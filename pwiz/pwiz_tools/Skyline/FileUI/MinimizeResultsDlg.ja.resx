@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -128,19 +128,19 @@
     <value>True</value>
   </metadata>
   <data name="colReplicateName.HeaderText" xml:space="preserve">
-<value>繰り返し測定</value>
+    <value>繰り返し測定</value>
   </data>
   <metadata name="colCacheFileSize.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colCacheFileSize.HeaderText" xml:space="preserve">
-<value>現在のサイズ</value>
+    <value>現在のサイズ</value>
   </data>
   <metadata name="colMinimizedRatio.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colMinimizedRatio.HeaderText" xml:space="preserve">
-<value>最小化したサイズ</value>
+    <value>最小化したサイズ</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="dataGridViewSizes.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -153,16 +153,16 @@
   <data name="dataGridViewSizes.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="&gt;&gt;dataGridViewSizes.Name" xml:space="preserve">
+  <data name=">>dataGridViewSizes.Name" xml:space="preserve">
     <value>dataGridViewSizes</value>
   </data>
-  <data name="&gt;&gt;dataGridViewSizes.Type" xml:space="preserve">
+  <data name=">>dataGridViewSizes.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;dataGridViewSizes.Parent" xml:space="preserve">
+  <data name=">>dataGridViewSizes.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;dataGridViewSizes.ZOrder" xml:space="preserve">
+  <data name=">>dataGridViewSizes.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="cbxDiscardUnmatchedChromatograms.AutoSize" type="System.Boolean, mscorlib">
@@ -178,18 +178,18 @@
     <value>1</value>
   </data>
   <data name="cbxDiscardUnmatchedChromatograms.Text" xml:space="preserve">
-<value>使用していないクロマトグラムを破棄</value>
+    <value>使用していないクロマトグラムを破棄</value>
   </data>
-  <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.Name" xml:space="preserve">
+  <data name=">>cbxDiscardUnmatchedChromatograms.Name" xml:space="preserve">
     <value>cbxDiscardUnmatchedChromatograms</value>
   </data>
-  <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.Type" xml:space="preserve">
+  <data name=">>cbxDiscardUnmatchedChromatograms.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.Parent" xml:space="preserve">
+  <data name=">>cbxDiscardUnmatchedChromatograms.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.ZOrder" xml:space="preserve">
+  <data name=">>cbxDiscardUnmatchedChromatograms.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="tbxNoiseTimeRange.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -202,21 +202,21 @@
     <value>1</value>
   </data>
   <data name="tbxNoiseTimeRange.Text" xml:space="preserve">
-<value>1</value>
+    <value>1</value>
   </data>
   <data name="tbxNoiseTimeRange.TextAlign" type="System.Windows.Forms.HorizontalAlignment, System.Windows.Forms">
     <value>Right</value>
   </data>
-  <data name="&gt;&gt;tbxNoiseTimeRange.Name" xml:space="preserve">
+  <data name=">>tbxNoiseTimeRange.Name" xml:space="preserve">
     <value>tbxNoiseTimeRange</value>
   </data>
-  <data name="&gt;&gt;tbxNoiseTimeRange.Type" xml:space="preserve">
+  <data name=">>tbxNoiseTimeRange.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbxNoiseTimeRange.Parent" xml:space="preserve">
+  <data name=">>tbxNoiseTimeRange.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;tbxNoiseTimeRange.ZOrder" xml:space="preserve">
+  <data name=">>tbxNoiseTimeRange.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="cbxLimitNoiseTime.AutoSize" type="System.Boolean, mscorlib">
@@ -232,21 +232,21 @@
     <value>0</value>
   </data>
   <data name="cbxLimitNoiseTime.Text" xml:space="preserve">
-<value>ノイズを制限 </value>
+    <value>ノイズを制限 </value>
   </data>
   <data name="cbxLimitNoiseTime.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
   </data>
-  <data name="&gt;&gt;cbxLimitNoiseTime.Name" xml:space="preserve">
+  <data name=">>cbxLimitNoiseTime.Name" xml:space="preserve">
     <value>cbxLimitNoiseTime</value>
   </data>
-  <data name="&gt;&gt;cbxLimitNoiseTime.Type" xml:space="preserve">
+  <data name=">>cbxLimitNoiseTime.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbxLimitNoiseTime.Parent" xml:space="preserve">
+  <data name=">>cbxLimitNoiseTime.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;cbxLimitNoiseTime.ZOrder" xml:space="preserve">
+  <data name=">>cbxLimitNoiseTime.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -262,18 +262,18 @@
     <value>8</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="btnMinimize.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -289,18 +289,18 @@
     <value>6</value>
   </data>
   <data name="btnMinimize.Text" xml:space="preserve">
-<value>その場で最小化</value>
+    <value>その場で最小化</value>
   </data>
-  <data name="&gt;&gt;btnMinimize.Name" xml:space="preserve">
+  <data name=">>btnMinimize.Name" xml:space="preserve">
     <value>btnMinimize</value>
   </data>
-  <data name="&gt;&gt;btnMinimize.Type" xml:space="preserve">
+  <data name=">>btnMinimize.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnMinimize.Parent" xml:space="preserve">
+  <data name=">>btnMinimize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnMinimize.ZOrder" xml:space="preserve">
+  <data name=">>btnMinimize.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -313,18 +313,18 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>このドキュメントで使用していないクロマトグラムを破棄したり、クロマトグラムの長さを制限することで、Skylineキャッシュファイル (.skyd) のサイズを小さくできます。</value>
+    <value>このドキュメントで使用していないクロマトグラムを破棄したり、クロマトグラムの長さを制限することで、Skylineキャッシュファイル (.skyd) のサイズを小さくできます。</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -340,21 +340,21 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>分 (クロマトグラムピークの前後)</value>
+    <value>分 (クロマトグラムピークの前後)</value>
   </data>
   <data name="label3.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+  <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name=">>label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name=">>label3.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name=">>label3.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="lblCurrentCacheFileSize.AutoSize" type="System.Boolean, mscorlib">
@@ -370,18 +370,18 @@
     <value>3</value>
   </data>
   <data name="lblCurrentCacheFileSize.Text" xml:space="preserve">
-<value>キャッシュファイルの現在のサイズはxxx MBです</value>
+    <value>キャッシュファイルの現在のサイズはxxx MBです</value>
   </data>
-  <data name="&gt;&gt;lblCurrentCacheFileSize.Name" xml:space="preserve">
+  <data name=">>lblCurrentCacheFileSize.Name" xml:space="preserve">
     <value>lblCurrentCacheFileSize</value>
   </data>
-  <data name="&gt;&gt;lblCurrentCacheFileSize.Type" xml:space="preserve">
+  <data name=">>lblCurrentCacheFileSize.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblCurrentCacheFileSize.Parent" xml:space="preserve">
+  <data name=">>lblCurrentCacheFileSize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;lblCurrentCacheFileSize.ZOrder" xml:space="preserve">
+  <data name=">>lblCurrentCacheFileSize.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="lblSpaceSavings.AutoSize" type="System.Boolean, mscorlib">
@@ -397,18 +397,18 @@
     <value>4</value>
   </data>
   <data name="lblSpaceSavings.Text" xml:space="preserve">
-<value>スペースの節約量を計算中...</value>
+    <value>スペースの節約量を計算中...</value>
   </data>
-  <data name="&gt;&gt;lblSpaceSavings.Name" xml:space="preserve">
+  <data name=">>lblSpaceSavings.Name" xml:space="preserve">
     <value>lblSpaceSavings</value>
   </data>
-  <data name="&gt;&gt;lblSpaceSavings.Type" xml:space="preserve">
+  <data name=">>lblSpaceSavings.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblSpaceSavings.Parent" xml:space="preserve">
+  <data name=">>lblSpaceSavings.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;lblSpaceSavings.ZOrder" xml:space="preserve">
+  <data name=">>lblSpaceSavings.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnMinimizeAs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -424,18 +424,18 @@
     <value>7</value>
   </data>
   <data name="btnMinimizeAs.Text" xml:space="preserve">
-<value>最小化してファイル名を付けて保存...</value>
+    <value>最小化してファイル名を付けて保存...</value>
   </data>
-  <data name="&gt;&gt;btnMinimizeAs.Name" xml:space="preserve">
+  <data name=">>btnMinimizeAs.Name" xml:space="preserve">
     <value>btnMinimizeAs</value>
   </data>
-  <data name="&gt;&gt;btnMinimizeAs.Type" xml:space="preserve">
+  <data name=">>btnMinimizeAs.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnMinimizeAs.Parent" xml:space="preserve">
+  <data name=">>btnMinimizeAs.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnMinimizeAs.ZOrder" xml:space="preserve">
+  <data name=">>btnMinimizeAs.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -447,16 +447,16 @@
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.Name" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -472,36 +472,36 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>結果の最小化</value>
+    <value>結果の最小化</value>
   </data>
-  <data name="&gt;&gt;bindingSource1.Name" xml:space="preserve">
+  <data name=">>bindingSource1.Name" xml:space="preserve">
     <value>bindingSource1</value>
   </data>
-  <data name="&gt;&gt;bindingSource1.Type" xml:space="preserve">
+  <data name=">>bindingSource1.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colReplicateName.Name" xml:space="preserve">
+  <data name=">>colReplicateName.Name" xml:space="preserve">
     <value>colReplicateName</value>
   </data>
-  <data name="&gt;&gt;colReplicateName.Type" xml:space="preserve">
+  <data name=">>colReplicateName.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colCacheFileSize.Name" xml:space="preserve">
+  <data name=">>colCacheFileSize.Name" xml:space="preserve">
     <value>colCacheFileSize</value>
   </data>
-  <data name="&gt;&gt;colCacheFileSize.Type" xml:space="preserve">
+  <data name=">>colCacheFileSize.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colMinimizedRatio.Name" xml:space="preserve">
+  <data name=">>colMinimizedRatio.Name" xml:space="preserve">
     <value>colMinimizedRatio</value>
   </data>
-  <data name="&gt;&gt;colMinimizedRatio.Type" xml:space="preserve">
+  <data name=">>colMinimizedRatio.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>MinimizeResultsDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -132,18 +132,18 @@
     <value>4</value>
   </data>
   <data name="labelCleavage.Text" xml:space="preserve">
-<value>次のアミノ酸残基のC末端を切断する(&amp;C)：</value>
+    <value>次のアミノ酸残基のC末端を切断する(&amp;C)：</value>
   </data>
-  <data name="&gt;&gt;labelCleavage.Name" xml:space="preserve">
+  <data name=">>labelCleavage.Name" xml:space="preserve">
     <value>labelCleavage</value>
   </data>
-  <data name="&gt;&gt;labelCleavage.Type" xml:space="preserve">
+  <data name=">>labelCleavage.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelCleavage.Parent" xml:space="preserve">
+  <data name=">>labelCleavage.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelCleavage.ZOrder" xml:space="preserve">
+  <data name=">>labelCleavage.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -159,18 +159,18 @@
     <value>5</value>
   </data>
   <data name="textCleavage.ToolTip" xml:space="preserve">
-<value>切断が発生する一連のアミノ酸残基 (セパレータなし) です。</value>
+    <value>切断が発生する一連のアミノ酸残基 (セパレータなし) です。</value>
   </data>
-  <data name="&gt;&gt;textCleavage.Name" xml:space="preserve">
+  <data name=">>textCleavage.Name" xml:space="preserve">
     <value>textCleavage</value>
   </data>
-  <data name="&gt;&gt;textCleavage.Type" xml:space="preserve">
+  <data name=">>textCleavage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textCleavage.Parent" xml:space="preserve">
+  <data name=">>textCleavage.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textCleavage.ZOrder" xml:space="preserve">
+  <data name=">>textCleavage.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="labelRestrict.AutoSize" type="System.Boolean, mscorlib">
@@ -186,18 +186,18 @@
     <value>6</value>
   </data>
   <data name="labelRestrict.Text" xml:space="preserve">
-<value>下流のアミノ酸残基が次の場合を除く(&amp;O)：</value>
+    <value>下流のアミノ酸残基が次の場合を除く(&amp;O)：</value>
   </data>
-  <data name="&gt;&gt;labelRestrict.Name" xml:space="preserve">
+  <data name=">>labelRestrict.Name" xml:space="preserve">
     <value>labelRestrict</value>
   </data>
-  <data name="&gt;&gt;labelRestrict.Type" xml:space="preserve">
+  <data name=">>labelRestrict.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelRestrict.Parent" xml:space="preserve">
+  <data name=">>labelRestrict.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelRestrict.ZOrder" xml:space="preserve">
+  <data name=">>labelRestrict.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="textRestrict.Location" type="System.Drawing.Point, System.Drawing">
@@ -210,30 +210,30 @@
     <value>7</value>
   </data>
   <data name="textRestrict.ToolTip" xml:space="preserve">
-<value>切断アミノ酸残基に隣接しているときに
+    <value>切断アミノ酸残基に隣接しているときに
 切断を抑制するアミノ酸残基の
 リストです (セパレータなし)。</value>
   </data>
-  <data name="&gt;&gt;textRestrict.Name" xml:space="preserve">
+  <data name=">>textRestrict.Name" xml:space="preserve">
     <value>textRestrict</value>
   </data>
-  <data name="&gt;&gt;textRestrict.Type" xml:space="preserve">
+  <data name=">>textRestrict.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textRestrict.Parent" xml:space="preserve">
+  <data name=">>textRestrict.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textRestrict.ZOrder" xml:space="preserve">
+  <data name=">>textRestrict.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="comboDirection.Items" xml:space="preserve">
-<value>C末端</value>
+    <value>C末端</value>
   </data>
   <data name="comboDirection.Items1" xml:space="preserve">
-<value>N末端</value>
+    <value>N末端</value>
   </data>
   <data name="comboDirection.Items2" xml:space="preserve">
-<value>両方</value>
+    <value>両方</value>
   </data>
   <data name="comboDirection.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 87</value>
@@ -248,19 +248,19 @@
     <value>17, 17</value>
   </metadata>
   <data name="comboDirection.ToolTip" xml:space="preserve">
-<value>切断が発生する切断アミノ酸残基の
+    <value>切断が発生する切断アミノ酸残基の
 末端側 (NまたはCあるいは両方) です。</value>
   </data>
-  <data name="&gt;&gt;comboDirection.Name" xml:space="preserve">
+  <data name=">>comboDirection.Name" xml:space="preserve">
     <value>comboDirection</value>
   </data>
-  <data name="&gt;&gt;comboDirection.Type" xml:space="preserve">
+  <data name=">>comboDirection.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboDirection.Parent" xml:space="preserve">
+  <data name=">>comboDirection.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;comboDirection.ZOrder" xml:space="preserve">
+  <data name=">>comboDirection.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -276,18 +276,18 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>タイプ(&amp;T)：</value>
+    <value>タイプ(&amp;T)：</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+  <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name=">>label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name=">>label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name=">>label3.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
@@ -300,18 +300,18 @@
     <value>12</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
@@ -324,18 +324,18 @@
     <value>13</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
@@ -348,18 +348,18 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-<value>ペプチド設定フォームでこのプロテアーゼ酵素の表示に使用する名前です</value>
+    <value>ペプチド設定フォームでこのプロテアーゼ酵素の表示に使用する名前です</value>
   </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+  <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+  <data name=">>textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+  <data name=">>textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+  <data name=">>textName.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -375,18 +375,18 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>名前(&amp;N)：</value>
+    <value>名前(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+  <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name=">>label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+  <data name=">>label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+  <data name=">>label4.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="textRestrictN.Location" type="System.Drawing.Point, System.Drawing">
@@ -399,20 +399,20 @@
     <value>11</value>
   </data>
   <data name="textRestrictN.ToolTip" xml:space="preserve">
-<value>N末端切断より前にあるときに
+    <value>N末端切断より前にあるときに
 切断を抑制するアミノ酸残基の
 リストです (セパレータなし)。</value>
   </data>
-  <data name="&gt;&gt;textRestrictN.Name" xml:space="preserve">
+  <data name=">>textRestrictN.Name" xml:space="preserve">
     <value>textRestrictN</value>
   </data>
-  <data name="&gt;&gt;textRestrictN.Type" xml:space="preserve">
+  <data name=">>textRestrictN.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textRestrictN.Parent" xml:space="preserve">
+  <data name=">>textRestrictN.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textRestrictN.ZOrder" xml:space="preserve">
+  <data name=">>textRestrictN.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="textCleavageN.Location" type="System.Drawing.Point, System.Drawing">
@@ -425,19 +425,19 @@
     <value>9</value>
   </data>
   <data name="textCleavageN.ToolTip" xml:space="preserve">
-<value>切断が発生する一連のアミノ酸残基N末端
+    <value>切断が発生する一連のアミノ酸残基N末端
 です (セパレータなし)</value>
   </data>
-  <data name="&gt;&gt;textCleavageN.Name" xml:space="preserve">
+  <data name=">>textCleavageN.Name" xml:space="preserve">
     <value>textCleavageN</value>
   </data>
-  <data name="&gt;&gt;textCleavageN.Type" xml:space="preserve">
+  <data name=">>textCleavageN.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textCleavageN.Parent" xml:space="preserve">
+  <data name=">>textCleavageN.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textCleavageN.ZOrder" xml:space="preserve">
+  <data name=">>textCleavageN.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelRestrictN.AutoSize" type="System.Boolean, mscorlib">
@@ -457,18 +457,18 @@
     <value>10</value>
   </data>
   <data name="labelRestrictN.Text" xml:space="preserve">
-<value>上流のアミノ酸残基が次の場合を除く(&amp;E)：</value>
+    <value>上流のアミノ酸残基が次の場合を除く(&amp;E)：</value>
   </data>
-  <data name="&gt;&gt;labelRestrictN.Name" xml:space="preserve">
+  <data name=">>labelRestrictN.Name" xml:space="preserve">
     <value>labelRestrictN</value>
   </data>
-  <data name="&gt;&gt;labelRestrictN.Type" xml:space="preserve">
+  <data name=">>labelRestrictN.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelRestrictN.Parent" xml:space="preserve">
+  <data name=">>labelRestrictN.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelRestrictN.ZOrder" xml:space="preserve">
+  <data name=">>labelRestrictN.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelCleavageN.AutoSize" type="System.Boolean, mscorlib">
@@ -487,18 +487,18 @@
     <value>8</value>
   </data>
   <data name="labelCleavageN.Text" xml:space="preserve">
-<value>次のアミノ酸残基のN末端を切断する(&amp;N)：</value>
+    <value>次のアミノ酸残基のN末端を切断する(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;labelCleavageN.Name" xml:space="preserve">
+  <data name=">>labelCleavageN.Name" xml:space="preserve">
     <value>labelCleavageN</value>
   </data>
-  <data name="&gt;&gt;labelCleavageN.Type" xml:space="preserve">
+  <data name=">>labelCleavageN.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelCleavageN.Parent" xml:space="preserve">
+  <data name=">>labelCleavageN.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelCleavageN.ZOrder" xml:space="preserve">
+  <data name=">>labelCleavageN.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -514,18 +514,18 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>消化酵素の設定</value>
+    <value>消化酵素の設定</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+  <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+  <data name=">>helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>EditEnzymeDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

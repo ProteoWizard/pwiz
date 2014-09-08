@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -144,16 +144,16 @@
   <data name="availableFieldsTreeFilter.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.Name" xml:space="preserve">
+  <data name=">>availableFieldsTreeFilter.Name" xml:space="preserve">
     <value>availableFieldsTreeFilter</value>
   </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.Type" xml:space="preserve">
+  <data name=">>availableFieldsTreeFilter.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.Parent" xml:space="preserve">
+  <data name=">>availableFieldsTreeFilter.Parent" xml:space="preserve">
     <value>splitContainerFilter.Panel1</value>
   </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.ZOrder" xml:space="preserve">
+  <data name=">>availableFieldsTreeFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnAddFilter.AutoSize" type="System.Boolean, mscorlib">
@@ -172,18 +172,18 @@
     <value>0</value>
   </data>
   <data name="btnAddFilter.Text" xml:space="preserve">
-<value>追加 &gt;&gt;</value>
+    <value>追加 &gt;&gt;</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.Name" xml:space="preserve">
+  <data name=">>btnAddFilter.Name" xml:space="preserve">
     <value>btnAddFilter</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.Type" xml:space="preserve">
+  <data name=">>btnAddFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.Parent" xml:space="preserve">
+  <data name=">>btnAddFilter.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.ZOrder" xml:space="preserve">
+  <data name=">>btnAddFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -198,47 +198,47 @@
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+  <data name=">>panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+  <data name=">>panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name=">>panel1.Parent" xml:space="preserve">
     <value>splitContainerFilter.Panel1</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name=">>panel1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.Name" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel1.Name" xml:space="preserve">
     <value>splitContainerFilter.Panel1</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.Type" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.Parent" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel1.Parent" xml:space="preserve">
     <value>splitContainerFilter</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.ZOrder" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="colFilterColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colFilterColumn.HeaderText" xml:space="preserve">
-<value>列</value>
+    <value>列</value>
   </data>
   <metadata name="colFilterOperation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colFilterOperation.HeaderText" xml:space="preserve">
-<value>操作</value>
+    <value>操作</value>
   </data>
   <metadata name="colFilterOperand.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colFilterOperand.HeaderText" xml:space="preserve">
-<value>値</value>
+    <value>値</value>
   </data>
   <data name="dataGridViewFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -252,16 +252,16 @@
   <data name="dataGridViewFilter.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;dataGridViewFilter.Name" xml:space="preserve">
+  <data name=">>dataGridViewFilter.Name" xml:space="preserve">
     <value>dataGridViewFilter</value>
   </data>
-  <data name="&gt;&gt;dataGridViewFilter.Type" xml:space="preserve">
+  <data name=">>dataGridViewFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;dataGridViewFilter.Parent" xml:space="preserve">
+  <data name=">>dataGridViewFilter.Parent" xml:space="preserve">
     <value>splitContainerFilter.Panel2</value>
   </data>
-  <data name="&gt;&gt;dataGridViewFilter.ZOrder" xml:space="preserve">
+  <data name=">>dataGridViewFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="toolStripFilter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -277,7 +277,7 @@
     <value>29, 20</value>
   </data>
   <data name="btnDeleteFilter.Text" xml:space="preserve">
-<value>削除</value>
+    <value>削除</value>
   </data>
   <data name="toolStripFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>475, 0</value>
@@ -289,30 +289,30 @@
     <value>1</value>
   </data>
   <data name="toolStripFilter.Text" xml:space="preserve">
-<value>toolStrip1</value>
+    <value>toolStrip1</value>
   </data>
-  <data name="&gt;&gt;toolStripFilter.Name" xml:space="preserve">
+  <data name=">>toolStripFilter.Name" xml:space="preserve">
     <value>toolStripFilter</value>
   </data>
-  <data name="&gt;&gt;toolStripFilter.Type" xml:space="preserve">
+  <data name=">>toolStripFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripFilter.Parent" xml:space="preserve">
+  <data name=">>toolStripFilter.Parent" xml:space="preserve">
     <value>splitContainerFilter.Panel2</value>
   </data>
-  <data name="&gt;&gt;toolStripFilter.ZOrder" xml:space="preserve">
+  <data name=">>toolStripFilter.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.Name" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel2.Name" xml:space="preserve">
     <value>splitContainerFilter.Panel2</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.Type" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.Parent" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel2.Parent" xml:space="preserve">
     <value>splitContainerFilter</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.ZOrder" xml:space="preserve">
+  <data name=">>splitContainerFilter.Panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainerFilter.Size" type="System.Drawing.Size, System.Drawing">
@@ -324,16 +324,16 @@
   <data name="splitContainerFilter.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Name" xml:space="preserve">
+  <data name=">>splitContainerFilter.Name" xml:space="preserve">
     <value>splitContainerFilter</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Type" xml:space="preserve">
+  <data name=">>splitContainerFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.Parent" xml:space="preserve">
+  <data name=">>splitContainerFilter.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;splitContainerFilter.ZOrder" xml:space="preserve">
+  <data name=">>splitContainerFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -345,34 +345,34 @@
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>881, 307</value>
   </data>
-  <data name="&gt;&gt;colFilterColumn.Name" xml:space="preserve">
+  <data name=">>colFilterColumn.Name" xml:space="preserve">
     <value>colFilterColumn</value>
   </data>
-  <data name="&gt;&gt;colFilterColumn.Type" xml:space="preserve">
+  <data name=">>colFilterColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colFilterOperation.Name" xml:space="preserve">
+  <data name=">>colFilterOperation.Name" xml:space="preserve">
     <value>colFilterOperation</value>
   </data>
-  <data name="&gt;&gt;colFilterOperation.Type" xml:space="preserve">
+  <data name=">>colFilterOperation.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colFilterOperand.Name" xml:space="preserve">
+  <data name=">>colFilterOperand.Name" xml:space="preserve">
     <value>colFilterOperand</value>
   </data>
-  <data name="&gt;&gt;colFilterOperand.Type" xml:space="preserve">
+  <data name=">>colFilterOperand.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
+  <data name=">>btnDeleteFilter.Name" xml:space="preserve">
     <value>btnDeleteFilter</value>
   </data>
-  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
+  <data name=">>btnDeleteFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>FilterTab</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.Editor.ViewEditorWidget, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -238,7 +238,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Annotations are extra pieces of data which you can attach to elements in a Skyline document.  Use this dialog to control which annotations are available in this document, as well as to define new annotations.</value>
+    <value>Annotations are extra pieces of data which you can attach to elements in a Skyline document. Use this dialog to control which annotations are available in this document, as well as to define new annotations.</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

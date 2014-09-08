@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -132,18 +132,18 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>最小iRT値(&amp;M)：</value>
+    <value>最小iRT値(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -159,18 +159,18 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>最大iRT値(&amp;X)：</value>
+    <value>最大iRT値(&amp;X)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textMaxIrt.Location" type="System.Drawing.Point, System.Drawing">
@@ -183,18 +183,18 @@
     <value>3</value>
   </data>
   <data name="textMaxIrt.Text" xml:space="preserve">
-<value>100</value>
+    <value>100</value>
   </data>
-  <data name="&gt;&gt;textMaxIrt.Name" xml:space="preserve">
+  <data name=">>textMaxIrt.Name" xml:space="preserve">
     <value>textMaxIrt</value>
   </data>
-  <data name="&gt;&gt;textMaxIrt.Type" xml:space="preserve">
+  <data name=">>textMaxIrt.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textMaxIrt.Parent" xml:space="preserve">
+  <data name=">>textMaxIrt.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textMaxIrt.ZOrder" xml:space="preserve">
+  <data name=">>textMaxIrt.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="textMinIrt.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -207,18 +207,18 @@
     <value>1</value>
   </data>
   <data name="textMinIrt.Text" xml:space="preserve">
-<value>0</value>
+    <value>0</value>
   </data>
-  <data name="&gt;&gt;textMinIrt.Name" xml:space="preserve">
+  <data name=">>textMinIrt.Name" xml:space="preserve">
     <value>textMinIrt</value>
   </data>
-  <data name="&gt;&gt;textMinIrt.Type" xml:space="preserve">
+  <data name=">>textMinIrt.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textMinIrt.Parent" xml:space="preserve">
+  <data name=">>textMinIrt.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textMinIrt.ZOrder" xml:space="preserve">
+  <data name=">>textMinIrt.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
@@ -235,18 +235,18 @@
     <value>8</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -262,18 +262,18 @@
     <value>9</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnUseCurrent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -289,18 +289,18 @@
     <value>19</value>
   </data>
   <data name="btnUseCurrent.Text" xml:space="preserve">
-<value>結果を使用(&amp;U)</value>
+    <value>結果を使用(&amp;U)</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
+  <data name=">>btnUseCurrent.Name" xml:space="preserve">
     <value>btnUseCurrent</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Type" xml:space="preserve">
+  <data name=">>btnUseCurrent.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Parent" xml:space="preserve">
+  <data name=">>btnUseCurrent.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.ZOrder" xml:space="preserve">
+  <data name=">>btnUseCurrent.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="bindingSourceStandard.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -313,19 +313,19 @@
     <value>True</value>
   </metadata>
   <data name="calibratePeptides.HeaderText" xml:space="preserve">
-<value>修飾配列</value>
+    <value>修飾配列</value>
   </data>
   <metadata name="calibrateMeasuredRt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="calibrateMeasuredRt.HeaderText" xml:space="preserve">
-<value>保持時間 (分)</value>
+    <value>保持時間 (分)</value>
   </data>
   <metadata name="checkFixedPoint.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="checkFixedPoint.HeaderText" xml:space="preserve">
-<value>固定点</value>
+    <value>固定点</value>
   </data>
   <data name="gridViewCalibrate.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 79</value>
@@ -336,16 +336,16 @@
   <data name="gridViewCalibrate.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;gridViewCalibrate.Name" xml:space="preserve">
+  <data name=">>gridViewCalibrate.Name" xml:space="preserve">
     <value>gridViewCalibrate</value>
   </data>
-  <data name="&gt;&gt;gridViewCalibrate.Type" xml:space="preserve">
+  <data name=">>gridViewCalibrate.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;gridViewCalibrate.Parent" xml:space="preserve">
+  <data name=">>gridViewCalibrate.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;gridViewCalibrate.ZOrder" xml:space="preserve">
+  <data name=">>gridViewCalibrate.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -361,36 +361,36 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>iRTカルキュレータの校正</value>
+    <value>iRTカルキュレータの校正</value>
   </data>
-  <data name="&gt;&gt;bindingSourceStandard.Name" xml:space="preserve">
+  <data name=">>bindingSourceStandard.Name" xml:space="preserve">
     <value>bindingSourceStandard</value>
   </data>
-  <data name="&gt;&gt;bindingSourceStandard.Type" xml:space="preserve">
+  <data name=">>bindingSourceStandard.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;calibratePeptides.Name" xml:space="preserve">
+  <data name=">>calibratePeptides.Name" xml:space="preserve">
     <value>calibratePeptides</value>
   </data>
-  <data name="&gt;&gt;calibratePeptides.Type" xml:space="preserve">
+  <data name=">>calibratePeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;calibrateMeasuredRt.Name" xml:space="preserve">
+  <data name=">>calibrateMeasuredRt.Name" xml:space="preserve">
     <value>calibrateMeasuredRt</value>
   </data>
-  <data name="&gt;&gt;calibrateMeasuredRt.Type" xml:space="preserve">
+  <data name=">>calibrateMeasuredRt.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkFixedPoint.Name" xml:space="preserve">
+  <data name=">>checkFixedPoint.Name" xml:space="preserve">
     <value>checkFixedPoint</value>
   </data>
-  <data name="&gt;&gt;checkFixedPoint.Type" xml:space="preserve">
+  <data name=">>checkFixedPoint.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>CalibrateIrtDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

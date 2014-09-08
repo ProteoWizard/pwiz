@@ -133,7 +133,7 @@
     <value>2</value>
   </data>
   <data name="lblFormDescription.Text" xml:space="preserve">
-    <value>Skyline uses the retention times of peptide identifications in your spectral libraries in order to be able to normalize the times of your replicates.  When aligning two replicates, Skyline performs a linear regression on the times of the peptides that were found in both replicates.  Skyline tries to get a linear regression with a correlation coefficient (i.e. "R") greater than .99.  Skyline will refine the regression by excluding outliers until the target correlation is achieved.</value>
+    <value>Skyline uses the retention times of peptide identifications in your spectral libraries in order to be able to normalize the times of your replicates. When aligning two replicates, Skyline performs a linear regression on the times of the peptides that were found in both replicates. Skyline tries to get a linear regression with a correlation coefficient (i.e. "R") greater than .99. Skyline will refine the regression by excluding outliers until the target correlation is achieved.</value>
   </data>
   <data name="&gt;&gt;lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>

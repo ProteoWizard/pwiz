@@ -500,7 +500,7 @@
     <value>Method Template</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>The chosen folder does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
+    <value>The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
   </data>
   <data name="SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching" xml:space="preserve">
     <value>Do you want to save your current settings before switching?</value>
@@ -722,7 +722,7 @@
     <value>The peptide '{0}' is not in the document. Do you want to continue?</value>
   </data>
   <data name="RefineListDlg_OkDialog_Of_the_specified__0__peptides__1__are_not_in_the_document_Do_you_want_to_continue" xml:space="preserve">
-    <value>Of the specified {0} peptides {1} are not in the document.  Do you want to continue?</value>
+    <value>Of the specified {0} peptides {1} are not in the document. Do you want to continue?</value>
   </data>
   <data name="UniquePeptidesDlg_OnShown_The_background_proteome__0__has_not_yet_finished_being_digested_with__1__" xml:space="preserve">
     <value>The background proteome {0} has not yet finished being digested with {1}.</value>
@@ -811,7 +811,7 @@ Are you sure you want to continue?</value>
     <value>All results must be completely imported before any can be minimized.</value>
   </data>
   <data name="MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue" xml:space="preserve">
-    <value>You have not chosen any options to minimize your cache file.  Are you sure you want to continue?</value>
+    <value>You have not chosen any options to minimize your cache file. Are you sure you want to continue?</value>
   </data>
   <data name="MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file" xml:space="preserve">
     <value>Saving new cache file</value>
@@ -1466,7 +1466,7 @@ Are you sure you want to continue?</value>
     <value>Precursor charges specified charge {0} more than once.</value>
   </data>
   <data name="TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__" xml:space="preserve">
-    <value>Invalid charge {1} found.  {0} must be between {2} and {3}.</value>
+    <value>Invalid charge {1} found. {0} must be between {2} and {3}.</value>
   </data>
   <data name="TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__" xml:space="preserve">
     <value>A precursor exclusion window must be between {0} and {1}.</value>
@@ -1865,7 +1865,7 @@ Are you sure you want to continue?</value>
     <value>Data truncation in cache header. File may be corrupted.</value>
   </data>
   <data name="ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_" xml:space="preserve">
-    <value>Failure writing cache.  Specified {0} peaks exceed total peak count {1}</value>
+    <value>Failure writing cache. Specified {0} peaks exceed total peak count {1}</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_Importing__0__" xml:space="preserve">
     <value>Importing {0}</value>
@@ -1925,13 +1925,13 @@ Are you sure you want to continue?</value>
     <value>Unexpected line in instrument config: {0}</value>
   </data>
   <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values" xml:space="preserve">
-    <value>Invalid chromatogram ID {0} found.  The ID must include both precursor and product m/z values.</value>
+    <value>Invalid chromatogram ID {0} found. The ID must include both precursor and product m/z values.</value>
   </data>
   <data name="ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID" xml:space="preserve">
     <value>The value '{0}' is not a valid chromatogram ID.</value>
   </data>
   <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values" xml:space="preserve">
-    <value>Invalid chromatogram ID {0} found.  Failure parsing m/z values.</value>
+    <value>Invalid chromatogram ID {0} found. Failure parsing m/z values.</value>
   </data>
   <data name="ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points" xml:space="preserve">
     <value>Failure trying to read points</value>
@@ -2084,7 +2084,7 @@ Are you sure you want to continue?</value>
     <value>Failed to find a valid MassLynx installation.</value>
   </data>
   <data name="WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found" xml:space="preserve">
-    <value>MassLynx may not be installed correctly.  The library {0} could not be found.</value>
+    <value>MassLynx may not be installed correctly. The library {0} could not be found.</value>
   </data>
   <data name="MethodExporter_ExportMethod_Exporting_method__0__" xml:space="preserve">
     <value>Exporting method {0}...</value>
@@ -2117,7 +2117,7 @@ Are you sure you want to continue?</value>
     <value>Empty transition list.</value>
   </data>
   <data name="MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence" xml:space="preserve">
-    <value>Invalid transition list.  Transition lists must contain at least precursor m/z, product m/z, and peptide sequence.</value>
+    <value>Invalid transition list. Transition lists must contain at least precursor m/z, product m/z, and peptide sequence.</value>
   </data>
   <data name="MassListImporter_Import_Failed_to_find_peptide_column" xml:space="preserve">
     <value>Failed to find peptide column.</value>
@@ -2593,16 +2593,16 @@ Are you sure you want to continue?</value>
     <value>You must specify an output file path.</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path" xml:space="preserve">
-    <value>The output path {0} is a directory.  You must specify a file path.</value>
+    <value>The output path {0} is a directory. You must specify a file path.</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
     <value>The directory {0} does not exist.</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server" xml:space="preserve">
-    <value>The lab authority name {0} is not valid.  This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server.</value>
+    <value>The lab authority name {0} is not valid. This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server.</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes" xml:space="preserve">
-    <value>The library identifier {0} is not valid.  Identifiers start with a letter, number or underscore, and contain only letters, numbers, underscores and dashes.</value>
+    <value>The library identifier {0} is not valid. Identifiers start with a letter, number or underscore, and contain only letters, numbers, underscores and dashes.</value>
     <comment>Letters restricted to English alphabet</comment>
   </data>
   <data name="BuildLibraryDlg_OkWizardPage_Finish" xml:space="preserve">
@@ -2804,7 +2804,7 @@ Are you sure you want to continue?</value>
     <value>Window width must be less than or equal to the isolation range.</value>
   </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
-    <value>The number of generated windows could not be adjusted to be a multiple of the windows per scan.  Try changing the windows per scan or the End value.</value>
+    <value>The number of generated windows could not be adjusted to be a multiple of the windows per scan. Try changing the windows per scan or the End value.</value>
   </data>
   <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
     <value>There is already an annotation defined named '{0}'.</value>
@@ -2825,7 +2825,7 @@ Are you sure you want to continue?</value>
     <value>The entry {0} is not valid.</value>
   </data>
   <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5" xml:space="preserve">
-    <value>the value {0} is not a valid charge.  Charges must be integer values between 1 and 5.</value>
+    <value>the value {0} is not a valid charge. Charges must be integer values between 1 and 5.</value>
   </data>
   <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope" xml:space="preserve">
     <value>the value {0} is not a valid slope.</value>
@@ -2947,7 +2947,7 @@ Are you sure you want to continue?</value>
     <value>The label name '{0}' may not be used more than once.</value>
   </data>
   <data name="EditLabelTypeListDlg_OkDialog_The_label_names__0__and__1__conflict_Use_more_unique_names" xml:space="preserve">
-    <value>The label names '{0}' and '{1}' conflict.  Use more unique names.</value>
+    <value>The label names '{0}' and '{1}' conflict. Use more unique names.</value>
   </data>
   <data name="EditLibraryDlg_OkDialog_The_library__0__already_exists" xml:space="preserve">
     <value>The library '{0}' already exists.</value>
@@ -2968,7 +2968,7 @@ Are you sure you want to continue?</value>
     <value>The file {0} is not a supported spectral library file format.</value>
   </data>
   <data name="EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue" xml:space="preserve">
-    <value>This will reset the list to its default values.  Continue?</value>
+    <value>This will reset the list to its default values. Continue?</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_The_special_ion__0__already_exists" xml:space="preserve">
     <value>The special ion '{0}' already exists.</value>
@@ -3115,7 +3115,7 @@ Are you sure you want to continue?</value>
     <value>Export Isolation List</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
+    <value>The folder {0} does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results" xml:space="preserve">
     <value>You will not be able to use retention time prediction with acquired results.</value>
@@ -3186,7 +3186,7 @@ Are you sure you want to continue?</value>
     <value>Variable modifications must specify amino acid or terminus.</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable" xml:space="preserve">
-    <value>The variable checkbox only applies to precursor modification.  Product ion losses are inherently variable.</value>
+    <value>The variable checkbox only applies to precursor modification. Product ion losses are inherently variable.</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid" xml:space="preserve">
     <value>Labeled atoms on terminal modification are not valid.</value>
@@ -3363,7 +3363,7 @@ Are you sure you want to continue?</value>
     <value>An error occurred attempting to import the {0} library.</value>
   </data>
   <data name="ViewLibraryDlg_MatchModifications__0__Would_you_like_to_use_the_Unimod_definitions_for__1__modifications_The_document_will_not_change_until_peptides_with_these_modifications_are_added" xml:space="preserve">
-    <value>{0}Would you like to use the Unimod definitions for {1} modifications?  The document will not change until peptides with these modifications are added.</value>
+    <value>{0}Would you like to use the Unimod definitions for {1} modifications? The document will not change until peptides with these modifications are added.</value>
   </data>
   <data name="ViewLibraryDlg_MatchModifications_the_matching" xml:space="preserve">
     <value>the matching</value>
@@ -3506,10 +3506,10 @@ Are you sure you want to continue?</value>
     <value>Unexpected error opening {0}</value>
   </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists" xml:space="preserve">
-    <value>Cannot save to {0}.  Check the path to make sure the directory exists.</value>
+    <value>Cannot save to {0}. Check the path to make sure the directory exists.</value>
   </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only" xml:space="preserve">
-    <value>Cannot save to {0}.  The file is read-only.</value>
+    <value>Cannot save to {0}. The file is read-only.</value>
   </data>
   <data name="AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum" xml:space="preserve">
     <value>Invalid byte buffer for checksum.</value>
@@ -3924,7 +3924,7 @@ Are you sure you want to continue?</value>
     <value>Install 32-bit {0}</value>
   </data>
   <data name="Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version" xml:space="preserve">
-    <value>You are attempting to run a 64-bit version of {0} on a 32-bit OS.  Please install the 32-bit version.</value>
+    <value>You are attempting to run a 64-bit version of {0} on a 32-bit OS. Please install the 32-bit version.</value>
   </data>
   <data name="RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score" xml:space="preserve">
     <value>Score</value>
@@ -4434,7 +4434,7 @@ Are you sure you want to continue?</value>
     <value>If you would like the command to launch a link, make sure to include http:// or https://</value>
   </data>
   <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__" xml:space="preserve">
-    <value>The command for {0} may not exist in that location. Would you like to edit it? </value>
+    <value>The command for {0} may not exist in that location. Would you like to edit it?</value>
   </data>
   <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
     <value>Note: if you would like the command to launch a link, make sure to include http:// or https://</value>
@@ -4500,7 +4500,7 @@ Are you sure you want to continue?</value>
     <value>Rename proteins</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences" xml:space="preserve">
-    <value>The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences.</value>
+    <value>The document contains a naming conflict. The name {0} is currently used by multiple protein sequences.</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_" xml:space="preserve">
     <value>No protein sequence matches found between the current document and the FASTA file {0}</value>
@@ -4839,7 +4839,7 @@ Are you sure you want to continue?</value>
     <value>On line {0}, {1}</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_" xml:space="preserve">
-    <value>Failure updating peptides in the iRT database.  The database may be out of synch.</value>
+    <value>Failure updating peptides in the iRT database. The database may be out of synch.</value>
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_" xml:space="preserve">
     <value>Could not find the spectral library {0} for this document. Without the library, no spectrum ID information will be available.</value>
@@ -5085,10 +5085,10 @@ Are you sure you want to continue?</value>
     <value>unknown</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
-    <value>The folder {0} does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
+    <value>The folder {0} does not appear to contain a Bruker TOF method template. The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
-    <value>The chosen folder does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
+    <value>The chosen folder does not appear to contain a Bruker TOF method template. The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
   </data>
   <data name="MQuestShapeCalc_MQuestShapeCalc_Shape" xml:space="preserve">
     <value>Shape</value>
@@ -5385,7 +5385,7 @@ Are you sure you want to continue?</value>
     <value>Error running process</value>
   </data>
   <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
-    <value>In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data.  Chromatograms will not be re-imported from raw data files, but peak integration information may change.</value>
+    <value>In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data. Chromatograms will not be re-imported from raw data files, but peak integration information may change.</value>
   </data>
   <data name="MProphetFeaturesDlg_OkDialog_Export_mProphet_Features" xml:space="preserve">
     <value>Export mProphet Features</value>
@@ -5847,7 +5847,7 @@ Are you sure you want to continue?</value>
     <value>Trained model is not applicable to current dataset.</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
-    <value>The current peak scoring model is incompatible with one or more peptides in the document.  Please train a new model.</value>
+    <value>The current peak scoring model is incompatible with one or more peptides in the document. Please train a new model.</value>
   </data>
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>Adjusting peak boundaries</value>
@@ -5955,7 +5955,7 @@ Are you sure you want to continue?</value>
     <value>..\Resources\ToolUpdateAvailable.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_" xml:space="preserve">
-    <value>The set of replicates in this document has changed.  Please choose again which replicates to use for the retention time filter.</value>
+    <value>The set of replicates in this document has changed. Please choose again which replicates to use for the retention time filter.</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates" xml:space="preserve">
     <value>Choose retention time filter replicates</value>
@@ -5964,7 +5964,7 @@ Are you sure you want to continue?</value>
     <value>You must choose at least one replicate</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction" xml:space="preserve">
-    <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but the prediction algorithm has not been calibrated.  Do you want to generate full gradient chromatograms?</value>
+    <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but the prediction algorithm has not been calibrated. Do you want to generate full gradient chromatograms?</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm" xml:space="preserve">
     <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but no prediction algorithm has been specified.
@@ -6022,7 +6022,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Missing scan time value on scan {0}. Scan times are required for overlap-based demultiplexing.</value>
   </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
-    <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}.  A non-degenerate overlapping window scheme is required.</value>
+    <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}. A non-degenerate overlapping window scheme is required.</value>
   </data>
   <data name="ShareListDlg_ImportFile_Failure_loading__0__" xml:space="preserve">
     <value>Failure loading {0}.</value>
@@ -6138,7 +6138,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Modification definition {0} missing close bracket.</value>
   </data>
   <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
-    <value>The modification {0} is not valid.  Expected a numeric delta mass.</value>
+    <value>The modification {0} is not valid. Expected a numeric delta mass.</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_" xml:space="preserve">
     <value>Failed reading the file.  Peptide {0} matches an existing iRT standard peptide.</value>

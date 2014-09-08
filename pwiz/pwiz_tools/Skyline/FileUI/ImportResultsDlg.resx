@@ -379,7 +379,7 @@ created for each of its subdirectories.</value>
   <data name="radioCreateMultiple.ToolTip" xml:space="preserve">
     <value>Add any number of single-injection replicates from files.
 The files may either contain one-injection per file, or
-multiple injections per file (.wiff).  Each injection will be
+multiple injections per file (.wiff). Each injection will be
 added as a seperate replicate.
 </value>
   </data>

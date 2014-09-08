@@ -529,7 +529,7 @@ times from a peptide specific hydrophobicity score.</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>If checked, peptides are automatically chosen from proteins
-using specified filter and library settings.  Otherwise, all peptide
+using specified filter and library settings. Otherwise, all peptide
 selection must be done by manual document editing.</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
@@ -586,7 +586,7 @@ in each protein</value>
   </data>
   <data name="cbRaggedEnds.ToolTip" xml:space="preserve">
     <value>Exclude peptides resulting from cleavage sites with immediate
-preceding or following cleavage sites.  e.g.  RR, KK, RK, KR for trypsin</value>
+preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   </data>
   <data name="&gt;&gt;cbRaggedEnds.Name" xml:space="preserve">
     <value>cbRaggedEnds</value>
@@ -767,7 +767,7 @@ from various peptide search engines.</value>
   </data>
   <data name="comboRank.ToolTip" xml:space="preserve">
     <value>Specifies a value associated with each spectrum in a library that may
-be used to rank matching peptides.  Not all library formats provide the
+be used to rank matching peptides. Not all library formats provide the
 same values for ranking.</value>
   </data>
   <data name="&gt;&gt;comboRank.Name" xml:space="preserve">
@@ -915,7 +915,7 @@ picked for each protein.</value>
   </data>
   <data name="listLibraries.ToolTip" xml:space="preserve">
     <value>The set of MS/MS spectral libraries matched with the peptides and
-transitions in the current document.  These libraries may be used
+transitions in the current document. These libraries may be used
 to rank and pick both peptides and transitions in the document.
 
 Library spectra are automatically matched in the order they appear

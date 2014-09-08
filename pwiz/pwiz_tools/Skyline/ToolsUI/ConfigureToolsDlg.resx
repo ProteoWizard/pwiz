@@ -136,18 +136,18 @@
     <value>19</value>
   </data>
   <data name="comboReport.ToolTip" xml:space="preserve">
-    <value>Here you select a SkylineReport to go with your tool. 
+    <value>Here you select a SkylineReport to go with your tool.
 If the command is a website url and you have selected
-a report then the report will be posted to the website 
-using http post. 
+a report then the report will be posted to the website
+using http post.
 
-If the command is an executable file and  
-$(InputReportTempPath) is an argument than the report 
-will be exported to a temp file and that file path will be 
+If the command is an executable file and
+$(InputReportTempPath) is an argument than the report
+will be exported to a temp file and that file path will be
 provided as an argument.
 
-If $(InputReportTempPath) is not an argument than the selected 
-report will be passed to the executable via standard input.  </value>
+If $(InputReportTempPath) is not an argument than the selected
+report will be passed to the executable via standard input.</value>
   </data>
   <data name="&gt;&gt;comboReport.Name" xml:space="preserve">
     <value>comboReport</value>
@@ -371,7 +371,7 @@ choose the arrow button to select a predefined argument.</value>
   </data>
   <data name="textCommand.ToolTip" xml:space="preserve">
     <value>Enter the path to a file or a URL you intend to launch
- or choose Browse to navigate to the file. 
+or choose Browse to navigate to the file.
 Files types that you can launch include .exe, .bat, .com, .cmd, and .pif
 All URLs must start with http: or https: to function properly.</value>
   </data>

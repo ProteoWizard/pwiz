@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -122,7 +122,7 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="colHdrName.Text" xml:space="preserve">
-<value>名前</value>
+    <value>名前</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="listView1.Location" type="System.Drawing.Point, System.Drawing">
@@ -135,16 +135,16 @@
   <data name="listView1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;listView1.Name" xml:space="preserve">
+  <data name=">>listView1.Name" xml:space="preserve">
     <value>listView1</value>
   </data>
-  <data name="&gt;&gt;listView1.Type" xml:space="preserve">
+  <data name=">>listView1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listView1.Parent" xml:space="preserve">
+  <data name=">>listView1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;listView1.ZOrder" xml:space="preserve">
+  <data name=">>listView1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnEdit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -163,18 +163,18 @@
     <value>2</value>
   </data>
   <data name="btnEdit.Text" xml:space="preserve">
-<value>編集(&amp;E)...</value>
+    <value>編集(&amp;E)...</value>
   </data>
-  <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
+  <data name=">>btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>
   </data>
-  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
+  <data name=">>btnEdit.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnEdit.Parent" xml:space="preserve">
+  <data name=">>btnEdit.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnEdit.ZOrder" xml:space="preserve">
+  <data name=">>btnEdit.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnRemove.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -193,18 +193,18 @@
     <value>3</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
-<value>削除(&amp;R)</value>
+    <value>削除(&amp;R)</value>
   </data>
-  <data name="&gt;&gt;btnRemove.Name" xml:space="preserve">
+  <data name=">>btnRemove.Name" xml:space="preserve">
     <value>btnRemove</value>
   </data>
-  <data name="&gt;&gt;btnRemove.Type" xml:space="preserve">
+  <data name=">>btnRemove.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnRemove.Parent" xml:space="preserve">
+  <data name=">>btnRemove.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnRemove.ZOrder" xml:space="preserve">
+  <data name=">>btnRemove.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -223,18 +223,18 @@
     <value>1</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>flowLayoutPanel2</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnShare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -253,18 +253,18 @@
     <value>5</value>
   </data>
   <data name="btnShare.Text" xml:space="preserve">
-<value>共有(&amp;S)...</value>
+    <value>共有(&amp;S)...</value>
   </data>
-  <data name="&gt;&gt;btnShare.Name" xml:space="preserve">
+  <data name=">>btnShare.Name" xml:space="preserve">
     <value>btnShare</value>
   </data>
-  <data name="&gt;&gt;btnShare.Type" xml:space="preserve">
+  <data name=">>btnShare.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnShare.Parent" xml:space="preserve">
+  <data name=">>btnShare.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnShare.ZOrder" xml:space="preserve">
+  <data name=">>btnShare.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnImport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -283,18 +283,18 @@
     <value>6</value>
   </data>
   <data name="btnImport.Text" xml:space="preserve">
-<value>インポート(&amp;I)...</value>
+    <value>インポート(&amp;I)...</value>
   </data>
-  <data name="&gt;&gt;btnImport.Name" xml:space="preserve">
+  <data name=">>btnImport.Name" xml:space="preserve">
     <value>btnImport</value>
   </data>
-  <data name="&gt;&gt;btnImport.Type" xml:space="preserve">
+  <data name=">>btnImport.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnImport.Parent" xml:space="preserve">
+  <data name=">>btnImport.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnImport.ZOrder" xml:space="preserve">
+  <data name=">>btnImport.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="flowLayoutPanel1.AutoSize" type="System.Boolean, mscorlib">
@@ -310,18 +310,18 @@
     <value>0</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
-<value>追加(&amp;A)...</value>
+    <value>追加(&amp;A)...</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
+  <data name=">>btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
+  <data name=">>btnAdd.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
+  <data name=">>btnAdd.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
+  <data name=">>btnAdd.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnCopy.Location" type="System.Drawing.Point, System.Drawing">
@@ -334,18 +334,18 @@
     <value>1</value>
   </data>
   <data name="btnCopy.Text" xml:space="preserve">
-<value>コピー(&amp;C)...</value>
+    <value>コピー(&amp;C)...</value>
   </data>
-  <data name="&gt;&gt;btnCopy.Name" xml:space="preserve">
+  <data name=">>btnCopy.Name" xml:space="preserve">
     <value>btnCopy</value>
   </data>
-  <data name="&gt;&gt;btnCopy.Type" xml:space="preserve">
+  <data name=">>btnCopy.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCopy.Parent" xml:space="preserve">
+  <data name=">>btnCopy.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnCopy.ZOrder" xml:space="preserve">
+  <data name=">>btnCopy.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelUpDown.AutoSize" type="System.Boolean, mscorlib">
@@ -364,18 +364,18 @@
     <value>0</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-<value>上へ(&amp;U)</value>
+    <value>上へ(&amp;U)</value>
   </data>
-  <data name="&gt;&gt;btnUp.Name" xml:space="preserve">
+  <data name=">>btnUp.Name" xml:space="preserve">
     <value>btnUp</value>
   </data>
-  <data name="&gt;&gt;btnUp.Type" xml:space="preserve">
+  <data name=">>btnUp.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnUp.Parent" xml:space="preserve">
+  <data name=">>btnUp.Parent" xml:space="preserve">
     <value>panelUpDown</value>
   </data>
-  <data name="&gt;&gt;btnUp.ZOrder" xml:space="preserve">
+  <data name=">>btnUp.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnDown.Location" type="System.Drawing.Point, System.Drawing">
@@ -388,18 +388,18 @@
     <value>1</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-<value>下へ(&amp;D)</value>
+    <value>下へ(&amp;D)</value>
   </data>
-  <data name="&gt;&gt;btnDown.Name" xml:space="preserve">
+  <data name=">>btnDown.Name" xml:space="preserve">
     <value>btnDown</value>
   </data>
-  <data name="&gt;&gt;btnDown.Type" xml:space="preserve">
+  <data name=">>btnDown.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnDown.Parent" xml:space="preserve">
+  <data name=">>btnDown.Parent" xml:space="preserve">
     <value>panelUpDown</value>
   </data>
-  <data name="&gt;&gt;btnDown.ZOrder" xml:space="preserve">
+  <data name=">>btnDown.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelUpDown.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
@@ -420,16 +420,16 @@
   <data name="panelUpDown.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;panelUpDown.Name" xml:space="preserve">
+  <data name=">>panelUpDown.Name" xml:space="preserve">
     <value>panelUpDown</value>
   </data>
-  <data name="&gt;&gt;panelUpDown.Type" xml:space="preserve">
+  <data name=">>panelUpDown.Type" xml:space="preserve">
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelUpDown.Parent" xml:space="preserve">
+  <data name=">>panelUpDown.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;panelUpDown.ZOrder" xml:space="preserve">
+  <data name=">>panelUpDown.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="flowLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -450,16 +450,16 @@
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.Name" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
+  <data name=">>flowLayoutPanel1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="flowLayoutPanel2.AutoSize" type="System.Boolean, mscorlib">
@@ -478,18 +478,18 @@
     <value>0</value>
   </data>
   <data name="btnExportData.Text" xml:space="preserve">
-<value>データをエクスポート(&amp;X)...</value>
+    <value>データをエクスポート(&amp;X)...</value>
   </data>
-  <data name="&gt;&gt;btnExportData.Name" xml:space="preserve">
+  <data name=">>btnExportData.Name" xml:space="preserve">
     <value>btnExportData</value>
   </data>
-  <data name="&gt;&gt;btnExportData.Type" xml:space="preserve">
+  <data name=">>btnExportData.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnExportData.Parent" xml:space="preserve">
+  <data name=">>btnExportData.Parent" xml:space="preserve">
     <value>flowLayoutPanel2</value>
   </data>
-  <data name="&gt;&gt;btnExportData.ZOrder" xml:space="preserve">
+  <data name=">>btnExportData.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="flowLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -510,16 +510,16 @@
   <data name="flowLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel2.Name" xml:space="preserve">
+  <data name=">>flowLayoutPanel2.Name" xml:space="preserve">
     <value>flowLayoutPanel2</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel2.Type" xml:space="preserve">
+  <data name=">>flowLayoutPanel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel2.Parent" xml:space="preserve">
+  <data name=">>flowLayoutPanel2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel2.ZOrder" xml:space="preserve">
+  <data name=">>flowLayoutPanel2.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -535,18 +535,18 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>ビュー(&amp;V)：</value>
+    <value>ビュー(&amp;V)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -562,18 +562,18 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>ビューの管理</value>
+    <value>ビューの管理</value>
   </data>
-  <data name="&gt;&gt;colHdrName.Name" xml:space="preserve">
+  <data name=">>colHdrName.Name" xml:space="preserve">
     <value>colHdrName</value>
   </data>
-  <data name="&gt;&gt;colHdrName.Type" xml:space="preserve">
+  <data name=">>colHdrName.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ManageViewsForm</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

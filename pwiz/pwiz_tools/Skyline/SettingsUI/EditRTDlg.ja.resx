@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -136,18 +136,18 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-<value>ぺプチド設定フォームでこの式の表示に使用する名前です</value>
+    <value>ぺプチド設定フォームでこの式の表示に使用する名前です</value>
   </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+  <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+  <data name=">>textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+  <data name=">>textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+  <data name=">>textName.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -163,18 +163,18 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>名前(&amp;N)：</value>
+    <value>名前(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+  <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name=">>label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+  <data name=">>label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+  <data name=">>label4.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -190,18 +190,18 @@
     <value>18</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>18</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -217,18 +217,18 @@
     <value>17</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>19</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -244,18 +244,18 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>勾配(&amp;S)：</value>
+    <value>勾配(&amp;S)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
   <data name="textSlope.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -268,21 +268,21 @@
     <value>3</value>
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
-<value>勾配を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
+    <value>勾配を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
 予測保持時間を計算します。
 
 RT = 勾配 * スコア + 切片</value>
   </data>
-  <data name="&gt;&gt;textSlope.Name" xml:space="preserve">
+  <data name=">>textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
   </data>
-  <data name="&gt;&gt;textSlope.Type" xml:space="preserve">
+  <data name=">>textSlope.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textSlope.Parent" xml:space="preserve">
+  <data name=">>textSlope.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textSlope.ZOrder" xml:space="preserve">
+  <data name=">>textSlope.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -298,18 +298,18 @@ RT = 勾配 * スコア + 切片</value>
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>切片(&amp;I)：</value>
+    <value>切片(&amp;I)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="textIntercept.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -322,22 +322,22 @@ RT = 勾配 * スコア + 切片</value>
     <value>5</value>
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
-<value>Y切片を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
+    <value>Y切片を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
 予測保持時間を計算します。
 
 RT = 勾配 * スコア + 切片
 </value>
   </data>
-  <data name="&gt;&gt;textIntercept.Name" xml:space="preserve">
+  <data name=">>textIntercept.Name" xml:space="preserve">
     <value>textIntercept</value>
   </data>
-  <data name="&gt;&gt;textIntercept.Type" xml:space="preserve">
+  <data name=">>textIntercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textIntercept.Parent" xml:space="preserve">
+  <data name=">>textIntercept.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textIntercept.ZOrder" xml:space="preserve">
+  <data name=">>textIntercept.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="btnCalculate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -353,22 +353,22 @@ RT = 勾配 * スコア + 切片
     <value>11</value>
   </data>
   <data name="btnCalculate.Text" xml:space="preserve">
-<value>計算 &gt;&gt;</value>
+    <value>計算 &gt;&gt;</value>
   </data>
   <data name="btnCalculate.ToolTip" xml:space="preserve">
-<value>線形回帰方程式の計算に使用するペプチド値を
+    <value>線形回帰方程式の計算に使用するペプチド値を
 表示または隠します</value>
   </data>
-  <data name="&gt;&gt;btnCalculate.Name" xml:space="preserve">
+  <data name=">>btnCalculate.Name" xml:space="preserve">
     <value>btnCalculate</value>
   </data>
-  <data name="&gt;&gt;btnCalculate.Type" xml:space="preserve">
+  <data name=">>btnCalculate.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCalculate.Parent" xml:space="preserve">
+  <data name=">>btnCalculate.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCalculate.ZOrder" xml:space="preserve">
+  <data name=">>btnCalculate.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="labelPeptides.AutoSize" type="System.Boolean, mscorlib">
@@ -384,18 +384,18 @@ RT = 勾配 * スコア + 切片
     <value>12</value>
   </data>
   <data name="labelPeptides.Text" xml:space="preserve">
-<value>測定ペプチド(&amp;M)：</value>
+    <value>測定ペプチド(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;labelPeptides.Name" xml:space="preserve">
+  <data name=">>labelPeptides.Name" xml:space="preserve">
     <value>labelPeptides</value>
   </data>
-  <data name="&gt;&gt;labelPeptides.Type" xml:space="preserve">
+  <data name=">>labelPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelPeptides.Parent" xml:space="preserve">
+  <data name=">>labelPeptides.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelPeptides.ZOrder" xml:space="preserve">
+  <data name=">>labelPeptides.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="labelRValue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -414,22 +414,22 @@ RT = 勾配 * スコア + 切片
     <value>13</value>
   </data>
   <data name="labelRValue.Text" xml:space="preserve">
-<value>(0 個のペプチド、R = 0.0)</value>
+    <value>(0 個のペプチド、R = 0.0)</value>
   </data>
   <data name="labelRValue.ToolTip" xml:space="preserve">
-<value>線形回帰方程式と回帰Rの計算に
+    <value>線形回帰方程式と回帰Rの計算に
 現在使用されているペプチドの数です</value>
   </data>
-  <data name="&gt;&gt;labelRValue.Name" xml:space="preserve">
+  <data name=">>labelRValue.Name" xml:space="preserve">
     <value>labelRValue</value>
   </data>
-  <data name="&gt;&gt;labelRValue.Type" xml:space="preserve">
+  <data name=">>labelRValue.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelRValue.Parent" xml:space="preserve">
+  <data name=">>labelRValue.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelRValue.ZOrder" xml:space="preserve">
+  <data name=">>labelRValue.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -445,18 +445,18 @@ RT = 勾配 * スコア + 切片
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>時間枠(&amp;T)：</value>
+    <value>時間枠(&amp;T)：</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+  <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name=">>label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name=">>label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name=">>label3.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="textTimeWindow.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -469,22 +469,22 @@ RT = 勾配 * スコア + 切片
     <value>7</value>
   </data>
   <data name="textTimeWindow.ToolTip" xml:space="preserve">
-<value>保持時間予測の表示と今後のペプチド測定の
+    <value>保持時間予測の表示と今後のペプチド測定の
 スケジュールに使用する予測保持時間近辺の時間枠を
 分単位で表示します。回帰計算方程式では、
 この値は残余の標準偏差の2倍となります。
 これは回帰値の95%を含む範囲です。</value>
   </data>
-  <data name="&gt;&gt;textTimeWindow.Name" xml:space="preserve">
+  <data name=">>textTimeWindow.Name" xml:space="preserve">
     <value>textTimeWindow</value>
   </data>
-  <data name="&gt;&gt;textTimeWindow.Type" xml:space="preserve">
+  <data name=">>textTimeWindow.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textTimeWindow.Parent" xml:space="preserve">
+  <data name=">>textTimeWindow.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textTimeWindow.ZOrder" xml:space="preserve">
+  <data name=">>textTimeWindow.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -500,18 +500,18 @@ RT = 勾配 * スコア + 切片
     <value>9</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-<value>カルキュレータ(&amp;C)：</value>
+    <value>カルキュレータ(&amp;C)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+  <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name=">>label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+  <data name=">>label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+  <data name=">>label5.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="comboCalculator.ItemHeight" type="System.Int32, mscorlib">
@@ -527,19 +527,19 @@ RT = 勾配 * スコア + 切片
     <value>10</value>
   </data>
   <data name="comboCalculator.ToolTip" xml:space="preserve">
-<value>使用されるカルキュレータアルゴリズム：
+    <value>使用されるカルキュレータアルゴリズム：
 SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレータ (Krokhin, et al.)</value>
   </data>
-  <data name="&gt;&gt;comboCalculator.Name" xml:space="preserve">
+  <data name=">>comboCalculator.Name" xml:space="preserve">
     <value>comboCalculator</value>
   </data>
-  <data name="&gt;&gt;comboCalculator.Type" xml:space="preserve">
+  <data name=">>comboCalculator.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboCalculator.Parent" xml:space="preserve">
+  <data name=">>comboCalculator.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;comboCalculator.ZOrder" xml:space="preserve">
+  <data name=">>comboCalculator.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -555,18 +555,18 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>8</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>分</value>
+    <value>分</value>
   </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+  <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+  <data name=">>label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+  <data name=">>label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+  <data name=">>label6.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnUseCurrent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -582,22 +582,22 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>15</value>
   </data>
   <data name="btnUseCurrent.Text" xml:space="preserve">
-<value>結果を使用(&amp;U)</value>
+    <value>結果を使用(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-<value>クリックして現在インポートされている結果データをこのドキュメント内のペプチドで使用し、
+    <value>クリックして現在インポートされている結果データをこのドキュメント内のペプチドで使用し、
 線形回帰式を計算します</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
+  <data name=">>btnUseCurrent.Name" xml:space="preserve">
     <value>btnUseCurrent</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Type" xml:space="preserve">
+  <data name=">>btnUseCurrent.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Parent" xml:space="preserve">
+  <data name=">>btnUseCurrent.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.ZOrder" xml:space="preserve">
+  <data name=">>btnUseCurrent.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnShowGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -613,22 +613,22 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>16</value>
   </data>
   <data name="btnShowGraph.Text" xml:space="preserve">
-<value>グラフを表示(&amp;G)...</value>
+    <value>グラフを表示(&amp;G)...</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-<value>このドキュメント内のペプチドに対して、現在インポートされている最適化結果データの
+    <value>このドキュメント内のペプチドに対して、現在インポートされている最適化結果データの
 線形回帰グラフを表示します</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.Name" xml:space="preserve">
+  <data name=">>btnShowGraph.Name" xml:space="preserve">
     <value>btnShowGraph</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.Type" xml:space="preserve">
+  <data name=">>btnShowGraph.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.Parent" xml:space="preserve">
+  <data name=">>btnShowGraph.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.ZOrder" xml:space="preserve">
+  <data name=">>btnShowGraph.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="gridPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -638,7 +638,7 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>True</value>
   </metadata>
   <data name="Sequence.HeaderText" xml:space="preserve">
-<value>修飾配列</value>
+    <value>修飾配列</value>
   </data>
   <data name="Sequence.MinimumWidth" type="System.Int32, mscorlib">
     <value>120</value>
@@ -647,7 +647,7 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>True</value>
   </metadata>
   <data name="RetentionTime.HeaderText" xml:space="preserve">
-<value>保持時間 (分)</value>
+    <value>保持時間 (分)</value>
   </data>
   <data name="RetentionTime.MinimumWidth" type="System.Int32, mscorlib">
     <value>125</value>
@@ -668,19 +668,19 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>14</value>
   </data>
   <data name="gridPeptides.ToolTip" xml:space="preserve">
-<value>線形回帰方程式の計算に使用するペプチドと
+    <value>線形回帰方程式の計算に使用するペプチドと
 その測定保持時間です</value>
   </data>
-  <data name="&gt;&gt;gridPeptides.Name" xml:space="preserve">
+  <data name=">>gridPeptides.Name" xml:space="preserve">
     <value>gridPeptides</value>
   </data>
-  <data name="&gt;&gt;gridPeptides.Type" xml:space="preserve">
+  <data name=">>gridPeptides.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;gridPeptides.Parent" xml:space="preserve">
+  <data name=">>gridPeptides.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;gridPeptides.ZOrder" xml:space="preserve">
+  <data name=">>gridPeptides.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="cbAutoCalc.AutoSize" type="System.Boolean, mscorlib">
@@ -696,23 +696,23 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>19</value>
   </data>
   <data name="cbAutoCalc.Text" xml:space="preserve">
-<value>回帰の自動計算(&amp;O)</value>
+    <value>回帰の自動計算(&amp;O)</value>
   </data>
   <data name="cbAutoCalc.ToolTip" xml:space="preserve">
-<value>チェックマークをオンにすると、Skylineがインポートされた
+    <value>チェックマークをオンにすると、Skylineがインポートされた
 各ファイルのスコアによる保持時間の各回帰に基づいて
 予測に使用する勾配と切片を計算します</value>
   </data>
-  <data name="&gt;&gt;cbAutoCalc.Name" xml:space="preserve">
+  <data name=">>cbAutoCalc.Name" xml:space="preserve">
     <value>cbAutoCalc</value>
   </data>
-  <data name="&gt;&gt;cbAutoCalc.Type" xml:space="preserve">
+  <data name=">>cbAutoCalc.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbAutoCalc.Parent" xml:space="preserve">
+  <data name=">>cbAutoCalc.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbAutoCalc.ZOrder" xml:space="preserve">
+  <data name=">>cbAutoCalc.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -728,36 +728,36 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>保持時間予測を編集</value>
+    <value>保持時間予測を編集</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+  <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+  <data name=">>helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;Sequence.Name" xml:space="preserve">
+  <data name=">>Sequence.Name" xml:space="preserve">
     <value>Sequence</value>
   </data>
-  <data name="&gt;&gt;Sequence.Type" xml:space="preserve">
+  <data name=">>Sequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;RetentionTime.Name" xml:space="preserve">
+  <data name=">>RetentionTime.Name" xml:space="preserve">
     <value>RetentionTime</value>
   </data>
-  <data name="&gt;&gt;RetentionTime.Type" xml:space="preserve">
+  <data name=">>RetentionTime.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingPeptides.Name" xml:space="preserve">
+  <data name=">>bindingPeptides.Name" xml:space="preserve">
     <value>bindingPeptides</value>
   </data>
-  <data name="&gt;&gt;bindingPeptides.Type" xml:space="preserve">
+  <data name=">>bindingPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>EditRTDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

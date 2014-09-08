@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -136,18 +136,18 @@
     <value>0</value>
   </data>
   <data name="linkProteome.Text" xml:space="preserve">
-<value>skyline.gs.washington.edu</value>
+    <value>skyline.gs.washington.edu</value>
   </data>
-  <data name="&gt;&gt;linkProteome.Name" xml:space="preserve">
+  <data name=">>linkProteome.Name" xml:space="preserve">
     <value>linkProteome</value>
   </data>
-  <data name="&gt;&gt;linkProteome.Type" xml:space="preserve">
+  <data name=">>linkProteome.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linkProteome.Parent" xml:space="preserve">
+  <data name=">>linkProteome.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;linkProteome.ZOrder" xml:space="preserve">
+  <data name=">>linkProteome.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -166,18 +166,18 @@
     <value>1</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="pictureSkylineIcon.Location" type="System.Drawing.Point, System.Drawing">
@@ -195,16 +195,16 @@
   <data name="pictureSkylineIcon.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;pictureSkylineIcon.Name" xml:space="preserve">
+  <data name=">>pictureSkylineIcon.Name" xml:space="preserve">
     <value>pictureSkylineIcon</value>
   </data>
-  <data name="&gt;&gt;pictureSkylineIcon.Type" xml:space="preserve">
+  <data name=">>pictureSkylineIcon.Type" xml:space="preserve">
     <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;pictureSkylineIcon.Parent" xml:space="preserve">
+  <data name=">>pictureSkylineIcon.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;pictureSkylineIcon.ZOrder" xml:space="preserve">
+  <data name=">>pictureSkylineIcon.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="labelSoftwareVersion.AutoSize" type="System.Boolean, mscorlib">
@@ -226,18 +226,18 @@
     <value>4</value>
   </data>
   <data name="labelSoftwareVersion.Text" xml:space="preserve">
-<value>Skyline</value>
+    <value>Skyline</value>
   </data>
-  <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
+  <data name=">>labelSoftwareVersion.Name" xml:space="preserve">
     <value>labelSoftwareVersion</value>
   </data>
-  <data name="&gt;&gt;labelSoftwareVersion.Type" xml:space="preserve">
+  <data name=">>labelSoftwareVersion.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelSoftwareVersion.Parent" xml:space="preserve">
+  <data name=">>labelSoftwareVersion.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelSoftwareVersion.ZOrder" xml:space="preserve">
+  <data name=">>labelSoftwareVersion.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="textBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -262,9 +262,9 @@
     <value>5</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
-<value>AB Sciex
+    <value>AB Sciex
 WIFFファイルリーダーライブラリ
-Copyright (c) 2010 by AB Sciex LLC.
+Copyright © 2010 by AB Sciex LLC.
 All rights reserved.
 http://www.absciex.com/
 
@@ -278,7 +278,7 @@ http://proteome.gs.washington.edu/software/bibliospec
 
 Bruker
 CompassXtractデータリーダーライブラリ
-Copyright (c) 2011 by Bruker Daltonik GmbH.All rights reserved.
+Copyright © 2011 by Bruker Daltonik GmbH.All rights reserved.
 http://www.bruker.com/
 
 Crawdad
@@ -298,7 +298,7 @@ Json.NET
 http://james.newtonking.com
 
 JetBrains Software
-開発ツール：ReSharper、dotTrace、dotCover
+開発ツール： ReSharper、dotTrace、dotCover
 http://www.jetbrains.com/index.html
 
 Matrix Science
@@ -323,14 +323,14 @@ http://sqlite.phxsoftware.com
 
 Thermo Fisher Scientific
 MSFileReaderファイル読み出しツール
-Copyright (c) 2009 by Thermo Fisher Scientific, Inc.
+Copyright © 2009 by Thermo Fisher Scientific, Inc.
 All rights reserved.
 http://www.thermo.com
 
 Waters Technologies Corporation
 メソッドエクスポートライブラリ
 ウォーターズローデータアクセスコンポーネント
-Copyright (c) 2010 by Waters Corporation.
+Copyright © 2010 by Waters Corporation.
 All rights reserved.
 http://www.waters.com
 
@@ -342,16 +342,16 @@ Zlib
 データ圧縮
 http://www.zlib.net</value>
   </data>
-  <data name="&gt;&gt;textBox1.Name" xml:space="preserve">
+  <data name=">>textBox1.Name" xml:space="preserve">
     <value>textBox1</value>
   </data>
-  <data name="&gt;&gt;textBox1.Type" xml:space="preserve">
+  <data name=">>textBox1.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textBox1.Parent" xml:space="preserve">
+  <data name=">>textBox1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textBox1.ZOrder" xml:space="preserve">
+  <data name=">>textBox1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -370,18 +370,18 @@ http://www.zlib.net</value>
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>各ソフトウェアのクレジット:</value>
+    <value>各ソフトウェアのクレジット:</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="pictureProteoWizardIcon.Location" type="System.Drawing.Point, System.Drawing">
@@ -399,16 +399,16 @@ http://www.zlib.net</value>
   <data name="pictureProteoWizardIcon.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;pictureProteoWizardIcon.Name" xml:space="preserve">
+  <data name=">>pictureProteoWizardIcon.Name" xml:space="preserve">
     <value>pictureProteoWizardIcon</value>
   </data>
-  <data name="&gt;&gt;pictureProteoWizardIcon.Type" xml:space="preserve">
+  <data name=">>pictureProteoWizardIcon.Type" xml:space="preserve">
     <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;pictureProteoWizardIcon.Parent" xml:space="preserve">
+  <data name=">>pictureProteoWizardIcon.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;pictureProteoWizardIcon.ZOrder" xml:space="preserve">
+  <data name=">>pictureProteoWizardIcon.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="linkProteoWizard.AutoSize" type="System.Boolean, mscorlib">
@@ -427,18 +427,18 @@ http://www.zlib.net</value>
     <value>8</value>
   </data>
   <data name="linkProteoWizard.Text" xml:space="preserve">
-<value>proteowizard.sourceforge.net</value>
+    <value>proteowizard.sourceforge.net</value>
   </data>
-  <data name="&gt;&gt;linkProteoWizard.Name" xml:space="preserve">
+  <data name=">>linkProteoWizard.Name" xml:space="preserve">
     <value>linkProteoWizard</value>
   </data>
-  <data name="&gt;&gt;linkProteoWizard.Type" xml:space="preserve">
+  <data name=">>linkProteoWizard.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linkProteoWizard.Parent" xml:space="preserve">
+  <data name=">>linkProteoWizard.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;linkProteoWizard.ZOrder" xml:space="preserve">
+  <data name=">>linkProteoWizard.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -457,18 +457,18 @@ http://www.zlib.net</value>
     <value>9</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>ProteoWizardアプリケーション</value>
+    <value>ProteoWizardアプリケーション</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+  <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name=">>label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name=">>label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name=">>label3.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
@@ -490,7 +490,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-<value>Copyright (c) 2008-2013 University of Washington, all rights reserved
+    <value>Copyright © 2008-2013 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 
@@ -498,16 +498,16 @@ MacCoss Lab, Department of Genome Sciences, UW
 MacCoss Labにより作成されました。詳細については、
 Skylineウェブサイトをご覧ください。</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
+  <data name=">>linkLabel1.Name" xml:space="preserve">
     <value>linkLabel1</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.Type" xml:space="preserve">
+  <data name=">>linkLabel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.Parent" xml:space="preserve">
+  <data name=">>linkLabel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
+  <data name=">>linkLabel1.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -526,12 +526,12 @@ Skylineウェブサイトをご覧ください。</value>
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>Skylineについて</value>
+    <value>Skylineについて</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>AboutDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

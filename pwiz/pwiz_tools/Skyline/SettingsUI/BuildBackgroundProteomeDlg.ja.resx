@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -133,18 +133,18 @@
     <value>5</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
-<value>参照(&amp;B)...</value>
+    <value>参照(&amp;B)...</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+  <data name=">>btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+  <data name=">>btnBrowse.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+  <data name=">>btnBrowse.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+  <data name=">>btnBrowse.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="labelFile.AutoSize" type="System.Boolean, mscorlib">
@@ -160,18 +160,18 @@
     <value>2</value>
   </data>
   <data name="labelFile.Text" xml:space="preserve">
-<value>プロテオームファイル(&amp;P)：</value>
+    <value>プロテオームファイル(&amp;P)：</value>
   </data>
-  <data name="&gt;&gt;labelFile.Name" xml:space="preserve">
+  <data name=">>labelFile.Name" xml:space="preserve">
     <value>labelFile</value>
   </data>
-  <data name="&gt;&gt;labelFile.Type" xml:space="preserve">
+  <data name=">>labelFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelFile.Parent" xml:space="preserve">
+  <data name=">>labelFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelFile.ZOrder" xml:space="preserve">
+  <data name=">>labelFile.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="textPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -186,16 +186,16 @@
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;textPath.Name" xml:space="preserve">
+  <data name=">>textPath.Name" xml:space="preserve">
     <value>textPath</value>
   </data>
-  <data name="&gt;&gt;textPath.Type" xml:space="preserve">
+  <data name=">>textPath.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
+  <data name=">>textPath.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
+  <data name=">>textPath.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -207,16 +207,16 @@
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+  <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+  <data name=">>textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+  <data name=">>textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+  <data name=">>textName.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -232,18 +232,18 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>名前(&amp;N)：</value>
+    <value>名前(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+  <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name=">>label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+  <data name=">>label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+  <data name=">>label4.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -259,18 +259,18 @@
     <value>12</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -286,18 +286,18 @@
     <value>11</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="btnAddFastaFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -313,18 +313,18 @@
     <value>10</value>
   </data>
   <data name="btnAddFastaFile.Text" xml:space="preserve">
-<value>ファイルを追加(&amp;A)...</value>
+    <value>ファイルを追加(&amp;A)...</value>
   </data>
-  <data name="&gt;&gt;btnAddFastaFile.Name" xml:space="preserve">
+  <data name=">>btnAddFastaFile.Name" xml:space="preserve">
     <value>btnAddFastaFile</value>
   </data>
-  <data name="&gt;&gt;btnAddFastaFile.Type" xml:space="preserve">
+  <data name=">>btnAddFastaFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAddFastaFile.Parent" xml:space="preserve">
+  <data name=">>btnAddFastaFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnAddFastaFile.ZOrder" xml:space="preserve">
+  <data name=">>btnAddFastaFile.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="tbxStatus.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -342,16 +342,16 @@
   <data name="tbxStatus.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="&gt;&gt;tbxStatus.Name" xml:space="preserve">
+  <data name=">>tbxStatus.Name" xml:space="preserve">
     <value>tbxStatus</value>
   </data>
-  <data name="&gt;&gt;tbxStatus.Type" xml:space="preserve">
+  <data name=">>tbxStatus.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbxStatus.Parent" xml:space="preserve">
+  <data name=">>tbxStatus.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;tbxStatus.ZOrder" xml:space="preserve">
+  <data name=">>tbxStatus.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="btnBuild.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -367,18 +367,18 @@
     <value>7</value>
   </data>
   <data name="btnBuild.Text" xml:space="preserve">
-<value>作成(&amp;U) &lt;&lt;</value>
+    <value>作成(&amp;U) &lt;&lt;</value>
   </data>
-  <data name="&gt;&gt;btnBuild.Name" xml:space="preserve">
+  <data name=">>btnBuild.Name" xml:space="preserve">
     <value>btnBuild</value>
   </data>
-  <data name="&gt;&gt;btnBuild.Type" xml:space="preserve">
+  <data name=">>btnBuild.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnBuild.Parent" xml:space="preserve">
+  <data name=">>btnBuild.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnBuild.ZOrder" xml:space="preserve">
+  <data name=">>btnBuild.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="labelFasta.AutoSize" type="System.Boolean, mscorlib">
@@ -394,18 +394,18 @@
     <value>8</value>
   </data>
   <data name="labelFasta.Text" xml:space="preserve">
-<value>FASTAファイル(&amp;F)：</value>
+    <value>FASTAファイル(&amp;F)：</value>
   </data>
-  <data name="&gt;&gt;labelFasta.Name" xml:space="preserve">
+  <data name=">>labelFasta.Name" xml:space="preserve">
     <value>labelFasta</value>
   </data>
-  <data name="&gt;&gt;labelFasta.Type" xml:space="preserve">
+  <data name=">>labelFasta.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelFasta.Parent" xml:space="preserve">
+  <data name=">>labelFasta.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelFasta.ZOrder" xml:space="preserve">
+  <data name=">>labelFasta.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="listboxFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -420,16 +420,16 @@
   <data name="listboxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="&gt;&gt;listboxFasta.Name" xml:space="preserve">
+  <data name=">>listboxFasta.Name" xml:space="preserve">
     <value>listboxFasta</value>
   </data>
-  <data name="&gt;&gt;listboxFasta.Type" xml:space="preserve">
+  <data name=">>listboxFasta.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listboxFasta.Parent" xml:space="preserve">
+  <data name=">>listboxFasta.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;listboxFasta.ZOrder" xml:space="preserve">
+  <data name=">>listboxFasta.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelFileNew.AutoSize" type="System.Boolean, mscorlib">
@@ -445,21 +445,21 @@
     <value>3</value>
   </data>
   <data name="labelFileNew.Text" xml:space="preserve">
-<value>プロテオームファイルを出力(&amp;O)：</value>
+    <value>プロテオームファイルを出力(&amp;O)：</value>
   </data>
   <data name="labelFileNew.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="&gt;&gt;labelFileNew.Name" xml:space="preserve">
+  <data name=">>labelFileNew.Name" xml:space="preserve">
     <value>labelFileNew</value>
   </data>
-  <data name="&gt;&gt;labelFileNew.Type" xml:space="preserve">
+  <data name=">>labelFileNew.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelFileNew.Parent" xml:space="preserve">
+  <data name=">>labelFileNew.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelFileNew.ZOrder" xml:space="preserve">
+  <data name=">>labelFileNew.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -475,12 +475,12 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>バックグラウンドプロテオームを編集</value>
+    <value>バックグラウンドプロテオームを編集</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>BuildBackgroundProteomeDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

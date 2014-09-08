@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -135,16 +135,16 @@
   <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;listboxServers.Name" xml:space="preserve">
+  <data name=">>listboxServers.Name" xml:space="preserve">
     <value>listboxServers</value>
   </data>
-  <data name="&gt;&gt;listboxServers.Type" xml:space="preserve">
+  <data name=">>listboxServers.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listboxServers.Parent" xml:space="preserve">
+  <data name=">>listboxServers.Parent" xml:space="preserve">
     <value>tabPanorama</value>
   </data>
-  <data name="&gt;&gt;listboxServers.ZOrder" xml:space="preserve">
+  <data name=">>listboxServers.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="lblServers.AutoSize" type="System.Boolean, mscorlib">
@@ -160,18 +160,18 @@
     <value>0</value>
   </data>
   <data name="lblServers.Text" xml:space="preserve">
-<value>サーバー：</value>
+    <value>サーバー：</value>
   </data>
-  <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
+  <data name=">>lblServers.Name" xml:space="preserve">
     <value>lblServers</value>
   </data>
-  <data name="&gt;&gt;lblServers.Type" xml:space="preserve">
+  <data name=">>lblServers.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblServers.Parent" xml:space="preserve">
+  <data name=">>lblServers.Parent" xml:space="preserve">
     <value>tabPanorama</value>
   </data>
-  <data name="&gt;&gt;lblServers.ZOrder" xml:space="preserve">
+  <data name=">>lblServers.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnEditServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -187,18 +187,18 @@
     <value>2</value>
   </data>
   <data name="btnEditServers.Text" xml:space="preserve">
-<value>リストを編集(&amp;D)...</value>
+    <value>リストを編集(&amp;D)...</value>
   </data>
-  <data name="&gt;&gt;btnEditServers.Name" xml:space="preserve">
+  <data name=">>btnEditServers.Name" xml:space="preserve">
     <value>btnEditServers</value>
   </data>
-  <data name="&gt;&gt;btnEditServers.Type" xml:space="preserve">
+  <data name=">>btnEditServers.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnEditServers.Parent" xml:space="preserve">
+  <data name=">>btnEditServers.Parent" xml:space="preserve">
     <value>tabPanorama</value>
   </data>
-  <data name="&gt;&gt;btnEditServers.ZOrder" xml:space="preserve">
+  <data name=">>btnEditServers.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tabPanorama.Location" type="System.Drawing.Point, System.Drawing">
@@ -214,18 +214,18 @@
     <value>0</value>
   </data>
   <data name="tabPanorama.Text" xml:space="preserve">
-<value>Panorama</value>
+    <value>Panorama</value>
   </data>
-  <data name="&gt;&gt;tabPanorama.Name" xml:space="preserve">
+  <data name=">>tabPanorama.Name" xml:space="preserve">
     <value>tabPanorama</value>
   </data>
-  <data name="&gt;&gt;tabPanorama.Type" xml:space="preserve">
+  <data name=">>tabPanorama.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabPanorama.Parent" xml:space="preserve">
+  <data name=">>tabPanorama.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabPanorama.ZOrder" xml:space="preserve">
+  <data name=">>tabPanorama.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -241,18 +241,18 @@
     <value>4</value>
   </data>
   <data name="labelDisplayLanguage.Text" xml:space="preserve">
-<value>表示言語の選択 (Skylineを再起動後より有効)</value>
+    <value>表示言語の選択 (Skylineを再起動後より有効)</value>
   </data>
-  <data name="&gt;&gt;labelDisplayLanguage.Name" xml:space="preserve">
+  <data name=">>labelDisplayLanguage.Name" xml:space="preserve">
     <value>labelDisplayLanguage</value>
   </data>
-  <data name="&gt;&gt;labelDisplayLanguage.Type" xml:space="preserve">
+  <data name=">>labelDisplayLanguage.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelDisplayLanguage.Parent" xml:space="preserve">
+  <data name=">>labelDisplayLanguage.Parent" xml:space="preserve">
     <value>tabLanguage</value>
   </data>
-  <data name="&gt;&gt;labelDisplayLanguage.ZOrder" xml:space="preserve">
+  <data name=">>labelDisplayLanguage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="listBoxLanguages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -267,16 +267,16 @@
   <data name="listBoxLanguages.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;listBoxLanguages.Name" xml:space="preserve">
+  <data name=">>listBoxLanguages.Name" xml:space="preserve">
     <value>listBoxLanguages</value>
   </data>
-  <data name="&gt;&gt;listBoxLanguages.Type" xml:space="preserve">
+  <data name=">>listBoxLanguages.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listBoxLanguages.Parent" xml:space="preserve">
+  <data name=">>listBoxLanguages.Parent" xml:space="preserve">
     <value>tabLanguage</value>
   </data>
-  <data name="&gt;&gt;listBoxLanguages.ZOrder" xml:space="preserve">
+  <data name=">>listBoxLanguages.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="tabLanguage.Location" type="System.Drawing.Point, System.Drawing">
@@ -292,18 +292,18 @@
     <value>2</value>
   </data>
   <data name="tabLanguage.Text" xml:space="preserve">
-<value>言語</value>
+    <value>言語</value>
   </data>
-  <data name="&gt;&gt;tabLanguage.Name" xml:space="preserve">
+  <data name=">>tabLanguage.Name" xml:space="preserve">
     <value>tabLanguage</value>
   </data>
-  <data name="&gt;&gt;tabLanguage.Type" xml:space="preserve">
+  <data name=">>tabLanguage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabLanguage.Parent" xml:space="preserve">
+  <data name=">>tabLanguage.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
+  <data name=">>tabLanguage.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
@@ -319,18 +319,18 @@
     <value>0</value>
   </data>
   <data name="checkBoxLiveReports.Text" xml:space="preserve">
-<value>ライブレポート (ドキュメントグリッド、新しい結果グリッド)</value>
+    <value>ライブレポート (ドキュメントグリッド、新しい結果グリッド)</value>
   </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Name" xml:space="preserve">
+  <data name=">>checkBoxLiveReports.Name" xml:space="preserve">
     <value>checkBoxLiveReports</value>
   </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Type" xml:space="preserve">
+  <data name=">>checkBoxLiveReports.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Parent" xml:space="preserve">
+  <data name=">>checkBoxLiveReports.Parent" xml:space="preserve">
     <value>tabMisc</value>
   </data>
-  <data name="&gt;&gt;checkBoxLiveReports.ZOrder" xml:space="preserve">
+  <data name=">>checkBoxLiveReports.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
@@ -346,18 +346,18 @@
     <value>1</value>
   </data>
   <data name="tabMisc.Text" xml:space="preserve">
-<value>その他</value>
+    <value>その他</value>
   </data>
-  <data name="&gt;&gt;tabMisc.Name" xml:space="preserve">
+  <data name=">>tabMisc.Name" xml:space="preserve">
     <value>tabMisc</value>
   </data>
-  <data name="&gt;&gt;tabMisc.Type" xml:space="preserve">
+  <data name=">>tabMisc.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabMisc.Parent" xml:space="preserve">
+  <data name=">>tabMisc.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
+  <data name=">>tabMisc.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
@@ -369,16 +369,16 @@
   <data name="tabControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;tabControl.Name" xml:space="preserve">
+  <data name=">>tabControl.Name" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabControl.Type" xml:space="preserve">
+  <data name=">>tabControl.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabControl.Parent" xml:space="preserve">
+  <data name=">>tabControl.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;tabControl.ZOrder" xml:space="preserve">
+  <data name=">>tabControl.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -394,18 +394,18 @@
     <value>2</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -421,18 +421,18 @@
     <value>1</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
+  <data name=">>btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+  <data name=">>btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
+  <data name=">>btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
+  <data name=">>btnOK.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -448,12 +448,12 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>オプション</value>
+    <value>オプション</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

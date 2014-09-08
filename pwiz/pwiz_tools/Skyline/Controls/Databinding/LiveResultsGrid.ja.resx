@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -125,21 +125,21 @@
     <value>189, 22</value>
   </data>
   <data name="synchronizeSelectionContextMenuItem.Text" xml:space="preserve">
-<value>選択の同期化</value>
+    <value>選択の同期化</value>
   </data>
   <data name="chooseColumnsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
   <data name="chooseColumnsToolStripMenuItem.Text" xml:space="preserve">
-<value>列の選択...</value>
+    <value>列の選択...</value>
   </data>
   <data name="contextMenuResultsGrid.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 70</value>
   </data>
-  <data name="&gt;&gt;contextMenuResultsGrid.Name" xml:space="preserve">
+  <data name=">>contextMenuResultsGrid.Name" xml:space="preserve">
     <value>contextMenuResultsGrid</value>
   </data>
-  <data name="&gt;&gt;contextMenuResultsGrid.Type" xml:space="preserve">
+  <data name=">>contextMenuResultsGrid.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="bindingListSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -159,16 +159,16 @@
   <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;boundDataGridView.Name" xml:space="preserve">
+  <data name=">>boundDataGridView.Name" xml:space="preserve">
     <value>boundDataGridView</value>
   </data>
-  <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name=">>boundDataGridView.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
+  <data name=">>boundDataGridView.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;boundDataGridView.ZOrder" xml:space="preserve">
+  <data name=">>boundDataGridView.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="navBar.AutoSize" type="System.Boolean, mscorlib">
@@ -186,16 +186,16 @@
   <data name="navBar.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;navBar.Name" xml:space="preserve">
+  <data name=">>navBar.Name" xml:space="preserve">
     <value>navBar</value>
   </data>
-  <data name="&gt;&gt;navBar.Type" xml:space="preserve">
+  <data name=">>navBar.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.NavBar, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;navBar.Parent" xml:space="preserve">
+  <data name=">>navBar.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;navBar.ZOrder" xml:space="preserve">
+  <data name=">>navBar.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -208,33 +208,33 @@
     <value>673, 458</value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
-<value>結果グリッド</value>
+    <value>結果グリッド</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>結果グリッド</value>
+    <value>結果グリッド</value>
   </data>
-  <data name="&gt;&gt;synchronizeSelectionContextMenuItem.Name" xml:space="preserve">
+  <data name=">>synchronizeSelectionContextMenuItem.Name" xml:space="preserve">
     <value>synchronizeSelectionContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;synchronizeSelectionContextMenuItem.Type" xml:space="preserve">
+  <data name=">>synchronizeSelectionContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;chooseColumnsToolStripMenuItem.Name" xml:space="preserve">
+  <data name=">>chooseColumnsToolStripMenuItem.Name" xml:space="preserve">
     <value>chooseColumnsToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;chooseColumnsToolStripMenuItem.Type" xml:space="preserve">
+  <data name=">>chooseColumnsToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingListSource.Name" xml:space="preserve">
+  <data name=">>bindingListSource.Name" xml:space="preserve">
     <value>bindingListSource</value>
   </data>
-  <data name="&gt;&gt;bindingListSource.Type" xml:space="preserve">
+  <data name=">>bindingListSource.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>LiveResultsGrid</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

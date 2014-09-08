@@ -471,7 +471,7 @@ linear regression, and R for the regression</value>
   <data name="textTimeWindow.ToolTip" xml:space="preserve">
     <value>Time window in minutes around the predicted retention time
 used in displaying retention time prediction and in scheduling
-future peptide measurements.  For regression calculated equations
+future peptide measurements. For regression calculated equations
 this value defaults to twice the standard deviation of the residuals,
 a range containing 95% of the regression values.</value>
   </data>

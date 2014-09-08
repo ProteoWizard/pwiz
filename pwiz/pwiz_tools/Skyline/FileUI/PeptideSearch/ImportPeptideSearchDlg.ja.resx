@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -133,18 +133,18 @@
     <value>3</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -160,52 +160,52 @@
     <value>2</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
-<value>&amp;次へ &gt;</value>
+    <value>次へ(&amp;N) &gt;</value>
   </data>
-  <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
+  <data name=">>btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
   </data>
-  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
+  <data name=">>btnNext.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
+  <data name=">>btnNext.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
+  <data name=">>btnNext.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
-<value>0</value>
+    <value>0</value>
   </data>
   <data name="cbMissedCleavages.Items1" xml:space="preserve">
-<value>1</value>
+    <value>1</value>
   </data>
   <data name="cbMissedCleavages.Items2" xml:space="preserve">
-<value>2</value>
+    <value>2</value>
   </data>
   <data name="cbMissedCleavages.Items3" xml:space="preserve">
-<value>3</value>
+    <value>3</value>
   </data>
   <data name="cbMissedCleavages.Items4" xml:space="preserve">
-<value>4</value>
+    <value>4</value>
   </data>
   <data name="cbMissedCleavages.Items5" xml:space="preserve">
-<value>5</value>
+    <value>5</value>
   </data>
   <data name="cbMissedCleavages.Items6" xml:space="preserve">
-<value>6</value>
+    <value>6</value>
   </data>
   <data name="cbMissedCleavages.Items7" xml:space="preserve">
-<value>7</value>
+    <value>7</value>
   </data>
   <data name="cbMissedCleavages.Items8" xml:space="preserve">
-<value>8</value>
+    <value>8</value>
   </data>
   <data name="cbMissedCleavages.Items9" xml:space="preserve">
-<value>9</value>
+    <value>9</value>
   </data>
   <data name="cbMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 95</value>
@@ -217,13 +217,13 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-<value>タンパク質消化時に、1 ペプチド内で許可される
+    <value>タンパク質消化時に、1 ペプチド内で許可される
 最大未切断サイト数です。</value>
   </data>
-  <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
+  <data name=">>cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
   </data>
-  <data name="&gt;&gt;cbMissedCleavages.Type" xml:space="preserve">
+  <data name=">>cbMissedCleavages.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
@@ -236,14 +236,14 @@
     <value>1</value>
   </data>
   <data name="comboEnzyme.ToolTip" xml:space="preserve">
-<value>質量分析計に注入するペプチドサンプルを調製するときに
+    <value>質量分析計に注入するペプチドサンプルを調製するときに
 使用したプロテアーゼ酵素
 </value>
   </data>
-  <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
+  <data name=">>comboEnzyme.Name" xml:space="preserve">
     <value>comboEnzyme</value>
   </data>
-  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
+  <data name=">>comboEnzyme.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
@@ -256,45 +256,45 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-<value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
+    <value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
 全タンパク質の
 処理済みFASTA配列情報です。</value>
   </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
+  <data name=">>comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
   </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
+  <data name=">>comboBackgroundProteome.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox1.Items" xml:space="preserve">
-<value>0</value>
+    <value>0</value>
   </data>
   <data name="comboBox1.Items1" xml:space="preserve">
-<value>1</value>
+    <value>1</value>
   </data>
   <data name="comboBox1.Items2" xml:space="preserve">
-<value>2</value>
+    <value>2</value>
   </data>
   <data name="comboBox1.Items3" xml:space="preserve">
-<value>3</value>
+    <value>3</value>
   </data>
   <data name="comboBox1.Items4" xml:space="preserve">
-<value>4</value>
+    <value>4</value>
   </data>
   <data name="comboBox1.Items5" xml:space="preserve">
-<value>5</value>
+    <value>5</value>
   </data>
   <data name="comboBox1.Items6" xml:space="preserve">
-<value>6</value>
+    <value>6</value>
   </data>
   <data name="comboBox1.Items7" xml:space="preserve">
-<value>7</value>
+    <value>7</value>
   </data>
   <data name="comboBox1.Items8" xml:space="preserve">
-<value>8</value>
+    <value>8</value>
   </data>
   <data name="comboBox1.Items9" xml:space="preserve">
-<value>9</value>
+    <value>9</value>
   </data>
   <data name="comboBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 95</value>
@@ -306,13 +306,13 @@
     <value>3</value>
   </data>
   <data name="comboBox1.ToolTip" xml:space="preserve">
-<value>タンパク質消化時に、1 ペプチド内で許可される
+    <value>タンパク質消化時に、1 ペプチド内で許可される
 最大未切断サイト数です。</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
+  <data name=">>comboBox1.Name" xml:space="preserve">
     <value>comboBox1</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
+  <data name=">>comboBox1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox2.Location" type="System.Drawing.Point, System.Drawing">
@@ -325,14 +325,14 @@
     <value>1</value>
   </data>
   <data name="comboBox2.ToolTip" xml:space="preserve">
-<value>質量分析計に注入するペプチドサンプルを調製するときに
+    <value>質量分析計に注入するペプチドサンプルを調製するときに
 使用したプロテアーゼ酵素
 </value>
   </data>
-  <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
+  <data name=">>comboBox2.Name" xml:space="preserve">
     <value>comboBox2</value>
   </data>
-  <data name="&gt;&gt;comboBox2.Type" xml:space="preserve">
+  <data name=">>comboBox2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox3.Location" type="System.Drawing.Point, System.Drawing">
@@ -345,14 +345,14 @@
     <value>5</value>
   </data>
   <data name="comboBox3.ToolTip" xml:space="preserve">
-<value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
+    <value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
 全タンパク質の
 処理済みFASTA配列情報です。</value>
   </data>
-  <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
+  <data name=">>comboBox3.Name" xml:space="preserve">
     <value>comboBox3</value>
   </data>
-  <data name="&gt;&gt;comboBox3.Type" xml:space="preserve">
+  <data name=">>comboBox3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -368,12 +368,12 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>最大未切断サイト数(&amp;M)：</value>
+    <value>最大未切断サイト数(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+  <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name=">>label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -389,12 +389,12 @@
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-<value>酵素(&amp;E)：</value>
+    <value>酵素(&amp;E)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+  <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name=">>label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label15.AutoSize" type="System.Boolean, mscorlib">
@@ -410,12 +410,12 @@
     <value>4</value>
   </data>
   <data name="label15.Text" xml:space="preserve">
-<value>バックグラウンドプロテオーム(&amp;B)：</value>
+    <value>バックグラウンドプロテオーム(&amp;B)：</value>
   </data>
-  <data name="&gt;&gt;label15.Name" xml:space="preserve">
+  <data name=">>label15.Name" xml:space="preserve">
     <value>label15</value>
   </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
+  <data name=">>label15.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -431,12 +431,12 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>最大未切断サイト数(&amp;M)：</value>
+    <value>最大未切断サイト数(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+  <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+  <data name=">>label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
@@ -452,12 +452,12 @@
     <value>0</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-<value>酵素(&amp;E)：</value>
+    <value>酵素(&amp;E)：</value>
   </data>
-  <data name="&gt;&gt;label8.Name" xml:space="preserve">
+  <data name=">>label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+  <data name=">>label8.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
@@ -473,12 +473,12 @@
     <value>4</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-<value>バックグラウンドプロテオーム(&amp;B)：</value>
+    <value>バックグラウンドプロテオーム(&amp;B)：</value>
   </data>
-  <data name="&gt;&gt;label9.Name" xml:space="preserve">
+  <data name=">>label9.Name" xml:space="preserve">
     <value>label9</value>
   </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+  <data name=">>label9.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnEarlyFinish.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -497,18 +497,18 @@
     <value>1</value>
   </data>
   <data name="btnEarlyFinish.Text" xml:space="preserve">
-<value>完了(&amp;F)</value>
+    <value>完了(&amp;F)</value>
   </data>
-  <data name="&gt;&gt;btnEarlyFinish.Name" xml:space="preserve">
+  <data name=">>btnEarlyFinish.Name" xml:space="preserve">
     <value>btnEarlyFinish</value>
   </data>
-  <data name="&gt;&gt;btnEarlyFinish.Type" xml:space="preserve">
+  <data name=">>btnEarlyFinish.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnEarlyFinish.Parent" xml:space="preserve">
+  <data name=">>btnEarlyFinish.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnEarlyFinish.ZOrder" xml:space="preserve">
+  <data name=">>btnEarlyFinish.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -533,18 +533,18 @@
     <value>0</value>
   </data>
   <data name="label14.Text" xml:space="preserve">
-<value>スペクトルライブラリを構築</value>
+    <value>スペクトルライブラリを構築</value>
   </data>
-  <data name="&gt;&gt;label14.Name" xml:space="preserve">
+  <data name=">>label14.Name" xml:space="preserve">
     <value>label14</value>
   </data>
-  <data name="&gt;&gt;label14.Type" xml:space="preserve">
+  <data name=">>label14.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label14.Parent" xml:space="preserve">
+  <data name=">>label14.Parent" xml:space="preserve">
     <value>buildSpectralLibraryTitlePanel</value>
   </data>
-  <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
+  <data name=">>label14.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="buildSpectralLibraryTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -559,16 +559,16 @@
   <data name="buildSpectralLibraryTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Name" xml:space="preserve">
+  <data name=">>buildSpectralLibraryTitlePanel.Name" xml:space="preserve">
     <value>buildSpectralLibraryTitlePanel</value>
   </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Type" xml:space="preserve">
+  <data name=">>buildSpectralLibraryTitlePanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Parent" xml:space="preserve">
+  <data name=">>buildSpectralLibraryTitlePanel.Parent" xml:space="preserve">
     <value>buildSearchSpecLibPage</value>
   </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.ZOrder" xml:space="preserve">
+  <data name=">>buildSpectralLibraryTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="buildSearchSpecLibPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -584,18 +584,18 @@
     <value>0</value>
   </data>
   <data name="buildSearchSpecLibPage.Text" xml:space="preserve">
-<value>1</value>
+    <value>1</value>
   </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.Name" xml:space="preserve">
+  <data name=">>buildSearchSpecLibPage.Name" xml:space="preserve">
     <value>buildSearchSpecLibPage</value>
   </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.Type" xml:space="preserve">
+  <data name=">>buildSearchSpecLibPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.Parent" xml:space="preserve">
+  <data name=">>buildSearchSpecLibPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.ZOrder" xml:space="preserve">
+  <data name=">>buildSearchSpecLibPage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
@@ -614,18 +614,18 @@
     <value>0</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
-<value>クロマトグラムを抽出</value>
+    <value>クロマトグラムを抽出</value>
   </data>
-  <data name="&gt;&gt;label20.Name" xml:space="preserve">
+  <data name=">>label20.Name" xml:space="preserve">
     <value>label20</value>
   </data>
-  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+  <data name=">>label20.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
+  <data name=">>label20.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
+  <data name=">>label20.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -640,16 +640,16 @@
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+  <data name=">>panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+  <data name=">>panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name=">>panel1.Parent" xml:space="preserve">
     <value>getChromatogramsPage</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name=">>panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="getChromatogramsPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -665,18 +665,18 @@
     <value>1</value>
   </data>
   <data name="getChromatogramsPage.Text" xml:space="preserve">
-<value>2</value>
+    <value>2</value>
   </data>
-  <data name="&gt;&gt;getChromatogramsPage.Name" xml:space="preserve">
+  <data name=">>getChromatogramsPage.Name" xml:space="preserve">
     <value>getChromatogramsPage</value>
   </data>
-  <data name="&gt;&gt;getChromatogramsPage.Type" xml:space="preserve">
+  <data name=">>getChromatogramsPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;getChromatogramsPage.Parent" xml:space="preserve">
+  <data name=">>getChromatogramsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="&gt;&gt;getChromatogramsPage.ZOrder" xml:space="preserve">
+  <data name=">>getChromatogramsPage.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label16.AutoSize" type="System.Boolean, mscorlib">
@@ -695,18 +695,18 @@
     <value>0</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-<value>修飾を追加</value>
+    <value>修飾を追加</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
+  <data name=">>label16.Name" xml:space="preserve">
     <value>label16</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name=">>label16.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name=">>label16.Parent" xml:space="preserve">
     <value>addModsTitlePanel</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name=">>label16.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="addModsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -721,16 +721,16 @@
   <data name="addModsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;addModsTitlePanel.Name" xml:space="preserve">
+  <data name=">>addModsTitlePanel.Name" xml:space="preserve">
     <value>addModsTitlePanel</value>
   </data>
-  <data name="&gt;&gt;addModsTitlePanel.Type" xml:space="preserve">
+  <data name=">>addModsTitlePanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;addModsTitlePanel.Parent" xml:space="preserve">
+  <data name=">>addModsTitlePanel.Parent" xml:space="preserve">
     <value>matchModificationsPage</value>
   </data>
-  <data name="&gt;&gt;addModsTitlePanel.ZOrder" xml:space="preserve">
+  <data name=">>addModsTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="matchModificationsPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -746,18 +746,18 @@
     <value>3</value>
   </data>
   <data name="matchModificationsPage.Text" xml:space="preserve">
-<value>3</value>
+    <value>3</value>
   </data>
-  <data name="&gt;&gt;matchModificationsPage.Name" xml:space="preserve">
+  <data name=">>matchModificationsPage.Name" xml:space="preserve">
     <value>matchModificationsPage</value>
   </data>
-  <data name="&gt;&gt;matchModificationsPage.Type" xml:space="preserve">
+  <data name=">>matchModificationsPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;matchModificationsPage.Parent" xml:space="preserve">
+  <data name=">>matchModificationsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="&gt;&gt;matchModificationsPage.ZOrder" xml:space="preserve">
+  <data name=">>matchModificationsPage.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label19.AutoSize" type="System.Boolean, mscorlib">
@@ -776,18 +776,18 @@
     <value>0</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-<value>MS1 フルスキャン設定を指定</value>
+    <value>MS1 フルスキャン設定を指定</value>
   </data>
-  <data name="&gt;&gt;label19.Name" xml:space="preserve">
+  <data name=">>label19.Name" xml:space="preserve">
     <value>label19</value>
   </data>
-  <data name="&gt;&gt;label19.Type" xml:space="preserve">
+  <data name=">>label19.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
+  <data name=">>label19.Parent" xml:space="preserve">
     <value>ms1FullScanSettingsTitlePanel</value>
   </data>
-  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
+  <data name=">>label19.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="ms1FullScanSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -802,16 +802,16 @@
   <data name="ms1FullScanSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Name" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsTitlePanel.Name" xml:space="preserve">
     <value>ms1FullScanSettingsTitlePanel</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Type" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsTitlePanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Parent" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsTitlePanel.Parent" xml:space="preserve">
     <value>ms1FullScanSettingsPage</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.ZOrder" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="ms1FullScanSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -827,18 +827,18 @@
     <value>5</value>
   </data>
   <data name="ms1FullScanSettingsPage.Text" xml:space="preserve">
-<value>4</value>
+    <value>4</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.Name" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsPage.Name" xml:space="preserve">
     <value>ms1FullScanSettingsPage</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.Type" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.Parent" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
+  <data name=">>ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
@@ -854,18 +854,18 @@
     <value>0</value>
   </data>
   <data name="lblFasta.Text" xml:space="preserve">
-<value>FASTA をインポート</value>
+    <value>FASTAをインポート</value>
   </data>
-  <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
+  <data name=">>lblFasta.Name" xml:space="preserve">
     <value>lblFasta</value>
   </data>
-  <data name="&gt;&gt;lblFasta.Type" xml:space="preserve">
+  <data name=">>lblFasta.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
+  <data name=">>lblFasta.Parent" xml:space="preserve">
     <value>importFASTATitlePanel</value>
   </data>
-  <data name="&gt;&gt;lblFasta.ZOrder" xml:space="preserve">
+  <data name=">>lblFasta.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="importFASTATitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -880,16 +880,16 @@
   <data name="importFASTATitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;importFASTATitlePanel.Name" xml:space="preserve">
+  <data name=">>importFASTATitlePanel.Name" xml:space="preserve">
     <value>importFASTATitlePanel</value>
   </data>
-  <data name="&gt;&gt;importFASTATitlePanel.Type" xml:space="preserve">
+  <data name=">>importFASTATitlePanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;importFASTATitlePanel.Parent" xml:space="preserve">
+  <data name=">>importFASTATitlePanel.Parent" xml:space="preserve">
     <value>importFastaPage</value>
   </data>
-  <data name="&gt;&gt;importFASTATitlePanel.ZOrder" xml:space="preserve">
+  <data name=">>importFASTATitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="importFastaPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -905,18 +905,18 @@
     <value>4</value>
   </data>
   <data name="importFastaPage.Text" xml:space="preserve">
-<value>5</value>
+    <value>5</value>
   </data>
-  <data name="&gt;&gt;importFastaPage.Name" xml:space="preserve">
+  <data name=">>importFastaPage.Name" xml:space="preserve">
     <value>importFastaPage</value>
   </data>
-  <data name="&gt;&gt;importFastaPage.Type" xml:space="preserve">
+  <data name=">>importFastaPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;importFastaPage.Parent" xml:space="preserve">
+  <data name=">>importFastaPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="&gt;&gt;importFastaPage.ZOrder" xml:space="preserve">
+  <data name=">>importFastaPage.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
@@ -928,16 +928,16 @@
   <data name="wizardPagesImportPeptideSearch.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Name" xml:space="preserve">
+  <data name=">>wizardPagesImportPeptideSearch.Name" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
+  <data name=">>wizardPagesImportPeptideSearch.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
+  <data name=">>wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.ZOrder" xml:space="preserve">
+  <data name=">>wizardPagesImportPeptideSearch.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -959,18 +959,18 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>ペプチド検索をインポート</value>
+    <value>ペプチド検索をインポート</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+  <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+  <data name=">>helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ImportPeptideSearchDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

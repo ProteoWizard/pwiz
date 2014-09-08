@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -133,18 +133,18 @@
     <value>6</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -160,18 +160,18 @@
     <value>5</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -187,18 +187,18 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>線幅(&amp;L)：</value>
+    <value>線幅(&amp;L)：</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+  <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name=">>label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name=">>label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name=">>label3.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textLineWidth.Location" type="System.Drawing.Point, System.Drawing">
@@ -210,16 +210,16 @@
   <data name="textLineWidth.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;textLineWidth.Name" xml:space="preserve">
+  <data name=">>textLineWidth.Name" xml:space="preserve">
     <value>textLineWidth</value>
   </data>
-  <data name="&gt;&gt;textLineWidth.Type" xml:space="preserve">
+  <data name=">>textLineWidth.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textLineWidth.Parent" xml:space="preserve">
+  <data name=">>textLineWidth.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textLineWidth.ZOrder" xml:space="preserve">
+  <data name=">>textLineWidth.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="textFontSize.Location" type="System.Drawing.Point, System.Drawing">
@@ -231,16 +231,16 @@
   <data name="textFontSize.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;textFontSize.Name" xml:space="preserve">
+  <data name=">>textFontSize.Name" xml:space="preserve">
     <value>textFontSize</value>
   </data>
-  <data name="&gt;&gt;textFontSize.Type" xml:space="preserve">
+  <data name=">>textFontSize.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textFontSize.Parent" xml:space="preserve">
+  <data name=">>textFontSize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textFontSize.ZOrder" xml:space="preserve">
+  <data name=">>textFontSize.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -256,18 +256,18 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>フォントサイズ(&amp;F)：</value>
+    <value>フォントサイズ(&amp;F)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textTimeRange.Location" type="System.Drawing.Point, System.Drawing">
@@ -279,16 +279,16 @@
   <data name="textTimeRange.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;textTimeRange.Name" xml:space="preserve">
+  <data name=">>textTimeRange.Name" xml:space="preserve">
     <value>textTimeRange</value>
   </data>
-  <data name="&gt;&gt;textTimeRange.Type" xml:space="preserve">
+  <data name=">>textTimeRange.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textTimeRange.Parent" xml:space="preserve">
+  <data name=">>textTimeRange.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;textTimeRange.ZOrder" xml:space="preserve">
+  <data name=">>textTimeRange.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -304,18 +304,18 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>最良ピーク時間範囲(&amp;B)：</value>
+    <value>最良ピーク時間範囲(&amp;B)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="labelTimeUnits.AutoSize" type="System.Boolean, mscorlib">
@@ -331,57 +331,57 @@
     <value>2</value>
   </data>
   <data name="labelTimeUnits.Text" xml:space="preserve">
-<value>分</value>
+    <value>分</value>
   </data>
-  <data name="&gt;&gt;labelTimeUnits.Name" xml:space="preserve">
+  <data name=">>labelTimeUnits.Name" xml:space="preserve">
     <value>labelTimeUnits</value>
   </data>
-  <data name="&gt;&gt;labelTimeUnits.Type" xml:space="preserve">
+  <data name=">>labelTimeUnits.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelTimeUnits.Parent" xml:space="preserve">
+  <data name=">>labelTimeUnits.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;labelTimeUnits.ZOrder" xml:space="preserve">
+  <data name=">>labelTimeUnits.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;cbRelative.Name" xml:space="preserve">
+  <data name=">>cbRelative.Name" xml:space="preserve">
     <value>cbRelative</value>
   </data>
-  <data name="&gt;&gt;cbRelative.Type" xml:space="preserve">
+  <data name=">>cbRelative.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbRelative.Parent" xml:space="preserve">
+  <data name=">>cbRelative.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;cbRelative.ZOrder" xml:space="preserve">
+  <data name=">>cbRelative.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.Name" xml:space="preserve">
+  <data name=">>textMaxIntensity.Name" xml:space="preserve">
     <value>textMaxIntensity</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.Type" xml:space="preserve">
+  <data name=">>textMaxIntensity.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.Parent" xml:space="preserve">
+  <data name=">>textMaxIntensity.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.ZOrder" xml:space="preserve">
+  <data name=">>textMaxIntensity.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+  <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name=">>label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+  <data name=">>label5.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+  <data name=">>label5.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
@@ -394,18 +394,18 @@
     <value>4</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-<value>グラフ領域面積(&amp;G)：</value>
+    <value>グラフ領域面積(&amp;G)：</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+  <data name=">>groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+  <data name=">>groupBox1.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+  <data name=">>groupBox1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+  <data name=">>groupBox1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="cbRelative.AutoSize" type="System.Boolean, mscorlib">
@@ -421,18 +421,18 @@
     <value>5</value>
   </data>
   <data name="cbRelative.Text" xml:space="preserve">
-<value>相対ピーク幅(&amp;P)</value>
+    <value>相対ピーク幅(&amp;P)</value>
   </data>
-  <data name="&gt;&gt;cbRelative.Name" xml:space="preserve">
+  <data name=">>cbRelative.Name" xml:space="preserve">
     <value>cbRelative</value>
   </data>
-  <data name="&gt;&gt;cbRelative.Type" xml:space="preserve">
+  <data name=">>cbRelative.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbRelative.Parent" xml:space="preserve">
+  <data name=">>cbRelative.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;cbRelative.ZOrder" xml:space="preserve">
+  <data name=">>cbRelative.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="textMaxIntensity.Location" type="System.Drawing.Point, System.Drawing">
@@ -444,16 +444,16 @@
   <data name="textMaxIntensity.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.Name" xml:space="preserve">
+  <data name=">>textMaxIntensity.Name" xml:space="preserve">
     <value>textMaxIntensity</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.Type" xml:space="preserve">
+  <data name=">>textMaxIntensity.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.Parent" xml:space="preserve">
+  <data name=">>textMaxIntensity.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;textMaxIntensity.ZOrder" xml:space="preserve">
+  <data name=">>textMaxIntensity.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -469,18 +469,18 @@
     <value>3</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-<value>最大強度(&amp;M)：</value>
+    <value>最大強度(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+  <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name=">>label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+  <data name=">>label5.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+  <data name=">>label5.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="cbShowOverlappingLabels.AutoSize" type="System.Boolean, mscorlib">
@@ -496,18 +496,18 @@
     <value>7</value>
   </data>
   <data name="cbShowOverlappingLabels.Text" xml:space="preserve">
-<value>重複ラベルを表示</value>
+    <value>重複ラベルを表示</value>
   </data>
-  <data name="&gt;&gt;cbShowOverlappingLabels.Name" xml:space="preserve">
+  <data name=">>cbShowOverlappingLabels.Name" xml:space="preserve">
     <value>cbShowOverlappingLabels</value>
   </data>
-  <data name="&gt;&gt;cbShowOverlappingLabels.Type" xml:space="preserve">
+  <data name=">>cbShowOverlappingLabels.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbShowOverlappingLabels.Parent" xml:space="preserve">
+  <data name=">>cbShowOverlappingLabels.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbShowOverlappingLabels.ZOrder" xml:space="preserve">
+  <data name=">>cbShowOverlappingLabels.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="cbShowMultiplePeptides.AutoSize" type="System.Boolean, mscorlib">
@@ -526,18 +526,18 @@
     <value>8</value>
   </data>
   <data name="cbShowMultiplePeptides.Text" xml:space="preserve">
-<value>複数ペプチドを表示</value>
+    <value>複数ペプチドを表示</value>
   </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.Name" xml:space="preserve">
+  <data name=">>cbShowMultiplePeptides.Name" xml:space="preserve">
     <value>cbShowMultiplePeptides</value>
   </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.Type" xml:space="preserve">
+  <data name=">>cbShowMultiplePeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.Parent" xml:space="preserve">
+  <data name=">>cbShowMultiplePeptides.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.ZOrder" xml:space="preserve">
+  <data name=">>cbShowMultiplePeptides.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -553,12 +553,12 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>クロマトグラムグラフのプロパティ</value>
+    <value>クロマトグラムグラフのプロパティ</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ChromChartPropertyDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

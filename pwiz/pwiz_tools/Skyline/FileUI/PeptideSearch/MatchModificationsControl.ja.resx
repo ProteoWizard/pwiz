@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -132,16 +132,16 @@
   <data name="modificationsListBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;modificationsListBox.Name" xml:space="preserve">
+  <data name=">>modificationsListBox.Name" xml:space="preserve">
     <value>modificationsListBox</value>
   </data>
-  <data name="&gt;&gt;modificationsListBox.Type" xml:space="preserve">
+  <data name=">>modificationsListBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;modificationsListBox.Parent" xml:space="preserve">
+  <data name=">>modificationsListBox.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
-  <data name="&gt;&gt;modificationsListBox.ZOrder" xml:space="preserve">
+  <data name=">>modificationsListBox.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelModifications.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -157,18 +157,18 @@
     <value>0</value>
   </data>
   <data name="labelModifications.Text" xml:space="preserve">
-<value>インポートされた検索結果には、以下に示す修飾が含まれているようです。ドキュメントに追加したいものを選択してください。</value>
+    <value>インポートされた検索結果には、以下に示す修飾が含まれているようです。ドキュメントに追加したいものを選択してください。</value>
   </data>
-  <data name="&gt;&gt;labelModifications.Name" xml:space="preserve">
+  <data name=">>labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>
   </data>
-  <data name="&gt;&gt;labelModifications.Type" xml:space="preserve">
+  <data name=">>labelModifications.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelModifications.Parent" xml:space="preserve">
+  <data name=">>labelModifications.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
-  <data name="&gt;&gt;labelModifications.ZOrder" xml:space="preserve">
+  <data name=">>labelModifications.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="unmatchedListBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -183,16 +183,16 @@
   <data name="unmatchedListBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;unmatchedListBox.Name" xml:space="preserve">
+  <data name=">>unmatchedListBox.Name" xml:space="preserve">
     <value>unmatchedListBox</value>
   </data>
-  <data name="&gt;&gt;unmatchedListBox.Type" xml:space="preserve">
+  <data name=">>unmatchedListBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;unmatchedListBox.Parent" xml:space="preserve">
+  <data name=">>unmatchedListBox.Parent" xml:space="preserve">
     <value>splitContainer.Panel2</value>
   </data>
-  <data name="&gt;&gt;unmatchedListBox.ZOrder" xml:space="preserve">
+  <data name=">>unmatchedListBox.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -223,30 +223,30 @@
     <value>2</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-<value>すべて選択/選択解除(&amp;A)</value>
+    <value>すべて選択/選択解除(&amp;A)</value>
   </data>
-  <data name="&gt;&gt;cbSelectAll.Name" xml:space="preserve">
+  <data name=">>cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>
   </data>
-  <data name="&gt;&gt;cbSelectAll.Type" xml:space="preserve">
+  <data name=">>cbSelectAll.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbSelectAll.Parent" xml:space="preserve">
+  <data name=">>cbSelectAll.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
-  <data name="&gt;&gt;cbSelectAll.ZOrder" xml:space="preserve">
+  <data name=">>cbSelectAll.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
+  <data name=">>splitContainer.Panel1.Name" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel1.Type" xml:space="preserve">
+  <data name=">>splitContainer.Panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel1.Parent" xml:space="preserve">
+  <data name=">>splitContainer.Panel1.Parent" xml:space="preserve">
     <value>splitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel1.ZOrder" xml:space="preserve">
+  <data name=">>splitContainer.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -262,30 +262,30 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>次の修飾を解釈できませんでした。</value>
+    <value>次の修飾を解釈できませんでした。</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>splitContainer.Panel2</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel2.Name" xml:space="preserve">
+  <data name=">>splitContainer.Panel2.Name" xml:space="preserve">
     <value>splitContainer.Panel2</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel2.Type" xml:space="preserve">
+  <data name=">>splitContainer.Panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel2.Parent" xml:space="preserve">
+  <data name=">>splitContainer.Panel2.Parent" xml:space="preserve">
     <value>splitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Panel2.ZOrder" xml:space="preserve">
+  <data name=">>splitContainer.Panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainer.Size" type="System.Drawing.Size, System.Drawing">
@@ -297,16 +297,16 @@
   <data name="splitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Name" xml:space="preserve">
+  <data name=">>splitContainer.Name" xml:space="preserve">
     <value>splitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Type" xml:space="preserve">
+  <data name=">>splitContainer.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Parent" xml:space="preserve">
+  <data name=">>splitContainer.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;splitContainer.ZOrder" xml:space="preserve">
+  <data name=">>splitContainer.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnAddModification.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -322,18 +322,18 @@
     <value>1</value>
   </data>
   <data name="btnAddModification.Text" xml:space="preserve">
-<value>修飾を追加(&amp;M)...</value>
+    <value>修飾を追加(&amp;M)...</value>
   </data>
-  <data name="&gt;&gt;btnAddModification.Name" xml:space="preserve">
+  <data name=">>btnAddModification.Name" xml:space="preserve">
     <value>btnAddModification</value>
   </data>
-  <data name="&gt;&gt;btnAddModification.Type" xml:space="preserve">
+  <data name=">>btnAddModification.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAddModification.Parent" xml:space="preserve">
+  <data name=">>btnAddModification.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnAddModification.ZOrder" xml:space="preserve">
+  <data name=">>btnAddModification.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <metadata name="menuAddModification.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -343,21 +343,21 @@
     <value>229, 22</value>
   </data>
   <data name="menuItemAddStructuralModification.Text" xml:space="preserve">
-<value>構造修飾を追加(&amp;S)...</value>
+    <value>構造修飾を追加(&amp;S)...</value>
   </data>
   <data name="menuItemAddHeavyModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 22</value>
   </data>
   <data name="menuItemAddHeavyModification.Text" xml:space="preserve">
-<value>安定同位体修飾を追加(&amp;H)...</value>
+    <value>安定同位体修飾を追加(&amp;H)...</value>
   </data>
   <data name="menuAddModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>230, 48</value>
   </data>
-  <data name="&gt;&gt;menuAddModification.Name" xml:space="preserve">
+  <data name=">>menuAddModification.Name" xml:space="preserve">
     <value>menuAddModification</value>
   </data>
-  <data name="&gt;&gt;menuAddModification.Type" xml:space="preserve">
+  <data name=">>menuAddModification.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -369,22 +369,22 @@
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 315</value>
   </data>
-  <data name="&gt;&gt;menuItemAddStructuralModification.Name" xml:space="preserve">
+  <data name=">>menuItemAddStructuralModification.Name" xml:space="preserve">
     <value>menuItemAddStructuralModification</value>
   </data>
-  <data name="&gt;&gt;menuItemAddStructuralModification.Type" xml:space="preserve">
+  <data name=">>menuItemAddStructuralModification.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;menuItemAddHeavyModification.Name" xml:space="preserve">
+  <data name=">>menuItemAddHeavyModification.Name" xml:space="preserve">
     <value>menuItemAddHeavyModification</value>
   </data>
-  <data name="&gt;&gt;menuItemAddHeavyModification.Type" xml:space="preserve">
+  <data name=">>menuItemAddHeavyModification.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>MatchModificationsControl</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

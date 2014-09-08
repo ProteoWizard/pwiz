@@ -383,8 +383,8 @@ of the redundant library data.</value>
   </data>
   <data name="textAuthority.ToolTip" xml:space="preserve">
     <value>This value is used in an LSID which uniquely identifies
-this library.  It should be something no other lab would
-use, like a DNS name for the lab web server.  Or at least
+this library. It should be something no other lab would
+use, like a DNS name for the lab web server. Or at least
 it should look like one. e.g.
 
 proteome.gs.washington.edu
@@ -413,7 +413,7 @@ tabb.vanderbilt.edu</value>
   </data>
   <data name="textID.ToolTip" xml:space="preserve">
     <value>This value is used in an LSID which uniquely identifies
-this library.  It should be chosen to be unique among
+this library. It should be chosen to be unique among
 all libraries created within the Lab Authority you have
 chosen. e.g.
 

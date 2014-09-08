@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -139,18 +139,18 @@
     <value>0</value>
   </data>
   <data name="btnNavFirst.Text" xml:space="preserve">
-<value>|&lt;</value>
+    <value>|&lt;</value>
   </data>
-  <data name="&gt;&gt;btnNavFirst.Name" xml:space="preserve">
+  <data name=">>btnNavFirst.Name" xml:space="preserve">
     <value>btnNavFirst</value>
   </data>
-  <data name="&gt;&gt;btnNavFirst.Type" xml:space="preserve">
+  <data name=">>btnNavFirst.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnNavFirst.Parent" xml:space="preserve">
+  <data name=">>btnNavFirst.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnNavFirst.ZOrder" xml:space="preserve">
+  <data name=">>btnNavFirst.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnNavPrev.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -171,16 +171,16 @@
   <data name="btnNavPrev.Text" xml:space="preserve">
     <value>&lt;</value>
   </data>
-  <data name="&gt;&gt;btnNavPrev.Name" xml:space="preserve">
+  <data name=">>btnNavPrev.Name" xml:space="preserve">
     <value>btnNavPrev</value>
   </data>
-  <data name="&gt;&gt;btnNavPrev.Type" xml:space="preserve">
+  <data name=">>btnNavPrev.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnNavPrev.Parent" xml:space="preserve">
+  <data name=">>btnNavPrev.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnNavPrev.ZOrder" xml:space="preserve">
+  <data name=">>btnNavPrev.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="tbxRecordNumber.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -199,18 +199,18 @@
     <value>2</value>
   </data>
   <data name="tbxRecordNumber.Text" xml:space="preserve">
-<value>####### / #######</value>
+    <value>####### / #######</value>
   </data>
-  <data name="&gt;&gt;tbxRecordNumber.Name" xml:space="preserve">
+  <data name=">>tbxRecordNumber.Name" xml:space="preserve">
     <value>tbxRecordNumber</value>
   </data>
-  <data name="&gt;&gt;tbxRecordNumber.Type" xml:space="preserve">
+  <data name=">>tbxRecordNumber.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbxRecordNumber.Parent" xml:space="preserve">
+  <data name=">>tbxRecordNumber.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;tbxRecordNumber.ZOrder" xml:space="preserve">
+  <data name=">>tbxRecordNumber.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -229,21 +229,21 @@
     <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>レコード：</value>
+    <value>レコード：</value>
   </data>
   <data name="label1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnNavNext.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -264,16 +264,16 @@
   <data name="btnNavNext.Text" xml:space="preserve">
     <value>&gt;</value>
   </data>
-  <data name="&gt;&gt;btnNavNext.Name" xml:space="preserve">
+  <data name=">>btnNavNext.Name" xml:space="preserve">
     <value>btnNavNext</value>
   </data>
-  <data name="&gt;&gt;btnNavNext.Type" xml:space="preserve">
+  <data name=">>btnNavNext.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnNavNext.Parent" xml:space="preserve">
+  <data name=">>btnNavNext.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnNavNext.ZOrder" xml:space="preserve">
+  <data name=">>btnNavNext.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="btnNavLast.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -292,18 +292,18 @@
     <value>5</value>
   </data>
   <data name="btnNavLast.Text" xml:space="preserve">
-<value>&gt;|</value>
+    <value>&gt;|</value>
   </data>
-  <data name="&gt;&gt;btnNavLast.Name" xml:space="preserve">
+  <data name=">>btnNavLast.Name" xml:space="preserve">
     <value>btnNavLast</value>
   </data>
-  <data name="&gt;&gt;btnNavLast.Type" xml:space="preserve">
+  <data name=">>btnNavLast.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnNavLast.Parent" xml:space="preserve">
+  <data name=">>btnNavLast.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;btnNavLast.ZOrder" xml:space="preserve">
+  <data name=">>btnNavLast.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -322,21 +322,21 @@
     <value>7</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>フィルタ：</value>
+    <value>フィルタ：</value>
   </data>
   <data name="label2.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="findBox.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -354,16 +354,16 @@
   <data name="findBox.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
-  <data name="&gt;&gt;findBox.Name" xml:space="preserve">
+  <data name=">>findBox.Name" xml:space="preserve">
     <value>findBox</value>
   </data>
-  <data name="&gt;&gt;findBox.Type" xml:space="preserve">
+  <data name=">>findBox.Type" xml:space="preserve">
     <value>pwiz.Common.Controls.FindBox, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;findBox.Parent" xml:space="preserve">
+  <data name=">>findBox.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;findBox.ZOrder" xml:space="preserve">
+  <data name=">>findBox.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="lblFilteredFrom.AutoSize" type="System.Boolean, mscorlib">
@@ -382,21 +382,21 @@
     <value>9</value>
   </data>
   <data name="lblFilteredFrom.Text" xml:space="preserve">
-<value>(########からフィルタ)</value>
+    <value>(########からフィルタ)</value>
   </data>
   <data name="lblFilteredFrom.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
   </data>
-  <data name="&gt;&gt;lblFilteredFrom.Name" xml:space="preserve">
+  <data name=">>lblFilteredFrom.Name" xml:space="preserve">
     <value>lblFilteredFrom</value>
   </data>
-  <data name="&gt;&gt;lblFilteredFrom.Type" xml:space="preserve">
+  <data name=">>lblFilteredFrom.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblFilteredFrom.Parent" xml:space="preserve">
+  <data name=">>lblFilteredFrom.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;lblFilteredFrom.ZOrder" xml:space="preserve">
+  <data name=">>lblFilteredFrom.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -414,16 +414,16 @@
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
+  <data name=">>tableLayoutPanel1.Name" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Type" xml:space="preserve">
+  <data name=">>tableLayoutPanel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Parent" xml:space="preserve">
+  <data name=">>tableLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
+  <data name=">>tableLayoutPanel1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
@@ -441,16 +441,16 @@
   <data name="navBar1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;navBar1.Name" xml:space="preserve">
+  <data name=">>navBar1.Name" xml:space="preserve">
     <value>navBar1</value>
   </data>
-  <data name="&gt;&gt;navBar1.Type" xml:space="preserve">
+  <data name=">>navBar1.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.NavBar, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;navBar1.Parent" xml:space="preserve">
+  <data name=">>navBar1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;navBar1.ZOrder" xml:space="preserve">
+  <data name=">>navBar1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="navBar2.AutoSize" type="System.Boolean, mscorlib">
@@ -465,16 +465,16 @@
   <data name="navBar2.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;navBar2.Name" xml:space="preserve">
+  <data name=">>navBar2.Name" xml:space="preserve">
     <value>navBar2</value>
   </data>
-  <data name="&gt;&gt;navBar2.Type" xml:space="preserve">
+  <data name=">>navBar2.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.NavBar, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;navBar2.Parent" xml:space="preserve">
+  <data name=">>navBar2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;navBar2.ZOrder" xml:space="preserve">
+  <data name=">>navBar2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -486,10 +486,10 @@
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>667, 21</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>RecordNavBar</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

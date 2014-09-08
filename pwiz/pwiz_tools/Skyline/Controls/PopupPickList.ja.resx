@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -132,7 +132,7 @@
     <value>29, 20</value>
   </data>
   <data name="tbbOk.ToolTipText" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
   <data name="tbbCancel.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -141,7 +141,7 @@
     <value>29, 20</value>
   </data>
   <data name="tbbCancel.ToolTipText" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>29, 6</value>
@@ -153,7 +153,7 @@
     <value>29, 20</value>
   </data>
   <data name="tbbFilter.ToolTipText" xml:space="preserve">
-<value>フィルタ</value>
+    <value>フィルタ</value>
   </data>
   <data name="tbbAutoManageChildren.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -171,7 +171,7 @@
     <value>29, 20</value>
   </data>
   <data name="tbbFind.ToolTipText" xml:space="preserve">
-<value>検索(Ctrl + F)</value>
+    <value>検索(Ctrl + F)</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -184,18 +184,18 @@
     <value>3</value>
   </data>
   <data name="toolStrip1.Text" xml:space="preserve">
-<value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
   </data>
-  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+  <data name=">>toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name=">>toolStrip1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
+  <data name=">>toolStrip1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
+  <data name=">>toolStrip1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="cbItems.AutoSize" type="System.Boolean, mscorlib">
@@ -214,18 +214,18 @@
     <value>1</value>
   </data>
   <data name="cbItems.Text" xml:space="preserve">
-<value>アイテム</value>
+    <value>アイテム</value>
   </data>
-  <data name="&gt;&gt;cbItems.Name" xml:space="preserve">
+  <data name=">>cbItems.Name" xml:space="preserve">
     <value>cbItems</value>
   </data>
-  <data name="&gt;&gt;cbItems.Type" xml:space="preserve">
+  <data name=">>cbItems.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbItems.Parent" xml:space="preserve">
+  <data name=">>cbItems.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbItems.ZOrder" xml:space="preserve">
+  <data name=">>cbItems.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="textSearch.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -243,16 +243,16 @@
   <data name="textSearch.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="&gt;&gt;textSearch.Name" xml:space="preserve">
+  <data name=">>textSearch.Name" xml:space="preserve">
     <value>textSearch</value>
   </data>
-  <data name="&gt;&gt;textSearch.Type" xml:space="preserve">
+  <data name=">>textSearch.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textSearch.Parent" xml:space="preserve">
+  <data name=">>textSearch.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textSearch.ZOrder" xml:space="preserve">
+  <data name=">>textSearch.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="cbSynchronize.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -271,18 +271,18 @@
     <value>4</value>
   </data>
   <data name="cbSynchronize.Text" xml:space="preserve">
-<value>同期</value>
+    <value>同期</value>
   </data>
-  <data name="&gt;&gt;cbSynchronize.Name" xml:space="preserve">
+  <data name=">>cbSynchronize.Name" xml:space="preserve">
     <value>cbSynchronize</value>
   </data>
-  <data name="&gt;&gt;cbSynchronize.Type" xml:space="preserve">
+  <data name=">>cbSynchronize.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbSynchronize.Parent" xml:space="preserve">
+  <data name=">>cbSynchronize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbSynchronize.ZOrder" xml:space="preserve">
+  <data name=">>cbSynchronize.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="pickListMulti.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -300,16 +300,16 @@
   <data name="pickListMulti.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;pickListMulti.Name" xml:space="preserve">
+  <data name=">>pickListMulti.Name" xml:space="preserve">
     <value>pickListMulti</value>
   </data>
-  <data name="&gt;&gt;pickListMulti.Type" xml:space="preserve">
+  <data name=">>pickListMulti.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;pickListMulti.Parent" xml:space="preserve">
+  <data name=">>pickListMulti.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;pickListMulti.ZOrder" xml:space="preserve">
+  <data name=">>pickListMulti.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -324,52 +324,52 @@
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>Manual</value>
   </data>
-  <data name="&gt;&gt;tbbOk.Name" xml:space="preserve">
+  <data name=">>tbbOk.Name" xml:space="preserve">
     <value>tbbOk</value>
   </data>
-  <data name="&gt;&gt;tbbOk.Type" xml:space="preserve">
+  <data name=">>tbbOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbbCancel.Name" xml:space="preserve">
+  <data name=">>tbbCancel.Name" xml:space="preserve">
     <value>tbbCancel</value>
   </data>
-  <data name="&gt;&gt;tbbCancel.Type" xml:space="preserve">
+  <data name=">>tbbCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+  <data name=">>toolStripSeparator1.Name" xml:space="preserve">
     <value>toolStripSeparator1</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+  <data name=">>toolStripSeparator1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbbFilter.Name" xml:space="preserve">
+  <data name=">>tbbFilter.Name" xml:space="preserve">
     <value>tbbFilter</value>
   </data>
-  <data name="&gt;&gt;tbbFilter.Type" xml:space="preserve">
+  <data name=">>tbbFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbbAutoManageChildren.Name" xml:space="preserve">
+  <data name=">>tbbAutoManageChildren.Name" xml:space="preserve">
     <value>tbbAutoManageChildren</value>
   </data>
-  <data name="&gt;&gt;tbbAutoManageChildren.Type" xml:space="preserve">
+  <data name=">>tbbAutoManageChildren.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
+  <data name=">>toolStripSeparator2.Name" xml:space="preserve">
     <value>toolStripSeparator2</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
+  <data name=">>toolStripSeparator2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbbFind.Name" xml:space="preserve">
+  <data name=">>tbbFind.Name" xml:space="preserve">
     <value>tbbFind</value>
   </data>
-  <data name="&gt;&gt;tbbFind.Type" xml:space="preserve">
+  <data name=">>tbbFind.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>PopupPickList</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

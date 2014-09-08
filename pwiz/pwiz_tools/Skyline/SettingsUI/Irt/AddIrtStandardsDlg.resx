@@ -129,7 +129,7 @@
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>The current document contains {0} peptides with measured retention times.  It is suggested that you use a small number of peptides that can be easily measured in a single injection for an iRT standard.  You can do this by editing the document to contain only the desired peptides, or by choosing a number of peptides below to have Skyline select automatically from the current document.</value>
+    <value>The current document contains {0} peptides with measured retention times. It is suggested that you use a small number of peptides that can be easily measured in a single injection for an iRT standard. You can do this by editing the document to contain only the desired peptides, or by choosing a number of peptides below to have Skyline select automatically from the current document.</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>

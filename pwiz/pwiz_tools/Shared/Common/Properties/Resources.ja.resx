@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -186,48 +186,48 @@
     <value>..\Resources\TextColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CustomizeViewForm_AdvancedShowing____Hide__Advanced" xml:space="preserve">
-<value>&lt;&lt;詳細を隠す(&amp;A)</value>
+    <value>&lt;&lt; 詳細を隠す(&amp;A)</value>
   </data>
   <data name="CustomizeViewForm_AdvancedShowing_Show__Advanced___" xml:space="preserve">
-<value>詳細を表示(&amp;A)&gt;&gt;</value>
+    <value>詳細を表示(&amp;A) &gt;&gt;</value>
   </data>
   <data name="CustomizeViewForm_SetFilterInfo_This_column_does_not_exist" xml:space="preserve">
-<value>この列はありません</value>
+    <value>この列はありません</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_" xml:space="preserve">
-<value>ビュー名は空白にはできません。</value>
+    <value>ビュー名は空白にはできません。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___" xml:space="preserve">
-<value>「{0}」というビューは既に作られています。</value>
+    <value>「{0}」というビューは既に作られています。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__" xml:space="preserve">
-<value>「{0}」という既存のビューに上書きしますか？</value>
+    <value>「{0}」という既存のビューに上書きしますか？</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_Column_Properties" xml:space="preserve">
-<value>列のプロパティ</value>
+    <value>列のプロパティ</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_No_Selection" xml:space="preserve">
-<value>選択なし</value>
+    <value>選択なし</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_Multiple_Selection" xml:space="preserve">
-<value>複数の選択</value>
+    <value>複数の選択</value>
   </data>
   <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
-<value>データを変換中...</value>
+    <value>データを変換中...</value>
   </data>
   <data name="NavBar_RefreshUi__Filtered_from__0__" xml:space="preserve">
-<value>({0}からフィルタ)</value>
+    <value>({0}からフィルタ)</value>
   </data>
   <data name="NavBar_RefreshUi__Transforming_data____" xml:space="preserve">
-<value>(データを変換中...)</value>
+    <value>(データを変換中...)</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
-<value>ビューを編集...</value>
+    <value>ビューを編集...</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
-<value>ビューの管理...</value>
+    <value>ビューの管理...</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
-<value>ビューをカスタマイズ...</value>
+    <value>ビューをカスタマイズ...</value>
   </data>
 </root>

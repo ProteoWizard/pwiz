@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -132,16 +132,16 @@
   <data name="listExisting.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;listExisting.Name" xml:space="preserve">
+  <data name=">>listExisting.Name" xml:space="preserve">
     <value>listExisting</value>
   </data>
-  <data name="&gt;&gt;listExisting.Type" xml:space="preserve">
+  <data name=">>listExisting.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listExisting.Parent" xml:space="preserve">
+  <data name=">>listExisting.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
+  <data name=">>listExisting.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="listOverwrite.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -156,16 +156,16 @@
   <data name="listOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;listOverwrite.Name" xml:space="preserve">
+  <data name=">>listOverwrite.Name" xml:space="preserve">
     <value>listOverwrite</value>
   </data>
-  <data name="&gt;&gt;listOverwrite.Type" xml:space="preserve">
+  <data name=">>listOverwrite.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listOverwrite.Parent" xml:space="preserve">
+  <data name=">>listOverwrite.Parent" xml:space="preserve">
     <value>panelOverwrite</value>
   </data>
-  <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
+  <data name=">>listOverwrite.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelExisting.AutoSize" type="System.Boolean, mscorlib">
@@ -181,18 +181,18 @@
     <value>0</value>
   </data>
   <data name="labelExisting.Text" xml:space="preserve">
-<value>{0} 個のペプチドの値が既にライブラリ内にあります：</value>
+    <value>{0} 個のペプチドの値が既にライブラリ内にあります：</value>
   </data>
-  <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
+  <data name=">>labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>
   </data>
-  <data name="&gt;&gt;labelExisting.Type" xml:space="preserve">
+  <data name=">>labelExisting.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelExisting.Parent" xml:space="preserve">
+  <data name=">>labelExisting.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;labelExisting.ZOrder" xml:space="preserve">
+  <data name=">>labelExisting.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="labelChoice.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -211,18 +211,18 @@
     <value>2</value>
   </data>
   <data name="labelChoice.Text" xml:space="preserve">
-<value>これらのペプチドの処理を選択してください。</value>
+    <value>これらのペプチドの処理を選択してください。</value>
   </data>
-  <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
+  <data name=">>labelChoice.Name" xml:space="preserve">
     <value>labelChoice</value>
   </data>
-  <data name="&gt;&gt;labelChoice.Type" xml:space="preserve">
+  <data name=">>labelChoice.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelChoice.Parent" xml:space="preserve">
+  <data name=">>labelChoice.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;labelChoice.ZOrder" xml:space="preserve">
+  <data name=">>labelChoice.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="radioSkip.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -241,18 +241,18 @@
     <value>3</value>
   </data>
   <data name="radioSkip.Text" xml:space="preserve">
-<value>既存の値を残す</value>
+    <value>既存の値を残す</value>
   </data>
-  <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
+  <data name=">>radioSkip.Name" xml:space="preserve">
     <value>radioSkip</value>
   </data>
-  <data name="&gt;&gt;radioSkip.Type" xml:space="preserve">
+  <data name=">>radioSkip.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioSkip.Parent" xml:space="preserve">
+  <data name=">>radioSkip.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;radioSkip.ZOrder" xml:space="preserve">
+  <data name=">>radioSkip.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="radioReplace.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -271,18 +271,18 @@
     <value>4</value>
   </data>
   <data name="radioReplace.Text" xml:space="preserve">
-<value>既存の値を上書きする</value>
+    <value>既存の値を上書きする</value>
   </data>
-  <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
+  <data name=">>radioReplace.Name" xml:space="preserve">
     <value>radioReplace</value>
   </data>
-  <data name="&gt;&gt;radioReplace.Type" xml:space="preserve">
+  <data name=">>radioReplace.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioReplace.Parent" xml:space="preserve">
+  <data name=">>radioReplace.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;radioReplace.ZOrder" xml:space="preserve">
+  <data name=">>radioReplace.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="radioAverage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -301,18 +301,18 @@
     <value>5</value>
   </data>
   <data name="radioAverage.Text" xml:space="preserve">
-<value>新しい値と既存の値の平均をとる</value>
+    <value>新しい値と既存の値の平均をとる</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
+  <data name=">>radioAverage.Name" xml:space="preserve">
     <value>radioAverage</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Type" xml:space="preserve">
+  <data name=">>radioAverage.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Parent" xml:space="preserve">
+  <data name=">>radioAverage.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;radioAverage.ZOrder" xml:space="preserve">
+  <data name=">>radioAverage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="labelOverwrite.AutoSize" type="System.Boolean, mscorlib">
@@ -328,19 +328,19 @@
     <value>0</value>
   </data>
   <data name="labelOverwrite.Text" xml:space="preserve">
-<value>MS.MSスキャンから計算された{0}ペプチドのiRT値が
+    <value>MS.MSスキャンから計算された{0}ペプチドのiRT値が
 クロマトグラムピークから計算されたiRT値で置換されます。</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.Name" xml:space="preserve">
+  <data name=">>labelOverwrite.Name" xml:space="preserve">
     <value>labelOverwrite</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.Type" xml:space="preserve">
+  <data name=">>labelOverwrite.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.Parent" xml:space="preserve">
+  <data name=">>labelOverwrite.Parent" xml:space="preserve">
     <value>panelOverwrite</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.ZOrder" xml:space="preserve">
+  <data name=">>labelOverwrite.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -356,18 +356,18 @@
     <value>6</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -383,18 +383,18 @@
     <value>5</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="panelExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -409,16 +409,16 @@
   <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;panelExisting.Name" xml:space="preserve">
+  <data name=">>panelExisting.Name" xml:space="preserve">
     <value>panelExisting</value>
   </data>
-  <data name="&gt;&gt;panelExisting.Type" xml:space="preserve">
+  <data name=">>panelExisting.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelExisting.Parent" xml:space="preserve">
+  <data name=">>panelExisting.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelExisting.ZOrder" xml:space="preserve">
+  <data name=">>panelExisting.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="panelOverwrite.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -433,16 +433,16 @@
   <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;panelOverwrite.Name" xml:space="preserve">
+  <data name=">>panelOverwrite.Name" xml:space="preserve">
     <value>panelOverwrite</value>
   </data>
-  <data name="&gt;&gt;panelOverwrite.Type" xml:space="preserve">
+  <data name=">>panelOverwrite.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelOverwrite.Parent" xml:space="preserve">
+  <data name=">>panelOverwrite.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelOverwrite.ZOrder" xml:space="preserve">
+  <data name=">>panelOverwrite.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="labelPeptidesAdded.AutoSize" type="System.Boolean, mscorlib">
@@ -458,18 +458,18 @@
     <value>0</value>
   </data>
   <data name="labelPeptidesAdded.Text" xml:space="preserve">
-<value>{0} 個の新しいペプチドがiRTデータベースに追加されます。</value>
+    <value>{0} 個の新しいペプチドがiRTデータベースに追加されます。</value>
   </data>
-  <data name="&gt;&gt;labelPeptidesAdded.Name" xml:space="preserve">
+  <data name=">>labelPeptidesAdded.Name" xml:space="preserve">
     <value>labelPeptidesAdded</value>
   </data>
-  <data name="&gt;&gt;labelPeptidesAdded.Type" xml:space="preserve">
+  <data name=">>labelPeptidesAdded.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelPeptidesAdded.Parent" xml:space="preserve">
+  <data name=">>labelPeptidesAdded.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelPeptidesAdded.ZOrder" xml:space="preserve">
+  <data name=">>labelPeptidesAdded.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="labelRunsConverted.AutoSize" type="System.Boolean, mscorlib">
@@ -485,18 +485,18 @@
     <value>1</value>
   </data>
   <data name="labelRunsConverted.Text" xml:space="preserve">
-<value>{0} 回の実行結果が変換されました。</value>
+    <value>{0} 回の実行結果が変換されました。</value>
   </data>
-  <data name="&gt;&gt;labelRunsConverted.Name" xml:space="preserve">
+  <data name=">>labelRunsConverted.Name" xml:space="preserve">
     <value>labelRunsConverted</value>
   </data>
-  <data name="&gt;&gt;labelRunsConverted.Type" xml:space="preserve">
+  <data name=">>labelRunsConverted.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelRunsConverted.Parent" xml:space="preserve">
+  <data name=">>labelRunsConverted.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelRunsConverted.ZOrder" xml:space="preserve">
+  <data name=">>labelRunsConverted.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelRunsFailed.AutoSize" type="System.Boolean, mscorlib">
@@ -512,18 +512,18 @@
     <value>2</value>
   </data>
   <data name="labelRunsFailed.Text" xml:space="preserve">
-<value>相関が不十分なため、{0} 回の実行結果が変換されませんでした。</value>
+    <value>相関が不十分なため、{0} 回の実行結果が変換されませんでした。</value>
   </data>
-  <data name="&gt;&gt;labelRunsFailed.Name" xml:space="preserve">
+  <data name=">>labelRunsFailed.Name" xml:space="preserve">
     <value>labelRunsFailed</value>
   </data>
-  <data name="&gt;&gt;labelRunsFailed.Type" xml:space="preserve">
+  <data name=">>labelRunsFailed.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelRunsFailed.Parent" xml:space="preserve">
+  <data name=">>labelRunsFailed.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelRunsFailed.ZOrder" xml:space="preserve">
+  <data name=">>labelRunsFailed.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -542,19 +542,19 @@
     <value>0</value>
   </data>
   <data name="labelKeep.Text" xml:space="preserve">
-<value>クロマトグラムピークから計算された {0} 個のペプチドの iRT 値が保持され、
+    <value>クロマトグラムピークから計算された {0} 個のペプチドの iRT 値が保持され、
 MS/MSスキャンから計算された新しいiRT値は無視されます。</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Name" xml:space="preserve">
+  <data name=">>labelKeep.Name" xml:space="preserve">
     <value>labelKeep</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Type" xml:space="preserve">
+  <data name=">>labelKeep.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Parent" xml:space="preserve">
+  <data name=">>labelKeep.Parent" xml:space="preserve">
     <value>panelKeep</value>
   </data>
-  <data name="&gt;&gt;labelKeep.ZOrder" xml:space="preserve">
+  <data name=">>labelKeep.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="listKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -569,16 +569,16 @@ MS/MSスキャンから計算された新しいiRT値は無視されます。</v
   <data name="listKeep.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;listKeep.Name" xml:space="preserve">
+  <data name=">>listKeep.Name" xml:space="preserve">
     <value>listKeep</value>
   </data>
-  <data name="&gt;&gt;listKeep.Type" xml:space="preserve">
+  <data name=">>listKeep.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listKeep.Parent" xml:space="preserve">
+  <data name=">>listKeep.Parent" xml:space="preserve">
     <value>panelKeep</value>
   </data>
-  <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
+  <data name=">>listKeep.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelKeep.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -590,16 +590,16 @@ MS/MSスキャンから計算された新しいiRT値は無視されます。</v
   <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;panelKeep.Name" xml:space="preserve">
+  <data name=">>panelKeep.Name" xml:space="preserve">
     <value>panelKeep</value>
   </data>
-  <data name="&gt;&gt;panelKeep.Type" xml:space="preserve">
+  <data name=">>panelKeep.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelKeep.Parent" xml:space="preserve">
+  <data name=">>panelKeep.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelKeep.ZOrder" xml:space="preserve">
+  <data name=">>panelKeep.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -615,12 +615,12 @@ MS/MSスキャンから計算された新しいiRT値は無視されます。</v
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>ペプチドを追加</value>
+    <value>ペプチドを追加</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>AddIrtPeptidesDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

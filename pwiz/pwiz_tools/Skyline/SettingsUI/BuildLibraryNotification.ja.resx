@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-  <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="NotificationCloseButton.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing">
+  <data name="NotificationCloseButton.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         R0lGODlhDgAOAIcAAAAAAHgAAP////7Jyf+Pj/8AAMoAAGcAAP9iYgAAAAAAAAAAAAAAAAAAAAAAAAAA
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -158,16 +158,16 @@
   <data name="NotificationCloseButton.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;NotificationCloseButton.Name" xml:space="preserve">
+  <data name=">>NotificationCloseButton.Name" xml:space="preserve">
     <value>NotificationCloseButton</value>
   </data>
-  <data name="&gt;&gt;NotificationCloseButton.Type" xml:space="preserve">
+  <data name=">>NotificationCloseButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;NotificationCloseButton.Parent" xml:space="preserve">
+  <data name=">>NotificationCloseButton.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;NotificationCloseButton.ZOrder" xml:space="preserve">
+  <data name=">>NotificationCloseButton.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="NotificationMessage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -186,18 +186,18 @@
     <value>7</value>
   </data>
   <data name="NotificationMessage.Text" xml:space="preserve">
-<value>構築が完了しました。</value>
+    <value>構築が完了しました。</value>
   </data>
-  <data name="&gt;&gt;NotificationMessage.Name" xml:space="preserve">
+  <data name=">>NotificationMessage.Name" xml:space="preserve">
     <value>NotificationMessage</value>
   </data>
-  <data name="&gt;&gt;NotificationMessage.Type" xml:space="preserve">
+  <data name=">>NotificationMessage.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;NotificationMessage.Parent" xml:space="preserve">
+  <data name=">>NotificationMessage.Parent" xml:space="preserve">
     <value>TextPanel</value>
   </data>
-  <data name="&gt;&gt;NotificationMessage.ZOrder" xml:space="preserve">
+  <data name=">>NotificationMessage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="LibraryNameLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -213,18 +213,18 @@
     <value>6</value>
   </data>
   <data name="LibraryNameLabel.Text" xml:space="preserve">
-<value>メッセージプレースホルダー</value>
+    <value>メッセージプレースホルダー</value>
   </data>
-  <data name="&gt;&gt;LibraryNameLabel.Name" xml:space="preserve">
+  <data name=">>LibraryNameLabel.Name" xml:space="preserve">
     <value>LibraryNameLabel</value>
   </data>
-  <data name="&gt;&gt;LibraryNameLabel.Type" xml:space="preserve">
+  <data name=">>LibraryNameLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;LibraryNameLabel.Parent" xml:space="preserve">
+  <data name=">>LibraryNameLabel.Parent" xml:space="preserve">
     <value>TextPanel</value>
   </data>
-  <data name="&gt;&gt;LibraryNameLabel.ZOrder" xml:space="preserve">
+  <data name=">>LibraryNameLabel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="ViewLibraryLink.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -243,18 +243,18 @@
     <value>5</value>
   </data>
   <data name="ViewLibraryLink.Text" xml:space="preserve">
-<value>ライブラリを調べる...</value>
+    <value>ライブラリを調べる...</value>
   </data>
-  <data name="&gt;&gt;ViewLibraryLink.Name" xml:space="preserve">
+  <data name=">>ViewLibraryLink.Name" xml:space="preserve">
     <value>ViewLibraryLink</value>
   </data>
-  <data name="&gt;&gt;ViewLibraryLink.Type" xml:space="preserve">
+  <data name=">>ViewLibraryLink.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;ViewLibraryLink.Parent" xml:space="preserve">
+  <data name=">>ViewLibraryLink.Parent" xml:space="preserve">
     <value>TextPanel</value>
   </data>
-  <data name="&gt;&gt;ViewLibraryLink.ZOrder" xml:space="preserve">
+  <data name=">>ViewLibraryLink.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="TextPanel.Location" type="System.Drawing.Point, System.Drawing">
@@ -266,16 +266,16 @@
   <data name="TextPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;TextPanel.Name" xml:space="preserve">
+  <data name=">>TextPanel.Name" xml:space="preserve">
     <value>TextPanel</value>
   </data>
-  <data name="&gt;&gt;TextPanel.Type" xml:space="preserve">
+  <data name=">>TextPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;TextPanel.Parent" xml:space="preserve">
+  <data name=">>TextPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;TextPanel.ZOrder" xml:space="preserve">
+  <data name=">>TextPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -290,10 +290,10 @@
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>Manual</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>BuildLibraryNotification</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

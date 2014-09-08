@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -136,10 +136,10 @@
     <value>19</value>
   </data>
   <data name="comboReport.ToolTip" xml:space="preserve">
-<value>ここでは、ツールと共に使用するSkylineReportを選択します。 
+    <value>ここでは、ツールと共に使用するSkylineReportを選択します。
 コマンドがウェブサイトのURLで、そこでレポートを選択した場合は、
 レポートはhttp投稿でウェブサイトに 
-投稿されます。 
+投稿されます。
 
 コマンドが実行ファイルで、  
 $(InputReportTempPath)が引数の場合は、レポートは 
@@ -147,24 +147,24 @@ $(InputReportTempPath)が引数の場合は、レポートは
 引数として提供されます。
 
 $(InputReportTempPath)が引数でなければ、選択した 
-レポートは標準入力により実行ファイルに渡されます。  </value>
+レポートは標準入力により実行ファイルに渡されます。</value>
   </data>
-  <data name="&gt;&gt;comboReport.Name" xml:space="preserve">
+  <data name=">>comboReport.Name" xml:space="preserve">
     <value>comboReport</value>
   </data>
-  <data name="&gt;&gt;comboReport.Type" xml:space="preserve">
+  <data name=">>comboReport.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboReport.Parent" xml:space="preserve">
+  <data name=">>comboReport.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;comboReport.ZOrder" xml:space="preserve">
+  <data name=">>comboReport.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnInitialDirectoryMacros.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="btnInitialDirectoryMacros.Image" type="System.Drawing.Bitmap, System.Drawing">
+  <data name="btnInitialDirectoryMacros.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABEAAAASCAYAAAC9+TVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
         YQUAAACXSURBVDhPY6AU/Pz58z+UOVjB+/fvKXfiu5Wt/1vPvqPMoDcr4oAGxP1f8ebN/zdADBUmDbxe
@@ -185,26 +185,26 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>ImageBeforeText</value>
   </data>
   <data name="btnInitialDirectoryMacros.ToolTip" xml:space="preserve">
-<value>これはサポートされている初期ディレクトリマクロのリストです。これらは 
+    <value>これはサポートされている初期ディレクトリマクロのリストです。これらは 
 ツールを実行すると適切な値に置換されます。
 </value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectoryMacros.Name" xml:space="preserve">
+  <data name=">>btnInitialDirectoryMacros.Name" xml:space="preserve">
     <value>btnInitialDirectoryMacros</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectoryMacros.Type" xml:space="preserve">
+  <data name=">>btnInitialDirectoryMacros.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectoryMacros.Parent" xml:space="preserve">
+  <data name=">>btnInitialDirectoryMacros.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectoryMacros.ZOrder" xml:space="preserve">
+  <data name=">>btnInitialDirectoryMacros.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="btnArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="btnArguments.Image" type="System.Drawing.Bitmap, System.Drawing">
+  <data name="btnArguments.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABEAAAASCAYAAAC9+TVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
         YQUAAACXSURBVDhPY6AU/Pz58z+UOVjB+/fvKXfiu5Wt/1vPvqPMoDcr4oAGxP1f8ebN/zdADBUmDbxe
@@ -225,19 +225,19 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>ImageBeforeText</value>
   </data>
   <data name="btnArguments.ToolTip" xml:space="preserve">
-<value>これはサポートされている引数マクロのリストです。これらは
+    <value>これはサポートされている引数マクロのリストです。これらは
 ツールを実行すると適切な値に置換されます。</value>
   </data>
-  <data name="&gt;&gt;btnArguments.Name" xml:space="preserve">
+  <data name=">>btnArguments.Name" xml:space="preserve">
     <value>btnArguments</value>
   </data>
-  <data name="&gt;&gt;btnArguments.Type" xml:space="preserve">
+  <data name=">>btnArguments.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnArguments.Parent" xml:space="preserve">
+  <data name=">>btnArguments.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnArguments.ZOrder" xml:space="preserve">
+  <data name=">>btnArguments.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="btnInitialDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -253,21 +253,21 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>16</value>
   </data>
   <data name="btnInitialDirectory.Text" xml:space="preserve">
-<value>...</value>
+    <value>...</value>
   </data>
   <data name="btnInitialDirectory.ToolTip" xml:space="preserve">
-<value>参照</value>
+    <value>参照</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectory.Name" xml:space="preserve">
+  <data name=">>btnInitialDirectory.Name" xml:space="preserve">
     <value>btnInitialDirectory</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectory.Type" xml:space="preserve">
+  <data name=">>btnInitialDirectory.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectory.Parent" xml:space="preserve">
+  <data name=">>btnInitialDirectory.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnInitialDirectory.ZOrder" xml:space="preserve">
+  <data name=">>btnInitialDirectory.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="btnFindCommand.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -283,21 +283,21 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>10</value>
   </data>
   <data name="btnFindCommand.Text" xml:space="preserve">
-<value>...</value>
+    <value>...</value>
   </data>
   <data name="btnFindCommand.ToolTip" xml:space="preserve">
-<value>参照</value>
+    <value>参照</value>
   </data>
-  <data name="&gt;&gt;btnFindCommand.Name" xml:space="preserve">
+  <data name=">>btnFindCommand.Name" xml:space="preserve">
     <value>btnFindCommand</value>
   </data>
-  <data name="&gt;&gt;btnFindCommand.Type" xml:space="preserve">
+  <data name=">>btnFindCommand.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnFindCommand.Parent" xml:space="preserve">
+  <data name=">>btnFindCommand.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnFindCommand.ZOrder" xml:space="preserve">
+  <data name=">>btnFindCommand.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="textInitialDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -313,20 +313,20 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>15</value>
   </data>
   <data name="textInitialDirectory.ToolTip" xml:space="preserve">
-<value>ツールの作業ディレクトリを入力してください。あるいは矢印ボタンで 
+    <value>ツールの作業ディレクトリを入力してください。あるいは矢印ボタンで 
 既存のディレクトリの場所を選択するか、 
 [参照] ボタンでディレクトリを選択してください。</value>
   </data>
-  <data name="&gt;&gt;textInitialDirectory.Name" xml:space="preserve">
+  <data name=">>textInitialDirectory.Name" xml:space="preserve">
     <value>textInitialDirectory</value>
   </data>
-  <data name="&gt;&gt;textInitialDirectory.Type" xml:space="preserve">
+  <data name=">>textInitialDirectory.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textInitialDirectory.Parent" xml:space="preserve">
+  <data name=">>textInitialDirectory.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textInitialDirectory.ZOrder" xml:space="preserve">
+  <data name=">>textInitialDirectory.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="textArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -342,19 +342,19 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>12</value>
   </data>
   <data name="textArguments.ToolTip" xml:space="preserve">
-<value>ツールに渡す引数を入力するか、 
+    <value>ツールに渡す引数を入力するか、 
 矢印ボタンを選択して事前に定義された引数を選択します。</value>
   </data>
-  <data name="&gt;&gt;textArguments.Name" xml:space="preserve">
+  <data name=">>textArguments.Name" xml:space="preserve">
     <value>textArguments</value>
   </data>
-  <data name="&gt;&gt;textArguments.Type" xml:space="preserve">
+  <data name=">>textArguments.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textArguments.Parent" xml:space="preserve">
+  <data name=">>textArguments.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textArguments.ZOrder" xml:space="preserve">
+  <data name=">>textArguments.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
   <data name="textCommand.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -370,21 +370,21 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>9</value>
   </data>
   <data name="textCommand.ToolTip" xml:space="preserve">
-<value>起動したいファイルのパスまたはURLを入力するか、
-[参照] を選択してファイルのある場所に移動します。 
+    <value>起動したいファイルのパスまたはURLを入力するか、
+[参照] を選択してファイルのある場所に移動します。
 起動できるファイルのタイプは、exe、.bat、com、cmd、.pifです
 すべてのURLは、http:またはhttps:で始まらなければ正しく機能しません。</value>
   </data>
-  <data name="&gt;&gt;textCommand.Name" xml:space="preserve">
+  <data name=">>textCommand.Name" xml:space="preserve">
     <value>textCommand</value>
   </data>
-  <data name="&gt;&gt;textCommand.Type" xml:space="preserve">
+  <data name=">>textCommand.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textCommand.Parent" xml:space="preserve">
+  <data name=">>textCommand.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textCommand.ZOrder" xml:space="preserve">
+  <data name=">>textCommand.ZOrder" xml:space="preserve">
     <value>18</value>
   </data>
   <data name="textTitle.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -400,18 +400,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>7</value>
   </data>
   <data name="textTitle.ToolTip" xml:space="preserve">
-<value>[ツール] メニューに表示するツール名を入力してください。</value>
+    <value>[ツール] メニューに表示するツール名を入力してください。</value>
   </data>
-  <data name="&gt;&gt;textTitle.Name" xml:space="preserve">
+  <data name=">>textTitle.Name" xml:space="preserve">
     <value>textTitle</value>
   </data>
-  <data name="&gt;&gt;textTitle.Type" xml:space="preserve">
+  <data name=">>textTitle.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textTitle.Parent" xml:space="preserve">
+  <data name=">>textTitle.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textTitle.ZOrder" xml:space="preserve">
+  <data name=">>textTitle.ZOrder" xml:space="preserve">
     <value>19</value>
   </data>
   <data name="btnAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -427,21 +427,21 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>2</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
-<value>追加(&amp;A)...</value>
+    <value>追加(&amp;A)...</value>
   </data>
   <data name="btnAdd.ToolTip" xml:space="preserve">
-<value>ここをクリックして新しいツールを追加します。</value>
+    <value>ここをクリックして新しいツールを追加します。</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
+  <data name=">>btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
+  <data name=">>btnAdd.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
+  <data name=">>btnAdd.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
+  <data name=">>btnAdd.ZOrder" xml:space="preserve">
     <value>24</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -457,18 +457,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>21</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
+  <data name=">>btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+  <data name=">>btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
+  <data name=">>btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
+  <data name=">>btnOK.ZOrder" xml:space="preserve">
     <value>27</value>
   </data>
   <data name="label6.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -487,18 +487,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>18</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>レポートを入力：</value>
+    <value>レポートを入力：</value>
   </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+  <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+  <data name=">>label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+  <data name=">>label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+  <data name=">>label6.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="cbOutputImmediateWindow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -517,18 +517,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>20</value>
   </data>
   <data name="cbOutputImmediateWindow.Text" xml:space="preserve">
-<value>即時ウィンドウに出力</value>
+    <value>即時ウィンドウに出力</value>
   </data>
-  <data name="&gt;&gt;cbOutputImmediateWindow.Name" xml:space="preserve">
+  <data name=">>cbOutputImmediateWindow.Name" xml:space="preserve">
     <value>cbOutputImmediateWindow</value>
   </data>
-  <data name="&gt;&gt;cbOutputImmediateWindow.Type" xml:space="preserve">
+  <data name=">>cbOutputImmediateWindow.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbOutputImmediateWindow.Parent" xml:space="preserve">
+  <data name=">>cbOutputImmediateWindow.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbOutputImmediateWindow.ZOrder" xml:space="preserve">
+  <data name=">>cbOutputImmediateWindow.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="listTools.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -543,16 +543,16 @@ $(InputReportTempPath)が引数でなければ、選択した
   <data name="listTools.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;listTools.Name" xml:space="preserve">
+  <data name=">>listTools.Name" xml:space="preserve">
     <value>listTools</value>
   </data>
-  <data name="&gt;&gt;listTools.Type" xml:space="preserve">
+  <data name=">>listTools.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listTools.Parent" xml:space="preserve">
+  <data name=">>listTools.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;listTools.ZOrder" xml:space="preserve">
+  <data name=">>listTools.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -571,18 +571,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>14</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-<value>初期ディレクトリ(&amp;I)：</value>
+    <value>初期ディレクトリ(&amp;I)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+  <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name=">>label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+  <data name=">>label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+  <data name=">>label5.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="labelArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -601,18 +601,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>11</value>
   </data>
   <data name="labelArguments.Text" xml:space="preserve">
-<value>引数(&amp;R)：</value>
+    <value>引数(&amp;R)：</value>
   </data>
-  <data name="&gt;&gt;labelArguments.Name" xml:space="preserve">
+  <data name=">>labelArguments.Name" xml:space="preserve">
     <value>labelArguments</value>
   </data>
-  <data name="&gt;&gt;labelArguments.Type" xml:space="preserve">
+  <data name=">>labelArguments.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelArguments.Parent" xml:space="preserve">
+  <data name=">>labelArguments.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelArguments.ZOrder" xml:space="preserve">
+  <data name=">>labelArguments.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="labelCommand.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -631,18 +631,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>8</value>
   </data>
   <data name="labelCommand.Text" xml:space="preserve">
-<value>コマンド(&amp;C)：</value>
+    <value>コマンド(&amp;C)：</value>
   </data>
-  <data name="&gt;&gt;labelCommand.Name" xml:space="preserve">
+  <data name=">>labelCommand.Name" xml:space="preserve">
     <value>labelCommand</value>
   </data>
-  <data name="&gt;&gt;labelCommand.Type" xml:space="preserve">
+  <data name=">>labelCommand.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelCommand.Parent" xml:space="preserve">
+  <data name=">>labelCommand.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelCommand.ZOrder" xml:space="preserve">
+  <data name=">>labelCommand.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
   <data name="label2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -661,18 +661,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>タイトル(&amp;T)：</value>
+    <value>タイトル(&amp;T)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -688,18 +688,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>メニューの内容(&amp;M)：</value>
+    <value>メニューの内容(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>20</value>
   </data>
   <data name="btnMoveDown.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -715,18 +715,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>5</value>
   </data>
   <data name="btnMoveDown.Text" xml:space="preserve">
-<value>下に移動(&amp;O)</value>
+    <value>下に移動(&amp;O)</value>
   </data>
-  <data name="&gt;&gt;btnMoveDown.Name" xml:space="preserve">
+  <data name=">>btnMoveDown.Name" xml:space="preserve">
     <value>btnMoveDown</value>
   </data>
-  <data name="&gt;&gt;btnMoveDown.Type" xml:space="preserve">
+  <data name=">>btnMoveDown.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnMoveDown.Parent" xml:space="preserve">
+  <data name=">>btnMoveDown.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnMoveDown.ZOrder" xml:space="preserve">
+  <data name=">>btnMoveDown.ZOrder" xml:space="preserve">
     <value>21</value>
   </data>
   <data name="btnMoveUp.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -742,18 +742,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>4</value>
   </data>
   <data name="btnMoveUp.Text" xml:space="preserve">
-<value>上に移動(&amp;U)</value>
+    <value>上に移動(&amp;U)</value>
   </data>
-  <data name="&gt;&gt;btnMoveUp.Name" xml:space="preserve">
+  <data name=">>btnMoveUp.Name" xml:space="preserve">
     <value>btnMoveUp</value>
   </data>
-  <data name="&gt;&gt;btnMoveUp.Type" xml:space="preserve">
+  <data name=">>btnMoveUp.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnMoveUp.Parent" xml:space="preserve">
+  <data name=">>btnMoveUp.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnMoveUp.ZOrder" xml:space="preserve">
+  <data name=">>btnMoveUp.ZOrder" xml:space="preserve">
     <value>22</value>
   </data>
   <data name="btnRemove.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -769,18 +769,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>3</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
-<value>削除(&amp;R)</value>
+    <value>削除(&amp;R)</value>
   </data>
-  <data name="&gt;&gt;btnRemove.Name" xml:space="preserve">
+  <data name=">>btnRemove.Name" xml:space="preserve">
     <value>btnRemove</value>
   </data>
-  <data name="&gt;&gt;btnRemove.Type" xml:space="preserve">
+  <data name=">>btnRemove.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnRemove.Parent" xml:space="preserve">
+  <data name=">>btnRemove.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnRemove.ZOrder" xml:space="preserve">
+  <data name=">>btnRemove.ZOrder" xml:space="preserve">
     <value>23</value>
   </data>
   <data name="btnApply.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -796,18 +796,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>23</value>
   </data>
   <data name="btnApply.Text" xml:space="preserve">
-<value>適用(&amp;L)</value>
+    <value>適用(&amp;L)</value>
   </data>
-  <data name="&gt;&gt;btnApply.Name" xml:space="preserve">
+  <data name=">>btnApply.Name" xml:space="preserve">
     <value>btnApply</value>
   </data>
-  <data name="&gt;&gt;btnApply.Type" xml:space="preserve">
+  <data name=">>btnApply.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnApply.Parent" xml:space="preserve">
+  <data name=">>btnApply.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnApply.ZOrder" xml:space="preserve">
+  <data name=">>btnApply.ZOrder" xml:space="preserve">
     <value>25</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -823,18 +823,18 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>22</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>26</value>
   </data>
   <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -844,27 +844,27 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>168, 22</value>
   </data>
   <data name="customAddContextMenuItem.Text" xml:space="preserve">
-<value>カスタム...</value>
+    <value>カスタム...</value>
   </data>
   <data name="fromFileAddContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
   </data>
   <data name="fromFileAddContextMenuItem.Text" xml:space="preserve">
-<value>ファイルから...</value>
+    <value>ファイルから...</value>
   </data>
   <data name="fromWebAddContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
   </data>
   <data name="fromWebAddContextMenuItem.Text" xml:space="preserve">
-<value>ツールストアから...</value>
+    <value>ツールストアから...</value>
   </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 92</value>
   </data>
-  <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
+  <data name=">>contextMenuAdd.Name" xml:space="preserve">
     <value>contextMenuAdd</value>
   </data>
-  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
+  <data name=">>contextMenuAdd.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuCommand.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -874,21 +874,21 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>140, 22</value>
   </data>
   <data name="browseToolStripMenuItem.Text" xml:space="preserve">
-<value>参照...</value>
+    <value>参照...</value>
   </data>
   <data name="editMacroToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>140, 22</value>
   </data>
   <data name="editMacroToolStripMenuItem.Text" xml:space="preserve">
-<value>マクロを編集...</value>
+    <value>マクロを編集...</value>
   </data>
   <data name="contextMenuCommand.Size" type="System.Drawing.Size, System.Drawing">
     <value>141, 48</value>
   </data>
-  <data name="&gt;&gt;contextMenuCommand.Name" xml:space="preserve">
+  <data name=">>contextMenuCommand.Name" xml:space="preserve">
     <value>contextMenuCommand</value>
   </data>
-  <data name="&gt;&gt;contextMenuCommand.Type" xml:space="preserve">
+  <data name=">>contextMenuCommand.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuMacroArguments.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -897,10 +897,10 @@ $(InputReportTempPath)が引数でなければ、選択した
   <data name="contextMenuMacroArguments.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
   </data>
-  <data name="&gt;&gt;contextMenuMacroArguments.Name" xml:space="preserve">
+  <data name=">>contextMenuMacroArguments.Name" xml:space="preserve">
     <value>contextMenuMacroArguments</value>
   </data>
-  <data name="&gt;&gt;contextMenuMacroArguments.Type" xml:space="preserve">
+  <data name=">>contextMenuMacroArguments.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuMacroInitialDirectory.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -909,10 +909,10 @@ $(InputReportTempPath)が引数でなければ、選択した
   <data name="contextMenuMacroInitialDirectory.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
   </data>
-  <data name="&gt;&gt;contextMenuMacroInitialDirectory.Name" xml:space="preserve">
+  <data name=">>contextMenuMacroInitialDirectory.Name" xml:space="preserve">
     <value>contextMenuMacroInitialDirectory</value>
   </data>
-  <data name="&gt;&gt;contextMenuMacroInitialDirectory.Type" xml:space="preserve">
+  <data name=">>contextMenuMacroInitialDirectory.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -934,48 +934,48 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>外部ツール</value>
+    <value>外部ツール</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+  <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+  <data name=">>helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;customAddContextMenuItem.Name" xml:space="preserve">
+  <data name=">>customAddContextMenuItem.Name" xml:space="preserve">
     <value>customAddContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;customAddContextMenuItem.Type" xml:space="preserve">
+  <data name=">>customAddContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;fromFileAddContextMenuItem.Name" xml:space="preserve">
+  <data name=">>fromFileAddContextMenuItem.Name" xml:space="preserve">
     <value>fromFileAddContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;fromFileAddContextMenuItem.Type" xml:space="preserve">
+  <data name=">>fromFileAddContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;fromWebAddContextMenuItem.Name" xml:space="preserve">
+  <data name=">>fromWebAddContextMenuItem.Name" xml:space="preserve">
     <value>fromWebAddContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;fromWebAddContextMenuItem.Type" xml:space="preserve">
+  <data name=">>fromWebAddContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;browseToolStripMenuItem.Name" xml:space="preserve">
+  <data name=">>browseToolStripMenuItem.Name" xml:space="preserve">
     <value>browseToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;browseToolStripMenuItem.Type" xml:space="preserve">
+  <data name=">>browseToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;editMacroToolStripMenuItem.Name" xml:space="preserve">
+  <data name=">>editMacroToolStripMenuItem.Name" xml:space="preserve">
     <value>editMacroToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;editMacroToolStripMenuItem.Type" xml:space="preserve">
+  <data name=">>editMacroToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ConfigureToolsDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

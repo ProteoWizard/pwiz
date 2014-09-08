@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -133,18 +133,18 @@
     <value>5</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -160,18 +160,18 @@
     <value>4</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -187,18 +187,18 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>ペインのグループ化(&amp;G)：</value>
+    <value>ペインのグループ化(&amp;G)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textGroups.Location" type="System.Drawing.Point, System.Drawing">
@@ -214,19 +214,19 @@
     <value>17, 17</value>
   </metadata>
   <data name="textGroups.ToolTip" xml:space="preserve">
-<value>グラフをいくつのペインにグループ分けするかを
+    <value>グラフをいくつのペインにグループ分けするかを
 指定してください。</value>
   </data>
-  <data name="&gt;&gt;textGroups.Name" xml:space="preserve">
+  <data name=">>textGroups.Name" xml:space="preserve">
     <value>textGroups</value>
   </data>
-  <data name="&gt;&gt;textGroups.Type" xml:space="preserve">
+  <data name=">>textGroups.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textGroups.Parent" xml:space="preserve">
+  <data name=">>textGroups.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textGroups.ZOrder" xml:space="preserve">
+  <data name=">>textGroups.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="radioDistribute.AutoSize" type="System.Boolean, mscorlib">
@@ -242,22 +242,22 @@
     <value>2</value>
   </data>
   <data name="radioDistribute.Text" xml:space="preserve">
-<value>グループ間でグラフを分配(&amp;D)</value>
+    <value>グループ間でグラフを分配(&amp;D)</value>
   </data>
   <data name="radioDistribute.ToolTip" xml:space="preserve">
-<value>グラフは、トランプのカードを配るように
+    <value>グラフは、トランプのカードを配るように
 各ペインに分配されます。</value>
   </data>
-  <data name="&gt;&gt;radioDistribute.Name" xml:space="preserve">
+  <data name=">>radioDistribute.Name" xml:space="preserve">
     <value>radioDistribute</value>
   </data>
-  <data name="&gt;&gt;radioDistribute.Type" xml:space="preserve">
+  <data name=">>radioDistribute.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioDistribute.Parent" xml:space="preserve">
+  <data name=">>radioDistribute.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;radioDistribute.ZOrder" xml:space="preserve">
+  <data name=">>radioDistribute.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="radioSeparate.AutoSize" type="System.Boolean, mscorlib">
@@ -273,23 +273,23 @@
     <value>3</value>
   </data>
   <data name="radioSeparate.Text" xml:space="preserve">
-<value>グラフをグループに分割(&amp;S)</value>
+    <value>グラフをグループに分割(&amp;S)</value>
   </data>
   <data name="radioSeparate.ToolTip" xml:space="preserve">
-<value>グラフは順番にグループに分割されます。つまり、
+    <value>グラフは順番にグループに分割されます。つまり、
 各ペインへ 1 巡目の割り当てが終了してから、
 2 巡目の割り当てが始まります。</value>
   </data>
-  <data name="&gt;&gt;radioSeparate.Name" xml:space="preserve">
+  <data name=">>radioSeparate.Name" xml:space="preserve">
     <value>radioSeparate</value>
   </data>
-  <data name="&gt;&gt;radioSeparate.Type" xml:space="preserve">
+  <data name=">>radioSeparate.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioSeparate.Parent" xml:space="preserve">
+  <data name=">>radioSeparate.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;radioSeparate.ZOrder" xml:space="preserve">
+  <data name=">>radioSeparate.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -305,25 +305,25 @@
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>並べ順(&amp;O)：</value>
+    <value>並べ順(&amp;O)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="comboSortOrder.Items" xml:space="preserve">
-<value>位置</value>
+    <value>位置</value>
   </data>
   <data name="comboSortOrder.Items1" xml:space="preserve">
-<value>ドキュメント</value>
+    <value>ドキュメント</value>
   </data>
   <data name="comboSortOrder.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 156</value>
@@ -334,16 +334,16 @@
   <data name="comboSortOrder.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;comboSortOrder.Name" xml:space="preserve">
+  <data name=">>comboSortOrder.Name" xml:space="preserve">
     <value>comboSortOrder</value>
   </data>
-  <data name="&gt;&gt;comboSortOrder.Type" xml:space="preserve">
+  <data name=">>comboSortOrder.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboSortOrder.Parent" xml:space="preserve">
+  <data name=">>comboSortOrder.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;comboSortOrder.ZOrder" xml:space="preserve">
+  <data name=">>comboSortOrder.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="cbReversed.AutoSize" type="System.Boolean, mscorlib">
@@ -359,18 +359,18 @@
     <value>8</value>
   </data>
   <data name="cbReversed.Text" xml:space="preserve">
-<value>反転(&amp;R)</value>
+    <value>反転(&amp;R)</value>
   </data>
-  <data name="&gt;&gt;cbReversed.Name" xml:space="preserve">
+  <data name=">>cbReversed.Name" xml:space="preserve">
     <value>cbReversed</value>
   </data>
-  <data name="&gt;&gt;cbReversed.Type" xml:space="preserve">
+  <data name=">>cbReversed.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbReversed.Parent" xml:space="preserve">
+  <data name=">>cbReversed.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbReversed.ZOrder" xml:space="preserve">
+  <data name=">>cbReversed.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -386,18 +386,18 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>グループにまとめたグラフの配置</value>
+    <value>グループにまとめたグラフの配置</value>
   </data>
-  <data name="&gt;&gt;toolTipControls.Name" xml:space="preserve">
+  <data name=">>toolTipControls.Name" xml:space="preserve">
     <value>toolTipControls</value>
   </data>
-  <data name="&gt;&gt;toolTipControls.Type" xml:space="preserve">
+  <data name=">>toolTipControls.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ArrangeGraphsGroupedDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -136,18 +136,18 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-<value>トランジション設定フォームでこの式の表示に使用する名前です。</value>
+    <value>トランジション設定フォームでこの式の表示に使用する名前です</value>
   </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+  <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+  <data name=">>textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+  <data name=">>textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+  <data name=">>textName.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -163,18 +163,18 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>名前(&amp;N)：</value>
+    <value>名前(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+  <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name=">>label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+  <data name=">>label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+  <data name=">>label4.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -190,18 +190,18 @@
     <value>15</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -217,18 +217,18 @@
     <value>14</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
   <data name="textIntercept.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -241,21 +241,21 @@
     <value>5</value>
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
-<value>切片は、以下の方程式でプリカーサーm/zから予想される最適デクラスタリングポテンシャル
+    <value>切片は、以下の方程式でプリカーサーm/zから予想される最適デクラスタリングポテンシャル
 の計算に使用します。
 
 DP = 勾配 * プリカーサーm/z + 切片</value>
   </data>
-  <data name="&gt;&gt;textIntercept.Name" xml:space="preserve">
+  <data name=">>textIntercept.Name" xml:space="preserve">
     <value>textIntercept</value>
   </data>
-  <data name="&gt;&gt;textIntercept.Type" xml:space="preserve">
+  <data name=">>textIntercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textIntercept.Parent" xml:space="preserve">
+  <data name=">>textIntercept.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textIntercept.ZOrder" xml:space="preserve">
+  <data name=">>textIntercept.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -271,18 +271,18 @@ DP = 勾配 * プリカーサーm/z + 切片</value>
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>切片(&amp;I)：</value>
+    <value>切片(&amp;I)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="textSlope.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -295,21 +295,21 @@ DP = 勾配 * プリカーサーm/z + 切片</value>
     <value>3</value>
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
-<value>勾配は、以下の方程式でプリカーサーm/z から予想される最適デクラスタリングポテンシャル
+    <value>勾配は、以下の方程式でプリカーサーm/z から予想される最適デクラスタリングポテンシャル
 の計算に使用します。
 
 DP = 勾配 * プリカーサーm/z + 切片</value>
   </data>
-  <data name="&gt;&gt;textSlope.Name" xml:space="preserve">
+  <data name=">>textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
   </data>
-  <data name="&gt;&gt;textSlope.Type" xml:space="preserve">
+  <data name=">>textSlope.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textSlope.Parent" xml:space="preserve">
+  <data name=">>textSlope.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textSlope.ZOrder" xml:space="preserve">
+  <data name=">>textSlope.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -325,18 +325,18 @@ DP = 勾配 * プリカーサーm/z + 切片</value>
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>勾配(&amp;S)：</value>
+    <value>勾配(&amp;S)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="textStepCount.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -349,20 +349,20 @@ DP = 勾配 * プリカーサーm/z + 切片</value>
     <value>11</value>
   </data>
   <data name="textStepCount.ToolTip" xml:space="preserve">
-<value>DP最適化メソッドで使用される値の数です。ここで、予測される
+    <value>DP最適化メソッドで使用される値の数です。ここで、予測される
 DPが測定されると同時に、その予測される値の両側でこの数の値が
 ステップサイズ単位分の間隔で測定されます。</value>
   </data>
-  <data name="&gt;&gt;textStepCount.Name" xml:space="preserve">
+  <data name=">>textStepCount.Name" xml:space="preserve">
     <value>textStepCount</value>
   </data>
-  <data name="&gt;&gt;textStepCount.Type" xml:space="preserve">
+  <data name=">>textStepCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textStepCount.Parent" xml:space="preserve">
+  <data name=">>textStepCount.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textStepCount.ZOrder" xml:space="preserve">
+  <data name=">>textStepCount.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -378,18 +378,18 @@ DPが測定されると同時に、その予測される値の両側でこの数
     <value>10</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>ステップ数(&amp;C)：</value>
+    <value>ステップ数(&amp;C)：</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+  <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name=">>label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name=">>label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name=">>label3.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="textStepSize.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -402,20 +402,20 @@ DPが測定されると同時に、その予測される値の両側でこの数
     <value>9</value>
   </data>
   <data name="textStepSize.ToolTip" xml:space="preserve">
-<value>DP最適化メソッドで使用される間隔です。ここで、予測される
+    <value>DP最適化メソッドで使用される間隔です。ここで、予測される
 DPが測定されると同時に、その予測される値の両側でステップ数の値が
 ステップサイズ単位分の間隔で測定されます。</value>
   </data>
-  <data name="&gt;&gt;textStepSize.Name" xml:space="preserve">
+  <data name=">>textStepSize.Name" xml:space="preserve">
     <value>textStepSize</value>
   </data>
-  <data name="&gt;&gt;textStepSize.Type" xml:space="preserve">
+  <data name=">>textStepSize.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textStepSize.Parent" xml:space="preserve">
+  <data name=">>textStepSize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textStepSize.ZOrder" xml:space="preserve">
+  <data name=">>textStepSize.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -431,18 +431,18 @@ DPが測定されると同時に、その予測される値の両側でステッ
     <value>8</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-<value>ステップサイズ(&amp;Z)：</value>
+    <value>ステップサイズ(&amp;Z)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+  <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name=">>label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+  <data name=">>label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+  <data name=">>label5.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -454,16 +454,16 @@ DPが測定されると同時に、その予測される値の両側でステッ
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+  <data name=">>groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+  <data name=">>groupBox1.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+  <data name=">>groupBox1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+  <data name=">>groupBox1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -479,18 +479,18 @@ DPが測定されると同時に、その予測される値の両側でステッ
     <value>6</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>最適化：</value>
+    <value>最適化：</value>
   </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+  <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+  <data name=">>label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+  <data name=">>label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+  <data name=">>label6.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnShowGraph.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -503,22 +503,22 @@ DPが測定されると同時に、その予測される値の両側でステッ
     <value>13</value>
   </data>
   <data name="btnShowGraph.Text" xml:space="preserve">
-<value>グラフを表示(&amp;S)...</value>
+    <value>グラフを表示(&amp;S)...</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-<value>このドキュメント内のペプチドに対して、現在インポートされている最適化結果データの
+    <value>このドキュメント内のペプチドに対して、現在インポートされている最適化結果データの
 線形回帰グラフを表示します</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.Name" xml:space="preserve">
+  <data name=">>btnShowGraph.Name" xml:space="preserve">
     <value>btnShowGraph</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.Type" xml:space="preserve">
+  <data name=">>btnShowGraph.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.Parent" xml:space="preserve">
+  <data name=">>btnShowGraph.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnShowGraph.ZOrder" xml:space="preserve">
+  <data name=">>btnShowGraph.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnUseCurrent.Enabled" type="System.Boolean, mscorlib">
@@ -534,22 +534,22 @@ DPが測定されると同時に、その予測される値の両側でステッ
     <value>12</value>
   </data>
   <data name="btnUseCurrent.Text" xml:space="preserve">
-<value>結果を使用(&amp;U)</value>
+    <value>結果を使用(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-<value>このドキュメント内のペプチドに、現在インポートされている最適化結果データを使用して
+    <value>このドキュメント内のペプチドに、現在インポートされている最適化結果データを使用して
 線形回帰式を計算します。</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
+  <data name=">>btnUseCurrent.Name" xml:space="preserve">
     <value>btnUseCurrent</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Type" xml:space="preserve">
+  <data name=">>btnUseCurrent.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.Parent" xml:space="preserve">
+  <data name=">>btnUseCurrent.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnUseCurrent.ZOrder" xml:space="preserve">
+  <data name=">>btnUseCurrent.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -565,18 +565,18 @@ DPが測定されると同時に、その予測される値の両側でステッ
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>デクラスタリングポテンシャル計算式を編集</value>
+    <value>デクラスタリングポテンシャル計算式を編集</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+  <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+  <data name=">>helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>EditDPDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

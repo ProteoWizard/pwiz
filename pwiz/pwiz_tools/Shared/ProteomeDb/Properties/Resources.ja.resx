@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
 		Microsoft ResX Schema
@@ -58,25 +58,25 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <xsd:element msdata:IsDataSet="true" name="root">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -98,30 +98,30 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
-<value xml:space="preserve">{0} 個のタンパク質を追加しました</value>
+    <value xml:space="preserve">{0} 個のタンパク質を追加しました</value>
   </data>
     <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
-<value xml:space="preserve">{0} 個のタンパク質をインポートしました</value>
+    <value xml:space="preserve">{0} 個のタンパク質をインポートしました</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
-<value xml:space="preserve">既存のペプチドのリストを表示中</value>
+    <value xml:space="preserve">既存のペプチドのリストを表示中</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_proteins" xml:space="preserve">
-<value xml:space="preserve">タンパク質のリストを表示中</value>
+    <value xml:space="preserve">タンパク質のリストを表示中</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
-<value xml:space="preserve">{0} 個のタンパク質の消化中</value>
+    <value xml:space="preserve">{0} 個のタンパク質の消化中</value>
   </data>
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
-<value xml:space="preserve">{0} 個のタンパク質を {1} 個のユニークペプチドに消化しました</value>
+    <value xml:space="preserve">{0} 個のタンパク質を {1} 個のユニークペプチドに消化しました</value>
   </data>
   <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
-<value xml:space="preserve">読み取りロックの保持中は書き込みロックを取得できません。</value>
+    <value xml:space="preserve">読み取りロックの保持中は書き込みロックを取得できません。</value>
   </data>
   <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
-<value xml:space="preserve">書き込みロックが必要です</value>
+    <value xml:space="preserve">書き込みロックが必要です</value>
   </data>
     <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
-<value>変更を保存中</value>
+    <value>変更を保存中</value>
   </data>
 </root>

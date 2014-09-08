@@ -138,7 +138,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="radioSingle.ToolTip" xml:space="preserve">
-    <value>Create a single file including all transitions.  If this is not just for reference,
+    <value>Create a single file including all transitions. If this is not just for reference,
 make sure your instrument can handle the full set of transitions.</value>
   </data>
   <data name="&gt;&gt;radioSingle.Name" xml:space="preserve">
@@ -169,7 +169,7 @@ make sure your instrument can handle the full set of transitions.</value>
     <value>&amp;One method per protein</value>
   </data>
   <data name="radioProtein.ToolTip" xml:space="preserve">
-    <value>Split methods along protein boundaries.  If this is not just for reference,
+    <value>Split methods along protein boundaries. If this is not just for reference,
 make sure your instrument can handle the number of transitions in each file.</value>
   </data>
   <data name="&gt;&gt;radioProtein.Name" xml:space="preserve">

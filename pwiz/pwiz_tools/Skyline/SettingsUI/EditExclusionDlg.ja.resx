@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -132,18 +132,18 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-<value>除外リストに表示される除外の名前です</value>
+    <value>除外リストに表示される除外の名前です</value>
   </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+  <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+  <data name=">>textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+  <data name=">>textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+  <data name=">>textName.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -159,18 +159,18 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>名前(&amp;N)：</value>
+    <value>名前(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+  <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name=">>label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+  <data name=">>label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+  <data name=">>label4.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -183,18 +183,18 @@
     <value>8</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -207,18 +207,18 @@
     <value>7</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textExclusionRegex.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -231,18 +231,18 @@
     <value>4</value>
   </data>
   <data name="textExclusionRegex.ToolTip" xml:space="preserve">
-<value>この正規表現に一致するペプチドを除外します</value>
+    <value>この正規表現に一致するペプチドを除外します</value>
   </data>
-  <data name="&gt;&gt;textExclusionRegex.Name" xml:space="preserve">
+  <data name=">>textExclusionRegex.Name" xml:space="preserve">
     <value>textExclusionRegex</value>
   </data>
-  <data name="&gt;&gt;textExclusionRegex.Type" xml:space="preserve">
+  <data name=">>textExclusionRegex.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textExclusionRegex.Parent" xml:space="preserve">
+  <data name=">>textExclusionRegex.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textExclusionRegex.ZOrder" xml:space="preserve">
+  <data name=">>textExclusionRegex.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="labelRegex.AutoSize" type="System.Boolean, mscorlib">
@@ -258,18 +258,18 @@
     <value>2</value>
   </data>
   <data name="labelRegex.Text" xml:space="preserve">
-<value>除外(&amp;E)</value>
+    <value>除外(&amp;E)</value>
   </data>
-  <data name="&gt;&gt;labelRegex.Name" xml:space="preserve">
+  <data name=">>labelRegex.Name" xml:space="preserve">
     <value>labelRegex</value>
   </data>
-  <data name="&gt;&gt;labelRegex.Type" xml:space="preserve">
+  <data name=">>labelRegex.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelRegex.Parent" xml:space="preserve">
+  <data name=">>labelRegex.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelRegex.ZOrder" xml:space="preserve">
+  <data name=">>labelRegex.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="radioSequence.AutoSize" type="System.Boolean, mscorlib">
@@ -285,22 +285,22 @@
     <value>6</value>
   </data>
   <data name="radioSequence.Text" xml:space="preserve">
-<value>アミノ酸配列(&amp;A)</value>
+    <value>アミノ酸配列(&amp;A)</value>
   </data>
   <data name="radioSequence.ToolTip" xml:space="preserve">
-<value>修飾に関係なく、PEPMICERのように単純なアミノ酸配列を
+    <value>修飾に関係なく、PEPMICERのように単純なアミノ酸配列を
 一致させます。</value>
   </data>
-  <data name="&gt;&gt;radioSequence.Name" xml:space="preserve">
+  <data name=">>radioSequence.Name" xml:space="preserve">
     <value>radioSequence</value>
   </data>
-  <data name="&gt;&gt;radioSequence.Type" xml:space="preserve">
+  <data name=">>radioSequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioSequence.Parent" xml:space="preserve">
+  <data name=">>radioSequence.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;radioSequence.ZOrder" xml:space="preserve">
+  <data name=">>radioSequence.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="radioModSequence.AutoSize" type="System.Boolean, mscorlib">
@@ -316,22 +316,22 @@
     <value>7</value>
   </data>
   <data name="radioModSequence.Text" xml:space="preserve">
-<value>軽修飾配列(&amp;L)</value>
+    <value>軽修飾配列(&amp;L)</value>
   </data>
   <data name="radioModSequence.ToolTip" xml:space="preserve">
-<value>PEPM[+12]IC[+58]ERのような軽修飾ペプチド配列を
+    <value>PEPM[+12]IC[+58]ERのような軽修飾ペプチド配列を
 一致させます</value>
   </data>
-  <data name="&gt;&gt;radioModSequence.Name" xml:space="preserve">
+  <data name=">>radioModSequence.Name" xml:space="preserve">
     <value>radioModSequence</value>
   </data>
-  <data name="&gt;&gt;radioModSequence.Type" xml:space="preserve">
+  <data name=">>radioModSequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioModSequence.Parent" xml:space="preserve">
+  <data name=">>radioModSequence.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;radioModSequence.ZOrder" xml:space="preserve">
+  <data name=">>radioModSequence.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="linkRegex.AutoSize" type="System.Boolean, mscorlib">
@@ -347,18 +347,18 @@
     <value>3</value>
   </data>
   <data name="linkRegex.Text" xml:space="preserve">
-<value>正規表現：</value>
+    <value>正規表現：</value>
   </data>
-  <data name="&gt;&gt;linkRegex.Name" xml:space="preserve">
+  <data name=">>linkRegex.Name" xml:space="preserve">
     <value>linkRegex</value>
   </data>
-  <data name="&gt;&gt;linkRegex.Type" xml:space="preserve">
+  <data name=">>linkRegex.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linkRegex.Parent" xml:space="preserve">
+  <data name=">>linkRegex.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;linkRegex.ZOrder" xml:space="preserve">
+  <data name=">>linkRegex.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -374,18 +374,18 @@
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>除外するペプチド(&amp;X)：</value>
+    <value>除外するペプチド(&amp;X)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="radioMatching.AutoSize" type="System.Boolean, mscorlib">
@@ -401,18 +401,18 @@
     <value>9</value>
   </data>
   <data name="radioMatching.Text" xml:space="preserve">
-<value>正規表現が一致するとき(&amp;M)</value>
+    <value>正規表現が一致するとき(&amp;M)</value>
   </data>
-  <data name="&gt;&gt;radioMatching.Name" xml:space="preserve">
+  <data name=">>radioMatching.Name" xml:space="preserve">
     <value>radioMatching</value>
   </data>
-  <data name="&gt;&gt;radioMatching.Type" xml:space="preserve">
+  <data name=">>radioMatching.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioMatching.Parent" xml:space="preserve">
+  <data name=">>radioMatching.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;radioMatching.ZOrder" xml:space="preserve">
+  <data name=">>radioMatching.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="radioNotMatching.AutoSize" type="System.Boolean, mscorlib">
@@ -428,18 +428,18 @@
     <value>10</value>
   </data>
   <data name="radioNotMatching.Text" xml:space="preserve">
-<value>正規表現がマッチしないとき(&amp;O)</value>
+    <value>正規表現がマッチしないとき(&amp;O)</value>
   </data>
-  <data name="&gt;&gt;radioNotMatching.Name" xml:space="preserve">
+  <data name=">>radioNotMatching.Name" xml:space="preserve">
     <value>radioNotMatching</value>
   </data>
-  <data name="&gt;&gt;radioNotMatching.Type" xml:space="preserve">
+  <data name=">>radioNotMatching.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;radioNotMatching.Parent" xml:space="preserve">
+  <data name=">>radioNotMatching.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;radioNotMatching.ZOrder" xml:space="preserve">
+  <data name=">>radioNotMatching.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -455,18 +455,18 @@
     <value>5</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>適用先(&amp;A)：</value>
+    <value>適用先(&amp;A)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+  <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name=">>label1.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name=">>label1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -478,16 +478,16 @@
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+  <data name=">>panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+  <data name=">>panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name=">>panel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name=">>panel1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -499,16 +499,16 @@
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
+  <data name=">>panel2.Name" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
+  <data name=">>panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+  <data name=">>panel2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+  <data name=">>panel2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -525,18 +525,18 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>除外を編集</value>
+    <value>除外を編集</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+  <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+  <data name=">>helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>EditExclusionDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -136,18 +136,18 @@
     <value>9</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>キャンセル</value>
+    <value>キャンセル</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -166,18 +166,18 @@
     <value>8</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-<value>OK</value>
+    <value>OK</value>
   </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+  <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+  <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+  <data name=">>btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="textBoxCutoff.Enabled" type="System.Boolean, mscorlib">
@@ -192,16 +192,16 @@
   <data name="textBoxCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="&gt;&gt;textBoxCutoff.Name" xml:space="preserve">
+  <data name=">>textBoxCutoff.Name" xml:space="preserve">
     <value>textBoxCutoff</value>
   </data>
-  <data name="&gt;&gt;textBoxCutoff.Type" xml:space="preserve">
+  <data name=">>textBoxCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textBoxCutoff.Parent" xml:space="preserve">
+  <data name=">>textBoxCutoff.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;textBoxCutoff.ZOrder" xml:space="preserve">
+  <data name=">>textBoxCutoff.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -217,18 +217,18 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>Q値カットオフ(&amp;Q)：</value>
+    <value>Q値カットオフ(&amp;Q)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+  <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name=">>label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name=">>label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name=">>label2.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="reintegrateAllPeaks.AutoSize" type="System.Boolean, mscorlib">
@@ -244,18 +244,18 @@
     <value>2</value>
   </data>
   <data name="reintegrateAllPeaks.Text" xml:space="preserve">
-<value>すべてのピークを積分(&amp;A)</value>
+    <value>すべてのピークを積分(&amp;A)</value>
   </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.Name" xml:space="preserve">
+  <data name=">>reintegrateAllPeaks.Name" xml:space="preserve">
     <value>reintegrateAllPeaks</value>
   </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.Type" xml:space="preserve">
+  <data name=">>reintegrateAllPeaks.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.Parent" xml:space="preserve">
+  <data name=">>reintegrateAllPeaks.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.ZOrder" xml:space="preserve">
+  <data name=">>reintegrateAllPeaks.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="reintegrateQCutoff.AutoSize" type="System.Boolean, mscorlib">
@@ -271,18 +271,18 @@
     <value>3</value>
   </data>
   <data name="reintegrateQCutoff.Text" xml:space="preserve">
-<value>有意のQ値のみを積分(&amp;O)</value>
+    <value>有意のQ値のみを積分(&amp;O)</value>
   </data>
-  <data name="&gt;&gt;reintegrateQCutoff.Name" xml:space="preserve">
+  <data name=">>reintegrateQCutoff.Name" xml:space="preserve">
     <value>reintegrateQCutoff</value>
   </data>
-  <data name="&gt;&gt;reintegrateQCutoff.Type" xml:space="preserve">
+  <data name=">>reintegrateQCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;reintegrateQCutoff.Parent" xml:space="preserve">
+  <data name=">>reintegrateQCutoff.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;reintegrateQCutoff.ZOrder" xml:space="preserve">
+  <data name=">>reintegrateQCutoff.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="checkBoxOverwrite.AutoSize" type="System.Boolean, mscorlib">
@@ -298,18 +298,18 @@
     <value>7</value>
   </data>
   <data name="checkBoxOverwrite.Text" xml:space="preserve">
-<value>手動積分を上書き(&amp;O)</value>
+    <value>手動積分を上書き(&amp;O)</value>
   </data>
-  <data name="&gt;&gt;checkBoxOverwrite.Name" xml:space="preserve">
+  <data name=">>checkBoxOverwrite.Name" xml:space="preserve">
     <value>checkBoxOverwrite</value>
   </data>
-  <data name="&gt;&gt;checkBoxOverwrite.Type" xml:space="preserve">
+  <data name=">>checkBoxOverwrite.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkBoxOverwrite.Parent" xml:space="preserve">
+  <data name=">>checkBoxOverwrite.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;checkBoxOverwrite.ZOrder" xml:space="preserve">
+  <data name=">>checkBoxOverwrite.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="checkBoxAnnotation.AutoSize" type="System.Boolean, mscorlib">
@@ -325,18 +325,18 @@
     <value>6</value>
   </data>
   <data name="checkBoxAnnotation.Text" xml:space="preserve">
-<value>Q値注釈を追加(&amp;D)</value>
+    <value>Q値注釈を追加(&amp;D)</value>
   </data>
-  <data name="&gt;&gt;checkBoxAnnotation.Name" xml:space="preserve">
+  <data name=">>checkBoxAnnotation.Name" xml:space="preserve">
     <value>checkBoxAnnotation</value>
   </data>
-  <data name="&gt;&gt;checkBoxAnnotation.Type" xml:space="preserve">
+  <data name=">>checkBoxAnnotation.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkBoxAnnotation.Parent" xml:space="preserve">
+  <data name=">>checkBoxAnnotation.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;checkBoxAnnotation.ZOrder" xml:space="preserve">
+  <data name=">>checkBoxAnnotation.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label36.AutoSize" type="System.Boolean, mscorlib">
@@ -355,18 +355,18 @@
     <value>0</value>
   </data>
   <data name="label36.Text" xml:space="preserve">
-<value>ピークスコアモデル(&amp;P)：</value>
+    <value>ピークスコアモデル(&amp;P)：</value>
   </data>
-  <data name="&gt;&gt;label36.Name" xml:space="preserve">
+  <data name=">>label36.Name" xml:space="preserve">
     <value>label36</value>
   </data>
-  <data name="&gt;&gt;label36.Type" xml:space="preserve">
+  <data name=">>label36.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label36.Parent" xml:space="preserve">
+  <data name=">>label36.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label36.ZOrder" xml:space="preserve">
+  <data name=">>label36.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="comboBoxScoringModel.Location" type="System.Drawing.Point, System.Drawing">
@@ -378,16 +378,16 @@
   <data name="comboBoxScoringModel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;comboBoxScoringModel.Name" xml:space="preserve">
+  <data name=">>comboBoxScoringModel.Name" xml:space="preserve">
     <value>comboBoxScoringModel</value>
   </data>
-  <data name="&gt;&gt;comboBoxScoringModel.Type" xml:space="preserve">
+  <data name=">>comboBoxScoringModel.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboBoxScoringModel.Parent" xml:space="preserve">
+  <data name=">>comboBoxScoringModel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;comboBoxScoringModel.ZOrder" xml:space="preserve">
+  <data name=">>comboBoxScoringModel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -403,12 +403,12 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>再積分</value>
+    <value>再積分</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>ReintegrateDlg</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -138,16 +138,16 @@
   <data name="progressBarAllFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;progressBarAllFiles.Name" xml:space="preserve">
+  <data name=">>progressBarAllFiles.Name" xml:space="preserve">
     <value>progressBarAllFiles</value>
   </data>
-  <data name="&gt;&gt;progressBarAllFiles.Type" xml:space="preserve">
+  <data name=">>progressBarAllFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;progressBarAllFiles.Parent" xml:space="preserve">
+  <data name=">>progressBarAllFiles.Parent" xml:space="preserve">
     <value>panelMultifileProgress</value>
   </data>
-  <data name="&gt;&gt;progressBarAllFiles.ZOrder" xml:space="preserve">
+  <data name=">>progressBarAllFiles.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="lblFileCount.AutoSize" type="System.Boolean, mscorlib">
@@ -166,18 +166,18 @@
     <value>0</value>
   </data>
   <data name="lblFileCount.Text" xml:space="preserve">
-<value>X/Yファイル</value>
+    <value>X/Yファイル</value>
   </data>
-  <data name="&gt;&gt;lblFileCount.Name" xml:space="preserve">
+  <data name=">>lblFileCount.Name" xml:space="preserve">
     <value>lblFileCount</value>
   </data>
-  <data name="&gt;&gt;lblFileCount.Type" xml:space="preserve">
+  <data name=">>lblFileCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblFileCount.Parent" xml:space="preserve">
+  <data name=">>lblFileCount.Parent" xml:space="preserve">
     <value>panelMultifileProgress</value>
   </data>
-  <data name="&gt;&gt;lblFileCount.ZOrder" xml:space="preserve">
+  <data name=">>lblFileCount.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelMultifileProgress.Location" type="System.Drawing.Point, System.Drawing">
@@ -192,16 +192,16 @@
   <data name="panelMultifileProgress.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;panelMultifileProgress.Name" xml:space="preserve">
+  <data name=">>panelMultifileProgress.Name" xml:space="preserve">
     <value>panelMultifileProgress</value>
   </data>
-  <data name="&gt;&gt;panelMultifileProgress.Type" xml:space="preserve">
+  <data name=">>panelMultifileProgress.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelMultifileProgress.Parent" xml:space="preserve">
+  <data name=">>panelMultifileProgress.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelMultifileProgress.ZOrder" xml:space="preserve">
+  <data name=">>panelMultifileProgress.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -223,18 +223,18 @@
     <value>0</value>
   </data>
   <data name="btnCancelFile.Text" xml:space="preserve">
-<value>ファイルをキャンセル(&amp;F)</value>
+    <value>ファイルをキャンセル(&amp;F)</value>
   </data>
-  <data name="&gt;&gt;btnCancelFile.Name" xml:space="preserve">
+  <data name=">>btnCancelFile.Name" xml:space="preserve">
     <value>btnCancelFile</value>
   </data>
-  <data name="&gt;&gt;btnCancelFile.Type" xml:space="preserve">
+  <data name=">>btnCancelFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancelFile.Parent" xml:space="preserve">
+  <data name=">>btnCancelFile.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;btnCancelFile.ZOrder" xml:space="preserve">
+  <data name=">>btnCancelFile.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -253,18 +253,18 @@
     <value>1</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-<value>インポートをキャンセル(&amp;M)</value>
+    <value>インポートをキャンセル(&amp;M)</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+  <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name=">>btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name=">>btnCancel.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -283,18 +283,18 @@
     <value>2</value>
   </data>
   <data name="btnHide.Text" xml:space="preserve">
-<value>隠す(&amp;H)</value>
+    <value>隠す(&amp;H)</value>
   </data>
-  <data name="&gt;&gt;btnHide.Name" xml:space="preserve">
+  <data name=">>btnHide.Name" xml:space="preserve">
     <value>btnHide</value>
   </data>
-  <data name="&gt;&gt;btnHide.Type" xml:space="preserve">
+  <data name=">>btnHide.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnHide.Parent" xml:space="preserve">
+  <data name=">>btnHide.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
+  <data name=">>btnHide.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
@@ -309,16 +309,16 @@
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
+  <data name=">>panel2.Name" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
+  <data name=">>panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+  <data name=">>panel2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+  <data name=">>panel2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="panelGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -339,16 +339,16 @@
   <data name="asyncGraph.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;asyncGraph.Name" xml:space="preserve">
+  <data name=">>asyncGraph.Name" xml:space="preserve">
     <value>asyncGraph</value>
   </data>
-  <data name="&gt;&gt;asyncGraph.Type" xml:space="preserve">
+  <data name=">>asyncGraph.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;asyncGraph.Parent" xml:space="preserve">
+  <data name=">>asyncGraph.Parent" xml:space="preserve">
     <value>panelGraph</value>
   </data>
-  <data name="&gt;&gt;asyncGraph.ZOrder" xml:space="preserve">
+  <data name=">>asyncGraph.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="panelGraph.Location" type="System.Drawing.Point, System.Drawing">
@@ -360,16 +360,16 @@
   <data name="panelGraph.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
   </data>
-  <data name="&gt;&gt;panelGraph.Name" xml:space="preserve">
+  <data name=">>panelGraph.Name" xml:space="preserve">
     <value>panelGraph</value>
   </data>
-  <data name="&gt;&gt;panelGraph.Type" xml:space="preserve">
+  <data name=">>panelGraph.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelGraph.Parent" xml:space="preserve">
+  <data name=">>panelGraph.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelGraph.ZOrder" xml:space="preserve">
+  <data name=">>panelGraph.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelFileProgress.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -390,16 +390,16 @@
   <data name="progressBarFile.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;progressBarFile.Name" xml:space="preserve">
+  <data name=">>progressBarFile.Name" xml:space="preserve">
     <value>progressBarFile</value>
   </data>
-  <data name="&gt;&gt;progressBarFile.Type" xml:space="preserve">
+  <data name=">>progressBarFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;progressBarFile.Parent" xml:space="preserve">
+  <data name=">>progressBarFile.Parent" xml:space="preserve">
     <value>panelFileProgress</value>
   </data>
-  <data name="&gt;&gt;progressBarFile.ZOrder" xml:space="preserve">
+  <data name=">>progressBarFile.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="lblFileName.AutoSize" type="System.Boolean, mscorlib">
@@ -418,18 +418,18 @@
     <value>0</value>
   </data>
   <data name="lblFileName.Text" xml:space="preserve">
-<value>ファイル名</value>
+    <value>ファイル名</value>
   </data>
-  <data name="&gt;&gt;lblFileName.Name" xml:space="preserve">
+  <data name=">>lblFileName.Name" xml:space="preserve">
     <value>lblFileName</value>
   </data>
-  <data name="&gt;&gt;lblFileName.Type" xml:space="preserve">
+  <data name=">>lblFileName.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblFileName.Parent" xml:space="preserve">
+  <data name=">>lblFileName.Parent" xml:space="preserve">
     <value>panelFileProgress</value>
   </data>
-  <data name="&gt;&gt;lblFileName.ZOrder" xml:space="preserve">
+  <data name=">>lblFileName.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelFileProgress.Location" type="System.Drawing.Point, System.Drawing">
@@ -441,16 +441,16 @@
   <data name="panelFileProgress.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;panelFileProgress.Name" xml:space="preserve">
+  <data name=">>panelFileProgress.Name" xml:space="preserve">
     <value>panelFileProgress</value>
   </data>
-  <data name="&gt;&gt;panelFileProgress.Type" xml:space="preserve">
+  <data name=">>panelFileProgress.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelFileProgress.Parent" xml:space="preserve">
+  <data name=">>panelFileProgress.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelFileProgress.ZOrder" xml:space="preserve">
+  <data name=">>panelFileProgress.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -466,12 +466,12 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>クロマトグラムの読み込み中...</value>
+    <value>クロマトグラムの読み込み中...</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+  <data name=">>$this.Name" xml:space="preserve">
     <value>AllChromatogramsGraph</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+  <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

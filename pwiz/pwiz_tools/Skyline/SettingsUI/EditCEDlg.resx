@@ -263,7 +263,7 @@ energy from the precursor m/z with an equation of the form:
 
 CE = slope * precursor m/z + intercept
 
-Equations for multiple precursor charge states are permitted.  If a precursor
+Equations for multiple precursor charge states are permitted. If a precursor
 charge stat is not represented in this list, its closest match is used.</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">

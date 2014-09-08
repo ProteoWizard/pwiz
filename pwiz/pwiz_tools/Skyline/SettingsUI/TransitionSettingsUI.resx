@@ -313,7 +313,7 @@ in each precursor totaled or for each transition separately</value>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
     <value>If checked, the any measured CE or DP optimization values will
 be used to select the value exported in methods and transition
-lists.  The value producing the maximum total peak area will be
+lists. The value producing the maximum total peak area will be
 chosen.</value>
   </data>
   <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
@@ -339,8 +339,8 @@ chosen.</value>
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
     <value>A linear equation used to predict the optimal declustering potential (DP)
-for each precursor from its mass-to-charge ratio.  Isotope labeled peptides
-use the predicted DP for the unlabeled form.  (AB instruments only)</value>
+for each precursor from its mass-to-charge ratio. Isotope labeled peptides
+use the predicted DP for the unlabeled form. (AB instruments only)</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
@@ -392,7 +392,7 @@ use the predicted DP for the unlabeled form.  (AB instruments only)</value>
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
     <value>A linear equation used to predict the optimal collsion energy (CE)
-for each precursor from its mass-to-charge ratio.  Isotope labeled
+for each precursor from its mass-to-charge ratio. Isotope labeled
 peptides use the predicted CE for the unlabeled form.</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
@@ -646,7 +646,7 @@ for calculating potential product ions</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>If checked, tranitions are automatically chosen for peptides
-using specified filter and library settings.  Otherwise, all transition
+using specified filter and library settings. Otherwise, all transition
 selection must be done by manual document editing.</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
@@ -735,7 +735,7 @@ selection must be done by manual document editing.</value>
   </data>
   <data name="textExclusionWindow.ToolTip" xml:space="preserve">
     <value>A m/z window around the precursor m/z within which transitions
-are excluded, or blank.  A window of 20 will exclude all transitions
+are excluded, or blank. A window of 20 will exclude all transitions
 within 10 on either side of the precursor m/z.</value>
   </data>
   <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
