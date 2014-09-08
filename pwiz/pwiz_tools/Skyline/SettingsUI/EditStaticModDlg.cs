@@ -340,11 +340,12 @@ namespace pwiz.Skyline.SettingsUI
                 // Allow formula and both masses to be empty, if losses are present
                 if (!string.IsNullOrEmpty(textMonoMass.Text) || !string.IsNullOrEmpty(textAverageMass.Text) || losses == null)
                 {
+                    // TODO: Maximum and minimum masses should be formalized and applied everywhere
                     double mass;
-                    if (!helper.ValidateDecimalTextBox(e, textMonoMass, -1500, 1500, out mass))
+                    if (!helper.ValidateDecimalTextBox(e, textMonoMass, -1500, 5000, out mass))
                         return;
                     monoMass = mass;
-                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 1500, out mass))
+                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 5000, out mass))
                         return;
                     avgMass = mass;
                 }
