@@ -239,7 +239,11 @@ namespace IDPicker.Forms
 
                     string idpDbFilepath = session.Connection.GetDataSource();
                     if (embedType == 2)
+                    {
+                        BeginInvoke(new MethodInvoker(() => ModeandDefaultPanel.Visible = false));
                         Embedder.EmbedMS1Metrics(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, xicConfigBySource, ilr);
+                        BeginInvoke(new MethodInvoker(() => ModeandDefaultPanel.Visible = true));
+                    }
                     else if (embedType == 1)
                         Embedder.EmbedScanTime(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
                     else
@@ -345,7 +349,11 @@ namespace IDPicker.Forms
 
         private void DefaultXICSettingsButton_Click(object sender, EventArgs e)
         {
-            var xicForm = new XICForm(new Embedder.XICConfiguration());
+            var maxQValue = 0.05;
+            var mostRecentFilter = session.Query<PersistentDataFilter>().OrderByDescending(o => o.Id).FirstOrDefault();
+            if (mostRecentFilter != null)
+                maxQValue = mostRecentFilter.MaximumQValue;
+            var xicForm = new XICForm(new Embedder.XICConfiguration(), maxQValue);
             if (xicForm.ShowDialog() == DialogResult.OK)
                 foreach (DataGridViewRow row in dataGridView.Rows)
                     row.Cells[XICSettingsColumn.Index].Value = xicForm.GetConfig();
@@ -353,12 +361,16 @@ namespace IDPicker.Forms
 
         private void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            var maxQValue = 0.05;
+            var mostRecentFilter = session.Query<PersistentDataFilter>().OrderByDescending(o => o.Id).FirstOrDefault();
+            if (mostRecentFilter != null)
+                maxQValue = mostRecentFilter.MaximumQValue;
             if (e.ColumnIndex == XICSettingsColumn.Index)
             {
                 var oldSettings = dataGridView[e.ColumnIndex, e.RowIndex].Value as Embedder.XICConfiguration;
                 if (oldSettings == null)
                     return;
-                var xicForm = new XICForm(oldSettings);
+                var xicForm = new XICForm(oldSettings, maxQValue);
                 if (xicForm.ShowDialog() == DialogResult.OK)
                     dataGridView[e.ColumnIndex, e.RowIndex].Value = xicForm.GetConfig();
             }

@@ -91,15 +91,15 @@ using pwiz::chemistry::MZTolerance;
 
 struct XICConfiguration
 {
-    XICConfiguration(bool useAvgMass = false, double maxQValue = 0.05,
+    XICConfiguration(bool AlignRetentionTime = false, double MaxQValue = 0.05,
                      int MonoisotopicAdjustmentMin = -1, int MonoisotopicAdjustmentMax = 1,
                      int RetentionTimeLowerTolerance = 120, int RetentionTimeUpperTolerance = 120,
                      MZTolerance ChromatogramMzLowerOffset = MZTolerance(0.5, MZTolerance::MZ),
                      MZTolerance ChromatogramMzUpperOffset = MZTolerance(1.0, MZTolerance::MZ));
 
 
-    bool useAvgMass;
-    double maxQValue;
+    bool AlignRetentionTime;
+    double MaxQValue;
     int MonoisotopicAdjustmentMin;
     int MonoisotopicAdjustmentMax;
     int RetentionTimeLowerTolerance;
@@ -121,7 +121,7 @@ struct MS2ScanInfo
     double scanStartTime;
     bool identified;
     int msLevel; // levels higher than 2 are currently ignored
-    size_t distinctModifiedPeptideID;
+    string distinctModifiedPeptide;
     string precursorNativeID;
     double precursorMZ;
     int precursorCharge;
@@ -137,7 +137,7 @@ struct MS2ScanInfo
     {
         return scanStartTime == rhs.scanStartTime &&
                nativeID == rhs.nativeID &&
-               distinctModifiedPeptideID == rhs.distinctModifiedPeptideID &&
+               distinctModifiedPeptide == rhs.distinctModifiedPeptide &&
                precursorScanStartTime == rhs.precursorScanStartTime &&
                precursorMZ == rhs.precursorMZ &&
                precursorNativeID == rhs.precursorNativeID;

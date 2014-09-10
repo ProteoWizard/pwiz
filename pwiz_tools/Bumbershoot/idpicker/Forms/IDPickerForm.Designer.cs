@@ -329,14 +329,14 @@ namespace IDPicker
             // loadGeneMetadataToolStripMenuItem
             // 
             this.loadGeneMetadataToolStripMenuItem.Name = "loadGeneMetadataToolStripMenuItem";
-            this.loadGeneMetadataToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadGeneMetadataToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.loadGeneMetadataToolStripMenuItem.Text = "Load";
             this.loadGeneMetadataToolStripMenuItem.Click += new System.EventHandler(this.loadGeneMetadataToolStripMenuItem_Click);
             // 
             // dropGeneMetadataToolStripMenuItem
             // 
             this.dropGeneMetadataToolStripMenuItem.Name = "dropGeneMetadataToolStripMenuItem";
-            this.dropGeneMetadataToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.dropGeneMetadataToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.dropGeneMetadataToolStripMenuItem.Text = "Drop";
             this.dropGeneMetadataToolStripMenuItem.Click += new System.EventHandler(this.dropGeneMetadataToolStripMenuItem_Click);
             // 

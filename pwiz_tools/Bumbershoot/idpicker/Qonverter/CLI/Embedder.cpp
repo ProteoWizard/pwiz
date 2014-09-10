@@ -54,7 +54,7 @@ NativeEmbedder::QuantitationConfiguration makeNativeQuantitationConfiguration(Em
 
 NativeXIC::XICConfiguration makeNativeXICConfiguration(Embedder::XICConfiguration^ managedXICConfig)
 {
-    return NativeXIC::XICConfiguration(managedXICConfig->useAvgMass, managedXICConfig->maxQValue,
+    return NativeXIC::XICConfiguration(managedXICConfig->AlignRetentionTime, managedXICConfig->MaxQValue,
                      (size_t)managedXICConfig->MonoisotopicAdjustmentMin, (size_t)managedXICConfig->MonoisotopicAdjustmentMax,
                      (size_t)managedXICConfig->RetentionTimeLowerTolerance, (size_t)managedXICConfig->RetentionTimeUpperTolerance,
                      pwiz::chemistry::MZTolerance(managedXICConfig->ChromatogramMzLowerOffset->value,
@@ -80,8 +80,10 @@ Embedder::XICConfiguration::XICConfiguration()
     MonoisotopicAdjustmentMax = nativeConfig.MonoisotopicAdjustmentMax;
     RetentionTimeLowerTolerance = nativeConfig.RetentionTimeLowerTolerance;
     RetentionTimeUpperTolerance = nativeConfig.RetentionTimeUpperTolerance;
+    MaxQValue = nativeConfig.MaxQValue;
     ChromatogramMzLowerOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzLowerOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzLowerOffset.units);
     ChromatogramMzUpperOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzUpperOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzUpperOffset.units);
+    AlignRetentionTime = false;
 }
 
 Embedder::XICConfiguration::XICConfiguration(String^ representitiveString)
@@ -108,6 +110,18 @@ Embedder::XICConfiguration::XICConfiguration(String^ representitiveString)
             ChromatogramMzUpperOffset = gcnew MZTolerance(ChromatogramMzUpperOffsetValue, MZTolerance::Units::MZ);
         else
             ChromatogramMzUpperOffset = gcnew MZTolerance(ChromatogramMzUpperOffsetValue, MZTolerance::Units::PPM);
+            
+        pattern = "\\[(-?\\d+),(-?\\d+)\\] ; \\[(-?\\d+),(-?\\d+)\\] ; \\[(-?[\\d\\.]+)(\\w+),(-?[\\d\\.]+)(\\w+)\\] ; ([\\d.]+) ; (\\d?)";
+        rx = gcnew Regex( pattern );
+        match = rx->Match( representitiveString );
+        if (match->Success)
+        {
+            MaxQValue = Double::Parse(match->Groups[9]->Value);
+            if (match->Groups[10]->Value == "1")
+                AlignRetentionTime = true;
+            else
+                AlignRetentionTime = false;
+        }
     }
     else
     {
@@ -117,15 +131,21 @@ Embedder::XICConfiguration::XICConfiguration(String^ representitiveString)
         RetentionTimeUpperTolerance = nativeConfig.RetentionTimeUpperTolerance;
         ChromatogramMzLowerOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzLowerOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzLowerOffset.units);
         ChromatogramMzUpperOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzUpperOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzUpperOffset.units);
+        MaxQValue = nativeConfig.MaxQValue;
+        AlignRetentionTime = nativeConfig.AlignRetentionTime;
     }
 }
 
 String^ Embedder::XICConfiguration::ToString()
 {
+    String^ align = "0";
+    if (AlignRetentionTime == true)
+        align = "1";
     return "[" + MonoisotopicAdjustmentMin.ToString() + "," + MonoisotopicAdjustmentMax.ToString() + "] ; "
             + "[" + (-RetentionTimeLowerTolerance).ToString() + "," + RetentionTimeUpperTolerance.ToString() + "] ; "
             + "[" + (-ChromatogramMzLowerOffset->value).ToString() + ChromatogramMzLowerOffset->units.ToString()->ToLower()
-            + "," + (ChromatogramMzUpperOffset->value).ToString() + ChromatogramMzUpperOffset->units.ToString()->ToLower() + "]";
+            + "," + (ChromatogramMzUpperOffset->value).ToString() + ChromatogramMzUpperOffset->units.ToString()->ToLower() + "] ; "
+            + MaxQValue.ToString() + " ; " + align;
 }
 
 void Embedder::Embed(String^ idpDbFilepath,

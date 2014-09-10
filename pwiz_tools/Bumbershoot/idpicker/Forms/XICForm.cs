@@ -33,7 +33,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using IDPicker.DataModel;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using NHibernate.Linq;
 using pwiz.CLI.chemistry;
 using pwiz.CLI.util;
 
@@ -45,18 +47,21 @@ namespace IDPicker.Forms
         private string _rFilepath;
         private Embedder.XICConfiguration _config;
         private bool _editMode = false;
+        private double _maxQValue = 0.05;
 
-        public XICForm(Embedder.XICConfiguration oldConfig)
+        public XICForm(Embedder.XICConfiguration oldConfig, double maxQValue)
         {
             this.session = null;
             _config = oldConfig;
             _editMode = true;
+            _maxQValue = maxQValue;
             InitializeComponent();
         }
 
-        public XICForm(NHibernate.ISession session)
+        public XICForm(NHibernate.ISession session, double maxQValue)
         {
             this.session = session.SessionFactory.OpenSession();
+            _maxQValue = maxQValue;
             InitializeComponent();
         }
 
@@ -111,7 +116,6 @@ namespace IDPicker.Forms
             var rtMin = (int)Math.Round(RTTolLowerBox.Value);
             var maMax = (int)Math.Round(MonoisotopicAdjustmentMaxBox.Value);
             var maMin = (int)Math.Round(MonoisotopicAdjustmentMinBox.Value);
-            var uam = maMax == 0 && maMin == 0;
             _config = new Embedder.XICConfiguration
             {
                 ChromatogramMzLowerOffset = new MZTolerance(cloValue, cloUnits),
@@ -120,8 +124,8 @@ namespace IDPicker.Forms
                 RetentionTimeUpperTolerance = rtMax,
                 MonoisotopicAdjustmentMax = maMax,
                 MonoisotopicAdjustmentMin = maMin,
-                //maxQValue = 0.05,
-                useAvgMass = uam
+                MaxQValue = _maxQValue,
+                AlignRetentionTime = false
             };
             if (_editMode || session == null)
             {

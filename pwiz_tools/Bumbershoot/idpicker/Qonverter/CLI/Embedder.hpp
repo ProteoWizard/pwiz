@@ -66,8 +66,8 @@ ref struct XICConfiguration
     XICConfiguration(String^ representitiveString);
     virtual String^ ToString() override;
 
-    property bool useAvgMass;
-    property double maxQValue;
+    property bool AlignRetentionTime;
+    property double MaxQValue;
     property int MonoisotopicAdjustmentMin;
     property int MonoisotopicAdjustmentMax;
     property int RetentionTimeLowerTolerance;

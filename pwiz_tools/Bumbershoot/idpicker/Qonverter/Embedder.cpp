@@ -915,10 +915,10 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
     //TODO: process all files
 //    idpDb.execute("DROP TABLE IF EXISTS XICMetrics; "
 //                  "CREATE TABLE IF NOT EXISTS XICMetrics (DistinctMatchId INT, Source INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC, PRIMARY KEY(DistinctMatchId, Source));");
-    idpDb.execute("DROP TABLE IF EXISTS XICMetrics;");
-    idpDb.execute("DROP TABLE IF EXISTS XICMetricsSettings;");
-    idpDb.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
-    idpDb.execute("CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
+    idpDb.execute("DROP TABLE IF EXISTS XICMetrics; "
+                  "DROP TABLE IF EXISTS XICMetricsSettings; "
+                  "CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC); "
+                  "CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
     for(size_t i=0; i < sources.size(); ++i)
     {
         SpectrumSource& source = sources[i];
@@ -929,9 +929,13 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
         else if (xicConfigBySource.count(0) > 0)
             config = xicConfigBySource.find(0)->second; // applies to all sources
 
+        string align = "0";
+        if (config.AlignRetentionTime)
+            align = "1";
         string configString = "[" + lexical_cast<string>(config.MonoisotopicAdjustmentMin) + "," + lexical_cast<string>(config.MonoisotopicAdjustmentMax) + "] ; " +
         "[-" + lexical_cast<string>(config.RetentionTimeLowerTolerance) + "," + lexical_cast<string>(config.RetentionTimeUpperTolerance) + "] ; "+
-        "[-" + lexical_cast<string>(config.ChromatogramMzLowerOffset) + "," + lexical_cast<string>(config.ChromatogramMzUpperOffset) + "]";
+        "[-" + lexical_cast<string>(config.ChromatogramMzLowerOffset) + "," + lexical_cast<string>(config.ChromatogramMzUpperOffset) + "] ; " +
+        lexical_cast<string>(config.MaxQValue) + " ; " + align;
 
         int spectraAdded = XIC::EmbedMS1ForFile(idpDb, idpDbFilepath, source.filepath, lexical_cast<string>(source.id), config, ilr, i, sources.size());
         idpDb.execute("INSERT INTO XICMetricsSettings VALUES (" + lexical_cast<string>(source.id) + "," + lexical_cast<string>(spectraAdded) + ",'" + configString+ "')");

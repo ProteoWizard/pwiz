@@ -72,7 +72,10 @@ namespace IDPicker.Forms
             this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.quantitationMethodColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.XICSettingsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.EmbedNotice = new System.Windows.Forms.TextBox();
+            this.ModeandDefaultPanel = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
+            this.ModeandDefaultPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView
@@ -185,7 +188,7 @@ namespace IDPicker.Forms
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 9);
+            this.label3.Location = new System.Drawing.Point(11, 8);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(66, 13);
             this.label3.TabIndex = 10;
@@ -199,7 +202,7 @@ namespace IDPicker.Forms
             "Spectra + scan times",
             "Scan times only",
             "MS1 intensities"});
-            this.EmbedTypeBox.Location = new System.Drawing.Point(84, 6);
+            this.EmbedTypeBox.Location = new System.Drawing.Point(83, 5);
             this.EmbedTypeBox.Name = "EmbedTypeBox";
             this.EmbedTypeBox.Size = new System.Drawing.Size(149, 21);
             this.EmbedTypeBox.TabIndex = 11;
@@ -219,7 +222,7 @@ namespace IDPicker.Forms
             // DefaultLabel
             // 
             this.DefaultLabel.AutoSize = true;
-            this.DefaultLabel.Location = new System.Drawing.Point(515, 9);
+            this.DefaultLabel.Location = new System.Drawing.Point(514, 8);
             this.DefaultLabel.Name = "DefaultLabel";
             this.DefaultLabel.Size = new System.Drawing.Size(140, 13);
             this.DefaultLabel.TabIndex = 13;
@@ -236,7 +239,7 @@ namespace IDPicker.Forms
             "iTRAQ 8-plex",
             "TMT duplex",
             "TMT 6-plex"});
-            this.DefaultQuantitationMethodBox.Location = new System.Drawing.Point(661, 6);
+            this.DefaultQuantitationMethodBox.Location = new System.Drawing.Point(660, 5);
             this.DefaultQuantitationMethodBox.Name = "DefaultQuantitationMethodBox";
             this.DefaultQuantitationMethodBox.Size = new System.Drawing.Size(111, 21);
             this.DefaultQuantitationMethodBox.TabIndex = 14;
@@ -287,7 +290,33 @@ namespace IDPicker.Forms
             this.XICSettingsColumn.Name = "XICSettingsColumn";
             this.XICSettingsColumn.ReadOnly = true;
             this.XICSettingsColumn.Visible = false;
-            this.XICSettingsColumn.Width = 200;
+            this.XICSettingsColumn.Width = 225;
+            // 
+            // EmbedNotice
+            // 
+            this.EmbedNotice.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.EmbedNotice.Location = new System.Drawing.Point(12, 7);
+            this.EmbedNotice.Name = "EmbedNotice";
+            this.EmbedNotice.Size = new System.Drawing.Size(760, 20);
+            this.EmbedNotice.TabIndex = 15;
+            this.EmbedNotice.Text = "Notice: XIC metrics are embedded based on current filters. If filters are changed" +
+    " please repeat embed process.";
+            this.EmbedNotice.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // ModeandDefaultPanel
+            // 
+            this.ModeandDefaultPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ModeandDefaultPanel.Controls.Add(this.label3);
+            this.ModeandDefaultPanel.Controls.Add(this.DefaultQuantitationMethodBox);
+            this.ModeandDefaultPanel.Controls.Add(this.DefaultLabel);
+            this.ModeandDefaultPanel.Controls.Add(this.EmbedTypeBox);
+            this.ModeandDefaultPanel.Controls.Add(this.DefaultXICSettingsButton);
+            this.ModeandDefaultPanel.Location = new System.Drawing.Point(1, 1);
+            this.ModeandDefaultPanel.Name = "ModeandDefaultPanel";
+            this.ModeandDefaultPanel.Size = new System.Drawing.Size(783, 31);
+            this.ModeandDefaultPanel.TabIndex = 16;
             // 
             // EmbedderForm
             // 
@@ -295,10 +324,8 @@ namespace IDPicker.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 562);
-            this.Controls.Add(this.DefaultLabel);
-            this.Controls.Add(this.DefaultXICSettingsButton);
-            this.Controls.Add(this.EmbedTypeBox);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.ModeandDefaultPanel);
+            this.Controls.Add(this.EmbedNotice);
             this.Controls.Add(this.extensionsTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -307,10 +334,11 @@ namespace IDPicker.Forms
             this.Controls.Add(this.embedAllButton);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.dataGridView);
-            this.Controls.Add(this.DefaultQuantitationMethodBox);
             this.Name = "EmbedderForm";
             this.Text = "Embed Subset Spectra";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            this.ModeandDefaultPanel.ResumeLayout(false);
+            this.ModeandDefaultPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -338,5 +366,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn embeddedSourceColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn quantitationMethodColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn XICSettingsColumn;
+        private System.Windows.Forms.TextBox EmbedNotice;
+        private System.Windows.Forms.Panel ModeandDefaultPanel;
     }
 }

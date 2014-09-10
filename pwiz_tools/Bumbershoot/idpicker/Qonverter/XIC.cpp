@@ -56,11 +56,11 @@ const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;RAW;WIFF;d;t2d;m
 const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
 #endif
 
-XICConfiguration::XICConfiguration(bool useAvgMass, double maxQValue,
+XICConfiguration::XICConfiguration(bool AlignRetentionTime, double MaxQValue,
                      int MonoisotopicAdjustmentMin, int MonoisotopicAdjustmentMax,
                      int RetentionTimeLowerTolerance, int RetentionTimeUpperTolerance,
                      MZTolerance ChromatogramMzLowerOffset, MZTolerance ChromatogramMzUpperOffset)
-                     :useAvgMass(useAvgMass), maxQValue(maxQValue), MonoisotopicAdjustmentMin(MonoisotopicAdjustmentMin), MonoisotopicAdjustmentMax(MonoisotopicAdjustmentMax), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
+                     :AlignRetentionTime(AlignRetentionTime), MaxQValue(MaxQValue), MonoisotopicAdjustmentMin(MonoisotopicAdjustmentMin), MonoisotopicAdjustmentMax(MonoisotopicAdjustmentMax), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
 {}
 
 double pchst ( double arg1, double arg2 )
@@ -533,66 +533,33 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
 
 XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const string& sourceId, XICConfiguration config)
 {
-    //determine if search engine considers lower scores to be better
-    string selectedScore = "3"; //by default Myrimatch:MVH is score 3
-    bool golfScoreMode = false;
-    int scorePreference = 0;
-    string scoreCheckSQL = "select * from PeptideSpectrumMatchScoreName "
-                           "where name = 'MyriMatch:MVH' or name = 'xcorr' or name = 'MS-GF:SpecEValue'";
-    sqlite::query scoreCheckQuery(db, scoreCheckSQL.c_str());
-    BOOST_FOREACH(sqlite::query::rows row, scoreCheckQuery)
-    {
-        string scoreIndex;
-        string scoreName;
-        row.getter() >> scoreIndex >> scoreName;
-        if (scoreName == "MS-GF:SpecEValue" && scorePreference < 1)
-        {
-            golfScoreMode = true;
-            selectedScore = scoreIndex;
-            scorePreference = 1;
-        }
-        else if (scoreName == "xcorr" && scorePreference < 2)
-        {
-            golfScoreMode = false;
-            selectedScore = scoreIndex;
-            scorePreference = 2;
-        }
-        else if (scoreName == "MyriMatch:MVH" && scorePreference < 3)
-        {
-            golfScoreMode = false;
-            selectedScore = scoreIndex;
-            scorePreference = 3;
-        }
-    }
-
-
-    string deltaMassColumn = config.useAvgMass ? "AvgMassDelta" : "MonoMassDelta";
-    string massColumn = config.useAvgMass ? "MolecularWeight" : "MonoisotopicMass";
-    string sql = "SELECT psm.Id, psm.Peptide, Source, dm.DistinctMatchId, NativeID, PrecursorMZ, Charge, IFNULL(Mods, '') AS Mods, psmScore.Value,  "
-                "(IFNULL(TotalModMass,0)+pep."+massColumn+"+Charge*1.0076)/Charge AS ExactMZ   "
+    bool useAvgMass = (config.MonoisotopicAdjustmentMin==0) && (config.MonoisotopicAdjustmentMax==0);
+    string deltaMassColumn = useAvgMass ? "AvgMassDelta" : "MonoMassDelta";
+    string massColumn = useAvgMass ? "MolecularWeight" : "MonoisotopicMass";
+    string sql = "SELECT psm.Id, psm.Peptide, Source, NativeID, PrecursorMZ, Charge, IFNULL(Mods, '') AS Mods, Qvalue,  "
+                "(IFNULL(TotalModMass,0)+pep."+massColumn+"+Charge*1.0076)/Charge AS ExactMZ,   "
+                "IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) || ' ' || Charge || ' ' ||  IFNULL(Mods, '') as Distinct_Match   "
                 "FROM Spectrum s  "
                 "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum  "
                 "JOIN Peptide pep ON psm.Peptide=pep.Id  "
                 "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide  "
                 "LEFT JOIN ProteinData pro ON pi.Protein=pro.Id  "
-                "JOIN PeptideSpectrumMatchScore psmScore ON psm.Id=psmScore.PsmId "
-                "JOIN DistinctMatch dm on psm.Id=dm.PsmId  "
                 "LEFT JOIN (SELECT pm.PeptideSpectrumMatch AS PsmId,  "
                 "GROUP_CONCAT(MonoMassDelta || '@' || pm.Offset) AS Mods,  "
                 "SUM("+deltaMassColumn+") AS TotalModMass  "
                 "FROM PeptideModification pm  "
                 "JOIN Modification mod ON pm.Modification=mod.Id  "
                 "GROUP BY PsmId) mods2 ON psm.Id=mods2.PsmId  "
-//                "WHERE QValue <= ? AND Source=? AND Rank=1 AND psmScore.ScoreNameId = 3  "
-                "WHERE Source=? AND Rank=1 AND psmScore.ScoreNameId = "+selectedScore+"  "
+                "WHERE QValue <= ? AND Source=? AND Rank=1  "
+                //"WHERE Source=? AND Rank=1 AND psmScore.ScoreNameId = "+selectedScore+"  "
                 "GROUP BY psm.Id  "
-                "ORDER BY dm.DistinctMatchId, Charge, Mods ";
+                "ORDER BY Distinct_Match, Charge, Mods ";
 
 
 
     sqlite::query q(db, sql.c_str());
-    //q.binder() << config.maxQValue << sourceId;
-    q.binder() << sourceId;
+    //q.binder() << config.MaxQValue << sourceId;
+    q.binder() << config.MaxQValue << sourceId;
 
     XICWindowList windows;
     XICWindow tmpWindow;
@@ -613,9 +580,9 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         string modif;
         double score, exactMZ;
         string sourceId;
-        string distinctMatchId;
+        string distinctMatch;
 
-        row.getter() >> psmId >> peptide >> sourceId >> distinctMatchId >> id >> precursorMZ >> charge >> modif >> score >> exactMZ;
+        row.getter() >> psmId >> peptide >> sourceId >> id >> precursorMZ >> charge >> modif >> score >> exactMZ >> distinctMatch;
 
         MS2ScanMap::index<nativeID>::type::const_iterator itr = ms2ScanMap.get<nativeID>().find(id);
         if (itr == ms2ScanMap.get<nativeID>().end())
@@ -627,21 +594,23 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         ms2ScanMap.get<nativeID>().modify(itr, ModifyPrecursorMZ(precursorMZ)); // prefer corrected monoisotopic m/z
         const MS2ScanInfo& scanInfo = *itr;
 
-        if (distinctMatchId != currentMatch)
+        if (distinctMatch != currentMatch)
         { // if any of these values change we make a new chromatogram
+        
             if (!tmpWindow.PSMs.empty())
             {
                 sort(tmpWindow.PSMs.begin(), tmpWindow.PSMs.end(), sortByScanTime);
                 tmpWindow.meanMS2RT /= tmpWindow.PSMs.size();
                 windows.insert(tmpWindow);
             }
-            currentMatch = distinctMatchId;
+                
+            currentMatch = distinctMatch;//distinctMatchId;
             lastPeptide = peptide;
             lastCharge = tmpPSM.charge = charge;
             lastModif = modif;
             tmpPSM.exactMZ = exactMZ;
             tmpWindow.source = sourceId;
-			tmpWindow.distinctMatch=distinctMatchId;
+            tmpWindow.distinctMatch=distinctMatch;
             tmpWindow.firstMS2RT = tmpWindow.lastMS2RT = tmpWindow.meanMS2RT = scanInfo.scanStartTime;
             tmpWindow.bestScore = score;
             tmpWindow.bestScoreScanStartTime = scanInfo.scanStartTime;
@@ -651,25 +620,15 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
 
             //IntegerSet::const_iterator itr = g_rtConfig->MonoisotopeAdjustmentSet.begin();
             //for (; itr != g_rtConfig->MonoisotopeAdjustmentSet.end(); ++itr) //access with *itr
-            if (config.useAvgMass)
+            for (int x = config.MonoisotopicAdjustmentMin; x <= config.MonoisotopicAdjustmentMax; x++)
             {
                 if (tmpPSM.charge == 0) throw runtime_error("[chromatogramMzWindow] charge cannot be 0");
-                double centerMz = tmpPSM.exactMZ;
+                double centerMz = tmpPSM.exactMZ + x * Neutron / tmpPSM.charge;
                 double mzLower = centerMz - MZTolerance(config.ChromatogramMzLowerOffset.value * tmpPSM.charge, config.ChromatogramMzLowerOffset.units);
                 double mzUpper = centerMz + MZTolerance(config.ChromatogramMzUpperOffset.value * tmpPSM.charge, config.ChromatogramMzUpperOffset.units);
                 tmpWindow.preMZ += boost::icl::interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
             }
-            else
-            {
-                for (int x = config.MonoisotopicAdjustmentMin; x <= config.MonoisotopicAdjustmentMax; x++)
-                {
-                    if (tmpPSM.charge == 0) throw runtime_error("[chromatogramMzWindow] charge cannot be 0");
-                    double centerMz = tmpPSM.exactMZ + x * Neutron / tmpPSM.charge;
-                    double mzLower = centerMz - MZTolerance(config.ChromatogramMzLowerOffset.value * tmpPSM.charge, config.ChromatogramMzLowerOffset.units);
-                    double mzUpper = centerMz + MZTolerance(config.ChromatogramMzUpperOffset.value * tmpPSM.charge, config.ChromatogramMzUpperOffset.units);
-                    tmpWindow.preMZ += boost::icl::interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
-                }
-            }
+        
 
 
             if (!scanInfo.identified)
@@ -691,8 +650,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         tmpWindow.firstMS2RT = min(tmpWindow.firstMS2RT, scanInfo.scanStartTime);
         tmpWindow.lastMS2RT = max(tmpWindow.lastMS2RT, scanInfo.scanStartTime);
         tmpWindow.meanMS2RT += scanInfo.scanStartTime;
-        if ((golfScoreMode && tmpPSM.score < tmpWindow.bestScore) ||
-            (!golfScoreMode && tmpPSM.score > tmpWindow.bestScore))
+        if (tmpPSM.score < tmpWindow.bestScore)
         {
             tmpWindow.bestScore = tmpPSM.score;
             tmpWindow.bestScoreScanStartTime = scanInfo.scanStartTime;
@@ -730,213 +688,198 @@ void simulateGaussianPeak(double peakStart, double peakEnd,
 }
 
 int writeChromatograms(const string& idpDBFilename,
-                            const MS2ScanMap& ms2ScanMap,
                             const XICWindowList& pepWindow,
-							const vector<RegDefinedPrecursorInfo>& RegDefinedPrecursors,
-							pwiz::util::IterationListenerRegistry* ilr,
-							const int& currentFile, const int& totalFiles)
+                            const vector<RegDefinedPrecursorInfo>& RegDefinedPrecursors,
+                            pwiz::util::IterationListenerRegistry* ilr,
+                            const int& currentFile, const int& totalFiles)
 {
     int totalAdded = 0;
     try
     {
         ITERATION_UPDATE(ilr, currentFile, totalFiles, "Writing chromatagrams to idpDB");
-    shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
+        shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
 
-	sqlite::database idpDB(idpDBFilename);
-	idpDB.execute("PRAGMA journal_mode=OFF;"
-                  "PRAGMA synchronous=OFF;"
-                  "PRAGMA cache_size=50000;"
-                  IDPICKER_SQLITE_PRAGMA_MMAP);
+        sqlite::database idpDB(idpDBFilename);
+        idpDB.execute("PRAGMA journal_mode=OFF;"
+                      "PRAGMA synchronous=OFF;"
+                      "PRAGMA cache_size=50000;"
+                      IDPICKER_SQLITE_PRAGMA_MMAP);
 
-	sqlite::transaction transaction(idpDB);
-	//initialize the table
-	idpDB.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
-	string sql = "INSERT INTO XICMetrics (PsmId, DistinctMatchId, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds) values (?,?,?,?,?,?)";
-	sqlite::command insertPeptideIntensity(idpDB, sql.c_str());
+        sqlite::transaction transaction(idpDB);
+        //initialize the table
+        idpDB.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
+        string sql = "INSERT INTO XICMetrics (PsmId, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds) values (?,?,?,?,?)";
+        sqlite::command insertPeptideIntensity(idpDB, sql.c_str());
 
-	// if available, read NIST peaks;
-	// input format is one line per peak: <exactMz> <peakTime> <peakHeight> <peakWidth> <peakFWHM>
-	map<double, Peak> nistPeakByExactMz;
-	if (bfs::exists("nist-peaks.txt"))
-	{
-		ifstream is("nist-peaks.txt");
-		double exactMz, peakWidth;
-		while (is >> exactMz)
-		{
-			Peak& peak = nistPeakByExactMz[exactMz];
-			is >> peak.peakTime >> peak.intensity >> peakWidth >> peak.fwhm;
-			peak.startTime = peak.peakTime - peakWidth/2;
-			peak.endTime = peak.peakTime + peakWidth/2;
-		}
-	}
-
-
-	// Put unique identified peptide chromatograms first in the file
-	BOOST_FOREACH(const XICWindow& window, pepWindow)
-	{
-		if (window.MS1RT.empty())
-			continue;
-		chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		c.index = chromatogramListSimple->size()-1;
-		ostringstream oss;
-		oss << " (id: " << window.PSMs[0].peptide
-			<< "; m/z: " << window.preMZ
-			<< "; time: " << window.preRT << ")";
-		c.id = "Raw SIC for " + oss.str();
-		c.set(MS_SIC_chromatogram);
-		c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
-
-
-
-		CrawdadPeakFinder crawdadPeakFinder;
-		crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
-
-		chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
-		c3.index = chromatogramListSimple->size()-1;
-		c3.id = "Smoothed SIC for " + oss.str();
-		c3.set(MS_SIC_chromatogram);
-		double sampleRate = window.MS1RT[1] - window.MS1RT[0];
-		size_t wingSize = crawdadPeakFinder.getWingData().size();
-		vector<double> newRT(wingSize, 0);
-		for(size_t i=0; i < wingSize; ++i) newRT[i] = window.MS1RT[0] - (wingSize-i)*sampleRate;
-		newRT.insert(newRT.end(), window.MS1RT.begin(), window.MS1RT.end());
-		for(size_t i=1; i <= wingSize; ++i) newRT.push_back(window.MS1RT.back() + i*sampleRate);
-		const vector<float>& tmp = crawdadPeakFinder.getSmoothedIntensities();
-		if (tmp.size() == newRT.size())
-			c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_detector_counts);
-
-		float baselineIntensity = crawdadPeakFinder.getBaselineIntensity();
-		double scaleForMS2Score = baselineIntensity;
-
-		// output all Crawdad peaks
-		{
-			chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-			Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-			c2.index = chromatogramListSimple->size()-1;
-			c2.id = "Crawdad peaks for " + oss.str();
-			c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
-
-			BOOST_FOREACH(const Peak& peak, window.peaks)
-			{
-				simulateGaussianPeak(peak.startTime, peak.endTime,
-									 peak.intensity, baselineIntensity,
-									 peak.peakTime, peak.fwhm / 2.35482,
-									 50,
-									 c2.getTimeArray()->data, c2.getIntensityArray()->data);
-
-				if (peak.startTime < window.bestScoreScanStartTime && window.bestScoreScanStartTime < peak.endTime)
-					//scaleForMS2Score = (double) peak->getHeight();
-					scaleForMS2Score = ms2ScanMap.get<time>().find(window.bestScoreScanStartTime)->precursorIntensity;
-				else if (window.bestPeak && peak.peakTime == window.bestPeak->peakTime)
-					scaleForMS2Score = window.bestPeak->intensity;
-			}
-		}
-
-		// output only the best peak
-		if (window.bestPeak)
-		{
+        // Put unique identified peptide chromatograms first in the file
+        double totalBestPeaks = 0;
+        BOOST_FOREACH(const XICWindow& window, pepWindow)
+        {
+            if (window.MS1RT.empty())
+                continue;
             chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-			Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-			c2.index = chromatogramListSimple->size()-1;
-			c2.id = "Best Crawdad peak for " + oss.str();
-			c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
-
-			const Peak& peak = *window.bestPeak;
-			simulateGaussianPeak(peak.startTime, peak.endTime,
-								 peak.intensity, baselineIntensity,
-								 peak.peakTime, peak.fwhm / 2.35482,
-								 50,
-								 c2.getTimeArray()->data, c2.getIntensityArray()->data);
-			//cout<<oss.str()<<" intensity: "<< peak.intensity<<endl;
+            Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+            c.index = chromatogramListSimple->size()-1;
+            ostringstream oss;
+            oss << " (id: " << window.PSMs[0].peptide
+                << "; m/z: " << window.preMZ
+                << "; time: " << window.preRT << ")";
+            c.id = "Raw SIC for " + oss.str();
+            c.set(MS_SIC_chromatogram);
+            c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
 
 
-			const vector<double>& myIntensityVec=window.MS1Intensity;
-			/*sort(myIntensityVec.begin(),myIntensityVec.end());
-			vector<double>::iterator it;
-			it=myIntensityVec.begin();
-			double peakPrecursorIntensityMedian=*(it+=(myIntensityVec.size()/2));
+
+            CrawdadPeakFinder crawdadPeakFinder;
+            crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
+
+            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+            Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
+            c3.index = chromatogramListSimple->size()-1;
+            c3.id = "Smoothed SIC for " + oss.str();
+            c3.set(MS_SIC_chromatogram);
+            double sampleRate = window.MS1RT[1] - window.MS1RT[0];
+            size_t wingSize = crawdadPeakFinder.getWingData().size();
+            vector<double> newRT(wingSize, 0);
+            for(size_t i=0; i < wingSize; ++i) newRT[i] = window.MS1RT[0] - (wingSize-i)*sampleRate;
+            newRT.insert(newRT.end(), window.MS1RT.begin(), window.MS1RT.end());
+            for(size_t i=1; i <= wingSize; ++i) newRT.push_back(window.MS1RT.back() + i*sampleRate);
+            const vector<float>& tmp = crawdadPeakFinder.getSmoothedIntensities();
+            if (tmp.size() == newRT.size())
+                c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_detector_counts);
+
+            float baselineIntensity = crawdadPeakFinder.getBaselineIntensity();
+
+            // output all Crawdad peaks
+            {
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                c2.index = chromatogramListSimple->size()-1;
+                c2.id = "Crawdad peaks for " + oss.str();
+                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+
+                BOOST_FOREACH(const Peak& peak, window.peaks)
+                {
+                    simulateGaussianPeak(peak.startTime, peak.endTime,
+                                         peak.intensity, baselineIntensity,
+                                         peak.peakTime, peak.fwhm / 2.35482,
+                                         50,
+                                         c2.getTimeArray()->data, c2.getIntensityArray()->data);
+                }
+            }
+
+            // output only the best peak
+            if (window.bestPeak)
+            {
+            totalBestPeaks +=1;
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                c2.index = chromatogramListSimple->size()-1;
+                c2.id = "Best Crawdad peak for " + oss.str();
+                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+
+                const Peak& peak = *window.bestPeak;
+                simulateGaussianPeak(peak.startTime, peak.endTime,
+                                     peak.intensity, baselineIntensity,
+                                     peak.peakTime, peak.fwhm / 2.35482,
+                                     50,
+                                     c2.getTimeArray()->data, c2.getIntensityArray()->data);
+                //cout<<oss.str()<<" intensity: "<< peak.intensity<<endl;
 
 
-			double SNRatio=(peak.intensity/peakPrecursorIntensityMedian) ;*/
-			const vector<double>& times=window.MS1RT;
-			accs::accumulator_set<double, accs::stats<accs::tag::variance, accs::tag::mean> > PeakIntensities;
-			accs::accumulator_set<double, accs::stats<accs::tag::variance, accs::tag::mean> > BackgroundIntensities;
-              for (size_t  i = 0; i < myIntensityVec.size(); i++){
-                  if(times[i]>=peak.startTime&&times[i]<=peak.endTime){
-                     PeakIntensities(myIntensityVec[i]);
+                const vector<double>& myIntensityVec=window.MS1Intensity;
+                /*sort(myIntensityVec.begin(),myIntensityVec.end());
+                vector<double>::iterator it;
+                it=myIntensityVec.begin();
+                double peakPrecursorIntensityMedian=*(it+=(myIntensityVec.size()/2));
+
+
+                double SNRatio=(peak.intensity/peakPrecursorIntensityMedian) ;*/
+                const vector<double>& times=window.MS1RT;
+                accs::accumulator_set<double, accs::stats<accs::tag::variance, accs::tag::mean> > PeakIntensities;
+                accs::accumulator_set<double, accs::stats<accs::tag::variance, accs::tag::mean> > BackgroundIntensities;
+                  for (size_t  i = 0; i < myIntensityVec.size(); i++){
+                      if(times[i]>=peak.startTime&&times[i]<=peak.endTime){
+                         PeakIntensities(myIntensityVec[i]);
+                      }
+                      else{
+                          BackgroundIntensities(myIntensityVec[i]);
+                      }
                   }
-                  else{
-                      BackgroundIntensities(myIntensityVec[i]);
-                  }
-              }
-            double peak_mean=accs::mean(PeakIntensities);
-            double bcd_mean=accs::mean(BackgroundIntensities);
-            double peak_var=accs::variance(PeakIntensities);
-            double bcd_var=accs::variance(BackgroundIntensities);
-            double SNRatio=(peak_mean-bcd_mean)/ sqrt(peak_var+bcd_var);
+                double peak_mean=accs::mean(PeakIntensities);
+                double bcd_mean=accs::mean(BackgroundIntensities);
+                double peak_var=accs::variance(PeakIntensities);
+                double bcd_var=accs::variance(BackgroundIntensities);
+                double SNRatio=(peak_mean-bcd_mean)/ sqrt(peak_var+bcd_var);
 
-			double peakArea=peak.intensity*peak.fwhm;
+                double peakArea=peak.intensity*peak.fwhm;
 
-			//HACK: only report once for each PSM to avoid duplicate distinct matches
-			// this is for the sake of reporting in IDP3
-			//BOOST_FOREACH(XICPeptideSpectrumMatch psm, window.PSMs)
-			if (window.PSMs.size() > 0)
-			{
-			    //insertPeptideIntensity.binder()<<psm.id<<window.distinctMatch<<window.source<<peak.intensity<<peakArea<<SNRatio<<peak.peakTime;
-			    insertPeptideIntensity.binder() << lexical_cast<string>(window.PSMs[0].id) << lexical_cast<string>(window.distinctMatch) << lexical_cast<string>(peak.intensity)
-                                                << lexical_cast<string>(peakArea) << lexical_cast<string>(SNRatio) << lexical_cast<string>(peak.peakTime);
-                insertPeptideIntensity.execute();
-                insertPeptideIntensity.reset();
-                totalAdded++;
-			}
-			//cout<<c2.getTimeArray()->data<<endl;
-		}
-	}
-	transaction.commit();
+                //HACK: only report once for each PSM to avoid duplicate distinct matches
+                // this is for the sake of reporting in IDP3
+                //BOOST_FOREACH(XICPeptideSpectrumMatch psm, window.PSMs)
+                if (window.PSMs.size() > 0)
+                {
+                    //insertPeptideIntensity.binder()<<psm.id<<window.distinctMatch<<window.source<<peak.intensity<<peakArea<<SNRatio<<peak.peakTime;
+                    insertPeptideIntensity.binder() << lexical_cast<string>(window.PSMs[0].id) << lexical_cast<string>(peak.intensity)
+                                                    << lexical_cast<string>(peakArea) << lexical_cast<string>(SNRatio) << lexical_cast<string>(peak.peakTime);
+                    insertPeptideIntensity.execute();
+                    insertPeptideIntensity.reset();
+                    totalAdded++;
+                }
+                //cout<<c2.getTimeArray()->data<<endl;
+            }
+        }
+        transaction.commit();
     }
     catch (exception& e)
-	{
-	    throw runtime_error(string("[writeChromatograms] ") + e.what());
-	}
-	return totalAdded;
+    {
+        throw runtime_error(string("[writeChromatograms] ") + e.what());
+    }
+    return totalAdded;
 }
 
 int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const string& sourceFilePath, const string& sourceId, XICConfiguration& config, pwiz::util::IterationListenerRegistry* ilr, const int& currentFile, const int& totalFiles)
 {
-	try
-	{
+    try
+    {
 
-	    string sourceFilename = bfs::path(sourceFilePath).filename().string();
-		// Initialize the idpicker reader. It supports idpDB's for now.
-		ITERATION_UPDATE(ilr, currentFile, totalFiles, "Reading identifications from " + sourceFilename);
+        string sourceFilename = bfs::path(sourceFilePath).filename().string();
+        // Initialize the idpicker reader. It supports idpDB's for now.
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Reading identifications from " + sourceFilename);
 
-		// Obtain the list of readers available
-		ExtendedReaderList readers;
-		MSDataFile msd(sourceFilePath, &readers);
+        // Obtain the list of readers available
+        ExtendedReaderList readers;
+        MSDataFile msd(sourceFilePath, &readers);
 
-		//TODO: add ability to apply spectrum list filters
-		/*vector<string> wrappers;
-		SpectrumListFactory::wrap(msd, wrappers);*/
+        //TODO: add ability to apply spectrum list filters
+        /*vector<string> wrappers;
+        SpectrumListFactory::wrap(msd, wrappers);*/
 
-		SpectrumList& spectrumList = *msd.run.spectrumListPtr;
+        SpectrumList& spectrumList = *msd.run.spectrumListPtr;
 
-		//ITERATION_UPDATE(ilr, currentFile, totalFiles, "Started processing file " + sourceFilename);
+        //ITERATION_UPDATE(ilr, currentFile, totalFiles, "Started processing file " + sourceFilename);
 
-		// Spectral counts
-		int MS1Count = 0, MS2Count = 0;
+        // Spectral counts
+        int MS1Count = 0, MS2Count = 0;
 
-		MS1ScanMap ms1ScanMap;
-		MS2ScanMap ms2ScanMap;
+        MS1ScanMap ms1ScanMap;
+        MS2ScanMap ms2ScanMap;
 
-        map<string, size_t> tempMap;
+        map<string, string> tempMap;
         {
-            string sql = "SELECT s.NativeID, dm.DistinctMatchId "
+            string sql = "SELECT s.NativeID, IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) || ' ' || Charge || ' ' ||  IFNULL(Mods, '') as Distinct_Match   "
                              "FROM PeptideSpectrumMatch psm "
                              "JOIN Spectrum s ON psm.Spectrum=s.Id "
-                             "JOIN DistinctMatch dm on psm.Id=dm.PsmId "
-                             "WHERE Rank=1 AND Source=? "
+                             "JOIN Peptide pep ON psm.Peptide=pep.Id  "
+                             "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide  "
+                             "LEFT JOIN ProteinData pro ON pi.Protein=pro.Id  "
+                             "LEFT JOIN (SELECT pm.PeptideSpectrumMatch AS PsmId,  "
+                             "GROUP_CONCAT(MonoMassDelta || '@' || pm.Offset) AS Mods,  "
+                             "SUM(MonoMassDelta) AS TotalModMass  "
+                             "FROM PeptideModification pm  "
+                             "JOIN Modification mod ON pm.Modification=mod.Id  "
+                             "GROUP BY PsmId) mods2 ON psm.Id=mods2.PsmId  "
+                             "WHERE Qvalue<=0.05 AND Rank=1 AND Source=? "
                              "GROUP BY s.Id ";
 
             sqlite::query distinctModifiedPeptideByNativeIDQuery(idpDb, sql.c_str());
@@ -944,504 +887,503 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             distinctModifiedPeptideByNativeIDQuery.binder() << sourceId;
 
             char const* nativeId;
-            sqlite_int64 distinctMatchId;
+            string distinctMatch;
 
             int temp = 0;
             BOOST_FOREACH(sqlite::query::rows row, distinctModifiedPeptideByNativeIDQuery)
             {
                 temp++;
-                row.getter() >> nativeId >> distinctMatchId;
-                tempMap[nativeId] = distinctMatchId;
+                row.getter() >> nativeId >> distinctMatch;
+                tempMap[nativeId] = distinctMatch;
             }
         }
-        const map<string, size_t>& distinctModifiedPeptideByNativeID = tempMap;
-		map<size_t, double> firstScanTimeOfDistinctModifiedPeptide;
+        const map<string, string>& distinctModifiedPeptideByNativeID = tempMap;
+        map<string, double> firstScanTimeOfDistinctModifiedPeptide;
 
-		string lastMS1NativeId;
-		size_t missingPrecursorIntensities = 0;
-		ITERATION_UPDATE(ilr, currentFile, totalFiles, "Found " + lexical_cast<string>(spectrumList.size())+ " spectra, reading metadata...");
+        string lastMS1NativeId;
+        size_t missingPrecursorIntensities = 0;
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Found " + lexical_cast<string>(spectrumList.size())+ " spectra, reading metadata...");
 
-		// For each spectrum
-		for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
-		{
-			SpectrumPtr spectrum = spectrumList.spectrum(curIndex, false);
+        // For each spectrum
+        for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
+        {
+            SpectrumPtr spectrum = spectrumList.spectrum(curIndex, false);
 
-			if (spectrum->defaultArrayLength == 0)
-				continue;
+            if (spectrum->defaultArrayLength == 0)
+                continue;
 
-			if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty())
-				continue;
+            if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty())
+                continue;
 
-			CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
-			if (spectrumMSLevel == CVID_Unknown)
-				continue;
+            CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+            if (spectrumMSLevel == CVID_Unknown)
+                continue;
 
-			// Check its MS level and increment the count
-			int msLevel = spectrumMSLevel.valueAs<int>();
-			if (msLevel == 1)
-			{
-				MS1ScanInfo scanInfo;
-				lastMS1NativeId = scanInfo.nativeID = spectrum->id;
-				scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
+            // Check its MS level and increment the count
+            int msLevel = spectrumMSLevel.valueAs<int>();
+            if (msLevel == 1)
+            {
+                MS1ScanInfo scanInfo;
+                lastMS1NativeId = scanInfo.nativeID = spectrum->id;
+                scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
 
-				if (spectrum->scanList.scans.empty())
-					throw runtime_error("No scan start time for " + spectrum->id);
+                if (spectrum->scanList.scans.empty())
+                    throw runtime_error("No scan start time for " + spectrum->id);
 
-				Scan& scan = spectrum->scanList.scans[0];
-				CVParam scanTime = scan.cvParam(MS_scan_start_time);
-				if (scanTime.empty())
-					throw runtime_error("No scan start time for " + spectrum->id);
+                Scan& scan = spectrum->scanList.scans[0];
+                CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                if (scanTime.empty())
+                    throw runtime_error("No scan start time for " + spectrum->id);
 
-				scanInfo.scanStartTime = scanTime.timeInSeconds();
+                scanInfo.scanStartTime = scanTime.timeInSeconds();
 
-				ms1ScanMap.push_back(scanInfo);
-				++MS1Count;
-			}
-			else if (msLevel == 2)
-			{
-				MS2ScanInfo scanInfo;
-				scanInfo.nativeID = spectrum->id;
-				scanInfo.msLevel = 2;
+                ms1ScanMap.push_back(scanInfo);
+                ++MS1Count;
+            }
+            else if (msLevel == 2)
+            {
+                MS2ScanInfo scanInfo;
+                scanInfo.nativeID = spectrum->id;
+                scanInfo.msLevel = 2;
 
-				if (spectrum->precursors.empty() || spectrum->precursors[0].selectedIons.empty())
-					throw runtime_error("No selected ion found for MS2 " + spectrum->id);
+                if (spectrum->precursors.empty() || spectrum->precursors[0].selectedIons.empty())
+                    throw runtime_error("No selected ion found for MS2 " + spectrum->id);
 
-				Precursor& precursor = spectrum->precursors[0];
-				const SelectedIon& si = precursor.selectedIons[0];
+                Precursor& precursor = spectrum->precursors[0];
+                const SelectedIon& si = precursor.selectedIons[0];
 
-				scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
-				if (scanInfo.precursorIntensity == 0)
-				{
-					//throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
-					//cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
-					++missingPrecursorIntensities;
+                scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
+                if (scanInfo.precursorIntensity == 0)
+                {
+                    //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
+                    //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
+                    ++missingPrecursorIntensities;
 
-					// fall back on MS2 TIC
-					scanInfo.precursorIntensity = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
-				}
+                    // fall back on MS2 TIC
+                    scanInfo.precursorIntensity = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
+                }
 
-				if (precursor.spectrumID.empty())
-				{
-					if (lastMS1NativeId.empty())
-						throw runtime_error("No MS1 spectrum found before " + spectrum->id);
-					scanInfo.precursorNativeID = lastMS1NativeId;
-				}
-				else
-					scanInfo.precursorNativeID = precursor.spectrumID;
+                if (precursor.spectrumID.empty())
+                {
+                    if (lastMS1NativeId.empty())
+                        throw runtime_error("No MS1 spectrum found before " + spectrum->id);
+                    scanInfo.precursorNativeID = lastMS1NativeId;
+                }
+                else
+                    scanInfo.precursorNativeID = precursor.spectrumID;
 
-				if (spectrum->scanList.scans.empty())
-					throw runtime_error("No scan start time for " + spectrum->id);
+                if (spectrum->scanList.scans.empty())
+                    throw runtime_error("No scan start time for " + spectrum->id);
 
-				Scan& scan = spectrum->scanList.scans[0];
-				CVParam scanTime = scan.cvParam(MS_scan_start_time);
-				if (scanTime.empty())
-					throw runtime_error("No scan start time for " + spectrum->id);
-				scanInfo.scanStartTime = scanTime.timeInSeconds();
+                Scan& scan = spectrum->scanList.scans[0];
+                CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                if (scanTime.empty())
+                    throw runtime_error("No scan start time for " + spectrum->id);
+                scanInfo.scanStartTime = scanTime.timeInSeconds();
 
-				++MS2Count;
+                ++MS2Count;
 
-				scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
-				if (si.cvParam(MS_selected_ion_m_z).empty() )
-					scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();
-				if (scanInfo.precursorMZ == 0)
-					throw runtime_error("No precursor m/z for " + spectrum->id);
+                scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
+                if (si.cvParam(MS_selected_ion_m_z).empty() )
+                    scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();
+                if (scanInfo.precursorMZ == 0)
+                    throw runtime_error("No precursor m/z for " + spectrum->id);
 
-				scanInfo.precursorScanStartTime =
-					ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
+                scanInfo.precursorScanStartTime =
+                    ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
 
-				// Only look at retention times of peptides identified in .idpDB
-				// curIndex is the spectrum index, curIndex+1 is (usually) the scan number
-				map<string, size_t>::const_iterator findItr = distinctModifiedPeptideByNativeID.find(spectrum->id);
-				if (findItr != distinctModifiedPeptideByNativeID.end())
-				{
-					scanInfo.identified = true;
-					scanInfo.distinctModifiedPeptideID = findItr->second;
-					map<size_t, double>::iterator insertItr = firstScanTimeOfDistinctModifiedPeptide.insert(make_pair(findItr->second, scanInfo.scanStartTime)).first;
-					insertItr->second = min(insertItr->second, scanInfo.scanStartTime);
-				}
-				else
-				{ // this MS2 scan was not identified; we need this data for metrics MS2-4A/B/C/D
-					scanInfo.identified = false;
-					scanInfo.distinctModifiedPeptideID = 0;
-				}
-				ms2ScanMap.push_back(scanInfo);
-			}
+                // Only look at retention times of peptides identified in .idpDB
+                // curIndex is the spectrum index, curIndex+1 is (usually) the scan number
+                map<string, string>::const_iterator findItr = distinctModifiedPeptideByNativeID.find(spectrum->id);
+                if (findItr != distinctModifiedPeptideByNativeID.end())
+                {
+                    scanInfo.identified = true;
+                    scanInfo.distinctModifiedPeptide = findItr->second;
+                    map<string, double>::iterator insertItr = firstScanTimeOfDistinctModifiedPeptide.insert(make_pair(findItr->second, scanInfo.scanStartTime)).first;
+                    insertItr->second = min(insertItr->second, scanInfo.scanStartTime);
+                }
+                else
+                { // this MS2 scan was not identified; we need this data for metrics MS2-4A/B/C/D
+                    scanInfo.identified = false;
+                    scanInfo.distinctModifiedPeptide = "";
+                }
+                ms2ScanMap.push_back(scanInfo);
+            }
 
-		} // finished cycling through all spectra
+        } // finished cycling through all spectra
 
-//		if (g_numWorkers == 1)
-//			cout << endl;
+//        if (g_numWorkers == 1)
+//            cout << endl;
 
-		/*if (missingPrecursorIntensities)
-			cerr << "Warning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;*/
+        /*if (missingPrecursorIntensities)
+            cerr << "Warning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;*/
 
-		if (MS1Count == 0)
-			throw runtime_error("no MS1 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
+        if (MS1Count == 0)
+            throw runtime_error("no MS1 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
 
-		if (MS2Count == 0)
-			throw runtime_error("no MS2 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
+        if (MS2Count == 0)
+            throw runtime_error("no MS2 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
 
-		/*if (MS3OrGreaterCount)
-			cerr << "Warning: " << MS3OrGreaterCount << " spectra have MS levels higher than 2 but will be ignored." << endl;*/
+        /*if (MS3OrGreaterCount)
+            cerr << "Warning: " << MS3OrGreaterCount << " spectra have MS levels higher than 2 but will be ignored." << endl;*/
 
-		XICWindowList pepWindow = GetMZRTWindows(idpDb,ms2ScanMap,sourceId, config);
-//§BreakPoint, in depth examination ended here
-		vector<RegDefinedPrecursorInfo> RegDefinedPrecursors;
+        XICWindowList pepWindow = GetMZRTWindows(idpDb,ms2ScanMap,sourceId, config);
+        vector<RegDefinedPrecursorInfo> RegDefinedPrecursors;
 
 
 //TODO: Give option for # if align the chromatogram peaks based on peptide retention time
-		/*if(g_rtConfig->peakAlignment)
-		{
-			string outputFilepath = g_rtConfig->OutputFilepath;
-			string regressionFilename=bfs::change_extension(bfs::path(outputFilepath) / bfs::path(sourceFilename).filename(), "-peptideScantimeRegression.tsv").string();
-			ifstream file;
+        /*if(g_rtConfig->peakAlignment)
+        {
+            string outputFilepath = g_rtConfig->OutputFilepath;
+            string regressionFilename=bfs::change_extension(bfs::path(outputFilepath) / bfs::path(sourceFilename).filename(), "-peptideScantimeRegression.tsv").string();
+            ifstream file;
 
-			try
-			{
-				file.open(regressionFilename.c_str()); // how to use a "string" variable
-				if(!file)
-					throw(regressionFilename);//If the file is not found, this calls the "catch"
-			}
-			catch(string regressionFilename)//This catches the infile and aborts process
-			{
-				cout << "Fatal error: File not found."<<endl<<"Abort process."<<endl;
-				exit(1);
-			}
+            try
+            {
+                file.open(regressionFilename.c_str()); // how to use a "string" variable
+                if(!file)
+                    throw(regressionFilename);//If the file is not found, this calls the "catch"
+            }
+            catch(string regressionFilename)//This catches the infile and aborts process
+            {
+                cout << "Fatal error: File not found."<<endl<<"Abort process."<<endl;
+                exit(1);
+            }
 
-			if (file.is_open())
-			{
-				RegDefinedPrecursorInfo info;
+            if (file.is_open())
+            {
+                RegDefinedPrecursorInfo info;
 
-				std::string   line;
-				getline(file, line);
-				while(getline(file, line))
-				{
-					istringstream   ss(line);
-					string         sequence, mods;
-					double     scantime1,precursorMZ;
-					int  charge;
-					ss >> sequence>>scantime1>>charge>>precursorMZ>>mods;
-					info.peptide=sequence;
-					info.exactMZ=precursorMZ;
-					info.mods=mods;
-					info.charge=charge;
-					info.RegTime=scantime1;
-					info.scanTimeWindow=g_rtConfig->chromatogramRegressionTimeWindow(info.RegTime);
-					info.mzWindow=g_rtConfig->chromatogramMzWindow(info.exactMZ,charge);
-					info.chromatogram.id = "regression defined precursor " +info.peptide+" "+lexical_cast<string>(info.charge)+" "+info.mods+ "(id: m/z: "+lexical_cast<string>(round(info.exactMZ,3))+"; time: "+lexical_cast<string>(info.RegTime)+") ";
-					RegDefinedPrecursors.push_back(info);
-				}
-				file.close();
-			}
-			cout<<"number of regdefined precursors are "<<RegDefinedPrecursors.size()<<endl;
-		}*/
-		// Going through all spectra once more to get intensities/retention times to build chromatograms
-		ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks...");
-		for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
-		{
+                std::string   line;
+                getline(file, line);
+                while(getline(file, line))
+                {
+                    istringstream   ss(line);
+                    string         sequence, mods;
+                    double     scantime1,precursorMZ;
+                    int  charge;
+                    ss >> sequence>>scantime1>>charge>>precursorMZ>>mods;
+                    info.peptide=sequence;
+                    info.exactMZ=precursorMZ;
+                    info.mods=mods;
+                    info.charge=charge;
+                    info.RegTime=scantime1;
+                    info.scanTimeWindow=g_rtConfig->chromatogramRegressionTimeWindow(info.RegTime);
+                    info.mzWindow=g_rtConfig->chromatogramMzWindow(info.exactMZ,charge);
+                    info.chromatogram.id = "regression defined precursor " +info.peptide+" "+lexical_cast<string>(info.charge)+" "+info.mods+ "(id: m/z: "+lexical_cast<string>(round(info.exactMZ,3))+"; time: "+lexical_cast<string>(info.RegTime)+") ";
+                    RegDefinedPrecursors.push_back(info);
+                }
+                file.close();
+            }
+            cout<<"number of regdefined precursors are "<<RegDefinedPrecursors.size()<<endl;
+        }*/
+        // Going through all spectra once more to get intensities/retention times to build chromatograms
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks...");
+        for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
+        {
 //
 //          if (curIndex+1==spectrumList.size() || !((curIndex+1)%100))
 //          ITERATION_UPDATE(ilr, currentFile, totalFiles, "\r§Reading peaks: " + lexical_cast<string>(curIndex+1) + "/" + lexical_cast<string>(spectrumList.size()));
 
-			SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
+            SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
 
-			if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
-				continue;
+            if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
+                continue;
 
-			CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
-			if (spectrumMSLevel == CVID_Unknown)
-				continue;
-			// this time around we're only looking for MS1 spectra
-			int msLevel = spectrumMSLevel.valueAs<int>();
-			if (msLevel == 1)
-			{
-				Scan& scan = spectrum->scanList.scans[0];
+            CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+            if (spectrumMSLevel == CVID_Unknown)
+                continue;
+            // this time around we're only looking for MS1 spectra
+            int msLevel = spectrumMSLevel.valueAs<int>();
+            if (msLevel == 1)
+            {
+                Scan& scan = spectrum->scanList.scans[0];
 
-				// all m/z and intensity data for a spectrum
-				const vector<double>& mzV = spectrum->getMZArray()->data;
-				const vector<double>& intensV = spectrum->getIntensityArray()->data;
-				size_t arraySize = mzV.size();
-				double curRT = scan.cvParam(MS_scan_start_time).timeInSeconds();
+                // all m/z and intensity data for a spectrum
+                const vector<double>& mzV = spectrum->getMZArray()->data;
+                const vector<double>& intensV = spectrum->getIntensityArray()->data;
+                size_t arraySize = mzV.size();
+                double curRT = scan.cvParam(MS_scan_start_time).timeInSeconds();
 
-				accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > mzMinMax;
-				mzMinMax = std::for_each(mzV.begin(), mzV.end(), mzMinMax);
-				boost::icl::interval_set<double> spectrumMzRange(continuous_interval<double>::closed(accs::min(mzMinMax), accs::max(mzMinMax)));
+                accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > mzMinMax;
+                mzMinMax = std::for_each(mzV.begin(), mzV.end(), mzMinMax);
+                boost::icl::interval_set<double> spectrumMzRange(continuous_interval<double>::closed(accs::min(mzMinMax), accs::max(mzMinMax)));
 
-				BOOST_FOREACH(const XICWindow& window, pepWindow)
-				{
-					// if the MS1 retention time is not in the RT window constructed for this peptide, skip this window
-					if (!boost::icl::contains(hull(window.preRT), curRT))
-						continue;
+                BOOST_FOREACH(const XICWindow& window, pepWindow)
+                {
+                    // if the MS1 retention time is not in the RT window constructed for this peptide, skip this window
+                    if (!boost::icl::contains(hull(window.preRT), curRT))
+                        continue;
 
-					// if the m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
-					if (disjoint(window.preMZ, spectrumMzRange))
-						continue;
+                    // if the m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
+                    if (disjoint(window.preMZ, spectrumMzRange))
+                        continue;
 
-					double sumIntensities = 0;
-					for (size_t iMZ = 0; iMZ < arraySize; ++iMZ)
-					{
-						// if this m/z is in the window, record its intensity and retention time
-						if (boost::icl::contains(window.preMZ, mzV[iMZ]))
-							sumIntensities += intensV[iMZ];
-					}
+                    double sumIntensities = 0;
+                    for (size_t iMZ = 0; iMZ < arraySize; ++iMZ)
+                    {
+                        // if this m/z is in the window, record its intensity and retention time
+                        if (boost::icl::contains(window.preMZ, mzV[iMZ]))
+                            sumIntensities += intensV[iMZ];
+                    }
 
-					window.MS1Intensity.push_back(sumIntensities);
-					window.MS1RT.push_back(curRT);
+                    window.MS1Intensity.push_back(sumIntensities);
+                    window.MS1RT.push_back(curRT);
 
-				} // done searching through all unique peptide windows for this MS1 scan
+                } // done searching through all unique peptide windows for this MS1 scan
 
 
-				//loop through all regression defined precursors
+                //loop through all regression defined precursors
 
-					  BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
-				{
+                      BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+                {
 
-					if (!boost::icl::contains(info.scanTimeWindow, curRT))
-						continue;
+                    if (!boost::icl::contains(info.scanTimeWindow, curRT))
+                        continue;
 
-					// if the PSM's m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
-					if (disjoint(info.mzWindow, spectrumMzRange))
-						continue;
+                    // if the PSM's m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
+                    if (disjoint(info.mzWindow, spectrumMzRange))
+                        continue;
 
-					double sumIntensities = 0;
-					for (size_t iMZ = 0; iMZ < arraySize; ++iMZ)
-					{
-						// if this m/z is in the window, record its intensity and retention time
-						if (boost::icl::contains(info.mzWindow, mzV[iMZ]))
-							sumIntensities += intensV[iMZ];
-					}
+                    double sumIntensities = 0;
+                    for (size_t iMZ = 0; iMZ < arraySize; ++iMZ)
+                    {
+                        // if this m/z is in the window, record its intensity and retention time
+                        if (boost::icl::contains(info.mzWindow, mzV[iMZ]))
+                            sumIntensities += intensV[iMZ];
+                    }
 
-					info.chromatogram.MS1Intensity.push_back(sumIntensities);
-					info.chromatogram.MS1RT.push_back(curRT);
-				} // done with regression defined precursor scan
+                    info.chromatogram.MS1Intensity.push_back(sumIntensities);
+                    info.chromatogram.MS1RT.push_back(curRT);
+                } // done with regression defined precursor scan
 
-			}
-			else if (msLevel == 2)
-			{
-				// calculate TIC manually if necessary
-				MS2ScanInfo& scanInfo = const_cast<MS2ScanInfo&>(*ms2ScanMap.get<nativeID>().find(spectrum->id));
-				if (scanInfo.precursorIntensity == 0)
+            }
+            else if (msLevel == 2)
+            {
+                // calculate TIC manually if necessary
+                MS2ScanInfo& scanInfo = const_cast<MS2ScanInfo&>(*ms2ScanMap.get<nativeID>().find(spectrum->id));
+                if (scanInfo.precursorIntensity == 0)
                 {
                     BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
-						scanInfo.precursorIntensity += p;
+                        scanInfo.precursorIntensity += p;
                 }
-			}
-		} // end of spectra loop
+            }
+        } // end of spectra loop
 
-		// Find peaks with Crawdad
-		// cycle through all distinct matches, passing each one to crawdad
-		size_t i = 0;
-		ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding distinct match peaks...");
-		BOOST_FOREACH(const XICWindow& window, pepWindow)
-		{
-			++i;
-			if (window.MS1RT.empty())
-			{
-				/*cerr << "Warning: distinct match window for " << window.peptide
-					 << " (id: " << window.PSMs[0].peptide
-					 << "; m/z: " << window.preMZ
-					 << "; time: " << window.preRT
-					 << ") has no chromatogram data points!" << endl;*/
-				continue;
-			}
+        // Find peaks with Crawdad
+        // cycle through all distinct matches, passing each one to crawdad
+        size_t i = 0;
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding distinct match peaks...");
+        BOOST_FOREACH(const XICWindow& window, pepWindow)
+        {
+            ++i;
+            if (window.MS1RT.empty())
+            {
+                /*cerr << "Warning: distinct match window for " << window.peptide
+                     << " (id: " << window.PSMs[0].peptide
+                     << "; m/z: " << window.preMZ
+                     << "; time: " << window.preRT
+                     << ") has no chromatogram data points!" << endl;*/
+                continue;
+            }
 
-				if(window.MS1RT.size()<4){
-			//cerr<<"Warning: the MS1 RT size is less than 4 :"<<window.peptide<<endl;
-			continue;
-			}
+                if(window.MS1RT.size()<4){
+            //cerr<<"Warning: the MS1 RT size is less than 4 :"<<window.peptide<<endl;
+            continue;
+            }
 
-			// make chromatogram data points evenly spaced
-			Interpolator interpolator(window.MS1RT, window.MS1Intensity);
-			interpolator.resample(window.MS1RT, window.MS1Intensity);
+            // make chromatogram data points evenly spaced
+            Interpolator interpolator(window.MS1RT, window.MS1Intensity);
+            interpolator.resample(window.MS1RT, window.MS1Intensity);
 
-			// eliminate negative signal
-			BOOST_FOREACH(double& intensity, window.MS1Intensity)
-				intensity = max(0.0, intensity);
-			CrawdadPeakFinder crawdadPeakFinder;
-			crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
+            // eliminate negative signal
+            BOOST_FOREACH(double& intensity, window.MS1Intensity)
+                intensity = max(0.0, intensity);
+            CrawdadPeakFinder crawdadPeakFinder;
+            crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
 
-			vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
-			if (crawPeaks.size() == 0)
-				continue;
+            vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
+            if (crawPeaks.size() == 0)
+                continue;
 
-			// if there are more than 2 PSMs, we interpolate a curve from their time/score pairs and
-			// use the dot product between it and the interpolated SIC to pick the peak
-			boost::optional<Interpolator> ms2Interpolator;
-			vector<double> ms2Times, ms2Scores;
-			if (window.PSMs.size() > 1)
-			{
-				// calculate the minimum time gap between PSMs
-				double minDiff = window.PSMs[1].spectrum->scanStartTime - window.PSMs[0].spectrum->scanStartTime;
-				for (size_t i=2; i < window.PSMs.size(); ++i)
-					minDiff = min(minDiff, window.PSMs[i].spectrum->scanStartTime - window.PSMs[i-1].spectrum->scanStartTime);
+            // if there are more than 2 PSMs, we interpolate a curve from their time/score pairs and
+            // use the dot product between it and the interpolated SIC to pick the peak
+            boost::optional<Interpolator> ms2Interpolator;
+            vector<double> ms2Times, ms2Scores;
+            if (window.PSMs.size() > 1)
+            {
+                // calculate the minimum time gap between PSMs
+                double minDiff = window.PSMs[1].spectrum->scanStartTime - window.PSMs[0].spectrum->scanStartTime;
+                for (size_t i=2; i < window.PSMs.size(); ++i)
+                    minDiff = min(minDiff, window.PSMs[i].spectrum->scanStartTime - window.PSMs[i-1].spectrum->scanStartTime);
 
-				// add zero scores before and after the "curve" using the minimum time gap
-				ms2Times.push_back(window.PSMs.front().spectrum->scanStartTime - minDiff);
-				ms2Scores.push_back(0);
-				BOOST_FOREACH(const XICPeptideSpectrumMatch& psm, window.PSMs)
-				{
-					ms2Times.push_back(psm.spectrum->scanStartTime);
-					ms2Scores.push_back(psm.score);
-				}
-				ms2Times.push_back(window.PSMs.back().spectrum->scanStartTime + minDiff);
-				ms2Scores.push_back(0);
+                // add zero scores before and after the "curve" using the minimum time gap
+                ms2Times.push_back(window.PSMs.front().spectrum->scanStartTime - minDiff);
+                ms2Scores.push_back(0);
+                BOOST_FOREACH(const XICPeptideSpectrumMatch& psm, window.PSMs)
+                {
+                    ms2Times.push_back(psm.spectrum->scanStartTime);
+                    ms2Scores.push_back(psm.score);
+                }
+                ms2Times.push_back(window.PSMs.back().spectrum->scanStartTime + minDiff);
+                ms2Scores.push_back(0);
 
-				ms2Interpolator = Interpolator(ms2Times, ms2Scores);
-			}
+                ms2Interpolator = Interpolator(ms2Times, ms2Scores);
+            }
 
-			// find the peak with the highest sum of (PSM scores * interpolated SIC) within the peak;
-			// if no IDs fall within peaks, find the peak closest to the best scoring id
-			map<double, map<double, Peak> > peakByIntensityBySumOfProducts;
-			BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
-			{
-				double startTime = window.MS1RT[crawPeak->getStartIndex()];
-				double endTime = window.MS1RT[crawPeak->getEndIndex()];
-				double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
-				//double peakTime = startTime + (endTime-startTime)/2;
+            // find the peak with the highest sum of (PSM scores * interpolated SIC) within the peak;
+            // if no IDs fall within peaks, find the peak closest to the best scoring id
+            map<double, map<double, Peak> > peakByIntensityBySumOfProducts;
+            BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
+            {
+                double startTime = window.MS1RT[crawPeak->getStartIndex()];
+                double endTime = window.MS1RT[crawPeak->getEndIndex()];
+                double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
+                //double peakTime = startTime + (endTime-startTime)/2;
 
-				// skip degenerate peaks
-				if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
-					continue;
+                // skip degenerate peaks
+                if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
+                    continue;
 
-				// skip peaks which don't follow the raw data
-				double rawPeakIntensity = window.MS1Intensity[crawPeak->getTimeIndex()];
-				if (rawPeakIntensity < window.MS1Intensity[crawPeak->getStartIndex()] ||
-					rawPeakIntensity < window.MS1Intensity[crawPeak->getEndIndex()])
-					continue;
+                // skip peaks which don't follow the raw data
+                double rawPeakIntensity = window.MS1Intensity[crawPeak->getTimeIndex()];
+                if (rawPeakIntensity < window.MS1Intensity[crawPeak->getStartIndex()] ||
+                    rawPeakIntensity < window.MS1Intensity[crawPeak->getEndIndex()])
+                    continue;
 
-				// Crawdad Fwhm is in index units; we have to translate it back to time units
-				double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
-				Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
-				window.peaks.insert(peak);
+                // Crawdad Fwhm is in index units; we have to translate it back to time units
+                double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
+                Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
+                window.peaks.insert(peak);
 
-				if (!window.bestPeak || fabs((window.bestPeak->peakTime - window.bestScoreScanStartTime) / window.bestPeak->fwhm) >
-										fabs((peakTime - window.bestScoreScanStartTime) / peak.fwhm))
-					window.bestPeak = peak;
+                if (!window.bestPeak || fabs((window.bestPeak->peakTime - window.bestScoreScanStartTime) / window.bestPeak->fwhm) >
+                                        fabs((peakTime - window.bestScoreScanStartTime) / peak.fwhm))
+                    window.bestPeak = peak;
 
-				// calculate sum of products between PSM score and interpolated SIC over 4 standard deviations
-				double wideStartTime = peakTime - peak.fwhm * 4 / 2.35482;
-				double wideEndTime = peakTime + peak.fwhm  * 4 / 2.35482;
-				double sumOfProducts = 0;
-				if (ms2Interpolator)
-				{
-					size_t wideStartIndex = boost::lower_bound(window.MS1RT, wideStartTime) - window.MS1RT.begin();
-					size_t wideEndIndex = boost::upper_bound(window.MS1RT, wideEndTime) - window.MS1RT.begin();
-					for (size_t i=wideStartIndex; i < wideEndIndex; ++i)
-						sumOfProducts += window.MS1Intensity[i] * ms2Interpolator->interpolate(ms2Times, ms2Scores, window.MS1RT[i]);
-				}
-				else
-				{
-					BOOST_FOREACH(const XICPeptideSpectrumMatch& psm, window.PSMs)
+                // calculate sum of products between PSM score and interpolated SIC over 4 standard deviations
+                double wideStartTime = peakTime - peak.fwhm * 4 / 2.35482;
+                double wideEndTime = peakTime + peak.fwhm  * 4 / 2.35482;
+                double sumOfProducts = 0;
+                if (ms2Interpolator)
+                {
+                    size_t wideStartIndex = boost::lower_bound(window.MS1RT, wideStartTime) - window.MS1RT.begin();
+                    size_t wideEndIndex = boost::upper_bound(window.MS1RT, wideEndTime) - window.MS1RT.begin();
+                    for (size_t i=wideStartIndex; i < wideEndIndex; ++i)
+                        sumOfProducts += window.MS1Intensity[i] * ms2Interpolator->interpolate(ms2Times, ms2Scores, window.MS1RT[i]);
+                }
+                else
+                {
+                    BOOST_FOREACH(const XICPeptideSpectrumMatch& psm, window.PSMs)
                     {
                         if (wideStartTime <= psm.spectrum->scanStartTime && psm.spectrum->scanStartTime <= wideEndTime)
                             sumOfProducts += psm.score * interpolator.interpolate(window.MS1RT, window.MS1Intensity, psm.spectrum->scanStartTime);
                     }
-				}
+                }
 
-				if (sumOfProducts > 0)
-					peakByIntensityBySumOfProducts[sumOfProducts][peak.intensity] = peak;
-			}
-			if (!peakByIntensityBySumOfProducts.empty())
-				window.bestPeak = peakByIntensityBySumOfProducts.rbegin()->second.rbegin()->second;
+                if (sumOfProducts > 0)
+                    peakByIntensityBySumOfProducts[sumOfProducts][peak.intensity] = peak;
+            }
+            if (!peakByIntensityBySumOfProducts.empty())
+                window.bestPeak = peakByIntensityBySumOfProducts.rbegin()->second.rbegin()->second;
 
-			/*if (!window.bestPeak)
-			{
-				cerr << "Warning: unable to select the best Crawdad peak for distinct match! " << window.peptide
-					 << " (id: " << window.PSMs[0].peptide
-					 << "; m/z: " << window.preMZ
-					 << "; time: " << window.preRT
-					 << ")" << endl;
-			}
-		    else
-				cout << "\n" << firstMS2.nativeID << "\t" << window.peptide << "\t" << window.bestPeak->intensity << "\t" << window.bestPeak->peakTime << "\t" << firstMS2.precursorIntensity << "\t" << (window.bestPeak->intensity / firstMS2.precursorIntensity);*/
-		}
-		i = 0;
-		//cycle through all regression defined precursors, passing each one to crawdad
-		ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding regression defined peptide peaks...");
-			BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
-		{
+            /*if (!window.bestPeak)
+            {
+                cerr << "Warning: unable to select the best Crawdad peak for distinct match! " << window.peptide
+                     << " (id: " << window.PSMs[0].peptide
+                     << "; m/z: " << window.preMZ
+                     << "; time: " << window.preRT
+                     << ")" << endl;
+            }
+            else
+                cout << "\n" << firstMS2.nativeID << "\t" << window.peptide << "\t" << window.bestPeak->intensity << "\t" << window.bestPeak->peakTime << "\t" << firstMS2.precursorIntensity << "\t" << (window.bestPeak->intensity / firstMS2.precursorIntensity);*/
+        }
+        i = 0;
+        //cycle through all regression defined precursors, passing each one to crawdad
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding regression defined peptide peaks...");
+            BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+        {
 
-			++i;
-			LocalChromatogram& lc = info.chromatogram;
-			if (lc.MS1RT.empty())
-			{
-				/*cerr << "Warning: regression defined precursor m/z " << info.exactMZ
-					 << " (m/z: " << info.mzWindow
-					 << "; time: " << info.scanTimeWindow
-					 << ") has no chromatogram data points!" << endl;*/
-				continue;
-			}
+            ++i;
+            LocalChromatogram& lc = info.chromatogram;
+            if (lc.MS1RT.empty())
+            {
+                /*cerr << "Warning: regression defined precursor m/z " << info.exactMZ
+                     << " (m/z: " << info.mzWindow
+                     << "; time: " << info.scanTimeWindow
+                     << ") has no chromatogram data points!" << endl;*/
+                continue;
+            }
 
-				if(lc.MS1RT.size()<4){
-			//cerr<<"Warning: the MS1 RT size is less than 4: "<<info.exactMZ<<endl;
-			continue;
-			}
+                if(lc.MS1RT.size()<4){
+            //cerr<<"Warning: the MS1 RT size is less than 4: "<<info.exactMZ<<endl;
+            continue;
+            }
 
-			 //try{
+             //try{
 
-			// make chromatogram data points evenly spaced
-			Interpolator(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity).resample(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
-
-
-			// eliminate negative signal
-			BOOST_FOREACH(double& intensity, info.chromatogram.MS1Intensity)
-				intensity = max(0.0, intensity);
-
-			CrawdadPeakFinder crawdadPeakFinder;
-			crawdadPeakFinder.SetChromatogram(lc.MS1RT, lc.MS1Intensity);
-			info.baselineIntensity= crawdadPeakFinder.getBaselineIntensity();
-
-			vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
-			 if (crawPeaks.size() == 0)
-				continue;
+            // make chromatogram data points evenly spaced
+            Interpolator(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity).resample(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
 
 
+            // eliminate negative signal
+            BOOST_FOREACH(double& intensity, info.chromatogram.MS1Intensity)
+                intensity = max(0.0, intensity);
 
-			BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
-			{
+            CrawdadPeakFinder crawdadPeakFinder;
+            crawdadPeakFinder.SetChromatogram(lc.MS1RT, lc.MS1Intensity);
+            info.baselineIntensity= crawdadPeakFinder.getBaselineIntensity();
 
-				double startTime = lc.MS1RT[crawPeak->getStartIndex()];
-				double endTime = lc.MS1RT[crawPeak->getEndIndex()];
-				double peakTime = lc.MS1RT[crawPeak->getTimeIndex()];
-				//double peakTime = startTime + (endTime-startTime)/2;
-
-				// skip degenerate peaks
-				if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
-					continue;
-
-				// skip peaks which don't follow the raw data
-				double rawPeakIntensity = lc.MS1Intensity[crawPeak->getTimeIndex()];
-				if (rawPeakIntensity < lc.MS1Intensity[crawPeak->getStartIndex()] ||
-					rawPeakIntensity < lc.MS1Intensity[crawPeak->getEndIndex()])
-					continue;
-
-				// Crawdad Fwhm is in index units; we have to translate it back to time units
-				double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
-				Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
-				lc.peaks.insert(peak);
-
-				//if bestPeak is still null  (i.e. if statement is executing for the first time) or the current peak is closer to the regression time than the best peak, set the current peak as the best peak
-				if (!lc.bestPeak || fabs(peakTime - info.RegTime) < fabs(lc.bestPeak->peakTime - info.RegTime))
-					lc.bestPeak = peak;
-
-			}
-			 /*}
+            vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
+             if (crawPeaks.size() == 0)
+                continue;
 
 
-				catch(exception& e)
-				{
-				continue;
-				}*/
 
-		}
-		// Write chromatograms for visualization of data
-		return writeChromatograms(idpDBFilePath, ms2ScanMap, pepWindow,RegDefinedPrecursors, ilr, currentFile, totalFiles);
-	}
-	catch (exception& e)
-	{
-	    throw runtime_error(string("[EmbedMS1ForFile] ") + e.what());
-	}
-	return 0;
+            BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
+            {
+
+                double startTime = lc.MS1RT[crawPeak->getStartIndex()];
+                double endTime = lc.MS1RT[crawPeak->getEndIndex()];
+                double peakTime = lc.MS1RT[crawPeak->getTimeIndex()];
+                //double peakTime = startTime + (endTime-startTime)/2;
+
+                // skip degenerate peaks
+                if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
+                    continue;
+
+                // skip peaks which don't follow the raw data
+                double rawPeakIntensity = lc.MS1Intensity[crawPeak->getTimeIndex()];
+                if (rawPeakIntensity < lc.MS1Intensity[crawPeak->getStartIndex()] ||
+                    rawPeakIntensity < lc.MS1Intensity[crawPeak->getEndIndex()])
+                    continue;
+
+                // Crawdad Fwhm is in index units; we have to translate it back to time units
+                double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
+                Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
+                lc.peaks.insert(peak);
+
+                //if bestPeak is still null  (i.e. if statement is executing for the first time) or the current peak is closer to the regression time than the best peak, set the current peak as the best peak
+                if (!lc.bestPeak || fabs(peakTime - info.RegTime) < fabs(lc.bestPeak->peakTime - info.RegTime))
+                    lc.bestPeak = peak;
+
+            }
+             /*}
+
+
+                catch(exception& e)
+                {
+                continue;
+                }*/
+
+        }
+        // Write chromatograms for visualization of data
+        return writeChromatograms(idpDBFilePath, pepWindow,RegDefinedPrecursors, ilr, currentFile, totalFiles);
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(string("[EmbedMS1ForFile] ") + e.what());
+    }
+    return 0;
 }
 
 } // namespace XIC
