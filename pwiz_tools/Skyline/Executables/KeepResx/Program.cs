@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+// ReSharper disable NonLocalizedString
 namespace KeepResx
 {
-    class Program
+    static class Program
     {
         private static readonly string[] Excludes =
         {
+            @"msconvertgui\*",
+            @"seems\*",
+            @"topograph\*",
+            @"shared\zedgraph\*",
+            @"shared\proteomedb\forms\proteomedbform.resx",
             @"skyline\executables\localizationhelper\localizationhelper\properties\resources.resx",
             @"skyline\executables\skylinepeptidecolorgenerator\mainwindow.resx",
             @"skyline\executables\skylinepeptidecolorgenerator\properties\resources.resx",
@@ -29,7 +35,7 @@ namespace KeepResx
 
         private const string ExtResx = ".resx";
         private static readonly string[] ExtNotResx = { ".ja.resx", ".zh-CHS.resx" };
-        private const string ExtNew = ".zh-CHS.resx";
+        private const string ExtNew = ".ja.resx";
 
         private static bool MoveResx { get { return false; } }
         private static bool RemoveNonResx { get { return true; } }
@@ -100,7 +106,16 @@ namespace KeepResx
             {
                 return false;
             }
-            return !Excludes.Any(exclude => Path.GetFullPath(fileName).ToLower().EndsWith(exclude));
+            return !Excludes.Any(exclude => MatchesExclude(fileName, exclude));
+        }
+
+        private static bool MatchesExclude(string fileName, string exclude)
+        {
+            string fullPathLower = Path.GetFullPath(fileName).ToLower();
+            if (exclude.EndsWith("*"))
+                return fullPathLower.IndexOf(exclude.Substring(0, exclude.Length - 1), StringComparison.Ordinal) != -1;
+
+            return fullPathLower.EndsWith(exclude);
         }
 
         private static void DeleteFileIfPossible(string fileName)
