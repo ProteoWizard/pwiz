@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-// ReSharper disable NonLocalizedString
-//TODO: Disabled strings so build will pass, Nick will be localizing this file.
+using pwiz.Common.Properties;
+
 namespace pwiz.Common.DataBinding
 {
     public interface IFilterOperation
@@ -55,34 +55,36 @@ namespace pwiz.Common.DataBinding
                 {typeof (Decimal),typeof(double)},
                 {typeof (DateTime),typeof(DateTime)}
             };
-        public static readonly IFilterOperation OP_HAS_ANY_VALUE = new UnaryFilterOperation("", "Has Any Value",
+        // ReSharper disable NonLocalizedString
+        public static readonly IFilterOperation OP_HAS_ANY_VALUE = new UnaryFilterOperation("", () => Resources.FilterOperations_Has_Any_Value,
                                                                          (cd, operand) => rowNode => true);
 
         public static readonly IFilterOperation OP_EQUALS 
-            = new FilterOperation("equals", "Equals", FnEquals);
+            = new FilterOperation("equals", ()=>Resources.FilterOperations_Equals, FnEquals);
 
-        public static readonly IFilterOperation OP_NOT_EQUALS 
-            = new FilterOperation("<>", "Does Not Equal", FnNotEquals);
+        public static readonly IFilterOperation OP_NOT_EQUALS
+            = new FilterOperation("<>", () => Resources.FilterOperations_Does_Not_Equal, FnNotEquals);
 
         public static readonly IFilterOperation OP_IS_BLANK
-            = new UnaryFilterOperation("isnullorblank", "Is Blank", FnIsBlank);
+            = new UnaryFilterOperation("isnullorblank", () => Resources.FilterOperations_Is_Blank, FnIsBlank);
 
         public static readonly IFilterOperation OP_IS_NOT_BLANK
-            = new UnaryFilterOperation("isnotnullorblank", "Is Not Blank", FnIsNotBlank);
+            = new UnaryFilterOperation("isnotnullorblank", () => Resources.FilterOperations_Is_Not_Blank, FnIsNotBlank);
 
         public static readonly IFilterOperation OP_IS_GREATER_THAN
-            = new ComparisonFilterOperation(">", "Is Greater Than", i => i > 0);
+            = new ComparisonFilterOperation(">", () => Resources.FilterOperations_Is_Greater_Than, i => i > 0);
         public static readonly IFilterOperation OP_IS_LESS_THAN
-            = new ComparisonFilterOperation("<", "Is Less Than", i => i < 0);
+            = new ComparisonFilterOperation("<", () => Resources.FilterOperations_Is_Less_Than, i => i < 0);
         public static readonly IFilterOperation OP_IS_GREATER_THAN_OR_EQUAL
-            = new ComparisonFilterOperation(">=", "Is Greater Than Or Equal To", i => i >= 0);
+            = new ComparisonFilterOperation(">=", () => Resources.FilterOperations_Is_Greater_Than_Or_Equal_To, i => i >= 0);
         public static readonly IFilterOperation OP_IS_LESS_THAN_OR_EQUAL
-            = new ComparisonFilterOperation("<=", "Is Less Than Or Equal To", i => i <= 0);
+            = new ComparisonFilterOperation("<=", () => Resources.FilterOperations_Is_Less_Than_Or_Equal_To, i => i <= 0);
 
-        public static readonly IFilterOperation OP_CONTAINS = new StringFilterOperation("contains", "Contains", FnContains);
-        public static readonly IFilterOperation OP_NOT_CONTAINS = new StringFilterOperation("notcontains", "Does Not Contain", FnNotContains);
-        public static readonly IFilterOperation OP_STARTS_WITH = new StringFilterOperation("startswith", "Starts With", FnStartsWith);
-        public static readonly IFilterOperation OP_NOT_STARTS_WITH = new StringFilterOperation("notstartswith", "Does Not Start With", FnNotStartsWith);
+        public static readonly IFilterOperation OP_CONTAINS = new StringFilterOperation("contains", () => Resources.FilterOperations_Contains, FnContains);
+        public static readonly IFilterOperation OP_NOT_CONTAINS = new StringFilterOperation("notcontains", () => Resources.FilterOperations_Does_Not_Contain, FnNotContains);
+        public static readonly IFilterOperation OP_STARTS_WITH = new StringFilterOperation("startswith", () => Resources.FilterOperations_Starts_With, FnStartsWith);
+        public static readonly IFilterOperation OP_NOT_STARTS_WITH = new StringFilterOperation("notstartswith", () => Resources.FilterOperations_Does_Not_Start_With, FnNotStartsWith);
+        // ReSharper enable NonLocalizedString
 
         private static readonly IList<IFilterOperation> LstFilterOperations = Array.AsReadOnly(new[]{
                                                                                                OP_HAS_ANY_VALUE,
@@ -99,7 +101,6 @@ namespace pwiz.Common.DataBinding
                                                                                                OP_STARTS_WITH,
                                                                                                OP_NOT_STARTS_WITH
                                                                                            });
-
         private static readonly IDictionary<string, IFilterOperation> DictFilterOperations =
             LstFilterOperations.ToDictionary(op => op.OpName, op => op);
         public static IFilterOperation GetOperation(string name)
@@ -227,14 +228,15 @@ namespace pwiz.Common.DataBinding
         class FilterOperation : IFilterOperation
         {
             private readonly Func<ColumnDescriptor, string, Predicate<object>> _fnMakePredicate;
-            public FilterOperation(string opName, string displayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
+            private readonly Func<string> _getDisplayNameFunc;
+            public FilterOperation(string opName, Func<string> getDisplayNameFunc, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
             {
                 OpName = opName;
-                DisplayName = displayName;
+                _getDisplayNameFunc = getDisplayNameFunc;
                 _fnMakePredicate = fnMakePredicate;
             }
             public string OpName { get; private set; }
-            public string DisplayName { get; private set; }
+            public string DisplayName { get { return _getDisplayNameFunc(); } }
             public virtual bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
                 return true;
@@ -250,7 +252,8 @@ namespace pwiz.Common.DataBinding
         }
         class StringFilterOperation : FilterOperation
         {
-            public StringFilterOperation(string opName, string displayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate) : base(opName, displayName, fnMakePredicate)
+            public StringFilterOperation(string opName, Func<string> fnDisplayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate) 
+                : base(opName, fnDisplayName, fnMakePredicate)
             {
             }
             public override bool IsValidFor(ColumnDescriptor columnDescriptor)
@@ -261,9 +264,9 @@ namespace pwiz.Common.DataBinding
 
         class ComparisonFilterOperation : FilterOperation
         {
-            public ComparisonFilterOperation(string opName, string displayName,
+            public ComparisonFilterOperation(string opName, Func<string> fnDisplayName,
                 Predicate<int> filterFunc)
-                : base(opName, displayName, MakeFnCompare(filterFunc))
+                : base(opName, fnDisplayName, MakeFnCompare(filterFunc))
             {
             }
 
@@ -281,9 +284,9 @@ namespace pwiz.Common.DataBinding
 
         class UnaryFilterOperation : FilterOperation
         {
-            public UnaryFilterOperation(string opName, string displayName,
+            public UnaryFilterOperation(string opName, Func<string> fnGetDisplayName,
                 Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
-                : base(opName, displayName, fnMakePredicate)
+                : base(opName, fnGetDisplayName, fnMakePredicate)
             {
                 
             }

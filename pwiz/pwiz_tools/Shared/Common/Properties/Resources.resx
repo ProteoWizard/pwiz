@@ -286,4 +286,43 @@
     <comment>Example : 1 of 10
 </comment>
   </data>
+  <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
+    <value>Has Any Value</value>
+  </data>
+  <data name="FilterOperations_Equals" xml:space="preserve">
+    <value>Equals</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Equal" xml:space="preserve">
+    <value>Does Not Equal</value>
+  </data>
+  <data name="FilterOperations_Is_Blank" xml:space="preserve">
+    <value>Is Blank</value>
+  </data>
+  <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
+    <value>Is Not Blank</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
+    <value>Is Greater Than</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than" xml:space="preserve">
+    <value>Is Less Than</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than_Or_Equal_To" xml:space="preserve">
+    <value>Is Greater Than Or Equal To</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than_Or_Equal_To" xml:space="preserve">
+    <value>Is Less Than Or Equal To</value>
+  </data>
+  <data name="FilterOperations_Contains" xml:space="preserve">
+    <value>Contains</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Contain" xml:space="preserve">
+    <value>Does Not Contain</value>
+  </data>
+  <data name="FilterOperations_Starts_With" xml:space="preserve">
+    <value>Starts With</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
+    <value>Does Not Start With</value>
+  </data>
 </root>

@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -98,6 +99,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
         private void Run(CancellationToken cancellationToken)
         {
+            LocalizationHelper.InitThread();
             try
             {
                 var queryResults = QueryRequest.InitialQueryResults
