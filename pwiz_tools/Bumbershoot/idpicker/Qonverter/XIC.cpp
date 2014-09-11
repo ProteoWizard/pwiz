@@ -696,7 +696,7 @@ int writeChromatograms(const string& idpDBFilename,
     int totalAdded = 0;
     try
     {
-        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Writing chromatagrams to idpDB");
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Writing chromatograms to idpDB");
         shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
 
         sqlite::database idpDB(idpDBFilename);

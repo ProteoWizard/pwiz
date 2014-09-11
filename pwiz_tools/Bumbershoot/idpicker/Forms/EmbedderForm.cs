@@ -45,6 +45,7 @@ namespace IDPicker.Forms
         private NHibernate.ISession session;
         private bool hasEmbeddedSources, hasNonEmbeddedSources;
         private bool embeddedChanges; // true if the embedded data has changed
+        private Dictionary<int, Embedder.XICConfiguration> _savedRowSettings;
 
         public EmbedderForm (NHibernate.ISession session)
         {
@@ -140,12 +141,16 @@ namespace IDPicker.Forms
                         hasNonEmbeddedSources = true;
                     }
                 }
-                
+
+                var newXIC = (_savedRowSettings != null && _savedRowSettings.ContainsKey(row.Id))
+                                 ? _savedRowSettings[row.Id]
+                                 : new Embedder.XICConfiguration(row.XICSettings);
 
                 dataGridView.Rows.Add(row.Id, row.Name, status,
                                       quantitationMethodColumn.Items[row.QuantitationMethodIndex],
-                                      new Embedder.XICConfiguration(row.XICSettings));
+                                      newXIC);
             }
+            _savedRowSettings = null;
 
             dataGridView.ResumeLayout();
 
@@ -195,6 +200,7 @@ namespace IDPicker.Forms
 
         private void embedAllButton_Click (object sender, EventArgs e)
         {
+            var embedType = EmbedTypeBox.SelectedIndex;
             var searchPath = new StringBuilder(searchPathTextBox.Text);
             string extensions = extensionsTextBox.Text;
             Application.UseWaitCursor = true;
@@ -228,8 +234,9 @@ namespace IDPicker.Forms
                 xicConfigBySource[id] = row.Cells[XICSettingsColumn.Index].Value as Embedder.XICConfiguration ??
                                         new Embedder.XICConfiguration();
             }
+            if (embedType == 2)
+                _savedRowSettings = new Dictionary<int, Embedder.XICConfiguration>(xicConfigBySource);
 
-            var embedType = EmbedTypeBox.SelectedIndex;
             new Thread(() =>
             {
                 try

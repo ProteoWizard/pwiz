@@ -255,5 +255,13 @@ namespace IDPicker.Forms
         {
             Process.Start("http://www.r-project.org/");
         }
+
+        private void NumericUpDownEnter(object sender, EventArgs e)
+        {
+            var control = sender as NumericUpDown;
+            if (control == null)
+                return;
+            control.Select(0, control.Text.Length);
+        }
     }
 }
