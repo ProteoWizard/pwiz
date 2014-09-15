@@ -285,6 +285,7 @@ void map_diff(const std::map<key_type, value_type>& a,
 typedef map<string, AnalysisPtr> DistinctAnalysisMap;
 void findDistinctAnalyses(const vector<string>& inputFilepaths,
                           DistinctAnalysisMap& distinctAnalyses,
+                          bool skipSourceOnError,
                           const IterationListenerRegistry* ilr)
 {
     map<string, vector<AnalysisPtr> > sameNameAnalysesByName;
@@ -332,7 +333,10 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
         }
         catch (exception &e)
         {
-            throw runtime_error("parsing \"" + filepath + "\": " + e.what());
+            if (skipSourceOnError) // TODO: log instead of write to console
+                cerr << "Error parsing \"" << filepath << "\": " << e.what() << endl;
+            else
+                throw runtime_error("parsing \"" + filepath + "\": " + e.what());
         }
     }
 
@@ -873,6 +877,7 @@ struct ProteinDatabaseTaskGroup
 vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<string>& inputFilepaths,
                                                                const DistinctAnalysisMap& distinctAnalysisByFilepath,
                                                                map<string, ProteomeDataPtr> proteinDatabaseByFilepath,
+                                                               bool skipSourceOnError,
                                                                int maxThreads)
 {
     // group input files by their protein database
@@ -880,7 +885,12 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
     BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
     {
         if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
+        {
+            if (skipSourceOnError)
+                continue;
+
             throw runtime_error("[Parser::parse()] unable to find analysis for file \"" + inputFilepath + "\"");
+        }
 
         const AnalysisPtr& analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
         const string& proteinDatabaseFilepath = analysis->importSettings.proteinDatabaseFilepath;
@@ -890,6 +900,12 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
 
     int processorCount = min(maxThreads, (int) boost::thread::hardware_concurrency());
     vector<ProteinDatabaseTaskGroup> taskGroups;
+
+    if (inputFilepathsByProteinDatabase.empty())
+    {
+        cerr << "[createTasksPerProteinDatabase] no tasks created" << endl;
+        return taskGroups;
+    }
 
     BOOST_FOREACH_FIELD((const string& proteinDatabaseFilepath)(vector<string>& inputFilepaths),
                         inputFilepathsByProteinDatabase)
@@ -1445,6 +1461,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
 void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                       const DistinctAnalysisMap& distinctAnalysisByFilepath,
                       vector<shared_ptr<sqlite::database> > memoryDatabases,
+                      bool skipSourceOnError,
                       IterationListenerRegistry* ilr)
 {
     using boost::thread;
@@ -1484,7 +1501,14 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                     finishedThreads.insert(t);
 
                 if (status.exception)
-                    boost::rethrow_exception(status.exception);
+                {
+                    if (skipSourceOnError) // TODO: log instead of write to console
+                        try { boost::rethrow_exception(status.exception); }
+                        catch (exception& e) { cerr << e.what() << endl; }
+                        catch (...) { boost::rethrow_exception(status.exception); }
+                    else
+                        boost::rethrow_exception(status.exception);
+                }
                 else if (status.userCanceled)
                     return;
             }
@@ -1530,7 +1554,14 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                     finishedThreads.insert(t);
 
                 if (status.exception)
-                    boost::rethrow_exception(status.exception);
+                {
+                    if (skipSourceOnError) // TODO: log instead of write to console
+                        try { boost::rethrow_exception(status.exception); }
+                        catch (exception& e) { cerr << e.what() << endl; }
+                        catch (...) { boost::rethrow_exception(status.exception); }
+                    else
+                        boost::rethrow_exception(status.exception);
+                }
                 else if (status.userCanceled)
                     return;
             }
@@ -1568,7 +1599,7 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
 
     // get the set of distinct analyses in the input files
     DistinctAnalysisMap distinctAnalysisByFilepath;
-    findDistinctAnalyses(inputFilepaths, distinctAnalysisByFilepath, ilr);
+    findDistinctAnalyses(inputFilepaths, distinctAnalysisByFilepath, skipSourceOnError, ilr);
 
     vector<ConstAnalysisPtr> distinctAnalyses;
     BOOST_FOREACH(const DistinctAnalysisMap::value_type& nameAnalysisPair, distinctAnalysisByFilepath)
@@ -1626,6 +1657,7 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
     vector<ProteinDatabaseTaskGroup> taskGroups = createTasksPerProteinDatabase(inputFilepaths,
                                                                                 distinctAnalysisByFilepath,
                                                                                 proteinDatabaseByFilepath,
+                                                                                skipSourceOnError,
                                                                                 maxThreads);
 
     // re-use the same in-memory databases because SQLite doesn't seem to let go of the memory after closing
@@ -1634,7 +1666,7 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
         memoryDatabases.push_back(shared_ptr<sqlite::database>(new sqlite::database(":memory:", sqlite::no_mutex)));
 
     BOOST_FOREACH(const ProteinDatabaseTaskGroup& taskGroup, taskGroups)
-        executeTaskGroup(taskGroup, distinctAnalysisByFilepath, memoryDatabases, ilr);
+        executeTaskGroup(taskGroup, distinctAnalysisByFilepath, memoryDatabases, skipSourceOnError, ilr);
 }
 
 

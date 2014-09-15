@@ -224,6 +224,8 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         BOOST_FOREACH(sqlite::query::rows row, q)
         {
             int blobBytes = row.column_bytes(2);
+            if (blobBytes == 0)
+                continue;
             char* blobCopy = new char[blobBytes];
             memcpy(blobCopy, (const char*) row.get<const void*>(2), blobBytes);
             pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = blobCopy;
@@ -290,17 +292,18 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     PivotDataMap::const_iterator findIdItr;
     map<boost::int64_t, PivotDataType>::const_iterator findColumnItr;
     vector<boost::int64_t> pivotColumnIds;
-    PivotDataType zeroBlob = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
     bool hasQuantitation = false;
 
     sqlite::query itraqPlexQuery(idpDB, "SELECT DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16) = '0000000000000000' AND "
                                         "COUNT(DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16)) = 1 "
+                                        "OR COUNT(*) = 0 "
                                         "FROM SpectrumQuantitation");
     bool hasITRAQ113 = false;
 
     sqlite::query tmtPlexQuery(idpDB, "SELECT DISTINCT substr(hex(TMT_ReporterIonIntensities), 33, 16) = '0000000000000000' AND "
                                       "COUNT(DISTINCT substr(hex(TMT_ReporterIonIntensities), 33, 16)) = 1 "
+                                      "OR COUNT(*) = 0 "
                                       "FROM SpectrumQuantitation");
     bool hasTMT128 = false;
 
@@ -450,9 +453,9 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                 for (size_t j=0; j < pivotColumnIds.size(); ++j)
                                 {
                                     if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
-                                        writeBlobArray<double>(boost::get<const void*>(zeroBlob), outputStream, 0, hasITRAQ113 ? 8 : 4);
+                                        writeBlobArray<double>(NULL, outputStream, 0, hasITRAQ113 ? 8 : 4);
                                     else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
-                                        writeBlobArray<double>(boost::get<const void*>(zeroBlob), outputStream, 0, hasTMT128 ? 6 : 2);
+                                        writeBlobArray<double>(NULL, outputStream, 0, hasTMT128 ? 6 : 2);
                                     
                                     if (j < pivotColumnIds.size()-1)
                                         outputStream << '\t';
@@ -464,7 +467,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                     if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
                                     {
                                         if (findColumnItr == findIdItr->second.end())
-                                            writeBlobArray<double>(boost::get<const void*>(zeroBlob), outputStream, 0, hasITRAQ113 ? 8 : 4);
+                                            writeBlobArray<double>(NULL, outputStream, 0, hasITRAQ113 ? 8 : 4);
                                         else if (hasITRAQ113)
                                             writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 8);
                                         else
@@ -473,7 +476,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                     else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
                                     {
                                         if (findColumnItr == findIdItr->second.end())
-                                            writeBlobArray<double>(boost::get<const void*>(zeroBlob), outputStream, 0, hasTMT128 ? 6 : 2);
+                                            writeBlobArray<double>(NULL, outputStream, 0, hasTMT128 ? 6 : 2);
                                         else if (hasTMT128)
                                             writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 2);
                                         else
@@ -561,7 +564,16 @@ int query(GroupBy groupBy, const vector<string>& args)
         
         int result = 0;
         BOOST_FOREACH(const bfs::path& filepath, filepaths)
+        {
+            if ((groupBy == GroupBy::Gene || groupBy == GroupBy::GeneGroup) && !Embedder::hasGeneMetadata(filepath.string()))
+            {
+                cerr << "Error: cannot group by gene or gene group because \"" << filepath.string() << "\" does not have embedded gene metadata; use idpQonvert to embed gene metadata." << endl;
+                ++result;
+                continue;
+            }
+
             result += proteinQuery(groupBy, filepath, enumColumns, selectedColumns, tokens);
+        }
         return result;
     }
 

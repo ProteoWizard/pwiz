@@ -554,7 +554,7 @@ void Qonverter::reset(const string& idpDbFilepath, pwiz::util::IterationListener
 void Qonverter::reset(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr)
 {
     // drop FilterHistory
-    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS FilterHistory", NULL, NULL, &errorBuf));
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DELETE FROM FilterHistory", NULL, NULL, &errorBuf));
 
     // drop old QonversionDetails
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS QonversionDetails", NULL, NULL, &errorBuf));

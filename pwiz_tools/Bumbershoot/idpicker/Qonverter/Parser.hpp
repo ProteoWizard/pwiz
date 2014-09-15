@@ -103,6 +103,7 @@ struct Parser
 
 
     ImportSettingsCallbackPtr importSettingsCallback;
+    bool skipSourceOnError;
 
 
     void parse(const vector<string>& inputFilepaths, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;

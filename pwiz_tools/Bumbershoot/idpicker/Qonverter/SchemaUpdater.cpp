@@ -68,7 +68,10 @@ struct DistinctDoubleArraySum
         int arrayByteCount = sqlite3_value_bytes(values[0]);
         int arrayLength = arrayByteCount / 8;
         const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
-        if (arrayBytes == NULL || arrayByteCount % 8 > 0)
+        if (arrayBytes == NULL)
+            return;
+
+        if (arrayByteCount % 8 > 0)
             throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
 
         if (pThis == NULL)
@@ -100,7 +103,7 @@ struct DistinctDoubleArraySum
         if (pThis == NULL)
             pThis = new DistinctDoubleArraySum(0);
 
-        sqlite3_result_blob(context, &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+        sqlite3_result_blob(context, pThis->result.empty() ? NULL : &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
 
         delete pThis;
     }

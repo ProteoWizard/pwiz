@@ -181,17 +181,17 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
     BOOST_FOREACH_FIELD((const string& group)(set<sqlite3_int64>& sources), sourcesByParentGroup)
     {
         // id 1 is reserved for '/'
-        int groupId = group == "/" ? 1 : ++groupId;
+        int parentGroupId = group == "/" ? 1 : ++groupId;
 
         // add the parent group to SpectrumSourceGroup
-        addSpectrumSourceGroup.binder() << groupId << group;
+        addSpectrumSourceGroup.binder() << parentGroupId << group;
         addSpectrumSourceGroup.step();
         addSpectrumSourceGroup.reset();
 
         BOOST_FOREACH(sqlite3_int64 sourceId, sources)
         {
             // add the source/group pair as a link
-            addSpectrumSourceGroupLink.binder() << ++linkId << sourceId << groupId;
+            addSpectrumSourceGroupLink.binder() << ++linkId << sourceId << parentGroupId;
             addSpectrumSourceGroupLink.step();
             addSpectrumSourceGroupLink.reset();
         }
@@ -335,7 +335,7 @@ int main(int argc, const char* argv[])
                    "                   [-cpus <max thread count>]\n"
                    "                   [-b <file containing a long list of newline-separated idpDB filemasks>]\n"
                    "\n"
-                   "Example: idpAssemble fraction1.idpDB fraction2.idpDB fraction3.idpDB -MergeTargetFilepath mudpit.idpDB\n"
+                   "Example: idpAssemble fraction1.idpDB fraction2.idpDB fraction3.idpDB -MergedOutputFilepath mudpit.idpDB\n"
                    "\n"
                    "The assemble.tsv file is a tab-delimited file with two columns. The first column is the source group path,\n"
                    "the second column is a source group name to assign to that group.";

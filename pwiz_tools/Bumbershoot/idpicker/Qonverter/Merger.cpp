@@ -490,6 +490,7 @@ struct Merger::Impl
         else
             tempMergeTargetFilepath = mergeTargetFilepath;
 
+        string biggestSourceFilepath;
         if (!SchemaUpdater::isValidFile(mergeTargetFilepath))
         {
             // if the target doesn't exist, the biggest source is copied to the target
@@ -499,7 +500,6 @@ struct Merger::Impl
             if (!mergeSourceFilepaths.empty())
             {
                 uintmax_t biggestFilesize = 0;
-                string biggestSourceFilepath;
                 BOOST_FOREACH(const string& filepath, mergeSourceFilepaths)
                 {
                     uintmax_t currentFilesize = bfs::file_size(filepath);
@@ -532,7 +532,23 @@ struct Merger::Impl
         db.executef("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA page_size=32768; PRAGMA cache_size=%d", tempCacheSize);
         db.executef("PRAGMA merged.journal_mode=OFF; PRAGMA merged.synchronous=OFF; PRAGMA merged.cache_size=%d", mergedCacheSize);
 
-        db.execute("CREATE TABLE IF NOT EXISTS merged.MergedFiles (Filepath TEXT PRIMARY KEY)");
+        if (!biggestSourceFilepath.empty()) // if there is a biggest source, it means the target filepath did not exist
+        {
+            try
+            {
+                // if the biggest source does not have a MergedFiles table, the first query will throw
+                sqlite3pp::query(db, "SELECT COUNT(*) FROM merged.MergedFiles").begin();
+
+                // if it already has a MergedFiles table, do nothing
+            }
+            catch (sqlite3pp::database_error&)
+            {
+                // if source does not have a MergedFiles table, create one and add the source filepath to the target MergedFiles
+                db.execute("CREATE TABLE IF NOT EXISTS merged.MergedFiles (Filepath TEXT PRIMARY KEY)");
+                db.execute("INSERT INTO merged.MergedFiles VALUES ('" + bal::replace_all_copy(biggestSourceFilepath, "'", "''") + "')");
+            }
+        }
+
         db.execute("UPDATE About SET SoftwareVersion = '" + IDPicker::Version::str() + "', StartTime = datetime('now')");
         db.execute("DELETE FROM FilterHistory");
 
@@ -630,7 +646,7 @@ struct Merger::Impl
                 addNewAnalysisParameters(inMemoryDb);
                 addNewQonverterSettings(inMemoryDb);
 
-                inMemoryDb.execute("INSERT INTO merged.MergedFiles VALUES ('" + sqliteSafeMergeSourceFilepath + "')");
+                mergeMergedFiles(inMemoryDb, sqliteSafeMergeSourceFilepath);
 
                 clearSqlFormats();
             }
@@ -738,6 +754,25 @@ struct Merger::Impl
     void addNewAnalyses(sqlite3pp::database& db) { db.execute((addNewAnalysesSql % mergeSourceDatabase % MaxAnalysisId).str()); }
     void addNewAnalysisParameters(sqlite3pp::database& db) { db.execute((addNewAnalysisParametersSql % mergeSourceDatabase % MaxAnalysisId).str()); }
     void addNewQonverterSettings(sqlite3pp::database& db) { db.execute((addNewQonverterSettingsSql % mergeSourceDatabase % MaxAnalysisId).str()); }
+
+    void mergeMergedFiles(sqlite3pp::database& db, const string& sqliteSafeMergeSourceFilepath)
+    {
+        try
+        {
+            // if source does not have a MergedFiles table, the first query will throw
+            boost::format selectMergedFilesSql("SELECT COUNT(*) FROM %1%.MergedFiles");
+            sqlite3pp::query(db, (selectMergedFilesSql % mergeSourceDatabase).str().c_str()).begin();
+
+            // if it has a MergedFiles table, insert files from it into the target MergedFiles instead of adding the source idpDB path itself as an idpDB
+            boost::format mergeMergedFilesSql("INSERT INTO merged.MergedFiles SELECT Filepath FROM %1%.MergedFiles WHERE Filepath NOT IN (SELECT Filepath FROM merged.MergedFiles)");
+            db.execute((mergeMergedFilesSql % mergeSourceDatabase).str());
+        }
+        catch (sqlite3pp::database_error&)
+        {
+            // if source does not have a MergedFiles table, add the source filepath to the target MergedFiles
+            db.execute("INSERT INTO merged.MergedFiles VALUES ('" + sqliteSafeMergeSourceFilepath + "')");
+        }        
+    }
 
     void getNewMaxIds(sqlite3pp::database& db)
     {

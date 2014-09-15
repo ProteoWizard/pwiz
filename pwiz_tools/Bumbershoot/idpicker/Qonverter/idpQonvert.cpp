@@ -253,8 +253,12 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                         << " does not match " << proteinDatabaseFilepath.filename();
                 analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             }
-            else if (!proteinDatabaseFilepath.is_complete())
-                analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / proteinDatabaseFilepath).string();
+            else
+            {
+                analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / bfs::path(proteinDatabaseFilepath).filename()).string();
+                if (!bfs::exists(analysis.importSettings.proteinDatabaseFilepath) && !proteinDatabaseFilepath.is_complete())
+                    analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / proteinDatabaseFilepath).string();
+            }
 
             analysis.importSettings.analysisName = analysis.name;
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
@@ -420,6 +424,14 @@ pair<int, int> summarizeQonversion(const string& filepath)
 {
     pair<int, int> result(0, 0);
 
+    if (!bfs::exists(filepath))
+    {
+        cout << left << setw(8) << 0
+             << left << setw(9) << 0
+             << "file does not exist" << " / " << filepath << endl;
+        return result;
+    }
+
     sqlite::database idpDb(filepath);
 
     string sql = "SELECT ss.Name, a.Name, COUNT(DISTINCT Spectrum), COUNT(DISTINCT Peptide)"
@@ -508,6 +520,7 @@ int main( int argc, char* argv[] )
         ilr.addListenerWithTimer(IterationListenerPtr(new UserFeedbackIterationListener), 1.0);
 
         parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
+        parser.skipSourceOnError = g_rtConfig->SkipSourceOnError;
         parser.parse(parserFilepaths, g_numWorkers, &ilr);
         
         if (!g_rtConfig->EmbedOnly)
@@ -565,10 +578,15 @@ int main( int argc, char* argv[] )
                      << (i+1) << "/" << idpDbFilepaths.size()
                      << flush;
 
+                string sourceSearchPath = g_rtConfig->SourceSearchPath;
+                bfs::path idpDbFilepath = idpDbFilepaths[i];
+                if (idpDbFilepath.has_parent_path())
+                    sourceSearchPath += ";" + idpDbFilepath.parent_path().string();
+
                 if (g_rtConfig->EmbedSpectrumSources)
-                    Embedder::embed(idpDbFilepaths[i], g_rtConfig->SourceSearchPath, allSourcesQuantitationMethodMap);
+                    Embedder::embed(idpDbFilepaths[i], sourceSearchPath, allSourcesQuantitationMethodMap);
                 else
-                    Embedder::embedScanTime(idpDbFilepaths[i], g_rtConfig->SourceSearchPath, allSourcesQuantitationMethodMap);
+                    Embedder::embedScanTime(idpDbFilepaths[i], sourceSearchPath, allSourcesQuantitationMethodMap);
             }
         }
 
