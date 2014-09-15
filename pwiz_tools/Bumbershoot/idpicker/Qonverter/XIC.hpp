@@ -281,7 +281,7 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
 
 struct Interpolator
 {
-    Interpolator(const vector<double>& x, const vector<double>& y)
+    Interpolator(vector<double>& x, vector<double>& y)
     {
         _size = x.size();
 
@@ -291,6 +291,26 @@ struct Interpolator
         BOOST_ASSERT(x.size() == y.size());
 
         //_ypp.reset(spline_cubic_set(_size, const_cast<double*>(&x[0]), const_cast<double*>(&y[0]), 1, 0, 1, 0));
+        
+        for ( int n = 0; n < x.size(); n++ )
+        {
+            if ( x[n] <= x[n-1] ) //only reorder if already out of order
+            {
+                map<double, double > peakMap;
+                for ( int z = 0; z < x.size(); z++ ) //throw everything into a map
+                    peakMap[x[z]] = y[z];
+                x.clear();
+                y.clear();
+                
+                map<double, double >::iterator itr;
+                for (itr = peakMap.begin(); itr != peakMap.end(); ++itr) //toss map back into x and y
+                {
+                    x.push_back(itr->first);
+                    y.push_back(itr->second);
+                }            
+                break;
+            }
+        }
 
         _ypp.reset(new double[_size]);
         spline_pchip_set(_size, const_cast<double*>(&x[0]), const_cast<double*>(&y[0]), _ypp.get());

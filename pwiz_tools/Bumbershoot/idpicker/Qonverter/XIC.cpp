@@ -636,7 +636,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
 
             if (!boost::icl::contains(tmpWindow.preMZ, scanInfo.precursorMZ))
             {
-                //fileOut << "§Warning: PSM for spectrum \"" << scanInfo.nativeID << "\" with observed m/z " << scanInfo.precursorMZ << " is disjoint with the exact m/z " << tmpPSM.exactMZ << endl;
+                //fileOut << "Warning: PSM for spectrum \"" << scanInfo.nativeID << "\" with observed m/z " << scanInfo.precursorMZ << " is disjoint with the exact m/z " << tmpPSM.exactMZ << endl;
                 continue;
             }
         }
@@ -1081,9 +1081,6 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks...");
         for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
         {
-//
-//          if (curIndex+1==spectrumList.size() || !((curIndex+1)%100))
-//          ITERATION_UPDATE(ilr, currentFile, totalFiles, "\r§Reading peaks: " + lexical_cast<string>(curIndex+1) + "/" + lexical_cast<string>(spectrumList.size()));
 
             SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
 
