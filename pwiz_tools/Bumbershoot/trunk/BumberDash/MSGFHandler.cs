@@ -211,7 +211,13 @@ namespace BumberDash
                         residue = "*";
                 }
 
-                sb.AppendLine(string.Format("{0},{1},{2},{3},{4}",
+                if (Math.Abs(closestMod.MonoMass-mod.Mass) > 1)
+                    sb.AppendLine(string.Format("{0},{1},{2},{3},{4}",
+                                            mod.Mass, residue,
+                                            mod.Type == "Static" ? "fix" : "opt",
+                                            position, "Custom"));
+                else
+                    sb.AppendLine(string.Format("{0},{1},{2},{3},{4}",
                                             closestMod.Composition, residue,
                                             mod.Type == "Static" ? "fix" : "opt",
                                             position, closestMod.Name));
