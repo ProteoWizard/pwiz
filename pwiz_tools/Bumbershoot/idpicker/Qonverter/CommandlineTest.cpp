@@ -682,6 +682,8 @@ int main(int argc, char* argv[])
         // the rest of the arguments should be directories
         BOOST_FOREACH(const string& arg, args)
         {
+            if (arg[0] == '-')
+                continue;
             if (!bfs::is_directory(arg))
                 throw runtime_error("expected a path to test files, got \"" + arg + "\"");
 
