@@ -62,12 +62,24 @@
       <DependentUpon>QuaSARUI.cs</DependentUpon>
     </Compile>
     <Compile Include="QuaSARUtil.cs" />
+    <EmbeddedResource Include="QuaSARResources.ja.resx">
+      <DependentUpon>QuaSARResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QuaSARResources.zh-CHS.resx">
+      <DependentUpon>QuaSARResources.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="QuaSARResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>QuaSARResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="QuaSARUI.ja.resx">
+      <DependentUpon>QuaSARUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="QuaSARUI.resx">
+      <DependentUpon>QuaSARUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QuaSARUI.zh-CHS.resx">
       <DependentUpon>QuaSARUI.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

@@ -2936,7 +2936,7 @@ namespace pwiz.Skyline
             _sequenceTreeForm.SequenceTree.ItemDrag += sequenceTree_ItemDrag;
             _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragEnter;
             _sequenceTreeForm.SequenceTree.DragOver += sequenceTree_DragOver;
-            _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragDrop;
+            _sequenceTreeForm.SequenceTree.DragDrop += sequenceTree_DragDrop;
             _sequenceTreeForm.SequenceTree.UseKeysOverride = _useKeysOverride;
             _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
             if (expansionAndSelection != null)

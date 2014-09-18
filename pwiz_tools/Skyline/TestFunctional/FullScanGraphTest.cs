@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
             TestScale(452, 456, 0, 250);
             ClickChromatogram(33.23, 27.9);
             TestScale(452, 456, 0, 400);
+            WaitForOpenForm<GraphFullScan>();   // For localization testing
 
             // Check arrow navigation.
             ClickForward(33.25, 0);
@@ -74,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
             // Check zoomed heatmap.
             SetSpectrum(false);
             TestScale(452, 456, 2.8, 4.2);
+            WaitForOpenForm<GraphFullScan>();   // For localization testing
 
             // Check filtered heatmap.
             SetFilter(true);

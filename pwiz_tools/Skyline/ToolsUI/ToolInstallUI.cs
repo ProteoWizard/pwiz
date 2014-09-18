@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using Ionic.Zip;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Databinding;
@@ -126,6 +127,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             var toolListStart = ToolList.CopyTools(Settings.Default.ToolList);
+            Exception xFailure = null;
             try
             {
                 result = ToolInstaller.UnpackZipTool(fullpath, new InstallZipToolHelper(install));
@@ -136,7 +138,19 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (IOException x)
             {
-                MessageDlg.Show(parent, TextUtil.LineSeparate(String.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), x.Message));
+                xFailure = x;
+            }
+            catch (ZipException x)
+            {
+                xFailure = x;
+            }
+            catch (UnauthorizedAccessException x)
+            {
+                xFailure = x;
+            }
+            if (xFailure != null)
+            {
+                MessageDlg.Show(parent, TextUtil.LineSeparate(String.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), xFailure.Message));                
             }
 
             if (result != null)

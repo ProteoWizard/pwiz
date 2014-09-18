@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.Results
                     break;
                 }
             }
-            start = i;
+            start = Math.Min(i, timesNew.Length - 1);
             // If there is only one time with an intensity, pick the time point
             // in the new time array closest to it.
             if (startTime == endTime)
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model.Results
                     break;
                 }
             }
-            end = i;
+            end = Math.Max(i, 0);
 
             // Make sure the final time interval contains at least one time.
             if (start > end)

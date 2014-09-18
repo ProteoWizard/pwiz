@@ -57,6 +57,12 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        //[TestMethod]
+        public void TestStandardTypeWithOldReports()
+        {
+            RunWithOldReports(TestStandardType);
+        }
+
         protected override void DoTest()
         {
             // Open the SRMCourse.sky file

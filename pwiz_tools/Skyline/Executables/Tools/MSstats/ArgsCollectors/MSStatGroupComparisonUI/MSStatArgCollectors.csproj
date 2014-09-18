@@ -72,15 +72,33 @@
     <Compile Include="Text.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="GroupComparisonUI.ja.resx">
+      <DependentUpon>GroupComparisonUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GroupComparisonUI.resx">
       <DependentUpon>GroupComparisonUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GroupComparisonUI.zh-CHS.resx">
+      <DependentUpon>GroupComparisonUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MSstatsResources.ja.resx">
+      <DependentUpon>MSstatsResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MSstatsResources.zh-CHS.resx">
+      <DependentUpon>MSstatsResources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MSstatsResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>MSstatsResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SampleSizeUI.ja.resx">
+      <DependentUpon>SampleSizeUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SampleSizeUI.resx">
+      <DependentUpon>SampleSizeUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SampleSizeUI.zh-CHS.resx">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

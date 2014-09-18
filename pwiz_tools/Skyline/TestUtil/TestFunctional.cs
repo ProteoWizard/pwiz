@@ -80,6 +80,12 @@ namespace pwiz.SkylineTestUtil
             set { RunUI(() => SkylineWindow.SetEnableLiveReports(value)); }
         }
 
+        protected void RunWithOldReports(Action test)
+        {
+            TestContext.Properties["LiveReports"] = false.ToString();
+            test();
+        }
+
         protected static TDlg ShowDialog<TDlg>(Action act) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();

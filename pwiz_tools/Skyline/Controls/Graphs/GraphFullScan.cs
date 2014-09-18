@@ -77,7 +77,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphPane.Title.IsVisible = true;
             GraphPane.Legend.IsVisible = false;
-            GraphPane.XAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeXAxis_MZ;
+            // Make sure to use italics for "m/z"
+            AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, Resources.AbstractMSGraphItem_CustomizeXAxis_MZ);
 
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
             spectrumBtn.Checked = Settings.Default.SumScansFullScan;

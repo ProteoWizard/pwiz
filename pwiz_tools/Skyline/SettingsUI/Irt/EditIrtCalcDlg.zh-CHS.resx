@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -229,7 +229,7 @@
     <value>4</value>
   </data>
   <data name="btnBrowseDb.Text" xml:space="preserve">
-    <value>打开(&amp;O)……</value>
+    <value>打开(&amp;O)…</value>
   </data>
   <data name=">>btnBrowseDb.Name" xml:space="preserve">
     <value>btnBrowseDb</value>
@@ -337,7 +337,7 @@
     <value>1</value>
   </data>
   <data name="btnCalibrate.Text" xml:space="preserve">
-    <value>校准(&amp;B)……</value>
+    <value>校准(&amp;B)…</value>
   </data>
   <data name=">>btnCalibrate.Name" xml:space="preserve">
     <value>btnCalibrate</value>
@@ -361,7 +361,7 @@
     <value>9</value>
   </data>
   <data name="btnAddResults.Text" xml:space="preserve">
-    <value>添加(&amp;A)……</value>
+    <value>添加(&amp;A)…</value>
   </data>
   <data name=">>btnAddResults.Name" xml:space="preserve">
     <value>btnAddResults</value>
@@ -439,7 +439,7 @@
     <value>5</value>
   </data>
   <data name="btnCreateDb.Text" xml:space="preserve">
-    <value>创建(&amp;C)……</value>
+    <value>创建(&amp;C)…</value>
   </data>
   <data name=">>btnCreateDb.Name" xml:space="preserve">
     <value>btnCreateDb</value>
@@ -466,19 +466,19 @@
     <value>189, 22</value>
   </data>
   <data name="addResultsContextMenuItem.Text" xml:space="preserve">
-    <value>添加结果(&amp;R)……</value>
+    <value>添加结果(&amp;R)…</value>
   </data>
   <data name="addSpectralLibraryContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>189, 22</value>
   </data>
   <data name="addSpectralLibraryContextMenuItem.Text" xml:space="preserve">
-    <value>添加谱图库(&amp;L)……</value>
+    <value>添加谱图库(&amp;L)…</value>
   </data>
   <data name="addIRTDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>189, 22</value>
   </data>
   <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
-    <value>添加 iRT 数据库(&amp;D)……</value>
+    <value>添加 iRT 数据库(&amp;D)…</value>
   </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>190, 70</value>
@@ -502,7 +502,7 @@
     <value>0</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
-    <value>肽……</value>
+    <value>肽…</value>
   </data>
   <data name="btnPeptides.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

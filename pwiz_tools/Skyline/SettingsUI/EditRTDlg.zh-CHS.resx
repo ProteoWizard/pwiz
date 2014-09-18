@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -528,7 +528,7 @@ R 代表回归。</value>
   </data>
   <data name="comboCalculator.ToolTip" xml:space="preserve">
     <value>所使用的计算器算法：
-SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin 等）。</value>
+SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin 等）</value>
   </data>
   <data name=">>comboCalculator.Name" xml:space="preserve">
     <value>comboCalculator</value>
@@ -585,7 +585,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>使用结果(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-    <value>在此文档中点击使用当前已导入的肽的结果数据，
+    <value>在此文档中点击使用目前已导入的肽的结果数据，
 并用线性回归计算方程式</value>
   </data>
   <data name=">>btnUseCurrent.Name" xml:space="preserve">
@@ -613,10 +613,10 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>16</value>
   </data>
   <data name="btnShowGraph.Text" xml:space="preserve">
-    <value>显示图形(&amp;G)……</value>
+    <value>显示图形(&amp;G)…</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-    <value>在此文档中显示当前已导入的肽的最优化结果数据的
+    <value>在此文档中显示目前已导入的肽的最优化结果数据的
 线性回归图</value>
   </data>
   <data name=">>btnShowGraph.Name" xml:space="preserve">

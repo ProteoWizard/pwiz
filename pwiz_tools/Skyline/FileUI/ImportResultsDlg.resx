@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -379,7 +379,7 @@ created for each of its subdirectories.</value>
   <data name="radioCreateMultiple.ToolTip" xml:space="preserve">
     <value>Add any number of single-injection replicates from files.
 The files may either contain one-injection per file, or
-multiple injections per file (.wiff).  Each injection will be
+multiple injections per file (.wiff). Each injection will be
 added as a seperate replicate.
 </value>
   </data>
@@ -525,7 +525,7 @@ operations, as the injection results become available.</value>
     <value>helpTip</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 20</value>

@@ -27,10 +27,12 @@ ColumnChooser,TestStandardTypeWithOldReports
 ComparePeakPickingDlg,TestPeakBoundaryCompare
 ConfigureToolsDlg,TestQuasarTutorial
 CreateIrtCalculatorDlg,TestAssayLibraryImport
+CustomIonMzDlg,*
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentGridForm,TestReportSummary
 EditCEDlg,TestOptimization
+EditChorusAccountDlg,*
 EditDPDlg,TestEditDialogs
 EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes
@@ -56,6 +58,7 @@ EditServerDlg,TestAccessServer
 EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 EmptyProteinsDlg,TestImportPeptideSearch
+ExportChorusRequestDlg,*
 ExportChromatogramDlg,TestExportChromatogram
 ExportLiveReportDlg,TestReportSummary
 ExportMethodDlg.IsolationListView,TestExportDiaList
@@ -95,7 +98,7 @@ MissingFileDlg,TestSynchSiblings
 MProphetFeaturesDlg,TestPeakPickingTutorial
 MultiButtonMsgDlg,TestShareSettings
 OpenDataSourceDialog,TestRetentionTimeAlignment
-PasteDlg.FastaTab,TestInsert
+PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
 PasteDlg.ProteinListTab,TestMethodEditTutorial
 PasteDlg.TransitionListTab,TestExistingExperimentsTutorial
@@ -103,7 +106,7 @@ PasteFilteredPeptidesDlg,TestLibraryBuild
 PasteTypeDlg,TestExplicitMultiType
 PathChooserDlg,TestStartPageShowPathChooser
 PeptideSettingsUI.DigestionTab,TestMethodEditTutorial
-PeptideSettingsUI.FilterTab,TestMethodEditTutorial
+PeptideSettingsUI.FilterTab,TestEditDialogs
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
 PeptideSettingsUI.ModificationsTab,TestNeutralLoss
 PeptideSettingsUI.PredictionTab,IrtFunctionalTest

@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         DisplayAllIonsSummary(timeRegressionFunction, nodeTranSelected, chromatograms, extractor,
                                               ref bestStartTime, ref bestEndTime);
 
-                        if (nodeGroups != null)
+                        if (nodeGroups != null && lookupSequence != null)
                         {
                             foreach (var chromGraphItem in _graphHelper.ListPrimaryGraphItems())
                             {

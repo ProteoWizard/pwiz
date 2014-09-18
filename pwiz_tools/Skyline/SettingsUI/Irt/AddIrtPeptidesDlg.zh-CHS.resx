@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,17 +59,17 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
-    <xsd:element msdata:IsDataSet="true" name="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
               <xsd:attribute name="type" type="xsd:string"/>
               <xsd:attribute name="mimetype" type="xsd:string"/>
               <xsd:attribute ref="xml:space"/>
@@ -84,19 +84,19 @@
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
               <xsd:attribute ref="xml:space"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
@@ -181,7 +181,7 @@
     <value>0</value>
   </data>
   <data name="labelExisting.Text" xml:space="preserve">
-    <value>库中已经有{0}个肽具有值：</value>
+    <value>库中已经有 {0} 个肽具有值：</value>
   </data>
   <data name=">>labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>
@@ -328,7 +328,7 @@
     <value>0</value>
   </data>
   <data name="labelOverwrite.Text" xml:space="preserve">
-    <value>从 MS/MS 扫描中计算得出的{0}个肽 iRT 值将被替换
+    <value>从 MS/MS 扫描中计算得出的 {0} 个肽 iRT 值将被替换
 为从色谱峰中计算得出的 iRT 值：</value>
   </data>
   <data name=">>labelOverwrite.Name" xml:space="preserve">
@@ -458,7 +458,7 @@
     <value>0</value>
   </data>
   <data name="labelPeptidesAdded.Text" xml:space="preserve">
-    <value>{0}个新肽将被添加至 iRT 数据库。</value>
+    <value>{0} 个新肽将被添加至 iRT 数据库。</value>
   </data>
   <data name=">>labelPeptidesAdded.Name" xml:space="preserve">
     <value>labelPeptidesAdded</value>
@@ -485,7 +485,7 @@
     <value>1</value>
   </data>
   <data name="labelRunsConverted.Text" xml:space="preserve">
-    <value>{0}次运行已被成功转换。</value>
+    <value>{0} 次运行已被成功转换。</value>
   </data>
   <data name=">>labelRunsConverted.Name" xml:space="preserve">
     <value>labelRunsConverted</value>
@@ -512,7 +512,7 @@
     <value>2</value>
   </data>
   <data name="labelRunsFailed.Text" xml:space="preserve">
-    <value>{0}次运行因相关性不足而未被成功转换。</value>
+    <value>{0} 次运行因相关性不足而未被成功转换。</value>
   </data>
   <data name=">>labelRunsFailed.Name" xml:space="preserve">
     <value>labelRunsFailed</value>
@@ -542,7 +542,7 @@
     <value>0</value>
   </data>
   <data name="labelKeep.Text" xml:space="preserve">
-    <value>从色谱峰中计算得出的{0}个肽 iRT 值将被保留
+    <value>从色谱峰中计算得出的 {0} 个肽 iRT 值将被保留
 并且从 MS/MS 扫描中计算得出的新 iRT 值将被忽略：</value>
   </data>
   <data name=">>labelKeep.Name" xml:space="preserve">

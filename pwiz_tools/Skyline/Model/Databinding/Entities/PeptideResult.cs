@@ -45,11 +45,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? PeptideRetentionTime { get { return ChromInfo.RetentionTime; } }
         
-        // TODO(nicksh): Maybe get rid of this property since it's redundant with Peptide.PredictedRetentionTime
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? PredictedResultRetentionTime
         {
-            get { return Peptide.PredictedRetentionTime; }
+            get
+            {
+                var peptidePrediction = SrmDocument.Settings.PeptideSettings.Prediction;
+                if (peptidePrediction.RetentionTime != null)
+                {
+                    double? scoreCalc = peptidePrediction.RetentionTime.Calculator.ScoreSequence(Peptide.ModifiedSequence);
+                    if (scoreCalc.HasValue)
+                    {
+                        return peptidePrediction.RetentionTime.GetRetentionTime(scoreCalc.Value, ResultFile.ChromFileInfoId);
+                    }
+                }
+                return null;
+            }
         }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? RatioToStandard

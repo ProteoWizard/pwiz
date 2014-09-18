@@ -113,13 +113,16 @@ namespace pwiz.ProteomeDatabase.API
                     }
                 }
             }
-        public ProteinMatchQuery(ProteinMatchSettings settings, int maxResults)
+
+        public ProteinMatchQuery(ProteinMatchSettings settings, int maxResults = MAX_RESULTS_DEFAULT)
         {
             Settings = settings;
             MaxResults = maxResults;
         }
 
         public int MaxResults { get; private set; }
+
+        public const int MAX_RESULTS_DEFAULT = 100;
         public const int MIN_FREE_SEARCH_LENGTH = 3; // below this search text length we only match metadata beginnings, and not species or description at all
 
 //        public Action<ProteinMatchQuery> Callback { get; private set; }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 
@@ -78,6 +79,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new InvalidOperationException("Cannot truncate after peak detection"); // Not L10N
             }
+            // Avoid truncating chromatograms down to something less than half the window width.
+            double minLength = (maxTime - minTime)/2;
+            minTime = Math.Min(minTime, Times[Times.Length - 1] - minLength);
+            maxTime = Math.Max(maxTime, Times[0] + minLength);
             int firstIndex = Array.BinarySearch(Times, (float) minTime);
             if (firstIndex < 0)
             {

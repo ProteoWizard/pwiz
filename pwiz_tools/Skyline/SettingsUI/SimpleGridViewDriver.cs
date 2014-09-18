@@ -100,12 +100,16 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditCell()
         {
+            if (_gridView.CurrentCell == null)
+                return;
             _gridView.Focus();
             _gridView.BeginEdit(true);
         }
 
         public void SetCellValue(string s)
         {
+            if (_gridView.CurrentCell == null)
+                return;
             _gridView.BeginEdit(true);
             _gridView.CurrentCell.Value = s;
             _gridView.NotifyCurrentCellDirty(true);
@@ -115,6 +119,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetCellValue(double d)
         {
+            if (_gridView.CurrentCell == null)
+                return;
             _gridView.BeginEdit(true);
             _gridView.CurrentCell.Value = d;
             _gridView.NotifyCurrentCellDirty(true);

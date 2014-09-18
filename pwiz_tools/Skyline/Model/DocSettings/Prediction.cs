@@ -138,7 +138,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (Conversion == null)
             {
                 if (dictStandardPeptides == null && _dictStandardPeptides == null)
-                    return this;
+                {
+                    // If no standard peptides, only return this, if _isMissingStandardPeptides is set,
+                    // otherwise fall through so it gets set.
+                    if (_isMissingStandardPeptides)
+                        return this;
+                }
                 if (dictStandardPeptides != null && _dictStandardPeptides != null)
                 {
                     if (dictStandardPeptides.Count == dictStandardPeptides.Intersect(_dictStandardPeptides).Count())

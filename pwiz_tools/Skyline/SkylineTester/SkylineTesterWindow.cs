@@ -766,7 +766,7 @@ namespace SkylineTester
                 var comboBox = control as ComboBox;
                 if (comboBox != null)
                 {
-                    comboBox.SelectedIndex = comboBox.Items.IndexOf(element.Value);
+                    comboBox.SelectedItem = element.Value;
                     continue;
                 }
 

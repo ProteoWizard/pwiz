@@ -51,6 +51,12 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        //[TestMethod]
+        public void TestReportSummaryWithOldReports()
+        {
+            RunWithOldReports(TestReportSummary);
+        }
+
         private const string DOCUMENT_NAME = "160109_Mix1_calcurve.sky";
 
         /// <summary>
