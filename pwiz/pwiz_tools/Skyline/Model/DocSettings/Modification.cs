@@ -673,6 +673,14 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        /// <summary>
+        /// Label type combo box in peptide settings Modifications tab depends on this
+        /// </summary>
+        public override string ToString()
+        {
+            return LabelType.ToString();
+        }
+
         #endregion
     }
 

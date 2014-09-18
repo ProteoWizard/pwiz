@@ -212,7 +212,7 @@
     <value>3</value>
   </data>
   <data name="btnComplete.Text" xml:space="preserve">
-    <value>完了(&amp;C)</value>
+    <value>完全(&amp;C)</value>
   </data>
   <data name=">>btnComplete.Name" xml:space="preserve">
     <value>btnComplete</value>

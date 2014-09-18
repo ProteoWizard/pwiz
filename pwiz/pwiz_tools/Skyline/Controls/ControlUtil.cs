@@ -262,8 +262,19 @@ namespace pwiz.Skyline.Controls
             while(label != null && !(label is Label))
                 label = _parent.GetNextControl(label, false);
             string message = (label == null ? Resources.MessageBoxHelper_GetControlMessage_Field : label.Text);
-            // TODO(L10N): The processing below may need to change for certain locales
-            message = message.Replace("&", string.Empty); // Not L10N
+            int ampIndex = message.IndexOf('&');
+            // Chinese and Japanese use the mnemonic format <label>(&A):
+            if (ampIndex > 0 && message[ampIndex - 1] == '(' &&
+                ampIndex < message.Length - 2 && char.IsLetter(message[ampIndex + 1]) && message[ampIndex + 2] == ')')
+            {
+                // Strip the (&A)<punctuation>
+                message = message.Substring(0, ampIndex - 1);
+            }
+            else
+            {
+                // For roman character languages, just remove the ambersand
+                message = message.Replace("&", string.Empty); // Not L10N
+            }
             if (message.Length > 0 && message[message.Length - 1] == ':')
                 message = message.Substring(0, message.Length - 1);
             return message;

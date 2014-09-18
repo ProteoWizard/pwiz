@@ -122,7 +122,7 @@
     <value>249, 20</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>検索する文字列(&amp;F)：</value>
+    <value>検索項目(&amp;F):</value>
   </data>
   <data name=">>checkedListBoxFinders.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -208,7 +208,7 @@
     <value>5</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-    <value>検索方向</value>
+    <value>方向</value>
   </data>
   <data name=">>btnFindAll.Parent" xml:space="preserve">
     <value>$this</value>
@@ -220,7 +220,7 @@
     <value>293, 34</value>
   </data>
   <data name="cbCaseSensitive.Text" xml:space="preserve">
-    <value>文字形式の一致</value>
+    <value>文字形式（大文字・小文字）の一致</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -340,7 +340,7 @@
     <value>6</value>
   </data>
   <data name="radioDown.Text" xml:space="preserve">
-    <value>下へ(&amp;D)</value>
+    <value>下(&amp;D)</value>
   </data>
   <data name="radioUp.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 18</value>
@@ -400,7 +400,7 @@
     <value>次も検索：</value>
   </data>
   <data name="radioUp.Text" xml:space="preserve">
-    <value>上へ(&amp;U)</value>
+    <value>上(&amp;U)</value>
   </data>
   <data name="radioDown.Size" type="System.Drawing.Size, System.Drawing">
     <value>53, 17</value>

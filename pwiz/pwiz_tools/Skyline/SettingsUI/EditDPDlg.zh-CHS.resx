@@ -242,9 +242,9 @@
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
     <value>利用分类中的方程式，用截距从
-母离子质核比中计算经预测的最优去簇电压：
+母离子质荷比中计算经预测的最优去簇电压：
 
-去簇电压 = 斜度 * 母离子质核比 + 截距</value>
+去簇电压 = 斜度 * 母离子质荷比 + 截距</value>
   </data>
   <data name=">>textIntercept.Name" xml:space="preserve">
     <value>textIntercept</value>
@@ -296,9 +296,9 @@
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
     <value>利用分类中的方程式，用斜度从
-母离子质核比中计算经预测的最优去簇电压：
+母离子质荷比中计算经预测的最优去簇电压：
 
-去簇电压 = 斜度 * 母离子质核比 + 截距</value>
+去簇电压 = 斜度 * 母离子质荷比 + 截距</value>
   </data>
   <data name=">>textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
@@ -404,7 +404,7 @@
   <data name="textStepSize.ToolTip" xml:space="preserve">
     <value>在去簇电压最优化方法（经预测的最优去簇电压已采用该方法进行测量）
 中使用的区间，以及预测值两侧的
-步数值分别用步长单位分隔</value>
+该值的数量分别用步长单位分隔</value>
   </data>
   <data name=">>textStepSize.Name" xml:space="preserve">
     <value>textStepSize</value>
@@ -503,11 +503,11 @@
     <value>13</value>
   </data>
   <data name="btnShowGraph.Text" xml:space="preserve">
-    <value>显示图形(&amp;S)……</value>
+    <value>显示图形(&amp;S)…</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
     <value>在此文档中显示目前已导入的肽的最优化结果数据的
-线性回归图形</value>
+线性回归图</value>
   </data>
   <data name=">>btnShowGraph.Name" xml:space="preserve">
     <value>btnShowGraph</value>

@@ -528,7 +528,7 @@ R 代表回归。</value>
   </data>
   <data name="comboCalculator.ToolTip" xml:space="preserve">
     <value>所使用的计算器算法：
-SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin 等）。</value>
+SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin 等）</value>
   </data>
   <data name=">>comboCalculator.Name" xml:space="preserve">
     <value>comboCalculator</value>
@@ -585,7 +585,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>使用结果(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-    <value>在此文档中点击使用当前已导入的肽的结果数据，
+    <value>在此文档中点击使用目前已导入的肽的结果数据，
 并用线性回归计算方程式</value>
   </data>
   <data name=">>btnUseCurrent.Name" xml:space="preserve">
@@ -613,10 +613,10 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>16</value>
   </data>
   <data name="btnShowGraph.Text" xml:space="preserve">
-    <value>显示图形(&amp;G)……</value>
+    <value>显示图形(&amp;G)…</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-    <value>在此文档中显示当前已导入的肽的最优化结果数据的
+    <value>在此文档中显示目前已导入的肽的最优化结果数据的
 线性回归图</value>
   </data>
   <data name=">>btnShowGraph.Name" xml:space="preserve">

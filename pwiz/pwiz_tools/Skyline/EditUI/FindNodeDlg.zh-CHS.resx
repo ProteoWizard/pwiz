@@ -316,7 +316,7 @@
     <value>$this</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 44</value>
+    <value>142, 44</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -409,7 +409,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="radioDown.Location" type="System.Drawing.Point, System.Drawing">
-    <value>53, 18</value>
+    <value>75, 18</value>
   </data>
   <data name="btnShowHideAdvanced.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

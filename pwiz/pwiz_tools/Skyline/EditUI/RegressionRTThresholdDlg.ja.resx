@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>保持時間線形回帰のR値の目標最小値を指定してください。</value>
+    <value>保持時間線形回帰の目標最小R値を指定します。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -199,7 +199,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>249, 45</value>
+    <value>269, 13</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
@@ -226,7 +226,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>249, 75</value>
+    <value>269, 43</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
@@ -256,13 +256,13 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>336, 119</value>
+    <value>356, 119</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>保持時間の閾値を設定</value>
+    <value>保持時間閾値を設定</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>SetRTThresholdDlg</value>

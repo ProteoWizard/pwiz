@@ -125,7 +125,7 @@
     <value>True</value>
   </metadata>
   <data name="Peptide.HeaderText" xml:space="preserve">
-    <value>肽</value>
+    <value>肽段</value>
   </data>
   <metadata name="Hydrophobicity.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

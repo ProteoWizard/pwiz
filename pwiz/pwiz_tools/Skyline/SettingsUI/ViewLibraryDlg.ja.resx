@@ -340,7 +340,7 @@
     <value>0</value>
   </data>
   <data name="PreviousLink.Text" xml:space="preserve">
-    <value>前へ(&lt;&lt;P)</value>
+    <value>&lt;&lt;前へ</value>
   </data>
   <data name=">>PreviousLink.Name" xml:space="preserve">
     <value>PreviousLink</value>
@@ -667,7 +667,7 @@
     <value>29, 20</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
-    <value>1 価のイオン</value>
+    <value>1価のイオン</value>
   </data>
   <data name="charge2Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -676,7 +676,7 @@
     <value>29, 20</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
-    <value>2 価のイオン</value>
+    <value>2価のイオン</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>29, 6</value>

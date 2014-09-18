@@ -223,7 +223,7 @@
     <value>2</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-    <value>选择/取消全选(&amp;A)</value>
+    <value>全选/取消全选(&amp;A)</value>
   </data>
   <data name=">>cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>
@@ -322,7 +322,7 @@
     <value>1</value>
   </data>
   <data name="btnAddModification.Text" xml:space="preserve">
-    <value>添加修饰(&amp;M)……</value>
+    <value>添加修饰(&amp;M)…</value>
   </data>
   <data name=">>btnAddModification.Name" xml:space="preserve">
     <value>btnAddModification</value>
@@ -343,13 +343,13 @@
     <value>229, 22</value>
   </data>
   <data name="menuItemAddStructuralModification.Text" xml:space="preserve">
-    <value>添加结构修饰(&amp;S)……</value>
+    <value>添加结构修饰(&amp;S)…</value>
   </data>
   <data name="menuItemAddHeavyModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 22</value>
   </data>
   <data name="menuItemAddHeavyModification.Text" xml:space="preserve">
-    <value>添加重修饰(&amp;H)……</value>
+    <value>添加重修饰(&amp;H)…</value>
   </data>
   <data name="menuAddModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>230, 48</value>

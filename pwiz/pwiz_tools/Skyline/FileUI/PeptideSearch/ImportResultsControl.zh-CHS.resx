@@ -205,7 +205,7 @@
     <value>2</value>
   </data>
   <data name="browseToResultsFileButton.Text" xml:space="preserve">
-    <value>查找(&amp;F)……</value>
+    <value>查找(&amp;F)…</value>
   </data>
   <data name=">>browseToResultsFileButton.Name" xml:space="preserve">
     <value>browseToResultsFileButton</value>
@@ -259,7 +259,7 @@
     <value>3</value>
   </data>
   <data name="findResultsFilesButton.Text" xml:space="preserve">
-    <value>在文件夹中查找(&amp;I)……</value>
+    <value>在文件夹中查找(&amp;I)…</value>
   </data>
   <data name=">>findResultsFilesButton.Name" xml:space="preserve">
     <value>findResultsFilesButton</value>

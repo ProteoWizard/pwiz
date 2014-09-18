@@ -379,7 +379,7 @@
     <value>9</value>
   </data>
   <data name="labelStatus.Text" xml:space="preserve">
-    <value>現在状況：</value>
+    <value>ステータス：</value>
   </data>
   <data name=">>labelStatus.Name" xml:space="preserve">
     <value>labelStatus</value>

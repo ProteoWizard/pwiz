@@ -619,7 +619,7 @@
     <value>13</value>
   </data>
   <data name="buttonToolStore.Text" xml:space="preserve">
-    <value>工具商店(&amp;T)……</value>
+    <value>工具商店(&amp;T)…</value>
   </data>
   <data name=">>buttonToolStore.Name" xml:space="preserve">
     <value>buttonToolStore</value>

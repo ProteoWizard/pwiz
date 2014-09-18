@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>Skylineがこのライブラリを参照するために使用する名前です</value>
+    <value>Skylineがこのライブラリを参照するために使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -268,8 +268,8 @@
     <value>3</value>
   </data>
   <data name="textPath.ToolTip" xml:space="preserve">
-    <value>ディスク上で最終的な無重複ライブラリが作成される場所です。
-</value>
+    <value>最終非常駐ライブラリを作成する
+ディスク上の場所</value>
   </data>
   <data name=">>textPath.Name" xml:space="preserve">
     <value>textPath</value>
@@ -331,7 +331,7 @@
     <value>5</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>操作(&amp;A)：</value>
+    <value>動作(&amp;A)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -358,7 +358,7 @@
     <value>11</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>管理者 (proteome.gs.washington.edu など)(&amp;U)：</value>
+    <value>研究室管轄者（proteome.gs.washington.eduなど）(&amp;U)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -473,7 +473,7 @@ Yeast_20090902</value>
     <value>7</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
-    <value>重複許容ライブラリを保持(&amp;K)</value>
+    <value>冗長ライブラリを保持(&amp;K)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
     <value>重複許容ライブラリにスペクトルを後で追加できるようにコピーを
@@ -505,9 +505,9 @@ Yeast_20090902</value>
 基準値を設定します。(最も正しいと思われるものを 1.0 とする)
  0 から 1.0 の値を入力してください。
 
-TPP pepXMLでは、これはPeptideProphetの最小値です。
-Mascotでは、最大期待値の 1 となります。
-SEQUEST SQTでは、最大FDRの 1 となります。</value>
+TPP pepXMLの場合、これはPeptideProphetの最小値です。
+Mascotの場合、これは1 - 最大期待値です。
+SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
   </data>
   <data name=">>textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
@@ -564,7 +564,7 @@ SEQUEST SQTでは、最大FDRの 1 となります。</value>
     <value>10</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
-    <value>ドキュメントペプチドのフィルタ</value>
+    <value>ドキュメント内のペプチドのフィルタ</value>
   </data>
   <data name=">>cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
@@ -732,7 +732,7 @@ SEQUEST SQTでは、最大FDRの 1 となります。</value>
     <value>ディレクトリを追加(&amp;D)...</value>
   </data>
   <data name="btnAddDirectory.ToolTip" xml:space="preserve">
-    <value>ルートディレクトリ下で見つかった受け入れ可能なスペクトルファイルをすべて追加します。
+    <value>ルートディレクトリ下で見つかった容認可能なスペクトルファイルをすべて追加します。
 ライブラリに追加したくないファイルは、チェックボックスをオフにします。</value>
   </data>
   <data name=">>btnAddDirectory.Name" xml:space="preserve">
@@ -763,7 +763,7 @@ SEQUEST SQTでは、最大FDRの 1 となります。</value>
     <value>ファイルを追加(&amp;F)...</value>
   </data>
   <data name="btnAddFile.ToolTip" xml:space="preserve">
-    <value>単一ディレクトリから 1 つ以上ファイルを追加します。</value>
+    <value>単一ディレクトリから1つ以上のファイルを追加します。</value>
   </data>
   <data name=">>btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>

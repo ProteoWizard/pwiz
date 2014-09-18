@@ -420,7 +420,7 @@
     <value>5</value>
   </data>
   <data name="toolStrip.Text" xml:space="preserve">
-    <value>工具条 1</value>
+    <value>toolStrip1</value>
   </data>
   <data name=">>toolStrip.Name" xml:space="preserve">
     <value>toolStrip</value>
@@ -447,7 +447,7 @@
     <value>4</value>
   </data>
   <data name="btnPreview.Text" xml:space="preserve">
-    <value>预览……</value>
+    <value>预览…</value>
   </data>
   <data name="btnPreview.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

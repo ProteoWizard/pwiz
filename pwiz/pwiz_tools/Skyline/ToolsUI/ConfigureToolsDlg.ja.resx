@@ -138,15 +138,15 @@
   <data name="comboReport.ToolTip" xml:space="preserve">
     <value>ここでは、ツールと共に使用するSkylineReportを選択します。
 コマンドがウェブサイトのURLで、そこでレポートを選択した場合は、
-レポートはhttp投稿でウェブサイトに 
+レポートはhttp投稿でウェブサイトに
 投稿されます。
 
-コマンドが実行ファイルで、  
-$(InputReportTempPath)が引数の場合は、レポートは 
-一時ファイルにエクスポートされ、そのファイルパスが 
+コマンドが実行ファイルで、
+$(InputReportTempPath)が引数の場合は、レポートは
+一時ファイルにエクスポートされ、そのファイルパスが
 引数として提供されます。
 
-$(InputReportTempPath)が引数でなければ、選択した 
+$(InputReportTempPath)が引数でなければ、選択した
 レポートは標準入力により実行ファイルに渡されます。</value>
   </data>
   <data name=">>comboReport.Name" xml:space="preserve">
@@ -304,10 +304,10 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textInitialDirectory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>102, 246</value>
+    <value>112, 246</value>
   </data>
   <data name="textInitialDirectory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 20</value>
+    <value>177, 20</value>
   </data>
   <data name="textInitialDirectory.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -333,10 +333,10 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textArguments.Location" type="System.Drawing.Point, System.Drawing">
-    <value>102, 217</value>
+    <value>112, 217</value>
   </data>
   <data name="textArguments.Size" type="System.Drawing.Size, System.Drawing">
-    <value>217, 20</value>
+    <value>207, 20</value>
   </data>
   <data name="textArguments.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -361,10 +361,10 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textCommand.Location" type="System.Drawing.Point, System.Drawing">
-    <value>102, 188</value>
+    <value>112, 188</value>
   </data>
   <data name="textCommand.Size" type="System.Drawing.Size, System.Drawing">
-    <value>217, 20</value>
+    <value>207, 20</value>
   </data>
   <data name="textCommand.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -391,16 +391,16 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>Bottom, Left, Right</value>
   </data>
   <data name="textTitle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>102, 159</value>
+    <value>112, 159</value>
   </data>
   <data name="textTitle.Size" type="System.Drawing.Size, System.Drawing">
-    <value>247, 20</value>
+    <value>237, 20</value>
   </data>
   <data name="textTitle.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="textTitle.ToolTip" xml:space="preserve">
-    <value>[ツール] メニューに表示するツール名を入力してください。</value>
+    <value>ツールメニューに表示するツール名を入力します。</value>
   </data>
   <data name=">>textTitle.Name" xml:space="preserve">
     <value>textTitle</value>
@@ -487,7 +487,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>18</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>レポートを入力：</value>
+    <value>入力レポート：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -688,7 +688,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>メニューの内容(&amp;M)：</value>
+    <value>メニューのコンテンツ(&amp;M)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>

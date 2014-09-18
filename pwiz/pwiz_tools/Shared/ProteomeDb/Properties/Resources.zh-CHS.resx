@@ -98,10 +98,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">添加的{0}蛋白质</value>
+    <value xml:space="preserve">添加 {0} 个肽段</value>
   </data>
     <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">已完成的导入{0}蛋白质</value>
+    <value xml:space="preserve">已完成的导入 {0} 个蛋白质</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
     <value xml:space="preserve">列出现有的肽</value>
@@ -110,10 +110,10 @@
     <value xml:space="preserve">列出蛋白质</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">消化{0}蛋白质</value>
+    <value xml:space="preserve">消化 {0} 个蛋白质</value>
   </data>
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
-    <value xml:space="preserve">将{0}蛋白质消化成{1}序列特异的肽段</value>
+    <value xml:space="preserve">将 {0} 个蛋白质消化成 {1} 个序列特异的肽段</value>
   </data>
   <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
     <value xml:space="preserve">无法在保持读取锁定的同时获取写入锁定。</value>
@@ -123,5 +123,36 @@
   </data>
     <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>保存更改</value>
+  </data>
+  <data name="SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_" xml:space="preserve">
+    <value>蛋白质组文件{0}拥有较当前软件更新的格式。 请更新至最新的软件版本并重试。</value>
+  </data>
+  <data name="ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details" xml:space="preserve">
+    <value>寻找未解决的蛋白质细节</value>
+  </data>
+  <data name="ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins" xml:space="preserve">
+    <value>访问网页服务，以检索{0}蛋白质的细节</value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Name___0__" xml:space="preserve">
+    <value>名称：{0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Accession___0__" xml:space="preserve">
+    <value>添加：{0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Preferred_Name___0__" xml:space="preserve">
+    <value>首选名称：{0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Gene___0__" xml:space="preserve">
+    <value>基因：{0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Species___0__" xml:space="preserve">
+    <value>种类：{0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Searched__" xml:space="preserve">
+    <value>已搜索的 </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_" xml:space="preserve">
+    <value>
+描述：{0}</value>
   </data>
 </root>

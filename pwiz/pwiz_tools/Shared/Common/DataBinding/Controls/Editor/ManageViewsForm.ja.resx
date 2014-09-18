@@ -364,7 +364,7 @@
     <value>0</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上へ(&amp;U)</value>
+    <value>上(&amp;U)</value>
   </data>
   <data name=">>btnUp.Name" xml:space="preserve">
     <value>btnUp</value>
@@ -388,7 +388,7 @@
     <value>1</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-    <value>下へ(&amp;D)</value>
+    <value>下(&amp;D)</value>
   </data>
   <data name=">>btnDown.Name" xml:space="preserve">
     <value>btnDown</value>
@@ -535,7 +535,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>ビュー(&amp;V)：</value>
+    <value>ビュー(&amp;V):</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -562,7 +562,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ビューの管理</value>
+    <value>ビューを管理</value>
   </data>
   <data name=">>colHdrName.Name" xml:space="preserve">
     <value>colHdrName</value>

@@ -157,7 +157,7 @@
     <value>1</value>
   </data>
   <data name="label.Text" xml:space="preserve">
-    <value>操作を 1 つ元に戻す</value>
+    <value>操作を1つ元に戻す</value>
   </data>
   <data name="label.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>

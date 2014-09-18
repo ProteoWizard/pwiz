@@ -136,7 +136,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>トランジション設定フォームでこの式の表示に使用する名前です</value>
+    <value>トランジション設定形式でこの式の表示に使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -244,7 +244,7 @@
     <value>切片は、以下の方程式でプリカーサーm/zから予想される最適デクラスタリングポテンシャル
 の計算に使用します。
 
-DP = 勾配 * プリカーサーm/z + 切片</value>
+DP = 勾配*プリカーサーm/z +切片</value>
   </data>
   <data name=">>textIntercept.Name" xml:space="preserve">
     <value>textIntercept</value>
@@ -298,7 +298,7 @@ DP = 勾配 * プリカーサーm/z + 切片</value>
     <value>勾配は、以下の方程式でプリカーサーm/z から予想される最適デクラスタリングポテンシャル
 の計算に使用します。
 
-DP = 勾配 * プリカーサーm/z + 切片</value>
+DP = 勾配*プリカーサーm/z +切片</value>
   </data>
   <data name=">>textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
@@ -565,7 +565,7 @@ DPが測定されると同時に、その予測される値の両側でステッ
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>デクラスタリングポテンシャル計算式を編集</value>
+    <value>デクラスタリングポテンシャル方程式を編集</value>
   </data>
   <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

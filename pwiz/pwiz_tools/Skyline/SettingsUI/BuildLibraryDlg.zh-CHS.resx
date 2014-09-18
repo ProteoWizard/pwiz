@@ -473,7 +473,7 @@ Yeast_20090902</value>
     <value>7</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
-    <value>保留冗余库(&amp;K)：</value>
+    <value>保留冗余库(&amp;K)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
     <value>选中并保留冗余库的副本，您可以在
@@ -534,7 +534,7 @@ Yeast_20090902</value>
     <value>8</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>阈值分数(&amp;C)：</value>
+    <value>截止分数(&amp;C)：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -591,7 +591,7 @@ Yeast_20090902</value>
     <value>4</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
-    <value>浏览(&amp;B)……</value>
+    <value>浏览(&amp;B)…</value>
   </data>
   <data name=">>btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
@@ -642,7 +642,7 @@ Yeast_20090902</value>
     <value>4</value>
   </data>
   <data name="btnAddPaths.Text" xml:space="preserve">
-    <value>添加路径(&amp;P)……</value>
+    <value>添加路径(&amp;P)…</value>
   </data>
   <data name=">>btnAddPaths.Name" xml:space="preserve">
     <value>btnAddPaths</value>
@@ -729,7 +729,7 @@ Yeast_20090902</value>
     <value>3</value>
   </data>
   <data name="btnAddDirectory.Text" xml:space="preserve">
-    <value>添加目录(&amp;D)……</value>
+    <value>添加目录(&amp;D)…</value>
   </data>
   <data name="btnAddDirectory.ToolTip" xml:space="preserve">
     <value>添加在根目录下查找到的所有可接受的谱图文件。
@@ -760,7 +760,7 @@ Yeast_20090902</value>
     <value>2</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
-    <value>添加文件(&amp;F)……</value>
+    <value>添加文件(&amp;F)…</value>
   </data>
   <data name="btnAddFile.ToolTip" xml:space="preserve">
     <value>从单一目录中添加一个或多个文件。</value>

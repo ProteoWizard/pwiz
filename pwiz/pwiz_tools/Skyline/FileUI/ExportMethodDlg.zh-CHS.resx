@@ -574,7 +574,7 @@
     <value>21</value>
   </data>
   <data name="btnBrowseTemplate.Text" xml:space="preserve">
-    <value>浏览(&amp;B)……</value>
+    <value>浏览(&amp;B)…</value>
   </data>
   <data name=">>btnBrowseTemplate.Name" xml:space="preserve">
     <value>btnBrowseTemplate</value>
@@ -640,7 +640,7 @@
   </data>
   <data name="cbEnergyRamp.ToolTip" xml:space="preserve">
     <value>Thermo TSQ 软件的某些版本要求具有
-添加能量梯度栏</value>
+添加触发器和参考栏</value>
   </data>
   <data name=">>cbEnergyRamp.Name" xml:space="preserve">
     <value>cbEnergyRamp</value>

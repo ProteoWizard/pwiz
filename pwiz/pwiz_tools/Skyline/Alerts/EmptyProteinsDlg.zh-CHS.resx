@@ -133,7 +133,7 @@
     <value>0</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
-    <value>删除(&amp;R)：</value>
+    <value>删除(&amp;R)</value>
   </data>
   <data name=">>btnRemove.Name" xml:space="preserve">
     <value>btnRemove</value>
@@ -160,7 +160,7 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>为符合您当前的筛选条件，此操作已经添加了{0}个无肽蛋白质。
+    <value>为符合您当前的筛选条件，此操作已经添加了 {0} 个无肽蛋白质。
 您希望在显示文档前删除所有空蛋白质吗？</value>
   </data>
   <data name=">>labelMessage.Name" xml:space="preserve">

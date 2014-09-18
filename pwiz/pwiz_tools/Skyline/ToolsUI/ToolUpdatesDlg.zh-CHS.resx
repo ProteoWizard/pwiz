@@ -220,7 +220,7 @@
     <value>3</value>
   </data>
   <data name="labelOperation.Text" xml:space="preserve">
-    <value>&lt;占位符&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="labelOperation.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

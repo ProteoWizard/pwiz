@@ -133,7 +133,7 @@
     <value>2</value>
   </data>
   <data name="lblFormDescription.Text" xml:space="preserve">
-    <value>Skyline では、スペクトルライブラリに登録されたペプチドの保持時間情報を使用して、繰り返し測定の保持時間を正規化 (補正) します。2 回の繰り返し測定をアラインする場合は、両方の繰り返し測定から共通して検出されたペプチドの保持時間を用いて線形回帰を行います。相関係数 (R) が 99 以上になるまで、外れ値の除外を繰り返して線形回帰を改善 (リファイン) します。</value>
+    <value>繰り返し測定における時間の正規化を可能にするため、Skylineでは、スペクトルライブラリのペプチド同定の保持時間を使用します。2 回の繰り返し測定をアラインする場合は、両方の繰り返し測定から共通して検出されたペプチドの保持時間を用いて線形回帰を行います。Skylineでは、.99より大きい相関係数（すなわち「R」）を伴う線形回帰を取得するようにしています。Skylineでは、異常値を排除することにより、目標相関度に達するまで、回帰を最適化します。</value>
   </data>
   <data name=">>lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>
@@ -253,7 +253,7 @@
     <value>True</value>
   </metadata>
   <data name="colOutlierCount.HeaderText" xml:space="preserve">
-    <value>外れ値数</value>
+    <value>異常値の数</value>
   </data>
   <metadata name="colUnrefinedSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -292,7 +292,7 @@
     <value>True</value>
   </metadata>
   <data name="colTotalPoints.HeaderText" xml:space="preserve">
-    <value>点の数</value>
+    <value>ポイントの数</value>
   </data>
   <metadata name="bindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>

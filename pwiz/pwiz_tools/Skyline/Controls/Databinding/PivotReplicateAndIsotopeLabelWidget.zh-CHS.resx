@@ -136,7 +136,7 @@
     <value>5</value>
   </data>
   <data name="cbxPivotIsotopeLabel.Text" xml:space="preserve">
-    <value>Pivot 同位素标记</value>
+    <value>枢轴同位素标记</value>
   </data>
   <data name=">>cbxPivotIsotopeLabel.Name" xml:space="preserve">
     <value>cbxPivotIsotopeLabel</value>

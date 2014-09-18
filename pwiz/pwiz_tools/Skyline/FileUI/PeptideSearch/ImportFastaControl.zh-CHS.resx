@@ -175,7 +175,7 @@
     <value>6</value>
   </data>
   <data name="browseFastaBtn.Text" xml:space="preserve">
-    <value>浏览(&amp;B)……</value>
+    <value>浏览(&amp;B)…</value>
   </data>
   <data name=">>browseFastaBtn.Name" xml:space="preserve">
     <value>browseFastaBtn</value>

@@ -214,7 +214,7 @@
     <value>4</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-    <value>选择/取消全选(&amp;A)</value>
+    <value>全选/取消全选(&amp;A)</value>
   </data>
   <data name=">>cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>

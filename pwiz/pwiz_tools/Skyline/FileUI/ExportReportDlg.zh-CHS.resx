@@ -235,7 +235,7 @@
     <value>3</value>
   </data>
   <data name="btnEdit.Text" xml:space="preserve">
-    <value>编辑列表(&amp;E)……</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name=">>btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>
@@ -262,7 +262,7 @@
     <value>2</value>
   </data>
   <data name="btnPreview.Text" xml:space="preserve">
-    <value>预览(&amp;P)……</value>
+    <value>预览(&amp;P)…</value>
   </data>
   <data name=">>btnPreview.Name" xml:space="preserve">
     <value>btnPreview</value>
@@ -286,7 +286,7 @@
     <value>4</value>
   </data>
   <data name="btnShare.Text" xml:space="preserve">
-    <value>分享(&amp;S)……</value>
+    <value>分享(&amp;S)…</value>
   </data>
   <data name=">>btnShare.Name" xml:space="preserve">
     <value>btnShare</value>
@@ -310,7 +310,7 @@
     <value>5</value>
   </data>
   <data name="btnImport.Text" xml:space="preserve">
-    <value>导入(&amp;I)……</value>
+    <value>导入(&amp;I)…</value>
   </data>
   <data name=">>btnImport.Name" xml:space="preserve">
     <value>btnImport</value>

@@ -136,7 +136,7 @@
     <value>2</value>
   </data>
   <data name="btnRescoreAs.Text" xml:space="preserve">
-    <value>再次计分并另存为(&amp;A)……</value>
+    <value>再次计分并另存为(&amp;A)…</value>
   </data>
   <data name=">>btnRescoreAs.Name" xml:space="preserve">
     <value>btnRescoreAs</value>

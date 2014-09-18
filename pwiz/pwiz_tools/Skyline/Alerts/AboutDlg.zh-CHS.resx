@@ -264,7 +264,7 @@
   <data name="textBox1.Text" xml:space="preserve">
     <value>AB Sciex
 WIFF File Reader Library
-© 2010 年 AB Sciex LLC. 版权所有。
+© 2010 年 AB Sciex LLC 版权所有。
 保留所有权利。
 http://www.absciex.com/
 
@@ -298,7 +298,7 @@ Json.NET
 http://james.newtonking.com
 
 JetBrains Software
-开发工具：ReSharper、dotTrace 和 dotCover
+开发工具： ReSharper、dotTrace 和 dotCover
 http://www.jetbrains.com/index.html
 
 Matrix Science
@@ -312,6 +312,12 @@ http://www.nhibernate.org
 ProteoWizard
 Mass Spectrometry Data Import
 http://proteowizard.sourceforge.net
+
+Shimadzu Corporation
+Shimadzu 的文件转换器软件
+© 2014 年 Shimadzu Corporation 版权所有
+保留所有权利。
+http://www.shimadzu.com
 
 SQLite
 Single File 和 In-Memory RDBMS
@@ -331,7 +337,7 @@ Waters Technologies Corporation
 方法导出库
 Waters Raw Data Access Component
 © 2010 年 Waters Corporation 版权所有。
-版权所有。
+保留所有权利。
 http://www.waters.com
 
 ZedGraph

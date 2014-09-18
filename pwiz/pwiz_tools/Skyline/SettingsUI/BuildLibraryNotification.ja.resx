@@ -186,7 +186,7 @@
     <value>7</value>
   </data>
   <data name="NotificationMessage.Text" xml:space="preserve">
-    <value>構築が完了しました。</value>
+    <value>構築完了。</value>
   </data>
   <data name=">>NotificationMessage.Name" xml:space="preserve">
     <value>NotificationMessage</value>
@@ -285,7 +285,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>150, 98</value>
+    <value>160, 94</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>Manual</value>

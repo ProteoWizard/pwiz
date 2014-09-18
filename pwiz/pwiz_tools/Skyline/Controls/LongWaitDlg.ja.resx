@@ -223,7 +223,7 @@
     <value>CenterScreen</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>作業中</value>
+    <value>作業</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>LongWaitDlg</value>

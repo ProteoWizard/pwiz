@@ -177,7 +177,7 @@
     <value>2</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
-    <value>删除(&amp;R)：</value>
+    <value>删除(&amp;R)</value>
   </data>
   <data name=">>btnRemove.Name" xml:space="preserve">
     <value>btnRemove</value>

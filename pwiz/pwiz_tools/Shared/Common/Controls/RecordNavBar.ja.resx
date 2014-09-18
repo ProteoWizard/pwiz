@@ -199,7 +199,7 @@
     <value>2</value>
   </data>
   <data name="tbxRecordNumber.Text" xml:space="preserve">
-    <value>####### / #######</value>
+    <value>#######/#######</value>
   </data>
   <data name=">>tbxRecordNumber.Name" xml:space="preserve">
     <value>tbxRecordNumber</value>
@@ -382,7 +382,7 @@
     <value>9</value>
   </data>
   <data name="lblFilteredFrom.Text" xml:space="preserve">
-    <value>(########からフィルタ)</value>
+    <value>（########からフィルタ）</value>
   </data>
   <data name="lblFilteredFrom.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>

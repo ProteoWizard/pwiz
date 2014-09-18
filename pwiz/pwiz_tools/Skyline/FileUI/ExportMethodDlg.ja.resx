@@ -138,7 +138,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="radioSingle.ToolTip" xml:space="preserve">
-    <value>すべてのトランジションを含むファイルを 1 つ作成します。実際に分析する場合は、
+    <value>すべてのトランジションを含む単一のファイルを作成します。実際に分析する場合は、
 お使いの装置がすべてのトランジションを処理できることを確認してください。</value>
   </data>
   <data name=">>radioSingle.Name" xml:space="preserve">
@@ -166,10 +166,10 @@
     <value>3</value>
   </data>
   <data name="radioProtein.Text" xml:space="preserve">
-    <value>各タンパク質につき 1 つのメソッド(&amp;O)</value>
+    <value>タンパク質毎の1つのメソッド(&amp;O)</value>
   </data>
   <data name="radioProtein.ToolTip" xml:space="preserve">
-    <value>タンパク質ごとにメソッドを分割します。実際に分析する場合は、
+    <value>タンパク質境界に従ってメソッドを分割します。実際に分析する場合は、
 お使いの装置が各ファイルのトランジション数をすべて処理できることを確認してください。</value>
   </data>
   <data name=">>radioProtein.Name" xml:space="preserve">
@@ -200,7 +200,7 @@
     <value>複数メソッド(&amp;M)</value>
   </data>
   <data name="radioBuckets.ToolTip" xml:space="preserve">
-    <value>トランジション数が制限されている場合に、必要な数のファイルを作成します。</value>
+    <value>トランジション数の指定された制約まで、必要に応じた数のファイルを作成します。</value>
   </data>
   <data name=">>radioBuckets.Name" xml:space="preserve">
     <value>radioBuckets</value>
@@ -252,7 +252,7 @@
     <value>6</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
-    <value>サンプル注入あたりの最大トランジション数(&amp;X)：</value>
+    <value>試料インジェクション毎の最大トランジション数(&amp;X)：</value>
   </data>
   <data name=">>labelMaxTransitions.Name" xml:space="preserve">
     <value>labelMaxTransitions</value>
@@ -430,7 +430,7 @@
     <value>14</value>
   </data>
   <data name="labelDwellTime.Text" xml:space="preserve">
-    <value>ドウェル時間(ms)(&amp;D)：</value>
+    <value>ドウェル時間 (ms)(&amp;D)：</value>
   </data>
   <data name="labelDwellTime.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -607,8 +607,8 @@
     <value>タンパク質を無視(&amp;R)</value>
   </data>
   <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
-    <value>これを選択すると、ペプチドはタンパク質に関係なくファイル間で分配されます。
-未選択時には、最大数を超えるトランジションを含むタンパク質がある場合にだけ、
+    <value>これを選択すると、ペプチドはタンパク質境界に関係なくファイル間で分配されます。
+ 未選択時には、最大数を超えるトランジションを含むタンパク質がある場合にだけ、
 1 タンパク質内のペプチドが分割されます。</value>
   </data>
   <data name=">>cbIgnoreProteins.Name" xml:space="preserve">
@@ -639,8 +639,8 @@
     <value>エネルギー勾配を追加(&amp;A)</value>
   </data>
   <data name="cbEnergyRamp.ToolTip" xml:space="preserve">
-    <value>Thermo TSQソフトウェアの一部のバージョンで必要な「エネルギー勾配」列を追加します
-</value>
+    <value>Thermo TSQソフトウェアの一部のバージョンでは、
+「トリガーと参照を追加」列が必要です</value>
   </data>
   <data name=">>cbEnergyRamp.Name" xml:space="preserve">
     <value>cbEnergyRamp</value>
@@ -667,11 +667,11 @@
     <value>1</value>
   </data>
   <data name="cbTriggerRefColumns.Text" xml:space="preserve">
-    <value>トリガーと参照を追加(&amp;N)</value>
+    <value>参照のトリガーを追加(&amp;N)</value>
   </data>
   <data name="cbTriggerRefColumns.ToolTip" xml:space="preserve">
-    <value>Thermo TSQソフトウェアの一部のバージョンで必要な「トリガーと参照」列を追加します
-</value>
+    <value>Thermo TSQソフトウェアの一部のバージョンでは、
+「トリガーと参照を追加」列が必要です</value>
   </data>
   <data name=">>cbTriggerRefColumns.Name" xml:space="preserve">
     <value>cbTriggerRefColumns</value>
@@ -701,8 +701,8 @@
     <value>MultiQuantメソッドを作成(&amp;Q)</value>
   </data>
   <data name="cbExportMultiQuant.ToolTip" xml:space="preserve">
-    <value>MultiQuant対応の分析メソッドをAnalyst取得メソッドと同じディレクトリ名とベース名にエクスポートします
-</value>
+    <value>MultiQuant互換の分析メソッドをAnalyst収集メソッドと同じ
+ディレクトリとベース名にエクスポートします。</value>
   </data>
   <data name=">>cbExportMultiQuant.Name" xml:space="preserve">
     <value>cbExportMultiQuant</value>
@@ -927,7 +927,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>トップ</value>
+    <value>上部</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>

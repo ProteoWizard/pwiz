@@ -219,7 +219,7 @@
     <value>0</value>
   </data>
   <data name="lblProjectInfo.Text" xml:space="preserve">
-    <value>URL (e.g. https://panoramaweb.org/)(&amp;U):</value>
+    <value>URL (例：https://panoramaweb.org/)(&amp;U)：</value>
   </data>
   <data name=">>lblProjectInfo.Name" xml:space="preserve">
     <value>lblProjectInfo</value>
@@ -246,7 +246,7 @@
     <value>7</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>(任意)</value>
+    <value>（オプション）</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -321,7 +321,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>(任意)</value>
+    <value>（オプション）</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>

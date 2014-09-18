@@ -160,7 +160,7 @@
     <value>7</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
-    <value>浏览(&amp;B)……</value>
+    <value>浏览(&amp;B)…</value>
   </data>
   <data name=">>btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
@@ -190,7 +190,7 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>本文档需要‘{0}’{1}。
+    <value>本文档需要‘{0}’ {1}。
 点击“浏览”按钮来指定其在您系统中的位置。
 点击“打开”按钮，无需{1}即可打开文档。
 </value>

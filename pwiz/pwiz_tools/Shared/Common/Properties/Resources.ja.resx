@@ -192,16 +192,16 @@
     <value>詳細を表示(&amp;A) &gt;&gt;</value>
   </data>
   <data name="CustomizeViewForm_SetFilterInfo_This_column_does_not_exist" xml:space="preserve">
-    <value>この列はありません</value>
+    <value>この列は存在しません</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_" xml:space="preserve">
     <value>ビュー名は空白にはできません。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___" xml:space="preserve">
-    <value>「{0}」というビューは既に作られています。</value>
+    <value>'{0}'という名前のビューは既に作られています。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__" xml:space="preserve">
-    <value>「{0}」という既存のビューに上書きしますか？</value>
+    <value>'{0}'という名前の既存のビューに上書きしますか？</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_Column_Properties" xml:space="preserve">
     <value>列のプロパティ</value>
@@ -210,24 +210,119 @@
     <value>選択なし</value>
   </data>
   <data name="CustomizeViewForm_UpdatePropertySheet_Multiple_Selection" xml:space="preserve">
-    <value>複数の選択</value>
+    <value>複数選択</value>
   </data>
   <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
-    <value>データを変換中...</value>
+    <value>データ変換中...</value>
   </data>
   <data name="NavBar_RefreshUi__Filtered_from__0__" xml:space="preserve">
-    <value>({0}からフィルタ)</value>
+    <value>（{0}からフィルタ）</value>
   </data>
   <data name="NavBar_RefreshUi__Transforming_data____" xml:space="preserve">
-    <value>(データを変換中...)</value>
+    <value>（データ変換中...）</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
     <value>ビューを編集...</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
-    <value>ビューの管理...</value>
+    <value>ビューを管理...</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
     <value>ビューをカスタマイズ...</value>
+  </data>
+  <data name="PropertyPath_Parse_Invalid_character____" xml:space="preserve">
+    <value>無効な文字'*'</value>
+  </data>
+  <data name="PropertyPath_Parse_Unterminated_quote" xml:space="preserve">
+    <value>終端文字のない引用</value>
+  </data>
+  <data name="PropertyPath_Parse_Empty_name" xml:space="preserve">
+    <value>空の名前</value>
+  </data>
+  <data name="PropertyPath_Parse_Invalid_character" xml:space="preserve">
+    <value>無効な文字</value>
+  </data>
+  <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
+    <value>ロケーション{1}: {2}での解析エラー{0} </value>
+  </data>
+  <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
+    <value>列は読み取り専用です</value>
+  </data>
+  <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
+    <value>タイプ{0}:{1}の除外構成列</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
+    <value>値の更新中に不明なエラーが発生しました。</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
+    <value>値の更新中のエラー：
+{0}</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
+    <value>行の書き込み中 </value>
+    <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
+</comment>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
+    <value>{0}行の書き込み中</value>
+  </data>
+  <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
+    <value>クエリの実行中</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
+    <value>{0}/{1}行の書き込み中</value>
+  </data>
+  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
+    <value>本当にビュー'{0}'を消去してよろしいですか？</value>
+  </data>
+  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
+    <value>本当にこれらの{0}ビューを消去してよろしいですか？</value>
+  </data>
+  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
+    <value>（{0}からフィルタ）</value>
+  </data>
+  <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
+    <value>{0}/{1}</value>
+    <comment>Example : 1 of 10
+</comment>
+  </data>
+  <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
+    <value>任意の値あり</value>
+  </data>
+  <data name="FilterOperations_Equals" xml:space="preserve">
+    <value>等しい</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Equal" xml:space="preserve">
+    <value>等しくない</value>
+  </data>
+  <data name="FilterOperations_Is_Blank" xml:space="preserve">
+    <value>空白</value>
+  </data>
+  <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
+    <value>空白ではない</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
+    <value>大なり</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than" xml:space="preserve">
+    <value>未満</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than_Or_Equal_To" xml:space="preserve">
+    <value>以上</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than_Or_Equal_To" xml:space="preserve">
+    <value>以下</value>
+  </data>
+  <data name="FilterOperations_Contains" xml:space="preserve">
+    <value>含む</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Contain" xml:space="preserve">
+    <value>含まない</value>
+  </data>
+  <data name="FilterOperations_Starts_With" xml:space="preserve">
+    <value>から開始</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
+    <value>から開始しない</value>
   </data>
 </root>

@@ -214,7 +214,7 @@
     <value>1</value>
   </data>
   <data name="labelHeavy1.Text" xml:space="preserve">
-    <value>安定同位体、Heavy (標識)：</value>
+    <value>同位体、重い：</value>
   </data>
   <data name=">>labelHeavy1.Name" xml:space="preserve">
     <value>labelHeavy1</value>

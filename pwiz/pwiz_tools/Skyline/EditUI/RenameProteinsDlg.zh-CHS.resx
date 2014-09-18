@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>518, 344</value>
+    <value>597, 344</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -145,13 +145,13 @@
     <value>$this</value>
   </data>
   <data name=">>btnCancel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>437, 344</value>
+    <value>516, 344</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -172,7 +172,7 @@
     <value>$this</value>
   </data>
   <data name=">>btnOK.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="btnPopulate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -199,22 +199,22 @@
     <value>$this</value>
   </data>
   <data name=">>btnPopulate.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="btnFASTA.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
   <data name="btnFASTA.Location" type="System.Drawing.Point, System.Drawing">
-    <value>94, 344</value>
+    <value>403, 344</value>
   </data>
   <data name="btnFASTA.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnFASTA.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="btnFASTA.Text" xml:space="preserve">
-    <value>FASTA……</value>
+    <value>FASTA…</value>
   </data>
   <data name=">>btnFASTA.Name" xml:space="preserve">
     <value>btnFASTA</value>
@@ -226,7 +226,7 @@
     <value>$this</value>
   </data>
   <data name=">>btnFASTA.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="dataGridViewRename.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -244,7 +244,7 @@
     <value>13, 12</value>
   </data>
   <data name="dataGridViewRename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>580, 326</value>
+    <value>659, 326</value>
   </data>
   <data name="dataGridViewRename.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -259,6 +259,93 @@
     <value>$this</value>
   </data>
   <data name=">>dataGridViewRename.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnAccession.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnAccession.Location" type="System.Drawing.Point, System.Drawing">
+    <value>94, 344</value>
+  </data>
+  <data name="btnAccession.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAccession.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnAccession.Text" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name=">>btnAccession.Name" xml:space="preserve">
+    <value>btnAccession</value>
+  </data>
+  <data name=">>btnAccession.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnAccession.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnAccession.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnGene.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnGene.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnGene.Location" type="System.Drawing.Point, System.Drawing">
+    <value>276, 344</value>
+  </data>
+  <data name="btnGene.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 23</value>
+  </data>
+  <data name="btnGene.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="btnGene.Text" xml:space="preserve">
+    <value>基因</value>
+  </data>
+  <data name=">>btnGene.Name" xml:space="preserve">
+    <value>btnGene</value>
+  </data>
+  <data name=">>btnGene.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnGene.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnGene.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnPreferredName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnPreferredName.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnPreferredName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>175, 344</value>
+  </data>
+  <data name="btnPreferredName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 23</value>
+  </data>
+  <data name="btnPreferredName.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnPreferredName.Text" xml:space="preserve">
+    <value>首选名称</value>
+  </data>
+  <data name=">>btnPreferredName.Name" xml:space="preserve">
+    <value>btnPreferredName</value>
+  </data>
+  <data name=">>btnPreferredName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnPreferredName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnPreferredName.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -268,7 +355,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>605, 379</value>
+    <value>684, 379</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>線幅(&amp;L)：</value>
+    <value>線の幅(&amp;L)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -421,7 +421,7 @@
     <value>5</value>
   </data>
   <data name="cbRelative.Text" xml:space="preserve">
-    <value>相対ピーク幅(&amp;P)</value>
+    <value>ピーク幅相対(&amp;P)</value>
   </data>
   <data name=">>cbRelative.Name" xml:space="preserve">
     <value>cbRelative</value>
@@ -496,7 +496,7 @@
     <value>7</value>
   </data>
   <data name="cbShowOverlappingLabels.Text" xml:space="preserve">
-    <value>重複ラベルを表示</value>
+    <value>重複標識を表示</value>
   </data>
   <data name=">>cbShowOverlappingLabels.Name" xml:space="preserve">
     <value>cbShowOverlappingLabels</value>

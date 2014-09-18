@@ -118,12 +118,15 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="btnImport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="btnImport.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnImport.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 125</value>
+    <value>252, 125</value>
   </data>
   <data name="btnImport.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 23</value>
@@ -133,7 +136,7 @@
     <value>5</value>
   </data>
   <data name="btnImport.Text" xml:space="preserve">
-    <value>导入(&amp;I)……</value>
+    <value>导入(&amp;I)…</value>
   </data>
   <data name=">>btnImport.Name" xml:space="preserve">
     <value>btnImport</value>
@@ -145,13 +148,16 @@
     <value>$this</value>
   </data>
   <data name=">>btnImport.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
+  </data>
+  <data name="btnShare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
   <data name="btnShare.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 96</value>
+    <value>252, 96</value>
   </data>
   <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 23</value>
@@ -160,7 +166,7 @@
     <value>4</value>
   </data>
   <data name="btnShare.Text" xml:space="preserve">
-    <value>分享(&amp;S)……</value>
+    <value>分享(&amp;S)…</value>
   </data>
   <data name=">>btnShare.Name" xml:space="preserve">
     <value>btnShare</value>
@@ -172,7 +178,10 @@
     <value>$this</value>
   </data>
   <data name=">>btnShare.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
+  </data>
+  <data name="btnPreview.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
   <data name="btnPreview.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -181,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnPreview.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 22</value>
+    <value>252, 22</value>
   </data>
   <data name="btnPreview.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 23</value>
@@ -190,7 +199,7 @@
     <value>2</value>
   </data>
   <data name="btnPreview.Text" xml:space="preserve">
-    <value>预览(&amp;P)……</value>
+    <value>预览(&amp;P)…</value>
   </data>
   <data name=">>btnPreview.Name" xml:space="preserve">
     <value>btnPreview</value>
@@ -202,13 +211,16 @@
     <value>$this</value>
   </data>
   <data name=">>btnPreview.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
+  </data>
+  <data name="btnEdit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
   <data name="btnEdit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 67</value>
+    <value>252, 67</value>
   </data>
   <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 23</value>
@@ -217,7 +229,7 @@
     <value>3</value>
   </data>
   <data name="btnEdit.Text" xml:space="preserve">
-    <value>编辑列表(&amp;E)……</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name=">>btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>
@@ -229,7 +241,7 @@
     <value>$this</value>
   </data>
   <data name=">>btnEdit.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -259,13 +271,16 @@
     <value>$this</value>
   </data>
   <data name=">>label1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
+  </data>
+  <data name="listboxReports.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listboxReports.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 22</value>
   </data>
   <data name="listboxReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>204, 225</value>
+    <value>238, 277</value>
   </data>
   <data name="listboxReports.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -280,7 +295,7 @@
     <value>$this</value>
   </data>
   <data name=">>listboxReports.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -289,7 +304,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>234, 260</value>
+    <value>268, 356</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -310,7 +325,7 @@
     <value>$this</value>
   </data>
   <data name=">>btnCancel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="btnExport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -322,7 +337,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnExport.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 260</value>
+    <value>187, 356</value>
   </data>
   <data name="btnExport.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -343,7 +358,61 @@
     <value>$this</value>
   </data>
   <data name=">>btnExport.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
+  </data>
+  <data name="label2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 308</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>语言：</value>
+  </data>
+  <data name=">>label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name=">>label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="comboLanguage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 324</value>
+  </data>
+  <data name="comboLanguage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>238, 21</value>
+  </data>
+  <data name="comboLanguage.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name=">>comboLanguage.Name" xml:space="preserve">
+    <value>comboLanguage</value>
+  </data>
+  <data name=">>comboLanguage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboLanguage.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboLanguage.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -352,7 +421,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>316, 288</value>
+    <value>350, 384</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

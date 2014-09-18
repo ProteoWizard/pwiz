@@ -56,6 +56,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="MppExportResources.ja.resx">
+      <DependentUpon>MppExportResources.resx</DependentUpon>
+    </EmbeddedResource>	
+    <EmbeddedResource Include="MppExportResources.zh-CHS.resx">
+      <DependentUpon>MppExportResources.resx</DependentUpon>
+    </EmbeddedResource>	
     <EmbeddedResource Include="MppExportResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>MppExportResources.Designer.cs</LastGenOutput>

@@ -232,7 +232,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>結果のないファイル(&amp;M)：</value>
+    <value>欠損結果ファイル(&amp;M)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -253,7 +253,7 @@
     <value>113, 96</value>
   </data>
   <data name="findResultsFilesButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>119, 23</value>
+    <value>88, 23</value>
   </data>
   <data name="findResultsFilesButton.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>

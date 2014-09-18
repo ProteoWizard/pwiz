@@ -439,7 +439,7 @@
     <value>5</value>
   </data>
   <data name="btnLibDetails.Text" xml:space="preserve">
-    <value>……</value>
+    <value>…</value>
   </data>
   <data name=">>btnLibDetails.Name" xml:space="preserve">
     <value>btnLibDetails</value>
@@ -829,7 +829,7 @@
     <value>2</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
-    <value>添加 (&amp;A)</value>
+    <value>添加(&amp;A)</value>
   </data>
   <data name=">>btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
@@ -856,7 +856,7 @@
     <value>1</value>
   </data>
   <data name="btnAddAll.Text" xml:space="preserve">
-    <value>添加全部(&amp;D)……</value>
+    <value>添加全部(&amp;D)…</value>
   </data>
   <data name=">>btnAddAll.Name" xml:space="preserve">
     <value>btnAddAll</value>
@@ -1126,13 +1126,13 @@
     <value>193, 22</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>离子质核比值</value>
+    <value>离子质荷比值</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>观察的质核比值</value>
+    <value>观察的质荷比值</value>
   </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1156,7 +1156,7 @@
     <value>193, 22</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性……</value>
+    <value>属性…</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>

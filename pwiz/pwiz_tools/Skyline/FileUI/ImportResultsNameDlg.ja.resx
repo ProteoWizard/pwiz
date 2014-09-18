@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>共通プリフィックス(&amp;C)：</value>
+    <value>共通プリフィックス(&amp;C):</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -255,7 +255,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>プリフィックスの一部またはすべてを削除して、</value>
+    <value>このプリフィックスの一部またはすべてを削除して、</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>

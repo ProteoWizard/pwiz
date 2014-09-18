@@ -161,7 +161,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorMoveFirstItem.Text" xml:space="preserve">
-    <value>移动第一个</value>
+    <value>移动至首位</value>
   </data>
   <data name="bindingNavigatorMovePreviousItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -203,10 +203,10 @@
     <value>35, 22</value>
   </data>
   <data name="bindingNavigatorCountItem.Text" xml:space="preserve">
-    <value>当前位置 {0}</value>
+    <value>{0} 个新的</value>
   </data>
   <data name="bindingNavigatorCountItem.ToolTipText" xml:space="preserve">
-    <value>项的总数</value>
+    <value>项目总数</value>
   </data>
   <data name="bindingNavigatorSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -271,7 +271,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorAddNewItem.Text" xml:space="preserve">
-    <value>添加新项</value>
+    <value>添加</value>
   </data>
   <data name="navBarDeleteItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -316,7 +316,7 @@
     <value>53, 22</value>
   </data>
   <data name="navBarButtonExport.Text" xml:space="preserve">
-    <value>导出……</value>
+    <value>导出…</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -345,7 +345,7 @@
     <value>23, 22</value>
   </data>
   <data name="navBarButtonMatchCase.Text" xml:space="preserve">
-    <value>大小写匹配</value>
+    <value>区分大小写</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>

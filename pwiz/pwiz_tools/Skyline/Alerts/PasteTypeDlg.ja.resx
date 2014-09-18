@@ -159,7 +159,7 @@
     <value>1</value>
   </data>
   <data name="radioProtein.Text" xml:space="preserve">
-    <value>単一タンパク質配列(&amp;S)</value>
+    <value>単一タンパク質シークエンス(&amp;S)</value>
   </data>
   <data name=">>radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>
@@ -186,7 +186,7 @@
     <value>2</value>
   </data>
   <data name="radioPeptides.Text" xml:space="preserve">
-    <value>ペプチド配列のリスト(&amp;L)</value>
+    <value>ペプチドシークエンスのリスト(&amp;L)</value>
   </data>
   <data name=">>radioPeptides.Name" xml:space="preserve">
     <value>radioPeptides</value>

@@ -60,7 +60,7 @@
             : and then encoded with base64 encoding.
     -->
   <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
@@ -77,8 +77,8 @@
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
@@ -98,7 +98,7 @@
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,23 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>483, 427</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>82, 24</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>レポートしない</value>
+    <value>レポート禁止</value>
   </data>
   <data name=">>btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -158,6 +158,9 @@
   </data>
   <data name="tbMessage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="tbMessage.Text" xml:space="preserve">
+    <value/>
   </data>
   <data name=">>tbMessage.Name" xml:space="preserve">
     <value>tbMessage</value>
@@ -187,7 +190,7 @@
     <value>0</value>
   </data>
   <data name="lblCommentBox.Text" xml:space="preserve">
-    <value>問題が起きた状況について説明してください (省略可)：</value>
+    <value>問題が起きた状況について説明してください（オプション）：</value>
   </data>
   <data name=">>lblCommentBox.Name" xml:space="preserve">
     <value>lblCommentBox</value>
@@ -247,8 +250,8 @@
     <value>7</value>
   </data>
   <data name="lblReportError.Text" xml:space="preserve">
-    <value>次の予期しないエラーが発生しました。
-エラーを報告して、Skylineの改善にご協力ください。</value>
+    <value>予期しないエラーが発生しました。作業を保存し、
+Skylineを再起動してください。Skylineの改善のため、エラーをご報告ください。</value>
   </data>
   <data name=">>lblReportError.Name" xml:space="preserve">
     <value>lblReportError</value>
@@ -365,7 +368,7 @@
     <value>2</value>
   </data>
   <data name="lblEmail.Text" xml:space="preserve">
-    <value>電子メールアドレス (省略可)：</value>
+    <value>電子メールアドレス（オプション）：</value>
   </data>
   <data name=">>lblEmail.Name" xml:space="preserve">
     <value>lblEmail</value>

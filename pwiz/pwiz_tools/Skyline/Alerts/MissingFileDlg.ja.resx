@@ -190,9 +190,9 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>この文書には '{0}' {1}が必要です。
-システム上の場所を指定するには、[参照] ボタンをクリックします。
-{1}なしで文書を開くには、[開く] ボタンをクリックします。
+    <value>このドキュメントには'{0}' {1}が必要です。
+ご使用のシステムで場所を指定するには、参照ボタンをクリックします。
+{1}なしでドキュメントを開くには、開くボタンをクリックします。
 </value>
   </data>
   <data name=">>labelMessage.Name" xml:space="preserve">

@@ -208,7 +208,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大時間(&amp;T)：</value>
+    <value>最大時間(&amp;T):</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -310,7 +310,7 @@
     <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>最小時間(&amp;T)：</value>
+    <value>最小時間(&amp;T):</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -337,7 +337,7 @@
     <value>9</value>
   </data>
   <data name="cbDecimalCvs.Text" xml:space="preserve">
-    <value>CV値を (小数で) 表示(&amp;D)</value>
+    <value>十進数のCV値を表示(&amp;D)</value>
   </data>
   <data name=">>cbDecimalCvs.Name" xml:space="preserve">
     <value>cbDecimalCvs</value>
@@ -412,7 +412,7 @@
     <value>6</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>最大CV(&amp;C):</value>
+    <value>最大CV(&amp;C)：</value>
   </data>
   <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -436,7 +436,7 @@
     <value>0</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-    <value>グラフ時間軸の長さ(&amp;G)：</value>
+    <value>グラフ時間面積(&amp;G)：</value>
   </data>
   <data name=">>groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>

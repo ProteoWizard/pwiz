@@ -313,7 +313,7 @@
     <value>3</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
-    <value>添加文件(&amp;A)……</value>
+    <value>添加文件(&amp;A)…</value>
   </data>
   <data name=">>btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>

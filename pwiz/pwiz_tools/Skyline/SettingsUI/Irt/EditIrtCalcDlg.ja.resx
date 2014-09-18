@@ -388,7 +388,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>測定ペプチド(&amp;M)：</value>
+    <value>測定されたペプチド(&amp;M)：</value>
   </data>
   <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -415,7 +415,7 @@
     <value>8</value>
   </data>
   <data name="labelNumPeptides.Text" xml:space="preserve">
-    <value>0 個のペプチド</value>
+    <value>0個のペプチド</value>
   </data>
   <data name=">>labelNumPeptides.Name" xml:space="preserve">
     <value>labelNumPeptides</value>
@@ -532,7 +532,7 @@
     <value>True</value>
   </metadata>
   <data name="columnStandardSequence.HeaderText" xml:space="preserve">
-    <value>修飾配列</value>
+    <value>修飾シークエンス</value>
   </data>
   <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -577,7 +577,7 @@
     <value>True</value>
   </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
-    <value>修飾配列</value>
+    <value>修飾シークエンス</value>
   </data>
   <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

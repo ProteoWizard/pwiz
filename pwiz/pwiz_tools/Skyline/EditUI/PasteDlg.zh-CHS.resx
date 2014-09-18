@@ -247,7 +247,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTA 记录以“&gt;”作为开头并含有蛋白质名称，名称后可带有蛋白质描述。 </value>
+    <value>FASTA 记录以“&gt;”作为开头并含有蛋白质名称，名称后可带有蛋白质描述。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -299,6 +299,30 @@
   </metadata>
   <data name="colProteinDescription.HeaderText" xml:space="preserve">
     <value>描述</value>
+  </data>
+  <metadata name="colProteinAccession.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinAccession.HeaderText" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinPreferredName.HeaderText" xml:space="preserve">
+    <value>首选名称</value>
+  </data>
+  <metadata name="colProteinGene.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinGene.HeaderText" xml:space="preserve">
+    <value>基因</value>
+  </data>
+  <metadata name="colProteinSpecies.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinSpecies.HeaderText" xml:space="preserve">
+    <value>种类</value>
   </data>
   <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -430,19 +454,19 @@
     <value>True</value>
   </metadata>
   <data name="colTransitionPeptide.HeaderText" xml:space="preserve">
-    <value>肽</value>
+    <value>肽段</value>
   </data>
   <metadata name="colTransitionPrecursorMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colTransitionPrecursorMz.HeaderText" xml:space="preserve">
-    <value>母离子质核比</value>
+    <value>母离子质荷比</value>
   </data>
   <metadata name="colTransitionProductMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colTransitionProductMz.HeaderText" xml:space="preserve">
-    <value>子离子质核比</value>
+    <value>子离子质荷比</value>
   </data>
   <metadata name="colTransitionProteinName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -634,6 +658,30 @@
     <value>colProteinDescription</value>
   </data>
   <data name=">>colProteinDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinAccession.Name" xml:space="preserve">
+    <value>colProteinAccession</value>
+  </data>
+  <data name=">>colProteinAccession.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinPreferredName.Name" xml:space="preserve">
+    <value>colProteinPreferredName</value>
+  </data>
+  <data name=">>colProteinPreferredName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinGene.Name" xml:space="preserve">
+    <value>colProteinGene</value>
+  </data>
+  <data name=">>colProteinGene.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinSpecies.Name" xml:space="preserve">
+    <value>colProteinSpecies</value>
+  </data>
+  <data name=">>colProteinSpecies.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>colProteinSequence.Name" xml:space="preserve">

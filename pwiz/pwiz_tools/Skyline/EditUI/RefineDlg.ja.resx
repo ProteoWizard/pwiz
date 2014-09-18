@@ -217,7 +217,7 @@
     <value>6</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>すべて自動選択(&amp;S)：</value>
+    <value>自動-すべて選択(&amp;S)：</value>
   </data>
   <data name=">>label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -271,7 +271,7 @@
     <value>10</value>
   </data>
   <data name="labelLabelType.Text" xml:space="preserve">
-    <value>標識タイプを削除(&amp;B)：</value>
+    <value>標識タイプの削除(&amp;B)：</value>
   </data>
   <data name=">>labelLabelType.Name" xml:space="preserve">
     <value>labelLabelType</value>
@@ -409,7 +409,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>プリカーサーあたりの最小遷移数(&amp;T)：</value>
+    <value>プリカーサー毎の最小トランジション(&amp;T)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -461,7 +461,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>タンパク質あたりの最小ペプチド数(&amp;M)：</value>
+    <value>タンパク質毎の最小ペプチド(&amp;M)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -541,7 +541,7 @@
     <value>4</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-    <value>最大ペプチドピークランク(&amp;K)：</value>
+    <value>最大ペプチドのピークのランク(&amp;K)：</value>
   </data>
   <data name=">>label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -568,7 +568,7 @@
     <value>13</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>含まれる繰り返し測定(&amp;C)：</value>
+    <value>繰り返し測定含有(&amp;C)：</value>
   </data>
   <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -598,7 +598,7 @@
     <value>14</value>
   </data>
   <data name="comboReplicateUse.ToolTip" xml:space="preserve">
-    <value>繰り返し測定結果を調整に使用するかを指定します：
+    <value>繰り返し測定結果を最適化に使用するかを決定：
 すべて - 繰り返し測定値の平均をとって、技術的繰り返し測定に使用する
 最良 - 各ペプチドに対して最良の繰り返し測定のみを分別に使用する</value>
   </data>
@@ -630,7 +630,7 @@
     <value>8</value>
   </data>
   <data name="cbPreferLarger.Text" xml:space="preserve">
-    <value>大きいプロダクトイオンを優先(&amp;P)</value>
+    <value>大きいプロダクトイオンを選択する(&amp;P)</value>
   </data>
   <data name="cbPreferLarger.ToolTip" xml:space="preserve">
     <value>小さい、選択性の良くないイオンではピーク面積が
@@ -688,7 +688,7 @@
     <value>6</value>
   </data>
   <data name="labelMaxPeakRank.Text" xml:space="preserve">
-    <value>最大トランジションピークランク(&amp;T)：</value>
+    <value>最大トランジションのピークのランク(&amp;T)：</value>
   </data>
   <data name=">>labelMaxPeakRank.Name" xml:space="preserve">
     <value>labelMaxPeakRank</value>
@@ -744,7 +744,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>最大ピーク検出率(&amp;X)：</value>
+    <value>比率における最大ピーク(&amp;X)：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -862,7 +862,7 @@
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>最小ピーク検出率(&amp;M)：</value>
+    <value>比率における最小ピーク(&amp;M)：</value>
   </data>
   <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -890,7 +890,7 @@
   </data>
   <data name="textMinIdotProduct.ToolTip" xml:space="preserve">
     <value>MS1 プリカーサーピーク面積と予測される同位体分布の
-ドット積に対する比率がこの閾値を下回るすべての前駆体は
+内積に対する比率がこの閾値を下回るすべての前駆体は
 ドキュメントから削除されます。</value>
   </data>
   <data name=">>textMinIdotProduct.Name" xml:space="preserve">
@@ -921,7 +921,7 @@
     <value>2</value>
   </data>
   <data name="labelMinIdotProduct.Text" xml:space="preserve">
-    <value>最小同位体ドット積：</value>
+    <value>最小同位体内積：</value>
   </data>
   <data name=">>labelMinIdotProduct.Name" xml:space="preserve">
     <value>labelMinIdotProduct</value>
@@ -949,7 +949,7 @@
   </data>
   <data name="textMinDotProduct.ToolTip" xml:space="preserve">
     <value>プロダクトイオンピーク面積のライブラリ
-スペクトルドット積に対する比率がこの閾値を下回る前駆体はすべて
+スペクトル内積に対する比率がこの閾値を下回る前駆体はすべて
 ドキュメントから削除されます。</value>
   </data>
   <data name=">>textMinDotProduct.Name" xml:space="preserve">
@@ -980,7 +980,7 @@
     <value>0</value>
   </data>
   <data name="labelMinDotProduct.Text" xml:space="preserve">
-    <value>最小ドット積：</value>
+    <value>最小内積：</value>
   </data>
   <data name=">>labelMinDotProduct.Name" xml:space="preserve">
     <value>labelMinDotProduct</value>
@@ -1007,7 +1007,7 @@
     <value>12</value>
   </data>
   <data name="groupLibCorr.Text" xml:space="preserve">
-    <value>予期される相対強度相関値(&amp;E)：</value>
+    <value>予期相対強度相関度(&amp;E)：</value>
   </data>
   <data name=">>groupLibCorr.Name" xml:space="preserve">
     <value>groupLibCorr</value>
@@ -1061,7 +1061,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>線形回帰の目標 R 値：</value>
+    <value>線形回帰の目標R値：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -1214,7 +1214,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>調整</value>
+    <value>最適化</value>
   </data>
   <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

@@ -217,7 +217,7 @@
     <value>0</value>
   </data>
   <data name="btnValidate.Text" xml:space="preserve">
-    <value>エラーのチェック(&amp;E)</value>
+    <value>エラーを確認(&amp;E)</value>
   </data>
   <data name=">>btnValidate.Name" xml:space="preserve">
     <value>btnValidate</value>
@@ -247,7 +247,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTAレコードは「&gt;」で始まり、タンパク質名とタンパク質の説明 (省略可) が続きます。</value>
+    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -300,11 +300,35 @@
   <data name="colProteinDescription.HeaderText" xml:space="preserve">
     <value>説明</value>
   </data>
+  <metadata name="colProteinAccession.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinAccession.HeaderText" xml:space="preserve">
+    <value>取得</value>
+  </data>
+  <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinPreferredName.HeaderText" xml:space="preserve">
+    <value>推奨名</value>
+  </data>
+  <metadata name="colProteinGene.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinGene.HeaderText" xml:space="preserve">
+    <value>遺伝子</value>
+  </data>
+  <metadata name="colProteinSpecies.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinSpecies.HeaderText" xml:space="preserve">
+    <value>種</value>
+  </data>
   <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colProteinSequence.HeaderText" xml:space="preserve">
-    <value>配列</value>
+    <value>シークエンス</value>
   </data>
   <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -361,13 +385,13 @@
     <value>True</value>
   </metadata>
   <data name="colPeptideSequence.HeaderText" xml:space="preserve">
-    <value>ペプチド配列</value>
+    <value>ペプチドシークエンス</value>
   </data>
   <metadata name="colPeptideProtein.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colPeptideProtein.HeaderText" xml:space="preserve">
-    <value>タンパク質の名前</value>
+    <value>タンパク質名</value>
   </data>
   <metadata name="colPeptideProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -448,7 +472,7 @@
     <value>True</value>
   </metadata>
   <data name="colTransitionProteinName.HeaderText" xml:space="preserve">
-    <value>タンパク質の名前</value>
+    <value>タンパク質名</value>
   </data>
   <metadata name="colTransitionProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -634,6 +658,30 @@
     <value>colProteinDescription</value>
   </data>
   <data name=">>colProteinDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinAccession.Name" xml:space="preserve">
+    <value>colProteinAccession</value>
+  </data>
+  <data name=">>colProteinAccession.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinPreferredName.Name" xml:space="preserve">
+    <value>colProteinPreferredName</value>
+  </data>
+  <data name=">>colProteinPreferredName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinGene.Name" xml:space="preserve">
+    <value>colProteinGene</value>
+  </data>
+  <data name=">>colProteinGene.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>colProteinSpecies.Name" xml:space="preserve">
+    <value>colProteinSpecies</value>
+  </data>
+  <data name=">>colProteinSpecies.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>colProteinSequence.Name" xml:space="preserve">

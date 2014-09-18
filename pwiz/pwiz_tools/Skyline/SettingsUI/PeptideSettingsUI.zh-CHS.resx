@@ -145,7 +145,7 @@
     <value>$this</value>
   </data>
   <data name=">>btnOk.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -172,10 +172,10 @@
     <value>$this</value>
   </data>
   <data name=">>btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>284, 17</value>
   </metadata>
   <data name="comboStandardType.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 395</value>
@@ -231,7 +231,7 @@
     <value>28, 269</value>
   </data>
   <data name="listHeavyMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 94</value>
+    <value>177, 79</value>
   </data>
   <data name="listHeavyMods.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -257,7 +257,7 @@
     <value>28, 36</value>
   </data>
   <data name="listStaticMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 94</value>
+    <value>177, 79</value>
   </data>
   <data name="listStaticMods.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -283,7 +283,7 @@
     <value>28, 395</value>
   </data>
   <data name="listStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 49</value>
+    <value>177, 34</value>
   </data>
   <data name="listStandardTypes.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -354,29 +354,29 @@
   <data name=">>textMaxNeutralLosses.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="cbMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="comboMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 95</value>
   </data>
-  <data name="cbMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="comboMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 21</value>
   </data>
-  <data name="cbMissedCleavages.TabIndex" type="System.Int32, mscorlib">
+  <data name="comboMissedCleavages.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
+  <data name="comboMissedCleavages.ToolTip" xml:space="preserve">
     <value>当考虑到蛋白质酶解时，肽段中允许的最大遗漏的酶解位点数
 最大遗漏的酶解位点数。</value>
   </data>
-  <data name=">>cbMissedCleavages.Name" xml:space="preserve">
-    <value>cbMissedCleavages</value>
+  <data name=">>comboMissedCleavages.Name" xml:space="preserve">
+    <value>comboMissedCleavages</value>
   </data>
-  <data name=">>cbMissedCleavages.Type" xml:space="preserve">
+  <data name=">>comboMissedCleavages.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbMissedCleavages.Parent" xml:space="preserve">
+  <data name=">>comboMissedCleavages.Parent" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
-  <data name=">>cbMissedCleavages.ZOrder" xml:space="preserve">
+  <data name=">>comboMissedCleavages.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
@@ -454,7 +454,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>textMeasureRTWindow.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>8</value>
   </data>
   <data name="cbUseMeasuredRT.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -485,7 +485,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>cbUseMeasuredRT.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>9</value>
   </data>
   <data name="comboRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -510,7 +510,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>comboRetentionTime.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>11</value>
   </data>
   <data name="cbAutoSelect.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -530,7 +530,7 @@
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>如果被选，那么肽将借助指定的过滤器和库设置
 从蛋白质中被自动选择。否则，所有肽
-选择都必须通过手动文档编辑来完成。</value>
+选择都必须由文档编辑完成。</value>
   </data>
   <data name=">>cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -610,7 +610,7 @@
     <value>11</value>
   </data>
   <data name="btnEditExlusions.Text" xml:space="preserve">
-    <value>编辑列表(&amp;D)……</value>
+    <value>编辑列表(&amp;D)…</value>
   </data>
   <data name="btnEditExlusions.ToolTip" xml:space="preserve">
     <value>编辑可用的肽排除列表</value>
@@ -631,7 +631,7 @@
     <value>28, 176</value>
   </data>
   <data name="listboxExclusions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 94</value>
+    <value>171, 79</value>
   </data>
   <data name="listboxExclusions.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -662,7 +662,7 @@
   </data>
   <data name="textMaxLength.ToolTip" xml:space="preserve">
     <value>匹配此过滤器的肽所允许的氨基酸
-最大数目</value>
+最小数目</value>
   </data>
   <data name=">>textMaxLength.Name" xml:space="preserve">
     <value>textMaxLength</value>
@@ -711,7 +711,7 @@
     <value>5</value>
   </data>
   <data name="btnExplore.Text" xml:space="preserve">
-    <value>探索(&amp;E)……</value>
+    <value>探索(&amp;E)…</value>
   </data>
   <data name="btnExplore.ToolTip" xml:space="preserve">
     <value>打开 MS/MS 谱图库浏览器</value>
@@ -738,7 +738,7 @@
     <value>4</value>
   </data>
   <data name="btnBuildLibrary.Text" xml:space="preserve">
-    <value>构建(&amp;B)……</value>
+    <value>构建(&amp;B)…</value>
   </data>
   <data name="btnBuildLibrary.ToolTip" xml:space="preserve">
     <value>从来自不同肽搜索引擎获得的肽搜索结果来
@@ -887,7 +887,7 @@
     <value>2</value>
   </data>
   <data name="editLibraries.Text" xml:space="preserve">
-    <value>编辑列表(&amp;E)……</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name="editLibraries.ToolTip" xml:space="preserve">
     <value>编辑可用的 MS/MS 谱图库列表。</value>
@@ -908,7 +908,7 @@
     <value>28, 36</value>
   </data>
   <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>219, 94</value>
+    <value>222, 95</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -957,7 +957,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>btnUpdateCalculator.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>6</value>
   </data>
   <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>22, 36</value>
@@ -983,6 +983,116 @@
   </data>
   <data name=">>comboPeakScoringModel.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="btnUpdateIonMobilityLibraries.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnUpdateIonMobilityLibraries.Location" type="System.Drawing.Point, System.Drawing">
+    <value>204, 214</value>
+  </data>
+  <data name="btnUpdateIonMobilityLibraries.Size" type="System.Drawing.Size, System.Drawing">
+    <value>25, 24</value>
+  </data>
+  <data name="btnUpdateIonMobilityLibraries.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="btnUpdateIonMobilityLibraries.ToolTip" xml:space="preserve">
+    <value>离子迁移库</value>
+  </data>
+  <data name=">>btnUpdateIonMobilityLibraries.Name" xml:space="preserve">
+    <value>btnUpdateIonMobilityLibraries</value>
+  </data>
+  <data name=">>btnUpdateIonMobilityLibraries.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnUpdateIonMobilityLibraries.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name=">>btnUpdateIonMobilityLibraries.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="comboDriftTimePredictor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 215</value>
+  </data>
+  <data name="comboDriftTimePredictor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 21</value>
+  </data>
+  <data name="comboDriftTimePredictor.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="comboDriftTimePredictor.ToolTip" xml:space="preserve">
+    <value>指定一组可与离子迁移库连用以预测漂移时间的线性方程</value>
+  </data>
+  <data name=">>comboDriftTimePredictor.Name" xml:space="preserve">
+    <value>comboDriftTimePredictor</value>
+  </data>
+  <data name=">>comboDriftTimePredictor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboDriftTimePredictor.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name=">>comboDriftTimePredictor.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 310</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
+    <value>确定谱图库中的漂移时间匹配公差（漂移时间以毫秒为单位测量）： 
+对于漂移时间“T”的分辨力“R”来说，中心在 T 的漂移时间匹配窗口宽度
+“W”= 2T/R</value>
+  </data>
+  <data name=">>textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
+    <value>textSpectralLibraryDriftTimesResolvingPower</value>
+  </data>
+  <data name=">>textSpectralLibraryDriftTimesResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textSpectralLibraryDriftTimesResolvingPower.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name=">>textSpectralLibraryDriftTimesResolvingPower.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 262</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 17</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
+    <value>使用谱图库漂移时间，如存在(&amp;S)</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
+    <value>如选中，则任何加载的谱图库中的漂移时间都将用于色谱图提取。</value>
+  </data>
+  <data name=">>cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
+    <value>cbUseSpectralLibraryDriftTimes</value>
+  </data>
+  <data name=">>cbUseSpectralLibraryDriftTimes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbUseSpectralLibraryDriftTimes.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name=">>cbUseSpectralLibraryDriftTimes.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1095,6 +1205,66 @@
   <data name=">>tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 292</value>
+  </data>
+  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>89, 13</value>
+  </data>
+  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="labelResolvingPower.Text" xml:space="preserve">
+    <value>分辨力(&amp;P)：</value>
+  </data>
+  <data name=">>labelResolvingPower.Name" xml:space="preserve">
+    <value>labelResolvingPower</value>
+  </data>
+  <data name=">>labelResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelResolvingPower.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name=">>labelResolvingPower.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label19.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label19.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 200</value>
+  </data>
+  <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 13</value>
+  </data>
+  <data name="label19.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="label19.Text" xml:space="preserve">
+    <value>漂移时间预测器(&amp;D)：</value>
+  </data>
+  <data name=">>label19.Name" xml:space="preserve">
+    <value>label19</value>
+  </data>
+  <data name=">>label19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label19.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name=">>label19.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="label14.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1120,7 +1290,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>label14.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>7</value>
   </data>
   <data name="label13.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1147,7 +1317,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>label13.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>10</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1174,7 +1344,7 @@
     <value>tabPrediction</value>
   </data>
   <data name=">>label9.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>12</value>
   </data>
   <data name="tabPrediction.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1213,7 +1383,7 @@
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>排除 N 端 AAs(&amp;N):</value>
+    <value>排除 N 端 AAs(&amp;N)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -1606,7 +1776,7 @@
     <value>11</value>
   </data>
   <data name="btnEditHeavyMods.Text" xml:space="preserve">
-    <value>编辑列表(&amp;D)……</value>
+    <value>编辑列表(&amp;D)…</value>
   </data>
   <data name=">>btnEditHeavyMods.Name" xml:space="preserve">
     <value>btnEditHeavyMods</value>
@@ -1657,7 +1827,7 @@
     <value>2</value>
   </data>
   <data name="btnEditStaticMods.Text" xml:space="preserve">
-    <value>编辑列表(&amp;E)……</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name=">>btnEditStaticMods.Name" xml:space="preserve">
     <value>btnEditStaticMods</value>
@@ -1798,28 +1968,28 @@
     <value>$this</value>
   </data>
   <data name=">>tabControl1.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>109, 17</value>
+    <value>387, 17</value>
   </metadata>
   <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
   </data>
   <data name="addCalculatorContextMenuItem.Text" xml:space="preserve">
-    <value>添加……</value>
+    <value>添加…</value>
   </data>
   <data name="editCalculatorCurrentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
   </data>
   <data name="editCalculatorCurrentContextMenuItem.Text" xml:space="preserve">
-    <value>编辑当前……</value>
+    <value>编辑当前…</value>
   </data>
   <data name="editCalculatorListContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
   </data>
   <data name="editCalculatorListContextMenuItem.Text" xml:space="preserve">
-    <value>编辑列表……</value>
+    <value>编辑列表…</value>
   </data>
   <data name="contextMenuCalculator.Size" type="System.Drawing.Size, System.Drawing">
     <value>147, 70</value>
@@ -1828,6 +1998,36 @@
     <value>contextMenuCalculator</value>
   </data>
   <data name=">>contextMenuCalculator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="contextMenuIonMobilityLibraries.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="addIonMobilityLibraryContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 22</value>
+  </data>
+  <data name="addIonMobilityLibraryContextMenuItem.Text" xml:space="preserve">
+    <value>添加…</value>
+  </data>
+  <data name="editIonMobilityLibraryCurrentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 22</value>
+  </data>
+  <data name="editIonMobilityLibraryCurrentContextMenuItem.Text" xml:space="preserve">
+    <value>编辑当前…</value>
+  </data>
+  <data name="editIonMobilityLibraryListContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 22</value>
+  </data>
+  <data name="editIonMobilityLibraryListContextMenuItem.Text" xml:space="preserve">
+    <value>编辑列表…</value>
+  </data>
+  <data name="contextMenuIonMobilityLibraries.Size" type="System.Drawing.Size, System.Drawing">
+    <value>147, 70</value>
+  </data>
+  <data name=">>contextMenuIonMobilityLibraries.Name" xml:space="preserve">
+    <value>contextMenuIonMobilityLibraries</value>
+  </data>
+  <data name=">>contextMenuIonMobilityLibraries.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1867,6 +2067,24 @@
     <value>editCalculatorListContextMenuItem</value>
   </data>
   <data name=">>editCalculatorListContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>addIonMobilityLibraryContextMenuItem.Name" xml:space="preserve">
+    <value>addIonMobilityLibraryContextMenuItem</value>
+  </data>
+  <data name=">>addIonMobilityLibraryContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>editIonMobilityLibraryCurrentContextMenuItem.Name" xml:space="preserve">
+    <value>editIonMobilityLibraryCurrentContextMenuItem</value>
+  </data>
+  <data name=">>editIonMobilityLibraryCurrentContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>editIonMobilityLibraryListContextMenuItem.Name" xml:space="preserve">
+    <value>editIonMobilityLibraryListContextMenuItem</value>
+  </data>
+  <data name=">>editIonMobilityLibraryListContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">

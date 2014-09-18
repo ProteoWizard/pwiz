@@ -125,13 +125,13 @@
     <value>189, 22</value>
   </data>
   <data name="synchronizeSelectionContextMenuItem.Text" xml:space="preserve">
-    <value>選択の同期化</value>
+    <value>選択を同期</value>
   </data>
   <data name="chooseColumnsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
   <data name="chooseColumnsToolStripMenuItem.Text" xml:space="preserve">
-    <value>列の選択...</value>
+    <value>列を選択...</value>
   </data>
   <data name="contextMenuResultsGrid.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 70</value>

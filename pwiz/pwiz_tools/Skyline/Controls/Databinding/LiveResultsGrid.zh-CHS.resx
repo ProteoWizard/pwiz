@@ -131,7 +131,7 @@
     <value>189, 22</value>
   </data>
   <data name="chooseColumnsToolStripMenuItem.Text" xml:space="preserve">
-    <value>选择列……</value>
+    <value>选择列…</value>
   </data>
   <data name="contextMenuResultsGrid.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 70</value>

@@ -166,7 +166,7 @@
     <value>0</value>
   </data>
   <data name="lblFileCount.Text" xml:space="preserve">
-    <value>X/Yファイル</value>
+    <value>YファイルのX</value>
   </data>
   <data name=">>lblFileCount.Name" xml:space="preserve">
     <value>lblFileCount</value>

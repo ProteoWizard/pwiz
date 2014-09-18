@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>トランジション設定フォームでこの式の表示に使用する名前です</value>
+    <value>トランジション設定形式でこの式の表示に使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -396,7 +396,7 @@ CE = 勾配 * プリカーサーm/z + 切片
   <data name="textStepCount.ToolTip" xml:space="preserve">
     <value>CE最適化メソッドで使用するCE値の数です。ここで予想される
 最適CEが測定されると同時に、予期される値の両側で
-この数の値だけステップサイズCEボルト分の間隔をあけて
+ステップ数がステップサイズCEボルト分の間隔をあけて
 測定されます</value>
   </data>
   <data name=">>textStepCount.Name" xml:space="preserve">
@@ -534,7 +534,7 @@ CE = 勾配 * プリカーサーm/z + 切片
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>コリジョンエネルギー計算式を編集</value>
+    <value>衝突エネルギー計算式を編集</value>
   </data>
   <data name=">>Charge.Name" xml:space="preserve">
     <value>Charge</value>

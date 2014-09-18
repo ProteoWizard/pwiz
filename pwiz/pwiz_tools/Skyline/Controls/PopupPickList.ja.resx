@@ -171,7 +171,7 @@
     <value>29, 20</value>
   </data>
   <data name="tbbFind.ToolTipText" xml:space="preserve">
-    <value>検索(Ctrl + F)</value>
+    <value>検索（Ctrl + F）</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>

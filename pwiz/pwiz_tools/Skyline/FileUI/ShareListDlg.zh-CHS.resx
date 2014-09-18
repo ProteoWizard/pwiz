@@ -175,7 +175,7 @@
     <value>320, 30</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-    <value>选择/取消选择全部(&amp;A)</value>
+    <value>全选/取消全选(&amp;A)</value>
   </data>
   <data name="cbSelectAll.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 17</value>

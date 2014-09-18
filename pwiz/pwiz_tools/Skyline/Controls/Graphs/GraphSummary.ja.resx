@@ -136,7 +136,7 @@
     <value>graphControl</value>
   </data>
   <data name=">>graphControl.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.23559, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.9487, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name=">>graphControl.Parent" xml:space="preserve">
     <value>$this</value>

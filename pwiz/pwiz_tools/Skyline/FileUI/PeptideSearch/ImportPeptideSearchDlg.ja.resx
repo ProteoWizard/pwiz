@@ -217,8 +217,8 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-    <value>タンパク質消化時に、1 ペプチド内で許可される
-最大未切断サイト数です。</value>
+    <value>タンパク質分解後、ペプチド内で可能な
+最大未切断サイト数。</value>
   </data>
   <data name=">>cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -236,8 +236,8 @@
     <value>1</value>
   </data>
   <data name="comboEnzyme.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するペプチドサンプルを調製するときに
-使用したプロテアーゼ酵素
+    <value>質量分析計への注入前にタンパク質をペプチドに消化するために
+使用するプロテアーゼ酵素です
 </value>
   </data>
   <data name=">>comboEnzyme.Name" xml:space="preserve">
@@ -256,8 +256,8 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
-全タンパク質の
+    <value>質量分析計に注入するサンプルマトリックス内に存在し得る
+全てのタンパク質を指定する
 処理済みFASTA配列情報です。</value>
   </data>
   <data name=">>comboBackgroundProteome.Name" xml:space="preserve">
@@ -306,8 +306,8 @@
     <value>3</value>
   </data>
   <data name="comboBox1.ToolTip" xml:space="preserve">
-    <value>タンパク質消化時に、1 ペプチド内で許可される
-最大未切断サイト数です。</value>
+    <value>タンパク質分解後、ペプチド内で可能な
+最大未切断サイト数。</value>
   </data>
   <data name=">>comboBox1.Name" xml:space="preserve">
     <value>comboBox1</value>
@@ -325,8 +325,8 @@
     <value>1</value>
   </data>
   <data name="comboBox2.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するペプチドサンプルを調製するときに
-使用したプロテアーゼ酵素
+    <value>質量分析計への注入前にタンパク質をペプチドに消化するために
+使用するプロテアーゼ酵素です
 </value>
   </data>
   <data name=">>comboBox2.Name" xml:space="preserve">
@@ -345,8 +345,8 @@
     <value>5</value>
   </data>
   <data name="comboBox3.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
-全タンパク質の
+    <value>質量分析計に注入するサンプルマトリックス内に存在し得る
+全てのタンパク質を指定する
 処理済みFASTA配列情報です。</value>
   </data>
   <data name=">>comboBox3.Name" xml:space="preserve">
@@ -368,7 +368,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>最大未切断サイト数(&amp;M)：</value>
+    <value>最大ミス開裂数(&amp;M)：</value>
   </data>
   <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -431,7 +431,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>最大未切断サイト数(&amp;M)：</value>
+    <value>最大ミス開裂数(&amp;M)：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -776,7 +776,7 @@
     <value>0</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-    <value>MS1 フルスキャン設定を指定</value>
+    <value>MS1フルスキャン設定を構成</value>
   </data>
   <data name=">>label19.Name" xml:space="preserve">
     <value>label19</value>
@@ -959,7 +959,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ペプチド検索をインポート</value>
+    <value>ペプチド検索のインポート</value>
   </data>
   <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

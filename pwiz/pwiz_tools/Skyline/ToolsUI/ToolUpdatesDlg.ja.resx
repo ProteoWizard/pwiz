@@ -133,7 +133,7 @@
     <value>4</value>
   </data>
   <data name="btnUpdate.Text" xml:space="preserve">
-    <value>更新(&amp;U)</value>
+    <value>アップデート(&amp;U)</value>
   </data>
   <data name=">>btnUpdate.Name" xml:space="preserve">
     <value>btnUpdate</value>
@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>更新するツールを選択：</value>
+    <value>アップデートするツールを選択：</value>
   </data>
   <data name=">>labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>
@@ -220,7 +220,7 @@
     <value>3</value>
   </data>
   <data name="labelOperation.Text" xml:space="preserve">
-    <value>&lt;プレースホルダー&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="labelOperation.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -304,7 +304,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>外部ツールを更新</value>
+    <value>外部ツールをアップデート</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>ToolUpdatesDlg</value>

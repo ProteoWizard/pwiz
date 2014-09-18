@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -448,7 +448,7 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="gridRegression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>283, 163</value>
+    <value>383, 163</value>
   </data>
   <data name="gridRegression.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>

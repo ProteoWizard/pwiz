@@ -157,7 +157,7 @@
     <value>0</value>
   </data>
   <data name="labelModifications.Text" xml:space="preserve">
-    <value>インポートされた検索結果には、以下に示す修飾が含まれているようです。ドキュメントに追加したいものを選択してください。</value>
+    <value>インポートされた検索結果には、以下に示す修飾が含まれているようです。ドキュメントに追加したいものを選択してください：</value>
   </data>
   <data name=">>labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>
@@ -349,7 +349,7 @@
     <value>229, 22</value>
   </data>
   <data name="menuItemAddHeavyModification.Text" xml:space="preserve">
-    <value>安定同位体修飾を追加(&amp;H)...</value>
+    <value>重い修飾を追加(&amp;H)...</value>
   </data>
   <data name="menuAddModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>230, 48</value>

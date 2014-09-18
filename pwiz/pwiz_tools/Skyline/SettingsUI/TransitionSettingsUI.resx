@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -700,6 +700,9 @@ selection must be done by manual document editing.</value>
   <data name="lbMZ.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="lbMZ.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+  </data>
   <data name="lbMZ.Location" type="System.Drawing.Point, System.Drawing">
     <value>98, 275</value>
   </data>
@@ -1394,6 +1397,9 @@ whenever peptides are matched to library spectrum.</value>
   <data name="label13.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="label13.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+  </data>
   <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
     <value>94, 43</value>
   </data>
@@ -1660,6 +1666,9 @@ that might be used on uninteresting parts of the gradient.</value>
   <data name="label26.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="label26.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+  </data>
   <data name="label26.Location" type="System.Drawing.Point, System.Drawing">
     <value>101, 127</value>
   </data>
@@ -1687,6 +1696,9 @@ that might be used on uninteresting parts of the gradient.</value>
   <data name="label25.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="label25.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+  </data>
   <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
     <value>264, 41</value>
   </data>
@@ -1713,6 +1725,9 @@ that might be used on uninteresting parts of the gradient.</value>
   </data>
   <data name="label24.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="label24.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
   </data>
   <data name="label24.Location" type="System.Drawing.Point, System.Drawing">
     <value>101, 41</value>

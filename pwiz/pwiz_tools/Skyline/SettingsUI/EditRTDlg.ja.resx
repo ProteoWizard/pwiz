@@ -136,7 +136,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ぺプチド設定フォームでこの式の表示に使用する名前です</value>
+    <value>ぺプチド設定形式でこの式の表示に使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -271,7 +271,7 @@
     <value>勾配を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
 予測保持時間を計算します。
 
-RT = 勾配 * スコア + 切片</value>
+RT = 勾配*スコア+切片</value>
   </data>
   <data name=">>textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
@@ -325,7 +325,7 @@ RT = 勾配 * スコア + 切片</value>
     <value>Y切片を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
 予測保持時間を計算します。
 
-RT = 勾配 * スコア + 切片
+RT = 勾配*スコア+切片
 </value>
   </data>
   <data name=">>textIntercept.Name" xml:space="preserve">
@@ -384,7 +384,7 @@ RT = 勾配 * スコア + 切片
     <value>12</value>
   </data>
   <data name="labelPeptides.Text" xml:space="preserve">
-    <value>測定ペプチド(&amp;M)：</value>
+    <value>測定されたペプチド(&amp;M)：</value>
   </data>
   <data name=">>labelPeptides.Name" xml:space="preserve">
     <value>labelPeptides</value>
@@ -405,7 +405,7 @@ RT = 勾配 * スコア + 切片
     <value>True</value>
   </data>
   <data name="labelRValue.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>247, 258</value>
+    <value>230, 258</value>
   </data>
   <data name="labelRValue.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>103, 13</value>
@@ -414,7 +414,7 @@ RT = 勾配 * スコア + 切片
     <value>13</value>
   </data>
   <data name="labelRValue.Text" xml:space="preserve">
-    <value>(0 個のペプチド、R = 0.0)</value>
+    <value>（0個のペプチド、R = 0.0）</value>
   </data>
   <data name="labelRValue.ToolTip" xml:space="preserve">
     <value>線形回帰方程式と回帰Rの計算に
@@ -445,7 +445,7 @@ RT = 勾配 * スコア + 切片
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>時間枠(&amp;T)：</value>
+    <value>時間ウィンドウ(&amp;W)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -527,8 +527,8 @@ RT = 勾配 * スコア + 切片
     <value>10</value>
   </data>
   <data name="comboCalculator.ToolTip" xml:space="preserve">
-    <value>使用されるカルキュレータアルゴリズム：
-SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレータ (Krokhin, et al.)</value>
+    <value>使用するカルキュレータアルゴリズム：
+SSRCalc - シークエンス固有の保持カルキュレータ。疎水性カルキュレータ（Krokhin他）</value>
   </data>
   <data name=">>comboCalculator.Name" xml:space="preserve">
     <value>comboCalculator</value>
@@ -638,7 +638,7 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>True</value>
   </metadata>
   <data name="Sequence.HeaderText" xml:space="preserve">
-    <value>修飾配列</value>
+    <value>修飾シークエンス</value>
   </data>
   <data name="Sequence.MinimumWidth" type="System.Int32, mscorlib">
     <value>120</value>
@@ -647,7 +647,7 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>True</value>
   </metadata>
   <data name="RetentionTime.HeaderText" xml:space="preserve">
-    <value>保持時間 (分)</value>
+    <value>保持時間（分）</value>
   </data>
   <data name="RetentionTime.MinimumWidth" type="System.Int32, mscorlib">
     <value>125</value>
@@ -696,11 +696,11 @@ SSRCalc - 配列固有の保持カルキュレータ。疎水性カルキュレ�
     <value>19</value>
   </data>
   <data name="cbAutoCalc.Text" xml:space="preserve">
-    <value>回帰の自動計算(&amp;O)</value>
+    <value>回帰を自動計算(&amp;O)</value>
   </data>
   <data name="cbAutoCalc.ToolTip" xml:space="preserve">
     <value>チェックマークをオンにすると、Skylineがインポートされた
-各ファイルのスコアによる保持時間の各回帰に基づいて
+	各ファイルのスコアによる保持時間の各回帰に基づいて
 予測に使用する勾配と切片を計算します</value>
   </data>
   <data name=">>cbAutoCalc.Name" xml:space="preserve">

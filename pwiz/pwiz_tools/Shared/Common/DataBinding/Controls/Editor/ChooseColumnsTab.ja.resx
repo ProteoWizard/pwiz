@@ -202,7 +202,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上へ</value>
+    <value>上</value>
   </data>
   <data name="btnDown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -211,7 +211,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-    <value>下へ</value>
+    <value>下</value>
   </data>
   <data name="toolStripColumns.Location" type="System.Drawing.Point, System.Drawing">
     <value>403, 0</value>

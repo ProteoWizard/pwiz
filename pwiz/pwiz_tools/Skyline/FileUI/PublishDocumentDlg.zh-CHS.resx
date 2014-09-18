@@ -289,7 +289,7 @@
     <value>2</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
-    <value>浏览……</value>
+    <value>浏览…</value>
   </data>
   <data name=">>btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>

@@ -253,7 +253,7 @@
     <value>True</value>
   </metadata>
   <data name="colOutlierCount.HeaderText" xml:space="preserve">
-    <value>异常值# </value>
+    <value>异常值#</value>
   </data>
   <metadata name="colUnrefinedSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -459,7 +459,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorMoveNextItem.Text" xml:space="preserve">
-    <value>移动至下一位</value>
+    <value>移动下一个</value>
   </data>
   <data name="bindingNavigatorMoveLastItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -479,7 +479,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorMoveLastItem.Text" xml:space="preserve">
-    <value>移动至末尾</value>
+    <value>移动最后一个</value>
   </data>
   <data name="bindingNavigatorSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>

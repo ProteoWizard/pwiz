@@ -235,7 +235,7 @@
     <value>5</value>
   </data>
   <data name="cbDecimalCvs.Text" xml:space="preserve">
-    <value>CV値を (小数で) 表示(&amp;D)</value>
+    <value>十進数のCV値を表示(&amp;D)</value>
   </data>
   <data name=">>cbDecimalCvs.Name" xml:space="preserve">
     <value>cbDecimalCvs</value>
@@ -310,7 +310,7 @@
     <value>2</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>最大CV(&amp;C):</value>
+    <value>最大CV(&amp;C)：</value>
   </data>
   <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -334,7 +334,7 @@
     <value>0</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-    <value>グラフ面積(&amp;G)：</value>
+    <value>グラフ領域面積(&amp;G)：</value>
   </data>
   <data name=">>groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
@@ -361,7 +361,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>面積グラフのプロパティ</value>
+    <value>面積グラフ</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>AreaChartPropertyDlg</value>

@@ -243,7 +243,7 @@
     <value>106, 22</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Text" xml:space="preserve">
-    <value>シングル</value>
+    <value>単一</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
@@ -429,7 +429,7 @@
     <value>152, 22</value>
   </data>
   <data name="removePeaksGraphSubMenuItem.Text" xml:space="preserve">
-    <value>&lt;プレースホルダー&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="removePeaksGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -549,7 +549,7 @@
     <value>132, 22</value>
   </data>
   <data name="singleTranContextMenuItem.Text" xml:space="preserve">
-    <value>シングル</value>
+    <value>単一</value>
   </data>
   <data name="totalTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 22</value>
@@ -615,7 +615,7 @@
     <value>212, 22</value>
   </data>
   <data name="transformChromContextMenuItem.Text" xml:space="preserve">
-    <value>変換</value>
+    <value>形質転換</value>
   </data>
   <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -771,7 +771,7 @@
     <value>177, 22</value>
   </data>
   <data name="refineRTContextMenuItem.Text" xml:space="preserve">
-    <value>調整</value>
+    <value>最適化</value>
   </data>
   <data name="predictionRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
@@ -789,7 +789,7 @@
     <value>106, 22</value>
   </data>
   <data name="singleReplicateRTContextMenuItem.Text" xml:space="preserve">
-    <value>シングル</value>
+    <value>単一</value>
   </data>
   <data name="bestReplicateRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 22</value>
@@ -822,7 +822,7 @@
     <value>152, 22</value>
   </data>
   <data name="placeholderToolStripMenuItem1.Text" xml:space="preserve">
-    <value>&lt;プレースホルダー&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="toolStripSeparatorCalculators.Size" type="System.Drawing.Size, System.Drawing">
     <value>149, 6</value>
@@ -927,7 +927,7 @@
     <value>155, 22</value>
   </data>
   <data name="peptideOrderAreaContextMenuItem.Text" xml:space="preserve">
-    <value>ピーク面積</value>
+    <value>ピーク領域</value>
   </data>
   <data name="peptideOrderContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -984,7 +984,7 @@
     <value>170, 22</value>
   </data>
   <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
-    <value>正規化：</value>
+    <value>正規化</value>
   </data>
   <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -1020,7 +1020,7 @@
     <value>170, 22</value>
   </data>
   <data name="showDotProductToolStripMenuItem.Text" xml:space="preserve">
-    <value>ドット積を表示</value>
+    <value>内積を表示</value>
   </data>
   <data name="peptideLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1335,6 +1335,15 @@
   <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>224, 17</value>
   </metadata>
+  <data name="startPageMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="startPageMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="startPageMenuItem.Text" xml:space="preserve">
+    <value>開始(&amp;R)...</value>
+  </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -1345,7 +1354,7 @@
     <value>193, 22</value>
   </data>
   <data name="newMenuItem.Text" xml:space="preserve">
-    <value>新規作成(&amp;N)</value>
+    <value>新規(&amp;N)</value>
   </data>
   <data name="openMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1477,7 +1486,7 @@
     <value>183, 22</value>
   </data>
   <data name="eSPFeaturesMenuItem.Text" xml:space="preserve">
-    <value>ESPの特長(&amp;E)...</value>
+    <value>ESP機能(&amp;E)...</value>
   </data>
   <data name="eSPFeaturesMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1486,13 +1495,19 @@
     <value>183, 22</value>
   </data>
   <data name="mProphetFeaturesMenuItem.Text" xml:space="preserve">
-    <value>mProphetの特長(&amp;P)...</value>
+    <value>mProphet機能(&amp;P)...</value>
   </data>
   <data name="chromatogramsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="chromatogramsToolStripMenuItem.Text" xml:space="preserve">
     <value>クロマトグラム...</value>
+  </data>
+  <data name="chorusRequestToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
+    <value>コーラスリクエスト...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1717,13 +1732,37 @@
     <value>218, 22</value>
   </data>
   <data name="renameProteinsMenuItem.Text" xml:space="preserve">
-    <value>タンパク質の名前の変更(&amp;N)...</value>
+    <value>タンパク質名を変更(&amp;N)...</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>名前別(&amp;N)</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
+    <value>取得別(&amp;A)</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>推奨名別(&amp;P)</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
+    <value>遺伝子別(&amp;G)</value>
   </data>
   <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="sortProteinsMenuItem.Text" xml:space="preserve">
-    <value>名前別にタンパク質を並べ替える(&amp;S)</value>
+    <value>タンパク質を並べ替え(&amp;S)</value>
   </data>
   <data name="toolStripSeparator43.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1732,7 +1771,7 @@
     <value>218, 22</value>
   </data>
   <data name="acceptPeptidesMenuItem.Text" xml:space="preserve">
-    <value>ペプチドを承認(&amp;C)...</value>
+    <value>ペプチドを許可(&amp;C)...</value>
   </data>
   <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1741,13 +1780,19 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>デコイペプチドを追加(&amp;D)...</value>
+    <value>デコイペプチドを追加(&amp;P)...</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>再積分(&amp;T)...</value>
+    <value>再統合(&amp;T)...</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 22</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
+    <value>ピークスコアを比較(&amp;O)...</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1762,7 +1807,7 @@
     <value>207, 22</value>
   </data>
   <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>調整(&amp;E)</value>
+    <value>最適化(&amp;E)</value>
   </data>
   <data name="toolStripSeparator6.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -1902,6 +1947,30 @@
   <data name="editToolStripMenuItem.Text" xml:space="preserve">
     <value>編集(&amp;E)</value>
   </data>
+  <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>名前別(&amp;N)</value>
+  </data>
+  <data name="showTargetsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByAccessionToolStripMenuItem.Text" xml:space="preserve">
+    <value>取得別(&amp;A)</value>
+  </data>
+  <data name="showTargetsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>推奨名別(&amp;P)</value>
+  </data>
+  <data name="showTargetsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByGeneToolStripMenuItem.Text" xml:space="preserve">
+    <value>遺伝子別(&amp;G)</value>
+  </data>
   <data name="peptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
@@ -1930,7 +1999,7 @@
     <value>183, 22</value>
   </data>
   <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
-    <value>テキストを拡大(&amp;Z)</value>
+    <value>テキストズーム(&amp;Z)</value>
   </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -1966,13 +2035,13 @@
     <value>187, 22</value>
   </data>
   <data name="groupedMenuItem.Text" xml:space="preserve">
-    <value>グループ化(&amp;G)...</value>
+    <value>グループにまとめた(&amp;G)...</value>
   </data>
   <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="arrangeGraphsToolStripMenuItem.Text" xml:space="preserve">
-    <value>グラフを配置(&amp;A)</value>
+    <value>グラフの配置(&amp;A)</value>
   </data>
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -1987,7 +2056,7 @@
     <value>183, 22</value>
   </data>
   <data name="graphsToolStripMenuItem.Text" xml:space="preserve">
-    <value>ライブラリマッチ(&amp;M)</value>
+    <value>ライブラリの一致(&amp;M)</value>
   </data>
   <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
@@ -2089,7 +2158,7 @@
     <value>219, 22</value>
   </data>
   <data name="showChromMenuItem.Text" xml:space="preserve">
-    <value>&lt;プレースホルダー&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="toolStripSeparatorReplicates.Size" type="System.Drawing.Size, System.Drawing">
     <value>216, 6</value>
@@ -2164,7 +2233,7 @@
     <value>210, 22</value>
   </data>
   <data name="singleTranMenuItem.Text" xml:space="preserve">
-    <value>シングル(&amp;S)</value>
+    <value>単一(&amp;S)</value>
   </data>
   <data name="totalTranMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F10</value>
@@ -2257,7 +2326,7 @@
     <value>183, 22</value>
   </data>
   <data name="transformChromMenuItem.Text" xml:space="preserve">
-    <value>変換(&amp;F)</value>
+    <value>形質転換(&amp;F)</value>
   </data>
   <data name="autoZoomNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F11</value>
@@ -2344,7 +2413,7 @@
     <value>228, 22</value>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Text" xml:space="preserve">
-    <value>アライン(&amp;G)</value>
+    <value>アライメント(&amp;G)</value>
   </data>
   <data name="retentionTimesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2380,7 +2449,7 @@
     <value>183, 22</value>
   </data>
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
-    <value>ピーク面積(&amp;K)</value>
+    <value>ピーク領域(&amp;K)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2398,7 +2467,7 @@
     <value>183, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>ドキュメントグリッド</value>
+    <value>ドキュメントグリッド(&amp;D)</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -2419,7 +2488,7 @@
     <value>44, 20</value>
   </data>
   <data name="viewToolStripMenuItem.Text" xml:space="preserve">
-    <value>表示(&amp;V)</value>
+    <value>ビュー(&amp;V)</value>
   </data>
   <data name="toolStripSeparatorSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 6</value>
@@ -2482,7 +2551,7 @@
     <value>181, 22</value>
   </data>
   <data name="integrateAllMenuItem.Text" xml:space="preserve">
-    <value>すべて積分(&amp;N)</value>
+    <value>すべて統合(&amp;N)</value>
   </data>
   <data name="settingsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 20</value>
@@ -2494,7 +2563,7 @@
     <value>178, 22</value>
   </data>
   <data name="placeholderToolsMenuItem.Text" xml:space="preserve">
-    <value>&lt;プレースホルダー&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="toolStripSeparatorTools.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
@@ -2506,7 +2575,7 @@
     <value>178, 22</value>
   </data>
   <data name="updatesToolsMenuItem.Text" xml:space="preserve">
-    <value>更新(&amp;U)...</value>
+    <value>アップデート(&amp;U)...</value>
   </data>
   <data name="updatesToolsMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2551,7 +2620,7 @@
     <value>120, 22</value>
   </data>
   <data name="homeMenuItem.Text" xml:space="preserve">
-    <value>ホームページ(&amp;H)</value>
+    <value>ホーム(&amp;H)</value>
   </data>
   <data name="videosMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 22</value>
@@ -2584,7 +2653,7 @@
     <value>120, 22</value>
   </data>
   <data name="aboutMenuItem.Text" xml:space="preserve">
-    <value>このソフトウェアについて(&amp;A)</value>
+    <value>について(&amp;A)</value>
   </data>
   <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 20</value>
@@ -3684,6 +3753,12 @@
   <data name=">>fileToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name=">>startPageMenuItem.Name" xml:space="preserve">
+    <value>startPageMenuItem</value>
+  </data>
+  <data name=">>startPageMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name=">>newMenuItem.Name" xml:space="preserve">
     <value>newMenuItem</value>
   </data>
@@ -3838,6 +3913,12 @@
     <value>chromatogramsToolStripMenuItem</value>
   </data>
   <data name=">>chromatogramsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>chorusRequestToolStripMenuItem.Name" xml:space="preserve">
+    <value>chorusRequestToolStripMenuItem</value>
+  </data>
+  <data name=">>chorusRequestToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>mruBeforeToolStripSeparator.Name" xml:space="preserve">
@@ -4026,6 +4107,30 @@
   <data name=">>sortProteinsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name=">>sortProteinsByNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByNameToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>sortProteinsByAccessionToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByAccessionToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByAccessionToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>sortProteinsByPreferredNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByPreferredNameToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByPreferredNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>sortProteinsByGeneToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByGeneToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByGeneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name=">>toolStripSeparator43.Name" xml:space="preserve">
     <value>toolStripSeparator43</value>
   </data>
@@ -4048,6 +4153,12 @@
     <value>reintegrateToolStripMenuItem</value>
   </data>
   <data name=">>reintegrateToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>compareModelsToolStripMenuItem.Name" xml:space="preserve">
+    <value>compareModelsToolStripMenuItem</value>
+  </data>
+  <data name=">>compareModelsToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>toolStripSeparator35.Name" xml:space="preserve">
@@ -4186,6 +4297,30 @@
     <value>peptidesMenuItem</value>
   </data>
   <data name=">>peptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByNameToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByAccessionToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByAccessionToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByAccessionToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByPreferredNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByPreferredNameToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByPreferredNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByGeneToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByGeneToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByGeneToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>textZoomToolStripMenuItem.Name" xml:space="preserve">

@@ -289,7 +289,7 @@
     <value>6</value>
   </data>
   <data name="btnMinimize.Text" xml:space="preserve">
-    <value>その場で最小化</value>
+    <value>所定の場所に最小化</value>
   </data>
   <data name=">>btnMinimize.Name" xml:space="preserve">
     <value>btnMinimize</value>
@@ -340,7 +340,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>分 (クロマトグラムピークの前後)</value>
+    <value>クロマトグラムピーク前後の分単位。</value>
   </data>
   <data name="label3.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
@@ -472,7 +472,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>結果の最小化</value>
+    <value>結果を最小化</value>
   </data>
   <data name=">>bindingSource1.Name" xml:space="preserve">
     <value>bindingSource1</value>

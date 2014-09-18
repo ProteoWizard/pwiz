@@ -340,7 +340,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>分钟</value>
+    <value>色谱图前后的分钟</value>
   </data>
   <data name="label3.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
@@ -397,7 +397,7 @@
     <value>4</value>
   </data>
   <data name="lblSpaceSavings.Text" xml:space="preserve">
-    <value>计算节约空间……</value>
+    <value>计算节约空间…</value>
   </data>
   <data name=">>lblSpaceSavings.Name" xml:space="preserve">
     <value>lblSpaceSavings</value>
@@ -424,7 +424,7 @@
     <value>7</value>
   </data>
   <data name="btnMinimizeAs.Text" xml:space="preserve">
-    <value>最小化并另存为……</value>
+    <value>最小化并另存为…</value>
   </data>
   <data name=">>btnMinimizeAs.Name" xml:space="preserve">
     <value>btnMinimizeAs</value>

@@ -213,21 +213,116 @@
     <value>多重选择</value>
   </data>
   <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
-    <value>转化数据……</value>
+    <value>转化数据…</value>
   </data>
   <data name="NavBar_RefreshUi__Filtered_from__0__" xml:space="preserve">
     <value>（从{0}过滤）</value>
   </data>
   <data name="NavBar_RefreshUi__Transforming_data____" xml:space="preserve">
-    <value>（转化数据……）</value>
+    <value>（转化数据…）</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
-    <value>编辑视图……</value>
+    <value>编辑视图…</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
-    <value>管理视图……</value>
+    <value>管理视图…</value>
   </data>
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
-    <value>自定义视图……</value>
+    <value>自定义视图…</value>
+  </data>
+  <data name="PropertyPath_Parse_Invalid_character____" xml:space="preserve">
+    <value>无效字符'*'</value>
+  </data>
+  <data name="PropertyPath_Parse_Unterminated_quote" xml:space="preserve">
+    <value>未结束的引用</value>
+  </data>
+  <data name="PropertyPath_Parse_Empty_name" xml:space="preserve">
+    <value>空名称</value>
+  </data>
+  <data name="PropertyPath_Parse_Invalid_character" xml:space="preserve">
+    <value>无效字符</value>
+  </data>
+  <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
+    <value>在位置{1}解析{0}出错：{2}</value>
+  </data>
+  <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
+    <value>本列为只读模式</value>
+  </data>
+  <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
+    <value>构造列类型{0}异常：{1}</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
+    <value>更新值出现未知错误。</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
+    <value>更新值出错：
+{0}</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
+    <value>写下一行 </value>
+    <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
+</comment>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
+    <value>写下 {0} 行</value>
+  </data>
+  <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
+    <value>执行查询</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
+    <value>写下 {1} 行中的 {0}</value>
+  </data>
+  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
+    <value>您是否确定想要删除视图“{0}”？</value>
+  </data>
+  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
+    <value>您是否确定想要删除视图{0}？</value>
+  </data>
+  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
+    <value>（从{0}过滤）</value>
+  </data>
+  <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
+    <value>{0} 的 {1}</value>
+    <comment>Example : 1 of 10
+</comment>
+  </data>
+  <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
+    <value>拥有任何值</value>
+  </data>
+  <data name="FilterOperations_Equals" xml:space="preserve">
+    <value>等于</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Equal" xml:space="preserve">
+    <value>不等于</value>
+  </data>
+  <data name="FilterOperations_Is_Blank" xml:space="preserve">
+    <value>为空</value>
+  </data>
+  <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
+    <value>不为空</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
+    <value>大于</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than" xml:space="preserve">
+    <value>小于</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than_Or_Equal_To" xml:space="preserve">
+    <value>大于或等于</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than_Or_Equal_To" xml:space="preserve">
+    <value>小于或等于</value>
+  </data>
+  <data name="FilterOperations_Contains" xml:space="preserve">
+    <value>包含</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Contain" xml:space="preserve">
+    <value>不包含</value>
+  </data>
+  <data name="FilterOperations_Starts_With" xml:space="preserve">
+    <value>开始于</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
+    <value>不开始于</value>
   </data>
 </root>

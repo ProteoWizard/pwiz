@@ -190,7 +190,7 @@
     <value>4</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-    <value>下へ(&amp;D)</value>
+    <value>下(&amp;D)</value>
   </data>
   <data name=">>btnDown.Name" xml:space="preserve">
     <value>btnDown</value>
@@ -220,7 +220,7 @@
     <value>3</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上へ(&amp;U)</value>
+    <value>上(&amp;U)</value>
   </data>
   <data name=">>btnUp.Name" xml:space="preserve">
     <value>btnUp</value>
@@ -310,7 +310,7 @@
     <value>5</value>
   </data>
   <data name="btnRename.Text" xml:space="preserve">
-    <value>名前の変更(&amp;N)...</value>
+    <value>名前を変更(&amp;N)...</value>
   </data>
   <data name=">>btnRename.Name" xml:space="preserve">
     <value>btnRename</value>
@@ -418,7 +418,7 @@
     <value>7</value>
   </data>
   <data name="btnRescore.Text" xml:space="preserve">
-    <value>再スコアする(&amp;S)...</value>
+    <value>再スコア(&amp;S)...</value>
   </data>
   <data name=">>btnRescore.Name" xml:space="preserve">
     <value>btnRescore</value>
@@ -451,7 +451,7 @@
     <value>9</value>
   </data>
   <data name="checkBoxRemoveLibraryRuns.Text" xml:space="preserve">
-    <value>対応するライブラリ実行を削除します</value>
+    <value>対応するライブラリ実行を削除</value>
   </data>
   <data name=">>checkBoxRemoveLibraryRuns.Name" xml:space="preserve">
     <value>checkBoxRemoveLibraryRuns</value>
@@ -511,7 +511,7 @@
     <value>3</value>
   </data>
   <data name="checkBoxRemoveReplicates.Text" xml:space="preserve">
-    <value>対応する繰り返し測定を削除します</value>
+    <value>対応する繰り返し測定を削除</value>
   </data>
   <data name=">>checkBoxRemoveReplicates.Name" xml:space="preserve">
     <value>checkBoxRemoveReplicates</value>
@@ -628,7 +628,7 @@
     <value>1</value>
   </data>
   <data name="libRunsTab.Text" xml:space="preserve">
-    <value>ライブラリ実行回数</value>
+    <value>ライブラリ実行</value>
   </data>
   <data name=">>libRunsTab.Name" xml:space="preserve">
     <value>libRunsTab</value>
@@ -676,7 +676,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>結果の管理</value>
+    <value>結果を管理</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>ManageResultsDlg</value>

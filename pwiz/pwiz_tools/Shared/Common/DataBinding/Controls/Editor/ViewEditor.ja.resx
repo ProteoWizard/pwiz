@@ -187,7 +187,7 @@
     <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>名前を表示(&amp;N)：</value>
+    <value>ビュー名(&amp;N):</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>

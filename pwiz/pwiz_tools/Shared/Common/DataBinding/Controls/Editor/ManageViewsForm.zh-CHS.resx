@@ -163,7 +163,7 @@
     <value>2</value>
   </data>
   <data name="btnEdit.Text" xml:space="preserve">
-    <value>编辑(&amp;E)……</value>
+    <value>编辑(&amp;E)…</value>
   </data>
   <data name=">>btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>
@@ -253,7 +253,7 @@
     <value>5</value>
   </data>
   <data name="btnShare.Text" xml:space="preserve">
-    <value>分享(&amp;S)……</value>
+    <value>分享(&amp;S)…</value>
   </data>
   <data name=">>btnShare.Name" xml:space="preserve">
     <value>btnShare</value>
@@ -283,7 +283,7 @@
     <value>6</value>
   </data>
   <data name="btnImport.Text" xml:space="preserve">
-    <value>导入(&amp;I)……</value>
+    <value>导入(&amp;I)…</value>
   </data>
   <data name=">>btnImport.Name" xml:space="preserve">
     <value>btnImport</value>
@@ -310,7 +310,7 @@
     <value>0</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
-    <value>添加(&amp;A)……</value>
+    <value>添加(&amp;A)…</value>
   </data>
   <data name=">>btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
@@ -334,7 +334,7 @@
     <value>1</value>
   </data>
   <data name="btnCopy.Text" xml:space="preserve">
-    <value>复制(&amp;C)……</value>
+    <value>复制(&amp;C)…</value>
   </data>
   <data name=">>btnCopy.Name" xml:space="preserve">
     <value>btnCopy</value>
@@ -478,7 +478,7 @@
     <value>0</value>
   </data>
   <data name="btnExportData.Text" xml:space="preserve">
-    <value>导出数据(&amp;X)……</value>
+    <value>导出数据(&amp;X)…</value>
   </data>
   <data name=">>btnExportData.Name" xml:space="preserve">
     <value>btnExportData</value>

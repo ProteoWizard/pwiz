@@ -220,7 +220,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textLabelTypes.ToolTip" xml:space="preserve">
-    <value>標識タイプ名を 1 行につき 1 つずつ入力します。</value>
+    <value>標識タイプ名を1行毎に1つ入力します。</value>
   </data>
   <data name=">>textLabelTypes.Name" xml:space="preserve">
     <value>textLabelTypes</value>

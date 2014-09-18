@@ -265,7 +265,7 @@
     <value>AB Sciex
 WIFFファイルリーダーライブラリ
 Copyright © 2010 by AB Sciex LLC.
-All rights reserved.
+著作権所有。
 http://www.absciex.com/
 
 Agilent Technologies
@@ -278,7 +278,7 @@ http://proteome.gs.washington.edu/software/bibliospec
 
 Bruker
 CompassXtractデータリーダーライブラリ
-Copyright © 2011 by Bruker Daltonik GmbH.All rights reserved.
+Copyright © 2011 by Bruker Daltonik GmbH.著作権所有。
 http://www.bruker.com/
 
 Crawdad
@@ -313,6 +313,12 @@ ProteoWizard
 質量分析データのインポート
 http://proteowizard.sourceforge.net
 
+Shimadzu Corporation
+Shimadzu's ファイルコンバータソフトウェア
+Copyright © 2014 by Shimadzu Coporation
+著作権所有。
+http://www.shimadzu.com
+
 SQLite
 単一ファイルおよびメモリ内RDBMS
 http://www.sqlite.org
@@ -324,14 +330,14 @@ http://sqlite.phxsoftware.com
 Thermo Fisher Scientific
 MSFileReaderファイル読み出しツール
 Copyright © 2009 by Thermo Fisher Scientific, Inc.
-All rights reserved.
+著作権所有。
 http://www.thermo.com
 
 Waters Technologies Corporation
 メソッドエクスポートライブラリ
 ウォーターズローデータアクセスコンポーネント
 Copyright © 2010 by Waters Corporation.
-All rights reserved.
+著作権所有。
 http://www.waters.com
 
 ZedGraph
@@ -370,7 +376,7 @@ http://www.zlib.net</value>
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>各ソフトウェアのクレジット:</value>
+    <value>ソフトウェア依存性クレジット：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -494,7 +500,7 @@ http://www.zlib.net</value>
 
 MacCoss Lab, Department of Genome Sciences, UW
 
-このソフトウェアは、連邦および民間資金源を使用して、
+このソフトウェアは、連邦政府および民間からの助成金を受け、
 MacCoss Labにより作成されました。詳細については、
 Skylineウェブサイトをご覧ください。</value>
   </data>

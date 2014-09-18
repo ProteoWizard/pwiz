@@ -117,164 +117,644 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-  <data name="labelWindowCount.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbOptimizeWindowPlacement.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 13</value>
-  </data>
-  <data name=">>textOverlap.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name=">>textWidth.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name=">>label8.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name=">>label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name=">>labelWindowCount.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-  <data name="textMarginLeft.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name=">>cbOptimizeWindowPlacement.Name" xml:space="preserve">
-    <value>cbOptimizeWindowPlacement</value>
+  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="cbMultiplexed.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>重複(&amp;O)：</value>
-  </data>
-  <data name=">>textMarginLeft.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="textWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
-    <value>39, 20</value>
-  </data>
-  <data name=">>label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>250, 13</value>
   </data>
-  <data name=">>cbGenerateMethodTarget.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name=">>label6.Parent" xml:space="preserve">
-    <value>$this</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>OK</value>
   </data>
-  <data name="cbGenerateMethodTarget.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbOptimizeWindowPlacement.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name=">>labelWindowsPerScan.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="textStart.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 30</value>
-  </data>
-  <data name="cbMultiplexed.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 168</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 13</value>
-  </data>
-  <data name="textStart.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
+  <data name=">>btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
   </data>
   <data name=">>btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelWindowCount.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+  <data name=">>btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name=">>labelWindowCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
+    <value>22</value>
   </data>
-  <data name=">>label7.ZOrder" xml:space="preserve">
-    <value>7</value>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>250, 42</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name=">>btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name=">>btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+    <value>21</value>
+  </data>
+  <data name="comboWindowType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>106, 78</value>
+  </data>
+  <data name="comboWindowType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>67, 21</value>
+  </data>
+  <data name="comboWindowType.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name=">>comboWindowType.Name" xml:space="preserve">
+    <value>comboWindowType</value>
+  </data>
+  <data name=">>comboWindowType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboWindowType.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboWindowType.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelWindowType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="textEnd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
+  <data name="labelWindowType.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name=">>labelWindowsPerScan.Type" xml:space="preserve">
+  <data name="labelWindowType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>103, 62</value>
+  </data>
+  <data name="labelWindowType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>72, 13</value>
+  </data>
+  <data name="labelWindowType.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="labelWindowType.Text" xml:space="preserve">
+    <value>ウィンドウタイプ(&amp;W)：</value>
+  </data>
+  <data name=">>labelWindowType.Name" xml:space="preserve">
+    <value>labelWindowType</value>
+  </data>
+  <data name=">>labelWindowType.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbOptimizeWindowPlacement.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 17</value>
+  <data name=">>labelWindowType.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name=">>textMarginLeft.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name=">>labelWindowType.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
-  <data name=">>textMarginRight.ZOrder" xml:space="preserve">
-    <value>10</value>
+  <data name="textWindowsPerScan.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="textWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 217</value>
+  </data>
+  <data name="textWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 20</value>
+  </data>
+  <data name="textWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
   </data>
   <data name=">>textWindowsPerScan.Name" xml:space="preserve">
     <value>textWindowsPerScan</value>
   </data>
-  <data name=">>textStart.Name" xml:space="preserve">
-    <value>textStart</value>
+  <data name=">>textWindowsPerScan.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
-    <value>20</value>
+  <data name=">>textWindowsPerScan.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="cbMultiplexed.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name=">>label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="comboMargins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
-  </data>
-  <data name="textOverlap.Location" type="System.Drawing.Point, System.Drawing">
-    <value>111, 79</value>
-  </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+  <data name=">>textWindowsPerScan.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="label7.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+  <data name="labelWindowsPerScan.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWindowsPerScan.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="labelWindowsPerScan.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="labelWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
-    <value>32, 189</value>
+    <value>15, 201</value>
+  </data>
+  <data name="labelWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
+    <value>98, 13</value>
+  </data>
+  <data name="labelWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="labelWindowsPerScan.Text" xml:space="preserve">
+    <value>スキャン毎のウィンドウ数(&amp;D)：</value>
+  </data>
+  <data name=">>labelWindowsPerScan.Name" xml:space="preserve">
+    <value>labelWindowsPerScan</value>
+  </data>
+  <data name=">>labelWindowsPerScan.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelWindowsPerScan.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelWindowsPerScan.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="labelWindowCount.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWindowCount.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWindowCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>90, 112</value>
+  </data>
+  <data name="labelWindowCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="labelWindowCount.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name=">>labelWindowCount.Name" xml:space="preserve">
+    <value>labelWindowCount</value>
+  </data>
+  <data name=">>labelWindowCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelWindowCount.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelWindowCount.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="cbGenerateMethodTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="cbGenerateMethodTarget.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbGenerateMethodTarget.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbGenerateMethodTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>220, 259</value>
+  </data>
+  <data name="cbGenerateMethodTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 17</value>
+  </data>
+  <data name="cbGenerateMethodTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="cbGenerateMethodTarget.Text" xml:space="preserve">
+    <value>ターゲットを生成(&amp;T)</value>
+  </data>
+  <data name=">>cbGenerateMethodTarget.Name" xml:space="preserve">
+    <value>cbGenerateMethodTarget</value>
+  </data>
+  <data name=">>cbGenerateMethodTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbGenerateMethodTarget.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>cbGenerateMethodTarget.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="cbOptimizeWindowPlacement.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbOptimizeWindowPlacement.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbOptimizeWindowPlacement.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 259</value>
+  </data>
+  <data name="cbOptimizeWindowPlacement.Size" type="System.Drawing.Size, System.Drawing">
+    <value>157, 17</value>
+  </data>
+  <data name="cbOptimizeWindowPlacement.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="cbOptimizeWindowPlacement.Text" xml:space="preserve">
+    <value>ウィンドウ位置の最適化(&amp;P)</value>
+  </data>
+  <data name=">>cbOptimizeWindowPlacement.Name" xml:space="preserve">
+    <value>cbOptimizeWindowPlacement</value>
+  </data>
+  <data name=">>cbOptimizeWindowPlacement.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbOptimizeWindowPlacement.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>cbOptimizeWindowPlacement.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label8.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 150</value>
+  </data>
+  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="label8.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="label8.Text" xml:space="preserve">
+    <value>デコンボリューション(&amp;D)：</value>
+  </data>
+  <data name=">>label8.Name" xml:space="preserve">
+    <value>label8</value>
+  </data>
+  <data name=">>label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label8.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label8.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="textMarginRight.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="textMarginRight.Location" type="System.Drawing.Point, System.Drawing">
+    <value>272, 217</value>
+  </data>
+  <data name="textMarginRight.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="textMarginRight.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name=">>textMarginRight.Name" xml:space="preserve">
+    <value>textMarginRight</value>
+  </data>
+  <data name=">>textMarginRight.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textMarginRight.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textMarginRight.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="textMarginLeft.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="textMarginLeft.Location" type="System.Drawing.Point, System.Drawing">
+    <value>206, 217</value>
+  </data>
+  <data name="textMarginLeft.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="textMarginLeft.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name=">>textMarginLeft.Name" xml:space="preserve">
+    <value>textMarginLeft</value>
+  </data>
+  <data name=">>textMarginLeft.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textMarginLeft.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textMarginLeft.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>203, 201</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>マージン幅(&amp;G)：</value>
+  </data>
+  <data name=">>label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name=">>label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label5.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label5.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name=">>cbOptimizeWindowPlacement.Parent" xml:space="preserve">
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>203, 150</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>マージン(&amp;M)：</value>
+  </data>
+  <data name=">>label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name=">>label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label4.Parent" xml:space="preserve">
     <value>$this</value>
+  </data>
+  <data name=">>label4.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="comboMargins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="comboMargins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>206, 166</value>
+  </data>
+  <data name="comboMargins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboMargins.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name=">>comboMargins.Name" xml:space="preserve">
+    <value>comboMargins</value>
+  </data>
+  <data name=">>comboMargins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboMargins.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboMargins.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="textWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 79</value>
+  </data>
+  <data name="textWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="textWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name=">>textWidth.Name" xml:space="preserve">
+    <value>textWidth</value>
+  </data>
+  <data name=">>textWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textWidth.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textWidth.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 62</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>ウィンドウ幅(&amp;W)：</value>
+  </data>
+  <data name=">>label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name=">>label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label3.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="textEnd.Location" type="System.Drawing.Point, System.Drawing">
+    <value>111, 30</value>
+  </data>
+  <data name="textEnd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="textEnd.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name=">>textEnd.Name" xml:space="preserve">
+    <value>textEnd</value>
+  </data>
+  <data name=">>textEnd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textEnd.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textEnd.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>108, 13</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>m/zの終了(&amp;E)：</value>
+  </data>
+  <data name=">>label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name=">>label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label2.ZOrder" xml:space="preserve">
+    <value>18</value>
+  </data>
+  <data name="textStart.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 30</value>
+  </data>
+  <data name="textStart.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 20</value>
+  </data>
+  <data name="textStart.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name=">>textStart.Name" xml:space="preserve">
+    <value>textStart</value>
+  </data>
+  <data name=">>textStart.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textStart.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textStart.ZOrder" xml:space="preserve">
+    <value>19</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 13</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>53, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>m/zの開始(&amp;S)：</value>
+  </data>
+  <data name=">>label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name=">>label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label1.ZOrder" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="comboDeconv.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 166</value>
+  </data>
+  <data name="comboDeconv.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboDeconv.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name=">>comboDeconv.Name" xml:space="preserve">
+    <value>comboDeconv</value>
+  </data>
+  <data name=">>comboDeconv.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboDeconv.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboDeconv.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 111</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>ウィンドウ数(&amp;W)：</value>
+  </data>
+  <data name=">>label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name=">>label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label6.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label6.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>337, 287</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -704,466 +1184,16 @@
         ////+f/////////5//////////n/////////+f/////////7//////////////////8=
 </value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
-    <value>18</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="textMarginRight.Location" type="System.Drawing.Point, System.Drawing">
-    <value>270, 236</value>
-  </data>
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name=">>textEnd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>ウィンドウ幅(&amp;W)：</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>マージンの幅(&amp;G)：</value>
-  </data>
-  <data name=">>comboMargins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbGenerateMethodTarget.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <data name="textEnd.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWindowsPerScan.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name=">>textStart.ZOrder" xml:space="preserve">
-    <value>19</value>
-  </data>
-  <data name=">>label5.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="textEnd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>111, 30</value>
-  </data>
-  <data name="labelWindowsPerScan.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="textMarginLeft.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="cbOptimizeWindowPlacement.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 278</value>
-  </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>comboMargins.Name" xml:space="preserve">
-    <value>comboMargins</value>
-  </data>
-  <data name="label8.Text" xml:space="preserve">
-    <value>ウィンドウ数：</value>
-  </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
-    <value>16</value>
-  </data>
-  <data name=">>label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>15, 13</value>
-  </data>
-  <data name="textMarginRight.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>201, 169</value>
-  </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 13</value>
-  </data>
-  <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
-  </data>
-  <data name="labelWindowCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>0, 13</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>単離スキームを計算</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>CalculateIsolationSchemeDlg</value>
   </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name=">>label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="textWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 79</value>
-  </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
-    <value>22</value>
-  </data>
-  <data name=">>comboMargins.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 278</value>
-  </data>
-  <data name=">>cbOptimizeWindowPlacement.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name=">>label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>labelWindowsPerScan.Name" xml:space="preserve">
-    <value>labelWindowsPerScan</value>
-  </data>
-  <data name="textWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
-    <value>35, 205</value>
-  </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
-    <value>21</value>
-  </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 112</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>201, 220</value>
-  </data>
-  <data name=">>textWidth.ZOrder" xml:space="preserve">
-    <value>15</value>
-  </data>
-  <data name=">>label2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>textWidth.Name" xml:space="preserve">
-    <value>textWidth</value>
-  </data>
-  <data name="cbMultiplexed.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 17</value>
-  </data>
-  <data name="textMarginRight.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="textMarginLeft.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
-  </data>
-  <data name="cbOptimizeWindowPlacement.Text" xml:space="preserve">
-    <value>ウィンドウ位置の最適化(&amp;P)</value>
-  </data>
-  <data name="textMarginLeft.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 236</value>
-  </data>
-  <data name="textOverlap.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="textWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name=">>label8.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="textWidth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
-  </data>
-  <data name=">>textWindowsPerScan.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>textMarginRight.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="comboMargins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name=">>label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="textWidth.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name=">>cbOptimizeWindowPlacement.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label7.Text" xml:space="preserve">
-    <value>%</value>
-  </data>
-  <data name=">>labelWindowsPerScan.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name=">>textStart.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
-  </data>
-  <data name=">>textOverlap.Name" xml:space="preserve">
-    <value>textOverlap</value>
-  </data>
-  <data name=">>textStart.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>textWindowsPerScan.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>labelWindowCount.Name" xml:space="preserve">
-    <value>labelWindowCount</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 62</value>
-  </data>
-  <data name=">>textEnd.ZOrder" xml:space="preserve">
-    <value>17</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name=">>cbGenerateMethodTarget.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Text" xml:space="preserve">
-    <value>ターゲットの生成(&amp;T)</value>
-  </data>
-  <data name="cbGenerateMethodTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
-  </data>
-  <data name=">>label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>キャンセル</value>
-  </data>
-  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name=">>cbGenerateMethodTarget.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name=">>cbMultiplexed.Name" xml:space="preserve">
-    <value>cbMultiplexed</value>
-  </data>
-  <data name=">>textMarginRight.Name" xml:space="preserve">
-    <value>textMarginRight</value>
-  </data>
-  <data name="textWindowsPerScan.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name=">>textEnd.Name" xml:space="preserve">
-    <value>textEnd</value>
-  </data>
-  <data name=">>label7.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="labelWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name=">>labelWindowCount.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name=">>label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboMargins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 185</value>
-  </data>
   <data name=">>$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name=">>textOverlap.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>cbGenerateMethodTarget.Name" xml:space="preserve">
-    <value>cbGenerateMethodTarget</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>m/zの終了(&amp;E):</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name=">>textEnd.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name=">>cbMultiplexed.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>156, 82</value>
-  </data>
-  <data name=">>label8.Name" xml:space="preserve">
-    <value>label8</value>
-  </data>
-  <data name="textMarginRight.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
-  </data>
-  <data name=">>label5.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>53, 13</value>
-  </data>
-  <data name=">>textMarginLeft.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>m/z の開始(&amp;S)：</value>
-  </data>
-  <data name="label8.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name=">>label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
-  </data>
-  <data name=">>label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name=">>textMarginLeft.Name" xml:space="preserve">
-    <value>textMarginLeft</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>単離スキームの作成</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>108, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>337, 311</value>
-  </data>
-  <data name=">>textWidth.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>cbMultiplexed.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>label7.Name" xml:space="preserve">
-    <value>label7</value>
-  </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>label6.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="textOverlap.Size" type="System.Drawing.Size, System.Drawing">
-    <value>42, 20</value>
-  </data>
-  <data name="textStart.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="comboMargins.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="cbMultiplexed.Text" xml:space="preserve">
-    <value>多重化取得(&amp;A)</value>
-  </data>
-  <data name=">>cbMultiplexed.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 42</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="labelWindowCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>90, 112</value>
-  </data>
-  <data name=">>textMarginRight.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>textWindowsPerScan.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name=">>textOverlap.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="labelWindowsPerScan.Text" xml:space="preserve">
-    <value>スキャンごとのウィンドウ数(&amp;D)：</value>
-  </data>
-  <data name="labelWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98, 13</value>
-  </data>
-  <data name=">>comboMargins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name=">>label4.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>108, 62</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>マージン(&amp;M)：</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.Language" type="System.Globalization.CultureInfo, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>fr</value>
-  </metadata>
 </root>

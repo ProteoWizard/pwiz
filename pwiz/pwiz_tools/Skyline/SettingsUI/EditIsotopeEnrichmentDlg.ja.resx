@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>トランジション設定フォームでこの式の表示に使用する名前です</value>
+    <value>トランジション設定形式でこの式の表示に使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -290,7 +290,7 @@
     <value>14</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>&amp;修飾で使用された場合の
+    <value>修飾で使用された場合の(&amp;E)
 次の安定同位体標識原子の濃縮パーセントを
 入力してください。</value>
   </data>

@@ -232,11 +232,15 @@ namespace SkylineTester
 
         public void InitLanguages(ComboBox comboBox)
         {
+            string selectedItem = comboBox.SelectedItem != null ? comboBox.SelectedItem.ToString() : null;
             comboBox.Items.Clear();
             var languages = GetLanguageNames().ToList();
             foreach (var language in languages)
                 comboBox.Items.Add(language);
-            comboBox.SelectedIndex = 0;
+            if (selectedItem != null)
+                comboBox.SelectedItem = selectedItem;
+            if (comboBox.SelectedIndex == -1)
+                comboBox.SelectedIndex = 0;
         }
 
         public string GetCulture(ComboBox comboBox)

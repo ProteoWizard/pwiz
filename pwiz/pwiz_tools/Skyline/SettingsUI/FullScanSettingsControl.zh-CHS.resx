@@ -199,7 +199,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>分钟之内进行的经预测的RT扫描</value>
+    <value>分钟之内进行的经预测的 RT 扫描</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -346,7 +346,7 @@
     <value>4</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Text" xml:space="preserve">
-    <value>分钟之内进行的MS/MS ID扫描</value>
+    <value>分钟之内进行的 MS/MS ID 扫描</value>
   </data>
   <data name=">>labelTimeAroundMs2Ids2.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids2</value>
@@ -667,7 +667,7 @@
     <value>11</value>
   </data>
   <data name="labelPrecursorAt.Text" xml:space="preserve">
-    <value>位于(&amp;A):</value>
+    <value>位于(&amp;A)：</value>
   </data>
   <data name=">>labelPrecursorAt.Name" xml:space="preserve">
     <value>labelPrecursorAt</value>
@@ -718,7 +718,7 @@
     <value>13</value>
   </data>
   <data name="labelPrecursorTh.Text" xml:space="preserve">
-    <value>质核比</value>
+    <value>质荷比</value>
   </data>
   <data name=">>labelPrecursorTh.Name" xml:space="preserve">
     <value>labelPrecursorTh</value>
@@ -901,7 +901,7 @@
     <value>11</value>
   </data>
   <data name="labelProductAt.Text" xml:space="preserve">
-    <value>位于(&amp;T):</value>
+    <value>位于(&amp;T)：</value>
   </data>
   <data name=">>labelProductAt.Name" xml:space="preserve">
     <value>labelProductAt</value>
@@ -952,7 +952,7 @@
     <value>13</value>
   </data>
   <data name="labelProductTh.Text" xml:space="preserve">
-    <value>质核比</value>
+    <value>质荷比</value>
   </data>
   <data name=">>labelProductTh.Name" xml:space="preserve">
     <value>labelProductTh</value>
@@ -1006,7 +1006,7 @@
     <value>9</value>
   </data>
   <data name="labelProductRes.Text" xml:space="preserve">
-    <value>分辨力(&amp;O)：</value>
+    <value>分辨能力(&amp;O)：</value>
   </data>
   <data name=">>labelProductRes.Name" xml:space="preserve">
     <value>labelProductRes</value>

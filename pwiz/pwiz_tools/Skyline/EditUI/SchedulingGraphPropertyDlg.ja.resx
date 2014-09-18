@@ -235,7 +235,7 @@
     <value>7</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最小</value>
+    <value>分</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -262,7 +262,7 @@
     <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>主遷移数(&amp;P)：</value>
+    <value>プライマリトランジション数(&amp;P)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>

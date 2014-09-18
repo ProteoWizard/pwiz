@@ -202,7 +202,7 @@
     <value>570, 480</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>レポートのプレビュー</value>
+    <value>レポートをプレビュー</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>PreviewReportDlg</value>

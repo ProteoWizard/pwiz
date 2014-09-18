@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>デコイプリカーサーの数(&amp;N)：</value>
+    <value>デコイプリカーサー数(&amp;N)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -238,7 +238,7 @@
     <value>17</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>デコイ生成メソッド(&amp;M)：</value>
+    <value>デコイ生成法(&amp;M)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>

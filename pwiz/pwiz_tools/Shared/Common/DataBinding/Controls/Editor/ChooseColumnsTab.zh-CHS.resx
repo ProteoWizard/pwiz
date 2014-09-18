@@ -223,7 +223,7 @@
     <value>1</value>
   </data>
   <data name="toolStripColumns.Text" xml:space="preserve">
-    <value>工具条 1</value>
+    <value>toolStrip1</value>
   </data>
   <data name=">>toolStripColumns.Name" xml:space="preserve">
     <value>toolStripColumns</value>

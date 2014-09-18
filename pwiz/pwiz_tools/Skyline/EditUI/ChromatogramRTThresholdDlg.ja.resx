@@ -121,6 +121,7 @@
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>12, 17</value>
   </data>
@@ -134,13 +135,13 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>保持時間標識ラベルを表示する強度の最小値を指定してください。</value>
+    <value>保持時間標識を表示する強度の最小値を指定します。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 13</value>
+	<value>46, 13</value>
   </data>
   <data name=">>label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -267,7 +268,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>保持時間強度の閾値</value>
+    <value>保持時間強度閾値</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>ChromatogramRTThresholdDlg</value>

@@ -228,6 +228,117 @@
   <data name=">>tabPanorama.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="listBoxChorusAccounts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listBoxChorusAccounts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 33</value>
+  </data>
+  <data name="listBoxChorusAccounts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>293, 199</value>
+  </data>
+  <data name="listBoxChorusAccounts.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name=">>listBoxChorusAccounts.Name" xml:space="preserve">
+    <value>listBoxChorusAccounts</value>
+  </data>
+  <data name=">>listBoxChorusAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>listBoxChorusAccounts.Parent" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name=">>listBoxChorusAccounts.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblChorusAccounts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblChorusAccounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblChorusAccounts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 17</value>
+  </data>
+  <data name="lblChorusAccounts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>91, 13</value>
+  </data>
+  <data name="lblChorusAccounts.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblChorusAccounts.Text" xml:space="preserve">
+    <value>コーラスアカウント：</value>
+  </data>
+  <data name=">>lblChorusAccounts.Name" xml:space="preserve">
+    <value>lblChorusAccounts</value>
+  </data>
+  <data name=">>lblChorusAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>lblChorusAccounts.Parent" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name=">>lblChorusAccounts.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnEditChorusAccountList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditChorusAccountList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditChorusAccountList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 33</value>
+  </data>
+  <data name="btnEditChorusAccountList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnEditChorusAccountList.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnEditChorusAccountList.Text" xml:space="preserve">
+    <value>リストを編集(&amp;D)...</value>
+  </data>
+  <data name=">>btnEditChorusAccountList.Name" xml:space="preserve">
+    <value>btnEditChorusAccountList</value>
+  </data>
+  <data name=">>btnEditChorusAccountList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnEditChorusAccountList.Parent" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name=">>btnEditChorusAccountList.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabChorus.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabChorus.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabChorus.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabChorus.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabChorus.Text" xml:space="preserve">
+    <value>コーラス</value>
+  </data>
+  <data name=">>tabChorus.Name" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name=">>tabChorus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>tabChorus.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name=">>tabChorus.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -241,7 +352,7 @@
     <value>4</value>
   </data>
   <data name="labelDisplayLanguage.Text" xml:space="preserve">
-    <value>表示言語の選択 (Skylineを再起動後より有効)</value>
+    <value>表示言語を選択（Skylineの再起動後より有効）</value>
   </data>
   <data name=">>labelDisplayLanguage.Name" xml:space="preserve">
     <value>labelDisplayLanguage</value>
@@ -304,7 +415,37 @@
     <value>tabControl</value>
   </data>
   <data name=">>tabLanguage.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkBoxShowWizard.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxShowWizard.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxShowWizard.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 30</value>
+  </data>
+  <data name="checkBoxShowWizard.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 17</value>
+  </data>
+  <data name="checkBoxShowWizard.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="checkBoxShowWizard.Text" xml:space="preserve">
+    <value>開始ページを表示</value>
+  </data>
+  <data name=">>checkBoxShowWizard.Name" xml:space="preserve">
+    <value>checkBoxShowWizard</value>
+  </data>
+  <data name=">>checkBoxShowWizard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>checkBoxShowWizard.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name=">>checkBoxShowWizard.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -319,7 +460,7 @@
     <value>0</value>
   </data>
   <data name="checkBoxLiveReports.Text" xml:space="preserve">
-    <value>ライブレポート (ドキュメントグリッド、新しい結果グリッド)</value>
+    <value>ライブレポート（ドキュメントグリッド、新しい結果グリッド）</value>
   </data>
   <data name=">>checkBoxLiveReports.Name" xml:space="preserve">
     <value>checkBoxLiveReports</value>
@@ -331,7 +472,7 @@
     <value>tabMisc</value>
   </data>
   <data name=">>checkBoxLiveReports.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -358,7 +499,7 @@
     <value>tabControl</value>
   </data>
   <data name=">>tabMisc.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>

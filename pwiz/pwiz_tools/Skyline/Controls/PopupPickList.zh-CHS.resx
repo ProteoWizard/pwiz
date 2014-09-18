@@ -184,7 +184,7 @@
     <value>3</value>
   </data>
   <data name="toolStrip1.Text" xml:space="preserve">
-    <value>工具条 1</value>
+    <value>toolStrip1</value>
   </data>
   <data name=">>toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>

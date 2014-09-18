@@ -211,7 +211,7 @@
     <value>3</value>
   </data>
   <data name="btnEditAnnotationList.Text" xml:space="preserve">
-    <value>编辑列表……</value>
+    <value>编辑列表…</value>
   </data>
   <data name=">>btnEditAnnotationList.Name" xml:space="preserve">
     <value>btnEditAnnotationList</value>

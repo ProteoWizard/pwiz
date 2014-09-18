@@ -147,7 +147,7 @@
     <value>btnCancel</value>
   </data>
   <data name="btnReset.Text" xml:space="preserve">
-    <value>重置(&amp;S)……</value>
+    <value>重置(&amp;S)…</value>
   </data>
   <data name="btnUp.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -325,13 +325,13 @@
     <value>7</value>
   </data>
   <data name="btnCopy.Text" xml:space="preserve">
-    <value>复制(&amp;C)……</value>
+    <value>复制(&amp;C)…</value>
   </data>
   <data name=">>btnReset.Name" xml:space="preserve">
     <value>btnReset</value>
   </data>
   <data name="btnEdit.Text" xml:space="preserve">
-    <value>编辑(&amp;E)……</value>
+    <value>编辑(&amp;E)…</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -439,7 +439,7 @@
     <value>179, 225</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
-    <value>添加(&amp;A)……</value>
+    <value>添加(&amp;A)…</value>
   </data>
   <data name=">>btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>

@@ -126,17 +126,17 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnRescoreAs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>142, 130</value>
+    <value>162, 130</value>
   </data>
   <data name="btnRescoreAs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>227, 23</value>
+    <value>207, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="btnRescoreAs.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="btnRescoreAs.Text" xml:space="preserve">
-    <value>再度スコアを計算して名前を付けて保存(&amp;A)...</value>
+    <value>再度スコアして名前を付けて保存(&amp;A)...</value>
   </data>
   <data name=">>btnRescoreAs.Name" xml:space="preserve">
     <value>btnRescoreAs</value>
@@ -160,13 +160,13 @@
     <value>12, 130</value>
   </data>
   <data name="btnRescore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124, 23</value>
+    <value>144, 23</value>
   </data>
   <data name="btnRescore.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="btnRescore.Text" xml:space="preserve">
-    <value>インプレース再スコア(&amp;P)</value>
+    <value>所定の場所を再スコア(&amp;P)</value>
   </data>
   <data name=">>btnRescore.Name" xml:space="preserve">
     <value>btnRescore</value>
@@ -190,7 +190,7 @@
     <value>373, 130</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 32</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -278,7 +278,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>結果の再スコア</value>
+    <value>結果を再スコア</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>RescoreResultsDlg</value>

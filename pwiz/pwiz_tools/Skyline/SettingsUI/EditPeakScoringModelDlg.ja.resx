@@ -125,14 +125,14 @@
     <value>12, 28</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>304, 20</value>
+    <value>385, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ぺプチド設定フォームでこの式の表示に使用する名前です</value>
+    <value>ぺプチド設定形式でこの式の表示に使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -151,16 +151,16 @@
     <value>NoControl</value>
   </data>
   <data name="btnTrainModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 25</value>
+    <value>248, 25</value>
   </data>
   <data name="btnTrainModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>78, 36</value>
+    <value>128, 23</value>
   </data>
   <data name="btnTrainModel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="btnTrainModel.Text" xml:space="preserve">
-    <value>モデルのトレーニング(&amp;R)</value>
+    <value>モデルのトレーニング(&amp;T)</value>
   </data>
   <data name="btnTrainModel.ToolTip" xml:space="preserve">
     <value>クリックして現在インポートされている結果データをこのドキュメント内のペプチドで使用し、
@@ -230,13 +230,13 @@
     <value>12, 213</value>
   </data>
   <data name="gridPeakCalculators.Size" type="System.Drawing.Size, System.Drawing">
-    <value>348, 266</value>
+    <value>385, 266</value>
   </data>
   <data name="gridPeakCalculators.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="gridPeakCalculators.ToolTip" xml:space="preserve">
-    <value>ピークカルキュレータと、ピークスコアに対するカルキュレータへの貢献度を決定する加重値です</value>
+    <value>ピークカルキュレータおよびピークスコアに対するカルキュレータへの貢献度を決定する加重値</value>
   </data>
   <data name=">>gridPeakCalculators.Name" xml:space="preserve">
     <value>gridPeakCalculators</value>
@@ -257,7 +257,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>739, 485</value>
+    <value>731, 485</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -287,7 +287,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>820, 485</value>
+    <value>812, 485</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -317,10 +317,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
+    <value>0, -1</value>
   </data>
   <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>492, 443</value>
+    <value>446, 443</value>
   </data>
   <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -329,7 +329,7 @@
     <value>zedGraphMProphet</value>
   </data>
   <data name=">>zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.16202, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name=">>zedGraphMProphet.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -344,7 +344,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>490, 441</value>
+    <value>445, 441</value>
   </data>
   <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -378,9 +378,6 @@
   </data>
   <data name="findPeptidesButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
-  </data>
-  <data name="findPeptidesButton.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
   </data>
   <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
     <value>不明なペプチドの検索</value>
@@ -425,7 +422,7 @@
     <value>zedGraphSelectedCalculator</value>
   </data>
   <data name=">>zedGraphSelectedCalculator.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.16202, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name=">>zedGraphSelectedCalculator.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -440,13 +437,13 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>490, 441</value>
+    <value>485, 441</value>
   </data>
   <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
-    <value>特長のスコア</value>
+    <value>機能のスコア</value>
   </data>
   <data name=">>tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
@@ -476,7 +473,7 @@
     <value>zedGraphPValues</value>
   </data>
   <data name=">>zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.16202, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name=">>zedGraphPValues.Parent" xml:space="preserve">
     <value>tabPage4</value>
@@ -491,7 +488,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>490, 441</value>
+    <value>485, 441</value>
   </data>
   <data name="tabPage4.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -527,7 +524,7 @@
     <value>zedGraphQValues</value>
   </data>
   <data name=">>zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.16202, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name=">>zedGraphQValues.Parent" xml:space="preserve">
     <value>tabPage3</value>
@@ -542,7 +539,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>490, 441</value>
+    <value>485, 441</value>
   </data>
   <data name="tabPage3.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -563,10 +560,10 @@
     <value>3</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>397, 12</value>
+    <value>434, 12</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>498, 467</value>
+    <value>453, 467</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -599,7 +596,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>利用可能な特長スコア(&amp;A)：</value>
+    <value>利用可能な機能のスコア(&amp;A)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -659,7 +656,7 @@
     <value>1</value>
   </data>
   <data name="secondBestCheckBox.Text" xml:space="preserve">
-    <value>2 番目に良いピークを使用(&amp;S)</value>
+    <value>2番目に良いピークを使用(&amp;S)</value>
   </data>
   <data name=">>secondBestCheckBox.Name" xml:space="preserve">
     <value>secondBestCheckBox</value>
@@ -677,7 +674,7 @@
     <value>12, 112</value>
   </data>
   <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>304, 67</value>
+    <value>385, 67</value>
   </data>
   <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -845,7 +842,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>907, 520</value>
+    <value>899, 520</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

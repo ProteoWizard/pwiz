@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="radioNoDuplicates.Text" xml:space="preserve">
-    <value>追加しない</value>
+    <value>追加禁止</value>
   </data>
   <data name=">>radioNoDuplicates.Name" xml:space="preserve">
     <value>radioNoDuplicates</value>
@@ -213,7 +213,7 @@
     <value>2</value>
   </data>
   <data name="radioFilterUnmatched.Text" xml:space="preserve">
-    <value>追加しない</value>
+    <value>追加禁止</value>
   </data>
   <data name=">>radioFilterUnmatched.Name" xml:space="preserve">
     <value>radioFilterUnmatched</value>
@@ -268,7 +268,7 @@
     <value>0</value>
   </data>
   <data name="msgUnmatchedPeptides.Text" xml:space="preserve">
-    <value>メッセージプレースホルダー 2</value>
+    <value>メッセージプレースホルダー2</value>
   </data>
   <data name=">>msgUnmatchedPeptides.Name" xml:space="preserve">
     <value>msgUnmatchedPeptides</value>
@@ -295,7 +295,7 @@
     <value>5</value>
   </data>
   <data name="msgDuplicatePeptides.Text" xml:space="preserve">
-    <value>メッセージプレースホルダー 1</value>
+    <value>メッセージプレースホルダー1</value>
   </data>
   <data name=">>msgDuplicatePeptides.Name" xml:space="preserve">
     <value>msgDuplicatePeptides</value>
@@ -322,7 +322,7 @@
     <value>0</value>
   </data>
   <data name="msgFilteredPeptides.Text" xml:space="preserve">
-    <value>メッセージプレースホルダー 3</value>
+    <value>メッセージプレースホルダー3</value>
   </data>
   <data name=">>msgFilteredPeptides.Name" xml:space="preserve">
     <value>msgFilteredPeptides</value>
@@ -376,7 +376,7 @@
     <value>1</value>
   </data>
   <data name="radioDoNotAddFiltered.Text" xml:space="preserve">
-    <value>追加しない</value>
+    <value>追加禁止</value>
   </data>
   <data name=">>radioDoNotAddFiltered.Name" xml:space="preserve">
     <value>radioDoNotAddFiltered</value>
@@ -520,7 +520,7 @@
     <value>5</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>以下の場合の処理を指定してください：</value>
+    <value>以下の場合の処理方法を指定してください：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -547,7 +547,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ペプチドのフィルタ設定</value>
+    <value>ペプチドをフィルタ</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>FilterMatchedPeptidesDlg</value>

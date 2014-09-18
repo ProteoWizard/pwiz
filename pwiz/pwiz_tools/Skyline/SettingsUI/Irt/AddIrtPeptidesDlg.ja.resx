@@ -181,7 +181,7 @@
     <value>0</value>
   </data>
   <data name="labelExisting.Text" xml:space="preserve">
-    <value>{0} 個のペプチドの値が既にライブラリ内にあります：</value>
+    <value>{0}個のペプチドは、既にライブラリに値があります。</value>
   </data>
   <data name=">>labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>
@@ -271,7 +271,7 @@
     <value>4</value>
   </data>
   <data name="radioReplace.Text" xml:space="preserve">
-    <value>既存の値を上書きする</value>
+    <value>既存の値を置き換え</value>
   </data>
   <data name=">>radioReplace.Name" xml:space="preserve">
     <value>radioReplace</value>
@@ -328,8 +328,8 @@
     <value>0</value>
   </data>
   <data name="labelOverwrite.Text" xml:space="preserve">
-    <value>MS.MSスキャンから計算された{0}ペプチドのiRT値が
-クロマトグラムピークから計算されたiRT値で置換されます。</value>
+    <value>MS/MSスキャンから計算された{0}ペプチドiRT値は、
+クロマトグラムピークから計算されたiRT値に置き換えられます。</value>
   </data>
   <data name=">>labelOverwrite.Name" xml:space="preserve">
     <value>labelOverwrite</value>
@@ -458,7 +458,7 @@
     <value>0</value>
   </data>
   <data name="labelPeptidesAdded.Text" xml:space="preserve">
-    <value>{0} 個の新しいペプチドがiRTデータベースに追加されます。</value>
+    <value>{0}個の新しいペプチドがiRTデータベースに追加されます。</value>
   </data>
   <data name=">>labelPeptidesAdded.Name" xml:space="preserve">
     <value>labelPeptidesAdded</value>
@@ -485,7 +485,7 @@
     <value>1</value>
   </data>
   <data name="labelRunsConverted.Text" xml:space="preserve">
-    <value>{0} 回の実行結果が変換されました。</value>
+    <value>{0}回の実行が正常に変換されました。</value>
   </data>
   <data name=">>labelRunsConverted.Name" xml:space="preserve">
     <value>labelRunsConverted</value>
@@ -512,7 +512,7 @@
     <value>2</value>
   </data>
   <data name="labelRunsFailed.Text" xml:space="preserve">
-    <value>相関が不十分なため、{0} 回の実行結果が変換されませんでした。</value>
+    <value>相関が不十分なため、{0}回の実行が変換されませんでした。</value>
   </data>
   <data name=">>labelRunsFailed.Name" xml:space="preserve">
     <value>labelRunsFailed</value>
@@ -542,8 +542,8 @@
     <value>0</value>
   </data>
   <data name="labelKeep.Text" xml:space="preserve">
-    <value>クロマトグラムピークから計算された {0} 個のペプチドの iRT 値が保持され、
-MS/MSスキャンから計算された新しいiRT値は無視されます。</value>
+    <value>クロマトグラムピークから計算された{0}ペプチドiRT値は保持され、
+MS/MSスキャンから計算されたより新しいiRT値は無視されます:</value>
   </data>
   <data name=">>labelKeep.Name" xml:space="preserve">
     <value>labelKeep</value>

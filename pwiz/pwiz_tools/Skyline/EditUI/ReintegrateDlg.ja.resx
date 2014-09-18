@@ -217,7 +217,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Q値カットオフ(&amp;Q)：</value>
+    <value>Q値のカットオフ(&amp;Q)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -244,7 +244,7 @@
     <value>2</value>
   </data>
   <data name="reintegrateAllPeaks.Text" xml:space="preserve">
-    <value>すべてのピークを積分(&amp;A)</value>
+    <value>すべてのピークを統合(&amp;A)</value>
   </data>
   <data name=">>reintegrateAllPeaks.Name" xml:space="preserve">
     <value>reintegrateAllPeaks</value>
@@ -271,7 +271,7 @@
     <value>3</value>
   </data>
   <data name="reintegrateQCutoff.Text" xml:space="preserve">
-    <value>有意のQ値のみを積分(&amp;O)</value>
+    <value>顕著なQ値のみ統合(&amp;O)</value>
   </data>
   <data name=">>reintegrateQCutoff.Name" xml:space="preserve">
     <value>reintegrateQCutoff</value>
@@ -298,7 +298,7 @@
     <value>7</value>
   </data>
   <data name="checkBoxOverwrite.Text" xml:space="preserve">
-    <value>手動積分を上書き(&amp;O)</value>
+    <value>手動の積分を上書き(&amp;O)</value>
   </data>
   <data name=">>checkBoxOverwrite.Name" xml:space="preserve">
     <value>checkBoxOverwrite</value>
@@ -325,7 +325,7 @@
     <value>6</value>
   </data>
   <data name="checkBoxAnnotation.Text" xml:space="preserve">
-    <value>Q値注釈を追加(&amp;D)</value>
+    <value>Q値の注釈を追加(&amp;D)</value>
   </data>
   <data name=">>checkBoxAnnotation.Name" xml:space="preserve">
     <value>checkBoxAnnotation</value>
@@ -403,7 +403,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>再積分</value>
+    <value>再統合</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>ReintegrateDlg</value>

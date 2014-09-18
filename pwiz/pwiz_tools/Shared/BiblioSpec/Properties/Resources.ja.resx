@@ -104,4 +104,7 @@
   <data name="LibraryBuildActionExtension_LOCALIZED_VALUES_Append">
     <value xml:space="preserve">追加</value>
   </data>
+  <data name="LibraryBuildActionExtension_GetEnum_The_string___0___does_not_match_an_enum_value" xml:space="preserve">
+    <value>文字列'{0}'がenum値と一致しません</value>
+  </data>
 </root>

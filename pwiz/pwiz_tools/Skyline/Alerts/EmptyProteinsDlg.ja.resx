@@ -160,7 +160,7 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>この操作で追加された{0}には、現在のフィルタ基準を満たすペプチドが存在しません。
+    <value>この操作により、現在のフィルタ基準を満たしていないペプチドを含む{0}が追加されました。
 ドキュメントを表示する前に、空のタンパク質をすべて削除しますか？</value>
   </data>
   <data name=">>labelMessage.Name" xml:space="preserve">
@@ -191,7 +191,7 @@
     <value>2</value>
   </data>
   <data name="labelPerf.Text" xml:space="preserve">
-    <value>多数の空のタンパク質があると、Skylineの動作に影響します。</value>
+    <value>多数の空のタンパク質を保持することにより、性能に影響を及ぼす恐れがあります。</value>
   </data>
   <data name=">>labelPerf.Name" xml:space="preserve">
     <value>labelPerf</value>

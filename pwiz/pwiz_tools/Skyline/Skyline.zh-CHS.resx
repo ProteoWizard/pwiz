@@ -188,7 +188,7 @@
     <value>149, 22</value>
   </data>
   <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
-    <value>QC</value>
+    <value>质量控制 (QC)</value>
   </data>
   <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>149, 22</value>
@@ -206,7 +206,7 @@
     <value>169, 22</value>
   </data>
   <data name="modifyPeptideContextMenuItem.Text" xml:space="preserve">
-    <value>修改……</value>
+    <value>修改…</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
@@ -357,13 +357,13 @@
     <value>193, 22</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>离子质核比值</value>
+    <value>离子质荷比值</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>观察的质核比值</value>
+    <value>观察的质荷比值</value>
   </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -387,7 +387,7 @@
     <value>193, 22</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性……</value>
+    <value>属性…</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -429,7 +429,7 @@
     <value>152, 22</value>
   </data>
   <data name="removePeaksGraphSubMenuItem.Text" xml:space="preserve">
-    <value>&lt;占位符&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="removePeaksGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -474,7 +474,7 @@
     <value>173, 22</value>
   </data>
   <data name="thresholdRTContextMenuItem.Text" xml:space="preserve">
-    <value>阈值以上……</value>
+    <value>阈值以上…</value>
   </data>
   <data name="noneRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
@@ -669,7 +669,7 @@
     <value>212, 22</value>
   </data>
   <data name="chromPropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性……</value>
+    <value>属性…</value>
   </data>
   <data name="toolStripSeparator19.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -807,7 +807,7 @@
     <value>177, 22</value>
   </data>
   <data name="setRTThresholdContextMenuItem.Text" xml:space="preserve">
-    <value>设定阈值……</value>
+    <value>设定阈值…</value>
   </data>
   <data name="toolStripSeparator22.Size" type="System.Drawing.Size, System.Drawing">
     <value>174, 6</value>
@@ -816,13 +816,13 @@
     <value>177, 22</value>
   </data>
   <data name="createRTRegressionContextMenuItem.Text" xml:space="preserve">
-    <value>创建回归……</value>
+    <value>创建回归…</value>
   </data>
   <data name="placeholderToolStripMenuItem1.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
   </data>
   <data name="placeholderToolStripMenuItem1.Text" xml:space="preserve">
-    <value>&lt;占位符&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="toolStripSeparatorCalculators.Size" type="System.Drawing.Size, System.Drawing">
     <value>149, 6</value>
@@ -831,13 +831,13 @@
     <value>152, 22</value>
   </data>
   <data name="addCalculatorContextMenuItem.Text" xml:space="preserve">
-    <value>添加……</value>
+    <value>添加…</value>
   </data>
   <data name="updateCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>152, 22</value>
   </data>
   <data name="updateCalculatorContextMenuItem.Text" xml:space="preserve">
-    <value>编辑当前……</value>
+    <value>编辑当前…</value>
   </data>
   <data name="chooseCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
@@ -867,7 +867,7 @@
     <value>177, 22</value>
   </data>
   <data name="timePropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性……</value>
+    <value>属性…</value>
   </data>
   <data name="toolStripSeparator38.Size" type="System.Drawing.Size, System.Drawing">
     <value>174, 6</value>
@@ -957,7 +957,7 @@
     <value>163, 22</value>
   </data>
   <data name="areaNormalizeGlobalContextMenuItem.Text" xml:space="preserve">
-    <value>全体标准</value>
+    <value>全球标准</value>
   </data>
   <data name="areaNormalizeMaximumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
@@ -1041,7 +1041,7 @@
     <value>170, 22</value>
   </data>
   <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性……</value>
+    <value>属性…</value>
   </data>
   <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 22</value>
@@ -1120,7 +1120,7 @@
     <value>379, 18</value>
   </data>
   <data name="statusGeneral.Text" xml:space="preserve">
-    <value>准备好的</value>
+    <value>准备完成</value>
   </data>
   <data name="statusGeneral.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
@@ -1246,7 +1246,7 @@
     <value>23, 22</value>
   </data>
   <data name="publishToolbarButton.Text" xml:space="preserve">
-    <value>工具条按钮 1</value>
+    <value>toolStripButton1</value>
   </data>
   <data name="publishToolbarButton.ToolTipText" xml:space="preserve">
     <value>发布至 Panorama</value>
@@ -1318,7 +1318,7 @@
     <value>5</value>
   </data>
   <data name="mainToolStrip.Text" xml:space="preserve">
-    <value>工具条 1</value>
+    <value>toolStrip1</value>
   </data>
   <data name=">>mainToolStrip.Name" xml:space="preserve">
     <value>mainToolStrip</value>
@@ -1335,6 +1335,15 @@
   <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>224, 17</value>
   </metadata>
+  <data name="startPageMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="startPageMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="startPageMenuItem.Text" xml:space="preserve">
+    <value>开始(&amp;R)…</value>
+  </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -1357,7 +1366,7 @@
     <value>193, 22</value>
   </data>
   <data name="openMenuItem.Text" xml:space="preserve">
-    <value>打开(&amp;O)……</value>
+    <value>打开(&amp;O)…</value>
   </data>
   <data name="saveMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1375,13 +1384,13 @@
     <value>193, 22</value>
   </data>
   <data name="saveAsMenuItem.Text" xml:space="preserve">
-    <value>另存为(&amp;A)……</value>
+    <value>另存为(&amp;A)…</value>
   </data>
   <data name="shareDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
   <data name="shareDocumentMenuItem.Text" xml:space="preserve">
-    <value>分享(&amp;H)……</value>
+    <value>分享(&amp;H)…</value>
   </data>
   <data name="publishMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1390,7 +1399,7 @@
     <value>193, 22</value>
   </data>
   <data name="publishMenuItem.Text" xml:space="preserve">
-    <value>发布至 Panorama(&amp;P)……</value>
+    <value>发布至 Panorama(&amp;P)…</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -1399,13 +1408,13 @@
     <value>170, 22</value>
   </data>
   <data name="importResultsMenuItem.Text" xml:space="preserve">
-    <value>结果(&amp;R)……</value>
+    <value>结果(&amp;R)…</value>
   </data>
   <data name="peakBoundariesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
   <data name="peakBoundariesToolStripMenuItem.Text" xml:space="preserve">
-    <value>峰值边界(&amp;B)……</value>
+    <value>峰值边界(&amp;B)…</value>
   </data>
   <data name="toolStripSeparator51.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
@@ -1414,7 +1423,7 @@
     <value>170, 22</value>
   </data>
   <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
-    <value>肽段搜索(&amp;P)……</value>
+    <value>肽段搜索(&amp;P)…</value>
   </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
@@ -1423,19 +1432,19 @@
     <value>170, 22</value>
   </data>
   <data name="importFASTAMenuItem.Text" xml:space="preserve">
-    <value>FASTA(&amp;F)……</value>
+    <value>FASTA(&amp;F)…</value>
   </data>
   <data name="importMassListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
   <data name="importMassListMenuItem.Text" xml:space="preserve">
-    <value>离子对列表(&amp;T)……</value>
+    <value>离子对列表(&amp;T)…</value>
   </data>
   <data name="importDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
   <data name="importDocumentMenuItem.Text" xml:space="preserve">
-    <value>文档(&amp;D)……</value>
+    <value>文档(&amp;D)…</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1447,19 +1456,19 @@
     <value>183, 22</value>
   </data>
   <data name="exportTransitionListMenuItem.Text" xml:space="preserve">
-    <value>离子对列表(&amp;T)……</value>
+    <value>离子对列表(&amp;T)…</value>
   </data>
   <data name="exportIsolationListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="exportIsolationListMenuItem.Text" xml:space="preserve">
-    <value>采集列表(&amp;I)……</value>
+    <value>采集列表(&amp;I)…</value>
   </data>
   <data name="exportMethodMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="exportMethodMenuItem.Text" xml:space="preserve">
-    <value>方法(&amp;M)……</value>
+    <value>方法(&amp;M)…</value>
   </data>
   <data name="toolStripSeparator49.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -1468,7 +1477,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportReportMenuItem.Text" xml:space="preserve">
-    <value>报告(&amp;R)……</value>
+    <value>报告(&amp;R)…</value>
   </data>
   <data name="toolStripSeparator50.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -1477,7 +1486,7 @@
     <value>183, 22</value>
   </data>
   <data name="eSPFeaturesMenuItem.Text" xml:space="preserve">
-    <value>ESP 特性(&amp;E)……</value>
+    <value>ESP 特性(&amp;E)…</value>
   </data>
   <data name="eSPFeaturesMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1486,13 +1495,19 @@
     <value>183, 22</value>
   </data>
   <data name="mProphetFeaturesMenuItem.Text" xml:space="preserve">
-    <value>mProphet 特性(&amp;P)……</value>
+    <value>mProphet 特性(&amp;P)…</value>
   </data>
   <data name="chromatogramsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="chromatogramsToolStripMenuItem.Text" xml:space="preserve">
-    <value>色谱图……</value>
+    <value>色谱图…</value>
+  </data>
+  <data name="chorusRequestToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
+    <value>统一申请…</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1627,7 +1642,7 @@
     <value>207, 22</value>
   </data>
   <data name="findPeptideMenuItem.Text" xml:space="preserve">
-    <value>查找(&amp;F)……</value>
+    <value>查找(&amp;F)…</value>
   </data>
   <data name="findNextMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F3</value>
@@ -1660,25 +1675,25 @@
     <value>157, 22</value>
   </data>
   <data name="insertFASTAMenuItem.Text" xml:space="preserve">
-    <value>FASTA(&amp;F)……</value>
+    <value>FASTA(&amp;F)…</value>
   </data>
   <data name="insertProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>157, 22</value>
   </data>
   <data name="insertProteinsMenuItem.Text" xml:space="preserve">
-    <value>蛋白质(&amp;O)……</value>
+    <value>蛋白质(&amp;O)…</value>
   </data>
   <data name="insertPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>157, 22</value>
   </data>
   <data name="insertPeptidesMenuItem.Text" xml:space="preserve">
-    <value>肽(&amp;P)……</value>
+    <value>肽(&amp;P)…</value>
   </data>
   <data name="insertTransitionListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>157, 22</value>
   </data>
   <data name="insertTransitionListMenuItem.Text" xml:space="preserve">
-    <value>离子对列表(&amp;T)……</value>
+    <value>离子对列表(&amp;T)…</value>
   </data>
   <data name="insertToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -1717,13 +1732,37 @@
     <value>218, 22</value>
   </data>
   <data name="renameProteinsMenuItem.Text" xml:space="preserve">
-    <value>重新命名蛋白质(&amp;N)……</value>
+    <value>重新命名蛋白质(&amp;N)…</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>按名称(&amp;N)</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
+    <value>按添加(&amp;A)</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>按首选名称(&amp;P)</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
+    <value>按基因(&amp;G)</value>
   </data>
   <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="sortProteinsMenuItem.Text" xml:space="preserve">
-    <value>按名称归类蛋白质(&amp;N)</value>
+    <value>归类蛋白质(&amp;S)</value>
   </data>
   <data name="toolStripSeparator43.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1732,7 +1771,7 @@
     <value>218, 22</value>
   </data>
   <data name="acceptPeptidesMenuItem.Text" xml:space="preserve">
-    <value>接受肽(&amp;C)……</value>
+    <value>接受肽(&amp;C)…</value>
   </data>
   <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1741,13 +1780,19 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>添加诱饵肽(&amp;D)……</value>
+    <value>添加诱饵肽(&amp;P)…</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>重新合并(&amp;T)……</value>
+    <value>重新合并(&amp;T)…</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 22</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
+    <value>比较峰值分数(&amp;O)…</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1756,7 +1801,7 @@
     <value>218, 22</value>
   </data>
   <data name="refineAdvancedMenuItem.Text" xml:space="preserve">
-    <value>高级(&amp;A)……</value>
+    <value>高级(&amp;A)…</value>
   </data>
   <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -1852,7 +1897,7 @@
     <value>149, 22</value>
   </data>
   <data name="qcStandardMenuItem.Text" xml:space="preserve">
-    <value>QC(&amp;C)</value>
+    <value>质量控制 (&amp;C)</value>
   </data>
   <data name="irtStandardMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1873,13 +1918,13 @@
     <value>207, 22</value>
   </data>
   <data name="modifyPeptideMenuItem.Text" xml:space="preserve">
-    <value>修改肽段(&amp;M)……</value>
+    <value>修改肽段(&amp;M)…</value>
   </data>
   <data name="manageUniquePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
   </data>
   <data name="manageUniquePeptidesMenuItem.Text" xml:space="preserve">
-    <value>序列特异的肽段(&amp;Q)……</value>
+    <value>序列特异的肽段(&amp;Q)…</value>
   </data>
   <data name="toolStripSeparator30.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -1891,7 +1936,7 @@
     <value>207, 22</value>
   </data>
   <data name="manageResultsMenuItem.Text" xml:space="preserve">
-    <value>管理结果(&amp;S)……</value>
+    <value>管理结果(&amp;S)…</value>
   </data>
   <data name="editToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1901,6 +1946,30 @@
   </data>
   <data name="editToolStripMenuItem.Text" xml:space="preserve">
     <value>编辑(&amp;E)</value>
+  </data>
+  <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>按名称(&amp;N)</value>
+  </data>
+  <data name="showTargetsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByAccessionToolStripMenuItem.Text" xml:space="preserve">
+    <value>按添加(&amp;A)</value>
+  </data>
+  <data name="showTargetsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>按首选名称(&amp;P)</value>
+  </data>
+  <data name="showTargetsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="showTargetsByGeneToolStripMenuItem.Text" xml:space="preserve">
+    <value>按基因(&amp;G)</value>
   </data>
   <data name="peptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1966,7 +2035,7 @@
     <value>187, 22</value>
   </data>
   <data name="groupedMenuItem.Text" xml:space="preserve">
-    <value>分组式(&amp;G)……</value>
+    <value>分组式(&amp;G)…</value>
   </data>
   <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -2089,7 +2158,7 @@
     <value>219, 22</value>
   </data>
   <data name="showChromMenuItem.Text" xml:space="preserve">
-    <value>&lt;占位符&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="toolStripSeparatorReplicates.Size" type="System.Drawing.Size, System.Drawing">
     <value>216, 6</value>
@@ -2398,7 +2467,7 @@
     <value>183, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>文档网格</value>
+    <value>文档网格(&amp;D)</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -2431,13 +2500,13 @@
     <value>181, 22</value>
   </data>
   <data name="saveCurrentMenuItem.Text" xml:space="preserve">
-    <value>保存当前(&amp;S)……</value>
+    <value>保存当前(&amp;S)…</value>
   </data>
   <data name="editSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>
   </data>
   <data name="editSettingsMenuItem.Text" xml:space="preserve">
-    <value>编辑列表(&amp;E)……</value>
+    <value>编辑列表(&amp;E)…</value>
   </data>
   <data name="toolStripSeparator31.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 6</value>
@@ -2446,13 +2515,13 @@
     <value>181, 22</value>
   </data>
   <data name="shareSettingsMenuItem.Text" xml:space="preserve">
-    <value>分享(&amp;A)……</value>
+    <value>分享(&amp;A)…</value>
   </data>
   <data name="importSettingsMenuItem1.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>
   </data>
   <data name="importSettingsMenuItem1.Text" xml:space="preserve">
-    <value>导入(&amp;I)……</value>
+    <value>导入(&amp;I)…</value>
   </data>
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 6</value>
@@ -2461,19 +2530,19 @@
     <value>181, 22</value>
   </data>
   <data name="peptideSettingsMenuItem.Text" xml:space="preserve">
-    <value>肽段设置(&amp;P)……</value>
+    <value>肽段设置(&amp;P)…</value>
   </data>
   <data name="transitionSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>
   </data>
   <data name="transitionSettingsMenuItem.Text" xml:space="preserve">
-    <value>离子对设置(&amp;T)……</value>
+    <value>离子对设置(&amp;T)…</value>
   </data>
   <data name="annotationsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>
   </data>
   <data name="annotationsToolStripMenuItem.Text" xml:space="preserve">
-    <value>注释(&amp;A)……</value>
+    <value>注释(&amp;A)…</value>
   </data>
   <data name="toolStripSeparator37.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 6</value>
@@ -2494,7 +2563,7 @@
     <value>178, 22</value>
   </data>
   <data name="placeholderToolsMenuItem.Text" xml:space="preserve">
-    <value>&lt;占位符&gt;</value>
+    <value>&lt;placeholder&gt;</value>
   </data>
   <data name="toolStripSeparatorTools.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
@@ -2506,7 +2575,7 @@
     <value>178, 22</value>
   </data>
   <data name="updatesToolsMenuItem.Text" xml:space="preserve">
-    <value>更新(&amp;U)……</value>
+    <value>更新(&amp;U)…</value>
   </data>
   <data name="updatesToolsMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2515,13 +2584,13 @@
     <value>178, 22</value>
   </data>
   <data name="toolStoreMenuItem.Text" xml:space="preserve">
-    <value>工具商店(&amp;T)……</value>
+    <value>工具商店(&amp;T)…</value>
   </data>
   <data name="configureToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 22</value>
   </data>
   <data name="configureToolsMenuItem.Text" xml:space="preserve">
-    <value>外部工具(&amp;E)……</value>
+    <value>外部工具(&amp;E)…</value>
   </data>
   <data name="toolStripSeparator46.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
@@ -2539,7 +2608,7 @@
     <value>178, 22</value>
   </data>
   <data name="optionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>选项(&amp;O)……</value>
+    <value>选项(&amp;O)…</value>
   </data>
   <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 20</value>
@@ -2602,7 +2671,7 @@
     <value>1</value>
   </data>
   <data name="menuMain.Text" xml:space="preserve">
-    <value>菜单条1</value>
+    <value>menuStrip1</value>
   </data>
   <data name=">>menuMain.Name" xml:space="preserve">
     <value>menuMain</value>
@@ -3684,6 +3753,12 @@
   <data name=">>fileToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name=">>startPageMenuItem.Name" xml:space="preserve">
+    <value>startPageMenuItem</value>
+  </data>
+  <data name=">>startPageMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name=">>newMenuItem.Name" xml:space="preserve">
     <value>newMenuItem</value>
   </data>
@@ -3838,6 +3913,12 @@
     <value>chromatogramsToolStripMenuItem</value>
   </data>
   <data name=">>chromatogramsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>chorusRequestToolStripMenuItem.Name" xml:space="preserve">
+    <value>chorusRequestToolStripMenuItem</value>
+  </data>
+  <data name=">>chorusRequestToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>mruBeforeToolStripSeparator.Name" xml:space="preserve">
@@ -4026,6 +4107,30 @@
   <data name=">>sortProteinsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name=">>sortProteinsByNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByNameToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>sortProteinsByAccessionToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByAccessionToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByAccessionToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>sortProteinsByPreferredNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByPreferredNameToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByPreferredNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>sortProteinsByGeneToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByGeneToolStripMenuItem</value>
+  </data>
+  <data name=">>sortProteinsByGeneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name=">>toolStripSeparator43.Name" xml:space="preserve">
     <value>toolStripSeparator43</value>
   </data>
@@ -4048,6 +4153,12 @@
     <value>reintegrateToolStripMenuItem</value>
   </data>
   <data name=">>reintegrateToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>compareModelsToolStripMenuItem.Name" xml:space="preserve">
+    <value>compareModelsToolStripMenuItem</value>
+  </data>
+  <data name=">>compareModelsToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>toolStripSeparator35.Name" xml:space="preserve">
@@ -4186,6 +4297,30 @@
     <value>peptidesMenuItem</value>
   </data>
   <data name=">>peptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByNameToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByAccessionToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByAccessionToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByAccessionToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByPreferredNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByPreferredNameToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByPreferredNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>showTargetsByGeneToolStripMenuItem.Name" xml:space="preserve">
+    <value>showTargetsByGeneToolStripMenuItem</value>
+  </data>
+  <data name=">>showTargetsByGeneToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>textZoomToolStripMenuItem.Name" xml:space="preserve">

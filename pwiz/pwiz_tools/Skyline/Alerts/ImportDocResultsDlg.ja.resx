@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>インポートしたドキュメントをどのように処理しますか？</value>
+    <value>このインポート用のドキュメント結果の処理方法はどのようにしますか？</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -241,7 +241,7 @@
     <value>2</value>
   </data>
   <data name="radioMergeByName.Text" xml:space="preserve">
-    <value>繰り返し測定名で既存の結果と結合する</value>
+    <value>繰り返し測定名別既存結果と統合</value>
   </data>
   <data name=">>radioMergeByName.Name" xml:space="preserve">
     <value>radioMergeByName</value>
@@ -268,7 +268,7 @@
     <value>3</value>
   </data>
   <data name="radioMergeByIndex.Text" xml:space="preserve">
-    <value>繰り返し測定順で既存の結果と結合する</value>
+    <value>繰り返し測定順別既存結果と統合</value>
   </data>
   <data name=">>radioMergeByIndex.Name" xml:space="preserve">
     <value>radioMergeByIndex</value>
@@ -295,7 +295,7 @@
     <value>4</value>
   </data>
   <data name="radioAdd.Text" xml:space="preserve">
-    <value>新しい繰り返し測定を追加</value>
+    <value>新規繰り返し測定を追加</value>
   </data>
   <data name=">>radioAdd.Name" xml:space="preserve">
     <value>radioAdd</value>

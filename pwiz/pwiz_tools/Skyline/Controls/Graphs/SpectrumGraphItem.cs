@@ -412,6 +412,18 @@ namespace pwiz.Skyline.Controls.Graphs
             axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;
+            SetAxisText(axis, title);
+        }
+
+        /// <summary>
+        /// Sets the title text of an axis, ensuring that it is italicized, if the text is "m/z".
+        /// Someone actually reported a reviewer of a manuscript mentioning that the m/z axis
+        /// title should be in italics.
+        /// </summary>
+        public static void SetAxisText(Axis axis, string title)
+        {
+            if (string.Equals(title, "m/z")) // Not L10N
+                axis.Title.FontSpec.IsItalic = true;
             axis.Title.Text = title;
         }
     }

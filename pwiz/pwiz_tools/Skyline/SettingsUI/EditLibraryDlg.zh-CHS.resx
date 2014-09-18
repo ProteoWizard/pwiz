@@ -235,7 +235,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
-    <value>浏览(&amp;B)……</value>
+    <value>浏览(&amp;B)…</value>
   </data>
   <data name=">>btnOk.Name" xml:space="preserve">
     <value>btnOk</value>

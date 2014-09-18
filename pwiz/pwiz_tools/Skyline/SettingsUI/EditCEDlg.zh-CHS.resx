@@ -259,9 +259,9 @@
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
     <value>利用分类中的方程式，用斜度和截距值从
-母离子质核比中计算经预测的最优碰撞能量：
+母离子质荷比中计算经预测的最优碰撞能量：
 
-碰撞能量 = 斜度 * 母离子质核比 + 截距
+碰撞能量 = 斜度 * 母离子质荷比 + 截距
 
 允许使用适用于多个母离子电荷态的方程式。如果母离子
 电荷态未出现在此列表中，则应采用最接近的匹配项。</value>
@@ -450,7 +450,7 @@
   <data name="textStepSize.ToolTip" xml:space="preserve">
     <value>在碰撞能量最优化方法（经预测的最优碰撞能量已采用该方法进行测量）
 中使用的电压区间，以及预测值两侧的
-步数值分别用步长分隔
+该值的数量分别用步长分隔
 碰撞能量伏特</value>
   </data>
   <data name=">>textStepSize.Name" xml:space="preserve">
@@ -502,11 +502,11 @@
     <value>11</value>
   </data>
   <data name="btnShowGraph.Text" xml:space="preserve">
-    <value>显示图形(&amp;S)……</value>
+    <value>显示图形(&amp;S)…</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
     <value>在此文档中显示目前已导入的肽的最优化结果数据的
-线性回归图形</value>
+线性回归图</value>
   </data>
   <data name=">>btnShowGraph.Name" xml:space="preserve">
     <value>btnShowGraph</value>

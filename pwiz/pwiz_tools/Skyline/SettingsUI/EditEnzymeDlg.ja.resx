@@ -132,7 +132,7 @@
     <value>4</value>
   </data>
   <data name="labelCleavage.Text" xml:space="preserve">
-    <value>次のアミノ酸残基のC末端を切断する(&amp;C)：</value>
+    <value>C末端の開裂先(&amp;C)：</value>
   </data>
   <data name=">>labelCleavage.Name" xml:space="preserve">
     <value>labelCleavage</value>
@@ -159,7 +159,7 @@
     <value>5</value>
   </data>
   <data name="textCleavage.ToolTip" xml:space="preserve">
-    <value>切断が発生する一連のアミノ酸残基 (セパレータなし) です。</value>
+    <value>開裂が発生するアミノ酸残基の鎖（セパレータなし）</value>
   </data>
   <data name=">>textCleavage.Name" xml:space="preserve">
     <value>textCleavage</value>
@@ -186,7 +186,7 @@
     <value>6</value>
   </data>
   <data name="labelRestrict.Text" xml:space="preserve">
-    <value>下流のアミノ酸残基が次の場合を除く(&amp;O)：</value>
+    <value>次の場合のみ(&amp;O)：</value>
   </data>
   <data name=">>labelRestrict.Name" xml:space="preserve">
     <value>labelRestrict</value>
@@ -210,7 +210,7 @@
     <value>7</value>
   </data>
   <data name="textRestrict.ToolTip" xml:space="preserve">
-    <value>切断アミノ酸残基に隣接しているときに
+    <value>N末端切断より前にあるときに
 切断を抑制するアミノ酸残基の
 リストです (セパレータなし)。</value>
   </data>
@@ -348,7 +348,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ペプチド設定フォームでこのプロテアーゼ酵素の表示に使用する名前です</value>
+    <value>ペプチド設定形式でこのプロテアーゼ酵素の表示に使用する名前</value>
   </data>
   <data name=">>textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -457,7 +457,7 @@
     <value>10</value>
   </data>
   <data name="labelRestrictN.Text" xml:space="preserve">
-    <value>上流のアミノ酸残基が次の場合を除く(&amp;E)：</value>
+    <value>次が上流の場合のみ(&amp;E)：</value>
   </data>
   <data name=">>labelRestrictN.Name" xml:space="preserve">
     <value>labelRestrictN</value>
@@ -487,7 +487,7 @@
     <value>8</value>
   </data>
   <data name="labelCleavageN.Text" xml:space="preserve">
-    <value>次のアミノ酸残基のN末端を切断する(&amp;N)：</value>
+    <value>N末端の開裂先(&amp;N)：</value>
   </data>
   <data name=">>labelCleavageN.Name" xml:space="preserve">
     <value>labelCleavageN</value>
@@ -514,7 +514,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>消化酵素の設定</value>
+    <value>酵素を編集</value>
   </data>
   <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

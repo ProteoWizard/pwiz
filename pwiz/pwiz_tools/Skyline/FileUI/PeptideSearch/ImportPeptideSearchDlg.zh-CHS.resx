@@ -431,7 +431,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>最大丢失剪切数量(&amp;M)：</value>
+    <value>最大遗漏的酶解位点数(&amp;M)：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>

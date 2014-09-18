@@ -229,7 +229,7 @@
     <value>4</value>
   </data>
   <data name="btnBrowseDb.Text" xml:space="preserve">
-    <value>打开(&amp;O)……</value>
+    <value>打开(&amp;O)…</value>
   </data>
   <data name=">>btnBrowseDb.Name" xml:space="preserve">
     <value>btnBrowseDb</value>
@@ -337,7 +337,7 @@
     <value>1</value>
   </data>
   <data name="btnCalibrate.Text" xml:space="preserve">
-    <value>校准(&amp;B)……</value>
+    <value>校准(&amp;B)…</value>
   </data>
   <data name=">>btnCalibrate.Name" xml:space="preserve">
     <value>btnCalibrate</value>
@@ -361,7 +361,7 @@
     <value>9</value>
   </data>
   <data name="btnAddResults.Text" xml:space="preserve">
-    <value>添加(&amp;A)……</value>
+    <value>添加(&amp;A)…</value>
   </data>
   <data name=">>btnAddResults.Name" xml:space="preserve">
     <value>btnAddResults</value>
@@ -439,7 +439,7 @@
     <value>5</value>
   </data>
   <data name="btnCreateDb.Text" xml:space="preserve">
-    <value>创建(&amp;C)……</value>
+    <value>创建(&amp;C)…</value>
   </data>
   <data name=">>btnCreateDb.Name" xml:space="preserve">
     <value>btnCreateDb</value>
@@ -466,19 +466,19 @@
     <value>189, 22</value>
   </data>
   <data name="addResultsContextMenuItem.Text" xml:space="preserve">
-    <value>添加结果(&amp;R)……</value>
+    <value>添加结果(&amp;R)…</value>
   </data>
   <data name="addSpectralLibraryContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>189, 22</value>
   </data>
   <data name="addSpectralLibraryContextMenuItem.Text" xml:space="preserve">
-    <value>添加谱图库(&amp;L)……</value>
+    <value>添加谱图库(&amp;L)…</value>
   </data>
   <data name="addIRTDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>189, 22</value>
   </data>
   <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
-    <value>添加 iRT 数据库(&amp;D)……</value>
+    <value>添加 iRT 数据库(&amp;D)…</value>
   </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>190, 70</value>
@@ -502,7 +502,7 @@
     <value>0</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
-    <value>肽……</value>
+    <value>肽…</value>
   </data>
   <data name="btnPeptides.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

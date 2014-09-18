@@ -310,7 +310,7 @@
     <value>5</value>
   </data>
   <data name="btnRename.Text" xml:space="preserve">
-    <value>重命名(&amp;N)……</value>
+    <value>重命名(&amp;N)…</value>
   </data>
   <data name=">>btnRename.Name" xml:space="preserve">
     <value>btnRename</value>
@@ -388,7 +388,7 @@
     <value>8</value>
   </data>
   <data name="btnMinimize.Text" xml:space="preserve">
-    <value>最小化(&amp;Z)……</value>
+    <value>最小化(&amp;Z)…</value>
   </data>
   <data name=">>btnMinimize.Name" xml:space="preserve">
     <value>btnMinimize</value>
@@ -418,7 +418,7 @@
     <value>7</value>
   </data>
   <data name="btnRescore.Text" xml:space="preserve">
-    <value>再次计分(&amp;S)……</value>
+    <value>再次计分(&amp;S)…</value>
   </data>
   <data name=">>btnRescore.Name" xml:space="preserve">
     <value>btnRescore</value>

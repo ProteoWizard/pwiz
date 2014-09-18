@@ -145,7 +145,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="tbxFasta.ToolTip" xml:space="preserve">
-    <value>FASTA配列テキストがファイルから貼り付けまたは読み込まれました</value>
+    <value>FASTAシークエンステキストがファイルから貼り付けまたは読み込まれました</value>
   </data>
   <data name="tbxFasta.WordWrap" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -280,7 +280,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTAレコードは「&gt;」で始まり、タンパク質の名前とタンパク質の説明（省略可）が続きます。</value>
+    <value>FASTAレコードは「&gt;」で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -307,7 +307,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大未切断サイト数：</value>
+    <value>最大ミス開裂数：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>

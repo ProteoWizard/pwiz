@@ -133,7 +133,7 @@
     <value>0</value>
   </data>
   <data name="btnFilter.Text" xml:space="preserve">
-    <value>除く(&amp;F)</value>
+    <value>フィルタ(&amp;F)</value>
   </data>
   <data name=">>btnFilter.Name" xml:space="preserve">
     <value>btnFilter</value>
@@ -214,7 +214,7 @@
     <value>3</value>
   </data>
   <data name="labelIssue.Text" xml:space="preserve">
-    <value>次のペプチドは現在のフィルタ基準を満たしませんでした：</value>
+    <value>以下のペプチドは現在のフィルタ基準を満たしませんでした：</value>
   </data>
   <data name=">>labelIssue.Name" xml:space="preserve">
     <value>labelIssue</value>
@@ -244,7 +244,7 @@
     <value>4</value>
   </data>
   <data name="labelQuestion.Text" xml:space="preserve">
-    <value>貼り付けたリストから除きますか？</value>
+    <value>貼り付けたリストからフィルタを行いますか？</value>
   </data>
   <data name=">>labelQuestion.Name" xml:space="preserve">
     <value>labelQuestion</value>

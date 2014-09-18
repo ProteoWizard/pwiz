@@ -148,7 +148,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>309, 229</value>
+    <value>324, 229</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -175,7 +175,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>390, 229</value>
+    <value>405, 229</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
@@ -205,7 +205,7 @@
     <value>390, 54</value>
   </data>
   <data name="btnEditAnnotationList.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>75, 40</value>
+    <value>90, 23</value>
   </data>
   <data name="btnEditAnnotationList.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -238,7 +238,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>注釈とは、Skylineドキュメントの各要素に付与できる追加データです。このダイアログでは、このドキュメントで使用する注釈を設定したり、新しい注釈を定義できます。</value>
+    <value>注釈とは、Skylineドキュメントの各要素に付与できる追加データです。このダイアログを使用して、このドキュメントで利用可能な注釈を管理したり、新しい注釈を定義することができます。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -259,7 +259,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>477, 264</value>
+    <value>492, 264</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
