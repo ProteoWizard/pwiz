@@ -529,7 +529,7 @@
     <value>gridViewMeasuredPeptides</value>
   </data>
   <data name=">>gridViewMeasuredPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name=">>gridViewMeasuredPeptides.Parent" xml:space="preserve">
     <value>$this</value>
@@ -619,6 +619,6 @@
     <value>EditIonMobilityLibraryDlg</value>
   </data>
   <data name=">>$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

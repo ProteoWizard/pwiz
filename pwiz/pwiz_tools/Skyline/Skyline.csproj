@@ -1422,6 +1422,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.zh-CHS.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
@@ -1449,6 +1450,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\StartPage.zh-CHS.resx">
       <DependentUpon>StartPage.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.ja.resx">
       <DependentUpon>TutorialLinkResources.resx</DependentUpon>
@@ -1468,24 +1470,28 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\AddPeakCompareDlg.zh-CHS.resx">
       <DependentUpon>AddPeakCompareDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ComparePeakPickingDlg.ja.resx">
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ComparePeakPickingDlg.zh-CHS.resx">
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.ja.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.zh-CHS.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.ja.resx">
       <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.zh-CHS.resx">
       <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
@@ -1495,6 +1501,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.zh-CHS.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
@@ -1795,6 +1802,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsNameDlg.ja.resx">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
@@ -1995,6 +2003,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.zh-CHS.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.ja.resx">
       <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
@@ -2010,6 +2019,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CustomIonMzDlg.zh-CHS.resx">
       <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.ja.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
@@ -2026,6 +2036,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DiaIsolationWindowsGraphForm.zh-CHS.resx">
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.ja.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
@@ -2044,18 +2055,21 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.zh-CHS.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.ja.resx">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.zh-CHS.resx">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.ja.resx">
       <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.zh-CHS.resx">
       <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.ja.resx">
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
@@ -2135,6 +2149,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.zh-CHS.resx">
       <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditRTDlg.ja.resx">
       <DependentUpon>EditRTDlg.cs</DependentUpon>
@@ -2156,6 +2171,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.zh-CHS.resx">
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
@@ -2214,6 +2230,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.zh-CHS.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationsDlg.ja.resx">
       <DependentUpon>AddOptimizationsDlg.cs</DependentUpon>
@@ -2223,6 +2240,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationsDlg.zh-CHS.resx">
       <DependentUpon>AddOptimizationsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.ja.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
@@ -2250,6 +2268,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\StartPageSettingsUI.zh-CHS.resx">
       <DependentUpon>StartPageSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.ja.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
@@ -2257,6 +2276,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.zh-CHS.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.ja.resx">
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
@@ -2497,12 +2517,14 @@
     </Content>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.zh-CHS.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.ja.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.zh-CHS.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>

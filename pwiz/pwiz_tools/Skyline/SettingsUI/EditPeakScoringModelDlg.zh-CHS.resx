@@ -242,7 +242,7 @@
     <value>gridPeakCalculators</value>
   </data>
   <data name=">>gridPeakCalculators.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name=">>gridPeakCalculators.Parent" xml:space="preserve">
     <value>$this</value>

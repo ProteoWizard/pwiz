@@ -163,7 +163,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name=">>boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name=">>boundDataGridView.Parent" xml:space="preserve">
     <value>$this</value>

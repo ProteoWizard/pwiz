@@ -2077,6 +2077,6 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>TransitionSettingsUI</value>
   </data>
   <data name=">>$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

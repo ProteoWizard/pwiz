@@ -136,7 +136,7 @@
     <value>sequenceTree</value>
   </data>
   <data name=">>sequenceTree.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.SequenceTree, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.SequenceTree, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name=">>sequenceTree.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -452,6 +452,6 @@
     <value>SequenceTreeForm</value>
   </data>
   <data name=">>$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
