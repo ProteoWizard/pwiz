@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 // ReSharper disable NonLocalizedString
 namespace KeepResx
@@ -34,11 +35,12 @@ namespace KeepResx
         };
 
         private const string ExtResx = ".resx";
-        private static readonly string[] ExtNotResx = { ".ja.resx", ".zh-CHS.resx" };
+        private static readonly string[] ExtNotResx = new string[0]; // { ".ja.resx", ".zh-CHS.resx" };
         private const string ExtNew = ".ja.resx";
 
         private static bool MoveResx { get { return false; } }
-        private static bool RemoveNonResx { get { return true; } }
+        private static bool RemoveNonResx { get { return false; } }
+        private static bool FixResx { get { return true; } }
 
         static void Main(string[] args)
         {
@@ -74,6 +76,10 @@ namespace KeepResx
                         string newFileName = fileName.Substring(0, fileName.Length - ExtResx.Length) + ExtNew;
                         DeleteFileIfPossible(newFileName);
                         File.Move(fileName, newFileName);
+                    }
+                    else if (FixResx)
+                    {
+                        FixNewlines(fileName);
                     }
                     containsResX = true;
                     continue;
@@ -136,6 +142,20 @@ namespace KeepResx
             }
             // ReSharper disable once EmptyGeneralCatchClause
             catch { }
+        }
+
+        private static void FixNewlines(string fileName)
+        {
+            try
+            {
+                string fileText = File.ReadAllText(fileName);
+                fileText = Regex.Replace(fileText, @"\r\n?|\n", "\r\n");
+                File.WriteAllText(fileName, fileText);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Failure writing {0}", fileName);
+            }
         }
     }
 }
