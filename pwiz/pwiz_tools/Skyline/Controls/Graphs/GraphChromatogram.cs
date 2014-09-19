@@ -2943,9 +2943,23 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (nearest is XAxis && IsGroupActive)
                         {
-                            var changeCurves = IsMultiGroup
-                                               ? GetCurves(nearestGraphPane).ToArray()
-                                               : new[] {GetCurves(nearestGraphPane).First()};
+                            CurveItem[] changeCurves;
+                            if (IsMultiGroup)
+                            {
+                                changeCurves = GetCurves(nearestGraphPane).ToArray();
+                            }
+                            else
+                            {
+                                var firstCurve = GetCurves(nearestGraphPane).FirstOrDefault();
+                                if (null == firstCurve)
+                                {
+                                    changeCurves = new CurveItem[0];
+                                }
+                                else
+                                {
+                                    changeCurves = new[] {firstCurve};
+                                }
+                            }
                             var listDragInfos = new List<PeakBoundsDragInfo>();
                             foreach (var curveItem in changeCurves)
                             {
