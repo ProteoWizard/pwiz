@@ -94,8 +94,9 @@ const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
     {MS_X_Tandem, "X! Tandem;X!Tandem;xtandem;X! Tandem (k-score)"},
     {MS_Spectrum_Mill_for_MassHunter_Workstation, "Spectrum Mill;SpectrumMill"},
     {MS_Proteios, "Proteios"},
-    {MS_MS_GF_, "MS-GF+"}
-    // TODO: Comet, PROBID, InsPecT, Crux, Tide need CV terms
+    {MS_MS_GF_, "MS-GF+"},
+    {MS_Comet, "Comet"}
+    // TODO: PROBID, InsPecT, Crux, Tide need CV terms
 };
 
 const size_t analysisSoftwareTranslationTableSize = sizeof(analysisSoftwareTranslationTable)/sizeof(AnalysisSoftwareTranslation);
@@ -193,6 +194,12 @@ const ScoreTranslation scoreTranslationTable[] =
     {MS_MS_GF_, MS_MS_GF_SpecEValue, "SpecEValue"},
     {MS_MS_GF_, MS_MS_GF_PepQValue, "PepQValue"},
     {MS_MS_GF_, MS_MS_GF_PEP, "PEP"},
+    {MS_Comet, MS_Comet_xcorr, "xcorr"},
+    {MS_Comet, MS_Comet_deltacn, "deltacn"},
+    {MS_Comet, MS_Comet_deltacnstar, "deltacnstar"},
+    {MS_Comet, MS_Comet_sprank, "sprank"},
+    {MS_Comet, MS_Comet_spscore, "spscore"},
+    {MS_Comet, MS_Comet_expectation_value, "expect"}
 };
 
 const size_t scoreTranslationTableSize = sizeof(scoreTranslationTable)/sizeof(ScoreTranslation);
@@ -1042,26 +1049,37 @@ struct HandlerSearchSummary : public SAXParser::Handler
         bal::split(tokens, ionSeriesList, bal::is_any_of(","));
         BOOST_FOREACH(const string& ionSeries, tokens)
         {
-            if (ionSeries == "immonium")               _sip->additionalSearchParams.set(MS_param__immonium_ion);
-            else if (bal::contains(ionSeries, "NH3"))  _sip->additionalSearchParams.set(MS_NH3_neutral_loss);
-            else if (bal::contains(ionSeries, "H2O"))  _sip->additionalSearchParams.set(MS_H2O_neutral_loss);
-            else if (ionSeries == "a")                 _sip->additionalSearchParams.set(MS_param__a_ion);
-            else if (ionSeries == "b")                 _sip->additionalSearchParams.set(MS_param__b_ion);
-            else if (ionSeries == "c")                 _sip->additionalSearchParams.set(MS_param__c_ion);
-            else if (ionSeries == "x")                 _sip->additionalSearchParams.set(MS_param__x_ion);
-            else if (ionSeries == "y")                 _sip->additionalSearchParams.set(MS_param__y_ion);
-            else if (ionSeries == "z")                 _sip->additionalSearchParams.set(MS_param__z_ion);
-            else if (ionSeries == "z+1" ||
-                     ionSeries == "z*")                _sip->additionalSearchParams.set(MS_param__z_1_ion);
-            else if (ionSeries == "z+2")               _sip->additionalSearchParams.set(MS_param__z_2_ion);
-            else if (ionSeries == "d")                 _sip->additionalSearchParams.set(MS_param__d_ion);
-            else if (ionSeries == "v")                 _sip->additionalSearchParams.set(MS_param__v_ion);
-            else if (ionSeries == "w")                 _sip->additionalSearchParams.set(MS_param__w_ion);
+            if (ionSeries == "immonium")                    _sip->additionalSearchParams.set(MS_param__immonium_ion);
+            else if (bal::starts_with(ionSeries, "a"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__a_ion);
+            else if (bal::starts_with(ionSeries, "b"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__b_ion);
+            else if (bal::starts_with(ionSeries, "c"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__c_ion);
+            else if (bal::starts_with(ionSeries, "x"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__x_ion);
+            else if (bal::starts_with(ionSeries, "y"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__y_ion);
+            else if (bal::starts_with(ionSeries, "z+1") ||
+                     bal::starts_with(ionSeries, "z*"))     _sip->additionalSearchParams.cvParams.push_back(MS_param__z_1_ion);
+            else if (bal::starts_with(ionSeries, "z+2"))    _sip->additionalSearchParams.cvParams.push_back(MS_param__z_2_ion);
+            else if (bal::starts_with(ionSeries, "z"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__z_ion);
+            else if (bal::starts_with(ionSeries, "d"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__d_ion);
+            else if (bal::starts_with(ionSeries, "v"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__v_ion);
+            else if (bal::starts_with(ionSeries, "w"))      _sip->additionalSearchParams.cvParams.push_back(MS_param__w_ion);
+
+            if (bal::contains(ionSeries, "NH3"))            _sip->additionalSearchParams.cvParams.push_back(MS_NH3_neutral_loss);
+            if (bal::contains(ionSeries, "H2O"))            _sip->additionalSearchParams.cvParams.push_back(MS_H2O_neutral_loss);
         }
     }
 
-    void translateParameter(const string& name, const string& value)
+    static const string& getValueOrDefault(const std::map<string, string>& keyValueMap, const string& key, const string& defaultValue)
     {
+        std::map<string, string>::const_iterator findItr = keyValueMap.find(key);
+        return findItr == keyValueMap.end() ? defaultValue : findItr->second;
+    }
+
+    void translateParameters()
+    {
+        map<string, string> kvPairs;
+        BOOST_FOREACH(const UserParam& userParam, _sip->additionalSearchParams.userParams)
+            kvPairs[bal::to_lower_copy(userParam.name)] = userParam.value;
+
         // Unless the CV starts to map the search engine specific parameters to the proper CV terms,
         // there's not really a way to avoid hand coding these mappings
 
@@ -1070,49 +1088,42 @@ struct HandlerSearchSummary : public SAXParser::Handler
         switch (searchEngine)
         {
             case MS_Mascot:
-                // we depend on TOL being parsed before TOLU
-                if (bal::iequals(name, "tol"))
                 {
-                    _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
-                    _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
-                }
-                else if (bal::iequals(name, "tolu"))
-                {
-                    _sip->parentTolerance.cvParams[0].units = 
-                    _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
-                    if (bal::iequals(value, "mmu"))
-                        _sip->parentTolerance.cvParams[0].value = 
-                        _sip->parentTolerance.cvParams[1].value = lexical_cast<string>(_sip->parentTolerance.cvParams[0].valueAs<double>() / 1000);
-                }
-                else if (bal::iequals(name, "itol"))
-                {
-                    _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
-                    _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
-                }
-                else if (bal::iequals(name, "itolu"))
-                {
-                    _sip->fragmentTolerance.cvParams[0].units = 
-                    _sip->fragmentTolerance.cvParams[1].units = translateToleranceUnits(value);
+                    string parentTolerance = getValueOrDefault(kvPairs, "tol", "");
+                    const string& parentToleranceUnits = getValueOrDefault(kvPairs, "tolu", "");
+                    if (!parentTolerance.empty() && !parentToleranceUnits.empty())
+                    {
+                        CVID parentUnits = translateToleranceUnits(parentToleranceUnits);
+                        if (bal::iequals(parentToleranceUnits, "mmu"))
+                            parentTolerance = lexical_cast<string>(lexical_cast<double>(parentTolerance) / 1000);
+                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance, parentUnits);
+                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance, parentUnits);
+                    }
 
-                    // special case: divide mmu by 1000 since the official unit is daltons
-                    if (bal::iequals(value, "mmu"))
-                        _sip->fragmentTolerance.cvParams[0].value = 
-                        _sip->fragmentTolerance.cvParams[1].value = lexical_cast<string>(_sip->fragmentTolerance.cvParams[0].valueAs<double>() / 1000);
-                }
-                else if (bal::iequals(name, "instrument"))
-                {
+                    string fragmentTolerance = getValueOrDefault(kvPairs, "itol", "");
+                    const string& fragmentToleranceUnits = getValueOrDefault(kvPairs, "itolu", "");
+                    if (!fragmentTolerance.empty() && !fragmentToleranceUnits.empty())
+                    {
+                        CVID fragmentUnits = translateToleranceUnits(fragmentToleranceUnits);
+                        if (bal::iequals(fragmentToleranceUnits, "mmu"))
+                            fragmentTolerance = lexical_cast<string>(lexical_cast<double>(fragmentTolerance) / 1000);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentTolerance, fragmentUnits);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentTolerance, fragmentUnits);
+                    }
+
                     // set predicted fragment series
-                    if (bal::iequals(value, "Default"))              translateIonSeriesConsidered("a,a-NH3,b,b-NH3,y,y-NH3");
-                    else if (bal::iequals(value, "ESI-4-SECT"))      translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y,z");
-                    else if (bal::istarts_with(value, "ESI"))        translateIonSeriesConsidered("b,b-NH3,b-H2O,y,y-NH3,y-H2O");
-                    else if (bal::icontains(value, "ECD") ||
-                             bal::icontains(value, "ETD"))           translateIonSeriesConsidered("c,y,z+1,z+2");
-                    else if (bal::iequals(value, "MALDI-QUAD-TOF"))  translateIonSeriesConsidered("immonium,b,b-NH3,b-H2O,y,y-NH3,y-H2O");
+                    const string& instrument = getValueOrDefault(kvPairs, "instrument", "");
+                    if (bal::iequals(instrument, "Default"))              translateIonSeriesConsidered("a,a-NH3,b,b-NH3,y,y-NH3");
+                    else if (bal::iequals(instrument, "ESI-4-SECT"))      translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y,z");
+                    else if (bal::istarts_with(instrument, "ESI"))        translateIonSeriesConsidered("b,b-NH3,b-H2O,y,y-NH3,y-H2O");
+                    else if (bal::icontains(instrument, "ECD") ||
+                             bal::icontains(instrument, "ETD"))           translateIonSeriesConsidered("c,y,z+1,z+2");
+                    else if (bal::iequals(instrument, "MALDI-QUAD-TOF"))  translateIonSeriesConsidered("immonium,b,b-NH3,b-H2O,y,y-NH3,y-H2O");
                     else
                     {
-                        if (bal::icontains(value, "TOF"))            translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y");
-                        if (bal::iends_with(value, "TOF"))           translateIonSeriesConsidered("y-NH3, y-H2O");
-                        if (bal::iends_with(value, "TOF-TOF"))       translateIonSeriesConsidered("d,v,w");
+                        if (bal::icontains(instrument, "TOF"))            translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y");
+                        if (bal::iends_with(instrument, "TOF"))           translateIonSeriesConsidered("y-NH3, y-H2O");
+                        if (bal::iends_with(instrument, "TOF-TOF"))       translateIonSeriesConsidered("d,v,w");
                     }
                 }
                 // TODO:
@@ -1124,89 +1135,105 @@ struct HandlerSearchSummary : public SAXParser::Handler
             case MS_MyriMatch:
             case MS_TagRecon:
             case MS_Pepitome:
-                // we depend on PrecursorMzTolerance being parsed before PrecursorMzToleranceUnits
-                if (bal::iends_with(name, "PrecursorMzTolerance"))
                 {
                     // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
-                    try
+                    const string& precursorMzTolerance = getValueOrDefault(kvPairs, "config: precursormztolerance", "");
+                    const string& precursorMzToleranceUnits = getValueOrDefault(kvPairs, "config: precursormztoleranceunits", "");
+
+                    if (!precursorMzTolerance.empty() && !precursorMzToleranceUnits.empty())
                     {
-                        MZTolerance parentTolerance = lexical_cast<MZTolerance>(value);
-                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance.value);
-                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance.value);
-                        _sip->parentTolerance.cvParams[0].units = 
-                        _sip->parentTolerance.cvParams[1].units = parentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million;
+                        CVID parentUnits = translateToleranceUnits(precursorMzToleranceUnits);
+                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, precursorMzTolerance, parentUnits);
+                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, precursorMzTolerance, parentUnits);
                     }
-                    catch(runtime_error&)
+                    else if (!precursorMzTolerance.empty())
                     {
-                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
-                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
+                        MZTolerance parentTolerance = lexical_cast<MZTolerance>(precursorMzTolerance);
+                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance.value, parentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
+                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance.value, parentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
                     }
-                }
-                else if (bal::iends_with(name, "PrecursorMzToleranceUnits"))
-                {
-                    _sip->parentTolerance.cvParams[0].units = 
-                    _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
-                }
-                else if (bal::iends_with(name, "FragmentMzTolerance"))
-                {
+
                     // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
-                    try
+                    const string& fragmentMzTolerance = getValueOrDefault(kvPairs, "config: fragmentmztolerance", "");
+                    const string& fragmentMzToleranceUnits = getValueOrDefault(kvPairs, "config: fragmentmztoleranceunits", "");
+
+                    if (!fragmentMzTolerance.empty() && !fragmentMzToleranceUnits.empty())
                     {
-                        MZTolerance fragmentTolerance = lexical_cast<MZTolerance>(value);
-                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentTolerance.value);
-                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentTolerance.value);
-                        _sip->fragmentTolerance.cvParams[0].units = 
-                        _sip->fragmentTolerance.cvParams[1].units = fragmentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million;
+                        CVID fragmentUnits = translateToleranceUnits(fragmentMzToleranceUnits);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentMzTolerance, fragmentUnits);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentMzTolerance, fragmentUnits);
                     }
-                    catch(runtime_error&)
+                    else if (!fragmentMzTolerance.empty())
                     {
-                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
-                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
+                        MZTolerance fragmentTolerance = lexical_cast<MZTolerance>(fragmentMzTolerance);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentTolerance.value, fragmentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentTolerance.value, fragmentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
                     }
-                }
-                else if (bal::iends_with(name, "FragmentMzToleranceUnits"))
-                {
-                    _sip->fragmentTolerance.cvParams[0].units = 
-                    _sip->fragmentTolerance.cvParams[1].units = translateToleranceUnits(value);
-                }
-                else if (bal::iends_with(name, "FragmentationRule"))
-                {
-                    if (bal::icontains(value, "cid"))     translateIonSeriesConsidered("b,y");
-                    if (bal::icontains(value, "etd"))     translateIonSeriesConsidered("c,z+1");
-                    if (bal::icontains(value, "manual"))  translateIonSeriesConsidered(value.substr(7)); // skip "manual:"
+
+                    const string& fragmentationRule = getValueOrDefault(kvPairs, "config: fragmentationrule", "cid");
+                    if (bal::icontains(fragmentationRule, "cid"))     translateIonSeriesConsidered("b,y");
+                    if (bal::icontains(fragmentationRule, "etd"))     translateIonSeriesConsidered("c,z+1");
+                    if (bal::icontains(fragmentationRule, "manual"))  translateIonSeriesConsidered(bal::replace_all_copy(fragmentationRule, "manual:", "")); // skip "manual:"
                 }
                 break;
 
             case MS_X_Tandem:
-                // we depend on "parent monoisotopic mass error"
-                // being parsed before "parent monoisotopic mass error units"
-                if (bal::iends_with(name, "parent monoisotopic mass error minus"))
-                    _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
-                else if (bal::iends_with(name, "parent monoisotopic mass error plus"))
-                    _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
-                else if (bal::iends_with(name, "parent monoisotopic mass error units"))
                 {
-                    _sip->parentTolerance.cvParams[0].units = 
-                    _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
-                }
-                else if (bal::iends_with(name, "fragment monoisotopic mass error"))
-                {
-                    _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
-                    _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
-                }
-                else if (bal::iends_with(name, "fragment monoisotopic mass error units"))
-                {
-                    _sip->fragmentTolerance.cvParams[0].units = 
-                    _sip->fragmentTolerance.cvParams[1].units = translateToleranceUnits(value);
-                }
-                else if (bal::iequals(value, "yes"))
-                {
-                    if (bal::iends_with(name, "b ions"))        translateIonSeriesConsidered("b");
-                    else if (bal::iends_with(name, "c ions"))   translateIonSeriesConsidered("c");
-                    else if (bal::iends_with(name, "y ions"))   translateIonSeriesConsidered("y");
-                    else if (bal::iends_with(name, "z ions"))   translateIonSeriesConsidered("z+1");
+                    const string& parentErrorMinus = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error minus", "");
+                    const string& parentErrorPlus = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error plus", "");
+                    const string& parentErrorUnits = getValueOrDefault(kvPairs, "spectrum, parent monoisotopic mass error units", "");
+                    CVID parentUnits = translateToleranceUnits(parentErrorUnits);
+                    if (!parentErrorMinus.empty()) _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentErrorMinus, parentUnits);
+                    if (!parentErrorPlus.empty()) _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentErrorPlus, parentUnits);
+
+                    const string& fragmentError = getValueOrDefault(kvPairs, "spectrum, fragment monoisotopic mass error", "");
+                    const string& fragmentErrorUnits = getValueOrDefault(kvPairs, "spectrum, fragment monoisotopic mass error units", "");
+                    CVID fragmentUnits = translateToleranceUnits(fragmentErrorUnits);
+                    if (!fragmentError.empty())
+                    {
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentError, fragmentUnits);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentError, fragmentUnits);
+                    }
+
+                    if (getValueOrDefault(kvPairs, "scoring, a ions", "") == "yes")   translateIonSeriesConsidered("a");
+                    if (getValueOrDefault(kvPairs, "scoring, b ions", "") == "yes")   translateIonSeriesConsidered("b");
+                    if (getValueOrDefault(kvPairs, "scoring, c ions", "") == "yes")   translateIonSeriesConsidered("c");
+                    if (getValueOrDefault(kvPairs, "scoring, x ions", "") == "yes")   translateIonSeriesConsidered("x");
+                    if (getValueOrDefault(kvPairs, "scoring, y ions", "") == "yes")   translateIonSeriesConsidered("y");
+                    if (getValueOrDefault(kvPairs, "scoring, z ions", "") == "yes")   translateIonSeriesConsidered("z+1");
                 }
                 break;
+
+            case MS_Comet:
+                {
+                    string parentTolerance = getValueOrDefault(kvPairs, "peptide_mass_tolerance", "");
+                    string parentToleranceUnits = getValueOrDefault(kvPairs, "peptide_mass_units", "");
+                    if (!parentTolerance.empty() && !parentToleranceUnits.empty())
+                    {
+                        if (parentToleranceUnits == "1") // 0 = amu, 1 = mmu, 2 = ppm
+                            parentTolerance = lexical_cast<string>(lexical_cast<double>(parentTolerance) / 1000);
+                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance, parentToleranceUnits == "2" ? UO_parts_per_million : UO_dalton);
+                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance, parentToleranceUnits == "2" ? UO_parts_per_million : UO_dalton);
+                    }
+
+                    // TODO: is using fragment_bin_tol the right way to get a fragmentTolerance?
+                    //<parameter name = "fragment_bin_offset" value = "0.400000" / >
+                    //<parameter name = "fragment_bin_tol" value = "1.000500" / >
+                    string fragmentTolerance = getValueOrDefault(kvPairs, "fragment_bin_tol", "");
+                    if (!fragmentTolerance.empty())
+                    {
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentTolerance, UO_dalton);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentTolerance, UO_dalton);
+                    }
+
+                    bool use_nl_ions = getValueOrDefault(kvPairs, "use_nl_ions", "") == "1";
+                    if (getValueOrDefault(kvPairs, "use_a_ions", "") == "1")   translateIonSeriesConsidered("a");
+                    if (getValueOrDefault(kvPairs, "use_b_ions", "") == "1")   translateIonSeriesConsidered(use_nl_ions ? "b,b-H2O,b-NH3" : "b");
+                    if (getValueOrDefault(kvPairs, "use_c_ions", "") == "1")   translateIonSeriesConsidered("c");
+                    if (getValueOrDefault(kvPairs, "use_x_ions", "") == "1")   translateIonSeriesConsidered("x");
+                    if (getValueOrDefault(kvPairs, "use_y_ions", "") == "1")   translateIonSeriesConsidered(use_nl_ions ? "y,y-H2O,y-NH3" : "y");
+                    if (getValueOrDefault(kvPairs, "use_z_ions", "") == "1")   translateIonSeriesConsidered("z+1");
+                }
 
             // TODO: add more search engines
 
@@ -1256,7 +1283,10 @@ struct HandlerSearchSummary : public SAXParser::Handler
             bal::to_lower(getAttribute(attributes, "type", type));
 
             if (searchDatabase->id.empty())
-                searchDatabase->id = searchDatabase->location.empty() ? "DB_1" : BFS_STRING(bfs::path(bal::replace_all_copy(searchDatabase->location,"\\","/")).filename());
+            {
+                searchDatabase->id = "DB_1";
+                searchDatabase->name = searchDatabase->location.empty() ? searchDatabase->id : BFS_STRING(bfs::path(bal::replace_all_copy(searchDatabase->location, "\\", "/")).filename());
+            }
 
             if (type == "aa")
                 searchDatabase->set(MS_database_type_amino_acid);
@@ -1349,13 +1379,22 @@ struct HandlerSearchSummary : public SAXParser::Handler
             getAttribute(attributes, "name", name);
             getAttribute(attributes, "value", value);
             _sip->additionalSearchParams.userParams.push_back(UserParam(name, value));
-
-            translateParameter(name, value);
         }
         else if (strict)
             throw runtime_error("[HandlerSearchSummary] Unexpected element "
                                 "name: " + name);
 
+        return Handler::Status::Ok;
+    }
+
+    virtual Status endElement(const string& name, stream_offset position)
+    {
+        if (name == "search_summary")
+        {
+            // after all parameters are read, translate the userParams to cvParams where possible;
+            // we need to wait until we have them all because interpretation of them sometimes depends on other parameters which not be read yet
+            translateParameters();
+        }
         return Handler::Status::Ok;
     }
 

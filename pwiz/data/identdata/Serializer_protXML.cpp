@@ -149,7 +149,7 @@ struct Handler_protXML : public SAXParser::Handler
             {
                 // no match with anything previously loaded
                 SearchDatabasePtr sdb(new SearchDatabase());
-                sdb->id = reference_database;
+                sdb->id = "DB_" + lexical_cast<string>(mzid.dataCollection.inputs.searchDatabase.size()+1);
                 sdb->name = reference_database;
                 sdb->version = "unknown";
                 sdb->releaseDate = "unknown";

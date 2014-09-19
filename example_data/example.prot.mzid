@@ -37,193 +37,193 @@
     </Organization>
   </AuditCollection>
   <SequenceCollection>
-    <DBSequence id="DBSeq_IPI00395455" accession="IPI00395455" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00395455" accession="IPI00395455" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00395455.1|TREMBL:Q15737;Q96AH3;Q9BTI2|REFSEQ_XP:XP_377464|ENSEMBL:ENSP00000262398 Tax_Id=9606 SUPT6H"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00220803" accession="IPI00220803" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00220803" accession="IPI00220803" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00220803.1|SWISS-PROT:P49006|REFSEQ_NP:NP_075385|ENSEMBL:ENSP00000310885 Tax_Id=9606 MARCKS-like protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00397229" accession="IPI00397229" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00397229" accession="IPI00397229" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397229.1|SWISS-PROT:P48960-2|REFSEQ_NP:NP_001775|ENSEMBL:ENSP00000242786 Tax_Id=9606 Splice isoform 2 of P48960 CD97 antigen precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00397230" accession="IPI00397230" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00397230" accession="IPI00397230" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397230.1|SWISS-PROT:P48960-3 Tax_Id=9606 Splice isoform 3 of P48960 CD97 antigen precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00299412" accession="IPI00299412" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00299412" accession="IPI00299412" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00299412.4|SWISS-PROT:P48960-1|REFSEQ_NP:NP_510966|ENSEMBL:ENSP00000242787 Tax_Id=9606 Splice isoform 1 of P48960 CD97 antigen precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00008530" accession="IPI00008530" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00008530" accession="IPI00008530" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00008530.1|SWISS-PROT:P05388|REFSEQ_NP:NP_444505;NP_000993|ENSEMBL:ENSP00000339027;ENSP00000328978 Tax_Id=9606 60S acidic ribosomal protein P0"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00396373" accession="IPI00396373" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00396373" accession="IPI00396373" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00396373.1|TREMBL:Q8NHW5|REFSEQ_XP:XP_165448|ENSEMBL:ENSP00000309759 Tax_Id=9606 BLOCK 23"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00019353" accession="IPI00019353" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00019353" accession="IPI00019353" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00019353.1|REFSEQ_NP:NP_060708|TREMBL:Q9NP48|ENSEMBL:ENSP00000007616;ENSP00000337458 Tax_Id=9606 Putative lipid kinase"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00030363" accession="IPI00030363" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00030363" accession="IPI00030363" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00030363.1|SWISS-PROT:P24752|REFSEQ_NP:NP_000010|ENSEMBL:ENSP00000265838 Tax_Id=9606 Acetyl-CoA acetyltransferase, mitochondrial precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00062003" accession="IPI00062003" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00062003" accession="IPI00062003" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00062003.1|TREMBL:Q96FG8|ENSEMBL:ENSP00000299355 Tax_Id=9606 Similar to acetyl-coenzyme A acetyltransferase 1"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00007611" accession="IPI00007611" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00007611" accession="IPI00007611" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00007611.1|SWISS-PROT:P48047|REFSEQ_NP:NP_001688|ENSEMBL:ENSP00000290299 Tax_Id=9606 ATP synthase oligomycin sensitivity conferral protein, mitochondrial precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00290583" accession="IPI00290583" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00290583" accession="IPI00290583" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00290583.1|TREMBL:Q8TAW0|ENSEMBL:ENSP00000335121 Tax_Id=9606 Similar to integral membrane protein 3"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00384327" accession="IPI00384327" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00384327" accession="IPI00384327" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00384327.1|TREMBL:Q86VK5|ENSEMBL:ENSP00000322730 Tax_Id=9606 ITM2C protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00016014" accession="IPI00016014" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00016014" accession="IPI00016014" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00016014.1|SWISS-PROT:Q9NQX7|REFSEQ_NP:NP_112188|TREMBL:Q8N288;Q9BUP8|ENSEMBL:ENSP00000322100 Tax_Id=9606 Integral membrane protein 2C"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00013847" accession="IPI00013847" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00013847" accession="IPI00013847" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00013847.1|SWISS-PROT:P31930|REFSEQ_NP:NP_003356|ENSEMBL:ENSP00000203407 Tax_Id=9606 Ubiquinol-cytochrome C reductase complex core protein I, mitochondrial precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00007940" accession="IPI00007940" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00007940" accession="IPI00007940" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00007940.1|REFSEQ_NP:NP_006450|TREMBL:O75477|ENSEMBL:ENSP00000266059 Tax_Id=9606 KE04p"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00010845" accession="IPI00010845" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00010845" accession="IPI00010845" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00010845.2|SWISS-PROT:O00217|REFSEQ_NP:NP_002487|ENSEMBL:ENSP00000315774 Tax_Id=9606 NADH-ubiquinone oxidoreductase 23 kDa subunit, mitochondrial precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00024145" accession="IPI00024145" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00024145" accession="IPI00024145" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00024145.1|SWISS-PROT:P45880-1|TREMBL:Q9BWK8|ENSEMBL:ENSP00000301937 Tax_Id=9606 Splice isoform 1 of P45880 Voltage-dependent anion-selective channel protein 2"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00216024" accession="IPI00216024" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00216024" accession="IPI00216024" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00216024.1|SWISS-PROT:P45880-2 Tax_Id=9606 Splice isoform 2 of P45880 Voltage-dependent anion-selective channel protein 2"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00216026" accession="IPI00216026" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00216026" accession="IPI00216026" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00216026.1|SWISS-PROT:P45880-3|REFSEQ_NP:NP_003366|ENSEMBL:ENSP00000298468 Tax_Id=9606 Splice isoform 3 of P45880 Voltage-dependent anion-selective channel protein 2"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00216027" accession="IPI00216027" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00216027" accession="IPI00216027" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00216027.1|SWISS-PROT:P45880-4 Tax_Id=9606 Splice isoform 4 of P45880 Voltage-dependent anion-selective channel protein 2"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00296259" accession="IPI00296259" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00296259" accession="IPI00296259" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00296259.3|REFSEQ_NP:NP_872353|TREMBL:Q8N2P6;Q7Z432;Q7Z7H5|ENSEMBL:ENSP00000289577 Tax_Id=9606 putative NFkB activating protein HNLF "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00023542" accession="IPI00023542" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00023542" accession="IPI00023542" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00023542.2|SWISS-PROT:Q9BVK6|REFSEQ_NP:NP_059980|ENSEMBL:ENSP00000330537;ENSP00000330945 Tax_Id=9606 gp25L2 protein "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00010153" accession="IPI00010153" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00010153" accession="IPI00010153" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00010153.1|SWISS-PROT:P23131|REFSEQ_NP:NP_000969|TREMBL:Q9BTQ7;Q8N4F9 Tax_Id=9606 60S ribosomal protein L23"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00329030" accession="IPI00329030" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00329030" accession="IPI00329030" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00329030.3|SWISS-PROT:Q86VZ6-1|REFSEQ_NP:NP_778231|ENSEMBL:ENSP00000283928 Tax_Id=9606 Splice isoform 1 of Q86VZ6 Juxtaposed with another zinc finger protein 1"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00332456" accession="IPI00332456" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00332456" accession="IPI00332456" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00332456.1|SWISS-PROT:Q86VZ6-2 Tax_Id=9606 Splice isoform 2 of Q86VZ6 Juxtaposed with another zinc finger protein 1"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00017342" accession="IPI00017342" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00017342" accession="IPI00017342" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00017342.1|SWISS-PROT:P35238|REFSEQ_NP:NP_001656|ENSEMBL:ENSP00000318151 Tax_Id=9606 Rho-related GTP-binding protein RhoG"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00028091" accession="IPI00028091" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00028091" accession="IPI00028091" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00028091.1|SWISS-PROT:P32391|REFSEQ_NP:NP_005712|ENSEMBL:ENSP00000263238 Tax_Id=9606 Actin-like protein 3"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00029196" accession="IPI00029196" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00029196" accession="IPI00029196" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00029196.2|SWISS-PROT:Q04759|REFSEQ_NP:NP_006248|ENSEMBL:ENSP00000263125 Tax_Id=9606 Protein kinase C, theta type"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00011363" accession="IPI00011363" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00011363" accession="IPI00011363" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00011363.1|TREMBL:O94987|ENSEMBL:ENSP00000242558 Tax_Id=9606 Hypothetical protein KIAA0913"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00102427" accession="IPI00102427" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00102427" accession="IPI00102427" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00102427.3|REFSEQ_XP:XP_034640|ENSEMBL:ENSP00000332008 Tax_Id=9606 similar to ribosomal protein L4"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00003918" accession="IPI00003918" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00003918" accession="IPI00003918" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00003918.2|SWISS-PROT:P36578|REFSEQ_NP:NP_000959|ENSEMBL:ENSP00000311430 Tax_Id=9606 60S ribosomal protein L4"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00154608" accession="IPI00154608" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00154608" accession="IPI00154608" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00154608.3|REFSEQ_NP:NP_076415|TREMBL:Q8TBC5;Q9H9A0;Q9BRK7|ENSEMBL:ENSP00000240727 Tax_Id=9606 Hypothetical protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00163111" accession="IPI00163111" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00163111" accession="IPI00163111" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00163111.1|TREMBL:Q96NJ8|ENSEMBL:ENSP00000276684 Tax_Id=9606 Hypothetical protein FLJ30717"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00031612" accession="IPI00031612" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00031612" accession="IPI00031612" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00031612.1|REFSEQ_NP:NP_115710|TREMBL:Q9BRU9|ENSEMBL:ENSP00000308332 Tax_Id=9606 Hypothetical protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00025879" accession="IPI00025879" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00025879" accession="IPI00025879" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00025879.1|SWISS-PROT:P12882|REFSEQ_NP:NP_005954|ENSEMBL:ENSP00000226207 Tax_Id=9606 Myosin heavy chain, skeletal muscle, adult 1"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00401614" accession="IPI00401614" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00401614" accession="IPI00401614" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00401614.1|REFSEQ_XP:XP_371558|ENSEMBL:ENSP00000332568 Tax_Id=9606 similar to FKSG30 "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00021440" accession="IPI00021440" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00021440" accession="IPI00021440" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00021440.1|SWISS-PROT:P02571|REFSEQ_NP:NP_001605|TREMBL:Q96DE1;Q96E67;Q9UE89;Q96HG5;Q8WVW5;Q96FU6|ENSEMBL:ENSP00000331514 Tax_Id=9606 Actin, cytoplasmic 2"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00021439" accession="IPI00021439" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00021439" accession="IPI00021439" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00021439.1|SWISS-PROT:P60709|REFSEQ_NP:NP_001092|TREMBL:Q96B34;Q9UMN3|ENSEMBL:ENSP00000158302 Tax_Id=9606 Actin, cytoplasmic 1"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00395632" accession="IPI00395632" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00395632" accession="IPI00395632" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00395632.1|SWISS-PROT:Q9UM73|REFSEQ_NP:NP_004295|ENSEMBL:ENSP00000306717 Tax_Id=9606 ALK tyrosine kinase receptor precursor"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00013252" accession="IPI00013252" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00013252" accession="IPI00013252" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00013252.1|REFSEQ_NP:NP_116012|TREMBL:Q8TDB4;Q9BZC3|ENSEMBL:ENSP00000260011 Tax_Id=9606 Ovary-specific acidic protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00383097" accession="IPI00383097" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00383097" accession="IPI00383097" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00383097.1|TREMBL:Q8TF26 Tax_Id=9606 Hypothetical protein KIAA1976"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00397526" accession="IPI00397526" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00397526" accession="IPI00397526" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397526.1|SWISS-PROT:P35580|REFSEQ_NP:NP_005955|TREMBL:Q9BWG0;Q9UMG3;Q9UE82;Q16087|ENSEMBL:ENSP00000269243 Tax_Id=9606 Myosin heavy chain, nonmuscle type B"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00376294" accession="IPI00376294" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00376294" accession="IPI00376294" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00376294.1|REFSEQ_XP:XP_377631 Tax_Id=9606 similar to beta actin "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00008603" accession="IPI00008603" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00008603" accession="IPI00008603" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00008603.1|SWISS-PROT:P03996|REFSEQ_NP:NP_001604|ENSEMBL:ENSP00000224784 Tax_Id=9606 Actin, aortic smooth muscle"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00025416" accession="IPI00025416" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00025416" accession="IPI00025416" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00025416.1|SWISS-PROT:P12718|REFSEQ_NP:NP_001606|ENSEMBL:ENSP00000295137 Tax_Id=9606 Actin, gamma-enteric smooth muscle"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00021428" accession="IPI00021428" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00021428" accession="IPI00021428" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00021428.1|SWISS-PROT:P02568|REFSEQ_NP:NP_001091|ENSEMBL:ENSP00000324452 Tax_Id=9606 Actin, alpha skeletal muscle"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00023006" accession="IPI00023006" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00023006" accession="IPI00023006" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00023006.1|SWISS-PROT:P04270|REFSEQ_NP:NP_005150|TREMBL:Q13707|ENSEMBL:ENSP00000290378 Tax_Id=9606 Actin, alpha cardiac"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00004352" accession="IPI00004352" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00004352" accession="IPI00004352" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00004352.1|SWISS-PROT:P46095|REFSEQ_NP:NP_005275|ENSEMBL:ENSP00000275169 Tax_Id=9606 Probable G protein-coupled receptor GPR6"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00169309" accession="IPI00169309" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00169309" accession="IPI00169309" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00169309.1|REFSEQ_NP:NP_689566|TREMBL:Q8NHS1|ENSEMBL:ENSP00000291715 Tax_Id=9606 Similar to RIKEN cDNA 1700071E18 gene"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00173355" accession="IPI00173355" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00173355" accession="IPI00173355" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00173355.4|REFSEQ_XP:XP_208908|ENSEMBL:ENSP00000304439 Tax_Id=9606 similar to KIAA1990 protein "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00386236" accession="IPI00386236" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00386236" accession="IPI00386236" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00386236.1|TREMBL:Q96AA6 Tax_Id=9606 Hypothetical protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00024427" accession="IPI00024427" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00024427" accession="IPI00024427" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00024427.2|SWISS-PROT:P55344-1 Tax_Id=9606 Splice isoform 1 of P55344 Lens fiber membrane intrinsic protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00219587" accession="IPI00219587" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00219587" accession="IPI00219587" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00219587.1|SWISS-PROT:P55344-2|REFSEQ_NP:NP_085915|ENSEMBL:ENSP00000221973 Tax_Id=9606 Splice isoform 2 of P55344 Lens fiber membrane intrinsic protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00009345" accession="IPI00009345" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00009345" accession="IPI00009345" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00009345.1|REFSEQ_NP:NP_073584|TREMBL:Q9H669|ENSEMBL:ENSP00000333535 Tax_Id=9606 Hypothetical protein FLJ22558"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00030466" accession="IPI00030466" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00030466" accession="IPI00030466" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00030466.2|TREMBL:Q9HCD6|ENSEMBL:ENSP00000324863 Tax_Id=9606 Hypothetical protein KIAA1636"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00397640" accession="IPI00397640" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00397640" accession="IPI00397640" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397640.1|TREMBL:Q9ULS2;Q9NW88;Q9NXY9|REFSEQ_XP:XP_371074|ENSEMBL:ENSP00000307872 Tax_Id=9606 putative ankyrin-repeat containing protein "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00396964" accession="IPI00396964" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00396964" accession="IPI00396964" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00396964.1|ENSEMBL:ENSP00000332641 Tax_Id=9606 "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00333119" accession="IPI00333119" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00333119" accession="IPI00333119" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00333119.1|ENSEMBL:ENSP00000329489 Tax_Id=9606 "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00333381" accession="IPI00333381" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00333381" accession="IPI00333381" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00333381.1|ENSEMBL:ENSP00000329856 Tax_Id=9606 "/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00337305" accession="IPI00337305" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00337305" accession="IPI00337305" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00337305.1|REFSEQ_NP:NP_892018|TREMBL:Q7Z411;Q7Z410|ENSEMBL:ENSP00000313222;ENSP00000332697 Tax_Id=9606 Polyserase 1A protein"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00155134" accession="IPI00155134" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00155134" accession="IPI00155134" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00155134.2|TREMBL:Q9UF51;Q9P271|ENSEMBL:ENSP00000280562 Tax_Id=9606 Hypothetical protein KIAA1457"/>
     </DBSequence>
-    <DBSequence id="DBSeq_IPI00097494" accession="IPI00097494" searchDatabase_ref="ipi.HUMAN.fasta.v2.31">
+    <DBSequence id="DBSeq_IPI00097494" accession="IPI00097494" searchDatabase_ref="DB_1">
       <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00097494.1|REFSEQ_NP:NP_065896|TREMBL:Q9BZ72|ENSEMBL:ENSP00000322218 Tax_Id=9606 NIR3"/>
     </DBSequence>
     <Peptide id="PEP_1"><PeptideSequence>DVDEAHYAYSFKYLK</PeptideSequence></Peptide>
@@ -644,7 +644,7 @@
   <AnalysisCollection>
     <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP" spectrumIdentificationList_ref="SIL" activityDate="2012-06-08T12:29:36">
       <InputSpectra spectraData_ref="SD"/>
-      <SearchDatabaseRef searchDatabase_ref="ipi.HUMAN.fasta.v2.31"/>
+      <SearchDatabaseRef searchDatabase_ref="DB_1"/>
     </SpectrumIdentification>
     <ProteinDetection id="PDP_1" name="PDP" proteinDetectionList_ref="PDL" activityDate="2012-06-08T12:29:41">
       <InputSpectrumIdentifications spectrumIdentificationList_ref="SIL"/>
@@ -699,7 +699,7 @@
   </AnalysisProtocolCollection>
   <DataCollection>
     <Inputs>
-      <SearchDatabase id="ipi.HUMAN.fasta.v2.31" location="c:\Inetpub\wwwroot\dbase\ipi.HUMAN.fasta.v2.31">
+      <SearchDatabase id="DB_1" name="ipi.HUMAN.fasta.v2.31" location="c:\Inetpub\wwwroot\dbase\ipi.HUMAN.fasta.v2.31">
         <FileFormat><cvParam cvRef="MS" accession="MS:1001348" name="FASTA format" value=""/></FileFormat>
         <DatabaseName></DatabaseName>
         <cvParam cvRef="MS" accession="MS:1001073" name="database type amino acid" value=""/>
