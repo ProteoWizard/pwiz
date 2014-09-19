@@ -40,6 +40,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual string SpecIdInFile { get; set; }
         public virtual double Score { get; set; }
         public virtual ushort ScoreType { get; set; }
+        public virtual double? IonMobilityValue { get; set; }
+        public virtual int? IonMobilityType { get; set; }
         public virtual DbRefSpectraRedundantPeaks Peaks { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
     }

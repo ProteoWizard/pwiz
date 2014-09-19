@@ -462,12 +462,29 @@ namespace pwiz.Skyline.Model.Lib
                 if (schemaVer >= 1)
                 {
                     // Build a one-to-many relationship from the smaller RefSpectra table to the comprehensive RetentionTimes table
-                    select.CommandText = (schemaVer == 1)
-                        ? "SELECT RefSpectraId, SpectrumSourceId, retentionTime FROM [RetentionTimes]" // Not L10N
-                        : "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType FROM [RetentionTimes]"; // Not L10N
                     var spectraIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
                     var spectraIdFileIdIonMobilities = new List<KeyValuePair<int, KeyValuePair<int, IonMobilityInfo>>>();
-                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    SQLiteDataReader reader = null;
+                    bool hasIonMobilityColumns = false;
+                    if (schemaVer > 1)
+                    {
+                        try
+                        {
+                            select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType FROM [RetentionTimes]"; // Not L10N
+                            reader = select.ExecuteReader();
+                            hasIonMobilityColumns = true;
+                        }
+                        catch (SQLiteException)
+                        {
+                        }
+                    }
+                    if (null == reader)
+                    {
+                        select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime FROM [RetentionTimes]"; // Not L10N
+                        reader = select.ExecuteReader();
+                    }
+                    
+                    using (reader)
                     {
                         while (reader.Read())
                         {
@@ -478,7 +495,7 @@ namespace pwiz.Skyline.Model.Lib
                                 refSpectraId, 
                                 new KeyValuePair<int, double>(spectrumSourceID, reader.GetDouble(2))) 
                                 );
-                            if (schemaVer > 1)
+                            if (hasIonMobilityColumns)
                             {
                                 var ionMobilityType = reader.GetInt32(4);
                                 if (ionMobilityType > 0)

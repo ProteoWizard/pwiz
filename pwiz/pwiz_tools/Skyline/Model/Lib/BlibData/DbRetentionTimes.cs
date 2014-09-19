@@ -29,6 +29,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual DbRefSpectra RefSpectra { get; set; }
         public virtual long RedundantRefSpectraId { get; set; }
         public virtual long SpectrumSourceId { get; set; }
+        public virtual double? IonMobilityValue { get; set; }
+        public virtual int? IonMobilityType { get; set; }
         public virtual double? RetentionTime { get; set; }
         public virtual int BestSpectrum { get; set; }
     }

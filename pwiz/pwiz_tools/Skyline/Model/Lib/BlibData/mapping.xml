@@ -63,6 +63,8 @@
     <many-to-one name="RefSpectra" column="RefSpectraId"/>
     <property name="RedundantRefSpectraId" column="RedundantRefSpectraId"/>
     <property name="SpectrumSourceId" column="SpectrumSourceId"/>
+    <property name="IonMobilityValue" column="ionMobilityValue"/>
+    <property name="IonMobilityType" column="ionMobilityType"/>
     <property name="RetentionTime" column="retentionTime"/>
     <property name="BestSpectrum" column="bestSpectrum"/>
   </class>

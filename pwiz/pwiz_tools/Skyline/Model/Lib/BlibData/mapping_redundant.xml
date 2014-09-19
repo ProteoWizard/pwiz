@@ -29,6 +29,8 @@
     <property name="SpecIdInFile" column="SpecIDinFile"/>
     <property name="Score" column="score"/>
     <property name="ScoreType" column="scoreType"/>
+    <property name="IonMobilityValue" column="ionMobilityValue"/>
+    <property name="IonMobilityType" column="ionMobilityType" />
     <one-to-one name="Peaks" property-ref="RefSpectra" cascade="save-update"/>
     <bag name="Modifications" cascade="save-update">
       <key column="RefSpectraId"/>
