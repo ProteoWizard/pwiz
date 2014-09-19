@@ -1732,10 +1732,13 @@ namespace pwiz.Skyline.Model.Results
                     int ceIndex = id.LastIndexOf(SUFFIX_CE, StringComparison.Ordinal);
                     float ceParsed;
                     if (ceIndex != -1 && float.TryParse(id.Substring(ceIndex + SUFFIX_CE.Length),
-                                                        NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,
+                                                        NumberStyles.AllowDecimalPoint | NumberStyles.Integer,
+                                                        CultureInfo.InvariantCulture,
                                                         out ceParsed))
                     {
-                        ceValue = ceParsed;
+                        // Shimadzu uses negative CE values internally, but Skyline uses positive CE values
+                        // Avoid sign confusion
+                        ceValue = Math.Abs(ceParsed);
                     }
                 }
                 return new ChromKey(null, precursor, 0, 0, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true);
