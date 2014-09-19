@@ -33,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -230,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
+                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, ChromatogramLibrary.FILTER_CLIB)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -315,7 +316,25 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textDatabase.Focus();
                 return;
             }
-            if (!string.Equals(Path.GetExtension(path), IrtDb.EXT))
+            bool chromLib = string.Equals(Path.GetExtension(path), ChromatogramLibrarySpec.EXT);
+            if (chromLib && DatabaseChanged)
+            {
+                string pathNew;
+                do
+                {
+                    MessageDlg.Show(this, Resources.EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_);
+                    using (var saveDlg = new SaveFileDialog {Filter = IrtDb.FILTER_IRTDB})
+                    {
+                        if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                        pathNew = saveDlg.FileName;
+                    }
+                } while (string.Equals(path, pathNew));
+                path = pathNew;
+            }
+            if (!string.Equals(Path.GetExtension(path), IrtDb.EXT) && !(chromLib && !DatabaseChanged))
                 path += IrtDb.EXT;
 
             //This function MessageBox.Show's error messages
@@ -355,15 +374,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             try
             {
-                var calculator = new RCalcIrt(textCalculatorName.Text, path);
-
-                IrtDb db = File.Exists(path)
-                               ? IrtDb.GetIrtDb(path, null)
-                               : IrtDb.CreateIrtDb(path);
-
-                db = db.UpdatePeptides(AllPeptides.ToArray(), _originalPeptides ?? new DbIrtPeptide[0]);
-
-                Calculator = calculator.ChangeDatabase(db);
+                if (DatabaseChanged)
+                {
+                    using (FileSaver fileSaver = new FileSaver(path))
+                    {
+                        IrtDb db = IrtDb.CreateIrtDb(fileSaver.SafeName);
+                        db.AddPeptides(AllPeptides.ToArray());
+                        fileSaver.Commit();
+                    }
+                }
+                Calculator = new RCalcIrt(textCalculatorName.Text, path).ChangeDatabase(IrtDb.GetIrtDb(path, null));
             }
             catch (DatabaseOpeningException x)
             {

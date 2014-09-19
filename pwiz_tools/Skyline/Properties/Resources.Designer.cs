@@ -748,6 +748,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A retention time predictor with that name already exists. Please choose a new name..
+        /// </summary>
+        public static string AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_ {
+            get {
+                return ResourceManager.GetString("AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_a" +
+                        "lready_exists__Please_choose_a_new_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A tool requires Program:{0} Version:{1} and it is not specified with the --tool-program-macro and --tool-program-path commands. Tool Installation Canceled..
         /// </summary>
         public static string AddZipToolHelper_FindProgramPath_A_tool_requires_Program__0__Version__1__and_it_is_not_specified_with_the___tool_program_macro_and___tool_program_path_commands__Tool_Installation_Canceled_ {
@@ -2644,6 +2654,15 @@ namespace pwiz.Skyline.Properties {
         public static string ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__ {
             get {
                 return ResourceManager.GetString("ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Libraries.
+        /// </summary>
+        public static string ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries {
+            get {
+                return ResourceManager.GetString("ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries", resourceCulture);
             }
         }
         
@@ -6776,6 +6795,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatogram libraries cannot be modified. You must save this iRT calculator as a new file..
+        /// </summary>
+        public static string EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_" +
+                        "this_iRT_calculator_as_a_new_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click the Create button to create a new database or the Open button to open an existing database file..
         /// </summary>
         public static string EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file {
@@ -7110,6 +7139,15 @@ namespace pwiz.Skyline.Properties {
         public static string EditLibraryDlg_GetLibraryPath_Spectral_Libraries {
             get {
                 return ResourceManager.GetString("EditLibraryDlg_GetLibraryPath_Spectral_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading chromatogram library.
+        /// </summary>
+        public static string EditLibraryDlg_OkDialog_Loading_chromatogram_library {
+            get {
+                return ResourceManager.GetString("EditLibraryDlg_OkDialog_Loading_chromatogram_library", resourceCulture);
             }
         }
         

@@ -1026,6 +1026,12 @@
     <Compile Include="SettingsUI\AddPathsDlg.Designer.cs">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\AddRetentionTimePredictorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AddRetentionTimePredictorDlg.Designer.cs">
+      <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\CustomIonMzDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1980,6 +1986,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddPathsDlg.zh-CHS.resx">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.resx">
+      <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.ja.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>

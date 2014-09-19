@@ -577,6 +577,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             CheckDisposed();
             _driverLibrary.EditList();
+            _driverRT.LoadList(_driverRT.SelectedItem.ToString());
 
             panelPick.Visible = listLibraries.CheckedIndices.Count > 0;
             btnExplore.Enabled = listLibraries.Items.Count > 0;
@@ -929,6 +930,14 @@ namespace pwiz.Skyline.SettingsUI
             CheckDisposed();
             _driverRT.AddItem();
         }
+        
+        public void EditRegression()
+        {
+            var list = Settings.Default.RetentionTimeList;
+            var regNew = list.EditItem(this, _driverRT.SelectedItem, list, null);
+            if (regNew != null)
+                list.SetValue(regNew);
+        }
 
         public void EditRegressionList()
         {
@@ -1012,6 +1021,11 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverBackgroundProteome.Combo.SelectedItem = value;  }
         }
 
+        public string SelectedRTPredictor
+        {
+            get { return _driverRT.Combo.SelectedItem.ToString(); }
+            set { _driverRT.Combo.SelectedItem = value; }
+        }
 
         public string SelectedLabelTypeName
         {

@@ -7,6 +7,7 @@ AddOptimizationLibraryDlg,TestOptimization
 AddOptimizationsDlg,TestOptimization
 AddPathsDlg,TestLibraryBuild
 AddPeakCompareDlg,TestPeakBoundaryCompare
+AddRetentionTimePredictorDlg,TestAddLibrary
 AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*

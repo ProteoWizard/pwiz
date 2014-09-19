@@ -7898,4 +7898,16 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column" xml:space="preserve">
     <value>Column</value>
   </data>
+  <data name="EditLibraryDlg_OkDialog_Loading_chromatogram_library" xml:space="preserve">
+    <value>Loading chromatogram library</value>
+  </data>
+  <data name="ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries" xml:space="preserve">
+    <value>Chromatogram Libraries</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
+    <value>Chromatogram libraries cannot be modified. You must save this iRT calculator as a new file.</value>
+  </data>
+  <data name="AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_" xml:space="preserve">
+    <value>A retention time predictor with that name already exists. Please choose a new name.</value>
+  </data>
 </root>

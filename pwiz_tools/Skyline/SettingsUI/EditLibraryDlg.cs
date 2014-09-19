@@ -20,9 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Properties;
@@ -120,7 +122,42 @@ namespace pwiz.Skyline.SettingsUI
             else if (Equals(ext, BiblioSpecLibSpec.EXT))
                 librarySpec = new BiblioSpecLibSpec(name, path);
             else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+            {
                 librarySpec = new ChromatogramLibrarySpec(name, path);
+                using (var longWait = new LongWaitDlg{ Text = Resources.EditLibraryDlg_OkDialog_Loading_chromatogram_library })
+                {
+                    Library lib = null;
+                    try
+                    {
+                        longWait.PerformWork(this, 800, monitor => lib = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor)));
+                    }
+// ReSharper disable once EmptyGeneralCatchClause
+                    catch
+                    {
+                        // Library failed to load
+                    }
+                    LibraryRetentionTimes libRts;
+                    if (lib != null && lib.TryGetIrts(out libRts) &&
+                        Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
+                    {
+                        using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path))
+                        {
+                            switch (addPredictorDlg.ShowDialog(this))
+                            {
+                                case DialogResult.OK:
+                                    Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
+                                    Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
+                                    Settings.Default.Save();
+                                    break;
+                                case DialogResult.No:
+                                    break;
+                                default:
+                                    return;
+                            }
+                        }
+                    }
+                }
+            }
             else if (Equals(ext, XHunterLibSpec.EXT))
                 librarySpec = new XHunterLibSpec(name, path);
             else if (Equals(ext, NistLibSpec.EXT))

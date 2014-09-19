@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
+    <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="ArrangeGraphsTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
@@ -249,6 +250,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AddLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />

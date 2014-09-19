@@ -181,6 +181,22 @@ namespace pwiz.Skyline.Model.Irt
             return result;
         }
 
+        public IrtDb AddPeptides(IList<DbIrtPeptide> newPeptides)
+        {
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                foreach (var peptideNewDisconnected in newPeptides.Select(peptideNew => new DbIrtPeptide(peptideNew) {Id = null}))
+                {
+                    session.SaveOrUpdate(peptideNewDisconnected);
+                }
+
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
+        }
+
         public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, IList<DbIrtPeptide> oldPeptides)
         {
             var setNew = new HashSet<long>(newPeptides.Select(pep => pep.Id.HasValue ? pep.Id.Value : 0));
