@@ -481,7 +481,7 @@ http://www.zlib.net</value>
     <value>True</value>
   </data>
   <data name="linkLabel1.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
-    <value>246, 15</value>
+    <value>245, 15</value>
   </data>
   <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
     <value>219, 44</value>
@@ -496,7 +496,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2013 University of Washington, all rights reserved
+    <value>Copyright © 2008-2014 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 
