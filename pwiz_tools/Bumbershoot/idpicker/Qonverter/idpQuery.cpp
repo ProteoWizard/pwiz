@@ -209,7 +209,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
             throw runtime_error("unsupported pivot mode");
 
         // build SQL query with spectrum quantitation
-        string sql = "SELECT " + groupByString + ", ssg.Id, " + countColumn + " "
+        string sql = "SELECT " + groupByString + ", " + pivotColumn + ", " + countColumn + " "
                      "FROM PeptideSpectrumMatch psm "
                      "JOIN Spectrum s ON psm.Spectrum=s.Id "
                      "JOIN SpectrumSource ss ON s.Source=ss.Id "
@@ -234,7 +234,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
     }
 
     // build SQL query without spectrum quantitation
-    string sql = "SELECT " + groupByString + ", ssg.Id, " + countColumn + " "
+    string sql = "SELECT " + groupByString + ", " + pivotColumn + ", " + countColumn + " "
                  "FROM PeptideSpectrumMatch psm "
                  "JOIN DistinctMatch dm ON psm.Id=dm.PsmId "
                  "JOIN Spectrum s ON psm.Spectrum=s.Id "
@@ -478,9 +478,9 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                         if (findColumnItr == findIdItr->second.end())
                                             writeBlobArray<double>(NULL, outputStream, 0, hasTMT128 ? 6 : 2);
                                         else if (hasTMT128)
-                                            writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 2);
-                                        else
                                             writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 6);
+                                        else
+                                            writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 2);
                                     }
                                     
                                     if (j < pivotColumnIds.size()-1)

@@ -60,7 +60,7 @@ struct DistinctDoubleArraySum
             throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
 
         MyType** ppThis = static_cast<MyType**>(aggContext);
-        MyType* pThis = *ppThis;
+        MyType*& pThis = *ppThis;
 
         if (numValues > 1 || values[0] == NULL)
             return;
@@ -98,7 +98,7 @@ struct DistinctDoubleArraySum
             throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
 
         MyType** ppThis = static_cast<MyType**>(aggContext);
-        MyType* pThis = *ppThis;
+        MyType*& pThis = *ppThis;
 
         if (pThis == NULL)
             pThis = new DistinctDoubleArraySum(0);
