@@ -438,7 +438,7 @@ InstrumentModelType RawFileImpl::getInstrumentModel()
         setCurrentController(Controller_MS, 1);
 
         string modelString = value(InstModel);
-        if (modelString == "LTQ Velos") // HACK: disambiguate LTQ Velos and Orbitrap Velos
+        if (modelString == "LTQ Velos" || modelString == "LTQ") // HACK: disambiguate LTQ Velos/Orbitrap Velos, and LTQ/LTQ-FT
         {
             modelString = value(InstName);
         }
