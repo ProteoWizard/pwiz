@@ -52,6 +52,7 @@ lib Qonverter
         Merger.cpp
         Filter.cpp
         TotalCounts.cpp
+        spline.cpp
     : # requirements
         <library>..//svm
         <library>/ext/boost//thread

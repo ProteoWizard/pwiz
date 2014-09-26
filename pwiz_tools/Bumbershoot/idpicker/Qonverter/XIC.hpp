@@ -92,10 +92,10 @@ using pwiz::chemistry::MZTolerance;
 struct XICConfiguration
 {
     XICConfiguration(bool AlignRetentionTime = false, double MaxQValue = 0.05,
-                     int MonoisotopicAdjustmentMin = -1, int MonoisotopicAdjustmentMax = 1,
-                     int RetentionTimeLowerTolerance = 120, int RetentionTimeUpperTolerance = 120,
-                     MZTolerance ChromatogramMzLowerOffset = MZTolerance(0.5, MZTolerance::MZ),
-                     MZTolerance ChromatogramMzUpperOffset = MZTolerance(1.0, MZTolerance::MZ));
+                     int MonoisotopicAdjustmentMin = 0, int MonoisotopicAdjustmentMax = 2,
+                     int RetentionTimeLowerTolerance = 30, int RetentionTimeUpperTolerance = 30,
+                     MZTolerance ChromatogramMzLowerOffset = MZTolerance(10, MZTolerance::PPM),
+                     MZTolerance ChromatogramMzUpperOffset = MZTolerance(10, MZTolerance::PPM));
 
 
     bool AlignRetentionTime;
@@ -190,8 +190,9 @@ typedef bmi::multi_index_container<Peak,
 struct LocalChromatogram
 {
     string id;
-    vector<double> MS1Intensity;
-    vector<double> MS1RT;
+    mutable vector<double> MS1Intensity;
+    mutable vector<double> MS1RT;
+    mutable map<double, double > MS1PeakMap;
     PeakList peaks;
     boost::optional<Peak> bestPeak;
 
@@ -199,8 +200,38 @@ struct LocalChromatogram
 
     LocalChromatogram(const vector<double>& intens, const vector<double>& rt)
     {
-        MS1Intensity = intens;
-        MS1RT = rt;
+        for ( int z = 0; z < rt.size(); z++ )
+        {
+            if (MS1PeakMap.find(rt[z]) == MS1PeakMap.end() || MS1PeakMap[rt[z]] < intens[z] )
+                MS1PeakMap[rt[z]] = intens[z];
+        }
+    }
+    
+    void SetMS1(const vector<double>& intens, const vector<double>& rt) const
+    {
+        for ( int z = 0; z < rt.size(); z++ )
+        {
+            if (MS1PeakMap.find(rt[z]) == MS1PeakMap.end() || MS1PeakMap[rt[z]] < intens[z] )
+                MS1PeakMap[rt[z]] = intens[z];
+        }
+    }
+    
+    void AddMS1(const double intens, const double rt) const
+    {
+        if (MS1PeakMap.find(rt) == MS1PeakMap.end() || MS1PeakMap[rt] < intens )
+            MS1PeakMap[rt] = intens;
+    }
+    
+     void FinalizeMS1() const
+    {
+        MS1RT.clear();
+        MS1Intensity.clear();
+        map<double, double >::iterator itr;
+        for (itr = MS1PeakMap.begin(); itr != MS1PeakMap.end(); ++itr)
+        {
+            MS1RT.push_back(itr->first);
+            MS1Intensity.push_back(itr->second);
+        }
     }
 };
 
@@ -244,8 +275,36 @@ struct XICWindow
     mutable interval_set<double> preRT;
     mutable vector<double> MS1Intensity;
     mutable vector<double> MS1RT;
+    mutable map<double, double > MS1PeakMap;
     mutable PeakList peaks;
     mutable boost::optional<Peak> bestPeak;
+    
+    void SetMS1(const vector<double>& intens, const vector<double>& rt) const
+    {
+        for ( int z = 0; z < rt.size(); z++ )
+        {
+            if (MS1PeakMap.find(rt[z]) == MS1PeakMap.end() || MS1PeakMap[rt[z]] < intens[z] )
+                MS1PeakMap[rt[z]] = intens[z];
+        }
+    }
+    
+    void AddMS1(const double& intens, const double& rt) const
+    {
+        if (MS1PeakMap.find(rt) == MS1PeakMap.end() || MS1PeakMap[rt] < intens )
+            MS1PeakMap[rt] = intens;
+    }
+    
+    void FinalizeMS1() const
+    {
+        MS1RT.clear();
+        MS1Intensity.clear();
+        map<double, double >::iterator itr;
+        for (itr = MS1PeakMap.begin(); itr != MS1PeakMap.end(); ++itr)
+        {
+            MS1RT.push_back(itr->first);
+            MS1Intensity.push_back(itr->second);
+        }
+    }
 };
 
 typedef bmi::multi_index_container<XICWindow,
@@ -267,105 +326,6 @@ struct ModifyPrecursorMZ
     double newMZ;
     ModifyPrecursorMZ(double newMZ) : newMZ(newMZ) {}
     void operator() (MS2ScanInfo& info) const {info.precursorMZ = newMZ;}
-};
-
-double pchst ( double arg1, double arg2 );
-
-void spline_pchip_set ( int n, double x[], double f[], double d[] );
-
- int chfev ( double x1, double x2, double f1, double f2, double d1, double d2,
-   int ne, double xe[], double fe[], int next[] );
-
-void spline_pchip_val ( int n, double x[], double f[], double d[],
-  int ne, double xe[], double fe[] );
-
-struct Interpolator
-{
-    Interpolator(vector<double>& x, vector<double>& y)
-    {
-        _size = x.size();
-
-        if (_size < 4)
-            return;
-
-        BOOST_ASSERT(x.size() == y.size());
-
-        //_ypp.reset(spline_cubic_set(_size, const_cast<double*>(&x[0]), const_cast<double*>(&y[0]), 1, 0, 1, 0));
-        
-        for ( int n = 0; n < x.size(); n++ )
-        {
-            if ( x[n] <= x[n-1] ) //only reorder if already out of order
-            {
-                map<double, double > peakMap;
-                for ( int z = 0; z < x.size(); z++ ) //throw everything into a map
-                    peakMap[x[z]] = y[z];
-                x.clear();
-                y.clear();
-                
-                map<double, double >::iterator itr;
-                for (itr = peakMap.begin(); itr != peakMap.end(); ++itr) //toss map back into x and y
-                {
-                    x.push_back(itr->first);
-                    y.push_back(itr->second);
-                }            
-                break;
-            }
-        }
-
-        _ypp.reset(new double[_size]);
-        spline_pchip_set(_size, const_cast<double*>(&x[0]), const_cast<double*>(&y[0]), _ypp.get());
-    }
-
-    // uses interpolation on piecewise cubic splines to make an f(x) function evenly spaced on the x axis
-    //WARNING: this function seems to change the size of x and y without updating _size
-    void resample(vector<double>& x, vector<double>& y) const
-    {
-        BOOST_ASSERT(_size == x.size());
-        BOOST_ASSERT(_size == y.size());
-
-        if (x.size() < 4)
-            return;
-
-        double minSampleSize = x[1] - x[0];
-        for (int i=2; i < _size; ++i)
-        {
-            if ((x[i] - x[i-1]) > minSampleSize)
-                minSampleSize = x[i] - x[i-1];
-            // Throws error for some odd reason //minSampleSize = std::min(minSampleSize, x[i] - x[i-1]);
-        }
-        //double ypval, yppval;
-        vector<double> newX, newY;
-        newX.reserve(_size);
-        newY.reserve(_size);
-        newX.push_back(x[0]);
-        newY.push_back(y[0]);
-        for (size_t i=1; newX.back() < x.back(); ++i)
-        {
-            newX.push_back(newX.back() + minSampleSize);
-            newY.push_back(0);
-            spline_pchip_val(_size, &x[0], &y[0], _ypp.get(), 1, &newX.back(), &newY.back());
-        }
-        swap(x, newX);
-        swap(y, newY);
-    }
-
-    double interpolate(const vector<double>& xs, const vector<double>& ys, double x) const
-    {
-        if (x < xs.front() || x > xs.back() || xs.size() < 4)
-            return -1;
-
-        //double ypval, yppval;
-        //return spline_cubic_val(_size, const_cast<double*>(&xs[0]), const_cast<double*>(&ys[0]), _ypp.get(), x, &ypval, &yppval);
-
-        double y;
-        //_size and xs.size() don't always match //spline_pchip_val(_size, const_cast<double*>(&xs[0]), const_cast<double*>(&ys[0]), _ypp.get(), 1, &x, &y);
-        spline_pchip_val((int)xs.size(), const_cast<double*>(&xs[0]), const_cast<double*>(&ys[0]), _ypp.get(), 1, &x, &y);
-        return y;
-    }
-
-    private:
-    boost::shared_array<double> _ypp;
-    int _size;
 };
 
 int EmbedMS1ForFile(sqlite3pp::database& idpDb,

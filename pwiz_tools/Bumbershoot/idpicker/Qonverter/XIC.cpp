@@ -25,6 +25,7 @@
 #include "Embedder.hpp"
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
+#include "Interpolator.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
@@ -63,474 +64,6 @@ XICConfiguration::XICConfiguration(bool AlignRetentionTime, double MaxQValue,
                      :AlignRetentionTime(AlignRetentionTime), MaxQValue(MaxQValue), MonoisotopicAdjustmentMin(MonoisotopicAdjustmentMin), MonoisotopicAdjustmentMax(MonoisotopicAdjustmentMax), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
 {}
 
-double pchst ( double arg1, double arg2 )
-{
-  double value;
-
-  if ( arg1 == 0.0 )
-  {
-    value = 0.0;
-  }
-  else if ( arg1 < 0.0 )
-  {
-    if ( arg2 < 0.0 )
-    {
-      value = 1.0;
-    }
-    else if ( arg2 == 0.0 )
-    {
-      value = 0.0;
-    }
-    else if ( 0.0 < arg2 )
-    {
-      value = -1.0;
-    }
-  }
-  else if ( 0.0 < arg1 )
-  {
-    if ( arg2 < 0.0 )
-    {
-      value = -1.0;
-    }
-    else if ( arg2 == 0.0 )
-    {
-      value = 0.0;
-    }
-    else if ( 0.0 < arg2 )
-    {
-      value = 1.0;
-    }
-  }
-
-  return value;
-}
-
-void spline_pchip_set ( int n, double x[], double f[], double d[] )
-{
-    double del1;
-  double del2;
-  double dmax;
-  double dmin;
-  double drat1;
-  double drat2;
-  double dsave;
-  double h1;
-  double h2;
-  double hsum;
-  double hsumt3;
-  int i;
-  int ierr;
-  int nless1;
-  double temp;
-  double w1;
-  double w2;
-//
-//  Check the arguments.
-//
-  if ( n < 2 )
-  {
-    throw runtime_error(string("[SPLINE_PCHIP_SET]- Number of data points less than 2"));
-  }
-
-  for ( i = 1; i < n; i++ )
-  {
-    if ( x[i] <= x[i-1] )
-    {
-      throw runtime_error(string("[SPLINE_PCHIP_SET]- X array not strictly increasing"));
-    }
-  }
-
-  ierr = 0;
-  nless1 = n - 1;
-  h1 = x[1] - x[0];
-  del1 = ( f[1] - f[0] ) / h1;
-  dsave = del1;
-//
-//  Special case N=2, use linear interpolation.
-//
-  if ( n == 2 )
-  {
-    d[0] = del1;
-    d[n-1] = del1;
-    return;
-  }
-//
-//  Normal case, 3 <= N.
-//
-  h2 = x[2] - x[1];
-  del2 = ( f[2] - f[1] ) / h2;
-//
-//  Set D(1) via non-centered three point formula, adjusted to be
-//  shape preserving.
-//
-  hsum = h1 + h2;
-  w1 = ( h1 + hsum ) / hsum;
-  w2 = -h1 / hsum;
-  d[0] = w1 * del1 + w2 * del2;
-
-  if ( pchst ( d[0], del1 ) <= 0.0 )
-  {
-    d[0] = 0.0;
-  }
-//
-//  Need do this check only if monotonicity switches.
-//
-  else if ( pchst ( del1, del2 ) < 0.0 )
-  {
-     dmax = 3.0 * del1;
-
-     if ( fabs ( dmax ) < fabs ( d[0] ) )
-     {
-       d[0] = dmax;
-     }
-
-  }
-//
-//  Loop through interior points.
-//
-  for ( i = 2; i <= nless1; i++ )
-  {
-    if ( 2 < i )
-    {
-      h1 = h2;
-      h2 = x[i] - x[i-1];
-      hsum = h1 + h2;
-      del1 = del2;
-      del2 = ( f[i] - f[i-1] ) / h2;
-    }
-//
-//  Set D(I)=0 unless data are strictly monotonic.
-//
-    d[i-1] = 0.0;
-
-    temp = pchst ( del1, del2 );
-
-    if ( temp < 0.0 )
-    {
-      ierr = ierr + 1;
-      dsave = del2;
-    }
-//
-//  Count number of changes in direction of monotonicity.
-//
-    else if ( temp == 0.0 )
-    {
-      if ( del2 != 0.0 )
-      {
-        if ( pchst ( dsave, del2 ) < 0.0 )
-        {
-          ierr = ierr + 1;
-        }
-        dsave = del2;
-      }
-    }
-//
-//  Use Brodlie modification of Butland formula.
-//
-    else
-    {
-      hsumt3 = 3.0 * hsum;
-      w1 = ( hsum + h1 ) / hsumt3;
-      w2 = ( hsum + h2 ) / hsumt3;
-      if (fabs ( del1 ) > fabs ( del2 ))
-      {
-        dmax = fabs ( del1 );
-        dmin = fabs ( del2 );
-      }
-      else
-      {
-        dmax = fabs ( del2 );
-        dmin = fabs ( del1 );
-      }
-      drat1 = del1 / dmax;
-      drat2 = del2 / dmax;
-      d[i-1] = dmin / ( w1 * drat1 + w2 * drat2 );
-    }
-  }
-//
-//  Set D(N) via non-centered three point formula, adjusted to be
-//  shape preserving.
-//
-  w1 = -h2 / hsum;
-  w2 = ( h2 + hsum ) / hsum;
-  d[n-1] = w1 * del1 + w2 * del2;
-
-  if ( pchst ( d[n-1], del2 ) <= 0.0 )
-  {
-    d[n-1] = 0.0;
-  }
-  else if ( pchst ( del1, del2 ) < 0.0 )
-  {
-//
-//  Need do this check only if monotonicity switches.
-//
-    dmax = 3.0 * del2;
-
-    if ( fabs ( dmax ) < abs ( d[n-1] ) )
-    {
-      d[n-1] = dmax;
-    }
-
-  }
-  return;
-}
-
- int chfev ( double x1, double x2, double f1, double f2, double d1, double d2,
-   int ne, double xe[], double fe[], int next[] )
-  {
-       double c2;
-   double c3;
-   double del1;
-   double del2;
-   double delta;
-   double h;
-   int i;
-   int ierr;
-   double x;
-   double xma;
-   double xmi;
-
-   if ( ne < 1 )
-   {
-     ierr = -1;
-     throw runtime_error(string("[chfev]- Number of evaluation points is less than 1"));
-   }
-
-   h = x2 - x1;
-
-   if ( h == 0.0 )
-   {
-     ierr = -2;
-     throw runtime_error(string("[chfev]- The interval [X1,X2] is of zero length"));
-   }
- //
- //  Initialize.
- //
-   ierr = 0;
-   next[0] = 0;
-   next[1] = 0;
-   if (h > 0)
-   {
-       xmi = 0;
-       xma = h;
-   }
-   else
-   {
-       xmi = 0;
-       xma = h;
-   }
- //
- //  Compute cubic coefficients expanded about X1.
- //
-   delta = ( f2 - f1 ) / h;
-   del1 = ( d1 - delta ) / h;
-   del2 = ( d2 - delta ) / h;
-   c2 = -( del1 + del1 + del2 );
-   c3 = ( del1 + del2 ) / h;
- //
- //  Evaluation loop.
- //
-   for ( i = 0; i < ne; i++ )
-   {
-     x = xe[i] - x1;
-     fe[i] = f1 + x * ( d1 + x * ( c2 + x * c3 ) );
- //
- //  Count the extrapolation points.
- //
-     if ( x < xmi )
-     {
-       next[0] = next[0] + 1;
-     }
-
-     if ( xma < x )
-     {
-       next[1] = next[1] + 1;
-     }
-
-   }
-
-   return 0;
-  }
-
-void spline_pchip_val ( int n, double x[], double f[], double d[],
-  int ne, double xe[], double fe[] )
-{
-      int i;
-  int ierc;
-  int ierr;
-  int ir;
-  int j;
-  int j_first;
-  int j_new;
-  int j_save;
-  int next[2];
-  int nj;
-//
-//  Check arguments.
-//
-  if ( n < 2 )
-  {
-    ierr = -1;
-    throw runtime_error(string("[spline_pchip_val]- Number of data points less than 2"));
-  }
-
-  for ( i = 1; i < n; i++ )
-  {
-    if ( x[i] <= x[i-1] )
-    {
-      ierr = -3;
-      throw runtime_error(string("[spline_pchip_val]- X array not strictly increasing- "+ lexical_cast<string>(i) + " ; "+ lexical_cast<string>(n) + " ; " + lexical_cast<string>(x[i]) + " <= " + lexical_cast<string>(x[i-1])));
-    }
-  }
-
-  if ( ne < 1 )
-  {
-    ierr = -4;
-    return;
-  }
-
-  ierr = 0;
-//
-//  Loop over intervals.
-//  The interval index is IL = IR-1.
-//  The interval is X(IL) <= X < X(IR).
-//
-  j_first = 1;
-  ir = 2;
-
-  for ( ; ; )
-  {
-//
-//  Skip out of the loop if have processed all evaluation points.
-//
-    if ( ne < j_first )
-    {
-      break;
-    }
-//
-//  Locate all points in the interval.
-//
-    j_save = ne + 1;
-
-    for ( j = j_first; j <= ne; j++ )
-    {
-      if ( x[ir-1] <= xe[j-1] )
-      {
-        j_save = j;
-        if ( ir == n )
-        {
-          j_save = ne + 1;
-        }
-        break;
-      }
-    }
-//
-//  Have located first point beyond interval.
-//
-    j = j_save;
-
-    nj = j - j_first;
-//
-//  Skip evaluation if no points in interval.
-//
-    if ( nj != 0 )
-    {
-//
-//  Evaluate cubic at XE(J_FIRST:J-1).
-//
-      ierc = chfev ( x[ir-2], x[ir-1], f[ir-2], f[ir-1], d[ir-2], d[ir-1],
-        nj, xe+j_first-1, fe+j_first-1, next );
-
-      if ( ierc < 0 )
-      {
-        ierr = -5;
-        throw runtime_error(string("[spline_pchip_val]- Error return from CHFEV (" + lexical_cast<string>(ierr) + ")"));
-      }
-//
-//  In the current set of XE points, there are NEXT(2) to the right of X(IR).
-//
-      if ( next[1] != 0 )
-      {
-        if ( ir < n )
-        {
-          ierr = -5;
-          throw runtime_error(string("[spline_pchip_val]-   IR < N"));
-        }
-//
-//  These are actually extrapolation points.
-//
-        ierr = ierr + next[1];
-
-      }
-//
-//  In the current set of XE points, there are NEXT(1) to the left of X(IR-1).
-//
-      if ( next[0] != 0 )
-      {
-//
-//  These are actually extrapolation points.
-//
-        if ( ir <= 2 )
-        {
-          ierr = ierr + next[0];
-        }
-        else
-        {
-          j_new = -1;
-
-          for ( i = j_first; i <= j-1; i++ )
-          {
-            if ( xe[i-1] < x[ir-2] )
-            {
-              j_new = i;
-              break;
-            }
-          }
-
-          if ( j_new == -1 )
-          {
-            ierr = -5;
-            throw runtime_error(string("[spline_pchip_val]- Could not bracket the data point"));
-          }
-//
-//  Reset J.  This will be the new J_FIRST.
-//
-          j = j_new;
-//
-//  Now find out how far to back up in the X array.
-//
-          for ( i = 1; i <= ir-1; i++ )
-          {
-            if ( xe[j-1] < x[i-1] )
-            {
-              break;
-            }
-          }
-//
-//  At this point, either XE(J) < X(1) or X(i-1) <= XE(J) < X(I) .
-//
-//  Reset IR, recognizing that it will be incremented before cycling.
-//
-          if (i-1 > 1)
-            ir = i-1;
-          else
-            ir = 1;
-        }
-      }
-
-      j_first = j;
-    }
-
-    ir = ir + 1;
-
-    if ( n < ir )
-    {
-      break;
-    }
-
-  }
-}
-
 XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const string& sourceId, XICConfiguration config)
 {
     bool useAvgMass = (config.MonoisotopicAdjustmentMin==0) && (config.MonoisotopicAdjustmentMax==0);
@@ -564,6 +97,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
     XICWindowList windows;
     XICWindow tmpWindow;
     XICPeptideSpectrumMatch tmpPSM;
+    map<double, int> psmMap;
     sqlite_int64 lastPeptide = 0;
     int lastCharge = 0;
     string lastModif = "initial value";
@@ -615,6 +149,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
             tmpWindow.bestScore = score;
             tmpWindow.bestScoreScanStartTime = scanInfo.scanStartTime;
             tmpWindow.PSMs.clear();
+			psmMap.clear();
             tmpWindow.preRT.clear();
             tmpWindow.preMZ.clear();
 
@@ -645,7 +180,18 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         tmpPSM.peptide = peptide;
         tmpPSM.spectrum = &scanInfo;
         tmpPSM.score = score;
-        tmpWindow.PSMs.push_back(tmpPSM);
+        
+        //merge PSMs with identical scan times
+        if (psmMap.find(scanInfo.scanStartTime) != psmMap.end())
+		{
+			if (tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]].score < score)
+				tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]] = tmpPSM;
+		}
+        else
+        {
+            tmpWindow.PSMs.push_back(tmpPSM);
+            psmMap[scanInfo.scanStartTime] = tmpWindow.PSMs.size()-1;
+        }
 
         tmpWindow.firstMS2RT = min(tmpWindow.firstMS2RT, scanInfo.scanStartTime);
         tmpWindow.lastMS2RT = max(tmpWindow.lastMS2RT, scanInfo.scanStartTime);
@@ -1079,6 +625,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         }*/
         // Going through all spectra once more to get intensities/retention times to build chromatograms
         ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks...");
+        map<double, double > peakMap;
         for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
         {
 
@@ -1123,12 +670,9 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                         if (boost::icl::contains(window.preMZ, mzV[iMZ]))
                             sumIntensities += intensV[iMZ];
                     }
-
-                    window.MS1Intensity.push_back(sumIntensities);
-                    window.MS1RT.push_back(curRT);
+                    window.AddMS1(sumIntensities, curRT);
 
                 } // done searching through all unique peptide windows for this MS1 scan
-
 
                 //loop through all regression defined precursors
 
@@ -1150,8 +694,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                             sumIntensities += intensV[iMZ];
                     }
 
-                    info.chromatogram.MS1Intensity.push_back(sumIntensities);
-                    info.chromatogram.MS1RT.push_back(curRT);
+                    info.chromatogram.AddMS1(sumIntensities,curRT);
                 } // done with regression defined precursor scan
 
             }
@@ -1166,6 +709,12 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 }
             }
         } // end of spectra loop
+        
+        //finalize ms1 vectors
+        BOOST_FOREACH(const XICWindow& window, pepWindow)
+            window.FinalizeMS1();
+        BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+            info.chromatogram.FinalizeMS1();
 
         // Find peaks with Crawdad
         // cycle through all distinct matches, passing each one to crawdad
