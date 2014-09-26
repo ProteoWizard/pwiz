@@ -27,6 +27,7 @@
 # include <cmath>
 # include <ctime>
 # include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -1185,7 +1186,7 @@ double bez_val ( int n, double x, double a, double b, double y[] )
     cout << "\n";
     cout << "BEZ_VAL - Fatal error!\n";
     cout << "  Null interval, A = B = " << a << "\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[BEZ_VAL]- Null interval, A = B = {a}"));
   }
 //
 //  X01 lies in [0,1], in the same relative position as X in [A,B].
@@ -1485,10 +1486,7 @@ double *bpab ( int n, double a, double b, double x )
 
   if ( b == a )
   {
-    cout << "\n";
-    cout << "BPAB - Fatal error!\n";
-    cout << "  A = B = " << a << "\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[BPAB]- A = B = {a}"));
   }
 
   bern = new double[n+1];
@@ -2150,12 +2148,9 @@ void data_to_dif ( int ntab, double xtab[], double ytab[], double diftab[] )
     {
       if ( xtab[i] - xtab[j] == 0.0 )
       {
-        cout << "\n";
-        cout << "DATA_TO_DIF - Fatal error!\n";
-        cout << "  Two entries of XTAB are equal!\n";
-        cout << "  XTAB[%d] = " << xtab[i] << "\n";
-        cout << "  XTAB[%d] = " << xtab[j] << "\n";
-        exit ( 1 );
+        // cout << "  XTAB[%d] = " << xtab[i] << "\n";
+        // cout << "  XTAB[%d] = " << xtab[j] << "\n";
+        throw std::runtime_error(string("[DATA_TO_DIF]- Two entries of XTAB are equal!"));
       }
     }
   }
@@ -2798,20 +2793,12 @@ void least_set_old ( int ntab, double xtab[], double ytab[], int ndeg,
 //
   if ( ndeg < 1 )
   {
-    *ierror = 1;
-    cout << "\n";
-    cout << "LEAST_SET_OLD - Fatal error!\n";
-    cout << "  NDEG < 1.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[LEAST_SET_OLD]- NDEG < 1"));
   }
 
   if ( ntab <= ndeg )
   {
-    *ierror = 1;
-    cout << "\n";
-    cout << "LEAST_SET_OLD - Fatal error!\n";
-    cout << "  NTAB <= NDEG.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[LEAST_SET_OLD]- NTAB <= NDEG"));
   }
 //
 //  Check that the abscissas are strictly increasing.
@@ -2820,13 +2807,9 @@ void least_set_old ( int ntab, double xtab[], double ytab[], int ndeg,
   {
     if ( xtab[i] <= xtab[i-1] )
     {
-      *ierror = 1;
-      cout << "\n";
-      cout << "LEAST_SET_OLD - Fatal error!\n";
-      cout << "  XTAB must be strictly increasing, but\n";
-      cout << "  XTAB(" << i-1 << ") = " << xtab[i-1] << "\n";
-      cout << "  XTAB(" << i   << ") = " << xtab[i]   << "\n";
-      exit ( 1 );
+      // cout << "  XTAB(" << i-1 << ") = " << xtab[i-1] << "\n";
+      // cout << "  XTAB(" << i   << ") = " << xtab[i]   << "\n";
+      throw std::runtime_error(string("[LEAST_SET_OLD]- XTAB must be strictly increasing"));
     }
   }
 
@@ -3112,26 +3095,17 @@ void parabola_val2 ( int ndim, int ndata, double tdata[], double ydata[],
 //
   if ( left < 1 )
   {
-    cout << "\n";
-    cout << "PARABOLA_VAL2 - Fatal error!\n";
-    cout << "  LEFT < 0.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[PARABOLA_VAL2]- LEFT < 0"));
   }
 
   if ( ndata-2 < left )
   {
-    cout << "\n";
-    cout << "PARABOLA_VAL2 - Fatal error!\n";
-    cout << " NDATA-2 < LEFT.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[PARABOLA_VAL2]- NDATA-2 < LEFT"));
   }
 
   if ( ndim < 1 )
   {
-    cout << "\n";
-    cout << "PARABOLA_VAL2 - Fatal error!\n";
-    cout << " NDIM < 1.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[PARABOLA_VAL2]- NDIM < 1"));
   }
 // 
 //  Copy out the three abscissas. 
@@ -3142,13 +3116,10 @@ void parabola_val2 ( int ndim, int ndata, double tdata[], double ydata[],
 
   if ( t2 <= t1 || t3 <= t2 )
   {
-    cout << "\n" ;
-    cout << "PARABOLA_VAL2 - Fatal error!\n";
-    cout << "  T2 <= T1 or T3 <= T2.\n";
-    cout << "  T1 = " << t1 << "\n";
-    cout << "  T2 = " << t2 << "\n";
-    cout << "  T3 = " << t3 << "\n";
-    exit ( 1 );
+    // cout << "  T1 = " << t1 << "\n";
+    // cout << "  T2 = " << t2 << "\n";
+    // cout << "  T3 = " << t3 << "\n";
+    throw std::runtime_error(string("[PARABOLA_VAL2]- T2 <= T1 or T3 <= T2"));
   }
 // 
 //  Construct and evaluate a parabolic interpolant for the data. 
@@ -3539,10 +3510,7 @@ void r8vec_bracket3 ( int n, double t[], double tval, int *left )
 //
   if ( n < 2 ) 
   {
-    cout << "\n";
-    cout << "R8VEC_BRACKET3 - Fatal error!\n";
-    cout << "  N must be at least 2.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[R8VEC_BRACKET3]- N must be at least 2"));
   }
 //
 //  If *LEFT is not between 1 and N-1, set it to the middle value.
@@ -5571,10 +5539,7 @@ double spline_overhauser_nonuni_val ( int ndata, double tdata[],
 //
   if ( ndata < 3 )
   {
-    cout << "\n";
-    cout << "SPLINE_OVERHAUSER_NONUNI_VAL - Fatal error!\n";
-    cout << "  NDATA < 3.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_OVERHAUSER_NONUNI_VAL]- NDATA < 3"));
   }
 //
 //  Find the nearest interval [ TDATA(LEFT), TDATA(RIGHT) ] to TVAL.
@@ -5631,12 +5596,10 @@ double spline_overhauser_nonuni_val ( int ndata, double tdata[],
   }
   else
   {
-    cout << "\n";
-    cout << "SPLINE_OVERHAUSER_NONUNI_VAL - Fatal error!\n";
-    cout << "  Nonsensical value of LEFT = " << left << "\n";
-    cout << "  but 0 < LEFT < NDATA = " << ndata << "\n";
-    cout << "  is required.\n";
-    exit ( 1 );
+    // cout << "  Nonsensical value of LEFT = " << left << "\n";
+    // cout << "  but 0 < LEFT < NDATA = " << ndata << "\n";
+    // cout << "  is required.\n";
+    throw std::runtime_error(string("[SPLINE_OVERHAUSER_NONUNI_VAL]- Nonsensical value of LEFT"));
   }
 
   delete [] mbasis;
@@ -5693,10 +5656,7 @@ double spline_overhauser_uni_val ( int ndata, double tdata[], double ydata[],
 //
   if ( ndata < 3 )
   {
-    cout << "\n";
-    cout << "SPLINE_OVERHAUSER_UNI_VAL - Fatal error!\n";
-    cout << "  NDATA < 3.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_OVERHAUSER_UNI_VAL]- NDATA < 3"));
   }
 //
 //  Find the nearest interval [ TDATA(LEFT), TDATA(RIGHT) ] to TVAL.
@@ -5816,18 +5776,12 @@ void spline_overhauser_val ( int ndim, int ndata, double tdata[],
 
   if ( order != 2 )
   {
-    cout << "\n";
-    cout << "SPLINE_OVERHAUSER_VAL - Fatal error!\n";
-    cout << "  The data abscissas are not strictly ascending.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_OVERHAUSER_VAL]- The data abscissas are not strictly ascending"));
   }
 
   if ( ndata < 3 )
   {
-    cout << "\n";
-    cout << "SPLINE_OVERHAUSER_VAL - Fatal error!\n";
-    cout << "  NDATA < 3.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_OVERHAUSER_VAL]- NDATA < 3"));
   }
 // 
 //  Locate the abscissa interval T[LEFT], T[LEFT+1] nearest to or 
@@ -6221,22 +6175,14 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
 //
   if ( n < 2 )
   {
-    ierr = -1;
-    cout << "\n";
-    cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
-    cout << "  Number of data points less than 2.\n";
-    throw std::runtime_error(string("[spline_pchip_val]- X array not strictly increasing"));
+    throw std::runtime_error(string("[SPLINE_PCHIP_VAL]- Number of data points less than 2"));
   }
 
   for ( i = 1; i < n; i++ )
   {
     if ( x[i] <= x[i-1] )
     {
-      ierr = -3;
-      cout << "\n";
-      cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
-      cout << "  X array not strictly increasing.\n";
-      throw std::runtime_error(string("[spline_pchip_val]- X array not strictly increasing"));
+      throw std::runtime_error(string("[SPLINE_PCHIP_VAL]- X array not strictly increasing"));
     }
   }
 
@@ -6303,11 +6249,7 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
 
       if ( ierc < 0 )
       {
-        ierr = -5;
-        cout << "\n";
-        cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
-        cout << "  Error return from CHFEV.\n";
-        exit ( ierr );
+        throw std::runtime_error(string("[SPLINE_PCHIP_VAL]- Error return from CHFEV"));
       }
 //
 //  In the current set of XE points, there are NEXT(2) to the right of X(IR).
@@ -6316,11 +6258,7 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
       {
         if ( ir < n )
         {
-          ierr = -5;
-          cout << "\n";
-          cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
-          cout << "  IR < N.\n";
-          exit ( ierr );
+          throw std::runtime_error(string("[SPLINE_PCHIP_VAL]- IR < N"));
         }
 //
 //  These are actually extrapolation points.
@@ -6355,11 +6293,7 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
 
           if ( j_new == -1 )
           {
-            ierr = -5;
-            cout << "\n";
-            cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
-            cout << "  Could not bracket the data point.\n";
-            exit ( ierr );
+            throw std::runtime_error(string("[SPLINE_PCHIP_VAL]- Could not bracket the data point"));
           }
 //
 //  Reset J.  This will be the new J_FIRST.
@@ -6457,18 +6391,12 @@ void spline_quadratic_val ( int ndata, double tdata[], double ydata[],
 
   if ( ndata < 3 )
   {
-    cout << "\n";
-    cout << "SPLINE_QUADRATIC_VAL - Fatal error!\n";
-    cout << "  NDATA < 3.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_QUADRATIC_VAL]- NDATA < 3"));
   }
 
   if ( ndata % 2 == 0 )
   {
-    cout << "\n";
-    cout << "SPLINE_QUADRATIC_VAL - Fatal error!\n";
-    cout << "  NDATA must be odd.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_QUADRATIC_VAL]- NDATA must be odd"));
   }
 //
 //  Find the interval [ TDATA(LEFT), TDATA(RIGHT) ] that contains, or is
@@ -6491,10 +6419,7 @@ void spline_quadratic_val ( int ndata, double tdata[], double ydata[],
 
   if ( t2 <= t1 || t3 <= t2 )
   {
-    cout << "\n";
-    cout << "SPLINE_QUADRATIC_VAL - Fatal error!\n";
-    cout << "  T2 <= T1 or T3 <= T2.\n";
-    exit ( 1 );
+    throw std::runtime_error(string("[SPLINE_QUADRATIC_VAL]- T2 <= T1 or T3 <= T2"));
   }
 //
 //  Construct and evaluate a parabolic interpolant for the data
