@@ -129,30 +129,44 @@ namespace pwiz.Skyline.SettingsUI
                     Library lib = null;
                     try
                     {
-                        longWait.PerformWork(this, 800, monitor => lib = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor)));
-                    }
-// ReSharper disable once EmptyGeneralCatchClause
-                    catch
-                    {
-                        // Library failed to load
-                    }
-                    LibraryRetentionTimes libRts;
-                    if (lib != null && lib.TryGetIrts(out libRts) &&
-                        Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
-                    {
-                        using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path))
+                        try
                         {
-                            switch (addPredictorDlg.ShowDialog(this))
+                            longWait.PerformWork(this, 800,
+                                monitor => lib = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor)));
+                        }
+// ReSharper disable once EmptyGeneralCatchClause
+                        catch
+                        {
+                            // Library failed to load
+                        }
+                        LibraryRetentionTimes libRts;
+                        if (lib != null && lib.TryGetIrts(out libRts) &&
+                            Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
+                        {
+                            using (var addPredictorDlg = new AddRetentionTimePredictorDlg(name, path))
                             {
-                                case DialogResult.OK:
-                                    Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
-                                    Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
-                                    Settings.Default.Save();
-                                    break;
-                                case DialogResult.No:
-                                    break;
-                                default:
-                                    return;
+                                switch (addPredictorDlg.ShowDialog(this))
+                                {
+                                    case DialogResult.OK:
+                                        Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
+                                        Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
+                                        Settings.Default.Save();
+                                        break;
+                                    case DialogResult.No:
+                                        break;
+                                    default:
+                                        return;
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (null != lib)
+                        {
+                            foreach (var pooledStream in lib.ReadStreams)
+                            {
+                                pooledStream.CloseStream();
                             }
                         }
                     }
