@@ -5980,7 +5980,7 @@ void spline_pchip_set ( int n, double x[], double f[], double d[] )
     cout << "\n";
     cout << "SPLINE_PCHIP_SET - Fatal error!\n";
     cout << "  Number of data points less than 2.\n";
-    throw runtime_error(string("[SPLINE_PCHIP_SET]- Number of data points less than 2"));
+    throw std::runtime_error(string("[SPLINE_PCHIP_SET]- Number of data points less than 2"));
   }
 
   for ( i = 1; i < n; i++ )
@@ -5991,7 +5991,7 @@ void spline_pchip_set ( int n, double x[], double f[], double d[] )
       cout << "\n";
       cout << "SPLINE_PCHIP_SET - Fatal error!\n";
       cout << "  X array not strictly increasing.\n";
-      throw runtime_error(string("[SPLINE_PCHIP_SET]- X array not strictly increasing"));
+      throw std::runtime_error(string("[SPLINE_PCHIP_SET]- X array not strictly increasing"));
     }
   }
 
@@ -6225,7 +6225,7 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
     cout << "\n";
     cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
     cout << "  Number of data points less than 2.\n";
-    throw runtime_error(string("[spline_pchip_val]- X array not strictly increasing"));
+    throw std::runtime_error(string("[spline_pchip_val]- X array not strictly increasing"));
   }
 
   for ( i = 1; i < n; i++ )
@@ -6236,7 +6236,7 @@ void spline_pchip_val ( int n, double x[], double f[], double d[],
       cout << "\n";
       cout << "SPLINE_PCHIP_VAL - Fatal error!\n";
       cout << "  X array not strictly increasing.\n";
-      throw runtime_error(string("[spline_pchip_val]- X array not strictly increasing"));
+      throw std::runtime_error(string("[spline_pchip_val]- X array not strictly increasing"));
     }
   }
 
