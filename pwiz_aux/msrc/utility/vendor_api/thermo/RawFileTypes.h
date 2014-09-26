@@ -140,7 +140,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "TRACE DSQ")               return InstrumentModelType_Trace_DSQ;
     else if (type == "TRITON")                  return InstrumentModelType_Triton;
     else if (type == "LTQ" || type == "LTQ XL") return InstrumentModelType_LTQ;
-    else if (type == "LTQ FT")                  return InstrumentModelType_LTQ_FT;
+    else if (type == "LTQ FT" || type == "LTQ-FT") return InstrumentModelType_LTQ_FT;
     else if (type == "LTQ FT ULTRA")            return InstrumentModelType_LTQ_FT_Ultra;
     else if (type == "LTQ ORBITRAP")            return InstrumentModelType_LTQ_Orbitrap;
     else if (type == "LTQ ORBITRAP DISCOVERY")  return InstrumentModelType_LTQ_Orbitrap_Discovery;
