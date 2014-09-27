@@ -884,6 +884,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else
                     {
                         var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
+                        bool enableTrackingDot = false;
                         for (int i = 0; i < _nodeGroups.Length; i++)
                         {
                             var nodeGroup = _nodeGroups[i];
@@ -897,6 +898,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    nodeGroup, chromGroupInfo,
                                                    new PaneKey(nodeGroup),
                                                    GetDisplayType(DocumentUI, nodeGroup), ref bestStartTime, ref bestEndTime);
+                                enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                             }
                             else
                             {
@@ -906,15 +908,18 @@ namespace pwiz.Skyline.Controls.Graphs
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance,
                                                        nodeGroup, chromGroupInfo, PaneKey.PRECURSORS, DisplayTypeChrom.precursors,
                                                        ref bestStartTime, ref bestEndTime);
+                                    enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                                 }
                                 if (displayType != DisplayTypeChrom.precursors)
                                 {
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance, 
                                                        nodeGroup, chromGroupInfo, PaneKey.PRODUCTS, DisplayTypeChrom.products,
                                                        ref bestStartTime, ref bestEndTime);
+                                    enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                                 }
                             }
                         }
+                        _enableTrackingDot = enableTrackingDot;
 
                         // Should we show the scan selection point?
                         if (_arrayChromInfo != null && Equals(_stateProvider.SelectedScanFile, FilePath) && _stateProvider.SelectedScanTransition != null)
