@@ -65,6 +65,17 @@ namespace IDPicker.DataModel
             }
         }
 
+        public class DistinctSum : StandardSQLFunction
+        {
+            public DistinctSum() : base("sum") { }
+
+            public override SqlString Render (IList args, NHibernate.Engine.ISessionFactoryImplementor factory)
+            {
+                var result = base.Render(args, factory);
+                return result.Replace("sum(", "sum(distinct ");
+            }
+        }
+
         public class Parens : StandardSQLFunction
         {
             public Parens() : base("parens", NHibernateUtil.String) { }
@@ -232,7 +243,7 @@ namespace IDPicker.DataModel
                 return result;
             }
         }
-
+        
         public class CustomSQLiteDialect : SQLiteDialect
         {
             public CustomSQLiteDialect ()
@@ -241,6 +252,7 @@ namespace IDPicker.DataModel
                 RegisterFunction("round_to_integer", new RoundToInteger());
                 RegisterFunction("group_concat", new StandardSQLFunction("group_concat", NHibernateUtil.String));
                 RegisterFunction("distinct_group_concat", new DistinctGroupConcat());
+                RegisterFunction("distinct_sum", new DistinctSum());
                 RegisterFunction("parens", new Parens());
                 RegisterFunction("range_concat", new StandardSQLFunction("range_concat", NHibernateUtil.String));
                 RegisterFunction("double_array_sum", new StandardSQLFunction("double_array_sum", NHibernateUtil.BinaryBlob));

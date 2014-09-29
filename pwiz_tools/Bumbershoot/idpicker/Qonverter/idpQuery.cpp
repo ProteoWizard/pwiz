@@ -89,16 +89,28 @@ BOOST_ENUM_VALUES(ProteinColumn, SqlColumn,
     (GeneFamily)(make_pair("pmd.GeneFamily", SQLITE_TEXT))
     (Chromosome)(make_pair("pmd.Chromosome", SQLITE_TEXT))
     (GeneDescription)(make_pair("pmd.GeneDescription", SQLITE_TEXT))
-    (iTRAQ4plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)", SQLITE_BLOB))
-    (iTRAQ8plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)", SQLITE_BLOB))
-    (TMT2plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)", SQLITE_BLOB))
-    (TMT6plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)", SQLITE_BLOB))
+    (PrecursorIntensity)(make_pair("IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)", SQLITE_FLOAT))
+    (PrecursorArea)(make_pair("IFNULL(SUM(DISTINCT xic.PeakArea), 0)", SQLITE_FLOAT))
+    (PrecursorBestSNR)(make_pair("IFNULL(MAX(xic.PeakSNR), 0)", SQLITE_FLOAT))
+    (PrecursorMeanSNR)(make_pair("IFNULL(AVG(DISTINCT xic.PeakSNR), 0)", SQLITE_FLOAT))
+    (iTRAQ4plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB))
+    (iTRAQ8plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB))
+    (TMT2plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB))
+    (TMT6plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB))
     (PivotMatchesByGroup)(make_pair("0", SQLITE_INTEGER))
     (PivotMatchesBySource)(make_pair("0", SQLITE_INTEGER))
     (PivotPeptidesByGroup)(make_pair("0", SQLITE_INTEGER))
     (PivotPeptidesBySource)(make_pair("0", SQLITE_INTEGER))
     (PivotSpectraByGroup)(make_pair("0", SQLITE_INTEGER))
     (PivotSpectraBySource)(make_pair("0", SQLITE_INTEGER))
+    (PivotPrecursorIntensityByGroup)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorIntensityBySource)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorAreaByGroup)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorAreaBySource)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorBestSNRByGroup)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorBestSNRBySource)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorMeanSNRByGroup)(make_pair("0", SQLITE_FLOAT))
+    (PivotPrecursorMeanSNRBySource)(make_pair("0", SQLITE_FLOAT))
     (PivotITRAQByGroup)(make_pair("0", SQLITE_BLOB))
     (PivotITRAQBySource)(make_pair("0", SQLITE_BLOB))
     (PivotTMTByGroup)(make_pair("0", SQLITE_BLOB))
@@ -175,8 +187,9 @@ void writeBlobArray(const void* blob, ostream& os, size_t offset, size_t length)
 }
 
 
-typedef boost::variant<int, const void*> PivotDataType;
+typedef boost::variant<int, double, const void*> PivotDataType;
 typedef map<boost::int64_t, map<boost::int64_t, PivotDataType> > PivotDataMap;
+typedef map<size_t, PivotDataMap> PivotDataByColumnMap;
 void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode, PivotDataMap& pivotDataMap)
 {
     string groupByString = "pro.Id";
@@ -202,13 +215,21 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
     else
     {
         if (bal::contains(pivotMode, "ITRAQ"))
-            countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)";
+            countColumn = "IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)";
         else if (bal::contains(pivotMode, "TMT"))
-            countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)";
+            countColumn = "IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)";
+        else if (bal::contains(pivotMode, "PrecursorIntensity"))
+            countColumn = "IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)";
+        else if (bal::contains(pivotMode, "PrecursorArea"))
+            countColumn = "IFNULL(SUM(DISTINCT xic.PeakArea), 0)";
+        else if (bal::contains(pivotMode, "BestSNR"))
+            countColumn = "IFNULL(MAX(xic.PeakSNR), 0)";
+        else if (bal::contains(pivotMode, "MeanSNR"))
+            countColumn = "IFNULL(AVG(DISTINCT xic.PeakSNR), 0)";
         else
             throw runtime_error("unsupported pivot mode");
 
-        // build SQL query with spectrum quantitation
+        // build SQL query with quantitation
         string sql = "SELECT " + groupByString + ", " + pivotColumn + ", " + countColumn + " "
                      "FROM PeptideSpectrumMatch psm "
                      "JOIN Spectrum s ON psm.Spectrum=s.Id "
@@ -218,22 +239,28 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                      "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
                      "JOIN Protein pro ON pi.Protein=pro.Id "
                      "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id "
+                     "LEFT JOIN XICMetrics xic ON psm.Id=xic.PsmId "
                      "GROUP BY " + groupByString + ", " + pivotColumn;
-    
+        cout << sql << endl;
         sqlite::query q(idpDB, sql.c_str());
-        BOOST_FOREACH(sqlite::query::rows row, q)
-        {
-            int blobBytes = row.column_bytes(2);
-            if (blobBytes == 0)
-                continue;
-            char* blobCopy = new char[blobBytes];
-            memcpy(blobCopy, (const char*) row.get<const void*>(2), blobBytes);
-            pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = blobCopy;
-        }
+
+        if (bal::contains(countColumn, "ARRAY_SUM"))
+            BOOST_FOREACH(sqlite::query::rows row, q)
+            {
+                int blobBytes = row.column_bytes(2);
+                if (blobBytes == 0)
+                    continue;
+                char* blobCopy = new char[blobBytes];
+                memcpy(blobCopy, (const char*) row.get<const void*>(2), blobBytes);
+                pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = blobCopy;
+            }
+        else
+            BOOST_FOREACH(sqlite::query::rows row, q)
+                pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = row.get<double>(2);
         return;
     }
 
-    // build SQL query without spectrum quantitation
+    // build SQL query without quantitation
     string sql = "SELECT " + groupByString + ", " + pivotColumn + ", " + countColumn + " "
                  "FROM PeptideSpectrumMatch psm "
                  "JOIN DistinctMatch dm ON psm.Id=dm.PsmId "
@@ -244,7 +271,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                  "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
                  "JOIN Protein pro ON pi.Protein=pro.Id "
                  "GROUP BY " + groupByString + ", " + pivotColumn;
-    
+    cout << sql << endl;
     sqlite::query q(idpDB, sql.c_str());
     BOOST_FOREACH(sqlite::query::rows row, q)
         pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = row.get<int>(2);
@@ -288,12 +315,14 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     int iTRAQ_masses[8] = { 113, 114, 115, 116, 117, 118, 119, 121 };
     int TMT_masses[6] = { 126, 127, 128, 129, 130, 131 };
         
-    PivotDataMap pivotDataMap;
+    PivotDataByColumnMap pivotDataByColumn;
+    PivotDataByColumnMap::const_iterator findAbstractColumnItr;
     PivotDataMap::const_iterator findIdItr;
-    map<boost::int64_t, PivotDataType>::const_iterator findColumnItr;
-    vector<boost::int64_t> pivotColumnIds;
+    map<boost::int64_t, PivotDataType>::const_iterator findPivotColumnItr;
+    map<size_t, vector<boost::int64_t> > pivotColumnIdsByAbstractColumn;
 
-    bool hasQuantitation = false;
+    bool hasSpectrumQuantitation = false;
+    bool hasPrecursorQuantitation = false;
 
     sqlite::query itraqPlexQuery(idpDB, "SELECT DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16) = '0000000000000000' AND "
                                         "COUNT(DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16)) = 1 "
@@ -312,22 +341,22 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     {
         if (tokens[i] == "iTRAQ4plex")
         {
-            hasQuantitation = true;
+            hasSpectrumQuantitation = true;
             for(int j=1; j < 5; ++j) outputStream << "iTRAQ-" << iTRAQ_masses[j] << '\t';
         }
         else if (tokens[i] == "iTRAQ8plex")
         {
-            hasQuantitation = true;
+            hasSpectrumQuantitation = true;
             for(int j=0; j < 8; ++j) outputStream << "iTRAQ-" << iTRAQ_masses[j] << '\t';
         }
         else if (tokens[i] == "TMT2plex")
         {
-            hasQuantitation = true;
+            hasSpectrumQuantitation = true;
             for(int j=0; j < 2; ++j) outputStream << "TMT-" << TMT_masses[j] << '\t';
         }
         else if (tokens[i] == "TMT6plex")
         {
-            hasQuantitation = true;
+            hasSpectrumQuantitation = true;
             for(int j=0; j < 6; ++j) outputStream << "TMT-" << TMT_masses[j] << '\t';
         }
         else if (bal::starts_with(tokens[i], "Pivot"))
@@ -335,9 +364,11 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
             hasITRAQ113 = itraqPlexQuery.begin()->get<int>(0) == 0;
             hasTMT128 = tmtPlexQuery.begin()->get<int>(0) == 0;
 
-            string sql = bal::ends_with(tokens[i], "Source") ? "SELECT Name, Id FROM SpectrumSource"
-                                                             : "SELECT Name, Id FROM SpectrumSourceGroup";
+            string sql = bal::ends_with(tokens[i], "Source") ? "SELECT Name, Id FROM SpectrumSource ORDER BY Name"
+                                                             : "SELECT Name, Id FROM SpectrumSourceGroup ORDER BY Name";
             sqlite::query q(idpDB, sql.c_str());
+
+            vector<boost::int64_t>& pivotColumnIds = pivotColumnIdsByAbstractColumn[i];
 
             if (bal::contains(tokens[i], "ITRAQ"))
             {
@@ -359,17 +390,22 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
             }
             else
             {
+                bool includeColumnName = bal::contains(tokens[i], "Precursor");
                 BOOST_FOREACH(sqlite::query::rows row, q)
                 {
-                    outputStream << row.get<string>(0) << '\t';
+                    outputStream << row.get<string>(0) << (includeColumnName ? " " + tokens[i] : "") << '\t';
                     pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
                 }
             }
 
-            pivotData(idpDB, groupBy, tokens[i], pivotDataMap);
+            pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i]);
         }
         else
+        {
+            if (bal::contains(tokens[i], "Precursor"))
+                hasPrecursorQuantitation = true;
             outputStream << tokens[i] << '\t';
+        }
     }
     outputStream << endl;
 
@@ -383,7 +419,8 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                  "JOIN Peptide pep ON pi.Peptide=pep.Id "
                  "JOIN PeptideSpectrumMatch psm ON psm.Peptide=pi.Peptide "
                  "JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
-                 string(hasQuantitation ? "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id " : "") +
+                 string(hasSpectrumQuantitation ? "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id " : "") +
+                 string(hasPrecursorQuantitation ? "LEFT JOIN XICMetrics xic ON psm.Id=xic.PsmId " : "") +
                  "GROUP BY " + groupByString;
     cout << sql << endl;
     sqlite::query q(idpDB, sql.c_str());
@@ -392,14 +429,15 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     BOOST_FOREACH(sqlite::query::rows row, q)
     {
         boost::int64_t id = static_cast<boost::int64_t>(row.get<sqlite_int64>(0));
-        findIdItr = pivotDataMap.find(id);
 
         for (size_t i=0; i < selectedColumns.size(); ++i)
         {
+            findAbstractColumnItr = pivotDataByColumn.find(i);
+
             const SqlColumn& sqlColumn = selectedColumns[i];
             switch (sqlColumn.second)
             {
-                case SQLITE_FLOAT: outputStream << row.get<double>(i+1); break;
+                case SQLITE_FLOAT:
                 case SQLITE_INTEGER:
                     switch (enumColumns[i].index())
                     {
@@ -409,6 +447,22 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                         case ProteinColumn::PivotPeptidesBySource:
                         case ProteinColumn::PivotSpectraByGroup:
                         case ProteinColumn::PivotSpectraBySource:
+                        case ProteinColumn::PivotPrecursorIntensityByGroup:
+                        case ProteinColumn::PivotPrecursorIntensityBySource:
+                        case ProteinColumn::PivotPrecursorAreaByGroup:
+                        case ProteinColumn::PivotPrecursorAreaBySource:
+                        case ProteinColumn::PivotPrecursorBestSNRByGroup:
+                        case ProteinColumn::PivotPrecursorBestSNRBySource:
+                        case ProteinColumn::PivotPrecursorMeanSNRByGroup:
+                        case ProteinColumn::PivotPrecursorMeanSNRBySource:
+                        {
+                            if (findAbstractColumnItr == pivotDataByColumn.end())
+                                throw runtime_error("unable to get pivot data for column " + lexical_cast<string>(i));
+
+                            const vector<boost::int64_t>& pivotColumnIds = pivotColumnIdsByAbstractColumn[i];
+                            const PivotDataMap& pivotDataMap = findAbstractColumnItr->second;
+                            findIdItr = pivotDataMap.find(id);
+
                             // for the current protein/gene/cluster/whatever, look it up in the pivotDataMap by its id,
                             // then (even if it's not found): for every source or group, output a column for the value
                             // corresponding to that source or group (or 0 if there is no value for that source or group)
@@ -422,16 +476,23 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                             else
                                 for (size_t j=0; j < pivotColumnIds.size(); ++j)
                                 {
-                                    findColumnItr = findIdItr->second.find(pivotColumnIds[j]);
-                                    if (findColumnItr == findIdItr->second.end())
+                                    findPivotColumnItr = findIdItr->second.find(pivotColumnIds[j]);
+                                    if (findPivotColumnItr == findIdItr->second.end())
                                         outputStream << 0;
                                     else
-                                        outputStream << findColumnItr->second;
+                                        outputStream << findPivotColumnItr->second;
                                     if (j < pivotColumnIds.size()-1)
                                         outputStream << '\t';
                                 }
                                 break;
-                        default: outputStream << row.get<int>(i+1); break;
+                        }
+
+                        default:
+                            if (sqlColumn.second == SQLITE_FLOAT)
+                                outputStream << row.get<double>(i+1);
+                            else
+                                outputStream << row.get<int>(i+1);
+                            break;
                     }
                     break;
                 case SQLITE_BLOB:
@@ -446,6 +507,14 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                         case ProteinColumn::PivotITRAQBySource:
                         case ProteinColumn::PivotTMTByGroup:
                         case ProteinColumn::PivotTMTBySource:
+                        {
+                            if (findAbstractColumnItr == pivotDataByColumn.end())
+                                throw runtime_error("unable to get pivot data for column " + lexical_cast<string>(i));
+
+                            const vector<boost::int64_t>& pivotColumnIds = pivotColumnIdsByAbstractColumn[i];
+                            const PivotDataMap& pivotDataMap = findAbstractColumnItr->second;
+                            findIdItr = pivotDataMap.find(id);
+
                             // for the current protein/gene/cluster/whatever, look it up in the pivotDataMap by its id,
                             // then (even if it's not found): for every source or group, output a column for the value
                             // corresponding to that source or group (or 0 if there is no value for that source or group)
@@ -463,30 +532,32 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                             else
                                 for (size_t j=0; j < pivotColumnIds.size(); ++j)
                                 {
-                                    findColumnItr = findIdItr->second.find(pivotColumnIds[j]);
+                                    findPivotColumnItr = findIdItr->second.find(pivotColumnIds[j]);
                                     if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
                                     {
-                                        if (findColumnItr == findIdItr->second.end())
+                                        if (findPivotColumnItr == findIdItr->second.end())
                                             writeBlobArray<double>(NULL, outputStream, 0, hasITRAQ113 ? 8 : 4);
                                         else if (hasITRAQ113)
-                                            writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 8);
+                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 0, 8);
                                         else
-                                            writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 1, 4);
+                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 1, 4);
                                     }
                                     else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
                                     {
-                                        if (findColumnItr == findIdItr->second.end())
+                                        if (findPivotColumnItr == findIdItr->second.end())
                                             writeBlobArray<double>(NULL, outputStream, 0, hasTMT128 ? 6 : 2);
                                         else if (hasTMT128)
-                                            writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 6);
+                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 0, 6);
                                         else
-                                            writeBlobArray<double>(boost::get<const void*>(findColumnItr->second), outputStream, 0, 2);
+                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 0, 2);
                                     }
                                     
                                     if (j < pivotColumnIds.size()-1)
                                         outputStream << '\t';
                                 }
                                 break;
+                        }
+
                         default: throw runtime_error("unknown enum column type");
                     }
                     break;

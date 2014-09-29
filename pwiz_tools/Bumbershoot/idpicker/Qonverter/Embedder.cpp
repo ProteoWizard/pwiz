@@ -922,6 +922,10 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
     for(size_t i=0; i < sources.size(); ++i)
     {
         SpectrumSource& source = sources[i];
+
+        if (quantitationMethodBySource.count((int) source.id) > 0 && quantitationMethodBySource.find((int) source.id)->second.quantitationMethod != QuantitationMethod::LabelFree)
+            continue;
+
         XIC::XICConfiguration config;
 
         if (xicConfigBySource.count(source.id) > 0)
@@ -932,7 +936,8 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
         string align = "0";
         if (config.AlignRetentionTime)
             align = "1";
-        string configString = "[" + lexical_cast<string>(config.MonoisotopicAdjustmentMin) + "," + lexical_cast<string>(config.MonoisotopicAdjustmentMax) + "] ; " +
+        ostringstream oss; oss << config.MonoisotopicAdjustmentSet;
+        string configString = oss.str() + " ; " +
         "[-" + lexical_cast<string>(config.RetentionTimeLowerTolerance) + "," + lexical_cast<string>(config.RetentionTimeUpperTolerance) + "] ; "+
         "[-" + lexical_cast<string>(config.ChromatogramMzLowerOffset) + "," + lexical_cast<string>(config.ChromatogramMzUpperOffset) + "] ; " +
         lexical_cast<string>(config.MaxQValue) + " ; " + align;

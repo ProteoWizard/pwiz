@@ -203,6 +203,7 @@ int InitProcess( argList_t& args )
         return 1;
     }
 
+
     args.insert(args.end(), extraFilepaths.begin(), extraFilepaths.end());
 
 	return 0;
@@ -571,6 +572,12 @@ int main( int argc, char* argv[] )
             map<int, Embedder::QuantitationConfiguration> allSourcesQuantitationMethodMap;
             allSourcesQuantitationMethodMap[0] = Embedder::QuantitationConfiguration(g_rtConfig->QuantitationMethod, g_rtConfig->ReporterIonMzTolerance);
 
+            map<int, XIC::XICConfiguration> allSourcesXICConfigurationMap;
+            allSourcesXICConfigurationMap[0] = XIC::XICConfiguration(false, g_rtConfig->MaxFDR,
+                                                                     g_rtConfig->LabelFreeMonoisotopeAdjustmentSet,
+                                                                     g_rtConfig->LabelFreeLowerScanTimeLimit, g_rtConfig->LabelFreeUpperScanTimeLimit,
+                                                                     g_rtConfig->LabelFreeLowerMzLimit, g_rtConfig->LabelFreeUpperMzLimit);
+
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
             {
                 cout << "\rEmbedding subset spectra" << (g_rtConfig->EmbedSpectrumSources ? "" : " scan times")
@@ -583,10 +590,13 @@ int main( int argc, char* argv[] )
                 if (idpDbFilepath.has_parent_path())
                     sourceSearchPath += ";" + idpDbFilepath.parent_path().string();
 
+                if (g_rtConfig->QuantitationMethod == QuantitationMethod::LabelFree)
+                    Embedder::EmbedMS1Metrics(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap, allSourcesXICConfigurationMap, 0);
+
                 if (g_rtConfig->EmbedSpectrumSources)
-                    Embedder::embed(idpDbFilepaths[i], sourceSearchPath, allSourcesQuantitationMethodMap);
+                    Embedder::embed(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap);
                 else
-                    Embedder::embedScanTime(idpDbFilepaths[i], sourceSearchPath, allSourcesQuantitationMethodMap);
+                    Embedder::embedScanTime(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap);
             }
         }
 

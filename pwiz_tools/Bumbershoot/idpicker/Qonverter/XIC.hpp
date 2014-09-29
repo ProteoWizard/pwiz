@@ -58,6 +58,7 @@
 #include <boost/range/algorithm/upper_bound.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include "crawdad/SimpleCrawdad.h"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <algorithm>
 #include "Embedder.hpp"
 
@@ -88,11 +89,12 @@ using std::vector;
 using std::map;
 using std::pair;
 using pwiz::chemistry::MZTolerance;
+using pwiz::util::IntegerSet;
 
 struct XICConfiguration
 {
     XICConfiguration(bool AlignRetentionTime = false, double MaxQValue = 0.05,
-                     int MonoisotopicAdjustmentMin = 0, int MonoisotopicAdjustmentMax = 2,
+                     const IntegerSet& MonoisotopicAdjustmentSet = IntegerSet(0, 2),
                      int RetentionTimeLowerTolerance = 30, int RetentionTimeUpperTolerance = 30,
                      MZTolerance ChromatogramMzLowerOffset = MZTolerance(10, MZTolerance::PPM),
                      MZTolerance ChromatogramMzUpperOffset = MZTolerance(10, MZTolerance::PPM));
@@ -100,8 +102,7 @@ struct XICConfiguration
 
     bool AlignRetentionTime;
     double MaxQValue;
-    int MonoisotopicAdjustmentMin;
-    int MonoisotopicAdjustmentMax;
+    IntegerSet MonoisotopicAdjustmentSet;
     int RetentionTimeLowerTolerance;
     int RetentionTimeUpperTolerance;
     MZTolerance ChromatogramMzLowerOffset;

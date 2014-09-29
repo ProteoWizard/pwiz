@@ -55,7 +55,7 @@ NativeEmbedder::QuantitationConfiguration makeNativeQuantitationConfiguration(Em
 NativeXIC::XICConfiguration makeNativeXICConfiguration(Embedder::XICConfiguration^ managedXICConfig)
 {
     return NativeXIC::XICConfiguration(managedXICConfig->AlignRetentionTime, managedXICConfig->MaxQValue,
-                     (size_t)managedXICConfig->MonoisotopicAdjustmentMin, (size_t)managedXICConfig->MonoisotopicAdjustmentMax,
+                     IntegerSet(managedXICConfig->MonoisotopicAdjustmentMin, managedXICConfig->MonoisotopicAdjustmentMax),
                      (size_t)managedXICConfig->RetentionTimeLowerTolerance, (size_t)managedXICConfig->RetentionTimeUpperTolerance,
                      pwiz::chemistry::MZTolerance(managedXICConfig->ChromatogramMzLowerOffset->value,
                                                  (pwiz::chemistry::MZTolerance::Units) managedXICConfig->ChromatogramMzLowerOffset->units),
@@ -76,8 +76,13 @@ Embedder::QuantitationConfiguration::QuantitationConfiguration()
 Embedder::XICConfiguration::XICConfiguration()
 {
     NativeXIC::XICConfiguration nativeConfig;
-    MonoisotopicAdjustmentMin = nativeConfig.MonoisotopicAdjustmentMin;
-    MonoisotopicAdjustmentMax = nativeConfig.MonoisotopicAdjustmentMax;
+
+    // TODO: fix IntegerSet to make it easier to get the min and max
+    IntegerSet::const_iterator itr = nativeConfig.MonoisotopicAdjustmentSet.begin();
+    MonoisotopicAdjustmentMin = *itr;
+    for (; itr != nativeConfig.MonoisotopicAdjustmentSet.end(); ++itr)
+        MonoisotopicAdjustmentMax = *itr;
+
     RetentionTimeLowerTolerance = nativeConfig.RetentionTimeLowerTolerance;
     RetentionTimeUpperTolerance = nativeConfig.RetentionTimeUpperTolerance;
     MaxQValue = nativeConfig.MaxQValue;
@@ -125,8 +130,12 @@ Embedder::XICConfiguration::XICConfiguration(String^ representitiveString)
     }
     else
     {
-        MonoisotopicAdjustmentMin = nativeConfig.MonoisotopicAdjustmentMin;
-        MonoisotopicAdjustmentMax = nativeConfig.MonoisotopicAdjustmentMax;
+        // TODO: fix IntegerSet to make it easier to get the min and max
+        IntegerSet::const_iterator itr = nativeConfig.MonoisotopicAdjustmentSet.begin();
+        MonoisotopicAdjustmentMin = *itr;
+        for (; itr != nativeConfig.MonoisotopicAdjustmentSet.end(); ++itr)
+            MonoisotopicAdjustmentMax = *itr;
+
         RetentionTimeLowerTolerance = nativeConfig.RetentionTimeLowerTolerance;
         RetentionTimeUpperTolerance = nativeConfig.RetentionTimeUpperTolerance;
         ChromatogramMzLowerOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzLowerOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzLowerOffset.units);

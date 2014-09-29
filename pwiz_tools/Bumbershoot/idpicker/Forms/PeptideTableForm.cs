@@ -330,7 +330,7 @@ namespace IDPicker.Forms
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
             else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
             else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
-            else if (pivot.Text.Contains("MS1")) valueColumn = "SUM(psm.PeakIntensity)";
+            else if (pivot.Text.Contains("MS1")) valueColumn = "DISTINCT_SUM(psm.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 
             var pivotHql = String.Format(pivotHqlFormat,

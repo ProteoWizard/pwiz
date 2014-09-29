@@ -58,15 +58,17 @@ const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
 #endif
 
 XICConfiguration::XICConfiguration(bool AlignRetentionTime, double MaxQValue,
-                     int MonoisotopicAdjustmentMin, int MonoisotopicAdjustmentMax,
+                     const IntegerSet& MonoisotopicAdjustmentSet,
                      int RetentionTimeLowerTolerance, int RetentionTimeUpperTolerance,
                      MZTolerance ChromatogramMzLowerOffset, MZTolerance ChromatogramMzUpperOffset)
-                     :AlignRetentionTime(AlignRetentionTime), MaxQValue(MaxQValue), MonoisotopicAdjustmentMin(MonoisotopicAdjustmentMin), MonoisotopicAdjustmentMax(MonoisotopicAdjustmentMax), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
+                     : AlignRetentionTime(AlignRetentionTime), MaxQValue(MaxQValue), MonoisotopicAdjustmentSet(MonoisotopicAdjustmentSet), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
 {}
 
 XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const string& sourceId, XICConfiguration config)
 {
-    bool useAvgMass = (config.MonoisotopicAdjustmentMin==0) && (config.MonoisotopicAdjustmentMax==0);
+    // use avg mass if either offset is not in PPM units and the total tolerance in Daltons is greater than 1
+    bool useAvgMass = config.ChromatogramMzUpperOffset.units != MZTolerance::PPM && config.ChromatogramMzLowerOffset.units != MZTolerance::PPM &&
+                      config.ChromatogramMzUpperOffset.value + config.ChromatogramMzLowerOffset.value > 1;
     string deltaMassColumn = useAvgMass ? "AvgMassDelta" : "MonoMassDelta";
     string massColumn = useAvgMass ? "MolecularWeight" : "MonoisotopicMass";
     string sql = "SELECT psm.Id, psm.Peptide, Source, NativeID, PrecursorMZ, Charge, IFNULL(Mods, '') AS Mods, Qvalue,  "
@@ -153,17 +155,25 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
             tmpWindow.preRT.clear();
             tmpWindow.preMZ.clear();
 
-            //IntegerSet::const_iterator itr = g_rtConfig->MonoisotopeAdjustmentSet.begin();
-            //for (; itr != g_rtConfig->MonoisotopeAdjustmentSet.end(); ++itr) //access with *itr
-            for (int x = config.MonoisotopicAdjustmentMin; x <= config.MonoisotopicAdjustmentMax; x++)
+            if (useAvgMass || config.MonoisotopicAdjustmentSet.empty())
             {
-                if (tmpPSM.charge == 0) throw runtime_error("[chromatogramMzWindow] charge cannot be 0");
-                double centerMz = tmpPSM.exactMZ + x * Neutron / tmpPSM.charge;
+                double centerMz = tmpPSM.exactMZ / tmpPSM.charge;
                 double mzLower = centerMz - MZTolerance(config.ChromatogramMzLowerOffset.value * tmpPSM.charge, config.ChromatogramMzLowerOffset.units);
                 double mzUpper = centerMz + MZTolerance(config.ChromatogramMzUpperOffset.value * tmpPSM.charge, config.ChromatogramMzUpperOffset.units);
                 tmpWindow.preMZ += boost::icl::interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
             }
-        
+            else
+            {
+                IntegerSet::const_iterator itr = config.MonoisotopicAdjustmentSet.begin();
+                for (; itr != config.MonoisotopicAdjustmentSet.end(); ++itr)
+                {
+                    if (tmpPSM.charge == 0) throw runtime_error("[chromatogramMzWindow] charge cannot be 0");
+                    double centerMz = tmpPSM.exactMZ + *itr * Neutron / tmpPSM.charge;
+                    double mzLower = centerMz - MZTolerance(config.ChromatogramMzLowerOffset.value * tmpPSM.charge, config.ChromatogramMzLowerOffset.units);
+                    double mzUpper = centerMz + MZTolerance(config.ChromatogramMzUpperOffset.value * tmpPSM.charge, config.ChromatogramMzUpperOffset.units);
+                    tmpWindow.preMZ += boost::icl::interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
+                }
+            }
 
 
             if (!scanInfo.identified)
@@ -922,6 +932,20 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 }*/
 
         }
+            
+        // populate the source statistics
+        sqlite::command cmd2(idpDb, "UPDATE SpectrumSource SET "
+                                    "TotalSpectraMS1 = ?, "
+                                    "TotalSpectraMS2 = ?, "
+                                    "QuantitationMethod = ? "
+                                    "WHERE Id = ?");
+        cmd2.binder() << MS1Count <<
+                         MS2Count <<
+                         int(QuantitationMethod::LabelFree) <<
+                         sourceId;
+        cmd2.execute();
+        cmd2.reset();
+
         // Write chromatograms for visualization of data
         return writeChromatograms(idpDBFilePath, pepWindow,RegDefinedPrecursors, ilr, currentFile, totalFiles);
     }
