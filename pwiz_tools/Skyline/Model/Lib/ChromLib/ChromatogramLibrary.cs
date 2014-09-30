@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     SetLibraryEntries(spectrumInfos);
 
                     var sampleFileQuery =
-                        session.CreateQuery("SELECT Id, FilePath, SampleName, AcquiredTime, ModifiedTime, InstrumentIonizationType, " +
+                        session.CreateQuery("SELECT Id, FilePath, SampleName, AcquiredTime, ModifiedTime, InstrumentIonizationType, " + // Not L10N
                                             "InstrumentAnalyzer, InstrumentDetector FROM SampleFile"); // Not L10N
                     var sampleFiles = new List<ChromatogramLibrarySourceInfo>();
                     foreach (object[] row in sampleFileQuery.List<object[]>())
