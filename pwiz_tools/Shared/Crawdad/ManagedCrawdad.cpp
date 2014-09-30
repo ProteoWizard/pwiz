@@ -48,7 +48,7 @@ namespace Crawdad {
                 _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
                 _CrtMemDumpAllObjectsSince(&_checkPointState);
             }
-            return diffState.lSizes[_NORMAL_BLOCK];
+            return (long)diffState.lSizes[_NORMAL_BLOCK];
         }
 #endif
         return 0;
