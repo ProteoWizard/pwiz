@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Data.Common;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
@@ -93,7 +94,14 @@ namespace pwiz.SkylineTest.Proteome
             {
                 string fastaPath = testFilesDir.GetTestPath("tiny.fasta");
                 string protDbPath = testFilesDir.GetTestPath("celegans_mini.protdb"); // a version 0 protdb file
-                
+                string blibPath = testFilesDir.GetTestPath("random.blib"); // a bibliospec file
+
+                // What happens when you try to open a random file as a protdb file?
+                AssertEx.ThrowsException<DbException>(() => ProteomeDb.OpenProteomeDb(fastaPath));
+
+                // What happens when you try to open a non-protdb database file as a protdb file?
+                AssertEx.ThrowsException<FileLoadException>(() => ProteomeDb.OpenProteomeDb(blibPath));
+
                 using (ProteomeDb proteomeDb = ProteomeDb.OpenProteomeDb(protDbPath))
                 {
                     Assert.IsTrue(proteomeDb.GetSchemaVersionMajor() == 0); // the initial db from our zipfile should be ancient

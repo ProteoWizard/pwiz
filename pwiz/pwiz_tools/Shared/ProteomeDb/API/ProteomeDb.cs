@@ -61,9 +61,20 @@ namespace pwiz.ProteomeDatabase.API
             _isTmp = isTmp;
             _databaseResource = DatabaseResource.GetDbResource(path);
 
-            // Do we need to update the db to current version?
             using (var session = OpenSession())
             {
+                // Is this even a proper protDB file? (https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?rowId=14893)
+                using (IDbCommand command = session.Connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbProteinName'"; // Not L10N
+                    var obj = command.ExecuteScalar();
+                    if (Convert.ToInt32(obj) == 0)
+                        throw new FileLoadException(
+                            String.Format(Resources.ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_, path));
+                }
+
+                // Do we need to update the db to current version?
                 ReadVersion(session);
             }
             if (_schemaVersionMajor != SCHEMA_VERSION_MAJOR_CURRENT)
