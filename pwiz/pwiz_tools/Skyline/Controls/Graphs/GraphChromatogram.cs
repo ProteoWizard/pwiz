@@ -1442,10 +1442,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
                 var fullScanInfo = new FullScanInfo
                 {
-                    ChromInfo = arrayChromInfo[i],
+                    ChromInfo = info,
                     ScanName = scanName
                 };
-                if (fullScanInfo.ChromInfo.ExtractionWidth > 0)
+                if (fullScanInfo.ChromInfo != null && fullScanInfo.ChromInfo.ExtractionWidth > 0)
                     _enableTrackingDot = true;
                 var graphItem = new ChromGraphItem(nodeGroup,
                                                     nodeTran,

@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -251,20 +252,22 @@ namespace pwiz.Skyline.SettingsUI
             }
             bool useLibraryDriftTime = cbUseSpectralLibraryDriftTimes.Checked;
             double? libraryDTResolvingPower = null;
-            if (!string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+            if (useLibraryDriftTime || !string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
             {
                 double libraryDTWindowOut;
-                const double minWindow = 0;
-                const double maxWindow = double.MaxValue;
                 if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Prediction,
-                        textSpectralLibraryDriftTimesResolvingPower, minWindow, maxWindow, out libraryDTWindowOut))
+                        textSpectralLibraryDriftTimesResolvingPower, null, null, out libraryDTWindowOut))
                     return null;
+                string errmsg = EditDriftTimePredictorDlg.ValidateResolvingPower(libraryDTWindowOut);
+                if (errmsg != null)
+                {
+                    helper.ShowTextBoxError(tabControl1, (int)TABS.Prediction, textSpectralLibraryDriftTimesResolvingPower, errmsg);
+                    return null;
+                }
                 libraryDTResolvingPower = libraryDTWindowOut;
             }
 
-
-
-            PeptidePrediction prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDTResolvingPower);
+            var prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDTResolvingPower);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and hold filter settings
@@ -922,6 +925,30 @@ namespace pwiz.Skyline.SettingsUI
             set { cbUseMeasuredRT.Checked = value; }
         }
 
+        public int TimeWindow
+        {
+            get { return Convert.ToInt32(textMeasureRTWindow.Text); }
+            set { textMeasureRTWindow.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public bool IsUseSpectralLibraryDriftTimes
+        {
+            get { return cbUseSpectralLibraryDriftTimes.Checked; }
+            set { cbUseSpectralLibraryDriftTimes.Checked = value; }
+        }
+
+        public double? SpectralLibraryDriftTimeResolvingPower
+        {
+            get
+            {
+
+                if (string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+                    return null;
+                return Convert.ToDouble(textSpectralLibraryDriftTimesResolvingPower.Text);
+            }
+            set { textSpectralLibraryDriftTimesResolvingPower.Text = value.HasValue ? value.ToString() : string.Empty; }
+        }
+
         public void ShowBuildBackgroundProteomeDlg()
         {
             CheckDisposed();
@@ -1066,12 +1093,6 @@ namespace pwiz.Skyline.SettingsUI
                 return from mod in _driverLabelType.GetHeavyModifications()
                        select mod.LabelType;
             }
-        }
-
-        public int TimeWindow
-        {
-            get { return Convert.ToInt32(textMeasureRTWindow.Text); }
-            set { textMeasureRTWindow.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public void AddPeakScoringModel()
