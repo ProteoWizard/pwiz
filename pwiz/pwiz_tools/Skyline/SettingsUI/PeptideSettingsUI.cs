@@ -267,20 +267,7 @@ namespace pwiz.Skyline.SettingsUI
                 libraryDTResolvingPower = libraryDTWindowOut;
             }
 
-            PeptidePrediction prediction;
-            try
-            {
-                prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDTResolvingPower);
-            }
-            catch (InvalidDataException x)
-            {
-                // Some unanticipated trouble with the peptide prediction settings - set focus on that tab and show user the problem
-                tabControl1.SelectedIndex = (int)TABS.Prediction;
-                var message = x.Message;
-                MessageDlg.Show(this, message);
-                e.Cancel = true;
-                return null;
-            }
+            var prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDTResolvingPower);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and hold filter settings
