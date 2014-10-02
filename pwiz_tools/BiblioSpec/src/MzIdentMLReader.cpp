@@ -263,7 +263,8 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
             } else if (analysisType_ != SCAFFOLD_ANALYSIS)
                 Verbosity::error("Scaffold score(s) found in non-Scaffold analysis");
             return boost::lexical_cast<double>(it->value);
-        } else if (name == "Byonic: Peptide AbsLogProb") {
+        } else if (name == "Byonic: Peptide AbsLogProb"
+                   || name == "Byonic: Peptide AbsLogProb2D") {
             if (analysisType_ == UNKNOWN_ANALYSIS) {
                 analysisType_ = BYONIC_ANALYSIS;
                 scoreThreshold_ = getScoreThreshold(BYONIC);
