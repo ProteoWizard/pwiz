@@ -1139,6 +1139,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
                     const string& precursorMzTolerance = getValueOrDefault(kvPairs, "config: precursormztolerance", "");
                     const string& precursorMzToleranceUnits = getValueOrDefault(kvPairs, "config: precursormztoleranceunits", "");
+                    const string& precursorMzToleranceRule = getValueOrDefault(kvPairs, "config: precursormztolerancerule", "");
 
                     if (!precursorMzTolerance.empty() && !precursorMzToleranceUnits.empty())
                     {
@@ -1146,11 +1147,21 @@ struct HandlerSearchSummary : public SAXParser::Handler
                         _sip->parentTolerance.set(MS_search_tolerance_minus_value, precursorMzTolerance, parentUnits);
                         _sip->parentTolerance.set(MS_search_tolerance_plus_value, precursorMzTolerance, parentUnits);
                     }
-                    else if (!precursorMzTolerance.empty())
+                    else if (!precursorMzToleranceRule.empty())
                     {
-                        MZTolerance parentTolerance = lexical_cast<MZTolerance>(precursorMzTolerance);
-                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance.value, parentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
-                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance.value, parentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
+                        const string& avgPrecursorMzTolerance = getValueOrDefault(kvPairs, "config: avgprecursormztolerance", "");
+                        const string& monoPrecursorMzTolerance = getValueOrDefault(kvPairs, "config: monoprecursormztolerance", "");
+                        scoped_ptr<MZTolerance> parentTolerance;
+                        if (precursorMzToleranceRule == "auto" || precursorMzToleranceRule == "mono")
+                            parentTolerance.reset(new MZTolerance(lexical_cast<MZTolerance>(monoPrecursorMzTolerance)));
+                        else if (precursorMzToleranceRule == "avg")
+                            parentTolerance.reset(new MZTolerance(lexical_cast<MZTolerance>(avgPrecursorMzTolerance)));
+
+                        if (parentTolerance)
+                        {
+                            _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance->value, parentTolerance->units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
+                            _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance->value, parentTolerance->units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million);
+                        }
                     }
 
                     // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
@@ -1206,6 +1217,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
 
             case MS_Comet:
                 {
+                    if (_sip->analysisSoftwarePtr->version.empty())
+                        _sip->analysisSoftwarePtr->version = getValueOrDefault(kvPairs, "# comet_version ", "");
+
                     string parentTolerance = getValueOrDefault(kvPairs, "peptide_mass_tolerance", "");
                     string parentToleranceUnits = getValueOrDefault(kvPairs, "peptide_mass_units", "");
                     if (!parentTolerance.empty() && !parentToleranceUnits.empty())
@@ -1234,6 +1248,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     if (getValueOrDefault(kvPairs, "use_y_ions", "") == "1")   translateIonSeriesConsidered(use_nl_ions ? "y,y-H2O,y-NH3" : "y");
                     if (getValueOrDefault(kvPairs, "use_z_ions", "") == "1")   translateIonSeriesConsidered("z+1");
                 }
+                break;
 
             // TODO: add more search engines
 
