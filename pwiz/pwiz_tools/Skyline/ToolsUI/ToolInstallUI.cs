@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
 using Ionic.Zip;
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException x)
             {
-                if (x.InnerException.GetType() == typeof(ToolExecutionException))
+                if (x.InnerException.GetType() == typeof(ToolExecutionException) || x.InnerException is WebException)
                     MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
                 else
                     throw;
