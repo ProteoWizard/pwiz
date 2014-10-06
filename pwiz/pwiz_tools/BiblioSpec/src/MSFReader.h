@@ -65,6 +65,21 @@ namespace BiblioSpec
             }
         } zlib_mem;
 
+        struct ProcessedMsfSpectrum {
+            PSM* psm;
+            double qvalue;
+            double xcorr;
+            bool ambiguous;
+
+            ProcessedMsfSpectrum():
+                psm(NULL), qvalue(numeric_limits<double>::max()), xcorr(-numeric_limits<double>::max()), ambiguous(false) {
+            };
+
+            ProcessedMsfSpectrum(PSM* psmPtr, double qvalueScore, double xcorrScore):
+                psm(psmPtr), qvalue(qvalueScore), xcorr(xcorrScore), ambiguous(false) {
+            };
+        };
+
         sqlite3* msfFile_;
         const char* msfName_;
         int schemaVersion_;

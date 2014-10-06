@@ -263,6 +263,18 @@ namespace BiblioSpec
     {
         sqlite3_stmt* statement;
         int resultCount;
+        map<int, double> xcorrs; // peptide id --> xcorr, for breaking ties when q-values are identical
+
+        if (!filtered_)
+        {
+            statement = getStmt(
+                "SELECT PeptideID, ScoreValue "
+                "FROM PeptideScores JOIN ProcessingNodeScores ON PeptideScores.ScoreID = ProcessingNodeScores.ScoreID "
+                "WHERE ScoreName = 'XCorr'");
+            while (hasNext(statement)) {
+                xcorrs[sqlite3_column_int(statement, 0)] = sqlite3_column_double(statement, 1);
+            }
+        }
 
         bool qValues = hasQValues();
         if (!qValues)
@@ -306,8 +318,7 @@ namespace BiblioSpec
         ProgressIndicator progress(resultCount);
 
         initFileNameMap();
-        map<int, PSM*> processedSpectra;
-        map<int, double> ambiguousSpectra;
+        map<int, ProcessedMsfSpectrum> processedSpectra;
         map< int, vector<SeqMod> > modMap = getMods();
         map<int, int> fileIdMap = getFileIds();
 
@@ -317,41 +328,39 @@ namespace BiblioSpec
             int peptideId = sqlite3_column_int(statement, 0);
             int specId = sqlite3_column_int(statement, 1);
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
-            double score = qValues ? sqlite3_column_double(statement, 3) : 0.0;
+            double qvalue = qValues ? sqlite3_column_double(statement, 3) : 0.0;
+
+            map<int, double>::const_iterator xcorrIter = xcorrs.find(peptideId);
+            double xcorr = (xcorrIter != xcorrs.end()) ? xcorrIter->second : -numeric_limits<double>::max();
 
             // check if we already processed a peptide that references this spectrum
-            map<int, PSM*>::iterator processedSpectraSearch = processedSpectra.find(specId);
+            map<int, ProcessedMsfSpectrum>::iterator processedSpectraSearch = processedSpectra.find(specId);
             if (processedSpectraSearch != processedSpectra.end())
             {
-                map<int, double>::iterator ambiguousCheck = ambiguousSpectra.find(specId);
+                ProcessedMsfSpectrum& processed = processedSpectraSearch->second;
                 // not an ambigous spectrum (yet)
-                if (ambiguousCheck == ambiguousSpectra.end())
+                if (!processed.ambiguous)
                 {
-                    PSM* other = processedSpectraSearch->second;
                     // worse than other score, skip this
-                    if (score < other->score)
+                    if (qvalue > processed.qvalue || (qvalue == processed.qvalue && xcorr < processed.xcorr))
                     {
                         Verbosity::debug("Peptide %d (%s) had a worse score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring this peptide).",
-                                         peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
+                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
                         continue;
                     }
                     // equal, discard other and skip this
-                    else if (score == other->score)
+                    else if (qvalue == processed.qvalue && xcorr == processed.xcorr)
                     {
-                        if (sequence == other->unmodSeq)
-                        {
-                            // same score, but also same sequence, ignore the new one
-                            continue;
-                        }
                         Verbosity::debug("Peptide %d (%s) had the same score as another peptide (%s) "
                                          "referencing spectrum %d (ignoring both peptides).",
-                                         peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
+                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
 
-                        removeFromFileMap(other);
-                        delete other;
+                        removeFromFileMap(processed.psm);
+                        delete processed.psm;
 
-                        ambiguousSpectra[specId] = score;
+                        processed.psm = NULL;
+                        processed.ambiguous = true;
                         continue;
                     }
                     // better than other score, discard other
@@ -359,22 +368,23 @@ namespace BiblioSpec
                     {
                         Verbosity::debug("Peptide %d (%s) had a better score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring other peptide).",
-                                         peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
-                        removeFromFileMap(other);
-                        curPSM_ = other;
+                                         peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
+                        removeFromFileMap(processed.psm);
+                        curPSM_ = processed.psm;
                         curPSM_->mods.clear();
+                        processed.qvalue = qvalue;
+                        processed.xcorr = xcorr;
                     }
                 }
                 // ambigous spectrum, check if score is better
                 else
                 {
                     Verbosity::debug("Peptide %d (%s) with score %f references same spectrum as other peptides "
-                                     "that had score %f.", peptideId, sequence.c_str(), score, ambiguousCheck->second);
-                    if (score > ambiguousCheck->second)
+                                     "that had score %f.", peptideId, sequence.c_str(), qvalue, processed.qvalue);
+                    if (qvalue < processed.qvalue || (qvalue == processed.qvalue && xcorr > processed.xcorr))
                     {
-                        ambiguousSpectra.erase(ambiguousCheck);
                         curPSM_ = new PSM();
-                        processedSpectraSearch->second = curPSM_;
+                        processedSpectraSearch->second = ProcessedMsfSpectrum(curPSM_, qvalue, xcorr);
                     }
                     else
                     {
@@ -386,7 +396,7 @@ namespace BiblioSpec
             {
                 // unseen spectrum
                 curPSM_ = new PSM();
-                processedSpectra[specId] = curPSM_;
+                processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, xcorr);
             }
 
             curPSM_->charge = spectraChargeStates_[specId];
@@ -398,7 +408,7 @@ namespace BiblioSpec
                 modMap.erase(modAccess);
             }
             curPSM_->specIndex = specId;
-            curPSM_->score = score;
+            curPSM_->score = qvalue;
 
             map<int, int>::iterator fileIdMapAccess = fileIdMap.find(peptideId);
             if (fileIdMapAccess == fileIdMap.end())
