@@ -1843,7 +1843,7 @@ namespace pwiz.Skyline.Model.DocSettings
             docLib = null;
             for (int i = 0; i < _libraries.Count; i++)
             {
-                if (_librarySpecs[i].IsDocumentLibrary)
+                if (_librarySpecs[i] != null && _librarySpecs[i].IsDocumentLibrary)
                 {
                     docLib = _libraries[i] as BiblioSpecLiteLibrary;
                     return docLib != null;

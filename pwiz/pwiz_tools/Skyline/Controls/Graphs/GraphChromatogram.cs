@@ -1132,7 +1132,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                            ref double bestStartTime,
                                            ref double bestEndTime)
         {
-
+            if (ChromGroupInfos.Length == 0)
+            {
+                return;
+            }
             var chromGroupInfo = ChromGroupInfos[0];
             var info = chromGroupInfo.GetTransitionInfo(0, 0);
             var fileId = chromatograms.FindFile(chromGroupInfo);

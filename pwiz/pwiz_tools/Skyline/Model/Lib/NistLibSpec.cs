@@ -878,6 +878,7 @@ namespace pwiz.Skyline.Model.Lib
                             ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__, sequence));
                             break;  // ReSharper
                         }
+                        lineCount++;
                         readChars += line.Length;
 
                         // Parse out mass and intensity as quickly as possible, since
