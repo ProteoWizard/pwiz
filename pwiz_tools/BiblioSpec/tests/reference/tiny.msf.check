@@ -4,8 +4,8 @@ id	RefSpectraID	position	mass
 1	1	1	4.008491
 2	1	2	4.008491
 3	1	7	4.008491
-4	2	1	4.008491
-5	2	2	4.008491
+4	2	3	4.008491
+5	2	4	4.008491
 6	2	7	4.008491
 7	3	1	4.008491
 8	3	3	4.008491
@@ -15,7 +15,7 @@ id	RefSpectraID	position	mass
 12	4	10	4.008491
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	KKLVPLK	419.819067	2	K[+4.0]K[+4.0]LVPLK[+4.0]	-	-	1	90	0.0	0	0.32088	1	2	0.002	1
-2	KKLVPLK	419.819159	2	K[+4.0]K[+4.0]LVPLK[+4.0]	-	-	1	95	0.0	0	1.126512	1	4	0.009	1
+2	VPKKILK	419.819159	2	VPK[+4.0]K[+4.0]ILK[+4.0]	-	-	1	95	0.0	0	1.126512	1	4	0.006	1
 3	KLKVIPK	419.81922	2	K[+4.0]LK[+4.0]VIPK[+4.0]	-	-	1	100	0.0	0	2.24853	1	6	0.002	1
 4	MASASGAMAK	481.22016	2	M[+16.0]ASASGAM[+16.0]AK[+4.0]	-	-	1	120	0.0	0	2.850287	1	9	0.01	1
 5	RPVTPKK	413.769812	2	RPVTPKK	-	-	1	175	0.0	0	2.879132	2	10	0.002	1

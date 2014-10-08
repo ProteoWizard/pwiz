@@ -252,7 +252,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                         {
                                             var namedSet = ImportResultsControl.FoundResultsFiles[i];
                                             ImportResultsControl.FoundResultsFiles[i] = new KeyValuePair<string, string[]>(
-                                                namedSet.Key.Substring(prefix.Length), namedSet.Value);
+                                                namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
                                         }
                                     }
                                 }

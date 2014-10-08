@@ -206,6 +206,16 @@ namespace pwiz.ProteomeDatabase.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} does not appear to be a valid &quot;.protDB&quot; background proteome file..
+        /// </summary>
+        internal static string ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_ {
+            get {
+                return ResourceManager.GetString("ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_prot" +
+                        "eome_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteome file {0} has a format which is newer than the current software.  Please update to the latest software version and try again..
         /// </summary>
         internal static string SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_ {

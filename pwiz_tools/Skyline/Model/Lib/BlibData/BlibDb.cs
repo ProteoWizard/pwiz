@@ -231,8 +231,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             string libAuthority = "unknown.org"; // Not L10N
             string libId = library.Name;
             // CONSIDER: Use version numbers of the original library?
-            int majorVer = 1;
-            int minorVer = 0;
+            int libraryRevision = DbLibInfo.INITIAL_LIBRARY_REVISION;
+            int schemaVersion = 0;
 
             bool saveRetentionTimes = false;
             bool saveRedundantLib = false;
@@ -254,8 +254,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // We will have a RetentionTimes table if schemaVersion if 1 or greater.
                 saveRetentionTimes = blibLib.SchemaVersion >= 1;
-                majorVer = blibLib.Revision;
-                minorVer = blibLib.SchemaVersion;
+                libraryRevision = blibLib.Revision;
+                schemaVersion = Math.Min(blibLib.SchemaVersion, DbLibInfo.SCHEMA_VERSION_CURRENT);
 
                 // If the document has MS1 filtering enabled we will save a minimized version
                 // of the redundant library, if available.
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
             // Use a very specific LSID, since it really only matches this document.
             string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}", // Not L10N
-                libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
+                libAuthority, libId, Guid.NewGuid(), libraryRevision, schemaVersion);
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
 
@@ -422,8 +422,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                 LibLSID = libLsid,
                                                 CreateTime = createTime,
                                                 NumSpecs = dictLibrary.Count,
-                                                MajorVersion = majorVer,
-                                                MinorVersion = minorVer
+                                                MajorVersion = libraryRevision,
+                                                MinorVersion = schemaVersion
                                             };
 
                     session.Save(libInfo);
@@ -442,8 +442,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                           LibLSID = libLsid.Replace(":nr:", ":redundant:"), // Not L10N
                                           CreateTime = createTime,
                                           NumSpecs = redundantSpectraCount,
-                                          MajorVersion = majorVer,
-                                          MinorVersion = minorVer
+                                          MajorVersion = libraryRevision,
+                                          MinorVersion = schemaVersion
                                       };
                         redundantSession.Save(libInfo);
                         redundantSession.Flush();
@@ -468,7 +468,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             var libraryEntries = dictLibrary.Values.ToArray();
 
-            return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer,
+            return new BiblioSpecLiteLibrary(librarySpec, libLsid, libraryRevision, schemaVersion,
                 libraryEntries, FileStreamManager.Default);
         }
 
@@ -526,6 +526,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                NumPeaks = (ushort) peaksInfo.Peaks.Count(),
                                                Copies = refSpectra.Copies,
                                                RetentionTime = specLiteKey.Time.RetentionTime,
+                                               IonMobilityValue = specLiteKey.Time.IonMobilityValue,
+                                               IonMobilityType = specLiteKey.Time.IonMobilityType,
                                                FileId = spectrumSourceId
                                            };
 
@@ -597,6 +599,19 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     SpectrumSourceId = spectrumSourceId,
                     BestSpectrum = spectrum.IsBest ? 1 : 0
                 };
+                if (null != spectrum.IonMobilityInfo)
+                {
+                    if (spectrum.IonMobilityInfo.IsCollisionalCrossSection)
+                    {
+                        dbRetentionTimes.IonMobilityType =
+                            (int) BiblioSpecLiteLibrary.IonMobilityType.collisionalCrossSection;
+                    }
+                    else
+                    {
+                        dbRetentionTimes.IonMobilityType = (int) BiblioSpecLiteLibrary.IonMobilityType.driftTime;
+                    }
+                    dbRetentionTimes.IonMobilityValue = spectrum.IonMobilityInfo.Value;
+                }
 
                 if (refSpectra.RetentionTimes == null)
                     refSpectra.RetentionTimes = new List<DbRetentionTimes>();

@@ -1776,7 +1776,9 @@ namespace pwiz.Skyline.Model.DocSettings
             bool precursorsDiff = !ArrayUtil.EqualsDeep(newTran.Filter.PrecursorCharges,
                                                         oldTran.Filter.PrecursorCharges) ||
                                   // Also changing auto-select could change precursors
-                                  newTran.Filter.AutoSelect != oldTran.Filter.AutoSelect;
+                                  newTran.Filter.AutoSelect != oldTran.Filter.AutoSelect ||
+                                  // And changing DIA isolation scheme could change precursors
+                                  !ReferenceEquals(newTran.FullScan.IsolationScheme, oldTran.FullScan.IsolationScheme);
 
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||

@@ -156,5 +156,8 @@
     <value>
 Description: {0}</value>
   </data>
+  <data name="ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_" xml:space="preserve">
+    <value>{0} does not appear to be a valid ".protDB" background proteome file.</value>
+  </data>
 </root>
 <!-- ReSharper restore NotOverridenInSpecificCulture -->

@@ -214,12 +214,30 @@ namespace pwiz.SkylineTestFunctional
                     editLibraryDlg.OkDialog();
                 });
                 OkDialog(editListUI, editListUI.OkDialog);
+                RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libname });
+
+                // Check error cases for resolving power (caused unexpected excption)
                 RunUI(() =>
                 {
-                    peptideSettingsUI.PickedLibraries = new[] { libname }; 
-                    peptideSettingsUI.OkDialog();
+                    peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;
+                    peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = null;
+
                 });
-                WaitForClosedForm(peptideSettingsUI);
+                RunDlg<MessageDlg>(peptideSettingsUI.OkDialog, dlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, dlg.Message);
+                    dlg.OkDialog();
+                });
+                RunUI(() => peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 0);
+                RunDlg<MessageDlg>(peptideSettingsUI.OkDialog, dlg =>
+                {
+                    Assert.AreEqual(Resources.EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_, dlg.Message);
+                    dlg.OkDialog();
+                });
+
+                RunUI(() => peptideSettingsUI.IsUseSpectralLibraryDriftTimes = false);
+
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 WaitForDocumentLoaded(); // Let that library load
 
                 // In this lib: ANGTTVLVGMPAGAK at z=2, with drift time 4.99820623749102

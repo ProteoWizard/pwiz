@@ -93,31 +93,39 @@ namespace pwiz.Skyline.Controls.Startup
         public void LongWaitDlgAction(SkylineWindow skylineWindow)
         {
             skylineWindow.ResetDefaultSettings();
-            using (var longWaitDlg = new LongWaitDlg
+            try
             {
-                Text = Resources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File,
-                Message =
-                    String.Format(
-                        Resources
-                            .ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
-                        getTempPath(), Environment.NewLine),
-                ProgressValue = 0
-            })
-            {
-                longWaitDlg.PerformWork(skylineWindow, 1000, DownloadTutorials);
-                if (longWaitDlg.IsCanceled)
+                using (var longWaitDlg = new LongWaitDlg
                 {
-                    return;
+                    Text = Resources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File,
+                    Message =
+                        String.Format(
+                            Resources
+                                .ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
+                            getTempPath(), Environment.NewLine),
+                    ProgressValue = 0
+                })
+                {
+                    longWaitDlg.PerformWork(skylineWindow, 1000, DownloadTutorials);
+                    if (longWaitDlg.IsCanceled)
+                    {
+                        return;
+                    }
+                }
+                using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text =
+                        Resources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_,
+                    ProgressValue = 0
+                })
+                {
+                    longWaitDlg.PerformWork(skylineWindow, 1000, ExtractTutorial);
                 }
             }
-            using (var longWaitDlg = new LongWaitDlg
+            catch (Exception exception)
             {
-                Text = Resources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_,
-                ProgressValue = 0
-            })
-            {
-                longWaitDlg.PerformWork(skylineWindow, 1000, ExtractTutorial);
-            } 
+                MessageDlg.Show(Program.MainWindow, string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message));
+            }
         }
 
         // Download
@@ -130,15 +138,7 @@ namespace pwiz.Skyline.Controls.Startup
                 CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore),
             };
             client.DownloadProgressChanged += client_DownloadProgressChanged;
-            try
-            {
-                client.DownloadFile(new Uri(TutorialZipFileLocation), getTempPath());
-            }
-            catch (Exception exception)
-            {
-                Program.MainWindow.BeginInvoke(new Action(()=>
-                MessageDlg.Show(Program.MainWindow, string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_, exception))));
-            }
+            client.DownloadFile(new Uri(TutorialZipFileLocation), getTempPath());
         }
 
         public void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)

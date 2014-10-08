@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Util
                     { C13, new KeyValuePair<int, double>(1, 0.995) },
                     { N15, new KeyValuePair<int, double>(1, 0.995) },
                     { O17, new KeyValuePair<int, double>(1, 0.99) },
-                    { O18, new KeyValuePair<int, double>(1, 0.99) },
+                    { O18, new KeyValuePair<int, double>(2, 0.99) },
                 };
 
         public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }

@@ -884,6 +884,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else
                     {
                         var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
+                        bool enableTrackingDot = false;
                         for (int i = 0; i < _nodeGroups.Length; i++)
                         {
                             var nodeGroup = _nodeGroups[i];
@@ -897,6 +898,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    nodeGroup, chromGroupInfo,
                                                    new PaneKey(nodeGroup),
                                                    GetDisplayType(DocumentUI, nodeGroup), ref bestStartTime, ref bestEndTime);
+                                enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                             }
                             else
                             {
@@ -906,15 +908,18 @@ namespace pwiz.Skyline.Controls.Graphs
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance,
                                                        nodeGroup, chromGroupInfo, PaneKey.PRECURSORS, DisplayTypeChrom.precursors,
                                                        ref bestStartTime, ref bestEndTime);
+                                    enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                                 }
                                 if (displayType != DisplayTypeChrom.precursors)
                                 {
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance, 
                                                        nodeGroup, chromGroupInfo, PaneKey.PRODUCTS, DisplayTypeChrom.products,
                                                        ref bestStartTime, ref bestEndTime);
+                                    enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                                 }
                             }
                         }
+                        _enableTrackingDot = enableTrackingDot;
 
                         // Should we show the scan selection point?
                         if (_arrayChromInfo != null && Equals(_stateProvider.SelectedScanFile, FilePath) && _stateProvider.SelectedScanTransition != null)
@@ -1127,7 +1132,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                            ref double bestStartTime,
                                            ref double bestEndTime)
         {
-
+            if (ChromGroupInfos.Length == 0)
+            {
+                return;
+            }
             var chromGroupInfo = ChromGroupInfos[0];
             var info = chromGroupInfo.GetTransitionInfo(0, 0);
             var fileId = chromatograms.FindFile(chromGroupInfo);
@@ -1437,10 +1445,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
                 var fullScanInfo = new FullScanInfo
                 {
-                    ChromInfo = arrayChromInfo[i],
+                    ChromInfo = info,
                     ScanName = scanName
                 };
-                if (fullScanInfo.ChromInfo.ExtractionWidth > 0)
+                if (fullScanInfo.ChromInfo != null && fullScanInfo.ChromInfo.ExtractionWidth > 0)
                     _enableTrackingDot = true;
                 var graphItem = new ChromGraphItem(nodeGroup,
                                                     nodeTran,
@@ -2943,9 +2951,23 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (nearest is XAxis && IsGroupActive)
                         {
-                            var changeCurves = IsMultiGroup
-                                               ? GetCurves(nearestGraphPane).ToArray()
-                                               : new[] {GetCurves(nearestGraphPane).First()};
+                            CurveItem[] changeCurves;
+                            if (IsMultiGroup)
+                            {
+                                changeCurves = GetCurves(nearestGraphPane).ToArray();
+                            }
+                            else
+                            {
+                                var firstCurve = GetCurves(nearestGraphPane).FirstOrDefault();
+                                if (null == firstCurve)
+                                {
+                                    changeCurves = new CurveItem[0];
+                                }
+                                else
+                                {
+                                    changeCurves = new[] {firstCurve};
+                                }
+                            }
                             var listDragInfos = new List<PeakBoundsDragInfo>();
                             foreach (var curveItem in changeCurves)
                             {
