@@ -461,6 +461,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 //this will not update the calculator
                 calculator = RecalcRegression(activePeptides);
+                if (calculator == null)
+                    return null;
             }
             else
             {
