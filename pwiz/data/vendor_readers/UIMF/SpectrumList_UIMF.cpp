@@ -250,10 +250,8 @@ PWIZ_API_DECL size_t SpectrumList_UIMF::size() const {return 0;}
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_UIMF::spectrumIdentity(size_t index) const {return emptyIdentity;}
 PWIZ_API_DECL size_t SpectrumList_UIMF::find(const std::string& id) const {return 0;}
 PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
-PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
-PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_UIMF::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const {return pwiz::analysis::Spectrum3DPtr();}
+//PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_UIMF::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const {return pwiz::analysis::Spectrum3DPtr();}
 
 } // detail
 } // msdata
