@@ -586,6 +586,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
     }
     return $(dependencies) ;
@@ -875,6 +876,32 @@ rule mhdac-dll-location ( api-path : properties * )
     }
 }
 
+rule uimf-dll-location ( api-path : properties * )
+{
+    local result ;
+    if <toolset-msvc:version>9.0 in $(properties) ||
+       <toolset-msvc:version>9.0express in $(properties)
+    {
+        # not supported
+    }
+    else # VC10 DLLs should work for VC11 as well (it's dependent on .NET version)
+    {
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result = $(api-path)\\x64 ;
+        }
+        else
+        {
+            result = $(api-path)\\x86 ;
+        }
+    }
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(result)\\UIMFLibrary.dll ]            
+    {
+        return $(result) ;
+    }
+}
+
 rule masslynxraw-dll-location ( api-path : properties * )
 {
     local result ;
@@ -929,14 +956,21 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if <toolset-msvc:version>9.0 in $(properties) ||
-           <toolset-msvc:version>9.0express in $(properties)
+        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2008" ;
         }
-        else
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2010" ;
+        }
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "11.0" "11.0express"
+        {
+            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2012" ;
+        }
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
+        {
+            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
     } 
     else if <toolset>gcc in $(properties)

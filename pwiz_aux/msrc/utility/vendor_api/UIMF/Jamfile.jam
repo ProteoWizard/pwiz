@@ -1,0 +1,145 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2014 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+import modules ;
+import path ;
+
+
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF ;
+
+
+if [ modules.peek : NT ]
+{
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        result += <source>UIMFReader.cpp ;
+        result += <using-clr>true ; # requires hacked msvc.jam
+        result += <link>static ; # <using-clr>true and <link>shared don't mix
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
+            result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>shared ;
+        }
+        else
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
+            result += <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp ;
+        }
+
+        result += <assembly>$(dll_location)/UIMFLibrary.dll ;
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result += <assembly-dependency>$(PWIZ_LIBRARIES_PATH)/SQLite/x64/System.Data.SQLite.dll ;
+        }
+        else
+        {
+            result += <assembly-dependency>$(PWIZ_LIBRARIES_PATH)/SQLite/x86/System.Data.SQLite.dll ;
+        }
+
+    }
+    return $(result) ;
+}
+
+rule msvc-uimf-requirement ( properties * )
+{
+    # Must be msvc
+    if ! <toolset>msvc in $(properties) { return <build>no ; }
+
+    # If msvc 9.0, can't build
+    if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
+    { return <build>no ; }
+}
+
+lib pwiz_vendor_api_uimf
+    : # sources
+    : # requirements
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
+        
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-uimf-requirement
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-usage-requirements
+        <conditional>@msvc-uimf-requirement
+    ;
+
+
+# a test utility, not a unit test
+exe UIMFReaderTest
+    : UIMFReaderTest.cpp
+      pwiz_vendor_api_uimf
+    ;
+
+explicit UIMFReaderTest ;
+
+rule install-requirements ( properties * )
+{
+    local result ;
+    local dll_location = [ uimf-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        result += <source>$(dll_location)\\UIMFLibrary.dll ;
+
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result += <source>$(PWIZ_LIBRARIES_PATH)/SQLite/x64/System.Data.SQLite.dll ;
+        }
+        else
+        {
+            result += <source>$(PWIZ_LIBRARIES_PATH)/SQLite/x86/System.Data.SQLite.dll ;
+        }
+    }
+    return $(result) ;
+}
+
+install install_pwiz_vendor_api_uimf
+    : : <conditional>@install-requirements
+    ;
+
+explicit install_pwiz_vendor_api_uimf ;
+
+}
