@@ -109,9 +109,11 @@ void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     //if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareMassHunter);
-    //if (!msd.instrumentConfigurationPtrs.empty())
-    //    msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+    // add dummy IC
+    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
+    msd.instrumentConfigurationPtrs.back()->set(MS_instrument_model);
+    if (!msd.instrumentConfigurationPtrs.empty())
+        msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
     msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(rawfile->getAcquisitionTime());
