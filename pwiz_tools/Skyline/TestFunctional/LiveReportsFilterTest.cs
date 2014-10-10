@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -89,7 +90,26 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             );
+            RunUI(()=>documentGrid.ChooseView("Precursors"));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            Assert.AreEqual(12, documentGrid.RowCount);
+            var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+            {
+                var precursorMzColumn = documentGrid.FindColumn(PropertyPath.Root.Property("Mz"));
+                documentGrid.QuickFilter(precursorMzColumn);
+            });
+            RunUI(()=>
+            {
+                quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN);
+                quickFilterForm.SetFilterOperand(0, "500");
+                quickFilterForm.SetFilterOperation(1, FilterOperations.OP_IS_LESS_THAN);
+                quickFilterForm.SetFilterOperand(1, "600");
+            });
+            OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            Assert.AreEqual(8, documentGrid.RowCount);
         }
+
         private void AddFilter(DataboundGridForm databoundGridForm, PropertyPath propertyPath,
             IFilterOperation filterOperation, string filterOperand)
         {

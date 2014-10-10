@@ -50,6 +50,12 @@ namespace pwiz.Common.DataBinding.Internal
                 return unfilteredRows;
             }
             var properties = results.ItemProperties;
+            Predicate<object>[] columnPredicates = new Predicate<object>[properties.Count];
+            
+            for (int i = 0; i < properties.Count; i++)
+            {
+                columnPredicates[i] = filter.GetPredicate(properties[i]);
+            }
             var filteredRows = new List<RowItem>();
             // toString on an enum is incredibly slow, so we cache the results in 
             // in a dictionary.
@@ -63,38 +69,54 @@ namespace pwiz.Common.DataBinding.Internal
                 }
             }
 
+            
             foreach (var row in unfilteredRows)
             {
+                bool matchesText = string.IsNullOrEmpty(filter.Text);
+                bool matchesFilter = true;
                 for (int iProperty = 0; iProperty < properties.Count; iProperty++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var property = properties[iProperty];
-                    var value = property.GetValue(row);
-                    if (value == null)
+                    var predicate = columnPredicates[iProperty];
+                    if (matchesText && null == predicate)
                     {
                         continue;
                     }
-                    var cache = toStringCaches[iProperty];
-                    string strValue;
-                    if (cache == null)
+                    var property = properties[iProperty];
+                    var value = property.GetValue(row);
+                    if (!matchesText && value != null)
                     {
-                        strValue = value.ToString();
-                    }
-                    else
-                    {
-                        if (!cache.TryGetValue(value, out strValue))
+                        var cache = toStringCaches[iProperty];
+                        string strValue;
+                        if (cache == null)
                         {
                             strValue = value.ToString();
-                            cache.Add(value, strValue);
+                        }
+                        else
+                        {
+                            if (!cache.TryGetValue(value, out strValue))
+                            {
+                                strValue = value.ToString();
+                                cache.Add(value, strValue);
+                            }
+                        }
+                        if (filter.MatchesText(strValue))
+                        {
+                            matchesText = true;
                         }
                     }
-                    if (filter.Matches(strValue))
+                    matchesFilter = null == predicate || predicate(value);
+                    if (!matchesFilter)
                     {
-                        filteredRows.Add(row);
                         break;
                     }
                 }
+                if (matchesText && matchesFilter)
+                {
+                    filteredRows.Add(row);
+                }
             }
+
             if (filteredRows.Count == unfilteredRows.Count)
             {
                 return unfilteredRows;

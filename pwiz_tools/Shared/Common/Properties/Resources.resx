@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -324,5 +324,11 @@
   </data>
   <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
     <value>Does Not Start With</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_No_other_filter" xml:space="preserve">
+    <value>No other filter</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
+    <value>Show rows where {0}...</value>
   </data>
 </root>

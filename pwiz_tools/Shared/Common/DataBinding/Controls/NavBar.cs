@@ -263,7 +263,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void UpdateFilter()
         {
-            BindingListView.RowFilter = new RowFilter(tbxFind.Text, navBarButtonMatchCase.Checked);
+            BindingListSource.RowFilter = BindingListSource.RowFilter.SetText(tbxFind.Text, navBarButtonMatchCase.Checked);
         }
 
         private void NavBarDeleteItemOnClick(object sender, EventArgs e)

@@ -20,7 +20,6 @@
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -30,10 +29,6 @@ namespace pwiz.Skyline.Controls.Databinding
         public DocumentGridForm(SkylineViewContext viewContext)
         {
             InitializeComponent();
-            BindingListSource = bindingListSource;
-            DataGridView = boundDataGridView;
-            NavBar = navBar;
-            Icon = Resources.Skyline;
             bindingListSource.SetViewContext(viewContext);
         }
 
@@ -70,5 +65,6 @@ namespace pwiz.Skyline.Controls.Databinding
                 navBar.ShowViewsButton = value;
             }
         }
+
     }
 }

@@ -101,6 +101,13 @@ namespace pwiz.Common.DataBinding.Controls
             get { return ViewInfo.ViewSpec; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public RowFilter RowFilter
+        {
+            get { return BindingListView.RowFilter; }
+            set { BindingListView.RowFilter = value; }
+        }
+
         public void SetViewSpec(ViewSpec viewSpec)
         {
             SetViewContext(ViewContext, ViewContext.GetViewInfo(viewSpec));

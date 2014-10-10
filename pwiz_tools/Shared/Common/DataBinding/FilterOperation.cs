@@ -18,7 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding
@@ -28,8 +30,12 @@ namespace pwiz.Common.DataBinding
         string OpName { get; }
         string DisplayName { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
+        bool IsValidFor(DataSchema dataSchema, Type columnType);
         Type GetOperandType(ColumnDescriptor columnDescriptor);
+        Type GetOperandType(DataSchema dataSchema, Type columnType);
+        Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType, string operand);
         Predicate<object> MakePredicate(ColumnDescriptor columnDescriptor, string operand);
+        Predicate<object> MakePredicate(PropertyDescriptor propertyDescriptor, string operand);
     }
 
     public static class FilterOperations
@@ -40,26 +46,27 @@ namespace pwiz.Common.DataBinding
         /// the expected result, even if the column type is integer.
         /// </summary>
         private static readonly IDictionary<Type, Type> convertibleTypes = new Dictionary<Type, Type>
-            {
-                {typeof (char),typeof(char)},
-                {typeof (sbyte),typeof(double)},
-                {typeof (byte),typeof(double)},
-                {typeof (short),typeof(double)},
-                {typeof (ushort),typeof(double)},
-                {typeof (int),typeof(double)},
-                {typeof (uint),typeof(double)},
-                {typeof (long),typeof(double)},
-                {typeof (ulong),typeof(double)},
-                {typeof (float),typeof(double)},
-                {typeof (double),typeof(double)},
-                {typeof (Decimal),typeof(double)},
-                {typeof (DateTime),typeof(DateTime)}
-            };
+        {
+            {typeof (char), typeof (char)},
+            {typeof (sbyte), typeof (double)},
+            {typeof (byte), typeof (double)},
+            {typeof (short), typeof (double)},
+            {typeof (ushort), typeof (double)},
+            {typeof (int), typeof (double)},
+            {typeof (uint), typeof (double)},
+            {typeof (long), typeof (double)},
+            {typeof (ulong), typeof (double)},
+            {typeof (float), typeof (double)},
+            {typeof (double), typeof (double)},
+            {typeof (Decimal), typeof (double)},
+            {typeof (DateTime), typeof (DateTime)}
+        };
+
         // ReSharper disable NonLocalizedString
         public static readonly IFilterOperation OP_HAS_ANY_VALUE = new UnaryFilterOperation("", () => Resources.FilterOperations_Has_Any_Value,
-                                                                         (cd, operand) => rowNode => true);
+            (dataSchema, columnType, operand) => rowNode => true);
 
-        public static readonly IFilterOperation OP_EQUALS 
+        public static readonly IFilterOperation OP_EQUALS
             = new FilterOperation("equals", ()=>Resources.FilterOperations_Equals, FnEquals);
 
         public static readonly IFilterOperation OP_NOT_EQUALS
@@ -73,10 +80,13 @@ namespace pwiz.Common.DataBinding
 
         public static readonly IFilterOperation OP_IS_GREATER_THAN
             = new ComparisonFilterOperation(">", () => Resources.FilterOperations_Is_Greater_Than, i => i > 0);
+
         public static readonly IFilterOperation OP_IS_LESS_THAN
             = new ComparisonFilterOperation("<", () => Resources.FilterOperations_Is_Less_Than, i => i < 0);
+
         public static readonly IFilterOperation OP_IS_GREATER_THAN_OR_EQUAL
             = new ComparisonFilterOperation(">=", () => Resources.FilterOperations_Is_Greater_Than_Or_Equal_To, i => i >= 0);
+
         public static readonly IFilterOperation OP_IS_LESS_THAN_OR_EQUAL
             = new ComparisonFilterOperation("<=", () => Resources.FilterOperations_Is_Less_Than_Or_Equal_To, i => i <= 0);
 
@@ -86,86 +96,107 @@ namespace pwiz.Common.DataBinding
         public static readonly IFilterOperation OP_NOT_STARTS_WITH = new StringFilterOperation("notstartswith", () => Resources.FilterOperations_Does_Not_Start_With, FnNotStartsWith);
         // ReSharper enable NonLocalizedString
 
-        private static readonly IList<IFilterOperation> LstFilterOperations = Array.AsReadOnly(new[]{
-                                                                                               OP_HAS_ANY_VALUE,
-                                                                                               OP_EQUALS,
-                                                                                               OP_NOT_EQUALS,
-                                                                                               OP_IS_BLANK,
-                                                                                               OP_IS_NOT_BLANK,
-                                                                                               OP_IS_GREATER_THAN,
-                                                                                               OP_IS_LESS_THAN,
-                                                                                               OP_IS_GREATER_THAN_OR_EQUAL,
-                                                                                               OP_IS_LESS_THAN_OR_EQUAL,
-                                                                                               OP_CONTAINS,
-                                                                                               OP_NOT_CONTAINS,
-                                                                                               OP_STARTS_WITH,
-                                                                                               OP_NOT_STARTS_WITH
-                                                                                           });
+        private static readonly IList<IFilterOperation> LstFilterOperations = Array.AsReadOnly(new[]
+        {
+            OP_HAS_ANY_VALUE,
+            OP_EQUALS,
+            OP_NOT_EQUALS,
+            OP_IS_BLANK,
+            OP_IS_NOT_BLANK,
+            OP_IS_GREATER_THAN,
+            OP_IS_LESS_THAN,
+            OP_IS_GREATER_THAN_OR_EQUAL,
+            OP_IS_LESS_THAN_OR_EQUAL,
+            OP_CONTAINS,
+            OP_NOT_CONTAINS,
+            OP_STARTS_WITH,
+            OP_NOT_STARTS_WITH
+        });
+
         private static readonly IDictionary<string, IFilterOperation> DictFilterOperations =
             LstFilterOperations.ToDictionary(op => op.OpName, op => op);
+
         public static IFilterOperation GetOperation(string name)
         {
             IFilterOperation result;
             DictFilterOperations.TryGetValue(name, out result);
             return result;
         }
+
         public static IList<IFilterOperation> ListOperations()
         {
             return LstFilterOperations;
         }
 
-        public static Predicate<object> FnEquals(ColumnDescriptor columnDescriptor, string strOperand)
+        public static Predicate<object> FnEquals(DataSchema dataSchema, Type columnType, string strOperand)
         {
-            object operand = ConvertOperand(columnDescriptor, strOperand);
-            return value => Equals(ConvertValue(columnDescriptor, value), operand);
+            object operand = ConvertOperand(dataSchema, columnType, strOperand);
+            return value => Equals(ConvertValue(dataSchema, columnType, value), operand);
         }
-        public static Predicate<object> FnNotEquals(ColumnDescriptor columnDescriptor, string strOperand)
+
+        public static Predicate<object> FnNotEquals(DataSchema dataSchema, Type columnType, string strOperand)
         {
-            object operand = ConvertOperand(columnDescriptor, strOperand);
-            return value => !Equals(ConvertValue(columnDescriptor, value), operand);
+            object operand = ConvertOperand(dataSchema, columnType, strOperand);
+            return value => !Equals(ConvertValue(dataSchema, columnType, value), operand);
         }
-        public static Predicate<object> FnIsBlank(ColumnDescriptor columnDescriptor, string operand)
+
+        public static Predicate<object> FnIsBlank(DataSchema dataSchema, Type columnType, string operand)
         {
             return value => null == value || Equals(value, "");
         }
-        public static Predicate<object> FnIsNotBlank(ColumnDescriptor columnDescriptor, string operand)
+
+        public static Predicate<object> FnIsNotBlank(DataSchema dataSchema, Type columnType, string operand)
         {
             return value => null != value && !Equals(value, "");
         }
-        public static Func<ColumnDescriptor, string, Predicate<object>> MakeFnCompare(Predicate<int> comparisonPredicate)
+
+        public static MakePredicateFunc MakeFnCompare(Predicate<int> comparisonPredicate)
         {
-            return (columnDescriptor, strOperand)
-                   =>
-                       {
-                           object operand = ConvertOperand(columnDescriptor, strOperand);
-                           return value => null != value && comparisonPredicate(columnDescriptor.DataSchema.Compare(ConvertValue(columnDescriptor, value), operand));
-                       };
-            
+            return (dataSchema, columnType, strOperand)
+                =>
+            {
+                object operand = ConvertOperand(dataSchema, columnType, strOperand);
+                return
+                    value =>
+                        null != value &&
+                        comparisonPredicate(dataSchema.Compare(ConvertValue(dataSchema, columnType, value),
+                            operand));
+            };
+
         }
-        public static Predicate<object> FnContains(ColumnDescriptor columnDescriptor, string strOperand)
+
+        public static Predicate<object> FnContains(DataSchema dataSchema, Type columnType, string strOperand)
         {
             return value => null != value && value.ToString().IndexOf(strOperand, StringComparison.Ordinal) >= 0;
         }
-        public static Predicate<object> FnNotContains(ColumnDescriptor columnDescriptor, string strOperand)
+
+        public static Predicate<object> FnNotContains(DataSchema dataSchema, Type columnType, string strOperand)
         {
             return value => null != value && value.ToString().IndexOf(strOperand, StringComparison.Ordinal) < 0;
         }
-        public static Predicate<object> FnStartsWith(ColumnDescriptor columnDescriptor, string strOperand)
+
+        public static Predicate<object> FnStartsWith(DataSchema dataSchema, Type columnType, string strOperand)
         {
             return value => null != value && value.ToString().StartsWith(strOperand);
         }
-        public static Predicate<object> FnNotStartsWith(ColumnDescriptor columnDescriptor, string strOperand)
+
+        public static Predicate<object> FnNotStartsWith(DataSchema dataSchema, Type columnType, string strOperand)
         {
             return value => null != value && !value.ToString().StartsWith(strOperand);
         }
 
         public static Type GetTypeToConvertOperandTo(ColumnDescriptor columnDescriptor)
         {
-            if (null == columnDescriptor)
+            return GetTypeToConvertOperandTo(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
+        }
+
+        public static Type GetTypeToConvertOperandTo(DataSchema dataSchema, Type columnType)
+        {
+            if (null == columnType)
             {
                 return typeof (string);
             }
-            var columnType = columnDescriptor.WrappedPropertyType;
+            columnType = dataSchema.GetWrappedValueType(columnType);
             columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
             Type typeToConvertTo;
             if (convertibleTypes.TryGetValue(columnType, out typeToConvertTo))
@@ -175,14 +206,14 @@ namespace pwiz.Common.DataBinding
             return typeof (string);
         }
 
-        public static object ConvertOperand(ColumnDescriptor columnDescriptor, string operand)
+        public static object ConvertOperand(DataSchema dataSchema, Type columnType, string operand)
         {
-            var type = GetTypeToConvertOperandTo(columnDescriptor);
+            var type = GetTypeToConvertOperandTo(dataSchema, columnType);
             if (null == type)
             {
                 return operand;
             }
-            if (typeof(char) == type)
+            if (typeof (char) == type)
             {
                 if (operand.Length != 1)
                 {
@@ -211,13 +242,19 @@ namespace pwiz.Common.DataBinding
             }
             return Convert.ChangeType(operand, type);
         }
+
         public static object ConvertValue(ColumnDescriptor columnDescriptor, object value)
+        {
+            return ConvertValue(columnDescriptor.DataSchema, columnDescriptor.PropertyType, value);
+        }
+
+        public static object ConvertValue(DataSchema dataSchema, Type columnType, object value)
         {
             if (value == null)
             {
                 return null;
             }
-            var type = GetTypeToConvertOperandTo(columnDescriptor);
+            var type = GetTypeToConvertOperandTo(dataSchema, columnType);
             if (type == typeof (string))
             {
                 return value.ToString();
@@ -225,11 +262,13 @@ namespace pwiz.Common.DataBinding
             return Convert.ChangeType(value, type);
         }
 
+        public delegate Predicate<object> MakePredicateFunc(DataSchema dataSchema, Type columnType, String operand);
+
         class FilterOperation : IFilterOperation
         {
-            private readonly Func<ColumnDescriptor, string, Predicate<object>> _fnMakePredicate;
+            private readonly MakePredicateFunc _fnMakePredicate;
             private readonly Func<string> _getDisplayNameFunc;
-            public FilterOperation(string opName, Func<string> getDisplayNameFunc, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
+            public FilterOperation(string opName, Func<string> getDisplayNameFunc, MakePredicateFunc fnMakePredicate)
             {
                 OpName = opName;
                 _getDisplayNameFunc = getDisplayNameFunc;
@@ -237,28 +276,65 @@ namespace pwiz.Common.DataBinding
             }
             public string OpName { get; private set; }
             public string DisplayName { get { return _getDisplayNameFunc(); } }
-            public virtual bool IsValidFor(ColumnDescriptor columnDescriptor)
+            public bool IsValidFor(ColumnDescriptor columnDescriptor)
+            {
+                return IsValidFor(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
+            }
+
+            public virtual bool IsValidFor(DataSchema dataSchema, Type columnType)
             {
                 return true;
             }
-            public virtual Type GetOperandType(ColumnDescriptor columnDescriptor)
+
+            public virtual Type GetOperandType(DataSchema dataSchema, Type columnType)
             {
-                return GetTypeToConvertOperandTo(columnDescriptor);
+                return GetTypeToConvertOperandTo(dataSchema, columnType);
+            }
+            public Type GetOperandType(ColumnDescriptor columnDescriptor)
+            {
+                return GetOperandType(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
             }
             public Predicate<object> MakePredicate(ColumnDescriptor columnDescriptor, string operand)
             {
-                return _fnMakePredicate(columnDescriptor, operand);
+                return MakePredicate(columnDescriptor.DataSchema, columnDescriptor.PropertyType, operand);
+            }
+
+            public Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType, string operand)
+            {
+                return _fnMakePredicate(dataSchema, columnType, operand);
+            }
+
+            public Predicate<object> MakePredicate(PropertyDescriptor propertyDescriptor, string operand)
+            {
+                DataSchema dataSchema = GetDataSchema(propertyDescriptor)
+                                        ?? new DataSchema();
+                return MakePredicate(dataSchema, propertyDescriptor.PropertyType, operand);
+            }
+
+            private DataSchema GetDataSchema(PropertyDescriptor properyDescriptor)
+            {
+                ColumnPropertyDescriptor columnPropertyDescriptor = properyDescriptor as ColumnPropertyDescriptor;
+                if (null != columnPropertyDescriptor)
+                {
+                    return columnPropertyDescriptor.DisplayColumn.DataSchema;
+                }
+                GroupedPropertyDescriptor groupedPropertyDescriptor = properyDescriptor as GroupedPropertyDescriptor;
+                if (null != groupedPropertyDescriptor)
+                {
+                    return groupedPropertyDescriptor.DisplayColumn.DataSchema;
+                }
+                return null;
             }
         }
         class StringFilterOperation : FilterOperation
         {
-            public StringFilterOperation(string opName, Func<string> fnDisplayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate) 
+            public StringFilterOperation(string opName, Func<string> fnDisplayName, MakePredicateFunc fnMakePredicate) 
                 : base(opName, fnDisplayName, fnMakePredicate)
             {
             }
-            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            public override bool IsValidFor(DataSchema dataSchema, Type columnType)
             {
-                return typeof (string) == columnDescriptor.WrappedPropertyType;
+                return typeof (string) == dataSchema.GetWrappedValueType(columnType);
             }
         }
 
@@ -270,13 +346,13 @@ namespace pwiz.Common.DataBinding
             {
             }
 
-            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            public override bool IsValidFor(DataSchema dataSchema, Type propertyType)
             {
-                if (null == columnDescriptor)
+                if (null == propertyType)
                 {
                     return false;
                 }
-                var columnType = columnDescriptor.WrappedPropertyType;
+                var columnType = dataSchema.GetWrappedValueType(propertyType);
                 columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
                 return convertibleTypes.ContainsKey(columnType) && columnType != typeof (string);
             }
@@ -285,13 +361,13 @@ namespace pwiz.Common.DataBinding
         class UnaryFilterOperation : FilterOperation
         {
             public UnaryFilterOperation(string opName, Func<string> fnGetDisplayName,
-                Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
+                MakePredicateFunc fnMakePredicate)
                 : base(opName, fnGetDisplayName, fnMakePredicate)
             {
                 
             }
 
-            public override Type GetOperandType(ColumnDescriptor columnDescriptor)
+            public override Type GetOperandType(DataSchema dataSchema, Type columnType)
             {
                 return null;
             }

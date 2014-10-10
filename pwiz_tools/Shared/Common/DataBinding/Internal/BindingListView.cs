@@ -305,7 +305,7 @@ namespace pwiz.Common.DataBinding.Internal
             }
             set
             {
-                RowFilter = new RowFilter(value, RowFilter.CaseSensitive);
+                RowFilter = RowFilter.SetText(value, true);
             }
         }
 

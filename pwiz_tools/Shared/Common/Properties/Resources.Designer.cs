@@ -632,6 +632,24 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No other filter.
+        /// </summary>
+        internal static string QuickFilterForm_SetPropertyDescriptor_No_other_filter {
+            get {
+                return ResourceManager.GetString("QuickFilterForm_SetPropertyDescriptor_No_other_filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show rows where {0}....
+        /// </summary>
+        internal static string QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____ {
+            get {
+                return ResourceManager.GetString("QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} of {1}.
         /// </summary>
         internal static string RecordNavBar_UpdateNow__0__of__1_ {

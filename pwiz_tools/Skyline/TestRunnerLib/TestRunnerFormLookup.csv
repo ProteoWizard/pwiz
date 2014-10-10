@@ -116,6 +116,7 @@ PopupPickList,TestPrecursorIon
 PreviewReportDlg,TestReportSummaryWithOldReports
 PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
+QuickFilterForm,TestLiveReportsFilter
 RecalibrateIrtDlg,IrtFunctionalTest
 RefineDlg,TestMethodEditTutorial
 RefineListDlg,TestRefineListDlg

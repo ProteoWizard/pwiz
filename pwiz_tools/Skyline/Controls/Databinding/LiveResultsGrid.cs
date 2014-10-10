@@ -37,8 +37,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
-// ReSharper disable NonLocalizedString
-//TODO: Should this be localized?
 namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class LiveResultsGrid : DataboundGridForm
@@ -52,14 +50,18 @@ namespace pwiz.Skyline.Controls.Databinding
         public LiveResultsGrid(SkylineWindow skylineWindow)
         {
             InitializeComponent();
-            BindingListSource = bindingListSource;
-            DataGridView = boundDataGridView;
-            NavBar = navBar;
-
-            Icon = Resources.Skyline;
             SkylineWindow = skylineWindow;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             DataGridViewPasteHandler.Attach(skylineWindow, boundDataGridView);
+            bindingListSource.ListChanged += bindingListSource_ListChanged;
+            bindingListSource.CurrentChanged += bindingListSource_CurrentChanged;
+            boundDataGridView.DataBindingComplete += boundDataGridView_DataBindingComplete;
+            contextMenuStrip.Items.Insert(0, new ToolStripSeparator());
+            for (int i = contextMenuResultsGrid.Items.Count - 1; i >= 0; i--)
+            {
+                contextMenuStrip.Items.Insert(0, contextMenuResultsGrid.Items[i]);
+            }
+            contextMenuStrip.Opening += contextMenu_Opening;
         }
 
         // TODO(nicksh): replace this with ResultsGrid.IStateProvider
@@ -204,19 +206,19 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     rowSource = new PeptideResultList(new Peptide(_dataSchema, identityPath));
                     rowType = typeof (PeptideResult);
-                    builtInViewName = "Peptide Results";
+                    builtInViewName = "Peptide Results"; // Not L10N
                 }
                 else if (identityPath.Length == 3)
                 {
                     rowSource = new PrecursorResultList(new Precursor(_dataSchema, identityPath));
                     rowType = typeof (PrecursorResult);
-                    builtInViewName = "Precursor Results";
+                    builtInViewName = "Precursor Results"; // Not L10N
                 }
                 else if (identityPath.Length == 4)
                 {
                     rowSource = new TransitionResultList(new Transition(_dataSchema, identityPath));
                     rowType = typeof (TransitionResult);
-                    builtInViewName = "Transition Results";
+                    builtInViewName = "Transition Results"; // Not L10N
                 }
             }
             else
@@ -230,14 +232,14 @@ namespace pwiz.Skyline.Controls.Databinding
                         rowSource = new MultiPrecursorResultList(_dataSchema,
                             _selectedIdentityPaths.Select(idPath => new Precursor(_dataSchema, idPath)));
                         rowType = typeof (MultiPrecursorResult);
-                        builtInViewName = "Multiple Precursor Results";
+                        builtInViewName = "Multiple Precursor Results"; // Not L10N
                     }
                     if (pathLength == 4)
                     {
                         rowSource = new MultiTransitionResultList(_dataSchema,
                             _selectedIdentityPaths.Select(idPath => new Transition(_dataSchema, idPath)));
                         rowType = typeof (MultiTransitionResult);
-                        builtInViewName = "Multiple Transition Results";
+                        builtInViewName = "Multiple Transition Results"; // Not L10N
                     }
                 }
             }
@@ -245,7 +247,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 rowSource = new ReplicateList(_dataSchema);
                 rowType = typeof (Replicate);
-                builtInViewName = "Replicates";
+                builtInViewName = "Replicates"; // Not L10N
             }
             var parentColumn = ColumnDescriptor.RootColumn(_dataSchema, rowType);
             var builtInViewSpec = SkylineViewContext.GetDefaultViewInfo(parentColumn).GetViewSpec()
@@ -343,7 +345,7 @@ namespace pwiz.Skyline.Controls.Databinding
             DataGridViewColumn column;
             if (findResult.FindMatch.Note)
             {
-                column = FindColumn(PropertyPath.Root.Property("Note"));
+                column = FindColumn(PropertyPath.Root.Property("Note")); // Not L10N
             }
             else if (findResult.FindMatch.AnnotationName != null)
             {
@@ -415,7 +417,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        private void contextMenuResultsGrid_Opening(object sender, CancelEventArgs e)
+        private void contextMenu_Opening(object sender, CancelEventArgs e)
         {
             synchronizeSelectionContextMenuItem.Checked = Settings.Default.ResultsGridSynchSelection;
         }
