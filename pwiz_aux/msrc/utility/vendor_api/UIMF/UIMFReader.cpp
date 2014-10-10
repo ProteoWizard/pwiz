@@ -150,8 +150,8 @@ blt::local_date_time UIMFReaderImpl::getAcquisitionTime() const
         else if (acquisitionTime.Year < 1400)
             acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
 
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(acquisitionTime.ToUniversalTime().ToOADate()));
-        return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
+        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(acquisitionTime.ToOADate())); // time zone is unknown
+        return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as is
     }
     CATCH_AND_FORWARD
 }
