@@ -82,14 +82,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            // Comment out the next two lines and comment in the bottom two to direct output to a specific 
-            // place on the hard drive (not portable across machines)
-            const string outDir = null;
-            var directoryName = Path.GetFileNameWithoutExtension(TestFilesZipPaths[0]);
-            TestFilesPersistent = new[] { directoryName };
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0], null, TestFilesPersistent);
-            var directoryPath = testFilesDir.GetTestPath(directoryName);
-            string resultsTable = Path.Combine(directoryPath,"results.txt");
+            string outDir = Path.Combine(TestContext.TestDir, "PerfPeakTest");
+            string resultsTable = Path.Combine(outDir, "results.txt");
+            Directory.CreateDirectory(outDir); // In case it doesn't already exists
+            File.Delete(resultsTable); // In case it does already exist
             var none = new List<string>();
             var openSwath = new List<string> { "OpenSwath.csv" };
             var spectronaut = new List<string> { "Spectronaut.csv" };
@@ -106,7 +102,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 WriteHeader(resultsWriter);
                 // Ludwig sPRG
-                AnalyzeDirectory(i++, peakView, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter, new List<int> { 1 });
                 // Hasmik Swath Heavy only
                 AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, resultsWriter, new List<int> { 1, 1, 1 });
                 // Hasmik Qe Heavy only
@@ -183,6 +179,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var directoryPath = testFilesDir.GetTestPath(directoryName);
             if (outDir == null)
                 outDir = directoryPath;
+            else if (directoryName != null)
+                outDir = Path.Combine(outDir, directoryName);
+            Directory.CreateDirectory(outDir);
             var sb = new StringBuilder(directoryName);
             sb.Append(".sky");
             var skylineName = sb.ToString();
