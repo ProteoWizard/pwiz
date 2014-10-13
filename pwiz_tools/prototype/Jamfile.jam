@@ -23,26 +23,37 @@
 
 project
     : requirements
-        <library>../common
-        <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
     ;
 
 exe iddump
     : iddump.cpp
+      ../common
       ../../pwiz/data/identdata//pwiz_data_identdata
+      ../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
     ;
 
 exe ThermoRawMetaDump
     : ThermoRawMetaDump.cpp
+      ../common
       ../../pwiz/data/misc
       ../../pwiz_aux/msrc/utility/vendor_api/thermo//pwiz_vendor_api_thermo
-    : <conditional>@msvc-requirement
+      ../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
+    : <conditional>@msvc-requirement <vendor-api-support>on
+    ;
+
+exe peptide2formula
+    : peptide2formula.cpp
+      ../../pwiz/utility/chemistry
+      ../../pwiz/data/proteome/Peptide.cpp
+      ../../pwiz/data/proteome/Modification.cpp
+      ../../pwiz/data/proteome/AminoAcid.cpp
+      /ext/boost//filesystem
     ;
 
 # local install for testing
 
 install bin 
-    : iddump ThermoRawMetaDump
+    : iddump ThermoRawMetaDump peptide2formula
     : <location>bin ;
 
 explicit bin ;

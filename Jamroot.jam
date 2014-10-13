@@ -634,7 +634,6 @@ rule gcc-install-dll-path ( properties * )
 install executables
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
-      pwiz_tools/prototype//ThermoRawMetaDump
       pwiz_tools/examples//example_tools
     : <conditional>@install-type
       <conditional>@install-location
@@ -642,6 +641,7 @@ install executables
       <conditional>@install-vendor-api-dependencies
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
+      <vendor-api-support>on:<dependency>pwiz_tools/prototype//ThermoRawMetaDump
       <dependency>VERSION
     ;
 
@@ -1155,6 +1155,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
+    [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/SQLite : *.cpp *.h ]
 
     [ mz5-build $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp ]
 
@@ -1247,6 +1248,7 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_LIBRARIES_PATH)/boost-build
     $(PWIZ_LIBRARIES_PATH)/boost_aux
     $(PWIZ_LIBRARIES_PATH)/libsvm-3.0
+    $(PWIZ_LIBRARIES_PATH)/SQLite
     [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
