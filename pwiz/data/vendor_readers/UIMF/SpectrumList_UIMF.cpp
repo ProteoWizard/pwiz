@@ -119,10 +119,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
     scan.set(MS_scan_start_time, rawfile_->getRetentionTime(rawIndexEntry.frame), UO_minute);
     scan.set(MS_ion_mobility_drift_time, rawfile_->getDriftTime(rawIndexEntry.frame, rawIndexEntry.scan), UO_millisecond);
 
+    pair<double, double> scanWindow = rawfile_->getScanRange();
+    scan.scanWindows.push_back(ScanWindow(scanWindow.first, scanWindow.second, MS_m_z));
+
     // NOTE: UIMF always represents DIA data, like Agilent all-ions
     if (msLevel > 1)
     {
         Precursor precursor;
+        precursor.selectedIons.push_back(SelectedIon((scanWindow.first + scanWindow.second) / 2)); // add a fake selected ion to be backwards compatible with mzXML
         precursor.activation.set(MS_CID); // assume CID
         //precursor.activation.set(MS_collision_energy, scanRecordPtr->getCollisionEnergy(), UO_electronvolt);
         result->precursors.push_back(precursor);
@@ -139,9 +143,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
 
     rawfile_->getScan(rawIndexEntry.frame, rawIndexEntry.scan, rawIndexEntry.frameType, mzArray, intensityArray);
     result->defaultArrayLength = mzArray.size();
-
-    pair<double, double> scanWindow = rawfile_->getScanRange();
-    scan.scanWindows.push_back(ScanWindow(scanWindow.first, scanWindow.second, MS_m_z));
 
     return result;
 }

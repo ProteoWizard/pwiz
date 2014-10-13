@@ -284,6 +284,7 @@ void testRead(const Reader& reader, const string& rawpath)
             bal::contains(fileType, "Waters") ||
             bal::contains(fileType, "MassHunter") ||
             fileType == "Bruker FID" ||
+            fileType == "UIMF" ||
             bal::contains(fileType, "T2D"))
             diffConfig_non_mzML.ignoreIdentity = true;
 
