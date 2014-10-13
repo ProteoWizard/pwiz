@@ -122,6 +122,18 @@ else
     feature.feature vendor-api-support : off on : incidental propagated ; # off is the default
 }
 
+rule vendor-api-support ( properties * )
+{
+    if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+    {
+        return <vendor-api-support>on ;
+    }
+    else
+    {
+        return <vendor-api-support>off ;
+    }
+}
+
 
 if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text formats like mzML, mzXML, MGF etc
 {
@@ -576,6 +588,7 @@ rule install-type ( properties * )
 
 rule install-vendor-api-dependencies ( properties * )
 {
+    properties = $(properties) [ vendor-api-support $(properties) ] ;
     local location = [ install-location $(properties) ] ;
     local dependencies ;
     if <toolset>msvc in $(properties) && <link>static in $(properties) && ! [ without-binary-msdata ]
@@ -588,6 +601,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
+        if <vendor-api-support>on in $(properties) { dependencies += <dependency>pwiz_tools/prototype//ThermoRawMetaDump/$(location) ; }
     }
     return $(dependencies) ;
 }
@@ -641,7 +655,6 @@ install executables
       <conditional>@install-vendor-api-dependencies
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
-      <vendor-api-support>on:<dependency>pwiz_tools/prototype//ThermoRawMetaDump
       <dependency>VERSION
     ;
 
