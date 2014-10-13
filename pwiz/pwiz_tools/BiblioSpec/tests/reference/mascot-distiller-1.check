@@ -2,7 +2,7 @@ libLSID	numSpecs	majorVersion	minorVersion
 urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mascot-distiller-1.blib	1	1	2
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	retentionTime	fileID	SpecIDinFile	score	scoreType
-1	LVNELTEFAK	582.32	2	LVNELTEFAK	-	-	1	500	0.0	0	39.512845	1	2	0.006486	5
+1	LVNELTEFAK	582.32	2	LVNELTEFAK	-	-	1	500	0.0	0	39.512845	1	2	7.4e-05	5
 id	fileName
 1	C:/Temp/ah_20101011y_BSA_MS-MS_only_5-1.RAW
 id	scoreType
