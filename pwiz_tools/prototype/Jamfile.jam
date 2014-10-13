@@ -38,7 +38,7 @@ exe ThermoRawMetaDump
       ../../pwiz/data/misc
       ../../pwiz_aux/msrc/utility/vendor_api/thermo//pwiz_vendor_api_thermo
       ../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-    : <conditional>@msvc-requirement <vendor-api-support>on
+    : <conditional>@msvc-requirement <vendor-api-support>off:<build>no
     ;
 
 exe peptide2formula
