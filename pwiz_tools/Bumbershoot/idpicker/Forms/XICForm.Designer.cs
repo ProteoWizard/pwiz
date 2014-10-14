@@ -118,11 +118,6 @@ namespace IDPicker.Forms
             this.MonoisotopicAdjustmentMinBox.Name = "MonoisotopicAdjustmentMinBox";
             this.MonoisotopicAdjustmentMinBox.Size = new System.Drawing.Size(47, 20);
             this.MonoisotopicAdjustmentMinBox.TabIndex = 1;
-            this.MonoisotopicAdjustmentMinBox.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            -2147483648});
             this.MonoisotopicAdjustmentMinBox.Enter += new System.EventHandler(this.NumericUpDownEnter);
             // 
             // label2
@@ -148,7 +143,7 @@ namespace IDPicker.Forms
             this.MonoisotopicAdjustmentMaxBox.Size = new System.Drawing.Size(47, 20);
             this.MonoisotopicAdjustmentMaxBox.TabIndex = 2;
             this.MonoisotopicAdjustmentMaxBox.Value = new decimal(new int[] {
-            1,
+            2,
             0,
             0,
             0});
@@ -178,10 +173,10 @@ namespace IDPicker.Forms
             this.ChromatogramMzLowerOffsetValueBox.Size = new System.Drawing.Size(59, 20);
             this.ChromatogramMzLowerOffsetValueBox.TabIndex = 5;
             this.ChromatogramMzLowerOffsetValueBox.Value = new decimal(new int[] {
-            5,
+            10,
             0,
             0,
-            65536});
+            0});
             this.ChromatogramMzLowerOffsetValueBox.Enter += new System.EventHandler(this.NumericUpDownEnter);
             // 
             // ChromatogramMzLowerOffsetUnitsBox
@@ -224,7 +219,7 @@ namespace IDPicker.Forms
             this.ChromatogramMzUpperOffsetValueBox.Size = new System.Drawing.Size(59, 20);
             this.ChromatogramMzUpperOffsetValueBox.TabIndex = 7;
             this.ChromatogramMzUpperOffsetValueBox.Value = new decimal(new int[] {
-            1,
+            10,
             0,
             0,
             0});
@@ -376,7 +371,7 @@ namespace IDPicker.Forms
             this.RTTolLowerBox.Size = new System.Drawing.Size(59, 20);
             this.RTTolLowerBox.TabIndex = 3;
             this.RTTolLowerBox.Value = new decimal(new int[] {
-            120,
+            30,
             0,
             0,
             0});
@@ -410,7 +405,7 @@ namespace IDPicker.Forms
             this.RTTolUpperBox.Size = new System.Drawing.Size(59, 20);
             this.RTTolUpperBox.TabIndex = 4;
             this.RTTolUpperBox.Value = new decimal(new int[] {
-            120,
+            30,
             0,
             0,
             0});

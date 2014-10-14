@@ -923,11 +923,9 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
     {
         SpectrumSource& source = sources[i];
 
-        if (quantitationMethodBySource.count((int) source.id) > 0 && 
-            (quantitationMethodBySource.find((int) source.id)->second.quantitationMethod != QuantitationMethod::None &&
-             quantitationMethodBySource.find((int) source.id)->second.quantitationMethod != QuantitationMethod::LabelFree))
-            
-            continue;
+        if (quantitationMethodBySource.count((int) source.id) == 0 ||
+            quantitationMethodBySource.find((int) source.id)->second.quantitationMethod != QuantitationMethod::LabelFree)            
+                    continue;
 
         XIC::XICConfiguration config;
 
