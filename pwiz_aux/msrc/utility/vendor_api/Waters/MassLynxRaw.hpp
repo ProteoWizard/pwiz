@@ -131,7 +131,7 @@ struct PWIZ_API_DECL RawData
         {
             double transportRF = boost::any_cast<short>(transportRFItr->second[std::min(transportRFItr->second.size()-1, (size_t) blockIndex)]);
             double pusherInterval = 1000 / transportRF;
-            return (scanIndex+1) * pusherInterval;
+            return scanIndex * pusherInterval; // 0-based, to match PLGS _final_fragment.csv bin values
         }
         return 0.0;
     }

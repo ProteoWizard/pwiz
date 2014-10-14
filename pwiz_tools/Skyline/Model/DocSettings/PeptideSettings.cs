@@ -402,33 +402,30 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Get drift time for the charged peptide from our drift time predictor, or,
-        /// failing that, from the provided spectral library if it has bare drift times
+        /// failing that, from the provided spectral library if it has bare drift times.
+        /// If no drift info is available, returns a new zero'd out drift time info object.
         /// </summary>
-        /// <param name="chargedPeptide"></param>
-        /// <param name="libraryIonMobilityInfo"></param>
-        /// <param name="windowDtMsec"></param>
-        /// <returns>drift time or null</returns>
-        public double? GetDriftTime(LibKey chargedPeptide, LibraryIonMobilityInfo libraryIonMobilityInfo, out  double windowDtMsec)
+        public DriftTimeInfo GetDriftTime(LibKey chargedPeptide,
+            LibraryIonMobilityInfo libraryIonMobilityInfo, out  double windowDtMsec)
         {
             if (DriftTimePredictor != null)
             {
-                double? result = DriftTimePredictor.GetDriftTimeAndWindow(chargedPeptide, out windowDtMsec);
-                if (result.HasValue)
+                var result = DriftTimePredictor.GetDriftTimeInfo(chargedPeptide, out windowDtMsec);
+                if (result != null && result.DriftTimeMsec(false).HasValue)
                     return result;
             }
 
             if (libraryIonMobilityInfo != null)
             {
-                double? dt = libraryIonMobilityInfo.GetLibraryMeasuredDriftTimeMsec(chargedPeptide);
-                if ((dt != null) && (LibraryDriftTimesResolvingPower ?? 0) > 0)
+                var dt = libraryIonMobilityInfo.GetLibraryMeasuredDriftTimeAndHighEnergyOffset(chargedPeptide);
+                if ((dt != null) && dt.DriftTimeMsec(false).HasValue && (LibraryDriftTimesResolvingPower ?? 0) > 0)
                 {
-                    double? result = dt.Value;
-                    windowDtMsec = 2.0 * result.Value / LibraryDriftTimesResolvingPower.Value;
-                    return result;
+                    windowDtMsec = 2.0 * dt.DriftTimeMsec(false).Value / LibraryDriftTimesResolvingPower.Value;
+                    return dt;
                 }
             }
             windowDtMsec = 0;
-            return null;
+            return new DriftTimeInfo(null,0);
         }
 
         /// <summary>

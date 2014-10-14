@@ -34,7 +34,8 @@ static const char ERROR_GENERIC[] = "Unexpected failure.";
 // integer values minorVersion, the minorVersion field has been taken
 // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 2 // Version 2 adds ion mobility information
+#define MINOR_VERSION_CURRENT 3 // Version 3 adds product ion mobility offset information for Waters Mse IMS
+                                // Version 2 adds ion mobility information
 
 
 // SQLite uses 1.5K pages, and PRAGMA cache_size is specified in these pages
@@ -303,6 +304,7 @@ void BlibMaker::createTables()
            "numPeaks INTEGER, "
            "ionMobilityValue REAL, "
            "ionMobilityType INTEGER, "
+           "ionMobilityHighEnergyDriftTimeOffsetMsec REAL, "
            "retentionTime REAL, "
            "fileID INTEGER, "
            "SpecIDinFile VARCHAR(256), "// spec label (id) in source file
@@ -392,6 +394,7 @@ void BlibMaker::updateTables(){
     newColumns.push_back(make_pair("scoreType", "TINYINT"));
     newColumns.push_back(make_pair("ionMobilityValue", "REAL"));
     newColumns.push_back(make_pair("ionMobilityType", "INTEGER"));
+    newColumns.push_back(make_pair("ionMobilityHighEnergyDriftTimeOffsetMsec", "REAL"));
 
     for (vector< pair<string, string> >::const_iterator i = newColumns.begin(); i != newColumns.end(); ++i) {
         if (!tableColumnExists("main", "RefSpectra", i->first.c_str())) {
@@ -580,15 +583,19 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
     // find out if the source library has the same columns as the new
     string alternate_cols = "'0', '0', '0', '0', '0', '0'";
     if (tableVersion > 0) {
-        alternate_cols = (tableVersion > 1) ?
-            "ionMobilityValue, ionMobilityType" : "'0', '0'";
+        if (tableVersion == 2) 
+            alternate_cols = "ionMobilityValue, ionMobilityType, '0'"; // Handle missing ion mobility info
+        else if (tableVersion == 3) 
+            alternate_cols = "ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec";
+        else
+            alternate_cols = "'0', '0', '0'"; // Handle missing ion mobility info
         alternate_cols += ", retentionTime, specIDinFile, score, scoreType";
     }
 
     sprintf(zSql,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-            "ionMobilityValue, ionMobilityType, retentionTime, specIDinFile, "
+            "ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, specIDinFile, "
             "score, scoreType) "
             "SELECT peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "

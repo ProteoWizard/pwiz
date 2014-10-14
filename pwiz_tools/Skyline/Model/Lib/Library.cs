@@ -485,7 +485,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="key">A sequence, charge pair</param>
         /// <param name="filePath">A file for which the ion mobility information is requested</param>
         /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
-        /// <returns>True if retention time information was retrieved successfully</returns>
+        /// <returns>True if ion mobility information was retrieved successfully</returns>
         public abstract bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities);
 
         /// <summary>
@@ -945,7 +945,7 @@ namespace pwiz.Skyline.Model.Lib
         /// Return the average measured drift time for spectra that were identified with a
         /// specific modified peptide sequence and charge state.  
         /// </summary>
-        public double? GetLibraryMeasuredDriftTimeMsec(LibKey chargedPeptide)
+        public DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey chargedPeptide)
         {
             IonMobilityInfo[] ionMobilities;
             if ((!_dictChargedPeptideIonMobilities.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
@@ -953,8 +953,9 @@ namespace pwiz.Skyline.Model.Lib
             if (ionMobilities.All(dt => dt.IsCollisionalCrossSection))
                 return null;
             double? result = Array.FindAll(ionMobilities, dt => !dt.IsCollisionalCrossSection).Select(dt => dt.Value).Average();
-            return result;
-        }
+            double highEnergyDriftTimeOffsetMsec = Array.FindAll(ionMobilities, dt => !dt.IsCollisionalCrossSection).Select(dt => dt.HighEnergyDriftTimeOffsetMsec).Average();
+            return new DriftTimeInfo(result, highEnergyDriftTimeOffsetMsec);
+       }
 
         public IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict()
         {
@@ -1380,13 +1381,15 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class IonMobilityInfo
     {
-        public IonMobilityInfo(double value, bool isCollisionalCrossSection)
+        public IonMobilityInfo(double value, bool isCollisionalCrossSection, double highEnergyDriftTimeOffsetMsec)
         {
             Value = value;
             IsCollisionalCrossSection = isCollisionalCrossSection;
+            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
         }
         public double Value { get; private set; }
         public bool IsCollisionalCrossSection { get; private set; }
+        public double HighEnergyDriftTimeOffsetMsec { get; set; }
     }
 
     /// <summary>

@@ -65,6 +65,7 @@
     <property name="SpectrumSourceId" column="SpectrumSourceId"/>
     <property name="IonMobilityValue" column="ionMobilityValue"/>
     <property name="IonMobilityType" column="ionMobilityType"/>
+    <property name="IonMobilityHighEnergyDriftTimeOffsetMsec" column="ionMobilityHighEnergyDriftTimeOffsetMsec"/>
     <property name="RetentionTime" column="retentionTime"/>
     <property name="BestSpectrum" column="bestSpectrum"/>
   </class>

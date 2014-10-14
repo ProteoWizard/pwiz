@@ -469,6 +469,12 @@ namespace pwiz.Skyline.SettingsUI
             _driverDT.AddItem();
         }
 
+        public void EditDriftTimePredictor()
+        {
+            CheckDisposed();
+            _driverDT.EditCurrent();
+        }
+
         private void btnUpdateIonMobilityLibrary_Click(object sender, EventArgs e)
         {
             // Enable Update Ion Mobility Library button based on whether the selected predictor

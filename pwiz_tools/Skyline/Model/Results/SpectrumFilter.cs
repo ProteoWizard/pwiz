@@ -73,10 +73,10 @@ namespace pwiz.Skyline.Model.Results
 
                     var key = new PrecursorModSeq(0, null, ChromExtractor.summed);  // TIC
                     dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
-                        _instrument.MinTime, _instrument.MaxTime, null, null, _isHighAccMsFilter, _isHighAccProductFilter));
+                        _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
                     key = new PrecursorModSeq(0, null, ChromExtractor.base_peak);   // BPC
                     dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
-                        _instrument.MinTime, _instrument.MaxTime, null, null, _isHighAccMsFilter, _isHighAccProductFilter));
+                        _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
                 }
                 if (EnabledMsMs)
                 {
@@ -131,12 +131,14 @@ namespace pwiz.Skyline.Model.Results
                         double? minTime = _minTime, maxTime = _maxTime;
                         double? startDriftTimeMsec = null, endDriftTimeMsec = null;
                         double windowDT;
-                        double? centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
+                        double highEnergyDriftTimeOffsetMsec = 0;
+                        DriftTimeInfo centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
                             new LibKey(nodePep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, out windowDT);
-                        if (centerDriftTime.HasValue)
+                        if (centerDriftTime.DriftTimeMsec(false).HasValue)
                         {
-                            startDriftTimeMsec = centerDriftTime.Value - windowDT / 2;
+                            startDriftTimeMsec = centerDriftTime.DriftTimeMsec(false) - windowDT / 2; // Get the low energy drift time
                             endDriftTimeMsec = startDriftTimeMsec + windowDT;
+                            highEnergyDriftTimeOffsetMsec = centerDriftTime.HighEnergyDriftTimeOffsetMsec;
                         }
 
                         if (canSchedule)
@@ -187,7 +189,8 @@ namespace pwiz.Skyline.Model.Results
                         var key = new PrecursorModSeq(mz, seq, ChromExtractor.summed);
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
-                            filter = new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count, minTime, maxTime, startDriftTimeMsec, endDriftTimeMsec, 
+                            filter = new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count, minTime, maxTime,
+                                startDriftTimeMsec, endDriftTimeMsec, highEnergyDriftTimeOffsetMsec,
                                 _isHighAccMsFilter, _isHighAccProductFilter);
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
@@ -418,7 +421,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra);
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, _isWatersMse && GetMseLevel() > 1);
                     if (filteredSrmSpectrum != null)
                         yield return filteredSrmSpectrum;
                 }

@@ -13,5 +13,6 @@
     </id>
     <property name="PeptideModSeq" index="idxPeptide" not-null="true"/>
     <property name="CollisionalCrossSection"/>
+    <property name="HighEnergyDriftTimeOffsetMsec"/>
   </class>
 </hibernate-mapping>

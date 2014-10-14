@@ -1453,13 +1453,13 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public string ModifiedSequence { get; private set; }
         public int Charge { get; private set; }
-        public double DriftTimeMsec { get; private set; }
+        public DriftTimeInfo DriftTimeInfo { get; private set; }
 
-        public MeasuredDriftTimePeptide(string seq, int charge, double driftTimeMsec)
+        public MeasuredDriftTimePeptide(string seq, int charge, DriftTimeInfo driftTimeInfo)
         {
             ModifiedSequence = seq;
             Charge = charge;
-            DriftTimeMsec = driftTimeMsec;
+            DriftTimeInfo = driftTimeInfo;
         }
 
         #region Implementation of IXmlSerializable
@@ -1475,7 +1475,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             modified_sequence,
             charge,
-            drift_time
+            drift_time,
+            high_energy_drift_time_offset
         }
 
         public static MeasuredDriftTimePeptide Deserialize(XmlReader reader)
@@ -1493,7 +1494,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read tag attributes
             ModifiedSequence = reader.GetAttribute(ATTR.modified_sequence);
             Charge = reader.GetIntAttribute(ATTR.charge);
-            DriftTimeMsec = reader.GetDoubleAttribute(ATTR.drift_time);
+            DriftTimeInfo = new DriftTimeInfo(reader.GetDoubleAttribute(ATTR.drift_time),
+                                                             reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
             // Consume tag
             reader.Read();
         }
@@ -1503,7 +1505,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write tag attributes
             writer.WriteAttribute(ATTR.modified_sequence, ModifiedSequence);
             writer.WriteAttribute(ATTR.charge, Charge);
-            writer.WriteAttribute(ATTR.drift_time, DriftTimeMsec);
+            writer.WriteAttribute(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec(false));
+            writer.WriteAttribute(ATTR.high_energy_drift_time_offset, DriftTimeInfo.HighEnergyDriftTimeOffsetMsec);
         }
 
         #endregion
@@ -1514,7 +1517,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.ModifiedSequence, ModifiedSequence) && obj.Charge == Charge && obj.DriftTimeMsec == DriftTimeMsec;
+            return Equals(obj.ModifiedSequence, ModifiedSequence) && obj.Charge == Charge &&
+                   Equals(obj.DriftTimeInfo, DriftTimeInfo);
         }
 
         public int CompareTo(MeasuredDriftTimePeptide other)
@@ -1527,12 +1531,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (result != 0)
                 return result;
 
-            double diff = DriftTimeMsec - other.DriftTimeMsec;
-            if (diff > 0)
-                return 1;
-            else if (diff < 0)
-                return -1;
-            return 0;
+            return DriftTimeInfo.CompareTo(other.DriftTimeInfo);
         }
 
         public override bool Equals(object obj)
@@ -1548,7 +1547,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = (ModifiedSequence != null ? ModifiedSequence.GetHashCode() : 0);
-                result = (result * 397) ^  (DriftTimeMsec.GetHashCode() * 397) ^ Charge;
+                result = (result * 397) ^ (DriftTimeInfo.GetHashCode() * 397) ^ Charge;
                 return result;
             }
         }
@@ -2123,18 +2122,68 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string Name { get; }
 
-        double? GetLibraryMeasuredDriftTimeMsec(LibKey peptide);
+        DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey peptide);
 
         IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict();
 
     }
 
+    /// <summary>
+    /// Contains drift time information, including details such as
+    /// the effect on drift time in high energy spectra as in Waters MSe
+    /// </summary>
+    public class DriftTimeInfo
+    {
+        private double? _driftTimeMsec;
+
+        public DriftTimeInfo(double? driftTimeMsec, double highEnergyDriftTimeOffsetMsec)
+        {
+            _driftTimeMsec = driftTimeMsec;
+            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
+        }
+
+        public double HighEnergyDriftTimeOffsetMsec { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
+
+        public double? DriftTimeMsec(bool isHighEnergy)
+        {
+            return _driftTimeMsec.HasValue ? _driftTimeMsec + (isHighEnergy ? HighEnergyDriftTimeOffsetMsec : 0) : null;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return 0 == CompareTo(obj as DriftTimeInfo);
+        }
+
+        public override int GetHashCode()
+        {
+            return _driftTimeMsec.GetHashCode()* 397 ^ HighEnergyDriftTimeOffsetMsec.GetHashCode();
+        }
+
+        public int CompareTo(DriftTimeInfo other)
+        {
+            double diff = 0;
+            if (_driftTimeMsec.HasValue && other._driftTimeMsec.HasValue)
+                diff = _driftTimeMsec.Value - other._driftTimeMsec.Value;
+            else if (_driftTimeMsec.HasValue)
+                return 1;
+            else if (other._driftTimeMsec.HasValue)
+                return -1;
+            if (diff == 0)
+                diff =  HighEnergyDriftTimeOffsetMsec - other.HighEnergyDriftTimeOffsetMsec;
+            if (diff > 0)
+                return 1;
+            else if (diff < 0)
+                return -1;
+            return 0;
+        }
+    }
+
     public interface IIonMobilityLibrary
     {
         string Name { get; }
-
-        double? GetDriftTimeMsec(String peptide, ChargeRegressionLine regressionLine);
-
+        DriftTimeInfo GetDriftTimeInfo(String peptide, ChargeRegressionLine regressionLine);
     }
 
     public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
@@ -2150,7 +2199,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="peptide"></param>
         /// <param name="regressionLine"></param>
         /// <returns>drift time, or null</returns>
-        public abstract double? GetDriftTimeMsec(String peptide, ChargeRegressionLine regressionLine);
+        public abstract DriftTimeInfo GetDriftTimeInfo(String peptide, ChargeRegressionLine regressionLine);
 
         public virtual bool IsUsable { get { return true; } }
 
@@ -2194,11 +2243,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Round(dtMsec.Value, 4);
         }
 
-        private ImmutableDictionary<LibKey, double> _measuredDriftTimePeptides;
+        private ImmutableDictionary<LibKey, DriftTimeInfo> _measuredDriftTimePeptides;
         private ReadOnlyCollection<ChargeRegressionLine> _chargeRegressionLines;
 
         public DriftTimePredictor(string name,
-                                    Dictionary<LibKey, double> measuredDriftTimePeptides,
+                                    Dictionary<LibKey, DriftTimeInfo> measuredDriftTimePeptides,
                                     IonMobilityLibrarySpec ionMobilityLibrary,
                                     IList<ChargeRegressionLine> chargeSlopeIntercepts,
                                     double resolvingPower)
@@ -2217,24 +2266,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double InverseResolvingPowerTimesTwo { get; private set; } // Cached 2.0/resolving_power for faster window size calcs
 
-        public double? GetMeasuredDriftTimeMsec(LibKey chargedPeptide)
+        public DriftTimeInfo GetMeasuredDriftTimeMsec(LibKey chargedPeptide)
         {
-            double? result = null;
             if (MeasuredDriftTimePeptides != null)
             {
-                double dt;
+                DriftTimeInfo dt;
                 if (MeasuredDriftTimePeptides.TryGetValue(chargedPeptide, out dt))
-                    result = dt;
+                    return dt;
             }
-            return result;
+            return new DriftTimeInfo(null, 0);
         }
 
-        public IDictionary<LibKey, double> MeasuredDriftTimePeptides
+        public IDictionary<LibKey, DriftTimeInfo> MeasuredDriftTimePeptides
         {
             get { return _measuredDriftTimePeptides; }
             private set 
             {
-                _measuredDriftTimePeptides = (value == null) ? null : new ImmutableDictionary<LibKey, double>(value);
+                _measuredDriftTimePeptides = (value == null) ? null : new ImmutableDictionary<LibKey, DriftTimeInfo>(value);
             }
         }
 
@@ -2301,12 +2349,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public double? GetDriftTimeMsec(LibKey peptide)
+        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide)
         {
             // Do we see this in our list of observed drift times?
             if (MeasuredDriftTimePeptides != null)
             {
-                double driftTime;
+                DriftTimeInfo driftTime;
                 if (MeasuredDriftTimePeptides.TryGetValue(peptide, out driftTime))
                     return driftTime;
             }
@@ -2320,7 +2368,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         // First access?  Load the library.
                         IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
                     }
-                    return IonMobilityLibrary.GetDriftTimeMsec(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
+                    return IonMobilityLibrary.GetDriftTimeInfo(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
                 }
             }
             return null;
@@ -2330,16 +2378,17 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Get the drift time in msec for the charged peptide, and the width of the window
         /// centered on that based on the drift time predictor's claimed resolving power
         /// </summary>
-        /// <param name="peptide"></param>
-        /// <param name="dtWindowWidthMsec"></param>
-        /// <returns></returns>
-        public double? GetDriftTimeAndWindow(LibKey peptide, out double dtWindowWidthMsec)
+        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, out double dtWindowWidthMsec)
         {
-            double? driftTime = GetDriftTimeMsec(peptide);
-            if (driftTime.HasValue)
-                dtWindowWidthMsec = InverseResolvingPowerTimesTwo * driftTime.Value; // 2.0*driftTime/resolvingPower
+            DriftTimeInfo driftTime = GetDriftTimeInfo(peptide);
+            if (driftTime != null)
+            {
+                dtWindowWidthMsec = InverseResolvingPowerTimesTwo * driftTime.DriftTimeMsec(false) ?? 0; // 2.0*driftTime/resolvingPower
+            }
             else
+            {
                 dtWindowWidthMsec = 0;
+            }
             return driftTime;
         }
 
@@ -2414,14 +2463,14 @@ namespace pwiz.Skyline.Model.DocSettings
             ChargeRegressionLines = list.ToArray();
 
             // Read all measured drift times
-            var dict = new Dictionary<LibKey, double>();
+            var dict = new Dictionary<LibKey, DriftTimeInfo>();
             while (reader.IsStartElement(EL.measured_dt))
             {
                 var dt = MeasuredDriftTimePeptide.Deserialize(reader);
                 var key = new LibKey(dt.ModifiedSequence, dt.Charge);
                 if (!dict.ContainsKey(key))
                 {
-                    dict.Add(key, dt.DriftTimeMsec);
+                    dict.Add(key, dt.DriftTimeInfo);
                 }
             }
             if (dict.Any())

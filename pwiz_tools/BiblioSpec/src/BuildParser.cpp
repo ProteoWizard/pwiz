@@ -412,9 +412,9 @@ void BuildParser::insertSpectrum(PSM* psm,
     sprintf(sql_statement_buf,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
-            "ionMobilityType, retentionTime, fileID, specIDinFile, "
+            "ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, fileID, specIDinFile, "
             "score, scoreType) "
-            "VALUES('%s', %f, %d, '%s', '%s', '%s', 1, %d, %f, %d, %f, %lld, '%s', "
+            "VALUES('%s', %f, %d, '%s', '%s', '%s', 1, %d, %f, %d, %f, %f, %lld, '%s', "
             "%f, %d)",
             psm->unmodSeq.c_str(),
             curSpectrum.mz,
@@ -424,6 +424,7 @@ void BuildParser::insertSpectrum(PSM* psm,
             curSpectrum.numPeaks,
             curSpectrum.ionMobility,
             curSpectrum.ionMobilityType,
+            curSpectrum.getIonMobilityHighEnergyDriftTimeOffsetMsec(),
             curSpectrum.retentionTime,
             fileId,
             specIdStr.c_str(),

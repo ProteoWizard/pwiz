@@ -74,19 +74,17 @@ namespace pwiz.SkylineTest.Results
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
             var results = document.Settings.MeasuredResults;
-            Assert.AreEqual(1, document.PeptidePrecursorPairs.Count());
-            foreach (var pair in document.PeptidePrecursorPairs)
+            Assert.AreEqual(2, document.PeptidePrecursorPairs.Count());
+            var pair = document.PeptidePrecursorPairs.ToArray()[1];
+            ChromatogramGroupInfo[] chromGroupInfo;
+            Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                tolerance, true, out chromGroupInfo));
+            Assert.AreEqual(1, chromGroupInfo.Length);
+            var chromGroup = chromGroupInfo[0];
+            Assert.AreEqual(2 , chromGroup.NumPeaks); // This will be higher if we don't filter on DT
+            foreach (var tranInfo in chromGroup.TransitionPointSets)
             {
-                ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
-                Assert.AreEqual(1, chromGroupInfo.Length);
-                var chromGroup = chromGroupInfo[0];
-                Assert.AreEqual(4 , chromGroup.NumPeaks); // This will be higher if we don't filter on DT
-                foreach (var tranInfo in chromGroup.TransitionPointSets)
-                {
-                    maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
-                }
+                maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
             }
             Assert.AreEqual(278 , maxHeight, 1);  // Without DT filtering, this will be much greater - about 996
 

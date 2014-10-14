@@ -236,7 +236,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_7 = 1.7;   // Adds Ion Mobility handling
         public const double FORMAT_VERSION_1_8 = 1.8;   // Adds Reporter Ions and non proteomic transitions
         public const double FORMAT_VERSION_1_9 = 1.9;   // Adds sequence lookup key for decoys
-        public const double FORMAT_VERSION = FORMAT_VERSION_1_9;
+        public const double FORMAT_VERSION_2_61 = 2.61;   // Adds drift time high energy offsets for Waters IMS, revised small molecule support
+        public const double FORMAT_VERSION = FORMAT_VERSION_2_61;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;

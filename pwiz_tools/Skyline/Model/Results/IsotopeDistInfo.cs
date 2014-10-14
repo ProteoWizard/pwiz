@@ -78,11 +78,11 @@ namespace pwiz.Skyline.Model.Results
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
             var key = new PrecursorModSeq(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
-            var filter = new SpectrumFilterPair(key, 0, null, null, null, null, false, false);
+            var filter = new SpectrumFilterPair(key, 0, null, null, null, null, 0, false, false);
             filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
-            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray() } } );
+            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray() } });
 
             int startIndex = expectedSpectrum.Intensities.IndexOf(inten => inten >= minimumAbundance);
             if (startIndex == -1)

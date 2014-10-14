@@ -27,7 +27,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
-        public SpectrumFilterPair(PrecursorModSeq precursorModSeq, int id, double? minTime, double? maxTime, double? minDriftTimeMsec, double? maxDriftTimeMsec, bool highAccQ1, bool highAccQ3)
+        public SpectrumFilterPair(PrecursorModSeq precursorModSeq, int id, double? minTime, double? maxTime,
+            double? minDriftTimeMsec, double? maxDriftTimeMsec, double highEnergyDriftTimeOffsetMsec, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorModSeq.ModifiedSequence;
@@ -37,6 +38,7 @@ namespace pwiz.Skyline.Model.Results
             MaxTime = maxTime;
             MinDriftTimeMsec = minDriftTimeMsec;
             MaxDriftTimeMsec = maxDriftTimeMsec;
+            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -92,6 +94,7 @@ namespace pwiz.Skyline.Model.Results
         public double? MaxTime { get; private set; }
         private double? MinDriftTimeMsec { get; set; }
         private double? MaxDriftTimeMsec { get; set; }
+        private double? HighEnergyDriftTimeOffsetMsec { get; set; }
         // Q1 values for when precursor ions are filtered from MS1
         private double[] ArrayQ1 { get; set; }
         private double[] ArrayQ1Window { get; set; }
@@ -132,16 +135,16 @@ namespace pwiz.Skyline.Model.Results
 
         public ExtractedSpectrum FilterQ1SpectrumList(MsDataSpectrum[] spectra)
         {
-            return FilterSpectrumList(spectra, ArrayQ1, ArrayQ1Window, HighAccQ1);
+            return FilterSpectrumList(spectra, ArrayQ1, ArrayQ1Window, HighAccQ1, false);
         }
 
-        public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra)
+        public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra, bool useDriftTimeHighEnergyOffset)
         {
             // All-ions extraction for MS1 scans only
             if (Q1 == 0)
                 return null;
 
-            return FilterSpectrumList(spectra, ArrayQ3, ArrayQ3Window, HighAccQ3);
+            return FilterSpectrumList(spectra, ArrayQ3, ArrayQ3Window, HighAccQ3, useDriftTimeHighEnergyOffset);
         }
 
         /// <summary>
@@ -156,7 +159,7 @@ namespace pwiz.Skyline.Model.Results
         /// trying to measure ions per injection, basically).
         /// </summary>
         private ExtractedSpectrum FilterSpectrumList(IEnumerable<MsDataSpectrum> spectra,
-                                                 double[] centerArray, double[] windowArray, bool highAcc)
+            double[] centerArray, double[] windowArray, bool highAcc, bool useDriftTimeHighEnergyOffset)
         {
             int targetCount = 1;
             if (Q1 == 0)
@@ -188,7 +191,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Filter on drift time, if any
-                if (!ContainsDriftTime(spectrum.DriftTimeMsec))
+                if (!ContainsDriftTime(spectrum.DriftTimeMsec, useDriftTimeHighEnergyOffset))
                     continue;
 
                 var mzArray = spectrum.Mzs;
@@ -279,7 +282,7 @@ namespace pwiz.Skyline.Model.Results
                     extractedIntensities[i] *= scale;
             }
             double dtCenter, dtWidth;
-            GetDriftTimeWindow(out dtCenter, out dtWidth);
+            GetDriftTimeWindow(out dtCenter, out dtWidth, useDriftTimeHighEnergyOffset);
             return new ExtractedSpectrum(ModifiedSequence,
                 Q1,
                 dtCenter,
@@ -386,20 +389,23 @@ namespace pwiz.Skyline.Model.Results
             return docFilterPair;
         }
 
-        public bool ContainsDriftTime(double? driftTimeMsec)
+        public bool ContainsDriftTime(double? driftTimeMsec, bool highEnergy)
         {
             if (!driftTimeMsec.HasValue)
                 return true; // It doesn't NOT have the drift time, since there isn't one
-            return (!MinDriftTimeMsec.HasValue || MinDriftTimeMsec.Value <= driftTimeMsec) &&
-                (!MaxDriftTimeMsec.HasValue || MaxDriftTimeMsec.Value >= driftTimeMsec);
+            double offset = (highEnergy ? HighEnergyDriftTimeOffsetMsec??0 : 0);
+            return (!MinDriftTimeMsec.HasValue || MinDriftTimeMsec.Value+offset <= driftTimeMsec) &&
+                (!MaxDriftTimeMsec.HasValue || MaxDriftTimeMsec.Value+offset >= driftTimeMsec);
         }
 
-        public void GetDriftTimeWindow(out double center, out double width)
+        public void GetDriftTimeWindow(out double center, out double width, bool highEnergy)
         {
             if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
             {
+                // High energy (product ion) scans may have a faster drift time, as in Waters MsE
+                double offset = (highEnergy ? HighEnergyDriftTimeOffsetMsec ?? 0 : 0);
                 width = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
-                center = MinDriftTimeMsec.Value + 0.5*width;
+                center = offset + MinDriftTimeMsec.Value + 0.5*width;
             }
             else
             {

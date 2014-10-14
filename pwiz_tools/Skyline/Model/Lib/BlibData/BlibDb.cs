@@ -528,6 +528,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                RetentionTime = specLiteKey.Time.RetentionTime,
                                                IonMobilityValue = specLiteKey.Time.IonMobilityValue,
                                                IonMobilityType = specLiteKey.Time.IonMobilityType,
+                                               IonMobilityHighEnergyDriftTimeOffsetMsec = specLiteKey.Time.IonMobilityHighEnergyDriftTimeOffsetMsec,
                                                FileId = spectrumSourceId
                                            };
 
@@ -611,6 +612,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         dbRetentionTimes.IonMobilityType = (int) BiblioSpecLiteLibrary.IonMobilityType.driftTime;
                     }
                     dbRetentionTimes.IonMobilityValue = spectrum.IonMobilityInfo.Value;
+                    dbRetentionTimes.IonMobilityHighEnergyDriftTimeOffsetMsec = spectrum.IonMobilityInfo.HighEnergyDriftTimeOffsetMsec;
                 }
 
                 if (refSpectra.RetentionTimes == null)

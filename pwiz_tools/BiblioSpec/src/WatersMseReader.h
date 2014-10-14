@@ -35,22 +35,49 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> >::iterator
  */
 struct MsePSM : PSM {
     double mz;
-    float precursorMobility;
+    double precursorNonIntegerCharge;   // A non-integer value that reveals relative abundance of charge states.  Rounded, it's the same value as "precursorZ".
+                          // For example, "2.74" means a mix of 2 and 3, with most being 3.  "3.2" would be a mix of 3 and 4, mostly 3. "1.5" is an even mix of 1 and 2.
+                          // This information is useful in interpreting product drift times, which differ from precursor drift times due
+                          // to the extra kinetic energy that is added post-drift-cell to induce fragmentation. (per telecon with Will Thompson 7/28/14) 
+    double precursorIonMobility;
     double retentionTime;
     std::vector<double> mzs;
     std::vector<double> intensities;
+    std::vector<double> productIonMobilities;
     bool valid; // if false, don't add to library
 
-    MsePSM() : PSM(), mz(0), precursorMobility(0), retentionTime(0), valid(true) {
+    MsePSM() : PSM(), mz(0), precursorNonIntegerCharge(0), precursorIonMobility(0), retentionTime(0), valid(true) {
+    }
+
+    MsePSM(const MsePSM& rhs)
+    {
+        *this = rhs;
+    }
+
+    MsePSM& operator= (const MsePSM& rhs)
+    {
+        clear();
+        PSM::operator=(rhs); // base class copy
+        mz = rhs.mz;
+        precursorIonMobility = rhs.precursorIonMobility;
+        precursorNonIntegerCharge = rhs.precursorNonIntegerCharge;
+        retentionTime = rhs.retentionTime;
+        mzs = rhs.mzs;
+        intensities = rhs.intensities;
+        productIonMobilities = rhs.productIonMobilities;
+        valid = rhs.valid;
+        return *this;
     }
 
     void clear(){
         PSM::clear();
         mz = 0;
-        precursorMobility = 0;
+        precursorIonMobility = 0;
+        precursorNonIntegerCharge = 0;
         retentionTime = 0;
         mzs.clear();
         intensities.clear();
+        productIonMobilities.clear();
         valid = true;
     }
 };
@@ -66,10 +93,10 @@ struct compMsePsm{
         if( left->charge == right->charge ){
             if( left->mz == right->mz ){
                 if( left->retentionTime == right->retentionTime ){
-                    if( left->precursorMobility == right->precursorMobility) {
+                    if( left->precursorIonMobility == right->precursorIonMobility) {
                         return false;
                     } else {
-                        return (left->precursorMobility < right->precursorMobility);
+                        return (left->precursorIonMobility < right->precursorIonMobility);
                     }
                 } else {
                     return (left->retentionTime < right->retentionTime);
@@ -93,7 +120,11 @@ struct compMsePsm{
 class LineEntry{
 public:
   double precursorMz;
-  int precursorZ;
+  double precursorNonIntegerCharge; // A non-integer value that reveals relative abundance of charge states.  Rounded, it's the same value as "precursorZ".
+                          // For example, "2.74" means a mix of 2 and 3, with most being 3.  "3.2" would be a mix of 3 and 4, mostly 3. "1.5" is an even mix of 1 and 2.
+                          // This information is useful in interpreting product drift times, which differ from precursor drift times due
+                          // to the extra kinetic energy that is added post-drift-cell to induce fragmentation. (per telecon with Will Thompson 7/28/14)
+  int precursorZ; // The most abundant charge.  Same as the rounded value of precursorCharge.
   double score;
   double retentionTime;
   string sequence;
@@ -102,15 +133,19 @@ public:
   double fragmentIntensity;
   double precursorMass;
   double minMass;
-  float precursorMobility;
+  float precursorIonMobility;
+  float productIonMobility;
   string pass;
 
-  LineEntry() : precursorMz(0), precursorZ(0), retentionTime(0),
+  LineEntry() : precursorMz(0), precursorNonIntegerCharge(0), precursorZ(0), retentionTime(0),
       fragmentMz(0), fragmentIntensity(0), precursorMass(0), minMass(0),
-      precursorMobility(0) {};
+      precursorIonMobility(0), productIonMobility(0) {};
 
   static void insertPrecursorMz(LineEntry& le, const string& value){
       le.precursorMz = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
+  }
+  static void insertPrecursorNonIntegerCharge(LineEntry& le, const string& value){
+      le.precursorNonIntegerCharge = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertPrecursorZ(LineEntry& le, const string& value){
       le.precursorZ = (value.empty()) ? 0 : boost::lexical_cast<int>(value);
@@ -139,8 +174,11 @@ public:
   static void insertMinMass(LineEntry& le, const string& value){
       le.minMass = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
-  static void insertPrecursorMobility(LineEntry& le, const string& value){
-      le.precursorMobility = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
+  static void insertPrecursorIonMobility(LineEntry& le, const string& value){
+      le.precursorIonMobility = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
+  }
+  static void insertProductIonMobility(LineEntry& le, const string& value){
+      le.productIonMobility = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertPass(LineEntry& le, const string& value){
       le.pass = value;

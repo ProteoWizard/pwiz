@@ -106,16 +106,6 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Select a peptide in the tree view.
-        /// </summary>
-        /// <param name="peptide">Name of peptide to select</param>
-        public void SelectPeptide(string peptide)
-        {
-            FindNode(peptide);
-            WaitForGraphs();
-        }
-
-        /// <summary>
         /// Close the spectrum graph.
         /// </summary>
         public void CloseSpectrumGraph()

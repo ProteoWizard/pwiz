@@ -74,9 +74,23 @@ struct PSM{
 
   virtual ~PSM(){ };
 
+  PSM& operator= (const PSM& rhs)
+  {
+    charge = rhs.charge;
+    unmodSeq = rhs.unmodSeq;
+    modifiedSeq = rhs.modifiedSeq;
+    mods = rhs.mods;
+    specKey = rhs.specKey;
+    specIndex = rhs.specIndex;
+    score = rhs.score;
+    specName = rhs.specName;
+    return *this;
+  }
+
   void clear(){
     charge = 0;
     unmodSeq.clear();
+    modifiedSeq.clear();
     mods.clear();
     specKey = -1;
     specIndex = -1;

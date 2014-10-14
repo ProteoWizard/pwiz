@@ -697,6 +697,8 @@ namespace pwiz.Skyline.SettingsUI
                             if (dt != null)
                             {
                                 var dtText = ( dt.IsCollisionalCrossSection ? "CCS" : "DT" ) + COLON_SEP + String.Format("{0:F4}",dt.Value); // Not L10N
+                                if (dt.HighEnergyDriftTimeOffsetMsec != 0) // Show the high energy value (as in Waters MSe) if different
+                                    dtText += String.Format("({0:F4}ms)", dt.HighEnergyDriftTimeOffsetMsec); // Not L10N
                                 labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
                             }
                         }

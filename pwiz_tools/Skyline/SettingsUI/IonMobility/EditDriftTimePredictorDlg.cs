@@ -85,12 +85,27 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     // List any measured drift times
                     if (_predictor.MeasuredDriftTimePeptides != null)
                     {
+                        bool hasHighEnergyOffsets =
+                            _predictor.MeasuredDriftTimePeptides.Any(p => p.Value.HighEnergyDriftTimeOffsetMsec != 0);
+                        cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
                         foreach (var p in _predictor.MeasuredDriftTimePeptides)
                         {
-                            gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
-                                p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                                p.Value.ToString(LocalizationHelper.CurrentCulture));
+                            if (hasHighEnergyOffsets)
+                                gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                                    p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                                    (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                                    p.Value.HighEnergyDriftTimeOffsetMsec.ToString(LocalizationHelper.CurrentCulture)
+                                    );
+                            else
+                                gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                                    p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                                    (p.Value.DriftTimeMsec(false) ?? 0).ToString(LocalizationHelper.CurrentCulture)
+                                    );
                         }
+                    }
+                    else
+                    {
+                        cbOffsetHighEnergySpectra.Checked = false;
                     }
 
                     comboLibrary.SelectedItem = (_predictor.IonMobilityLibrary != null) ? _predictor.IonMobilityLibrary.Name : null;
@@ -117,6 +132,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             labelConversionParameters.Enabled = gridRegression.Enabled =
                 labelConversionParameters.Visible = gridRegression.Visible =
                     _showRegressions;
+            gridMeasuredDriftTimes.Columns[3].Visible = cbOffsetHighEnergySpectra.Checked;
+
             if (oldVisible != _showRegressions)
             {
                 int adjust = (gridRegression.Size.Height + 2*labelConversionParameters.Size.Height) * (_showRegressions ? 1 : -1);
@@ -124,6 +141,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     adjust -= (2*labelIonMobilityLibrary.Size.Height + comboLibrary.Size.Height);
                 Size = new Size(Size.Width, Size.Height + adjust);
                 gridMeasuredDriftTimes.Size = new Size(gridMeasuredDriftTimes.Size.Width, gridMeasuredDriftTimes.Size.Height - adjust);
+                cbOffsetHighEnergySpectra.Location = new Point(cbOffsetHighEnergySpectra.Location.X, gridMeasuredDriftTimes.Location.Y + gridMeasuredDriftTimes.Size.Height + cbOffsetHighEnergySpectra.Size.Height/4);
                 labelIonMobilityLibrary.Location = new Point(labelIonMobilityLibrary.Location.X, labelIonMobilityLibrary.Location.Y - adjust);
                 comboLibrary.Location = new Point(comboLibrary.Location.X, comboLibrary.Location.Y - adjust);
             }
@@ -151,7 +169,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     return;
                 }
             }
-            if (driftTable.GetTableMeasuredDriftTimes() == null) // Some error detected in the measured drift times table
+            if (driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked) == null) // Some error detected in the measured drift times table
             {
                 return;
             }
@@ -180,7 +198,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var ionMobilityLibrary = _driverIonMobilityLibraryListComboDriver.SelectedItem;
 
             DriftTimePredictor predictor =
-                new DriftTimePredictor(name, driftTable.GetTableMeasuredDriftTimes(), 
+                new DriftTimePredictor(name, driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), 
                     ionMobilityLibrary, table.GetTableChargeRegressionLines(), resolvingPower);
 
             _predictor = predictor;
@@ -272,6 +290,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             gridMeasuredDriftTimes.DoPaste(this, MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues);
         }
 
+        public void SetOffsetHighEnergySpectraCheckbox(bool enable)
+        {
+            cbOffsetHighEnergySpectra.Checked = enable;
+            UpdateControls();
+        }
+
+        public bool GetOffsetHighEnergySpectraCheckbox()
+        {
+            return cbOffsetHighEnergySpectra.Checked;
+        }
+
         #endregion
 
 
@@ -301,6 +330,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
+        private void cbOffsetHighEnergySpectra_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateControls();
+        }
+
     }
     
     public class MeasuredDriftTimeTable
@@ -312,10 +346,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
         }
 
-        public Dictionary<LibKey, double> GetTableMeasuredDriftTimes()
+        public Dictionary<LibKey, DriftTimeInfo> GetTableMeasuredDriftTimes(bool useHighEnergyOffsets)
         {
             var e = new CancelEventArgs();
-            var dict = new Dictionary<LibKey, double>();
+            var dict = new Dictionary<LibKey, DriftTimeInfo>();
             foreach (DataGridViewRow row in _gridMeasuredDriftTimePeptides.Rows)
             {
                 if (row.IsNewRow)
@@ -333,9 +367,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (!ValidateDriftTime(e, row.Cells[2], out driftTime))
                     return null;
 
+                double highEnergyDriftTimeOffset = 0; // Set default value in case user does not provide one
+                if (useHighEnergyOffsets && !ValidateHighEnergyDriftTimeOffset(e, row.Cells[3], out highEnergyDriftTimeOffset))
+                    return null;
+
                 try
                 {
-                    dict.Add(new LibKey(seq,charge), driftTime);
+                    dict.Add(new LibKey(seq,charge), new DriftTimeInfo(driftTime, highEnergyDriftTimeOffset));
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -348,7 +386,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out int charge)
         {
-            if (!ValidateCell(e, cell, Convert.ToInt32, out charge))
+            if (!ValidateCell(e, cell, Convert.ToInt32, out charge, true))
                 return false;
 
             var errmsg = ValidateCharge(charge);
@@ -370,7 +408,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private bool ValidateDriftTime(CancelEventArgs e, DataGridViewCell cell, out double driftTime)
         {
-            if (!ValidateCell(e, cell, Convert.ToDouble, out driftTime))
+            if (!ValidateCell(e, cell, Convert.ToDouble, out driftTime, true))
+                return false;
+
+            // TODO: Range check.
+
+            return true;
+        }
+
+        private bool ValidateHighEnergyDriftTimeOffset(CancelEventArgs e, DataGridViewCell cell, out double driftTimeHighEnergyOffset)
+        {
+            if (!ValidateCell(e, cell, Convert.ToDouble, out driftTimeHighEnergyOffset, false))
                 return false;
 
             // TODO: Range check.
@@ -380,20 +428,27 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private bool ValidateSequence(CancelEventArgs e, DataGridViewCell cell, out string sequence)
         {
-            if (!ValidateCell(e, cell, Convert.ToString, out sequence))
+            if (!ValidateCell(e, cell, Convert.ToString, out sequence, true))
                 return false;
 
             return true;
         }
 
         private bool ValidateCell<TVal>(CancelEventArgs e, DataGridViewCell cell,
-            Converter<string, TVal> conv, out TVal valueT)
+            Converter<string, TVal> conv, out TVal valueT, bool required)
         {
             valueT = default(TVal);
             if (cell.Value == null)
             {
-                InvalidCell(e, cell, Resources.EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_);
-                return false;
+                if (required)
+                {
+                    InvalidCell(e, cell, Resources.EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_);
+                    return false;
+                }
+                else
+                {
+                    return true; // Missing value is acceptable, don't change the output value
+                }
             }
             string value = cell.Value.ToString();
             try

@@ -49,11 +49,12 @@ namespace pwiz.Skyline.Model.IonMobility
             get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
         }
 
-        public const int SCHEMA_VERSION_CURRENT = 1;
+        public const int SCHEMA_VERSION_CURRENT = 2; // Version 2 adds high energy drift time offset 
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
         private readonly ReaderWriterLock _databaseLock;
+        private int _schemaVersion;
 
         private DateTime _modifiedTime;
         private ImmutableDictionary<String, DbIonMobilityPeptide> _dictLibrary;
@@ -63,6 +64,19 @@ namespace pwiz.Skyline.Model.IonMobility
             _path = path;
             _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
+            // Do we need to update the db to current version?
+            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            {
+                ReadVersion(session);
+            }
+            if (_schemaVersion < SCHEMA_VERSION_CURRENT)
+            {
+                using (var session = OpenWriteSession())
+                {
+                    UpdateSchema(session);
+                }
+            }
+
         }
 
         public void Validate()
@@ -89,11 +103,11 @@ namespace pwiz.Skyline.Model.IonMobility
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        public double? GetDriftTime(string seq, ChargeRegressionLine regression)
+        public DriftTimeInfo GetDriftTimeInfo(string seq, ChargeRegressionLine regression)
         {
             DbIonMobilityPeptide pep;
             if (DictLibrary.TryGetValue(seq, out pep))
-                return regression.GetY(pep.CollisionalCrossSection);
+                return new DriftTimeInfo(regression.GetY(pep.CollisionalCrossSection), pep.HighEnergyDriftTimeOffsetMsec);
             return null;
         }
 
@@ -297,6 +311,35 @@ namespace pwiz.Skyline.Model.IonMobility
                 loadMonitor.UpdateProgress(status.ChangeErrorException(x));
                 return null;
             }
+        }
+
+        private void ReadVersion(ISession session)
+        {
+            using (var cmd = session.Connection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT SchemaVersion FROM VersionInfo"; // Not L10N
+                var obj = cmd.ExecuteScalar();
+                _schemaVersion = Convert.ToInt32(obj);
+            }
+        }
+
+        private void UpdateSchema(ISession session)
+        {
+            ReadVersion(session);  // Recheck version, in case another thread got here before us
+            if ((_schemaVersion < SCHEMA_VERSION_CURRENT))
+            {
+                using (var transaction = session.BeginTransaction())
+                using (var command = session.Connection.CreateCommand())
+                {
+                    command.CommandText =
+                            String.Format("ALTER TABLE IonMobilityLibrary ADD COLUMN HighEnergyDriftTimeOffsetMsec DOUBLE"); // Not L10N
+                    command.ExecuteNonQuery();
+                    _schemaVersion = SCHEMA_VERSION_CURRENT;
+                    session.Save(new DbVersionInfo { SchemaVersion = _schemaVersion });
+                    transaction.Commit();
+                }
+            }
+            // else unhandled schema version update - let downstream process issue detailed exceptions about missing fields etc
         }
     }
 }

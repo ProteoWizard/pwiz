@@ -29,16 +29,10 @@ namespace pwiz.Skyline.Model.IonMobility
             get { return typeof(DbIonMobilityPeptide); }
         }
 
-        /*
-        CREATE TABLE RetentionTimes (
-            Id id INTEGER PRIMARY KEY autoincrement not null,
-            PeptideModSeq VARCHAR(200),
-            CollisionalCrossSection DOUBLE
-        )
-        */
         // public virtual long? ID { get; set; } // in DbEntity
         public virtual string PeptideModSeq { get; set; }
         public virtual double CollisionalCrossSection { get; set; }
+        public virtual double HighEnergyDriftTimeOffsetMsec { get; set; }
 
         public virtual string Sequence { get { return PeptideModSeq; } }
         
@@ -50,15 +44,16 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         public DbIonMobilityPeptide(DbIonMobilityPeptide other)
-            : this(other.PeptideModSeq, other.CollisionalCrossSection)
+            : this(other.PeptideModSeq, other.CollisionalCrossSection, other.HighEnergyDriftTimeOffsetMsec)
         {
             Id = other.Id;
         }
 
-        public DbIonMobilityPeptide(string sequence, double collisionalCrossSection)
+        public DbIonMobilityPeptide(string sequence, double collisionalCrossSection, double highEnergyDriftTimeOffsetMsec)
         {
             PeptideModSeq = sequence;
             CollisionalCrossSection = collisionalCrossSection;
+            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
         }
 
         #region object overrides
@@ -69,6 +64,7 @@ namespace pwiz.Skyline.Model.IonMobility
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
                    Equals(other.PeptideModSeq, PeptideModSeq) &&
+                   other.HighEnergyDriftTimeOffsetMsec.Equals(other.HighEnergyDriftTimeOffsetMsec) &&
                    other.CollisionalCrossSection.Equals(CollisionalCrossSection);
         }
 
@@ -86,6 +82,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 int result = base.GetHashCode();
                 result = (result*397) ^ (PeptideModSeq != null ? PeptideModSeq.GetHashCode() : 0);
                 result = (result*397) ^ CollisionalCrossSection.GetHashCode();
+                result = (result*397) ^ HighEnergyDriftTimeOffsetMsec.GetHashCode();
                 return result;
             }
         }

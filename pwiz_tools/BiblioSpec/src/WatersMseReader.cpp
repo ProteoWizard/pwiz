@@ -29,6 +29,7 @@
 #include "WatersMseReader.h"
 #include "boost/algorithm/string.hpp"
 #include "boost/filesystem.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
 
 #ifdef USE_WATERS_READER
 #include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
@@ -206,6 +207,8 @@ void WatersMseReader::initTargetColumns(){
                                             LineEntry::insertScore));
   targetColumns_.push_back(wColumnTranslator("precursor.retT", -1,
                                             LineEntry::insertRetentionTime));
+  targetColumns_.push_back(wColumnTranslator("precursor.charge", -1,
+                                            LineEntry::insertPrecursorNonIntegerCharge));
   targetColumns_.push_back(wColumnTranslator("precursor.z", -1,
                                             LineEntry::insertPrecursorZ));
   targetColumns_.push_back(wColumnTranslator("precursor.mz", -1,
@@ -222,7 +225,9 @@ void WatersMseReader::initTargetColumns(){
   optionalColumns_.push_back(wColumnTranslator("minMass", -1,
                                               LineEntry::insertMinMass));
   optionalColumns_.push_back(wColumnTranslator("precursor.Mobility", -1,
-                                              LineEntry::insertPrecursorMobility));
+                                              LineEntry::insertPrecursorIonMobility));
+  optionalColumns_.push_back(wColumnTranslator("product.Mobility", -1,
+                                              LineEntry::insertProductIonMobility));
 
 
   numColumns_ = targetColumns_.size();
@@ -315,6 +320,10 @@ void WatersMseReader::parseHeader(string& line){
     if( optionalColumns_[2].position_ != -1 ){
         targetColumns_.push_back(optionalColumns_[2]);
     }
+    // add product mobility column if found
+    if( optionalColumns_[3].position_ != -1 ){
+        targetColumns_.push_back(optionalColumns_[3]);
+    }
     
     // sort by column number so they can be fetched in order
     sort(targetColumns_.begin(), targetColumns_.end());
@@ -404,11 +413,13 @@ void WatersMseReader::storeLine(LineEntry& entry){
 
     // is this entry the same as the curPSM?
     if( curMsePSM_->unmodSeq == entry.sequence &&
+        curMsePSM_->precursorNonIntegerCharge == entry.precursorNonIntegerCharge &&
         curMsePSM_->charge == entry.precursorZ &&
         curMsePSM_->mz == entry.precursorMz ){
         // yes, same PSM: just add peaks
         curMsePSM_->mzs.push_back(entry.fragmentMz);
         curMsePSM_->intensities.push_back(entry.fragmentIntensity);
+        curMsePSM_->productIonMobilities.push_back((pusherInterval_ > 0) ? pusherInterval_ * entry.productIonMobility : 0);
         return;
     }
 
@@ -416,7 +427,7 @@ void WatersMseReader::storeLine(LineEntry& entry){
     insertCurPSM();
 
     // Do we need to get the pusher frequency for ion mobility?
-    if ((entry.precursorMobility > 0) && (pusherInterval_ <= 0)) {
+    if ((entry.precursorIonMobility > 0) && (pusherInterval_ <= 0)) {
 #ifdef USE_WATERS_READER
             throw BlibException(false, "Drift time data can only be processed with the original raw data "
             "present in the same directory as the final_fragment.csv, or by specifying a pusher interval "
@@ -434,13 +445,15 @@ void WatersMseReader::storeLine(LineEntry& entry){
 
         curMsePSM_->charge = entry.precursorZ;
         curMsePSM_->unmodSeq = entry.sequence;
+        curMsePSM_->precursorNonIntegerCharge = entry.precursorNonIntegerCharge;
         curMsePSM_->mz = entry.precursorMz;
         curMsePSM_->score = entry.score;
-        curMsePSM_->precursorMobility = (pusherInterval_ > 0) ? pusherInterval_ * entry.precursorMobility : 0;
+        curMsePSM_->precursorIonMobility = (pusherInterval_ > 0) ? pusherInterval_ * entry.precursorIonMobility : 0;
         curMsePSM_->retentionTime = entry.retentionTime;
         parseModString(entry, curMsePSM_);
         curMsePSM_->mzs.push_back(entry.fragmentMz);
         curMsePSM_->intensities.push_back(entry.fragmentIntensity);
+        curMsePSM_->productIonMobilities.push_back((pusherInterval_ > 0) ? pusherInterval_ * entry.productIonMobility : 0);
 
     } else {
         curMsePSM_->valid = false;
@@ -454,6 +467,117 @@ void WatersMseReader::storeLine(LineEntry& entry){
 void WatersMseReader::insertCurPSM(){
     if( !curMsePSM_->unmodSeq.empty() && curMsePSM_->valid 
         && curMsePSM_->score > scoreThreshold_ ){
+
+       // For Waters ion mobility data we may actually be looking at two different precursor charge states producing product ions.
+       // That non-integer charge column tells us about the relative abundance of two charges: "2.7" means "some 2 and some 3, mostly 3".
+       // We can tell them apart by examining product drift times, which should be almost the same as the precursor drift time.
+       // If the product and precursor drift times are very different, it means the product was actually from a different precursor
+       // charge state than reported.
+       // After the ions pass through the drift tube, they enter a cell which adds kinetic energy to fragment them for Mse, which 
+       // means the product ions move a bit faster from there to the detector.  But this effect is small compared to charge state.
+       // So if we see two major sets of product drift times for a supposedly single precurosr, split this into two different records  
+       // for the two precursor charge states (per telecon with Will Thompson 7/28/14)
+        if ((curMsePSM_->precursorIonMobility > 0) &&  // Has ion mobility info
+            (curMsePSM_->productIonMobilities.size() > 1) && // Has multiple product ions
+            (curMsePSM_->precursorNonIntegerCharge != (double)curMsePSM_->charge)) // Has multiple charge states
+        {
+            // We expect two sets of grouped drift times, one for each charge state, but there may in fact only be one.
+            // If there are indeed two groups, the more numerous set is that of the more abundant charge.
+            // In practice what we've seen is that the main set's drift time offset from the precursor drift time
+            // is around 2 bins, though there's no guarantee of this.  We can expect, though, that the lower-charge precursor
+            // has a longer drift time.
+            // To divide the two sets, we find the largest discontinuity in a sorted list of product ion mobilities.
+            std::vector<std::pair<float,int>> orderedMobilities;
+            for (int i=0; i < (int)curMsePSM_->productIonMobilities.size(); i++)
+                orderedMobilities.push_back(std::pair<float,int>(curMsePSM_->productIonMobilities[i],i));
+            std::sort(orderedMobilities.begin(), orderedMobilities.end());
+            int maxJumpIndex=0;
+            double jumpThreshold = 2*pusherInterval_; // at least a couple of bin widths should seperate the groups - if indeed there are more than one 
+            double maxJump=0;
+            for (int j=1;j<(int)orderedMobilities.size();j++) // Sort on drift time low->high (which means sort charge high->low)
+            {
+                double jump = orderedMobilities[j].first - orderedMobilities[j-1].first;
+                if ((jump > maxJump) && (jump > jumpThreshold) &&
+                    // Watch out for an outlier at the end of the list (third charge state?)
+                    !((j+1 == (int)orderedMobilities.size()) &&  // This is the last one
+                      (maxJump > jumpThreshold) && // We already have a reasonable looking divide
+                      (jump > (maxJump*2)))) // This is a pretty big jump right at the end
+                {
+                    maxJump = jump;
+                    maxJumpIndex = j;
+                }
+            }
+
+            if (maxJumpIndex > 0) {  // If there are really two charge state sets
+                // Determine the time delta attributable to kinetic energy - that's the difference between the
+                // reported precursor ion mobility and the product ion mobility for the reported charge
+                float averageHighChargeReportedProductIonMobility = 0;
+                for (int k=0; k<maxJumpIndex; k++)
+                {
+                    averageHighChargeReportedProductIonMobility += orderedMobilities[k].first;
+                }
+                averageHighChargeReportedProductIonMobility /= maxJumpIndex;
+                float averageLowChargeReportedProductIonMobility = 0;
+                for (int l=maxJumpIndex; l<(int)orderedMobilities.size();l++)
+                {
+                    averageLowChargeReportedProductIonMobility += orderedMobilities[l].first;
+                }
+                averageLowChargeReportedProductIonMobility /= (orderedMobilities.size()-maxJumpIndex);
+
+                float deltaFromKineticEnergy = 
+                  ((int)curMsePSM_->precursorNonIntegerCharge != curMsePSM_->charge) ? // High charge dominant?
+                  (averageHighChargeReportedProductIonMobility - curMsePSM_->precursorIonMobility) :
+                  (averageLowChargeReportedProductIonMobility - curMsePSM_->precursorIonMobility); 
+
+                // Split the current MsePSM into two charge states
+                MsePSM originalPSM(*curMsePSM_);
+                MsePSM lowchargeMsePSM(*curMsePSM_);
+                lowchargeMsePSM.charge = (int)curMsePSM_->precursorNonIntegerCharge;
+                MsePSM highchargeMsePSM(*curMsePSM_);
+                highchargeMsePSM.charge = 1+(int)curMsePSM_->precursorNonIntegerCharge;
+
+            
+                // Save the split sets
+                for (int isHighCharge = 1; isHighCharge >= 0; isHighCharge--)
+                {
+                    MsePSM& msePSM =  isHighCharge ? highchargeMsePSM : lowchargeMsePSM;
+                    msePSM.mzs.clear();
+                    msePSM.intensities.clear();
+                    msePSM.productIonMobilities.clear();
+                    for (int k = 0; k<(int)orderedMobilities.size();k++) 
+                    {
+                        bool isHighChargeFragment = (k < maxJumpIndex);
+                        bool isHighChargeSpectrum = (isHighCharge==1);
+                        if  (isHighChargeFragment == isHighChargeSpectrum)
+                        {
+                            msePSM.mzs.push_back(originalPSM.mzs[orderedMobilities[k].second]);
+                            msePSM.intensities.push_back(originalPSM.intensities[orderedMobilities[k].second]);
+                            msePSM.productIonMobilities.push_back(originalPSM.productIonMobilities[orderedMobilities[k].second]);
+                        }
+                    }
+
+                    *curMsePSM_ = msePSM;
+                    curMsePSM_->precursorNonIntegerCharge = msePSM.charge;  // No more mixed charges
+                    if (curMsePSM_->charge != originalPSM.charge)
+                    {
+                        // Recalculate mz and drift time of precursor
+                        double mass = pwiz::chemistry::Ion::neutralMass(originalPSM.mz, originalPSM.charge);
+                        curMsePSM_->mz = pwiz::chemistry::Ion::mz(mass, msePSM.charge);
+                        double averageProductIonDriftTime =  
+                            isHighCharge ? averageHighChargeReportedProductIonMobility : averageLowChargeReportedProductIonMobility;
+                        // The drift time delta from kinetic energy is roughly charge independent
+                        curMsePSM_->precursorIonMobility = averageProductIonDriftTime - deltaFromKineticEnergy;
+                    }
+
+                    if (isHighCharge)
+                    {
+                        curMsePSM_->specKey = lineNum_ - 1; // Make this unique (multiline read so this won't conflict)
+                        insertCurPSM();  // Recursive call - just fall through for the other charge state
+                    }
+                }
+            }
+        }
+
         pair<set<MsePSM*,compMsePsm>::iterator, bool> inserted = 
             uniquePSMs_.insert(curMsePSM_);  
         if( ! inserted.second ){ // same psm already there
@@ -547,7 +671,7 @@ bool WatersMseReader::getSpectrum(PSM* psm,
                                   bool getPeaks){    
 
     returnData.id = ((MsePSM*)psm)->specKey;
-    returnData.ionMobility = ((MsePSM*)psm)->precursorMobility;
+    returnData.ionMobility = ((MsePSM*)psm)->precursorIonMobility;
     returnData.ionMobilityType = (returnData.ionMobility > 0) ? 1 : 0;
     returnData.retentionTime = ((MsePSM*)psm)->retentionTime;
     returnData.mz = ((MsePSM*)psm)->mz;
@@ -556,13 +680,16 @@ bool WatersMseReader::getSpectrum(PSM* psm,
     if( getPeaks ){
         returnData.mzs = new double[returnData.numPeaks];
         returnData.intensities = new float[returnData.numPeaks];
+        returnData.productIonMobilities = new float[returnData.numPeaks];
         for(int i=0; i < returnData.numPeaks; i++){
             returnData.mzs[i] = ((MsePSM*)psm)->mzs[i]; 
             returnData.intensities[i] = (float)((MsePSM*)psm)->intensities[i];  
+            returnData.productIonMobilities[i] = (float)((MsePSM*)psm)->productIonMobilities[i];  
         }
     } else {
         returnData.mzs = NULL;
         returnData.intensities = NULL;
+        returnData.productIonMobilities = NULL;
     }
     return true;
 }

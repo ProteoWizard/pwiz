@@ -7303,9 +7303,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_" xml:space="preserve">
     <value>Adding ion mobility data from {0}</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
-    <value>The pasted text must have two columns.</value>
-  </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__" xml:space="preserve">
     <value>Missing peptide sequence on line {0}.</value>
   </data>
@@ -7912,5 +7909,14 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_" xml:space="preserve">
     <value>A retention time predictor with that name already exists. Please choose a new name.</value>
+  </data>
+  <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyDriftTimeOffsetMsec_High_energy_drift_time_offsets_should_be_empty__or_a__usually_negative__value_for_the_relative_drift_time_in_msec_for_high_collision_energy_scans_" xml:space="preserve">
+    <value>High energy drift time offsets should be empty, or a (usually negative) value for the relative drift time in msec for high collision energy scans.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_high_energy_drift_time_offset_on_line__1__" xml:space="preserve">
+    <value>Invalid number format {0} for high energy drift time offset on line {1}.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_" xml:space="preserve">
+    <value>The pasted text must have at least two columns.</value>
   </data>
 </root>

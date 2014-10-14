@@ -22,10 +22,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -141,16 +143,41 @@ namespace pwiz.SkylineTest.Results
             }
             Assert.AreEqual(1, nPeptides);
 
-            if (withDriftTimePredictor)
+            if (withDriftTimePredictor || withDriftTimeFilter)
             {
-                // Verify that the .imdb file goes out in the share zipfile
+                // Verify that the .imdb pr .blib file goes out in the share zipfile
                 for (int complete = 0; complete <= 1; complete++)
                 {
                     var sharePath = testFilesDir.GetTestPath(complete==1?"share_complete.zip":"share_minimized.zip");
                     var share = new SrmDocumentSharing(document, docPath, sharePath, complete==1);
                     share.Share(new LongWaitDlg(null, false));
                     var files = share.ListEntries().ToArray();
-                    Assert.IsTrue(files.Contains("scaled.imdb"));
+                    Assert.IsTrue(files.Contains(withDriftTimePredictor ? "scaled.imdb" : "mse-mobility.filtered-scaled.blib"));
+                    // And round trip it to make sure we haven't left out any new features in minimized imdb or blib files
+                    using (var longWaitDlg = new LongWaitDlg
+                    {
+                        Text = "unit test WatersImsTest",
+                    })
+                    {
+                        longWaitDlg.PerformWork(null, 1000, share.Extract);
+                        Assert.IsFalse(longWaitDlg.IsCanceled);
+                    }
+                    using (TextReader reader = new StreamReader(share.DocumentPath))
+                    {
+                        XmlSerializer documentSerializer = new XmlSerializer(typeof(SrmDocument));
+                        var document2 = (SrmDocument) documentSerializer.Deserialize(reader);
+                        Assert.IsNotNull(document2);
+                        var im = document.Settings.GetIonMobilities(new MsDataFilePath(path));
+                        var pep = document2.Peptides.First();
+                        foreach (TransitionGroupDocNode nodeGroup in pep.Children)
+                        {
+                            double windowDT;
+                            var centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
+                                                       new LibKey(pep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), im, out windowDT);
+                            Assert.AreEqual(3.86124, centerDriftTime.DriftTimeMsec(false) ?? 0, .0001, testModeStr);
+                            Assert.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);
+                        }
+                    }
                 }
             }
 

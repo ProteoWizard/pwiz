@@ -72,6 +72,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             const int chromIndex = 1;
             var doc0 = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile
             AssertEx.IsDocumentState(doc0, null, 19, 19, 28, 607);
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(); // Avoid "document changed since last edit" message
+                doc0 = SkylineWindow.DocumentUI;
+            }); 
             float tolerance = (float)doc0.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight0 = 0;
             var results0 = doc0.Settings.MeasuredResults;

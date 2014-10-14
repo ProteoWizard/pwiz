@@ -1049,13 +1049,25 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("db.imdb", ""), Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
             AssertEx.DeserializeError<DriftTimePredictor>(predictorNoRegression, Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
 
-            // Check using drift time predictor with only measured drift times
-            const string predictor2 = "<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\"/> </predict_drift_time>";
+            // Check using drift time predictor with only measured drift times, and no high energy drift offset
+            const string predictor1 = "<predict_drift_time name=\"test1\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" /> </predict_drift_time>";
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor1);
+            var pred1 = AssertEx.Deserialize<DriftTimePredictor>(predictor1);
+            Assert.AreEqual(100, pred1.ResolvingPower);
+            Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(false) ?? 0);
+            Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(true) ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)).DriftTimeMsec(false)); // Should not find a value for that charge state
+            Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", 5)).DriftTimeMsec(false)); // Should not find a value for that peptide
+
+            // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset
+            const string predictor2 = "<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" high_energy_drift_time_offset=\"-1.0\"/> </predict_drift_time>";
             AssertEx.DeserializeNoError<DriftTimePredictor>(predictor2);
             var pred2 = AssertEx.Deserialize<DriftTimePredictor>(predictor2);
             Assert.AreEqual(100, pred2.ResolvingPower);
-            Assert.AreEqual(17.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)) ?? 0);
-            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)));
+            Assert.AreEqual(17.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(false) ?? 0);
+            Assert.AreEqual(16.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec(true) ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)).DriftTimeMsec(false)); // Should not find a value for that charge state
+            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", 5)).DriftTimeMsec(false)); // Should not find a value for that peptide
 
 
         }

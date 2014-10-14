@@ -192,7 +192,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
         if (nInputs < 1)
         {
             Verbosity::comment(V_ERROR,
-                               "Missing input files (.sqt, .pep.xml/.pep.XML/.pepXML, .idpXML, .dat, .xtan.xml, .pride.xml, .mzid, .perc.xml.)");
+                               "Not enough arguments. Missing input files (.sqt, .pep.xml/.pep.XML/.pepXML, .idpXML, .dat, .xtan.xml, .pride.xml, .mzid, .perc.xml, final_fragment.csv.), or no output file specified.");
             usage();          // Nothing to add
         }
         else
@@ -271,7 +271,9 @@ int BlibBuilder::transferLibrary(int iLib,
     // does the incomming library have retentiontime, score, etc columns
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
-        if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityValue")) {
+        if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyDriftTimeOffsetMsec")) { // As in Waters MsE IMS
+            tableVersion = 3;
+        } else if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityValue")) {
             tableVersion = 2;
         } else {
             tableVersion = 1;

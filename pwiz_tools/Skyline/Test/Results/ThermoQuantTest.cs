@@ -122,21 +122,21 @@ namespace pwiz.SkylineTest.Results
                 Thread.Sleep(10);
             }
 
-            Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1);
+            Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1, "Failed to create cache file");
 
             // Cancel by reverting to the original document
             Assert.IsTrue(docContainer.SetDocument(doc, docResults, true));
             Assert.IsTrue(docContainer.LastProgress.IsCanceled);
 
-            // Wait up to 10 seconds for the cache to be removed
-            for (int i = 0; i < 100; i++)
+            // Wait up to 20 seconds for the cache to be removed
+            for (int i = 0; i < 200; i++)
             {
                 if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1)
                     break;
                 Thread.Sleep(100);
             }
             // Cache file has been removed
-            Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1);
+            Assert.IsTrue(Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1, "Failed to remove cache file");
             testFilesDir.Dispose();
         }
 

@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Is there actually any drift time filtering available?
                 double minDriftTime, maxDriftTime;
-                GetDriftRange(out minDriftTime, out maxDriftTime);
+                GetDriftRange(out minDriftTime, out maxDriftTime, ChromSource.unknown); // Get range of drift times for all products and precursors
                 if ((minDriftTime == double.MinValue) && (maxDriftTime == double.MaxValue))
                 {
                     filterBtn.Visible = false;
@@ -346,7 +346,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double minDrift;
             double maxDrift;
-            GetDriftRange(out minDrift, out maxDrift);
+            GetDriftRange(out minDrift, out maxDrift, _source);  // There may be a different drift time filter for products in Waters
 
             if (minDrift > 0 && maxDrift < double.MaxValue)
             {
@@ -483,13 +483,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var fullScans = _fullScans;
             double minDrift, maxDrift;
-            GetDriftRange(out minDrift, out maxDrift);
+            GetDriftRange(out minDrift, out maxDrift, _source);
             if (Settings.Default.FilterDriftTimesFullScan)
                 fullScans = fullScans.Where(s => minDrift <= s.DriftTimeMsec && s.DriftTimeMsec <= maxDrift).ToArray();
             return fullScans;
         }
 
-        private void GetDriftRange(out double minDrift, out double maxDrift)
+        private void GetDriftRange(out double minDrift, out double maxDrift, ChromSource sourceType)
         {
             minDrift = double.MaxValue;
             maxDrift = double.MinValue;
@@ -501,8 +501,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     minDrift = double.MinValue;
                     maxDrift = double.MaxValue;
                 }
-                else
+                else if (sourceType == ChromSource.unknown || transition.Source == sourceType)
                 {
+                    // Products and precursors may have different expected drift time values in Waters MsE
                     double startDrift = transition.IonMobilityValue.Value -
                                         transition.IonMobilityExtractionWidth.Value / 2;
                     double endDrift = startDrift + transition.IonMobilityExtractionWidth.Value;
@@ -665,7 +666,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 double minDriftTime, maxDriftTime;
-                GetDriftRange(out minDriftTime, out maxDriftTime);
+                GetDriftRange(out minDriftTime, out maxDriftTime, _source);
                 if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
                 {
                     double range = filterBtn.Checked

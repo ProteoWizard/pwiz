@@ -3099,6 +3099,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid number format {0} for high energy drift time offset on line {1}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_high_energy_drift_time_offset_on_line__1__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__f" +
+                        "or_high_energy_drift_time_offset_on_line__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing collisional cross section value on line {0}..
         /// </summary>
         public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__ {
@@ -3129,12 +3139,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The pasted text must have two columns..
+        ///   Looks up a localized string similar to The pasted text must have at least two columns..
         /// </summary>
-        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_two_columns_ {
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_ {
             get {
-                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_t" +
-                        "wo_columns_", resourceCulture);
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_a" +
+                        "t_least_two_columns_", resourceCulture);
             }
         }
         
@@ -23313,6 +23323,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional" +
                         "_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High energy drift time offsets should be empty, or a (usually negative) value for the relative drift time in msec for high collision energy scans..
+        /// </summary>
+        public static string ValidatingIonMobilityPeptide_ValidateHighEnergyDriftTimeOffsetMsec_High_energy_drift_time_offsets_should_be_empty__or_a__usually_negative__value_for_the_relative_drift_time_in_msec_for_high_collision_energy_scans_ {
+            get {
+                return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateHighEnergyDriftTimeOffsetMsec_High_energy_dr" +
+                        "ift_time_offsets_should_be_empty__or_a__usually_negative__value_for_the_relative" +
+                        "_drift_time_in_msec_for_high_collision_energy_scans_", resourceCulture);
             }
         }
         

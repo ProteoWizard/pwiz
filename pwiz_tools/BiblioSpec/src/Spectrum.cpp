@@ -37,6 +37,7 @@ Spectrum::Spectrum() :
     mz_(0),
     ionMobility_(0),
     ionMobilityType_(0),
+    ionMobilityHighEnergyDriftTimeOffsetMsec_(0),
     retentionTime_(0),
     totalIonCurrentRaw_(-1),
     totalIonCurrentProcessed_(-1), 
@@ -51,6 +52,7 @@ Spectrum::Spectrum(const Spectrum& s)
     mz_ = s.mz_;
     ionMobility_ = s.ionMobility_;
     ionMobilityType_ = s.ionMobilityType_;
+    ionMobilityHighEnergyDriftTimeOffsetMsec_ = s.ionMobilityHighEnergyDriftTimeOffsetMsec_;
     retentionTime_ = s.retentionTime_;
     type_ = s.type_;
     totalIonCurrentRaw_ = s.totalIonCurrentRaw_;
@@ -74,6 +76,7 @@ void Spectrum::clear() {
     mz_ = 0;
     ionMobility_ = 0;
     ionMobilityType_ = 0;
+    ionMobilityHighEnergyDriftTimeOffsetMsec_ = 0;
     retentionTime_ = 0;
     type_ = SPEC_UNDEF;
     possibleCharges_.clear();
@@ -91,6 +94,7 @@ Spectrum& Spectrum::operator= (const Spectrum& right)
     mz_ = right.mz_;
     ionMobility_ = right.ionMobility_;
     ionMobilityType_ = right.ionMobilityType_;
+    ionMobilityHighEnergyDriftTimeOffsetMsec_ = right.ionMobilityHighEnergyDriftTimeOffsetMsec_;
     retentionTime_ = right.retentionTime_;
     possibleCharges_ = right.possibleCharges_;
     rawPeaks_ = right.rawPeaks_;
@@ -149,6 +153,21 @@ double Spectrum::getTotalIonCurrentRaw() const
         return sum;
     }
     return totalIonCurrentRaw_;
+}
+
+// In Waters Mse IMS, product ions have kinetic energy added post-drift tube and fly the last part of path to detector slightly faster
+double Spectrum::getIonMobilityHighEnergyDriftTimeOffsetMsec() const 
+{
+    if (ionMobilityHighEnergyDriftTimeOffsetMsec_ == 0)
+    {
+        double sum = 0;
+        for(size_t i = 0; i < rawPeaks_.size(); i++){
+            sum += rawPeaks_[i].ionMobility;
+        }
+        if (sum > 0)
+            return (sum/rawPeaks_.size()) - getIonMobility();
+    }
+    return ionMobilityHighEnergyDriftTimeOffsetMsec_;
 }
 
 double Spectrum::getTotalIonCurrentProcessed() const
@@ -259,6 +278,10 @@ void Spectrum::setMz(double newmz){
 
 void Spectrum::setIonMobility(double mobility) {
     ionMobility_ = mobility;
+}
+
+void Spectrum::setIonMobilityHighEnergyDriftTimeOffsetMsec(double offset) { // In Waters Mse IMS, ions are given extra kinetic energy post-drift to fragment them, and so product ions reach the detector a bit sooner
+    ionMobilityHighEnergyDriftTimeOffsetMsec_ = offset;
 }
 
 void Spectrum::setIonMobilityType(int type) {

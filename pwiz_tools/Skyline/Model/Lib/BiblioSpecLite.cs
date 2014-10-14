@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 5;
+        private const int FORMAT_VERSION_CACHE = 6;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -337,6 +337,7 @@ namespace pwiz.Skyline.Model.Lib
             precursorMZ,
             precursorCharge,
             ionMobilityValue,     // See ionMobilityType value for interpretation
+            ionMobilityHighEnergyDriftTimeOffsetMsec, // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell
             ionMobilityType, // See enum IonMobilityType
             peptideModSeq,
             copies,
@@ -356,6 +357,7 @@ namespace pwiz.Skyline.Model.Lib
             RedundantRefSpectraID,
             SpectrumSourceID,
             ionMobilityValue,     // See ionMobilityType value for interpretation
+            ionMobilityHighEnergyDriftTimeOffsetMsec, // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell
             ionMobilityType, // See enum IonMobilityType
             retentionTime,
             bestSpectrum
@@ -471,7 +473,9 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         try
                         {
-                            select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType FROM [RetentionTimes]"; // Not L10N
+                            select.CommandText = schemaVer > 2 ?
+                              "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec FROM [RetentionTimes]" : // Not L10N
+                              "SELECT RefSpectraId, SpectrumSourceId, retentionTime, ionMobilityValue, ionMobilityType FROM [RetentionTimes]"; // Not L10N
                             reader = select.ExecuteReader();
                             hasIonMobilityColumns = true;
                         }
@@ -501,13 +505,14 @@ namespace pwiz.Skyline.Model.Lib
                                 var ionMobilityType = reader.GetInt32(4);
                                 if (ionMobilityType > 0)
                                 {
+                                    double ionMobility = reader.GetDouble(3);
+                                    double highEnergyDriftTimeOffsetMsec = (schemaVer > 2) ? reader.GetDouble(5) : 0;
                                     spectraIdFileIdIonMobilities.Add(new KeyValuePair<int, KeyValuePair<int, IonMobilityInfo>>(
                                         refSpectraId, 
                                         new KeyValuePair<int, IonMobilityInfo>(spectrumSourceID,
-                                            new IonMobilityInfo(reader.GetDouble(3), (ionMobilityType==(int)IonMobilityType.collisionalCrossSection)))) 
-                            );
-                        }
-                    }
+                                            new IonMobilityInfo(ionMobility, (ionMobilityType == (int)IonMobilityType.collisionalCrossSection), highEnergyDriftTimeOffsetMsec))));
+                                }
+                            }
                         }
                     }
                     retentionTimesBySpectraIdAndFileId = spectraIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
@@ -1225,6 +1230,9 @@ namespace pwiz.Skyline.Model.Lib
                     int iDriftTime = (SchemaVersion > 1)
                         ? reader.GetOrdinal(RetentionTimes.ionMobilityValue)
                         : int.MinValue;
+                    int iHighEnergyDriftTimeOffsetMsec = (SchemaVersion > 2)
+                        ? reader.GetOrdinal(RetentionTimes.ionMobilityHighEnergyDriftTimeOffsetMsec)
+                        : int.MinValue;
 
                     var listSpectra = new List<SpectrumInfo>();
                     while (reader.Read())
@@ -1237,10 +1245,11 @@ namespace pwiz.Skyline.Model.Lib
                         IonMobilityInfo ionMobilityInfo = null;
                         if (iDriftTimeType >= 0)
                         {
-                            var type = reader.GetInt32(iDriftTimeType);
+                            var type = reader.GetInt32(iDriftTimeType); // 0=none, 1=dt, 2=ccs
                             if (type > 0)
                             {
-                                ionMobilityInfo = new IonMobilityInfo(reader.GetDouble(iDriftTime), type!=1);
+                                ionMobilityInfo = new IonMobilityInfo(reader.GetDouble(iDriftTime), type != 1,
+                                    (iHighEnergyDriftTimeOffsetMsec > 0) ? reader.GetDouble(iHighEnergyDriftTimeOffsetMsec) : 0);
                             }
                         }
 
@@ -1677,6 +1686,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.Value);
                     PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.IsCollisionalCrossSection);
+                    PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.HighEnergyDriftTimeOffsetMsec);
                 }
             }
         }
@@ -1698,7 +1708,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     double value = PrimitiveArrays.ReadOneValue<double>(stream);
                     bool isCollisionalCrossSection = PrimitiveArrays.ReadOneValue<bool>(stream);
-                    driftTimes.Add(new IonMobilityInfo(value, isCollisionalCrossSection));
+                    double highEnergyDriftTimeOffsetMsec = PrimitiveArrays.ReadOneValue<double>(stream);
+                    driftTimes.Add(new IonMobilityInfo(value, isCollisionalCrossSection, highEnergyDriftTimeOffsetMsec));
                 }
                 keyValuePairs[i] = new KeyValuePair<int, IonMobilityInfo[]>(id, driftTimes.ToArray());
             }

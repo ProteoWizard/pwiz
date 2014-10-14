@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.IonMobility
                     DbIonMobilityPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {
-                        persistPeptides.Add(new ValidatingIonMobilityPeptide(dbPeptide.Sequence,dbPeptide.CollisionalCrossSection));
+                        persistPeptides.Add(new ValidatingIonMobilityPeptide(dbPeptide.Sequence,dbPeptide.CollisionalCrossSection,dbPeptide.HighEnergyDriftTimeOffsetMsec));
                         // Only add once
                         dictPeptides.Remove(modifiedSeq);
                     }
@@ -109,10 +109,10 @@ namespace pwiz.Skyline.Model.IonMobility
             return persistPath;
         }
 
-        public override double? GetDriftTimeMsec(String seq, ChargeRegressionLine regressionLine)
+        public override DriftTimeInfo GetDriftTimeInfo(String seq, ChargeRegressionLine regressionLine)
         {
             if (_database != null)
-                return _database.GetDriftTime(seq, regressionLine);
+                return _database.GetDriftTimeInfo(seq, regressionLine);
             return null;
         }
 

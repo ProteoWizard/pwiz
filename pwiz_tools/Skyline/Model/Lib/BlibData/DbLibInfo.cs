@@ -22,7 +22,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
     public class DbLibInfo
     {
         public const int INITIAL_LIBRARY_REVISION = 1;
-        public const int SCHEMA_VERSION_CURRENT = 2; 
+        public const int SCHEMA_VERSION_CURRENT = 3; 
         public virtual string LibLSID { get; set; }
         public virtual string CreateTime { get; set; }
         public virtual int NumSpecs { get; set; }
@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// Version 1 added the "RetentionTimes" table.
         /// Version 2 added the ion mobility columns to RetentionTimes 
         /// and, also for redundant libraries, to the RefSpectra table.
+        /// Version 3 adds ion mobility high energy drift time offset
         /// </summary>
         public virtual int MinorVersion { get; set; }
     }

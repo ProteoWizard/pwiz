@@ -38,7 +38,9 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument("BlibDriftTimeTest.sky");
             ImportResults("ID12692_01_UCA168_3727_040714.mz5");
-            SelectPeptide("R.GLAGVENVTELKK.N");
+            FindNode("453");
+            WaitForGraphs();
+
             CloseSpectrumGraph();
 
             // Simulate click on a peak in GraphChromatogram form.
@@ -74,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check zoomed heatmap.
             SetSpectrum(false);
-            TestScale(452, 456, 2.8, 4.2);
+            TestScale(452, 456, 2.61, 4.34);
             WaitForOpenForm<GraphFullScan>();   // For localization testing
 
             // Check filtered heatmap.
@@ -85,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             SetFilter(false);
             TestScale(0, 2000, 0, 15);
             SetZoom(true);
-            TestScale(452, 456, 2.8, 4.2);
+            TestScale(452, 456, 2.61, 4.34);
 
             // Check click on ion label.
             SetSpectrum(true);
@@ -96,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check split graph
             ShowSplitChromatogramGraph(true);
-            ClickChromatogram(33.11, 24.7, PaneKey.PRODUCTS);
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             TestScale(529, 533, 0, 50);
             ClickChromatogram(33.06, 68.8, PaneKey.PRECURSORS);
             TestScale(452, 456, 0, 300);

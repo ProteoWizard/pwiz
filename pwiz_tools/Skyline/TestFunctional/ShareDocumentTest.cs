@@ -96,8 +96,9 @@ namespace pwiz.SkylineTestFunctional
             string shareMinPath = TestFilesDirs[1].GetTestPath(zipFileMin);
             RunDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
             Share(shareMinPath, false, origFileSet, newFileSet, docName);
-            Assert.AreEqual(origFileSet[blibName].UncompressedSize,
-                            newFileSet[blibName].UncompressedSize);
+            // The blib schema changes over time, stuff gets added, this isn't a reliable check
+            // Assert.AreEqual(origFileSet[blibName].UncompressedSize,
+            //                newFileSet[blibName].UncompressedSize);
             // Schema changed to support document libraries, adding information
             long newSize = newFileSet[redundantBlibName].UncompressedSize;
             Assert.IsTrue(origFileSet[redundantBlibName].UncompressedSize < newSize);

@@ -52,10 +52,11 @@
             this.addIRTDatabaseContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label4 = new System.Windows.Forms.Label();
             this.gridViewMeasuredPeptides = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.columnLibrarySequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnLibraryCollisionalCrossSection = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolTipImportBtn = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipMeasuredPeptidesGrid = new System.Windows.Forms.ToolTip(this.components);
+            this.columnLibrarySequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLibraryCollisionalCrossSection = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLibraryHighEnergyDriftTimeOffsetMsec = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -168,7 +169,8 @@
             this.gridViewMeasuredPeptides.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridViewMeasuredPeptides.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnLibrarySequence,
-            this.columnLibraryCollisionalCrossSection});
+            this.columnLibraryCollisionalCrossSection,
+            this.columnLibraryHighEnergyDriftTimeOffsetMsec});
             this.gridViewMeasuredPeptides.DataSource = this.bindingSourceLibrary;
             dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
@@ -201,6 +203,14 @@
             this.columnLibraryCollisionalCrossSection.DefaultCellStyle = dataGridViewCellStyle3;
             resources.ApplyResources(this.columnLibraryCollisionalCrossSection, "columnLibraryCollisionalCrossSection");
             this.columnLibraryCollisionalCrossSection.Name = "columnLibraryCollisionalCrossSection";
+            // 
+            // columnLibraryHighEnergyDriftTimeOffsetMsec
+            // 
+            this.columnLibraryHighEnergyDriftTimeOffsetMsec.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnLibraryHighEnergyDriftTimeOffsetMsec.DataPropertyName = "HighEnergyDriftTimeOffsetMsec";
+            this.columnLibraryHighEnergyDriftTimeOffsetMsec.DefaultCellStyle = dataGridViewCellStyle3;
+            resources.ApplyResources(this.columnLibraryHighEnergyDriftTimeOffsetMsec, "columnHighEnergyDriftTimeOffsetMsec");
+            this.columnLibraryHighEnergyDriftTimeOffsetMsec.Name = "columnHighEnergyDriftTimeOffsetMsec";
             // 
             // EditIonMobilityLibraryDlg
             // 
@@ -258,5 +268,6 @@
         private System.Windows.Forms.ToolTip toolTipMeasuredPeptidesGrid;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibrarySequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryCollisionalCrossSection;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryHighEnergyDriftTimeOffsetMsec;
     }
 }

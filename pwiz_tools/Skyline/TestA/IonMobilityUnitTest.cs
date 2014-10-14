@@ -39,7 +39,8 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestLibIonMobilityInfo()
         {
-            var dbIon1 = new DbIonMobilityPeptide("JKLMN", 1.2) {Id = 12345};
+            const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.01;
+            var dbIon1 = new DbIonMobilityPeptide("JKLMN", 1.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) { Id = 12345 };
             var dbIon2 = new DbIonMobilityPeptide(dbIon1);
             DbIonMobilityPeptide dbIon3 = null;
             Assert.AreEqual(dbIon1.GetHashCode(), dbIon2.GetHashCode());
@@ -57,28 +58,30 @@ namespace pwiz.SkylineTestA
             Assert.AreNotEqual(dbIon1.PeptideModSeq, dbIon2.PeptideModSeq);
 
             var dictCCS1 = new Dictionary<LibKey, IonMobilityInfo[]>();
-            var ccs1 = new List<IonMobilityInfo> {new IonMobilityInfo(1, true), new IonMobilityInfo(2, true)}; // Collisional cross sections
-            var ccs2 = new List<IonMobilityInfo> {new IonMobilityInfo(3, true), new IonMobilityInfo(4, true)}; // Collisional cross sections
+            var ccs1 = new List<IonMobilityInfo> { new IonMobilityInfo(1, true, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), new IonMobilityInfo(2, true, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) }; // Collisional cross sections
+            var ccs2 = new List<IonMobilityInfo> { new IonMobilityInfo(3, true, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), new IonMobilityInfo(4, true, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) }; // Collisional cross sections
             const string seq1 = "JKLM";
             const string seq2 = "KLMN";
             dictCCS1.Add(new LibKey(seq1,1),ccs1.ToArray());
             dictCCS1.Add(new LibKey(seq2,1),ccs2.ToArray());
             var lib = new List<LibraryIonMobilityInfo> { new LibraryIonMobilityInfo("test", dictCCS1) };
 
-            var peptideTimes = CollisionalCrossSectionGridViewDriver.ProcessIonMobilityValues(null,
+            var peptideTimes = CollisionalCrossSectionGridViewDriver.ConvertDriftTimesToCollisionalCrossSections(null,
                 lib, 1, null);
             var validatingIonMobilityPeptides = peptideTimes as ValidatingIonMobilityPeptide[] ?? peptideTimes.ToArray();
             Assert.AreEqual(2, validatingIonMobilityPeptides.Count());
             Assert.AreEqual(1.5, validatingIonMobilityPeptides[0].CollisionalCrossSection);
             Assert.AreEqual(3.5, validatingIonMobilityPeptides[1].CollisionalCrossSection);
+            Assert.AreEqual(HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, validatingIonMobilityPeptides[1].HighEnergyDriftTimeOffsetMsec);
+
 
             var dictCCS2 = new Dictionary<LibKey, IonMobilityInfo[]>();
-            var ccs3 = new List<IonMobilityInfo> { new IonMobilityInfo(4, false), new IonMobilityInfo(5, false) }; // Drift times
+            var ccs3 = new List<IonMobilityInfo> { new IonMobilityInfo(4, false, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), new IonMobilityInfo(5, false, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) }; // Drift times
             const string seq3 = "KLMNJ";
             dictCCS2.Add(new LibKey(seq3, 1), ccs3.ToArray());
             lib.Add(new LibraryIonMobilityInfo("test2", dictCCS2));
             List<LibraryIonMobilityInfo> lib1 = lib;
-            AssertEx.ThrowsException<Exception>(() => CollisionalCrossSectionGridViewDriver.ProcessIonMobilityValues(null,
+            AssertEx.ThrowsException<Exception>(() => CollisionalCrossSectionGridViewDriver.ConvertDriftTimesToCollisionalCrossSections(null,
                 lib1, 2, null),
                 String.Format(
                         Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
@@ -86,7 +89,7 @@ namespace pwiz.SkylineTestA
 
             var regressions = new Dictionary<int, RegressionLine> {{1, new RegressionLine(2, 1)}};
             lib = new List<LibraryIonMobilityInfo> { new LibraryIonMobilityInfo("test", dictCCS2) };
-            peptideTimes = CollisionalCrossSectionGridViewDriver.ProcessIonMobilityValues(null,
+            peptideTimes = CollisionalCrossSectionGridViewDriver.ConvertDriftTimesToCollisionalCrossSections(null,
                             lib, 1, regressions);
             validatingIonMobilityPeptides = peptideTimes as ValidatingIonMobilityPeptide[] ?? peptideTimes.ToArray();
             Assert.AreEqual(1, validatingIonMobilityPeptides.Count());
