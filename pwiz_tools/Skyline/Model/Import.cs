@@ -468,7 +468,8 @@ namespace pwiz.Skyline.Model
             listGroups.Add(nodeGroup);
             irtPeptides.AddRange(builder.IrtPeptides);
             librarySpectra.AddRange(builder.LibrarySpectra);
-            errorList.AddRange(builder.PeptideGroupErrorInfo);
+            if (builder.PeptideGroupErrorInfo.Count > 0)
+                errorList.AddRange(builder.PeptideGroupErrorInfo);
             _countPeptides += nodeGroup.PeptideCount;
             _countIons += nodeGroup.TransitionCount;
         }
@@ -2186,7 +2187,12 @@ namespace pwiz.Skyline.Model
 
         public static int CompareTriples(TransitionGroupLibraryIrtTriple p1, TransitionGroupLibraryIrtTriple p2)
         {
-            return Peptide.CompareGroups(p1.NodeGroup, p2.NodeGroup);
+            int groupComparison = Peptide.CompareGroups(p1.NodeGroup, p2.NodeGroup);
+            if (groupComparison != 0)
+                return groupComparison;
+            if (!p1.Irt.HasValue || !p2.Irt.HasValue)
+                return 0;
+            return p1.Irt.Value.CompareTo(p2.Irt.Value);
         }
     }
 

@@ -384,6 +384,9 @@
   <data name="Peptide">
     <value>Peptide</value>
   </data>
+  <data name="PeptideDocumentLocation">
+    <value>Peptide Document Location</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>Peptide Modified Sequence</value>
   </data>
@@ -395,6 +398,9 @@
   </data>
   <data name="PeptideResult">
     <value>Peptide Result</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>Peptide Result Document Location</value>
   </data>
   <data name="PeptideResults">
     <value>Peptide Results</value>

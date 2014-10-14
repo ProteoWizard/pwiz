@@ -21522,6 +21522,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Connection.
+        /// </summary>
+        public static string ToolMacros__listArguments_Skyline_Connection {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Skyline_Connection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This tool does not provide the functionality for the Collected Arguments macro. Please edit the tool..
         /// </summary>
         public static string ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_ {

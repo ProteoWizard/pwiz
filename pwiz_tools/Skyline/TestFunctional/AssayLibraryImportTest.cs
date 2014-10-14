@@ -180,7 +180,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                             "AAAAAAAAAAAAAAAGAAGK", 492.9385,  53, 54);
-                Assert.AreEqual(messageDlg.ErrorList.Count, 3);
+                Assert.AreEqual(messageDlg.ErrorList.Count, 2);
                 var firstError = messageDlg.ErrorList.First();
                 Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
                 messageDlg.CancelDialog();
@@ -194,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                             "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54);
-                Assert.AreEqual(messageDlg.ErrorList.Count, 3);
+                Assert.AreEqual(messageDlg.ErrorList.Count, 2);
                 var firstError = messageDlg.ErrorList.First();
                 Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
                 messageDlg.AcceptButton.PerformClick();
@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestFunctional
                 var docCurrent = SkylineWindow.DocumentUI;
                 // All of the transitions are there except for the ones with errors
                 ValidateDocAndIrt(docCurrent, 16, 361, 10);
-                Assert.AreEqual(docCurrent.TransitionCount, 108);
+                Assert.AreEqual(docCurrent.TransitionCount, 109);
                 Assert.AreEqual(docCurrent.TransitionGroupCount, 22);
                 // Spectral library results are there
                 var currentLibraries = docCurrent.Settings.PeptideSettings.Libraries;

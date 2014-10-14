@@ -302,7 +302,7 @@ namespace pwiz.Skyline
             base.OnHandleCreated(e);
         }
 
-        void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
+        public void Listen(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent += listener;
         }
@@ -1676,6 +1676,22 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool NavigateToBookmark(Bookmark bookmark)
+        {
+            var bookmarkEnumerator = BookmarkEnumerator.TryGet(DocumentUI, bookmark);
+            if (bookmarkEnumerator == null)
+            {
+                return false;
+            }
+            SequenceTree.SelectedPath = bookmarkEnumerator.IdentityPath;
+            int resultsIndex = bookmarkEnumerator.ResultsIndex;
+            if (resultsIndex >= 0)
+            {
+                ComboResults.SelectedIndex = resultsIndex;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Navigates the UI to the appropriate spot to display to the user
         /// where text was found.
@@ -1692,19 +1708,12 @@ namespace pwiz.Skyline
             {
                 return;
             }
-            var bookmarkEnumerator = BookmarkEnumerator.TryGet(DocumentUI, findResult.Bookmark);
-            if (bookmarkEnumerator == null)
+            if (!NavigateToBookmark(findResult.Bookmark))
             {
                 return;
             }
-            SequenceTree.SelectedPath = bookmarkEnumerator.IdentityPath;
-            int resultsIndex = bookmarkEnumerator.ResultsIndex;
-            if (resultsIndex >= 0)
-            {
-                ComboResults.SelectedIndex = resultsIndex;
-            }
             bool isAnnotationOrNote = findResult.FindMatch.AnnotationName != null || findResult.FindMatch.Note;
-            if (isAnnotationOrNote && bookmarkEnumerator.CurrentChromInfo != null)
+            if (isAnnotationOrNote && findResult.Bookmark.ChromFileInfoId != null)
             {
                 ShowResultsGrid(true);
                 ResultsGridForm resultsGridForm = _resultsGridForm as ResultsGridForm;
