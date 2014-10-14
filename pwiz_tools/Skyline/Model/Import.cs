@@ -2190,8 +2190,10 @@ namespace pwiz.Skyline.Model
             int groupComparison = Peptide.CompareGroups(p1.NodeGroup, p2.NodeGroup);
             if (groupComparison != 0)
                 return groupComparison;
-            if (!p1.Irt.HasValue || !p2.Irt.HasValue)
-                return 0;
+            if (!p1.Irt.HasValue)
+                return p2.Irt.HasValue ? -1 : 0;
+            if (!p2.Irt.HasValue)
+                return 1;
             return p1.Irt.Value.CompareTo(p2.Irt.Value);
         }
     }
