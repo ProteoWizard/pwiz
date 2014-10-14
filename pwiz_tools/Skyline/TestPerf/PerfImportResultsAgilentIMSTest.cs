@@ -70,7 +70,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             const int chromIndex = 1;
-            var doc0 = WaitForDocumentLoaded();
+            var doc0 = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile
             AssertEx.IsDocumentState(doc0, null, 19, 19, 28, 607);
             float tolerance = (float)doc0.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight0 = 0;
