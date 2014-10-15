@@ -468,8 +468,7 @@ namespace pwiz.Skyline.Model
             listGroups.Add(nodeGroup);
             irtPeptides.AddRange(builder.IrtPeptides);
             librarySpectra.AddRange(builder.LibrarySpectra);
-            if (builder.PeptideGroupErrorInfo.Count > 0)
-                errorList.AddRange(builder.PeptideGroupErrorInfo);
+            errorList.AddRange(builder.PeptideGroupErrorInfo);
             _countPeptides += nodeGroup.PeptideCount;
             _countIons += nodeGroup.TransitionCount;
         }

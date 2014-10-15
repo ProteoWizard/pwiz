@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Get rid of the tools directory created for this test
                 if (Directory.Exists(SrcDirPath))
-                    Helpers.TryTwice(() => Directory.Delete(SrcDirPath, true));
+                    Helpers.TryTwice(() => Directory.Delete(SrcDirPath));
                 // If there was an existing tools directory move it back
                 if (DestDirPath != null)
                     Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath));

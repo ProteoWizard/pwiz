@@ -926,15 +926,12 @@ namespace ZedGraph
 				ZoomScale( pane.X2Axis, zoomFraction, x2, isZoomOnCenter );
 			}
             if ((_isEnableVZoom || verticalZoom) && y[0] > pane.YAxis.Scale.Min)
-            {
-                var oldMin = pane.YAxis.Scale.Min;
+			{
 				for ( int i = 0; i < pane.YAxisList.Count; i++ )
 					ZoomScale( pane.YAxisList[i], zoomFraction, y[i], isZoomOnCenter );
 				for ( int i = 0; i < pane.Y2AxisList.Count; i++ )
 					ZoomScale( pane.Y2AxisList[i], zoomFraction, y2[i], isZoomOnCenter );
-                if (!_isEnableVPan)
-                    pane.YAxis.Scale.Min = oldMin;
-            }
+			}
 
 			using ( Graphics g = this.CreateGraphics() )
 			{

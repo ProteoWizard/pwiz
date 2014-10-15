@@ -174,14 +174,5 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return Sequence;
         }
-
-        [InvariantDisplayName("PeptideDocumentLocation")]
-        public DocumentLocation DocumentLocation
-        {
-            get
-            {
-                return new DocumentLocation(IdentityPath);
-            }
-        }
     }
 }

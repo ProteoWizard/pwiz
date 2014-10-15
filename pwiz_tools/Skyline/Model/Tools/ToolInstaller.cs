@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns></returns>
         public static UnzipToolReturnAccumulator UnpackZipTool(string pathToZip, IUnpackZipToolSupport unpackSupport)
         {
-            if (!Directory.Exists(pathToZip) && !File.Exists(pathToZip))
+            if (!File.Exists(pathToZip))
                 throw new FileNotFoundException(pathToZip);
 
             //Removes any old folders that dont have Tools associated with them
@@ -278,11 +278,7 @@ namespace pwiz.Skyline.Model.Tools
 
             using (new TemporaryDirectory(tempToolPath))
             {
-                if (Directory.Exists(pathToZip))
-                {
-                    DirectoryCopy(pathToZip, tempToolPath);
-                }
-                else using (var zipFile = new ZipFile(pathToZip))
+                using (var zipFile = new ZipFile(pathToZip))
                 {
                     try
                     {
@@ -428,33 +424,6 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
             return retval;
-        }
-
-        private static void DirectoryCopy(string sourceDirName, string destDirName)
-        {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-            DirectoryInfo[] dirs = dir.GetDirectories();
-
-            // If the destination directory doesn't exist, create it. 
-            if (!Directory.Exists(destDirName))
-            {
-                Directory.CreateDirectory(destDirName);
-            }
-
-            // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
-            {
-                string temppath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(temppath, false);
-            }
-
-            foreach (DirectoryInfo subdir in dirs)
-            {
-                string temppath = Path.Combine(destDirName, subdir.Name);
-                DirectoryCopy(subdir.FullName, temppath);
-            }
         }
 
         /// <summary>

@@ -134,7 +134,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Design" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -649,7 +648,6 @@
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
     <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
-    <Compile Include="Model\Databinding\Entities\DocumentLocation.cs" />
     <Compile Include="Model\Databinding\Entities\MultiResult.cs" />
     <Compile Include="Model\Databinding\Entities\Peptide.cs" />
     <Compile Include="Model\Databinding\Entities\PeptideResult.cs" />
@@ -3328,10 +3326,6 @@
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
       <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
       <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="SkylineTool\SkylineTool.csproj">
-      <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
-      <Name>SkylineTool</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

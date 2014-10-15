@@ -17,16 +17,10 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -112,53 +106,6 @@ namespace pwiz.SkylineTestUtil
         {
             RunUI(() => SkylineWindow.ShowGraphSpectrum(false));
             WaitForGraphs();
-        }
-
-        public class Tool : IDisposable
-        {
-            private readonly MovedDirectory _movedDirectory;
-
-            public Tool(
-                string zipInstallerPath,
-                string toolName,
-                string toolPath,
-                string toolArguments,
-                string toolInitialDirectory,
-                bool toolOutputToImmediateWindow,
-                string toolReport)
-            {
-                Settings.Default.ToolList.Clear();
-
-                _movedDirectory = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Skyline.Program.StressTest);
-                RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
-                {
-                    configureToolsDlg.RemoveAllTools();
-                    configureToolsDlg.InstallZipTool(zipInstallerPath);
-                    Assert.AreEqual(toolName, configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual(toolPath, configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual(toolArguments, configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(toolInitialDirectory, configureToolsDlg.textInitialDirectory.Text);
-                    Assert.AreEqual(toolOutputToImmediateWindow ? CheckState.Checked : CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual(toolReport, configureToolsDlg.comboReport.SelectedItem);
-                    string toolDir = configureToolsDlg.ToolDir;
-                    Assert.IsTrue(Directory.Exists(toolDir));
-                    configureToolsDlg.OkDialog();
-                });
-            }
-
-            public void Dispose()
-            {
-                _movedDirectory.Dispose();
-            }
-
-            public void Run()
-            {
-                RunUI(() =>
-                {
-                    SkylineWindow.PopulateToolsMenu();
-                    SkylineWindow.RunTool(0);
-                });
-            }
         }
     }
 }
