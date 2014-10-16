@@ -657,8 +657,15 @@ namespace pwiz.Skyline.Model.Results
     public sealed class ChromFileInfo : DocNode, IPathContainer
     {
         public ChromFileInfo(MsDataFileUri filePath)
-            : base(new ChromFileInfoId())            
+            : base(new ChromFileInfoId())
         {
+            ChorusUrl chorusUrl = filePath as ChorusUrl;
+            if (null != chorusUrl)
+            {
+                FileWriteTime = chorusUrl.FileWriteTime;
+                RunStartTime = chorusUrl.RunStartTime;
+                filePath = chorusUrl.SetFileWriteTime(null).SetRunStartTime(null);
+            }
             FilePath = filePath;
             InstrumentInfoList = new MsInstrumentConfigInfo[0];
         }

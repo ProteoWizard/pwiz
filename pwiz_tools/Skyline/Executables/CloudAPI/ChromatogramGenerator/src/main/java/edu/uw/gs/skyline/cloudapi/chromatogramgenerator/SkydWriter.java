@@ -47,8 +47,7 @@ public class SkydWriter {
         chromGroupHeader.hasMassErrors = chromatogramPoints.hasMassErrors();
         chromGroupHeader.extracted_base_peak = chromatogramGroupInfo.getExtractor() == ChromExtractor.BASE_PEAK;
         chromGroupHeader.precursor = chromatogramGroupInfo.getPrecursorMz();
-        // TODO(nicksh): find out what hasCalculatedMzs means
-        chromGroupHeader.hasCalculatedMzs = false;
+        chromGroupHeader.hasCalculatedMzs = true;
 
         if (chromatogramPoints.hasScanIds()) {
             switch (chromatogramPoints.getChromatogramGroupInfo().getSource()) {

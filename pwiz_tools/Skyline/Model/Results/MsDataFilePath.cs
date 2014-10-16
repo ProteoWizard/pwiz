@@ -22,6 +22,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Web;
 using pwiz.Skyline.Model.Results.RemoteApi;
 
@@ -199,16 +200,25 @@ namespace pwiz.Skyline.Model.Results
                 HttpUtility.ParseQueryString(chorusUrl.Substring(ChorusUrlPrefix.Length));
             ServerUrl = nameValueCollection.Get("server");    // Not L10N
             Username = nameValueCollection.Get("username");    // Not L10N
-            FileId = nameValueCollection.Get("fileId");    // Not L10N
+            ProjectId = ParseLong(nameValueCollection.Get("projectId")); // Not L10N
+            ExperimentId = ParseLong(nameValueCollection.Get("experimentId")); // Not L10N
+            FileId = ParseLong(nameValueCollection.Get("fileId"));    // Not L10N
             Path = nameValueCollection.Get("path");    // Not L10N
+            FileWriteTime = ParseDate(nameValueCollection.Get("fileWriteTime")); // Not L10N
+            RunStartTime = ParseDate(nameValueCollection.Get("runStartTime")); // Not L10N
+
         }
 
         protected ChorusUrl(ChorusUrl chorusUrl)
         {
             ServerUrl = chorusUrl.ServerUrl;
             Username = chorusUrl.Username;
+            ProjectId = chorusUrl.ProjectId;
+            ExperimentId = chorusUrl.ExperimentId;
             FileId = chorusUrl.FileId;
             Path = chorusUrl.Path;
+            RunStartTime = chorusUrl.RunStartTime;
+            FileWriteTime = chorusUrl.FileWriteTime;
         }
 
         public string ServerUrl { get; private set; }
@@ -225,18 +235,28 @@ namespace pwiz.Skyline.Model.Results
             return new ChorusUrl(this){Username = username};
         }
 
-        public string FileId { get; private set; }
-
-        public ChorusUrl SetFileId(string fileId)
-        {
-            return new ChorusUrl(this){FileId = fileId};
-        }
-
-        public ChorusUrl SetFileId(int fileId)
-        {
-            return SetFileId(fileId.ToString(CultureInfo.InvariantCulture));
-        }
         public string Path { get; private set; }
+
+        public long? ProjectId { get; private set; }
+
+        public ChorusUrl SetProjectId(long? projectId)
+        {
+            return new ChorusUrl(this) { ProjectId = projectId };
+        }
+
+        public long? ExperimentId { get; private set; }
+
+        public ChorusUrl SetExperimentId(long? experimentId)
+        {
+            return new ChorusUrl(this) {ExperimentId = experimentId};
+        }
+
+        public long? FileId { get; private set; }
+
+        public ChorusUrl SetFileId(long? fileId)
+        {
+            return new ChorusUrl(this) { FileId = fileId };
+        }
 
         public ChorusUrl SetPath(string path)
         {
@@ -246,6 +266,20 @@ namespace pwiz.Skyline.Model.Results
         public override string GetFileName()
         {
             return GetPathParts().LastOrDefault() ?? ServerUrl;
+        }
+
+        public DateTime? RunStartTime { get; private set; }
+
+        public ChorusUrl SetRunStartTime(DateTime? runStartTime)
+        {
+            return new ChorusUrl(this) {RunStartTime = runStartTime};
+        }
+
+        public DateTime? FileWriteTime { get; private set; }
+
+        public ChorusUrl SetFileWriteTime(DateTime? fileWriteTime)
+        {
+            return new ChorusUrl(this) {FileWriteTime = fileWriteTime};
         }
 
         public override string GetFileNameWithoutExtension()
@@ -296,9 +330,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 parts.Add("server=" + Uri.EscapeDataString(ServerUrl));    // Not L10N
             }
-            if (!string.IsNullOrEmpty(FileId))
+            if (ProjectId.HasValue)
             {
-                parts.Add("fileId=" + Uri.EscapeDataString(FileId));    // Not L10N
+                parts.Add("projectId=" + Uri.EscapeDataString(LongToString(ProjectId.Value))); // Not L10N
+            }
+            if (ExperimentId.HasValue)
+            {
+                parts.Add("experimentId=" + Uri.EscapeDataString(LongToString(ExperimentId.Value))); // Not L10N
+            }
+            if (FileId.HasValue)
+            {
+                parts.Add("fileId=" + Uri.EscapeDataString(LongToString(FileId.Value)));    // Not L10N
             }
             if (!string.IsNullOrEmpty(Path))
             {
@@ -307,6 +349,14 @@ namespace pwiz.Skyline.Model.Results
             if (!string.IsNullOrEmpty(Username))
             {
                 parts.Add("username=" + Uri.EscapeDataString(Username));    // Not L10N
+            }
+            if (FileWriteTime.HasValue)
+            {
+                parts.Add("fileWriteTime=" + Uri.EscapeDataString(DateToString(FileWriteTime.Value))); // Not L10N
+            }
+            if (RunStartTime.HasValue)
+            {
+                parts.Add("runStartTime=" + Uri.EscapeDataString(DateToString(RunStartTime.Value))); // Not L10N
             }
             return ChorusUrlPrefix + string.Join("&", parts); // Not L10N
         }
@@ -323,7 +373,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Uri GetChromExtractionUri()
         {
-            return new Uri(ServerUrl + "/skyline/api/chroextract/file/" + Uri.EscapeUriString(FileId));    // Not L10N
+            return new Uri(ServerUrl + "/skyline/api/chroextract/file/" + LongToString(FileId.Value));    // Not L10N
         }
 
         public override string GetSampleName()
@@ -348,8 +398,11 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(ChorusUrl other)
         {
-            return string.Equals(ServerUrl, other.ServerUrl) && 
-                string.Equals(FileId, other.FileId) &&
+            return string.Equals(ServerUrl, other.ServerUrl) &&
+                Equals(ExperimentId, other.ExperimentId) &&
+                Equals(ProjectId, other.ProjectId) &&
+                Equals(FileId, other.FileId) &&
+                Equals(RunStartTime, other.RunStartTime) &&
                 string.Equals(Path, other.Path);
         }
 
@@ -368,9 +421,18 @@ namespace pwiz.Skyline.Model.Results
             int result = ServerUrl.CompareTo(other.ServerUrl);
             if (result != 0)
                 return result;
-            result = FileId.CompareTo(other.FileId);
-            if (result != 0)
-                return result;
+            if (FileId.HasValue)
+            {
+                result = FileId.Value.CompareTo(other.FileId);
+                if (result != 0)
+                {
+                    return result;
+                }
+            }
+            else if (other.FileId.HasValue)
+            {
+                return -1;
+            }
             return Path.CompareTo(other.Path);
 // ReSharper restore StringCompareToIsCultureSpecific
         }
@@ -388,9 +450,12 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = (ServerUrl != null ? ServerUrl.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (FileId != null ? FileId.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ ProjectId.GetHashCode();
+                hashCode = (hashCode*397) ^ ExperimentId.GetHashCode();
+                hashCode = (hashCode*397) ^ FileId.GetHashCode();
                 hashCode = (hashCode*397) ^ (Path != null ? Path.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Username != null ? Username.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ RunStartTime.GetHashCode();
                 return hashCode;
             }
         }
@@ -407,6 +472,14 @@ namespace pwiz.Skyline.Model.Results
             {
                 result = result.AddPathPart(pathParts[i]);
             }
+            if (FileId.HasValue)
+            {
+                result = result.SetExperimentId(ExperimentId);
+            }
+            if (ExperimentId.HasValue)
+            {
+                result = result.SetProjectId(ProjectId);
+            }
             return result;
         }
 
@@ -414,6 +487,34 @@ namespace pwiz.Skyline.Model.Results
         {
             return chorusAccounts.FirstOrDefault(chorusAccount =>
                 Equals(ServerUrl, chorusAccount.ServerUrl) && Equals(Username, chorusAccount.Username));
+        }
+
+        private static string LongToString(long value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static long? ParseLong(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return null;
+            }
+            return long.Parse(str, CultureInfo.InvariantCulture);
+        }
+
+        private static string DateToString(DateTime dateTime)
+        {
+            return dateTime.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private DateTime? ParseDate(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return null;
+            }
+            return DateTime.Parse(str, CultureInfo.InvariantCulture);
         }
     }
 }

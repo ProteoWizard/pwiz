@@ -42,6 +42,7 @@ namespace pwiz.Skyline.FileUI
         private readonly int _chorusIndex;
         private ChorusSession _chorusSession;
         private readonly ChorusAccountList _chorusAccounts;
+        private bool _waitingForData;
 
         public OpenDataSourceDialog(ChorusAccountList chorusAccounts)
         {
@@ -271,6 +272,7 @@ namespace pwiz.Skyline.FileUI
         {
             _abortPopulateList = false;
             listView.Cursor = Cursors.Default;
+            _waitingForData = false;
             listView.Items.Clear();
 
             var listSourceInfo = new List<SourceInfo>();
@@ -367,19 +369,17 @@ namespace pwiz.Skyline.FileUI
                             size = item.FileSize
                         });
                     }
-                    if (CurrentDirectoryIsServerRoot)
+                    if (null != exception)
                     {
-                        if (null != exception)
+                        if (MultiButtonMsgDlg.Show(this, exception.Message, Resources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
                         {
-                            if (MultiButtonMsgDlg.Show(this, exception.Message, Resources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
-                            {
-                                _chorusSession.RetryFetchContents(chorusAccount, chorusUrl);
-                            }
+                            _chorusSession.RetryFetchContents(chorusAccount, chorusUrl);
                         }
-                        if (!isComplete)
-                        {
-                            listView.Cursor = Cursors.WaitCursor;
-                        }
+                    }
+                    if (!isComplete)
+                    {
+                        listView.Cursor = Cursors.WaitCursor;
+                        _waitingForData = true;
                     }
                 }
             }
@@ -467,7 +467,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     try
                     {
-                        if (CurrentDirectoryIsServerRoot)
+                        if (CurrentDirectory is ChorusUrl && _waitingForData)
                         {
                             populateListViewFromDirectory(CurrentDirectory);
                         }
@@ -481,15 +481,6 @@ namespace pwiz.Skyline.FileUI
             {
             }
             // ReSharper restore EmptyGeneralCatchClause
-        }
-
-        private bool CurrentDirectoryIsServerRoot
-        {
-            get
-            {
-                var chorusUrl = CurrentDirectory as ChorusUrl;
-                return null != chorusUrl && chorusUrl.Equals(chorusUrl.GetRootChorusUrl());
-            }
         }
 
         private ChorusAccount GetChorusAccount(ChorusUrl chorusUrl)

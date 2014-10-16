@@ -27,16 +27,19 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             string GetName();
             IEnumerable<IChorusItem> ListChildren();
-            DateTime? GetDateTime();
+            DateTime? GetModifiedDateTime();
             long GetSize();
         }
 
+        public Project[] projects { get; set; }
         public Project[] myProjects { get; set; }
         public Project[] sharedProjects { get; set; }
         public Project[] publicProjects { get; set; }
+        public Experiment[] experiments { get; set; }
         public Experiment[] myExperiments { get; set; }
         public Experiment[] sharedExperiments { get; set; }
         public Experiment[] publicExperiments { get; set; }
+        public File[] files { get; set; }
         public File[] myFiles { get; set; }
         public File[] sharedFiles { get; set; }
         public File[] publicFiles { get; set; }
@@ -59,6 +62,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public class Project : IChorusItem
         {
+            public long id { get; set; }
             public string projectName { get; set; }
             public string labName { get; set; }
             public string owner { get; set; }
@@ -74,7 +78,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return experiments;
             }
 
-            public DateTime? GetDateTime()
+            public DateTime? GetModifiedDateTime()
             {
                 return ToDateTime(lastModified);
             }
@@ -87,6 +91,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public class Experiment : IChorusItem
         {
+            public long id { get; set; }
             public string experimentName { get; set; }
             public string owner { get; set; }
             public long? lastModified { get; set; }
@@ -101,7 +106,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return files;
             }
 
-            public DateTime? GetDateTime()
+            public DateTime? GetModifiedDateTime()
             {
                 return ToDateTime(lastModified);
             }
@@ -114,11 +119,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public class File : IChorusItem
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string name { get; set; }
             public string instrumentName { get; set; }
             public string instrumentModel { get; set; }
             public long? uploadDate { get; set; }
+            public long? acquisitionDate { get; set; }
             public long fileSizeBytes { get; set; }
             public string GetName()
             {
@@ -130,9 +136,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return null;
             }
 
-            public DateTime? GetDateTime()
+            public DateTime? GetModifiedDateTime()
             {
                 return ToDateTime(uploadDate);
+            }
+
+            public DateTime? GetAcquisitionDateTime()
+            {
+                return ToDateTime(acquisitionDate);
             }
 
             public long GetSize()

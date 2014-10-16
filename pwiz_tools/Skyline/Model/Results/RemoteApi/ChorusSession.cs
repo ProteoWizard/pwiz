@@ -40,10 +40,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
     public class ChorusSession
     {
         private readonly object _lock = new object();
-        private readonly Dictionary<ChorusAccount, ChorusContentsResponse> _chorusContentsByServerUrl 
-            = new Dictionary<ChorusAccount, ChorusContentsResponse>();
-        private readonly HashSet<ChorusAccount> _fetchRequests 
-            = new HashSet<ChorusAccount>();
+        private readonly IDictionary<RequestKey, ChorusContentsResponse> _chorusContentsByServerUrl
+            = new Dictionary<RequestKey, ChorusContentsResponse>();
+        private readonly HashSet<RequestKey> _fetchRequests
+            = new HashSet<RequestKey>();
         private readonly CancellationTokenSource _cancellationTokenSource 
             = new CancellationTokenSource();
 
@@ -163,13 +163,19 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public void RetryFetchContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
         {
+            Uri requestUri = GetContentsUri(chorusAccount, chorusUrl);
+            if (null == requestUri)
+            {
+                return;
+            }
+            RequestKey requestKey = new RequestKey(chorusAccount, requestUri);
             lock (_lock)
             {
-                if (_fetchRequests.Contains(chorusAccount))
+                if (_fetchRequests.Contains(requestKey))
                 {
                     return;
                 }
-                _chorusContentsByServerUrl.Remove(chorusAccount);
+                _chorusContentsByServerUrl.Remove(requestKey);
                 ChorusServerException exceptionIgnore;
                 AsyncFetchContents(chorusAccount, chorusUrl, out exceptionIgnore);
             }
@@ -177,21 +183,28 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public bool AsyncFetchContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl, out ChorusServerException chorusException)
         {
+            Uri requestUri = GetContentsUri(chorusAccount, chorusUrl);
+            if (null == requestUri)
+            {
+                chorusException = null;
+                return true;
+            }
+            RequestKey requestKey = new RequestKey(chorusAccount, requestUri);
             lock (_lock)
             {
                 ChorusContentsResponse chorusContentsResponse;
-                if (_chorusContentsByServerUrl.TryGetValue(chorusAccount, out chorusContentsResponse))
+                if (_chorusContentsByServerUrl.TryGetValue(requestKey, out chorusContentsResponse))
                 {
                     chorusException = chorusContentsResponse.ChorusException;
                     return chorusContentsResponse.IsComplete;
                 }
                 chorusException = null;
-                if (!_fetchRequests.Add(chorusAccount))
+                if (!_fetchRequests.Add(requestKey))
                 {
                     return false;
                 }
             }
-            ActionUtil.RunAsync(() => FetchAndStoreContents(chorusAccount, chorusUrl));
+            ActionUtil.RunAsync(() => FetchAndStoreContents(chorusAccount, requestUri));
             return false;
         }
 
@@ -260,25 +273,40 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             });
         }
 
-        private void FetchAndStoreContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
+        private Uri GetContentsUri(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
+        {
+            if (chorusUrl.FileId.HasValue)
+            {
+                return null;
+            }
+            if (chorusUrl.ExperimentId.HasValue)
+            {
+                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/experiments/" + chorusUrl.ExperimentId + "/files"); // Not L10N
+            }
+            if (chorusUrl.ProjectId.HasValue)
+            {
+                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/projects/" + chorusUrl.ProjectId + "/experiments"); // Not L10N
+            }
+            if (!chorusUrl.GetPathParts().Any())
+            {
+                return null;
+            }
+            string topLevelName = chorusUrl.GetPathParts().First();
+            TopLevelContents topLevelContents = TOP_LEVEL_ITEMS.FirstOrDefault(item => item.Name.Equals(topLevelName));
+            if (null != topLevelContents)
+            {
+                return new Uri(chorusUrl.ServerUrl + "/skyline/api/contents" + topLevelContents.ContentsPath); // Not L10N
+            }
+            return null;
+        }
+        
+        private void FetchAndStoreContents(ChorusAccount chorusAccount, Uri requestUri)
         {
             ChorusContents contents = new ChorusContents();
+            var key = new RequestKey(chorusAccount, requestUri);
             try
             {
-                var urisToFetchFrom = new[]
-                    {
-                        // ReSharper disable NonLocalizedString
-                        new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/my"),
-                        new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/shared"),
-                        new Uri(chorusUrl.ServerUrl + "/skyline/api/contents/public"),
-                        // ReSharper restore NonLocalizedString
-                    };
-                for (int iUri = 0; iUri < urisToFetchFrom.Length; iUri++)
-                {
-                    contents = contents.Merge(FetchContents(chorusAccount, urisToFetchFrom[iUri]));
-                    bool isComplete = iUri == urisToFetchFrom.Length - 1;
-                    StoreContentsResponse(chorusAccount, new ChorusContentsResponse(contents) {IsComplete = isComplete});
-                }
+                StoreContentsResponse(key, new ChorusContentsResponse(FetchContents(chorusAccount, requestUri), true));
             }
             catch (Exception exception)
             {
@@ -290,26 +318,25 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                         Resources.ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__
                         + exception.Message, exception);
                 }
-                StoreContentsResponse(chorusAccount, new ChorusContentsResponse(contents)
+                StoreContentsResponse(key, new ChorusContentsResponse(contents, true)
                 {
                     ChorusException = chorusException,
-                    IsComplete = true,
                 });
             }
             finally
             {
                 lock (_lock)
                 {
-                    _fetchRequests.Remove(chorusAccount);
+                    _fetchRequests.Remove(key);
                 }
             }
         }
 
-        private void StoreContentsResponse(ChorusAccount chorusAccount, ChorusContentsResponse chorusContentsResponse)
+        private void StoreContentsResponse(RequestKey key, ChorusContentsResponse chorusContentsResponse)
         {
             lock (_lock)
             {
-                _chorusContentsByServerUrl[chorusAccount] = chorusContentsResponse;
+                _chorusContentsByServerUrl[key] = chorusContentsResponse;
             }
             var contentsAvailableEvent = ContentsAvailable;
             if (null != contentsAvailableEvent)
@@ -320,69 +347,24 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         
         public IEnumerable<ChorusItem> ListContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
         {
+            if (!chorusUrl.GetPathParts().Any())
+            {
+                return TOP_LEVEL_ITEMS.Select(
+                    item => new ChorusItem(chorusUrl.AddPathPart(item.Name), item.Label, DataSourceUtil.FOLDER_TYPE, null, 0));
+            }
+            Uri requestUri = GetContentsUri(chorusAccount, chorusUrl);
             ChorusContents contents;
+            var key = new RequestKey(chorusAccount, requestUri);
             lock (_lock)
             {
                 ChorusContentsResponse chorusContentsResponse;
-                if (!_chorusContentsByServerUrl.TryGetValue(chorusAccount, out chorusContentsResponse))
+                if (!_chorusContentsByServerUrl.TryGetValue(key, out chorusContentsResponse))
                 {
                     return new ChorusItem[0];
                 }
-                contents = chorusContentsResponse.ChorusContents;
+                contents = chorusContentsResponse.Data;
             }
-
-            var pathParts = chorusUrl.GetPathParts().ToArray();
-            if (pathParts.Length == 0)
-            {
-                return TOP_LEVEL_ITEMS.Where(item => item.ListItems(contents).Any())
-                    .Select(item =>
-                        new ChorusItem(chorusUrl.AddPathPart(item.Name), item.Label, DataSourceUtil.FOLDER_TYPE, null, 0));
-            }
-            TopLevelContents topLevelContents = TOP_LEVEL_ITEMS.FirstOrDefault(item => item.Name == pathParts[0]);
-            if (null == topLevelContents)
-            {
-                return new ChorusItem[0];
-            }
-            
-            if (pathParts.Length == 1)
-            {
-                return MakeItems(chorusUrl, topLevelContents.ListItems(contents));
-            }
-            IEnumerable<ChorusContents.IChorusItem> children = topLevelContents.ListItems(contents);
-            for (int iPathPart = 1; iPathPart < pathParts.Length; iPathPart ++)
-            {
-                if (null == children)
-                {
-                    return new ChorusItem[0];
-                }
-                var item = children.FirstOrDefault(chorusItem => chorusItem.GetName() == pathParts[iPathPart]);
-                if (null == item)
-                {
-                    return new ChorusItem[0];
-                }
-                children = item.ListChildren();
-            }
-            return MakeItems(chorusUrl, children);
-        }
-
-        private IEnumerable<ChorusItem> MakeItems(ChorusUrl folderUrl,
-            IEnumerable<ChorusContents.IChorusItem> chorusItems)
-        {
-            if (null == chorusItems)
-            {
-                return new ChorusItem[0];
-            }
-            return chorusItems.Select(chorusItem =>
-            {
-                ChorusContents.File fileItem = chorusItem as ChorusContents.File;
-                if (null != fileItem)
-                {
-                    return new ChorusItem(folderUrl.AddPathPart(chorusItem.GetName()).SetFileId(fileItem.id), chorusItem.GetName(), GetFileType(fileItem), 
-                        fileItem.GetDateTime(), 
-                        fileItem.fileSizeBytes);
-                }
-                return new ChorusItem(folderUrl.AddPathPart(chorusItem.GetName()), chorusItem.GetName(), DataSourceUtil.FOLDER_TYPE, chorusItem.GetDateTime(), 0);
-            });
+            return ListItems(chorusUrl, contents);
         }
 
         private string GetFileType(ChorusContents.File file)
@@ -393,47 +375,91 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         private static readonly IList<TopLevelContents> TOP_LEVEL_ITEMS = new[]
         {
             // ReSharper disable NonLocalizedString
-            new TopLevelContents("myProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Projects, chorusContents => chorusContents.myProjects),
-            new TopLevelContents("myExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Experiments, chorusContents=>chorusContents.myExperiments), 
-            new TopLevelContents("myFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Files, chorusContents=>chorusContents.myFiles), 
-            new TopLevelContents("sharedProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects, chorusContents => chorusContents.sharedProjects),
-            new TopLevelContents("sharedExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments, chorusContents=>chorusContents.sharedExperiments), 
-            new TopLevelContents("sharedFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Files, chorusContents=>chorusContents.sharedFiles), 
-            new TopLevelContents("publicProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Projects, chorusContents => chorusContents.publicProjects),
-            new TopLevelContents("publicExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments, chorusContents=>chorusContents.publicExperiments), 
-            new TopLevelContents("publicFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Files, chorusContents=>chorusContents.publicFiles), 
+            new TopLevelContents("myProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Projects, "/my/projects"),
+            new TopLevelContents("myExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Experiments, "/my/experiments"), 
+            new TopLevelContents("myFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Files, "/my/files"),
+            new TopLevelContents("sharedProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects, "/shared/projects"),
+            new TopLevelContents("sharedExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments, "/shared/experiments"), 
+            new TopLevelContents("sharedFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Files, "/shared/files"),
+            new TopLevelContents("publicProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Projects, "/public/projects"),
+            new TopLevelContents("publicExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments, "/public/experiments"),
+            new TopLevelContents("publicFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Files, "/public/files"),
             // ReSharper restore NonLocalizedString
         };
 
         private class TopLevelContents
         {
-            private readonly Func<ChorusContents, IEnumerable<ChorusContents.IChorusItem>> _fnListItems;
-            public TopLevelContents(string name, string label, Func<ChorusContents, IEnumerable<ChorusContents.IChorusItem>> listItems)
+            public TopLevelContents(string name, string label, string contentsPath)
             {
                 Name = name;
                 Label = label;
-                _fnListItems = listItems;
+                ContentsPath = contentsPath;
             }
 
             public string Name { get; private set; }
             public string Label { get; private set; }
+            public string ContentsPath { get; private set; }
+        }
 
-            public IEnumerable<ChorusContents.IChorusItem> ListItems(ChorusContents chorusContents)
+        private IEnumerable<ChorusItem> ListItems(ChorusUrl chorusUrl, ChorusContents chorusContents)
+        {
+            IEnumerable<ChorusItem> items = new ChorusItem[0];
+            if (null != chorusContents.experiments)
             {
-                return _fnListItems(chorusContents) ?? new ChorusContents.IChorusItem[0];
+                items = items.Concat(chorusContents.experiments.Select(experiment =>
+                    new ChorusItem(chorusUrl.SetExperimentId(experiment.id).AddPathPart(experiment.GetName()),
+                    experiment.GetName(), DataSourceUtil.FOLDER_TYPE, null, 0)));
             }
+            if (null != chorusContents.files)
+            {
+                items = items.Concat(chorusContents.files.Select(
+                    file =>
+                    {
+                        ChorusUrl fileUrl = chorusUrl.SetFileId(file.id)
+                            .AddPathPart(file.GetName())
+                            .SetFileWriteTime(file.GetModifiedDateTime())
+                            .SetRunStartTime(file.GetAcquisitionDateTime());
+                        return new ChorusItem(fileUrl, file.GetName(),
+                            GetFileType(file), file.GetModifiedDateTime(), file.fileSizeBytes);
+                    }
+                        ));
+            }
+            if (null != chorusContents.projects)
+            {
+                items = items.Concat(chorusContents.projects.Select(project =>
+                new ChorusItem(chorusUrl.SetProjectId(project.id).AddPathPart(project.GetName()),
+                project.GetName(), DataSourceUtil.FOLDER_TYPE, null, project.GetSize())));
+            }
+            return items;
+        }
+
+        private struct RequestKey
+        {
+            public RequestKey(ChorusAccount chorusAccount, Uri requestUri) : this()
+            {
+                ChorusAccount = chorusAccount;
+                RequestUri = requestUri;
+            } 
+            public ChorusAccount ChorusAccount { get; private set; }
+            public Uri RequestUri { get; private set; }
         }
 
         private class ChorusContentsResponse
         {
-            public ChorusContentsResponse(ChorusContents chorusContents)
+            public ChorusContentsResponse(ChorusContents data, bool isComplete)
             {
-                ChorusContents = chorusContents;
+                Data = data;
+                IsComplete = isComplete;
             }
 
-            public ChorusContents ChorusContents { get; private set; }
+            public ChorusContentsResponse(ChorusServerException exception)
+            {
+                ChorusException = exception;
+            }
+            
             public ChorusServerException ChorusException { get; set; }
             public bool IsComplete { get; set; }
+            public ChorusContents Data { get; set; }
         }
 
         public event Action ContentsAvailable;
@@ -470,5 +496,4 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             return null;
         }
     }
-
 }
