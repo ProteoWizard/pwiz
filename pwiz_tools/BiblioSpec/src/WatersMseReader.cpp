@@ -487,9 +487,9 @@ void WatersMseReader::insertCurPSM(){
             // is around 2 bins, though there's no guarantee of this.  We can expect, though, that the lower-charge precursor
             // has a longer drift time.
             // To divide the two sets, we find the largest discontinuity in a sorted list of product ion mobilities.
-            std::vector<std::pair<float,int>> orderedMobilities;
+            std::vector< std::pair< float, int > > orderedMobilities;
             for (int i=0; i < (int)curMsePSM_->productIonMobilities.size(); i++)
-                orderedMobilities.push_back(std::pair<float,int>(curMsePSM_->productIonMobilities[i],i));
+                orderedMobilities.push_back(std::pair< float, int >(curMsePSM_->productIonMobilities[i], i));
             std::sort(orderedMobilities.begin(), orderedMobilities.end());
             int maxJumpIndex=0;
             double jumpThreshold = 2*pusherInterval_; // at least a couple of bin widths should seperate the groups - if indeed there are more than one 
