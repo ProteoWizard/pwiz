@@ -65,13 +65,13 @@ bool PercolatorXmlReader::parseFile() {
 
     parse(); // the saxhandler will read the file and store the psms
 
-    vector<const char*> extensions;
+    vector<std::string> extensions;
     extensions.push_back(".ms2");
     extensions.push_back(".cms2");
     extensions.push_back(".bms2");
     extensions.push_back(".pms2");
 
-    vector<const char*> dirs;
+    vector<std::string> dirs;
     dirs.push_back("../sequest/");
     dirs.push_back("../");
     dirs.push_back("../../");
@@ -94,10 +94,10 @@ bool PercolatorXmlReader::parseFile() {
         {
             // if the filename contains a parent path (references other directories), extract the basename
             // and add the path to the directories to search
-            dirs.push_back(spectrumParentPath.c_str());
+            dirs.push_back(spectrumParentPath.string());
         }
         // set the filename for the file containing the spectra 
-        setSpecFileName(filename.c_str(), extensions, dirs);
+        setSpecFileName(filename.string(), extensions, dirs);
         if (spectrumFullPath.has_parent_path())
         {
             // if the file had a parent path, remove that parent path from the dirs
@@ -111,7 +111,7 @@ bool PercolatorXmlReader::parseFile() {
         string fullFilename = getPath(getSpecFileName());
         // replaceExtension(filename, "sqt");
         // add on the name of the spectrum file as an sqt
-        fullFilename += filename.c_str();
+        fullFilename += filename.string();
         fullFilename += ".sqt";
         ifstream file(fullFilename.c_str());
 
@@ -119,14 +119,14 @@ bool PercolatorXmlReader::parseFile() {
         // try opening the file in the path of the perc xml file
         if(!file.good()) {
             fullFilename = getPath(getFileName());
-            fullFilename += filename.c_str();
+            fullFilename += filename.string();
             fullFilename += ".sqt";
             file.open(fullFilename.c_str());
         }
 
         // if the file still can't be read, try looking in the current directory
         if(!file.good()) {
-            fullFilename = filename.c_str();
+            fullFilename = filename.string();
             fullFilename += ".sqt";
         }
         file.close();
@@ -317,8 +317,8 @@ void PercolatorXmlReader::parseSequence(const XML_Char** attributes){
                 }
                 catch (boost::bad_lexical_cast& e)
                 {
-                    throw BlibException(false, "Sequence '%s' has an unreadable modification.",
-                                        seq.c_str());
+                    throw BlibException(false, "Sequence '%s' has an unreadable modification. (%s)",
+                                        seq.c_str(), e.what());
                 }
                 double deltaMass;
                 // if the bracketed modification is + or - a number, assume it's a delta mass

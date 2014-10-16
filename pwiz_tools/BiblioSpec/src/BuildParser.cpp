@@ -69,9 +69,9 @@ BuildParser::~BuildParser() {
  * Must be called before buildTables().
  */
 void BuildParser::setSpecFileName(
-  const char* specfileroot,///< basename of file
-  const vector<const char*>& extensions, ///< extensions to be searched in order
-  const vector<const char*>& directories)///< directories to be searched in order
+  std::string specfileroot,///< basename of file
+  const vector<std::string>& extensions, ///< extensions to be searched in order
+  const vector<std::string>& directories)///< directories to be searched in order
 {
 
     curSpecFileName_.clear();
@@ -130,15 +130,15 @@ void BuildParser::setSpecFileName(
  * Must be called before buildTables().
  */
 void BuildParser::setSpecFileName
-    (const char* specfile,  ///< name of spectrum file
+    (std::string specfile,  ///< name of spectrum file
      bool checkFile)         ///< see if the file exists
 {
     curSpecFileName_.clear();
     if( checkFile ){
-        ifstream file(specfile);
+        ifstream file(specfile.c_str());
         if(!file.good()) {
             throw BlibException(true, "Could not open spectrum file '%s'.", 
-                                specfile);
+                                specfile.c_str());
         }
     }
     curSpecFileName_ = specfile;
@@ -150,9 +150,9 @@ void BuildParser::setSpecFileName
  * directories.
  */
 string BuildParser::fileNotFoundMessage(
-     const char* specfileroot,///< basename of file
-     const vector<const char*>& extensions, ///< extensions searched
-     const vector<const char*>& directories ///< directories searched
+     std::string specfileroot,///< basename of file
+     const vector<std::string>& extensions, ///< extensions searched
+     const vector<std::string>& directories ///< directories searched
                                         )
 {
     string extString;

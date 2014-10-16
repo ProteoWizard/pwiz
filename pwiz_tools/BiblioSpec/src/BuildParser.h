@@ -91,9 +91,9 @@ class BuildParser : protected SAXHandler{
   void verifySequences();
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
   void removeDuplicates();
-  string fileNotFoundMessage(const char* specfileroot,
-                             const vector<const char*>& extensions,
-                             const vector<const char*>& directories);
+  string fileNotFoundMessage(std::string specfileroot,
+                             const vector<std::string>& extensions,
+                             const vector<std::string>& directories);
   double aaMasses_[128];
 
  protected:
@@ -110,10 +110,10 @@ class BuildParser : protected SAXHandler{
   void initSpecProgress(int numSpec);
   void setNextProgressSize(int size);
 
-  void setSpecFileName(const char* filename, bool checkFile = true);
-  void setSpecFileName(const char* fileroot, 
-                       const vector<const char*>& extensions,
-                       const vector<const char*>& directories = vector<const char*>());
+  void setSpecFileName(std::string filename, bool checkFile = true);
+  void setSpecFileName(std::string fileroot, 
+                       const vector<std::string>& extensions,
+                       const vector<std::string>& directories = vector<std::string>());
 
   double getScoreThreshold(BUILD_INPUT fileType);
   void findScanNumFromName();

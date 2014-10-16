@@ -71,8 +71,8 @@ class PepXMLreader : public BuildParser{
                   XTANDEM_ANALYSIS};
 
   vector<SeqMod> mods;      ///< mods for the current spectrum being parsed
-  vector<const char*> dirs;       ///< directories where spec files might be
-  vector<const char*> extensions; ///< possible extensions of spec files (.mzXML)
+  vector<std::string> dirs;       ///< directories where spec files might be
+  vector<std::string> extensions; ///< possible extensions of spec files (.mzXML)
 
   char mzXMLFile[1024];
   

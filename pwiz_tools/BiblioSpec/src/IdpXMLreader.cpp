@@ -274,7 +274,7 @@ void IdpXMLreader::addPeptide() {
 void IdpXMLreader::setSpecFilename(const XML_Char** attributes) {
 
     const char* name = getAttrValue("name", attributes);
-    vector<const char*> extensions;
+    vector<std::string> extensions;
     extensions.push_back(".mzML");
     extensions.push_back(".mzXML");
     setSpecFileName(name, extensions);

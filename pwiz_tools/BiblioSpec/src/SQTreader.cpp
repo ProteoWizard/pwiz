@@ -197,7 +197,7 @@ void SQTreader::openRead(bool warnIfNotPercolated)
 bool SQTreader::parseFile() {
     openRead(true);
 
-    vector<const char*> extensions;
+    vector<std::string> extensions;
     extensions.push_back(".ms2");
     extensions.push_back(".cms2");
     extensions.push_back(".bms2");

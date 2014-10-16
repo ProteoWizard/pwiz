@@ -97,7 +97,7 @@ bool MzIdentMLReader::parseFile(){
     }
 
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
-    vector<const char*> specExtensions;
+    vector<std::string> specExtensions;
     specExtensions.push_back(".MGF");
     specExtensions.push_back(".mzXML");
     specExtensions.push_back(".mzML");
@@ -296,6 +296,7 @@ bool MzIdentMLReader::passThreshold(double score)
             return score >= scoreThreshold_;
     }
     Verbosity::error("Can't determine cutoff score, unknown analysis type");
+    return false;
 }
 
 } // namespace
