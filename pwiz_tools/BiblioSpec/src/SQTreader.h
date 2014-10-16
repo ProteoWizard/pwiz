@@ -32,6 +32,8 @@
 #define SQT_READER_H
 
 #include "BuildParser.h"
+#include "SQTversion.h"
+#include <boost/regex.hpp>
 
 #define MAX_MODS 128
 
@@ -62,7 +64,7 @@ class SQTreader : public BuildParser {
   double staticMods[MAX_MODS];
   double diffMods[MAX_MODS];
   bool percolated;
-  float sequestVersion;
+  SQTversion * sqtVersion;
   double masses_[128];
 
   // for values read from file
@@ -72,6 +74,7 @@ class SQTreader : public BuildParser {
   int scanNumber;
   int charge;
 
+  const boost::regex cometModRegex;
   void extractPSMs(); //populate the list of psms
 
 };
@@ -79,12 +82,6 @@ class SQTreader : public BuildParser {
 } // namespace
 
 #endif
-
-
-
-
-
-
 
 /*
  * Local Variables:

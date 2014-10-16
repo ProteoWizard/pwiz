@@ -142,6 +142,7 @@ lib blibbuild
     ProteinPilotReader.cpp
     saxhandler.cpp
     SQTreader.cpp
+    SQTversion.cpp
     SslReader.cpp
     TandemNativeParser.cpp
     WatersMseReader.cpp

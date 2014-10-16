@@ -78,11 +78,12 @@ class PercolatorXmlReader : public BuildParser {
   double qvalueThreshold_;
   double staticMods_[MAX_MODS];
   double diffMods_[MAX_MODS];
+  double masses_[128];  // amino acid masses
 
   void parseId(const XML_Char** attributes);
   void parseSequence(const XML_Char** attributes);
   void addCurPSM();
-  void applyModifciations(vector<PSM*>& psms, SQTreader& modsReader);
+  void applyModifications(vector<PSM*>& psms, SQTreader& modsReader);
 
 };
 

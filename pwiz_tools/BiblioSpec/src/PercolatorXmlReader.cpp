@@ -28,8 +28,12 @@
 
 #include "PercolatorXmlReader.h"
 #include "BlibMaker.h"
+#include <boost/filesystem.hpp>
+#include "AminoAcidMasses.h"
 
 using namespace std;
+
+namespace fs = boost::filesystem;
 
 namespace BiblioSpec {
 
@@ -44,6 +48,7 @@ PercolatorXmlReader::PercolatorXmlReader(BlibBuilder& maker,
     qvalueBuffer_ = new char[256];
     qvalueBuffer_[0] = '\0';
     qvalueBufferPosition_ = qvalueBuffer_;
+    AminoAcidMasses::initializeMass(masses_, 0);
 }
 
 PercolatorXmlReader::~PercolatorXmlReader()
@@ -79,20 +84,52 @@ bool PercolatorXmlReader::parseFile() {
     // for each source file, read the .sqt for mods info, add spec to lib
     map<string, vector<PSM*> >::iterator mapAccess = fileMap_.begin();
     for(; mapAccess != fileMap_.end(); ++mapAccess){
-        string filename = mapAccess->first;
+        // filenameInput is the input source file, without the extension, may or may not be a full directory path
+        string filenameInput = mapAccess->first;
+        fs::path spectrumFullPath(filenameInput);
+        fs::path spectrumParentPath = spectrumFullPath.parent_path();
+        fs::path filename = spectrumFullPath.filename();
+
+        if (spectrumFullPath.has_parent_path())
+        {
+            // if the filename contains a parent path (references other directories), extract the basename
+            // and add the path to the directories to search
+            dirs.push_back(spectrumParentPath.c_str());
+        }
+        // set the filename for the file containing the spectra 
         setSpecFileName(filename.c_str(), extensions, dirs);
+        if (spectrumFullPath.has_parent_path())
+        {
+            // if the file had a parent path, remove that parent path from the dirs
+            dirs.pop_back();
+        }
 
         vector<PSM*>& psms = mapAccess->second;
 
         // create an SQTReader and get mods
+        // this is the preceeding path for the spectrum file
         string fullFilename = getPath(getSpecFileName());
-        replaceExtension(filename, "sqt");
-        fullFilename += filename;
+        // replaceExtension(filename, "sqt");
+        // add on the name of the spectrum file as an sqt
+        fullFilename += filename.c_str();
+        fullFilename += ".sqt";
         ifstream file(fullFilename.c_str());
+
+        // if the file from the path of the spectrum file can't be read
+        // try opening the file in the path of the perc xml file
         if(!file.good()) {
             fullFilename = getPath(getFileName());
-            fullFilename += filename;
+            fullFilename += filename.c_str();
+            fullFilename += ".sqt";
+            file.open(fullFilename.c_str());
         }
+
+        // if the file still can't be read, try looking in the current directory
+        if(!file.good()) {
+            fullFilename = filename.c_str();
+            fullFilename += ".sqt";
+        }
+        file.close();
 
         SQTreader modsReader(tmpBuilder, fullFilename.c_str(), NULL);
         try{
@@ -105,7 +142,7 @@ bool PercolatorXmlReader::parseFile() {
             }// ignore warning that perc wasn't run on the sqt
         }
 
-        applyModifciations(psms, modsReader);
+        applyModifications(psms, modsReader);
 
         psms_ = psms; // transfer to BuildParser list
 
@@ -272,15 +309,31 @@ void PercolatorXmlReader::parseSequence(const XML_Char** attributes){
                                         "with no closing bracket.", seq.c_str());
                 }
                 // get delta mass
-                double deltaMass;
+                string modSeq = seq.substr(i, modClose - i);
+                double modMass;
                 try
                 {
-                    deltaMass = boost::lexical_cast<double>(seq.substr(i, modClose - i));
+                    modMass = boost::lexical_cast<double>(modSeq);
                 }
                 catch (boost::bad_lexical_cast& e)
                 {
                     throw BlibException(false, "Sequence '%s' has an unreadable modification.",
                                         seq.c_str());
+                }
+                double deltaMass;
+                // if the bracketed modification is + or - a number, assume it's a delta mass
+                if (modSeq[0] == '-' || modSeq[0] == '+')
+                {
+                    deltaMass = modMass;
+                }
+                // if there is no +/- in the bracketed mass, assume it's monoisotopic residue mass + modification mass
+                else
+                {
+                    if (i == 1)
+                        throw BlibException(false, "Error assigning modification to amino acid in sequence %s", seq.c_str());
+                    string residue(1, seq[i-1]);
+                    double residueMass = getPeptideMass(residue, masses_);
+                    deltaMass = modMass - residueMass;
                 }
                 // add seqmod to psm
                 curPSM_->mods.push_back(SeqMod(aaCount, deltaMass));
@@ -358,7 +411,7 @@ void PercolatorXmlReader::addCurPSM(){
  * symbols to a vector of mods, a seq with bracketed masses, and an
  * unmodified seq.
  */
-void PercolatorXmlReader::applyModifciations(vector<PSM*>& psms, 
+void PercolatorXmlReader::applyModifications(vector<PSM*>& psms, 
                                              SQTreader& modsReader){
     size_t numPsms = psms.size();
     for(size_t i=0; i < numPsms; i++){

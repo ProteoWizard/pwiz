@@ -34,8 +34,14 @@ namespace BiblioSpec {
 SQTreader::SQTreader(BlibBuilder& maker, 
                      const char* sqtfile, 
                      const ProgressIndicator* parent_progress)
-: BuildParser(maker, sqtfile, parent_progress), percolated(false), 
-  sequestVersion((float)2.7)
+: BuildParser(maker, sqtfile, parent_progress), percolated(false),
+  cometModRegex("^H[[:blank:]]+"    //H followed by at least some white space
+          "CometParams[[:blank:]]+" //CometParams followed by at least somewhite space 
+          "add_(?<aa>[A-Z])_"       //pull out the amino acid from add_<aa>_
+          "[^\\s]+"                  //some non-white space after add_<aa>_ (ex add_C_Cysteine)
+          "[[:blank:]]*=[[:blank:]]*"           //equal sign, potentially preceeded and followed by white space
+          "(?<modMass>(\\d*[.])?\\d+)"//modification mass as a floating point number
+          "[[:blank:]]*$")          //potential blank space, end of the line
 {
     // initialize mod arrays
     for(int i=0; i<MAX_MODS; i++) {
@@ -43,12 +49,15 @@ SQTreader::SQTreader(BlibBuilder& maker,
         diffMods[i] = 0;
     }
     AminoAcidMasses::initializeMass(masses_, 0);
+    sqtVersion = new SequestVersion("2.7");
 }
 
 SQTreader::~SQTreader()
 {
     if(file.is_open())
         file.close();
+    if(sqtVersion != NULL)
+        delete sqtVersion;
 }
 
 
@@ -72,19 +81,52 @@ void SQTreader::openRead(bool warnIfNotPercolated)
     char thisLine[1024];
     char mods[512];
 
+    boost::match_results<string::const_iterator> match;
+    string::const_iterator start, end;
+
     while(file.peek() == 'H') {
 
         getline(file,buffer);
-        if(buffer.find("SQTGeneratorVersion") != string::npos) {
+        start = buffer.begin();
+        end = buffer.end();
+        if(sqtVersion->generatorName() == "Sequest" && buffer.find("SQTGeneratorVersion") != string::npos) {
             size_t numPos = buffer.find_first_of("0123456789");
-            try{
-                string versionStr = buffer.substr(numPos, 
-                                                  buffer.length() - numPos);
-                sequestVersion = boost::lexical_cast<float>(versionStr);
-            } catch (...) {
-              throw new BlibException(false, "Could not get the SEQUEST "
-                        "version from this line in the header: %s.", 
-                         buffer.c_str());
+            if (numPos == string::npos)
+            {
+                throw new BlibException(false, "Could not get the SEQUEST "
+                    "version from this line in the header: %s.", 
+                     buffer.c_str());
+            }
+
+            string versionStr = buffer.substr(numPos, 
+                                              buffer.length() - numPos);
+            if (!sqtVersion->trySetVersion(versionStr))
+            {
+                throw new BlibException(false, "Could not get the SEQUEST "
+                    "version from this line in the header: %s.", 
+                     buffer.c_str());
+            }
+        }
+
+        if(buffer.find("CometVersion") != string::npos)
+        {
+            if (sqtVersion != NULL)
+                delete sqtVersion;
+            sqtVersion = new CometVersion();
+            size_t numPos = buffer.find_first_of("0123456789");
+            if (numPos == string::npos)
+            {
+                throw new BlibException(false, "Could not get the Comet "
+                    "version from this line in the header: %s.", 
+                     buffer.c_str());
+            }
+            string versionStr = buffer.substr(numPos,
+                                              buffer.length() - numPos);
+            if (!sqtVersion->trySetVersion(versionStr))
+            {
+                throw new BlibException(false, "Could not get the Comet "
+                    "version from this line in the header: %s.", 
+                     buffer.c_str());
             }
         }
 
@@ -97,11 +139,29 @@ void SQTreader::openRead(bool warnIfNotPercolated)
       
             // if version is > 2.7, subtract modValue from residue mass
             // if no version number found, die
-            if( sequestVersion > 2.701 ){ // "2.7" parsed to 2.700000006
+            if( sqtVersion->generatorName() == "Comet" ||
+                    (sqtVersion->generatorName() == "Sequest" && *sqtVersion > SequestVersion("2.7"))){
                 string residue(1, modLetter);
                 float residueMass = getPeptideMass(residue, masses_);
                 modValue = modValue - residueMass;
             } 
+            staticMods[(int)modLetter]=modValue;
+        }
+
+        if(regex_search(start, end, match, cometModRegex))
+        {
+            // the comet params values report static modificiations to amino acids
+            // and are redundant to values reported in the StaticMod entry in the header
+            // The comet params entries are preferable to use because they report the mass of the modification.
+            // Static mod reports amino acid mass + modification, and we don't necessarily know if 
+            // the amino acid mass is average or monoisotopic
+            if (match.str("aa").length() != 1 || match.str("modMass").length() <=0)
+            {
+                throw new BlibException(false, "Could not extract the staticMod "
+                        "from this line in the header: %s",buffer.c_str());
+            }
+            char modLetter = match.str("aa")[0];
+            float modValue = atof(match.str("modMass").c_str());
             staticMods[(int)modLetter]=modValue;
         }
     
@@ -109,7 +169,7 @@ void SQTreader::openRead(bool warnIfNotPercolated)
             buffer.find("	DiffMod") != string::npos) {
             size_t posEquals = buffer.find("=");
             if( posEquals == string::npos ){ 
-                throw new BlibException(false, "Unexpectd static mod format: "
+                throw new BlibException(false, "Unexpected static mod format: "
                                         "%s", buffer.c_str());
             }
             char modSymbol = buffer[posEquals - 1];
