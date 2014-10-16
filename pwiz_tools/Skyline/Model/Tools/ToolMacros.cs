@@ -66,6 +66,7 @@ namespace pwiz.Skyline.Model.Tools
         public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";  // Not L10N
         public const string PROGRAM_PATH = @"\$\(ProgramPath\((.*)\)\)";        // Not L10N
         public const string TOOL_DIR = "$(ToolDir)";                            // Not L10N
+        public const string SKYLINE_CONNECTION = "$(SkylineConnection)";        // Not L10N
         public const string COLLECTED_ARGS = "$(CollectedArgs)";                // Not L10N
 
         // Macros for Arguments.
@@ -82,7 +83,8 @@ namespace pwiz.Skyline.Model.Tools
             new Macro(() => Resources.ToolMacros__listArguments_Active_Replicate_Name, "$(ReplicateName)", GetActiveReplicateName, () => Resources.ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run, true),                
             new Macro(() => Resources.ToolMacros__listArguments_Input_Report_Temp_Path, INPUT_REPORT_TEMP_PATH, GetReportTempPath , () => Resources.ToolMacros_listArguments_This_tool_requires_a_selected_report),
             new Macro(() => Resources.ToolMacros__listArguments_Collected_Arguments, COLLECTED_ARGS, null , () => Resources.ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_),
-            new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_)
+            new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_),
+            new Macro(() => Resources.ToolMacros__listArguments_Skyline_Connection, SKYLINE_CONNECTION, GetSkylineConnection, () => "")
         };
         // ReSharper restore NonLocalizedString
 
@@ -332,6 +334,18 @@ namespace pwiz.Skyline.Model.Tools
         {
             return String.IsNullOrEmpty(arg.ToolDirPath) ? null : arg.ToolDirPath; //Todo: danny escape spaces in this path.
         }
+
+        private static string GetSkylineConnection(ToolMacroInfo arg)
+        {
+            return GetSkylineConnection();
+        }
+
+        public static string GetSkylineConnection()
+        {
+            return _skylineConnectionGuid.ToString("D");  // Not L10N
+        }
+
+        private static Guid _skylineConnectionGuid = Guid.NewGuid();
 
         /// <summary>
         /// Helper function to match on the ProgramPath Macro and extract the program title and version where relevant. 

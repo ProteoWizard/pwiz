@@ -48,7 +48,8 @@ namespace TestInteractiveTool
             // Create a service so Skyline tests can drive this tool.
             using (new SkylineTool.SkylineToolService(typeof(TestToolService), args[0] + "-test"))
             {
-                QuitEvent.WaitOne();
+                // Wait to be killed.
+                Thread.Sleep(Timeout.Infinite);
             }
         }
 
@@ -105,7 +106,6 @@ namespace TestInteractiveTool
 
                     // Quit the tool.
                     case "quit":
-                        QuitEvent.Set();
                         return Process.GetCurrentProcess().Id;
                 }
 

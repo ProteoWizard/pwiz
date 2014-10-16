@@ -5198,6 +5198,9 @@ Are you sure you want to continue?</value>
   <data name="ToolMacros__listArguments_Tool_Directory" xml:space="preserve">
     <value>Tool Directory</value>
   </data>
+  <data name="ToolMacros__listArguments_Skyline_Connection" xml:space="preserve">
+    <value>Skyline Connection</value>
+  </data>
   <data name="ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_" xml:space="preserve">
     <value>This tool is not an installed tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
   </data>

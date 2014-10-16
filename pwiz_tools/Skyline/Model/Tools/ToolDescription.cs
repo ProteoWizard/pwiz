@@ -404,6 +404,7 @@ namespace pwiz.Skyline.Model.Tools
 
                 try
                 {
+                    p.StartInfo.UseShellExecute = false;
                     p.Start();
                     if (OutputToImmediateWindow)
                     {
@@ -755,7 +756,7 @@ namespace pwiz.Skyline.Model.Tools
         ///  A helper function that generates the report with reportTitle from the SrmDocument.
         ///  Throws an error if the reportSpec no longer exists in Settings.Default.
         /// </summary>
-        /// <param name="doc">Document to create the report from.</param>                
+        /// <param name="doc">Document to create the report from.</param>
         /// <param name="reportTitle">Title of the reportSpec to make a report from.</param>
         /// <param name="toolTitle">Title of tool for exception error message.</param>
         /// <param name="progressMonitor">Progress monitor.</param>

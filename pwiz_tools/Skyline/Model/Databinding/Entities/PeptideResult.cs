@@ -86,5 +86,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         public ResultFile ResultFile { get { return GetResultFile(); } }
+
+        [InvariantDisplayName("PeptideResultDocumentLocation")]
+        public DocumentLocation DocumentLocation
+        {
+            get
+            {
+                return new DocumentLocation(Peptide.IdentityPath).SetChromFileId(ResultFile.ChromFileInfoId.GlobalIndex);
+            }
+        }
     }
 }

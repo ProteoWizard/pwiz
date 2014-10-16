@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
+using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -31,6 +32,8 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -228,7 +231,12 @@ namespace pwiz.Skyline
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
 
-                Application.Run(MainWindow);
+                MainWindow.Listen(DocumentChangedEventHandler);
+
+                using (new SkylineTool.SkylineToolService(typeof (SkylineToolService), ToolMacros.GetSkylineConnection()))
+                {
+                    Application.Run(MainWindow);
+                }
             }
             catch (Exception x)
             {
@@ -243,20 +251,104 @@ namespace pwiz.Skyline
             MainWindow = null;
         }
 
+        private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
+        {
+            SkylineToolService.CallClients();
+        }
+
+
+        private class SkylineToolService : SkylineTool.ISkylineTool
+        {
+            private static readonly List<SkylineTool.ISkylineToolEvents> _events = new List<SkylineTool.ISkylineToolEvents>();
+
+            public string GetReport(string toolName, string reportName)
+            {
+                string report = null;
+                MainWindow.Invoke(new Action(() =>
+                {
+                    report = ToolDescriptionHelpers.GetReport(MainWindow.DocumentUI, reportName, toolName, MainWindow);
+                }));
+                return report;
+            }
+
+            public void Select(string link)
+            {
+                MainWindow.Invoke(new Action(() =>
+                {
+                    DocumentLocation documentLocation = DocumentLocation.Parse(link);
+                    Bookmark bookmark = documentLocation.ToBookmark(MainWindow.DocumentUI);
+                    MainWindow.NavigateToBookmark(bookmark);
+                }));
+            }
+
+            public string DocumentPath
+            {
+                get { return MainWindow.DocumentFilePath; }
+            }
+
+            public SkylineTool.Version Version
+            {
+                get
+                {
+                    int major, minor, build, revision;
+                    try
+                    {
+                        major = Install.MajorVersion;
+                        minor = Install.MinorVersion;
+                        build = Install.Build;
+                        revision = Install.Revision;
+                    }
+                    // ReSharper disable once EmptyGeneralCatchClause
+                    catch
+                    {
+                        major = minor = build = revision = 0;
+                    }
+                    return new SkylineTool.Version(major, minor, build, revision);
+                }
+            }
+
+            public void NotifyDocumentChanged()
+            {
+                _events.Add(OperationContext.Current.GetCallbackChannel<SkylineTool.ISkylineToolEvents>());
+            }
+
+            public int RunTest(string testName)
+            {
+                // This is implemented only in special tools that test the ToolService API.
+                throw new NotSupportedException();
+            }
+
+            public static void CallClients()
+            {
+                Action<SkylineTool.ISkylineToolEvents> invoke = callback => callback.DocumentChangedEvent();
+                for (int i = 0; i < _events.Count; i++)
+                {
+                    try
+                    {
+                        invoke(_events[i]);
+                    }
+                    catch (CommunicationObjectAbortedException)
+                    {
+                        _events.RemoveAt(i--);
+                    }
+                }
+            }
+        }
+
         private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
         {
             //Copy tools to a different folder then Directory.Move if successful.
-            string tempOutterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); // Not L10N
-            if (Directory.Exists(tempOutterToolsFolderPath))
+            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); // Not L10N
+            if (Directory.Exists(tempOuterToolsFolderPath))
             {
-                DirectoryEx.SafeDelete(tempOutterToolsFolderPath);
+                DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
                 // Not sure this is necessay, but just to be safe
-                if (Directory.Exists(tempOutterToolsFolderPath))
+                if (Directory.Exists(tempOuterToolsFolderPath))
                     throw new Exception(Resources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
             }
 
             // Must create the tools directory to avoid ending up here again next time
-            Directory.CreateDirectory(tempOutterToolsFolderPath);
+            Directory.CreateDirectory(tempOuterToolsFolderPath);
 
             ToolList toolList = Settings.Default.ToolList;
             int numTools = toolList.Count;
@@ -271,7 +363,7 @@ namespace pwiz.Skyline
                 {
                     string foldername = Path.GetFileName(toolDirPath);
                     string newDir = Path.Combine(outerToolsFolderPath, foldername);
-                    string tempNewDir = Path.Combine(tempOutterToolsFolderPath, foldername);
+                    string tempNewDir = Path.Combine(tempOuterToolsFolderPath, foldername);
                     if (!Directory.Exists(tempNewDir))
                         DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
                     tool.ToolDirPath = newDir; // Update the tool to point to its new directory.
@@ -280,14 +372,14 @@ namespace pwiz.Skyline
                 if (broker.IsCanceled)
                 {
                     // Don't leave around a corrupted directory
-                    DirectoryEx.SafeDelete(tempOutterToolsFolderPath);
+                    DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
                     return;
                 }
 
                 progressValue += increment;
                 broker.ProgressValue = progressValue;                
             }
-            Directory.Move(tempOutterToolsFolderPath, outerToolsFolderPath);
+            Directory.Move(tempOuterToolsFolderPath, outerToolsFolderPath);
             Settings.Default.ToolList = ToolList.CopyTools(toolList);
         }
 

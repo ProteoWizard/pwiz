@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override bool IsScalar(Type type)
         {
-            return base.IsScalar(type) || type == typeof(IsotopeLabelType);
+            return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation);
         }
 
         public override bool IsRootTypeSelectable(Type type)
