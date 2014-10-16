@@ -900,7 +900,7 @@ if $(UNIX) = true
     gzip -c9 "$(>)" > "$(<)"
     }
     actions [COPY] {
-        cp -Rpf "$(>)" "$(<)"
+        cp -Rf --preserve=ownership,timestamp "$(>)" "$(<)"
     }
 }
 
