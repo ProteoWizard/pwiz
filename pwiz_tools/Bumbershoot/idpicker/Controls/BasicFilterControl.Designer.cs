@@ -56,27 +56,27 @@ namespace IDPicker.Controls
             System.Windows.Forms.Label label9;
             System.Windows.Forms.Label label11;
             this.proteinLevelFilterGroupBox = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.filterByGeneCheckBox = new System.Windows.Forms.CheckBox();
             this.minSpectraTextBox = new System.Windows.Forms.TextBox();
-            this.minAdditionalPeptidesTextBox = new System.Windows.Forms.TextBox();
             this.minDistinctPeptidesTextBox = new System.Windows.Forms.TextBox();
+            this.minAdditionalPeptidesTextBox = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.psmLevelFilterGroupBox = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
             this.maxProteinGroupsTextBox = new System.Windows.Forms.TextBox();
             this.minSpectraPerMatchTextBox = new System.Windows.Forms.TextBox();
             this.maxQValueComboBox = new System.Windows.Forms.ComboBox();
             this.minSpectraPerPeptideTextBox = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
             this.CloseLabel = new System.Windows.Forms.LinkLabel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.QonverterLabel = new System.Windows.Forms.LinkLabel();
-            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.filterByGeneCheckBox = new System.Windows.Forms.CheckBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label21 = new System.Windows.Forms.Label();
             this.distinctMatchFormatGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.modificationRoundToMassTextBox = new System.Windows.Forms.TextBox();
@@ -90,13 +90,46 @@ namespace IDPicker.Controls
             label9 = new System.Windows.Forms.Label();
             label11 = new System.Windows.Forms.Label();
             this.proteinLevelFilterGroupBox.SuspendLayout();
-            this.psmLevelFilterGroupBox.SuspendLayout();
-            this.panel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
+            this.psmLevelFilterGroupBox.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.distinctMatchFormatGroupBox.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // label4
+            // 
+            label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            label4.AutoSize = true;
+            label4.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            label4.Location = new System.Drawing.Point(3, 5);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(132, 13);
+            label4.TabIndex = 127;
+            label4.Text = "Minimum distinct peptides:";
+            // 
+            // label9
+            // 
+            label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            label9.AutoSize = true;
+            label9.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            label9.Location = new System.Drawing.Point(3, 29);
+            label9.Name = "label9";
+            label9.Size = new System.Drawing.Size(148, 13);
+            label9.TabIndex = 127;
+            label9.Text = "Minimum spectra per peptide:";
+            // 
+            // label11
+            // 
+            label11.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            label11.AutoSize = true;
+            label11.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            label11.Location = new System.Drawing.Point(3, 82);
+            label11.Name = "label11";
+            label11.Size = new System.Drawing.Size(158, 13);
+            label11.TabIndex = 148;
+            label11.Text = "Mod. mass rounded to nearest:";
             // 
             // proteinLevelFilterGroupBox
             // 
@@ -105,141 +138,9 @@ namespace IDPicker.Controls
             this.proteinLevelFilterGroupBox.Location = new System.Drawing.Point(3, 132);
             this.proteinLevelFilterGroupBox.Name = "proteinLevelFilterGroupBox";
             this.proteinLevelFilterGroupBox.Size = new System.Drawing.Size(245, 123);
-            this.proteinLevelFilterGroupBox.TabIndex = 125;
+            this.proteinLevelFilterGroupBox.TabIndex = 1;
             this.proteinLevelFilterGroupBox.TabStop = false;
             this.proteinLevelFilterGroupBox.Text = "Protein/Gene Level Filters";
-            // 
-            // minSpectraTextBox
-            // 
-            this.minSpectraTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minSpectraTextBox.Location = new System.Drawing.Point(170, 51);
-            this.minSpectraTextBox.Name = "minSpectraTextBox";
-            this.minSpectraTextBox.Size = new System.Drawing.Size(46, 21);
-            this.minSpectraTextBox.TabIndex = 11;
-            this.minSpectraTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.minSpectraTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
-            // 
-            // minAdditionalPeptidesTextBox
-            // 
-            this.minAdditionalPeptidesTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minAdditionalPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minAdditionalPeptidesTextBox.Location = new System.Drawing.Point(170, 27);
-            this.minAdditionalPeptidesTextBox.Name = "minAdditionalPeptidesTextBox";
-            this.minAdditionalPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
-            this.minAdditionalPeptidesTextBox.TabIndex = 9;
-            this.minAdditionalPeptidesTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.minAdditionalPeptidesTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
-            // 
-            // minDistinctPeptidesTextBox
-            // 
-            this.minDistinctPeptidesTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minDistinctPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minDistinctPeptidesTextBox.Location = new System.Drawing.Point(170, 3);
-            this.minDistinctPeptidesTextBox.Name = "minDistinctPeptidesTextBox";
-            this.minDistinctPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
-            this.minDistinctPeptidesTextBox.TabIndex = 7;
-            this.minDistinctPeptidesTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.minDistinctPeptidesTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
-            // 
-            // psmLevelFilterGroupBox
-            // 
-            this.psmLevelFilterGroupBox.Controls.Add(this.tableLayoutPanel4);
-            this.psmLevelFilterGroupBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.psmLevelFilterGroupBox.Location = new System.Drawing.Point(3, 3);
-            this.psmLevelFilterGroupBox.Name = "psmLevelFilterGroupBox";
-            this.psmLevelFilterGroupBox.Size = new System.Drawing.Size(245, 123);
-            this.psmLevelFilterGroupBox.TabIndex = 126;
-            this.psmLevelFilterGroupBox.TabStop = false;
-            this.psmLevelFilterGroupBox.Text = "Peptide-Spectrum-Match Filters";
-            // 
-            // maxProteinGroupsTextBox
-            // 
-            this.maxProteinGroupsTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.maxProteinGroupsTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.maxProteinGroupsTextBox.Location = new System.Drawing.Point(170, 75);
-            this.maxProteinGroupsTextBox.Name = "maxProteinGroupsTextBox";
-            this.maxProteinGroupsTextBox.Size = new System.Drawing.Size(46, 21);
-            this.maxProteinGroupsTextBox.TabIndex = 133;
-            this.maxProteinGroupsTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.maxProteinGroupsTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
-            // 
-            // minSpectraPerMatchTextBox
-            // 
-            this.minSpectraPerMatchTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minSpectraPerMatchTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minSpectraPerMatchTextBox.Location = new System.Drawing.Point(170, 51);
-            this.minSpectraPerMatchTextBox.Name = "minSpectraPerMatchTextBox";
-            this.minSpectraPerMatchTextBox.Size = new System.Drawing.Size(46, 21);
-            this.minSpectraPerMatchTextBox.TabIndex = 9;
-            this.minSpectraPerMatchTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.minSpectraPerMatchTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
-            // 
-            // maxQValueComboBox
-            // 
-            this.maxQValueComboBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.maxQValueComboBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.maxQValueComboBox.FormattingEnabled = true;
-            this.maxQValueComboBox.Items.AddRange(new object[] {
-            "0",
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10"});
-            this.maxQValueComboBox.Location = new System.Drawing.Point(170, 3);
-            this.maxQValueComboBox.Name = "maxQValueComboBox";
-            this.maxQValueComboBox.Size = new System.Drawing.Size(45, 21);
-            this.maxQValueComboBox.TabIndex = 4;
-            this.maxQValueComboBox.Text = "5";
-            this.maxQValueComboBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.maxQValueComboBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.doubleTextBox_KeyDown);
-            // 
-            // minSpectraPerPeptideTextBox
-            // 
-            this.minSpectraPerPeptideTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minSpectraPerPeptideTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minSpectraPerPeptideTextBox.Location = new System.Drawing.Point(170, 27);
-            this.minSpectraPerPeptideTextBox.Name = "minSpectraPerPeptideTextBox";
-            this.minSpectraPerPeptideTextBox.Size = new System.Drawing.Size(46, 21);
-            this.minSpectraPerPeptideTextBox.TabIndex = 7;
-            this.minSpectraPerPeptideTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
-            this.minSpectraPerPeptideTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
-            // 
-            // CloseLabel
-            // 
-            this.CloseLabel.AutoSize = true;
-            this.CloseLabel.Location = new System.Drawing.Point(151, 5);
-            this.CloseLabel.Name = "CloseLabel";
-            this.CloseLabel.Size = new System.Drawing.Size(82, 13);
-            this.CloseLabel.TabIndex = 127;
-            this.CloseLabel.TabStop = true;
-            this.CloseLabel.Text = "Save and Close";
-            this.CloseLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.CloseLabel_LinkClicked);
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.QonverterLabel);
-            this.panel1.Controls.Add(this.CloseLabel);
-            this.panel1.Location = new System.Drawing.Point(3, 394);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(245, 25);
-            this.panel1.TabIndex = 128;
-            // 
-            // QonverterLabel
-            // 
-            this.QonverterLabel.AutoSize = true;
-            this.QonverterLabel.Location = new System.Drawing.Point(3, 5);
-            this.QonverterLabel.Name = "QonverterLabel";
-            this.QonverterLabel.Size = new System.Drawing.Size(95, 13);
-            this.QonverterLabel.TabIndex = 128;
-            this.QonverterLabel.TabStop = true;
-            this.QonverterLabel.Text = "Qonverter Settings";
-            this.QonverterLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.QonverterLabel_LinkClicked);
             // 
             // tableLayoutPanel2
             // 
@@ -276,20 +177,41 @@ namespace IDPicker.Controls
             this.filterByGeneCheckBox.Location = new System.Drawing.Point(170, 77);
             this.filterByGeneCheckBox.Name = "filterByGeneCheckBox";
             this.filterByGeneCheckBox.Size = new System.Drawing.Size(15, 14);
-            this.filterByGeneCheckBox.TabIndex = 141;
+            this.filterByGeneCheckBox.TabIndex = 7;
             this.filterByGeneCheckBox.UseVisualStyleBackColor = true;
             this.filterByGeneCheckBox.CheckedChanged += new System.EventHandler(this.filterControl_CheckedChanged);
             // 
-            // label4
+            // minSpectraTextBox
             // 
-            label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            label4.AutoSize = true;
-            label4.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            label4.Location = new System.Drawing.Point(3, 5);
-            label4.Name = "label4";
-            label4.Size = new System.Drawing.Size(132, 13);
-            label4.TabIndex = 127;
-            label4.Text = "Minimum distinct peptides:";
+            this.minSpectraTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minSpectraTextBox.Location = new System.Drawing.Point(170, 51);
+            this.minSpectraTextBox.Name = "minSpectraTextBox";
+            this.minSpectraTextBox.Size = new System.Drawing.Size(46, 21);
+            this.minSpectraTextBox.TabIndex = 6;
+            this.minSpectraTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.minSpectraTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
+            // 
+            // minDistinctPeptidesTextBox
+            // 
+            this.minDistinctPeptidesTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minDistinctPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.minDistinctPeptidesTextBox.Location = new System.Drawing.Point(170, 3);
+            this.minDistinctPeptidesTextBox.Name = "minDistinctPeptidesTextBox";
+            this.minDistinctPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
+            this.minDistinctPeptidesTextBox.TabIndex = 4;
+            this.minDistinctPeptidesTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.minDistinctPeptidesTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
+            // 
+            // minAdditionalPeptidesTextBox
+            // 
+            this.minAdditionalPeptidesTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minAdditionalPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.minAdditionalPeptidesTextBox.Location = new System.Drawing.Point(170, 27);
+            this.minAdditionalPeptidesTextBox.Name = "minAdditionalPeptidesTextBox";
+            this.minAdditionalPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
+            this.minAdditionalPeptidesTextBox.TabIndex = 5;
+            this.minAdditionalPeptidesTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.minAdditionalPeptidesTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
             // 
             // label5
             // 
@@ -321,6 +243,17 @@ namespace IDPicker.Controls
             this.label15.Size = new System.Drawing.Size(138, 13);
             this.label15.TabIndex = 142;
             this.label15.Text = "Filter by gene (if possible): ";
+            // 
+            // psmLevelFilterGroupBox
+            // 
+            this.psmLevelFilterGroupBox.Controls.Add(this.tableLayoutPanel4);
+            this.psmLevelFilterGroupBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.psmLevelFilterGroupBox.Location = new System.Drawing.Point(3, 3);
+            this.psmLevelFilterGroupBox.Name = "psmLevelFilterGroupBox";
+            this.psmLevelFilterGroupBox.Size = new System.Drawing.Size(245, 123);
+            this.psmLevelFilterGroupBox.TabIndex = 0;
+            this.psmLevelFilterGroupBox.TabStop = false;
+            this.psmLevelFilterGroupBox.Text = "Peptide-Spectrum-Match Filters";
             // 
             // tableLayoutPanel4
             // 
@@ -372,16 +305,63 @@ namespace IDPicker.Controls
             this.label8.TabIndex = 132;
             this.label8.Text = "Minimum spectra per match:";
             // 
-            // label9
+            // maxProteinGroupsTextBox
             // 
-            label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            label9.AutoSize = true;
-            label9.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            label9.Location = new System.Drawing.Point(3, 29);
-            label9.Name = "label9";
-            label9.Size = new System.Drawing.Size(148, 13);
-            label9.TabIndex = 127;
-            label9.Text = "Minimum spectra per peptide:";
+            this.maxProteinGroupsTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxProteinGroupsTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.maxProteinGroupsTextBox.Location = new System.Drawing.Point(170, 75);
+            this.maxProteinGroupsTextBox.Name = "maxProteinGroupsTextBox";
+            this.maxProteinGroupsTextBox.Size = new System.Drawing.Size(46, 21);
+            this.maxProteinGroupsTextBox.TabIndex = 3;
+            this.maxProteinGroupsTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.maxProteinGroupsTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
+            // 
+            // minSpectraPerMatchTextBox
+            // 
+            this.minSpectraPerMatchTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minSpectraPerMatchTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.minSpectraPerMatchTextBox.Location = new System.Drawing.Point(170, 51);
+            this.minSpectraPerMatchTextBox.Name = "minSpectraPerMatchTextBox";
+            this.minSpectraPerMatchTextBox.Size = new System.Drawing.Size(46, 21);
+            this.minSpectraPerMatchTextBox.TabIndex = 2;
+            this.minSpectraPerMatchTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.minSpectraPerMatchTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
+            // 
+            // maxQValueComboBox
+            // 
+            this.maxQValueComboBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxQValueComboBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.maxQValueComboBox.FormattingEnabled = true;
+            this.maxQValueComboBox.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10"});
+            this.maxQValueComboBox.Location = new System.Drawing.Point(170, 3);
+            this.maxQValueComboBox.Name = "maxQValueComboBox";
+            this.maxQValueComboBox.Size = new System.Drawing.Size(45, 21);
+            this.maxQValueComboBox.TabIndex = 0;
+            this.maxQValueComboBox.Text = "5";
+            this.maxQValueComboBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.maxQValueComboBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.doubleTextBox_KeyDown);
+            // 
+            // minSpectraPerPeptideTextBox
+            // 
+            this.minSpectraPerPeptideTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.minSpectraPerPeptideTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.minSpectraPerPeptideTextBox.Location = new System.Drawing.Point(170, 27);
+            this.minSpectraPerPeptideTextBox.Name = "minSpectraPerPeptideTextBox";
+            this.minSpectraPerPeptideTextBox.Size = new System.Drawing.Size(46, 21);
+            this.minSpectraPerPeptideTextBox.TabIndex = 1;
+            this.minSpectraPerPeptideTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
+            this.minSpectraPerPeptideTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.integerTextBox_KeyDown);
             // 
             // label10
             // 
@@ -407,13 +387,44 @@ namespace IDPicker.Controls
             this.label21.TabIndex = 142;
             this.label21.Text = "%";
             // 
+            // CloseLabel
+            // 
+            this.CloseLabel.AutoSize = true;
+            this.CloseLabel.Location = new System.Drawing.Point(151, 5);
+            this.CloseLabel.Name = "CloseLabel";
+            this.CloseLabel.Size = new System.Drawing.Size(82, 13);
+            this.CloseLabel.TabIndex = 13;
+            this.CloseLabel.TabStop = true;
+            this.CloseLabel.Text = "Save and Close";
+            this.CloseLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.CloseLabel_LinkClicked);
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.QonverterLabel);
+            this.panel1.Controls.Add(this.CloseLabel);
+            this.panel1.Location = new System.Drawing.Point(3, 394);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(245, 25);
+            this.panel1.TabIndex = 5;
+            // 
+            // QonverterLabel
+            // 
+            this.QonverterLabel.AutoSize = true;
+            this.QonverterLabel.Location = new System.Drawing.Point(3, 5);
+            this.QonverterLabel.Name = "QonverterLabel";
+            this.QonverterLabel.Size = new System.Drawing.Size(95, 13);
+            this.QonverterLabel.TabIndex = 12;
+            this.QonverterLabel.TabStop = true;
+            this.QonverterLabel.Text = "Qonverter Settings";
+            this.QonverterLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.QonverterLabel_LinkClicked);
+            // 
             // distinctMatchFormatGroupBox
             // 
             this.distinctMatchFormatGroupBox.Controls.Add(this.tableLayoutPanel1);
             this.distinctMatchFormatGroupBox.Location = new System.Drawing.Point(3, 261);
             this.distinctMatchFormatGroupBox.Name = "distinctMatchFormatGroupBox";
             this.distinctMatchFormatGroupBox.Size = new System.Drawing.Size(245, 127);
-            this.distinctMatchFormatGroupBox.TabIndex = 140;
+            this.distinctMatchFormatGroupBox.TabIndex = 3;
             this.distinctMatchFormatGroupBox.TabStop = false;
             this.distinctMatchFormatGroupBox.Text = "Distinct Match Format";
             // 
@@ -450,7 +461,7 @@ namespace IDPicker.Controls
             this.modificationRoundToMassTextBox.Location = new System.Drawing.Point(170, 78);
             this.modificationRoundToMassTextBox.Name = "modificationRoundToMassTextBox";
             this.modificationRoundToMassTextBox.Size = new System.Drawing.Size(46, 21);
-            this.modificationRoundToMassTextBox.TabIndex = 142;
+            this.modificationRoundToMassTextBox.TabIndex = 11;
             this.modificationRoundToMassTextBox.TextChanged += new System.EventHandler(this.filterControl_TextChanged);
             this.modificationRoundToMassTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.doubleTextBox_KeyDown);
             // 
@@ -462,7 +473,7 @@ namespace IDPicker.Controls
             this.modificationsAreDistinctCheckbox.Location = new System.Drawing.Point(170, 55);
             this.modificationsAreDistinctCheckbox.Name = "modificationsAreDistinctCheckbox";
             this.modificationsAreDistinctCheckbox.Size = new System.Drawing.Size(15, 14);
-            this.modificationsAreDistinctCheckbox.TabIndex = 144;
+            this.modificationsAreDistinctCheckbox.TabIndex = 10;
             this.modificationsAreDistinctCheckbox.UseVisualStyleBackColor = true;
             this.modificationsAreDistinctCheckbox.CheckedChanged += new System.EventHandler(this.filterControl_CheckedChanged);
             // 
@@ -474,7 +485,7 @@ namespace IDPicker.Controls
             this.analysisIsDistinctCheckBox.Location = new System.Drawing.Point(170, 30);
             this.analysisIsDistinctCheckBox.Name = "analysisIsDistinctCheckBox";
             this.analysisIsDistinctCheckBox.Size = new System.Drawing.Size(15, 14);
-            this.analysisIsDistinctCheckBox.TabIndex = 143;
+            this.analysisIsDistinctCheckBox.TabIndex = 9;
             this.analysisIsDistinctCheckBox.UseVisualStyleBackColor = true;
             this.analysisIsDistinctCheckBox.CheckedChanged += new System.EventHandler(this.filterControl_CheckedChanged);
             // 
@@ -486,7 +497,7 @@ namespace IDPicker.Controls
             this.chargeIsDistinctCheckBox.Location = new System.Drawing.Point(170, 5);
             this.chargeIsDistinctCheckBox.Name = "chargeIsDistinctCheckBox";
             this.chargeIsDistinctCheckBox.Size = new System.Drawing.Size(15, 14);
-            this.chargeIsDistinctCheckBox.TabIndex = 142;
+            this.chargeIsDistinctCheckBox.TabIndex = 8;
             this.chargeIsDistinctCheckBox.UseVisualStyleBackColor = true;
             this.chargeIsDistinctCheckBox.CheckedChanged += new System.EventHandler(this.filterControl_CheckedChanged);
             // 
@@ -522,17 +533,6 @@ namespace IDPicker.Controls
             this.label14.TabIndex = 147;
             this.label14.Text = "Modifications are distinct:";
             // 
-            // label11
-            // 
-            label11.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            label11.AutoSize = true;
-            label11.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            label11.Location = new System.Drawing.Point(3, 82);
-            label11.Name = "label11";
-            label11.Size = new System.Drawing.Size(158, 13);
-            label11.TabIndex = 148;
-            label11.Text = "Mod. mass rounded to nearest:";
-            // 
             // BasicFilterControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -548,13 +548,13 @@ namespace IDPicker.Controls
             this.Name = "BasicFilterControl";
             this.Size = new System.Drawing.Size(251, 422);
             this.proteinLevelFilterGroupBox.ResumeLayout(false);
-            this.psmLevelFilterGroupBox.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
+            this.psmLevelFilterGroupBox.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
             this.tableLayoutPanel4.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.distinctMatchFormatGroupBox.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
