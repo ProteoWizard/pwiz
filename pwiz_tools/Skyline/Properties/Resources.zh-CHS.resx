@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+﻿<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5770,9 +5770,6 @@
   </data>
   <data name="PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__" xml:space="preserve">
     <value>第 {1} 行上的样品{0}不匹配文件{2}。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__" xml:space="preserve">
-    <value>肽{0}不在第 {2} 行的文件{1}中。</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>文件 Id {0}不匹配文档中的任何文件。</value>

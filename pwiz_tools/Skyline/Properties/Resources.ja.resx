@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+﻿<?xml version='1.0' encoding='UTF-8'?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5770,9 +5770,6 @@
   </data>
   <data name="PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__" xml:space="preserve">
     <value>{1}行目の試料{0}がファイル{2}に一致しません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__" xml:space="preserve">
-    <value>{2}行目のファイル{1}にペプチド{0}が存在しませんでした。</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>ファイルID{0}はドキュメント内のどのファイルにも一致しません。</value>

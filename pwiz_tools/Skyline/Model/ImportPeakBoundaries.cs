@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model
         public List<string> AnnotationsAdded { get; private set; }
         public HashSet<string> UnrecognizedPeptides { get; private set; }
         public HashSet<string> UnrecognizedFiles { get; private set; }
+        public HashSet<UnrecognizedChargeState> UnrecognizedChargeStates { get; private set; } 
 	    
         public PeakBoundaryImporter(SrmDocument document)
 	    {
@@ -50,7 +51,33 @@ namespace pwiz.Skyline.Model
             AnnotationsAdded = new List<string>();
             UnrecognizedFiles = new HashSet<string>();
             UnrecognizedPeptides = new HashSet<string>();
+            UnrecognizedChargeStates = new HashSet<UnrecognizedChargeState>();
 	    }
+
+        public struct UnrecognizedChargeState
+        {
+            public string Peptide;
+            public string File;
+            public int Charge;
+
+            public UnrecognizedChargeState(int charge, string file, string peptide)
+            {
+                Charge = charge;
+                File = file;
+                Peptide = peptide;
+            }
+
+            public string PrintLine(char separator)
+            {
+                var sb = new StringBuilder();
+                sb.Append(Peptide);
+                sb.Append(separator); // Not L10N
+                sb.Append(File);
+                sb.Append(separator); // Not L10N
+                sb.Append(Charge);
+                return sb.ToString();
+            }
+        }
 
         public enum Field { modified_peptide, filename, start_time, end_time, charge, is_decoy, sample_name }
 
@@ -328,8 +355,7 @@ namespace pwiz.Skyline.Model
                 }
                 if (!foundSample)
                 {
-                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__, 
-                                                        modifiedPeptideString, fileName, linesRead));
+                    UnrecognizedChargeStates.Add(new UnrecognizedChargeState(charge, fileName, modifiedPeptideString));
                 }
             }
             // Remove peaks from the document that weren't in the file.
@@ -488,6 +514,7 @@ namespace pwiz.Skyline.Model
         /// <returns></returns>
         public bool UnrecognizedPeptidesCancel(IWin32Window parent)
         {
+            const int itemsToShow = 10;
             var peptides = UnrecognizedPeptides.ToList();
             if (peptides.Any())
             {
@@ -497,7 +524,7 @@ namespace pwiz.Skyline.Model
                     : string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__,
                                                   peptides.Count));
                 sb.AppendLine();
-                int peptidesToShow = Math.Min(peptides.Count, 10);
+                int peptidesToShow = Math.Min(peptides.Count, itemsToShow);
                 for (int i = 0; i < peptidesToShow; ++i)
                 {
                     sb.AppendLine(peptides[i]);
@@ -525,7 +552,7 @@ namespace pwiz.Skyline.Model
                     : string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_,
                              files.Count));
                 sb.AppendLine();
-                int filesToShow = Math.Min(files.Count, 10);
+                int filesToShow = Math.Min(files.Count, itemsToShow);
                 for (int i = 0; i < filesToShow; ++i)
                 {
                     sb.AppendLine(files[i]);
@@ -538,6 +565,34 @@ namespace pwiz.Skyline.Model
                 sb.Append(files.Count == 1
                     ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_
                     : Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
+                var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
+                if (dlgFiles == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
+            var charges = UnrecognizedChargeStates.ToList();
+            if (charges.Any())
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine(files.Count == 1
+                              ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_
+                              : string.Format(Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, 
+                                            charges.Count()));
+                sb.AppendLine();
+                int chargesToShow = Math.Min(charges.Count, itemsToShow);
+                for (int i = 0; i < chargesToShow; ++i)
+                {
+                    sb.AppendLine(charges[i].PrintLine(' ')); // Not L10N
+                }
+                if (chargesToShow < charges.Count)
+                {
+                    sb.AppendLine("..."); // Not L10N
+                }
+                sb.AppendLine();
+                sb.Append(files.Count == 1
+                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_
+                    : Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
                 var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
                 if (dlgFiles == DialogResult.Cancel)
                 {

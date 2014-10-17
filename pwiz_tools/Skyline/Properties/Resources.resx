@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5774,9 +5774,6 @@ Are you sure you want to continue?</value>
   <data name="PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__" xml:space="preserve">
     <value>Sample {0} on line {1} does not match the file {2}.</value>
   </data>
-  <data name="PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__" xml:space="preserve">
-    <value>The peptide {0} was not present in the file {1} on line {2}.</value>
-  </data>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>File Id {0} does not match any file in document.</value>
   </data>
@@ -7918,5 +7915,17 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_" xml:space="preserve">
     <value>The pasted text must have at least two columns.</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_" xml:space="preserve">
+    <value>The following {0} peptide, file, and charge state combinations were not recognized:</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_" xml:space="preserve">
+    <value>The following peptide, file, and charge state combination was not recognized:</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_" xml:space="preserve">
+    <value>Continue peak boundary import ignoring these charge states?</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_" xml:space="preserve">
+    <value>Continue peak boundary import ignoring this charge state?</value>
   </data>
 </root>

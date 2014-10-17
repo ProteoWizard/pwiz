@@ -258,11 +258,10 @@ namespace pwiz.SkylineTestA
             string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
             ImportNoException(docResults, TextUtil.LineSeparate(headerFourFields, string.Join(csvSep, valuesFourFields)));
 
-            // 14. Valid (charge state, fileName, peptide) combo that is not in document leads to error
+            // 14. Valid (charge state, fileName, peptide) combo that is not in document gets skipped
             string[] valuesBadCombo = new List<string>(values).ToArray();
             valuesBadCombo[(int) PeakBoundaryImporter.Field.charge] = (5).ToString(cult);
-            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)),
-                Resources.PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__);
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)));
 
             // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
 
