@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            //OpenDocument(FILE_NAME);
+            OpenDocument(FILE_NAME);
 
             // Install and run the test tool.
             using (var tool = new Tool(
@@ -57,24 +57,24 @@ namespace pwiz.SkylineTestFunctional
                 // NOTE: We manually Dispose instead of "using" so we can catch an expected exception.
                 var toolClient = ConnectTool(TOOL_NAME, ToolConnection);
 
-//                // Select peptides.
-//                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
-//                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
-//
-//                // Select peptides in specific replicates.
-//                SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
-//                SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
-//
-//                // Check document changes.
-//                CheckDocumentChanges(toolClient);
-//
-//                // Check version and path.
-//                CheckVersion(toolClient);
-//                CheckPath(toolClient, FILE_NAME);
+                // Select peptides.
+                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
+                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
+
+                // Select peptides in specific replicates.
+                SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
+                SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
+
+                // Check document changes.
+                CheckDocumentChanges(toolClient);
+
+                // Check version and path.
+                CheckVersion(toolClient);
+                CheckPath(toolClient, FILE_NAME);
 
                 // Kill the test tool.
                 KillTool(toolClient);
-Thread.Sleep(1000);
+                Thread.Sleep(500);
 
                 // We expect a CommunicationException because we didn't shutdown the channel cleanly.
                 try
