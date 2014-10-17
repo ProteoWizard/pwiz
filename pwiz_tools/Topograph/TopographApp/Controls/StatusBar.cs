@@ -40,6 +40,10 @@ namespace pwiz.Topograph.ui.Controls
         public StatusBar()
         {
             InitializeComponent();
+            if (DesignMode)
+            {
+                return;
+            }
             _availableMBytes = new PerformanceCounter("Memory", "Available MBytes");
             components.Add(_availableMBytes);
             UpdateTimerTick(this, new EventArgs());

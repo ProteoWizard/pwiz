@@ -161,7 +161,9 @@ namespace pwiz.Topograph.Model.Data
                 && Peaks.Equals(other.Peaks) 
                 && ChromatogramSetId == other.ChromatogramSetId
                 && Equals(PsmTimes, other.PsmTimes)
-                && Equals(ChromatogramSet, other.ChromatogramSet);
+                && Equals(ChromatogramSet, other.ChromatogramSet)
+                && Equals(ValidationStatus, other.ValidationStatus)
+                && Equals(Note, other.Note);
         }
 
         public override bool Equals(object obj)
@@ -196,7 +198,9 @@ namespace pwiz.Topograph.Model.Data
             if (!Equals(MsDataFileId, that.MsDataFileId)
                 || !Equals(ChromatogramStartTime, that.ChromatogramStartTime)
                 || !Equals(ChromatogramEndTime, that.ChromatogramEndTime)
-                || !Equals(AutoFindPeak, that.AutoFindPeak))
+                || !Equals(AutoFindPeak, that.AutoFindPeak)
+                || !Equals(ValidationStatus, that.ValidationStatus)
+                || !Equals(Note, that.Note))
             {
                 return true;
             }

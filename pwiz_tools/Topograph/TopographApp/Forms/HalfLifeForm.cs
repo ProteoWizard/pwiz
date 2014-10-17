@@ -176,33 +176,25 @@ namespace pwiz.Topograph.ui.Forms
 
         private void RequeryPeptideAnalyses()
         {
-            var peptideAnalysisIds = new HashSet<long>();
-            using (var session = Workspace.OpenSession())
+            PeptideAnalysis[] peptideAnalysesToLoad;
+            if (string.IsNullOrEmpty(Peptide))
             {
-                IQuery query;
-                if (string.IsNullOrEmpty(Peptide))
-                {
-                    query = session.CreateQuery("FROM " + typeof(DbPeptideAnalysis) +
-                                                " T WHERE T.Peptide.Protein = :protein")
-                        .SetParameter("protein", ProteinName);
-                }
-                else
-                {
-                    query = session.CreateQuery("FROM " + typeof(DbPeptideAnalysis) +
-                                                " T WHERE T.Peptide.Sequence = :sequence")
-                        .SetParameter("sequence", Peptide);
-                }
-                foreach (DbPeptideAnalysis dbPeptideAnalysis in query.List())
-                {
-                    peptideAnalysisIds.Add(dbPeptideAnalysis.Id.GetValueOrDefault());
-                }
+                peptideAnalysesToLoad = Workspace.PeptideAnalyses.Where(
+                    peptideAnalysis => peptideAnalysis.Peptide.ProteinName == ProteinName).ToArray();
             }
-            var peptideAnalyses = TopographForm.Instance.LoadPeptideAnalyses(peptideAnalysisIds);
-            ClearPeptideAnalyses();
-            foreach (var peptideAnalysis in peptideAnalyses.Values)
+            else
+            {
+                peptideAnalysesToLoad =
+                    Workspace.PeptideAnalyses.Where(peptideAnalysis => peptideAnalysis.Peptide.Sequence == Peptide)
+                        .ToArray();
+            }
+            foreach (var peptideAnalysis in peptideAnalysesToLoad)
             {
                 peptideAnalysis.IncChromatogramRefCount();
             }
+            var peptideAnalysisIds = new HashSet<long>(peptideAnalysesToLoad.Select(pa=>pa.Id));
+            var peptideAnalyses = TopographForm.Instance.LoadPeptideAnalyses(peptideAnalysisIds);
+            ClearPeptideAnalyses();
             _peptideAnalyses.AddRange(peptideAnalyses.Values);
         }
 

@@ -46,6 +46,8 @@ namespace pwiz.Topograph.Model.Data
             ExcludedMasses = peptideAnalysisData.ExcludedMasses;
             MassAccuracy = peptideAnalysisData.MassAccuracy;
             FileAnalyses = peptideAnalysisData.FileAnalyses;
+            ChromatogramsWereLoaded = peptideAnalysisData.ChromatogramsWereLoaded;
+
         }
 
         public string Name { get; private set; }
@@ -104,7 +106,8 @@ namespace pwiz.Topograph.Model.Data
                 && Equals(ExcludedMasses, other.ExcludedMasses)
                 && MaxCharge == other.MaxCharge
                 && MassAccuracy.Equals(other.MassAccuracy) 
-                && Equals(FileAnalyses, other.FileAnalyses);
+                && Equals(FileAnalyses, other.FileAnalyses)
+                && Equals(ChromatogramsWereLoaded, other.ChromatogramsWereLoaded);
         }
 
         public override bool Equals(object obj)

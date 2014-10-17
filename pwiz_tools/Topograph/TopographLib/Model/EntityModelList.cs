@@ -214,9 +214,19 @@ namespace pwiz.Topograph.Model
                     continue;
                 }
                 TData baseData;
-                if (baseList.TryGetValue(entry.Key, out baseData) && !CheckDirty(baseData, myData))
+                if (baseList.TryGetValue(entry.Key, out baseData))
                 {
-                    mergedList[entry.Key] = entry.Value;
+                    if (!CheckDirty(baseData, myData))
+                    {
+                        mergedList[entry.Key] = entry.Value;
+                    }
+                    else
+                    {
+                        if (CheckDirty(myData, entry.Value))
+                        {
+                            Console.Out.WriteLine("Unable to merge {0}", entry.Key);
+                        }
+                    }
                 }
             }
             foreach (var deletedKey in baseList.Keys.Except(theirList.Keys))

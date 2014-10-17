@@ -34,14 +34,13 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class HalfLivesForm : WorkspaceForm
     {
-        private IViewContext _viewContext;
         public HalfLivesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
             Settings.Default.Reload();
             HalfLifeSettings = Workspace.GetHalfLifeSettings(Settings.Default.HalfLifeSettings);
             UpdateTimePoints();
-            bindingSource1.SetViewContext(_viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)}));
+            bindingSource1.SetViewContext(new TopographViewContext(workspace, typeof (ResultRow), new ResultRow[0], new[] {GetDefaultViewSpec(false)}));
         }
 
         private ViewSpec GetDefaultViewSpec(bool byProtein)
@@ -96,8 +95,8 @@ namespace pwiz.Topograph.ui.Forms
             var rows = calculator.ResultRows.Select(row => new ResultRow(this, row)).ToArray();
             if (viewInfo == null || "default" == viewInfo.Name)
             {
-                // TODO
-                // viewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein));
+                viewInfo = new ViewInfo(ColumnDescriptor.RootColumn(bindingSource1.ViewInfo.DataSchema, typeof(ResultRow)), 
+                    GetDefaultViewSpec(calculator.ByProtein));
             }
             bindingSource1.SetView(viewInfo, rows);
         }

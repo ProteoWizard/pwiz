@@ -85,7 +85,7 @@ namespace pwiz.Topograph.ui.Forms
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            bindingSourceResults.SetViewContext(new TopographViewContext(workspace, typeof (PerReplicateResult), new[] {defaultViewSpec}));
+            bindingSourceResults.SetViewContext(new TopographViewContext(workspace, typeof (PerReplicateResult), new PerReplicateResult[0], new[] {defaultViewSpec}));
         }
 
         private void BtnRequeryOnClick(object sender, EventArgs e)

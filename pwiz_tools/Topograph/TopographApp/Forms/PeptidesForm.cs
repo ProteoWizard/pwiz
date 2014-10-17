@@ -48,7 +48,7 @@ namespace pwiz.Topograph.ui.Forms
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            peptidesBindingSource.SetViewContext(new TopographViewContext(workspace, typeof(LinkValue<Peptide>), new[] { defaultViewSpec }));
+            peptidesBindingSource.SetViewContext(new TopographViewContext(workspace, typeof(LinkValue<Peptide>), new LinkValue<Peptide>[0], new[] { defaultViewSpec }));
         }
 
         protected override void OnHandleCreated(EventArgs e)

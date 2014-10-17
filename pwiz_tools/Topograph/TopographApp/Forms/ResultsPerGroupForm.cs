@@ -42,7 +42,7 @@ namespace pwiz.Topograph.ui.Forms
                 comboEvviesFilter.Items.Add(evviesFilter);
             }
             comboEvviesFilter.SelectedIndex = 0;
-            bindingSource1.SetViewContext(_viewContext = new TopographViewContext(Workspace, typeof(DisplayRow), new[]{GetDefaultViewSpec(cbxByProtein.Checked)}));
+            bindingSource1.SetViewContext(_viewContext = new TopographViewContext(Workspace, typeof(DisplayRow), new DisplayRow[0], new[]{GetDefaultViewSpec(cbxByProtein.Checked)}));
             HalfLifeSettings = Settings.Default.HalfLifeSettings;
         }
 

@@ -59,12 +59,12 @@ namespace pwiz.Topograph.Data.Snapshot
                 {
                     return;
                 }
-                attemptNumber++;
-                longOperationBroker.UpdateStatusMessage("Loading peptide analyses.  Attempt #" + attemptNumber);
                 if (Workspace.DatabasePoller.TryLoadAndMergeChanges(requestedPeptideAnalyses))
                 {
                     return;
                 }
+                attemptNumber++;
+                longOperationBroker.UpdateStatusMessage("Loading peptide analyses.  Attempt #" + attemptNumber);
             }
         }
     }
