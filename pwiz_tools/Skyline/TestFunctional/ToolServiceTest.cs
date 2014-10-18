@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
         private static void SelectPeptide(SkylineTool.SkylineToolClient tool, int index, string peptideSequence, string replicate)
         {
             tool.RunTest("select," + index);
-            Thread.Sleep(1000);
+            Thread.Sleep(10000);
             RunUI(() =>
             {
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);
