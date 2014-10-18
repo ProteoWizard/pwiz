@@ -57,8 +57,8 @@ namespace pwiz.SkylineTestFunctional
                 // NOTE: We manually Dispose instead of "using" so we can catch an expected exception.
                 var toolClient = ConnectTool(TOOL_NAME, ToolConnection);
 
-//                // Select peptides.
-//                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
+                // Select peptides.
+                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
 //                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
 //
 //                // Select peptides in specific replicates.
