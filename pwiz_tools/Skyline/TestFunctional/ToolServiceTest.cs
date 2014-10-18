@@ -65,8 +65,8 @@ namespace pwiz.SkylineTestFunctional
 //                SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
 //                SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
 //
-//                // Check document changes.
-//                CheckDocumentChanges(toolClient);
+                // Check document changes.
+                CheckDocumentChanges(toolClient);
 
                 // Check version and path.
                 CheckVersion(toolClient);
