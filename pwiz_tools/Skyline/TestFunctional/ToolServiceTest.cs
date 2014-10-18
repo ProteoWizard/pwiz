@@ -74,7 +74,6 @@ namespace pwiz.SkylineTestFunctional
 
                 // Kill the test tool.
                 KillTool(toolClient);
-                Thread.Sleep(500);
 
                 // We expect a CommunicationException because we didn't shutdown the channel cleanly.
                 try
@@ -93,6 +92,7 @@ namespace pwiz.SkylineTestFunctional
         private static void SelectPeptide(SkylineTool.SkylineToolClient tool, int index, string peptideSequence, string replicate)
         {
             tool.RunTest("select," + index);
+            Thread.Sleep(1000);
             RunUI(() =>
             {
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);

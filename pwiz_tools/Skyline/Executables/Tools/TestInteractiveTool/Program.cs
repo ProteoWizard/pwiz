@@ -114,9 +114,13 @@ namespace TestInteractiveTool
 
             private static void SelectLink(string row, int linkColumn)
             {
-                var report = _toolClient.GetReport("Peak Area");
-                var link = report.Cells[int.Parse(row)][linkColumn];
-                _toolClient.Select(link);
+                var thread = new Thread(() =>
+                {
+                    var report = _toolClient.GetReport("Peak Area");
+                    var link = report.Cells[int.Parse(row)][linkColumn];
+                    _toolClient.Select(link);
+                });
+                thread.Start();
             }
 
             public string GetReport(string toolName, string reportName)
