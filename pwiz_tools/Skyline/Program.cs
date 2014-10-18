@@ -266,6 +266,7 @@ namespace pwiz.Skyline
                 string report = null;
                 MainWindow.Invoke(new Action(() =>
                 {
+                    Console.WriteLine("SkylineToolService: GetReport");
                     report = ToolDescriptionHelpers.GetReport(MainWindow.DocumentUI, reportName, toolName, MainWindow);
                 }));
                 return report;
@@ -275,6 +276,7 @@ namespace pwiz.Skyline
             {
                 MainWindow.Invoke(new Action(() =>
                 {
+                    Console.WriteLine("SkylineToolService: Select " + link);
                     DocumentLocation documentLocation = DocumentLocation.Parse(link);
                     Bookmark bookmark = documentLocation.ToBookmark(MainWindow.DocumentUI);
                     MainWindow.NavigateToBookmark(bookmark);

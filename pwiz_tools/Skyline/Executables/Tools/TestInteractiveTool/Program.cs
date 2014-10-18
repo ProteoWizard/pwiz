@@ -116,9 +116,12 @@ namespace TestInteractiveTool
             {
                 var thread = new Thread(() =>
                 {
+                    Console.WriteLine("TestInteractiveTool: Get peak area report");
                     var report = _toolClient.GetReport("Peak Area");
                     var link = report.Cells[int.Parse(row)][linkColumn];
+                    Console.WriteLine("TestInteractiveTool: Select " + link);
                     _toolClient.Select(link);
+                    Console.WriteLine("TestInteractiveTool: Link selected");
                 });
                 thread.Start();
             }
