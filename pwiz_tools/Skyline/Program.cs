@@ -329,7 +329,7 @@ namespace pwiz.Skyline
                     {
                         invoke(_events[i]);
                     }
-                    catch (CommunicationObjectAbortedException)
+                    catch (Exception)
                     {
                         _events.RemoveAt(i--);
                     }

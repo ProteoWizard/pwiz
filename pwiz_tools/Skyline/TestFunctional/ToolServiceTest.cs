@@ -115,10 +115,10 @@ namespace pwiz.SkylineTestFunctional
         {
             Assert.AreEqual(0, tool.RunTest("documentchanges"));
             RunUI(SkylineWindow.EditDelete);
-            Thread.Sleep(2500);  // Wait for document change event to propagate
+            Thread.Sleep(500);  // Wait for document change event to propagate
             Assert.AreEqual(1, tool.RunTest("documentchanges"));
             RunUI(SkylineWindow.Undo);
-            Thread.Sleep(2500);  // Wait for document change event to propagate
+            Thread.Sleep(500);  // Wait for document change event to propagate
             Assert.AreEqual(2, tool.RunTest("documentchanges"));
         }
 
