@@ -16,11 +16,13 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Debug|x64.ActiveCfg = Debug|x86
+		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Debug|x64.ActiveCfg = Debug|x64
+		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Debug|x64.Build.0 = Debug|x64
 		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Debug|x86.ActiveCfg = Debug|x86
 		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Debug|x86.Build.0 = Debug|x86
 		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Release|Any CPU.ActiveCfg = Release|x86
-		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Release|x64.ActiveCfg = Release|x86
+		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Release|x64.ActiveCfg = Release|x64
+		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Release|x64.Build.0 = Release|x64
 		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Release|x86.ActiveCfg = Release|x86
 		{088078CC-2D99-4227-808C-1DB9A0DA98F5}.Release|x86.Build.0 = Release|x86
 		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
