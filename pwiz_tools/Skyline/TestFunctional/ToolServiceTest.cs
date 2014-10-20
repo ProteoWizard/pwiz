@@ -57,6 +57,10 @@ namespace pwiz.SkylineTestFunctional
                 // NOTE: We manually Dispose instead of "using" so we can catch an expected exception.
                 var toolClient = ConnectTool(TOOL_NAME, ToolConnection);
 
+                // Check version and path.
+                CheckVersion(toolClient);
+                CheckPath(toolClient, FILE_NAME);
+
                 // BUG: 10-18-2014, This causes TeamCity to hang, but works fine on dev machines
 //                // Select peptides.
 //                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
@@ -68,10 +72,6 @@ namespace pwiz.SkylineTestFunctional
 //
                 // Check document changes.
                 CheckDocumentChanges(toolClient);
-
-                // Check version and path.
-                CheckVersion(toolClient);
-                CheckPath(toolClient, FILE_NAME);
 
                 // Kill the test tool.
                 KillTool(toolClient);
@@ -115,10 +115,10 @@ namespace pwiz.SkylineTestFunctional
         {
             Assert.AreEqual(0, tool.RunTest("documentchanges"));
             RunUI(SkylineWindow.EditDelete);
-            Thread.Sleep(500);  // Wait for document change event to propagate
+            Thread.Sleep(2500);  // Wait for document change event to propagate
             Assert.AreEqual(1, tool.RunTest("documentchanges"));
             RunUI(SkylineWindow.Undo);
-            Thread.Sleep(500);  // Wait for document change event to propagate
+            Thread.Sleep(2500);  // Wait for document change event to propagate
             Assert.AreEqual(2, tool.RunTest("documentchanges"));
         }
 
