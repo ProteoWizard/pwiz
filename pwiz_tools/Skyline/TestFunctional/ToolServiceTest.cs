@@ -62,8 +62,8 @@ namespace pwiz.SkylineTestFunctional
                 CheckPath(toolClient, FILE_NAME);
 
                 // BUG: 10-18-2014, This causes TeamCity to hang, but works fine on dev machines
-//                // Select peptides.
-//                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
+                // Select peptides.
+                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
 //                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
 //
 //                // Select peptides in specific replicates.
