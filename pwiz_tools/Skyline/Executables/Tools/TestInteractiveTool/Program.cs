@@ -116,8 +116,9 @@ namespace TestInteractiveTool
                 {
                     _toolClient.RunTest("TestInteractiveTool: Get peak area report");
                     var report = _toolClient.GetReport("Peak Area");
+                    _toolClient.RunTest("TestInteractiveTool: Got report");
                     _toolClient.RunTest(string.Format(
-                        "TestInteractiveTool: Got report {0},{1} ({2},{3})",
+                        "TestInteractiveTool: Report {0},{1} ({2},{3})",
                         report.Cells.Length, report.Cells[0].Length, row, linkColumn));
                     var link = report.Cells[int.Parse(row)][linkColumn];
                     _toolClient.RunTest("TestInteractiveTool: Select " + link);

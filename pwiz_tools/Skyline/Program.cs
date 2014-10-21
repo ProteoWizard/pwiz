@@ -268,7 +268,9 @@ namespace pwiz.Skyline
                 {
                     Console.WriteLine("SkylineToolService: GetReport");
                     report = ToolDescriptionHelpers.GetReport(MainWindow.DocumentUI, reportName, toolName, MainWindow);
+                    Console.WriteLine("SkylineToolService: report generated");
                 }));
+                Console.WriteLine("SkylineToolService: returning report");
                 return report;
             }
 
