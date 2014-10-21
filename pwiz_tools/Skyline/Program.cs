@@ -314,10 +314,11 @@ namespace pwiz.Skyline
                 _events.Add(OperationContext.Current.GetCallbackChannel<SkylineTool.ISkylineToolEvents>());
             }
 
-            public int RunTest(string testName)
+            public int RunTest(string message)
             {
-                // This is implemented only in special tools that test the ToolService API.
-                throw new NotSupportedException();
+                // This is used to pass debugging messages from a test tool (useful when trying to debug problems on TeamCity)
+                Console.WriteLine(message);
+                return 0;
             }
 
             public static void CallClients()
