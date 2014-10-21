@@ -53,7 +53,7 @@ namespace pwiz.Topograph.ui.Forms
             columnSpecs.Add(new ColumnSpec().SetName("ProteinName"));
             columnSpecs.Add(new ColumnSpec().SetName("ProteinDescription"));
             columnSpecs.Add(new ColumnSpec().SetName("HalfLives!*.Value"));
-            return new ViewSpec().SetName("default").SetColumns(columnSpecs);
+            return new ViewSpec().SetName("default").SetColumns(columnSpecs).SetRowType(typeof(ResultRow));
         }
 
         public HalfLifeSettings HalfLifeSettings
