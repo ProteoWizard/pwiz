@@ -20,7 +20,6 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
-using Version = SkylineTool.Version;
 
 namespace TestInteractiveTool
 {
@@ -30,14 +29,13 @@ namespace TestInteractiveTool
         private const int PeptideLinkColumn = 2;
         private const int PeptideReplicateLinkColumn = 4;
 
-        private static readonly AutoResetEvent QuitEvent = new AutoResetEvent(false);
         private static SkylineTool.SkylineToolClient _toolClient;
         private static int _documentChangeCount;
 
         public static void Main(string[] args)
         {
             // Useful for debugging the tool after it starts.
-            //System.Diagnostics.Debugger.Launch();
+            //Debugger.Launch();
 
             Console.WriteLine("Tool starting...");
 
@@ -141,7 +139,7 @@ namespace TestInteractiveTool
                 get { throw new NotImplementedException(); }
             }
 
-            public Version Version
+            public SkylineTool.Version Version
             {
                 get { throw new NotImplementedException(); }
             }

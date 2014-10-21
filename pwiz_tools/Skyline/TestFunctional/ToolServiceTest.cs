@@ -61,15 +61,14 @@ namespace pwiz.SkylineTestFunctional
                 CheckVersion(toolClient);
                 CheckPath(toolClient, FILE_NAME);
 
-                // BUG: 10-18-2014, This causes TeamCity to hang, but works fine on dev machines
                 // Select peptides.
                 SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
-//                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
-//
-//                // Select peptides in specific replicates.
-//                SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
-//                SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
-//
+                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
+
+                // Select peptides in specific replicates.
+                SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
+                SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
+
                 // Check document changes.
                 CheckDocumentChanges(toolClient);
 
@@ -93,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
         private static void SelectPeptide(SkylineTool.SkylineToolClient tool, int index, string peptideSequence, string replicate)
         {
             tool.RunTest("select," + index);
-            Thread.Sleep(1000); // HACK: this is not currently synchronized with the tool
+            Thread.Sleep(2000); // HACK: this is not currently synchronized with the tool
             RunUI(() =>
             {
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);
@@ -104,6 +103,7 @@ namespace pwiz.SkylineTestFunctional
         private static void SelectPeptideReplicate(SkylineTool.SkylineToolClient tool, int index, string peptideSequence, string replicate)
         {
             tool.RunTest("selectreplicate," + index);
+            Thread.Sleep(2000); // HACK: this is not currently synchronized with the tool
             RunUI(() =>
             {
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);

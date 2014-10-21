@@ -297,14 +297,28 @@ namespace pwiz.Skyline.Controls
         public override void WriteLine()
         {
             base.WriteLine();
-            Text += Environment.NewLine;
+            try
+            {
+                Text += Environment.NewLine;
+            }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+            }
             OnWroteLine(string.Empty);
         }
         
         public override void WriteLine(string value)
         {
             base.WriteLine(value);
-            Text += value + Environment.NewLine;
+            try
+            {
+                Text += value + Environment.NewLine;
+            }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+            }
             OnWroteLine(value);
         }
         
