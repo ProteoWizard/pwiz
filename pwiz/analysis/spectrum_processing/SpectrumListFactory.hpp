@@ -27,6 +27,7 @@
 
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/msdata/examples.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 #include <string>
 #include <vector>
 
@@ -41,13 +42,13 @@ class PWIZ_API_DECL SpectrumListFactory
     public:
 
     /// instantiate the SpectrumListWrapper indicated by wrapper
-    static void wrap(msdata::MSData& msd, const std::string& wrapper);
+    static void wrap(msdata::MSData& msd, const std::string& wrapper, pwiz::util::IterationListenerRegistry* ilr = NULL);
 
     /// instantiate a list of SpectrumListWrappers
-    static void wrap(msdata::MSData& msd, const std::vector<std::string>& wrappers);
+    static void wrap(msdata::MSData& msd, const std::vector<std::string>& wrappers, pwiz::util::IterationListenerRegistry* ilr = NULL);
 
     /// user-friendly documentation, with option of less or more detail
-    static std::string usage(bool detailedHelp=true,const char *morehelp_prompt=NULL);
+    static std::string usage(bool detailedHelp = true, const char* morehelp_prompt = NULL);
 };
 
 

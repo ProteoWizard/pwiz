@@ -79,12 +79,14 @@ PWIZ_API_DECL SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalcul
     int maxMultipleCharge,
     int minMultipleCharge,
     double intensityFractionBelowPrecursorForSinglyCharged,
+    int maxKnownCharge,
     bool makeMS2)
 :   SpectrumListWrapper(inner),
     override_(overrideExistingChargeState),
     maxCharge_(maxMultipleCharge),
     minCharge_(minMultipleCharge),
     fraction_(intensityFractionBelowPrecursorForSinglyCharged),
+    maxKnownCharge_(maxKnownCharge),
     makeMS2_(makeMS2)
 {
 }
@@ -135,7 +137,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
             itr->cvid == MS_possible_charge_state)
         {
             // some files may have a bogus "0" charge state
-            if (override_ || itr->value == "0")
+            if (override_ || itr->value == "0" || (maxKnownCharge_ > 0 && maxKnownCharge_ < itr->valueAs<int>()))
             {
                 selectedIon.userParams.push_back(UserParam("old charge state", itr->value));
                 itr = --cvParams.erase(itr);

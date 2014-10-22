@@ -57,16 +57,72 @@ using namespace pwiz::util;
 namespace {
 
 
+inline const char* cppTypeToNaturalLanguage(short T) { return "a small integer"; }
+inline const char* cppTypeToNaturalLanguage(int T) { return "an integer"; }
+inline const char* cppTypeToNaturalLanguage(long T) { return "an integer"; }
+inline const char* cppTypeToNaturalLanguage(unsigned short T) { return "a small positive integer"; }
+inline const char* cppTypeToNaturalLanguage(unsigned int T) { return "a positive integer"; }
+inline const char* cppTypeToNaturalLanguage(unsigned long T) { return "a positive integer"; }
+inline const char* cppTypeToNaturalLanguage(float T) { return "a real number"; }
+inline const char* cppTypeToNaturalLanguage(double T) { return "a real number"; }
+inline const char* cppTypeToNaturalLanguage(bool T) { return "true or false"; }
+
+
+/// parses a lexical-castable key=value pair from a string of arguments which may also include non-key-value strings;
+/// if the key is not in the argument string, defaultValue is returned;
+/// if bad_lexical_cast is thrown, it is converted into a sensible error message
+template <typename ArgT>
+ArgT parseKeyValuePair(string& args, const string& tokenName, const ArgT& defaultValue)
+{
+    try
+    {
+        size_t keyIndex = args.rfind(tokenName);
+        if (keyIndex != string::npos)
+        {
+            size_t valueIndex = keyIndex + tokenName.length();
+            if (valueIndex < args.length())
+            {
+                string valueStr;
+                try
+                {
+                    valueStr = args.substr(valueIndex, args.find(" ", valueIndex) - valueIndex);
+                    ArgT value = lexical_cast<ArgT>(valueStr);
+                    args.erase(keyIndex, args.find(" ", valueIndex) - keyIndex);
+                    return value;
+                }
+                catch (bad_lexical_cast&)
+                {
+                    throw runtime_error("error parsing \"" + valueStr + "\" as value for \"" + tokenName + "\"; expected " + cppTypeToNaturalLanguage(defaultValue));
+                }
+            }
+        }
+        return defaultValue;
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(string("[parseKeyValuePair] ") + e.what());
+    }
+}
+
+/// parses a lexical-castable key=value pair from a string of arguments which may also include non-key-value strings;
+/// if the key is not in the argument string or if bad_lexical_cast is thrown, a default-constructed ArgT is returned
+template <typename ArgT>
+ArgT parseKeyValuePair(string& args, const string& tokenName)
+{
+    return parseKeyValuePair<ArgT>(args, tokenName, ArgT());
+}
+
+
 //
 // each SpectrumListWrapper has a filterCreator_* function, 
 // and an entry in the jump table below
 //
 
 
-typedef SpectrumListPtr (*FilterCreator)(const MSData& msd, const string& arg);
+typedef SpectrumListPtr (*FilterCreator)(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr);
 typedef const char *UsageInfo[2];  // usage like <int_set>, and details
 
-SpectrumListPtr filterCreator_index(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_index(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet indexSet;
     indexSet.parse(arg);
@@ -80,7 +136,7 @@ UsageInfo usage_index = {"<index_value_set>",
     "  <index_value_set> is an int_set of indexes."
 };
 
-SpectrumListPtr filterCreator_scanNumber(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_scanNumber(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet scanNumberSet;
     scanNumberSet.parse(arg);
@@ -94,7 +150,7 @@ UsageInfo usage_scanNumber = {"<scan_numbers>",
     "<scan_numbers> is an int_set of scan numbers to be kept."
 };
 
-SpectrumListPtr filterCreator_scanEvent(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_scanEvent(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet scanEventSet;
     scanEventSet.parse(arg);
@@ -110,7 +166,7 @@ UsageInfo usage_scanEvent = {"<scan_event_set>","This filter selects spectra by 
             "the Thermo Xcalibur glossary as: \"a mass spectrometer scan that is defined by choosing the necessary scan parameter "
             "settings. Multiple scan events can be defined for each segment of time.\"."};
 
-SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     double scanTimeLow = 0;
     double scanTimeHigh = 0;
@@ -134,14 +190,14 @@ UsageInfo usage_scanTime = {"<scan_time_range>",
     "  <scan_time_range> is a time range, specified in seconds.  For example, to select only spectra within the "
     "second minute of the run, use \"scanTime [60-119.99]\"."};
 
-SpectrumListPtr filterCreator_sortScanTime(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_sortScanTime(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_Sorter(msd.run.spectrumListPtr,
                                                    SpectrumList_SorterPredicate_ScanStartTime()));
 }
 UsageInfo usage_sortScanTime = {"","This filter reorders spectra, sorting them by ascending scan start time."};
 
-SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
 
     // defaults
@@ -188,7 +244,7 @@ UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol
     "and <scan time tolerance> (default: 10 secs.). Its use is intended for some Waters DDA data, where sub-scans " 
     "should be summed together to increase the SNR. This filter has only been tested for Waters data."};
 
-SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
 
     // by default assume we are using the low-quality localMax code unless explicitly told otherwise
@@ -319,7 +375,7 @@ UsageInfo usage_nativeCentroid = {"[<PickerType> [snr=<minimum signal-to-noise r
  *  Handler for --filter zeroSamples removeExtra|addMissing[=FlankingZeroCount] [mslevels]
  *
  **/
-SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
     string action;
@@ -369,7 +425,7 @@ UsageInfo usage_zeroSamples = {"<mode> [<MS_levels>]",
  *  <true|false> remove neutral loss species from charge reduced precursor
  *  float_val <MZ|PPM> matching tolerance -- floating point value, followed by units (example: 3.1 MZ)
  */
-SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
 
@@ -415,7 +471,7 @@ UsageInfo usage_ETDFilter = {"[<removePrecursor> [<removeChargeReduced> [<remove
     "  <matchingTolerance> - specify matching tolerance in MZ or PPM (examples: \"3.1 MZ\" (the default) or \"2.2 PPM\")"
 };
 
-SpectrumListPtr filterCreator_MS2Denoise(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_MS2Denoise(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
 
@@ -457,7 +513,7 @@ UsageInfo usage_MS2Denoise = {"[<peaks_in_window> [<window_width_Da> [multicharg
     "Proteomics, 9, 4978-4984, 2009.\n"
 };
 
-SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
 
@@ -492,13 +548,13 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg)
                 try { lexical_cast<double>(buf); }
                 catch (...) { changeBool = false; }
                 if (changeBool) backwardsCompatible = true;
-            }
+    }
 
             if (backwardsCompatible)
-            {
+    {
                 mzt = lexical_cast<double>(buf);
                 break;
-            }
+    }
 
             if ( string::npos == buf.rfind('=') )
                 throw user_error("[filterCreator_MS2Deisotope] = sign required after keyword argument");
@@ -577,7 +633,7 @@ struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
     }
 };
 
-SpectrumListPtr filterCreator_stripIT(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_stripIT(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new 
         SpectrumList_Filter(msd.run.spectrumListPtr, StripIonTrapSurveyScans()));
@@ -585,7 +641,7 @@ SpectrumListPtr filterCreator_stripIT(const MSData& msd, const string& arg)
 UsageInfo usage_stripIT={"","This filter rejects ion trap data spectra with MS level 1."};
 
 
-SpectrumListPtr filterCreator_precursorRecalculation(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_precursorRecalculation(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_PrecursorRecalculator(msd));
 }
@@ -594,7 +650,7 @@ UsageInfo usage_precursorRecalculation = {"","This filter recalculates the precu
     "although it does not use any 3rd party (vendor DLL) code.  Since the time the code was written, Thermo has since fixed "
     "up its own estimation in response, so it's less critical than it used to be (though can still be useful)."};
 
-SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_PrecursorRefine(msd));
 }
@@ -602,7 +658,7 @@ UsageInfo usage_precursorRefine = {"", "This filter recalculates the precursor m
     "It looks at the prior MS1 scan to better infer the parent mass.  It only works on orbitrap, FT, and TOF data. "
     "It does not use any 3rd party (vendor DLL) code."};
 
-SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     double mzLow = 0;
     double mzHigh = 0;
@@ -625,7 +681,7 @@ UsageInfo usage_mzWindow = {"<mzrange>",
     "100.1 to 307.5, use --filter \"mzWindow [100.1,307.5]\" ."
 };
 
-SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     char open='\0', comma='\0', close='\0';
     std::set<double> setMz;
@@ -657,7 +713,7 @@ UsageInfo usage_mzPrecursors = {"<precursor_mz_list>",
     "Note that this filter will drop MS1 scans unless you include 0.0 in the list of precursor values."
     };
 
-SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet msLevelSet;
     msLevelSet.parse(arg);
@@ -670,7 +726,7 @@ UsageInfo usage_msLevel = {"<mslevels>",
     "This filter selects only spectra with the indicated <mslevels>, expressed as an int_set."}; 
 
 
-SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_mzPresent(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
 
@@ -752,7 +808,7 @@ UsageInfo usage_mzPresent = {"<tolerance> <type> <threshold> <orientation> <mz_l
     "used the filter drops data points that match the various criteria instead of keeping them."
 };
 
-SpectrumListPtr filterCreator_chargeState(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_chargeState(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet chargeStateSet;
     chargeStateSet.parse(arg);
@@ -765,7 +821,7 @@ UsageInfo usage_chargeState = {"<charge_states>",
     "This filter keeps spectra that match the listed charge state(s), expressed as an int_set.  Both known/single "
     "and possible/multiple charge states are tested.  Use 0 to include spectra with no charge state at all."};
 
-SpectrumListPtr filterCreator_defaultArrayLength(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_defaultArrayLength(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet defaultArrayLengthSet;
     defaultArrayLengthSet.parse(arg);
@@ -781,7 +837,7 @@ UsageInfo usage_defaultArrayLength = { "<peak_count_range>",
     };
 
 
-SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_MetadataFixer(msd.run.spectrumListPtr));
 }
@@ -792,7 +848,7 @@ UsageInfo usage_metadataFixer={"","This filter is used to add or replace a spect
     "peak picking for some strange results. Certainly adding up all the samples of profile data to get the TIC is "
     "just wrong, but we do it anyway."};
 
-SpectrumListPtr filterCreator_titleMaker(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_titleMaker(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_TitleMaker(msd, bal::trim_copy(arg)));
 }
@@ -820,32 +876,48 @@ UsageInfo usage_titleMaker={"<format_string>","This filter adds or replaces spec
      "--filter \"titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState>\""
 };
 
-SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
-    istringstream parser(arg);
+    const string overrideExistingChargeToken("overrideExistingCharge=");
+    const string maxMultipleChargeToken("maxMultipleCharge=");
+    const string minMultipleChargeToken("minMultipleCharge=");
+    const string singleChargeFractionTICToken("singleChargeFractionTIC=");
+    const string maxKnownChargeToken("maxKnownCharge=");
+    const string makeMS2Token("makeMS2=");
 
-    string overrideExistingCharge, maxMultipleCharge, minMultipleCharge, singleChargeFractionTIC, makeMS2;
-    parser >> overrideExistingCharge >> maxMultipleCharge >> minMultipleCharge >> singleChargeFractionTIC >> makeMS2;
+    string arg = carg;
+    bool overrideExistingCharge = parseKeyValuePair<bool>(arg, overrideExistingChargeToken, false);
+    int maxMultipleCharge = parseKeyValuePair<int>(arg, maxMultipleChargeToken, 3);
+    int minMultipleCharge = parseKeyValuePair<int>(arg, minMultipleChargeToken, 2);
+    double singleChargeFractionTIC = parseKeyValuePair<double>(arg, singleChargeFractionTICToken, 0.9);
+    int maxKnownCharge = parseKeyValuePair<int>(arg, maxKnownChargeToken, 0);
+    bool makeMS2 = parseKeyValuePair<bool>(arg, makeMS2Token, false);
+    bal::trim(arg);
+    if (!arg.empty())
+        throw runtime_error("[chargeStatePredictor] unhandled text remaining in argument string: \"" + arg + "\"");
 
     return SpectrumListPtr(new
         SpectrumList_ChargeStateCalculator(msd.run.spectrumListPtr,
-                                           overrideExistingCharge == "false" || overrideExistingCharge == "0" ? false : true,
-                                           maxMultipleCharge!=""?lexical_cast<int>(maxMultipleCharge):3,
-                                           minMultipleCharge!=""?lexical_cast<int>(minMultipleCharge):2,
-                                           singleChargeFractionTIC!=""?lexical_cast<double>(singleChargeFractionTIC):0.9,
-                                           makeMS2 == "true" || makeMS2 == "1" ? true : false));
+                                           overrideExistingCharge,
+                                           maxMultipleCharge,
+                                           minMultipleCharge,
+                                           singleChargeFractionTIC,
+                                           maxKnownCharge,
+                                           makeMS2));
 }
-UsageInfo usage_chargeStatePredictor = {"[<overrideExistingCharge> [<maxMultipleCharge> [<minMultipleCharge> [<singleChargeFractionTIC> [<algorithmMakeMS2>]]]]]",
+UsageInfo usage_chargeStatePredictor = {"[overrideExistingCharge=<true|false (false)>] [maxMultipleCharge=<int (3)>] [minMultipleCharge=<int (2)>] [singleChargeFractionTIC=<real (0.9)>] [maxKnownCharge=<int (0)>] [makeMS2=<true|false (false)>]",
     "Predicts MSn spectrum precursors to be singly or multiply charged depending on the ratio of intensity above and below the precursor m/z, or optionally using the \"makeMS2\" algorithm\n"
-    "  <overrideExistingCharge> : always override existing charge information (default:\"true\")\n"
+    "  <overrideExistingCharge> : always override existing charge information (default:\"false\")\n"
     "  <maxMultipleCharge> (default 3) and <minMultipleCharge> (default 2): range of values to add to the spectrum's existing \"MS_possible_charge_state\" values."
     "If these are the same values, the spectrum's MS_possible_charge_state values are removed and replaced with this single value.\n"
     "  <singleChargeFractionTIC> : is a percentage expressed as a value between 0 and 1 (the default is 0.9, or 90 percent). "
-    "This is the value used as the previously mentioned ratio of intensity above and below the precursor m/z.\n" 
+    "This is the value used as the previously mentioned ratio of intensity above and below the precursor m/z.\n"
+    "  <maxKnownCharge> (default is 0, meaning no maximum): the maximum charge allowed for \"known\" charges even if override existing charge is false. "
+    "This allows overriding junk charge calls like +15 peptides.\n"
     "  <algorithmMakeMS2> : default is \"false\", when set to \"true\" the \"makeMS2\" algorithm is used instead of the one described above."
     };
 
-SpectrumListPtr filterCreator_chargeFromIsotope(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_chargeFromIsotope(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
 
     // defaults
@@ -961,7 +1033,7 @@ UsageInfo usage_chargeFromIsotope = {"[minCharge=<minCharge>] [maxCharge=<maxCha
   *   output files containing only ETD or CID MSn data where both activation modes have been
   *   interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
   */ 
-SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
     string activationType;
@@ -1030,7 +1102,7 @@ UsageInfo usage_activation = { "<precursor_activation_type>",
     "   <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI."
     };
 
-SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
     string analyzerType;
@@ -1067,7 +1139,7 @@ UsageInfo usage_analyzerType = { "<analyzer>",
     "because there are no hybrid FT+Orbi instruments - so this filter does too.\n"
 };
 
-SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
     string byTypeArg, orientationArg;
@@ -1136,7 +1208,7 @@ UsageInfo usage_thresholdFilter={"<type> <threshold> <orientation> [<mslevels>]"
     "   <mslevels> is an optional int_set of MS levels - if provided, only scans with those MS levels will be filtered, and others left untouched."
 };
 
-SpectrumListPtr filterCreator_polarityFilter(const MSData& msd, const string& arg)
+SpectrumListPtr filterCreator_polarityFilter(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
     string polarityArg;
@@ -1225,7 +1297,7 @@ struct HasCommand
 
 
 PWIZ_API_DECL
-void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
+void SpectrumListFactory::wrap(MSData& msd, const string& wrapper, pwiz::util::IterationListenerRegistry* ilr)
 {
     if (!msd.run.spectrumListPtr)
         return;
@@ -1273,7 +1345,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
         return;
     }
 
-    SpectrumListPtr filter = entry->creator(msd, arg);
+    SpectrumListPtr filter = entry->creator(msd, arg, ilr);
     msd.filterApplied(); // increase the filter count
 
     if (!filter.get())
@@ -1290,10 +1362,10 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
 
 
 PWIZ_API_DECL
-void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappers)
+void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappers, pwiz::util::IterationListenerRegistry* ilr)
 {
     for (vector<string>::const_iterator it=wrappers.begin(); it!=wrappers.end(); ++it)
-        wrap(msd, *it);
+        wrap(msd, *it, ilr);
 }
 
 

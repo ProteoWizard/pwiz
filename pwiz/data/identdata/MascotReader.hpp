@@ -54,7 +54,7 @@ public:
                       std::vector<IdentDataPtr>& results,
                       const Reader::Config&) const;
 
-    virtual const char *getType() const;
+    virtual const char *getType() const { return "Mascot DAT"; }
 
 private:
     class Impl;

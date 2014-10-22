@@ -826,11 +826,15 @@ ScanFilter::parse(const string& filterLine)
                                 currentType == ActivationType_CID)
                                 currentType = ActivationType_HCD;
 
-			                activationType_ = static_cast<ActivationType>(activationType_ | currentType);
-                            if (supplementalCIDOn_ == TriBool_True)
-                                activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
-			                if (activationType_ == ActivationType_Unknown)
-				                throw runtime_error("failed to parse activation type");
+                            // only parse the left-most activation type because that corresponds to the current MS level
+                            if (activationType_ == ActivationType_Unknown)
+                            {
+                                activationType_ = currentType;
+                                if (supplementalCIDOn_ == TriBool_True)
+                                    activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
+                                if (activationType_ == ActivationType_Unknown)
+                                    throw runtime_error("failed to parse activation type");
+                            }
 		                } else
 			                throw runtime_error("failed to find activation energy");
 	                }

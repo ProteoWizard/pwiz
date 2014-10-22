@@ -22,14 +22,11 @@
 
 #define PWIZ_SOURCE
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "MascotReader.hpp"
-#include <iostream>
-#include <stdexcept>
 
 namespace pwiz {
 namespace identdata {
-
-using namespace std;
 
 PWIZ_API_DECL MascotReader::MascotReader()
 {
@@ -63,11 +60,6 @@ PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const Reader::Config& config) const
 {
     throw runtime_error("[MascotReader::read] no mascot support enabled.");
-}
-
-PWIZ_API_DECL const char *MascotReader::getType() const
-{
-    return "mzIdentML";
 }
 
 class MascotReader::Impl

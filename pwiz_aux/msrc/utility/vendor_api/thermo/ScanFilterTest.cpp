@@ -328,11 +328,19 @@ const TestScanFilter testScanFilters[] =
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_Unknown, TriBool_True, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_True,
      false, 0.0 },
-
+     // 
     {"FTMS + p ESI sps d Full ms3 262.64@hcd35.00 1521.97@hcd35.00 [50.00-1500.00]",
      "262.64 1521.97", "35 35", "50", "1500", 0, 3, -1, -1,
      ScanFilterMassAnalyzerType_FTMS, PolarityType_Positive, DataPointType_Profile,
      IonizationType_ESI, AccurateMass_Unknown, ScanType_Full, false, ActivationType_HCD,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_True,
+     false, 0.0 },
+
+     {"FTMS + p NSI sps d Full ms3 380.1937@cid35.00 409.4627@hcd65.00 [100.0000-500.0000]",
+     "380.1937 409.4627", "35 65", "100", "500", 0, 3, -1, -1,
+     ScanFilterMassAnalyzerType_FTMS, PolarityType_Positive, DataPointType_Profile,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, false, ActivationType_CID,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_Unknown, TriBool_True, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_True,
      false, 0.0 },

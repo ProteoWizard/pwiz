@@ -50,13 +50,30 @@ struct Config
     :   outputPath("."), verbose(false)//, merge(false)
     {}
 
-    string outputFilename(const string& inputFilename, const IdentData& inputIdentData) const;
+    string outputFilename(const string& inputFilename, const IdentData& inputIdentData, bool multipleOutputs) const;
 };
 
 
-string Config::outputFilename(const string& filename, const IdentData& idd) const
+string Config::outputFilename(const string& filename, const IdentData& idd, bool multipleOutputs) const
 {
-    bfs::path fullPath = bfs::path(outputPath) / (bfs::basename(filename) + extension);
+    if (idd.dataCollection.inputs.spectraData.empty())
+        throw runtime_error("[Config::outputFilename] no spectraData elements");
+
+    string sourceName;
+    if (multipleOutputs)
+        sourceName = idd.id;
+    if (sourceName.empty())
+        sourceName = bfs::basename(idd.dataCollection.inputs.spectraData[0]->name);
+    if (sourceName.empty())
+        sourceName = bfs::basename(filename);
+    
+    // this list is for Windows; it's a superset of the POSIX list
+    string illegalFilename = "\\/*:?<>|\"";
+    BOOST_FOREACH(char& c, sourceName)
+        if (illegalFilename.find(c) != string::npos)
+            c = '_';
+
+    bfs::path fullPath = bfs::path(outputPath) / (sourceName + extension);
     return fullPath.string(); 
 }
 
@@ -436,7 +453,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 addContactInfo(msd, config.contactFilename);*/
 
             // write out the new data file
-            string outputFilename = config.outputFilename(filename, idd);
+            string outputFilename = config.outputFilename(filename, idd, iddList.size() > 1);
             cout << "writing output file: " << outputFilename << endl;
 
             if (config.outputPath == "-")
