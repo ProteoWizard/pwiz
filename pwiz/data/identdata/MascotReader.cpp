@@ -814,7 +814,9 @@ public:
             // FIXME: this iteration through memberNumber does not enumerate the "sameset" proteins as intended; only the "lead" protein is being created
             int memberNumber = 1;
             ms_protein* proteinHit;
-            while ((proteinHit = results.getHit(i, memberNumber)) != NULL) // returns null when there are no memberNumbers
+            //while ((proteinHit = results.getHit(i, memberNumber)) != NULL) // returns null when there are no memberNumbers
+            proteinHit = results.getHit(i);
+            if (proteinHit != NULL)
             {
                 string accession = proteinHit->getAccession();
                 ProteinDetectionHypothesisPtr pdh(new ProteinDetectionHypothesis("PDH_" + pagIndex + "_" + lexical_cast<string>(pag->proteinDetectionHypothesis.size() + 1), accession));
@@ -832,7 +834,7 @@ public:
                     ph.spectrumIdentificationItemPtr = siiByProtein[accession];
                     ++itr;
                 }
-                ++memberNumber;
+                //++memberNumber;
             }
         }
 
