@@ -296,9 +296,9 @@ namespace pwiz.Skyline.Controls
         
         public override void WriteLine()
         {
-            base.WriteLine();
             try
             {
+                base.WriteLine();
                 Text += Environment.NewLine;
             }
 // ReSharper disable once EmptyGeneralCatchClause
@@ -310,9 +310,9 @@ namespace pwiz.Skyline.Controls
         
         public override void WriteLine(string value)
         {
-            base.WriteLine(value);
             try
             {
+                base.WriteLine(value);
                 Text += value + Environment.NewLine;
             }
 // ReSharper disable once EmptyGeneralCatchClause
