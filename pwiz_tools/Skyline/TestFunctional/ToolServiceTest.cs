@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Tools;
@@ -51,37 +50,27 @@ namespace pwiz.SkylineTestFunctional
                 true,
                 "Peak Area"))
             {
-                tool.Run();
-
-                // Connect to a special server in the test tool that allows remote control.
-                // NOTE: We manually Dispose instead of "using" so we can catch an expected exception.
-                var toolClient = ConnectTool(TOOL_NAME, ToolConnection);
-
-                // Check version and path.
-                CheckVersion(toolClient);
-                CheckPath(toolClient, FILE_NAME);
-
-                // Select peptides.
-                SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
-                SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
-
-                // Select peptides in specific replicates.
-                SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
-                SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
-
-                // Check document changes.
-                CheckDocumentChanges(toolClient);
-
-                // Kill the test tool.
-                KillTool(toolClient);
-
-                // We expect a CommunicationException because we didn't shutdown the channel cleanly.
-                try
+                using (var testToolApi = new SkylineTool.TestToolApi(ToolConnection, true))
                 {
-                    toolClient.Dispose();
-                }
-                catch (System.ServiceModel.CommunicationException)
-                {
+                    tool.Run();
+
+                    // Check version and path.
+                    CheckVersion(testToolApi);
+                    CheckPath(testToolApi, FILE_NAME);
+
+//                    // Select peptides.
+//                    SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
+//                    SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
+//
+//                    // Select peptides in specific replicates.
+//                    SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
+//                    SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
+//
+                    // Check document changes.
+                    CheckDocumentChanges(testToolApi);
+
+                    // Kill the test tool.
+                    KillTool(testToolApi);
                 }
             }
 
@@ -111,53 +100,35 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private static void CheckDocumentChanges(SkylineTool.SkylineToolClient tool)
+        private static void CheckDocumentChanges(SkylineTool.TestToolApi testToolApi)
         {
-            Assert.AreEqual(0, tool.RunTest("documentchanges"));
+            Assert.AreEqual("0", testToolApi.RunTool("documentchanges"));
             RunUI(SkylineWindow.EditDelete);
             Thread.Sleep(500);  // Wait for document change event to propagate
-            Assert.AreEqual(1, tool.RunTest("documentchanges"));
+            Assert.AreEqual("1", testToolApi.RunTool("documentchanges"));
             RunUI(SkylineWindow.Undo);
             Thread.Sleep(500);  // Wait for document change event to propagate
-            Assert.AreEqual(2, tool.RunTest("documentchanges"));
+            Assert.AreEqual("2", testToolApi.RunTool("documentchanges"));
         }
 
-        private static void CheckVersion(SkylineTool.SkylineToolClient tool)
+        private static void CheckVersion(SkylineTool.TestToolApi testToolApi)
         {
-            Assert.AreEqual(1, tool.RunTest("version"));
+            Assert.AreEqual("true", testToolApi.RunTool("version"));
         }
 
-        private static void CheckPath(SkylineTool.SkylineToolClient tool, string fileName)
+        private static void CheckPath(SkylineTool.TestToolApi testToolApi, string fileName)
         {
-            Assert.AreEqual(1, tool.RunTest("path," + FILE_NAME));
+            Assert.AreEqual("true", testToolApi.RunTool("path," + FILE_NAME));
         }
 
-        private static void KillTool(SkylineTool.SkylineToolClient tool)
+        private static void KillTool(SkylineTool.TestToolApi testToolApi)
         {
-            int toolProcessId = tool.RunTest("quit");
-            var toolProcess = Process.GetProcessById(toolProcessId);
-            toolProcess.Kill();
-        }
-
-        private static SkylineTool.SkylineToolClient ConnectTool(string toolName, string toolConnection)
-        {
-            while (true)
-            {
-                Thread.Sleep(500);
-                try
-                {
-                    return new SkylineTool.SkylineToolClient(toolName, toolConnection);
-                }
-// ReSharper disable once EmptyGeneralCatchClause
-                catch
-                {
-                }
-            }
+            Assert.AreEqual("true", testToolApi.RunTool("quit"));
         }
 
         private static string ToolConnection
         {
-            get { return ToolMacros.GetSkylineConnection() + "-test"; }
+            get { return ToolMacros.GetSkylineConnection(); }
         }
     }
 }

@@ -19,6 +19,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 
 namespace TestInteractiveTool
@@ -43,11 +44,18 @@ namespace TestInteractiveTool
             _toolClient = new SkylineTool.SkylineToolClient("Test Interactive Tool", args[0]); // Not L10N
             _toolClient.DocumentChanged += OnDocumentChanged;
 
-            // Create a service so Skyline tests can drive this tool.
-            using (new SkylineTool.SkylineToolService(typeof(TestToolService), args[0] + "-test"))
+            using (var testToolApi = new SkylineTool.TestToolApi(args[0]))
             {
-                // Wait to be killed.
-                Thread.Sleep(Timeout.Infinite);
+                while (true)
+                {
+                    var message = testToolApi.GetMessage();
+                    if (message == "quit")
+                    {
+                        testToolApi.ReturnMessage("true");
+                        break;
+                    }
+                    testToolApi.ReturnMessage(RunTest(message));
+                }
             }
         }
 
@@ -59,99 +67,68 @@ namespace TestInteractiveTool
             _documentChangeCount++;
         }
 
-        /// <summary>
-        /// This is the testing service that allows Skyline tests to drive this tool.
-        /// </summary>
-        private class TestToolService  : SkylineTool.ISkylineTool
+        private static string RunTest(string testName)
         {
-            public int RunTest(string testName)
+            Console.WriteLine(testName);
+
+            // Split comma-separated arguments.
+            var args = testName.Split(',');
+            switch (args[0])
             {
-                Console.WriteLine(testName);
+                // Select a peptide in Skyline.
+                case "select":
+                    SelectLink(args[1], PeptideLinkColumn);
+                    break;
 
-                // Split comma-separated arguments.
-                var args = testName.Split(',');
-                switch (args[0])
+                // Select a peptide and replicate in Skyline.
+                case "selectreplicate":
+                    SelectLink(args[1], PeptideReplicateLinkColumn);
+                    break;
+
+                // Verify that SkylineVersion works.
+                case "version":
                 {
-                    // Select a peptide in Skyline.
-                    case "select":
-                        SelectLink(args[1], PeptideLinkColumn);
-                        break;
-
-                    // Select a peptide and replicate in Skyline.
-                    case "selectreplicate":
-                        SelectLink(args[1], PeptideReplicateLinkColumn);
-                        break;
-
-                    // Verify that SkylineVersion works.
-                    case "version":
-                    {
-                        var version = _toolClient.SkylineVersion;
-                        return (version.Major >= 0 && version.Minor >= 0 && version.Build >= 0 && version.Revision >= 0)
-                            ? 1
-                            : 0;
-                    }
-
-                    // Verify that DocumentPath works.
-                    case "path":
-                    {
-                        var path = _toolClient.DocumentPath;
-                        return path.EndsWith(args[1]) ? 1 : 0;
-                    }
-
-                    // Return the number of document changes that have been seen.
-                    case "documentchanges":
-                        return _documentChangeCount;
-
-                    // Quit the tool.
-                    case "quit":
-                        return Process.GetCurrentProcess().Id;
+                    var version = _toolClient.SkylineVersion;
+                    return (version.Major >= 0 && version.Minor >= 0 && version.Build >= 0 && version.Revision >= 0)
+                        ? "true"
+                        : "false";
                 }
 
-                return 0;
-            }
-
-            private static void SelectLink(string row, int linkColumn)
-            {
-                var thread = new Thread(() =>
+                // Verify that DocumentPath works.
+                case "path":
                 {
-                    _toolClient.RunTest("TestInteractiveTool: Get peak area report");
-                    var report = _toolClient.GetReport("Peak Area");
-                    _toolClient.RunTest("TestInteractiveTool: Got report");
-                    _toolClient.RunTest(string.Format(
-                        "TestInteractiveTool: Report {0},{1} ({2},{3})",
-                        report.Cells.Length, report.Cells[0].Length, row, linkColumn));
-                    var link = report.Cells[int.Parse(row)][linkColumn];
-                    _toolClient.RunTest("TestInteractiveTool: Select " + link);
-                    _toolClient.Select(link);
-                    _toolClient.RunTest("TestInteractiveTool: Link selected");
-                });
-                thread.Start();
+                    var path = _toolClient.DocumentPath;
+                    return path.EndsWith(args[1]) ? "true" : "false";
+                }
+
+                // Return the number of document changes that have been seen.
+                case "documentchanges":
+                    return _documentChangeCount.ToString(CultureInfo.InvariantCulture);
+
+                // Quit the tool.
+                case "quit":
+                    return Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
             }
 
-            public string GetReport(string toolName, string reportName)
-            {
-                throw new NotImplementedException();
-            }
+            return "true";
+        }
 
-            public void Select(string link)
+        private static void SelectLink(string row, int linkColumn)
+        {
+            var thread = new Thread(() =>
             {
-                throw new NotImplementedException();
-            }
-
-            public string DocumentPath
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public SkylineTool.Version Version
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public void NotifyDocumentChanged()
-            {
-                // Do nothing.  Don't throw or the error will prevent construction of the Client object.
-            }
+                _toolClient.RunTest("TestInteractiveTool: Get peak area report");
+                var report = _toolClient.GetReport("Peak Area");
+                _toolClient.RunTest("TestInteractiveTool: Got report");
+                _toolClient.RunTest(string.Format(
+                    "TestInteractiveTool: Report {0},{1} ({2},{3})",
+                    report.Cells.Length, report.Cells[0].Length, row, linkColumn));
+                var link = report.Cells[int.Parse(row)][linkColumn];
+                _toolClient.RunTest("TestInteractiveTool: Select " + link);
+                _toolClient.Select(link);
+                _toolClient.RunTest("TestInteractiveTool: Link selected");
+            });
+            thread.Start();
         }
     }
 }
