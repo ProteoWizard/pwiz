@@ -142,23 +142,22 @@ SslReader::SslReader(BlibBuilder& maker,
    */
   void SslReader::parseModSeq(vector<SeqMod>& mods, 
                               string& modSeq){
-    // find next [
-    size_t nonAaChars = 0;// for finding aa position
-    size_t openBracket = modSeq.find_first_of("[");
-    while( openBracket != string::npos ){
-      SeqMod mod;
-      // get mass diff
-      size_t closeBracket = modSeq.find_first_of("]", openBracket);
-      string mass = modSeq.substr(openBracket + 1, 
-                                  closeBracket - openBracket -1);
-      mod.deltaMass = atof( mass.c_str() );
-      // get position
-      mod.position = openBracket - nonAaChars;
-      nonAaChars += (closeBracket - openBracket + 1);
-      // add to mods
-      mods.push_back(mod);
-      // find next
-      openBracket = modSeq.find_first_of("[", openBracket + 1);
+    int pos = 0; // SeqMod pos is 1 based
+    for (size_t i = 0; i < modSeq.length(); i++) {
+      char c = modSeq[i];
+      if (c >= 'A' && c <= 'Z') {
+        ++pos;
+      } else if (c == '[') {
+        size_t closePos = modSeq.find(']', ++i);
+        if (closePos == string::npos) {
+          throw BlibException(false, "Sequence had opening bracket without closing bracket: %s", modSeq.c_str());
+        }
+        string mass = modSeq.substr(i, closePos - i);
+        mods.push_back(SeqMod(max(1, pos), atof(mass.c_str())));
+
+        // Move iterator past mod
+        i = closePos;
+      }
     }
   }
 
@@ -171,6 +170,13 @@ SslReader::SslReader(BlibBuilder& maker,
     while( openBracket != string::npos ){
       seq.replace(openBracket, seq.find_first_of("]") - openBracket + 1, "");
       openBracket = seq.find_first_of("[");
+    }
+
+    if (!seq.empty() && seq[0] == '-') {
+        seq.erase(0, 1);
+    }
+    if (!seq.empty() && seq[seq.length() - 1] == '-') {
+        seq.erase(seq.length() - 1, 1);
     }
   }
 
