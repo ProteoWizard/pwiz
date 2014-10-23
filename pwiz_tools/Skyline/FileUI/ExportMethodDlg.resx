@@ -716,6 +716,39 @@ and base name as the Analyst acquisition method.</value>
   <data name="&gt;&gt;cbExportMultiQuant.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="cbUseStartAndEndRts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseStartAndEndRts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbUseStartAndEndRts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 6</value>
+  </data>
+  <data name="cbUseStartAndEndRts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 17</value>
+  </data>
+  <data name="cbUseStartAndEndRts.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbUseStartAndEndRts.Text" xml:space="preserve">
+    <value>Use start &amp;&amp; end &amp;RTs</value>
+  </data>
+  <data name="cbUseStartAndEndRts.ToolTip" xml:space="preserve">
+    <value>Exports a start and end time, rather than a retention time and a window.</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Name" xml:space="preserve">
+    <value>cbUseStartAndEndRts</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Parent" xml:space="preserve">
+    <value>panelThermoRt</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 250</value>
   </data>
@@ -965,6 +998,30 @@ and base name as the Analyst acquisition method.</value>
   <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="panelThermoRt.Location" type="System.Drawing.Point, System.Drawing">
+    <value>148, 214</value>
+  </data>
+  <data name="panelThermoRt.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 28</value>
+  </data>
+  <data name="panelThermoRt.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="panelThermoRt.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Name" xml:space="preserve">
+    <value>panelThermoRt</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
+    <value>25</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -990,6 +1047,6 @@ and base name as the Analyst acquisition method.</value>
     <value>ExportMethodDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

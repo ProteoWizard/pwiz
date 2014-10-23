@@ -52,6 +52,7 @@
             this.cbEnergyRamp = new System.Windows.Forms.CheckBox();
             this.cbTriggerRefColumns = new System.Windows.Forms.CheckBox();
             this.cbExportMultiQuant = new System.Windows.Forms.CheckBox();
+            this.cbUseStartAndEndRts = new System.Windows.Forms.CheckBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.labelMethods = new System.Windows.Forms.Label();
@@ -62,9 +63,11 @@
             this.textPrimaryCount = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.panelThermoRt = new System.Windows.Forms.Panel();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
+            this.panelThermoRt.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -218,6 +221,13 @@
             this.helpTip.SetToolTip(this.cbExportMultiQuant, resources.GetString("cbExportMultiQuant.ToolTip"));
             this.cbExportMultiQuant.UseVisualStyleBackColor = true;
             // 
+            // cbUseStartAndEndRts
+            // 
+            resources.ApplyResources(this.cbUseStartAndEndRts, "cbUseStartAndEndRts");
+            this.cbUseStartAndEndRts.Name = "cbUseStartAndEndRts";
+            this.helpTip.SetToolTip(this.cbUseStartAndEndRts, resources.GetString("cbUseStartAndEndRts.ToolTip"));
+            this.cbUseStartAndEndRts.UseVisualStyleBackColor = true;
+            // 
             // comboOptimizing
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -278,6 +288,12 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
+            // panelThermoRt
+            // 
+            this.panelThermoRt.Controls.Add(this.cbUseStartAndEndRts);
+            resources.ApplyResources(this.panelThermoRt, "panelThermoRt");
+            this.panelThermoRt.Name = "panelThermoRt";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -309,6 +325,7 @@
             this.Controls.Add(this.radioSingle);
             this.Controls.Add(this.panelAbSciexTOF);
             this.Controls.Add(this.panelThermoColumns);
+            this.Controls.Add(this.panelThermoRt);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -321,6 +338,8 @@
             this.panelAbSciexTOF.PerformLayout();
             this.panelTriggered.ResumeLayout(false);
             this.panelTriggered.PerformLayout();
+            this.panelThermoRt.ResumeLayout(false);
+            this.panelThermoRt.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -360,5 +379,7 @@
         private System.Windows.Forms.TextBox textPrimaryCount;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.CheckBox cbUseStartAndEndRts;
+        private System.Windows.Forms.Panel panelThermoRt;
     }
 }

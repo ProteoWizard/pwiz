@@ -151,6 +151,7 @@ namespace pwiz.Skyline.FileUI
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             panelThermoColumns.Top = labelDwellTime.Top;
+            panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
 
@@ -383,6 +384,23 @@ namespace pwiz.Skyline.FileUI
         private void UpdateAbSciexControls()
         {
             panelAbSciexTOF.Visible = InstrumentType == ExportInstrumentType.ABI_TOF;
+        }
+
+        private void UpdateThermoRtControls(ExportMethodType targetType)
+        {
+            panelThermoRt.Visible =
+                InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                (targetType == ExportMethodType.Scheduled && InstrumentType == ExportInstrumentType.THERMO);
+            if (panelThermoColumns.Visible)
+            {
+                panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height * 0.8);
+            }
+            else
+            {
+                panelThermoRt.Top = labelDwellTime.Visible
+                    ? labelDwellTime.Top - panelThermoRt.Height
+                    : labelDwellTime.Top + (panelThermoRt.Height / 2);
+            }
         }
 
         private void UpdateMaxTransitions()
@@ -752,6 +770,8 @@ namespace pwiz.Skyline.FileUI
 
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
 
+            _exportProperties.RetentionStartAndEnd = panelThermoRt.Visible && cbUseStartAndEndRts.Checked;
+
             _exportProperties.Ms1Scan = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                                         _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
 
@@ -1098,6 +1118,7 @@ namespace pwiz.Skyline.FileUI
             UpdateDwellControls(standard);
             UpdateThermoColumns(targetType);
             UpdateAbSciexControls();
+            UpdateThermoRtControls(targetType);
             UpdateMaxLabel(standard);
         }
 

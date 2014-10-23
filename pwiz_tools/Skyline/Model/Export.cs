@@ -321,6 +321,8 @@ namespace pwiz.Skyline.Model
 
         public virtual bool ExportMultiQuant { get; set; }
 
+        public virtual bool RetentionStartAndEnd { get; set; }
+
         public virtual int MultiplexIsolationListCalculationTime { get; set; }
         public virtual bool DebugCycles { get; set; }
 
@@ -495,6 +497,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new ThermoQuantivaMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
+            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.Export(fileName);
 
             return exporter;
@@ -525,6 +528,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new ThermoMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
+            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
@@ -637,6 +641,8 @@ namespace pwiz.Skyline.Model
 
         public double? RunLength { get; set; }
 
+        public bool RetentionStartAndEnd { get; set; }
+
         protected override string InstrumentType
         {
             get { return ExportInstrumentType.THERMO; }
@@ -669,13 +675,24 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
-                // Start Time and Stop Time
                 if (predictedRT.HasValue)
                 {
-                    writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2).ToString(CultureInfo));    // No negative retention times
-                    writer.Write(FieldSeparator);
-                    writer.Write((predictedRT.Value + windowRT / 2).ToString(CultureInfo));
-                    writer.Write(FieldSeparator);
+                    if (RetentionStartAndEnd)
+                    {
+                        // Start Time and Stop Time
+                        writer.Write(Math.Max(0, predictedRT.Value - windowRT/2).ToString(CultureInfo));
+                        // No negative retention times
+                        writer.Write(FieldSeparator);
+                        writer.Write((predictedRT.Value + windowRT/2).ToString(CultureInfo));
+                        writer.Write(FieldSeparator);
+                    }
+                    else
+                    {
+                        writer.Write(predictedRT.Value.ToString(CultureInfo));
+                        writer.Write(FieldSeparator);
+                        writer.Write(windowRT.ToString(CultureInfo));
+                        writer.Write(FieldSeparator);
+                    }
                 }
                 else
                 {
@@ -729,10 +746,20 @@ namespace pwiz.Skyline.Model
             }
             else if (RunLength.HasValue)
             {
-                writer.Write(0);    // No negative retention times
-                writer.Write(FieldSeparator);
-                writer.Write(RunLength);
-                writer.Write(FieldSeparator);
+                if (RetentionStartAndEnd)
+                {
+                    writer.Write(0); // No negative retention times
+                    writer.Write(FieldSeparator);
+                    writer.Write(RunLength);
+                    writer.Write(FieldSeparator);
+                }
+                else
+                {
+                    writer.Write(RunLength/2);
+                    writer.Write(FieldSeparator);
+                    writer.Write(RunLength);
+                    writer.Write(FieldSeparator);
+                }
                 writer.Write(1);  // Polarity
                 writer.Write(FieldSeparator);                                    
             }
@@ -777,10 +804,20 @@ namespace pwiz.Skyline.Model
         {
             writer.Write("Compound"); // Not L10N
             writer.Write(FieldSeparator);
-            writer.Write("Start Time (min)"); // Not L10N
-            writer.Write(FieldSeparator);
-            writer.Write("End Time (min)"); // Not L10N
-            writer.Write(FieldSeparator);
+            if (RetentionStartAndEnd)
+            {
+                writer.Write("Start Time (min)"); // Not L10N
+                writer.Write(FieldSeparator);
+                writer.Write("End Time (min)"); // Not L10N
+                writer.Write(FieldSeparator);
+            }
+            else
+            {
+                writer.Write("Retention Time (min)"); // Not L10N
+                writer.Write(FieldSeparator);
+                writer.Write("RT Window (min)"); // Not L10N
+                writer.Write(FieldSeparator);
+            }
             writer.Write("Polarity"); // Not L10N
             writer.Write(FieldSeparator);
             writer.Write("Precursor (m/z)"); // Not L10N
@@ -817,11 +854,21 @@ namespace pwiz.Skyline.Model
             // Retention time
             if (MethodType == ExportMethodType.Standard)
             {
-                // Start Time and Stop Time
-                writer.Write(0);
-                writer.Write(FieldSeparator);
-                writer.Write(RunLength);
-                writer.Write(FieldSeparator);
+                if (RetentionStartAndEnd)
+                {
+                    // Start Time and Stop Time
+                    writer.Write(0);
+                    writer.Write(FieldSeparator);
+                    writer.Write(RunLength);
+                    writer.Write(FieldSeparator);
+                }
+                else
+                {
+                    writer.Write(RunLength/2);
+                    writer.Write(FieldSeparator);
+                    writer.Write(RunLength);
+                    writer.Write(FieldSeparator);
+                }
             }
             else
             {
@@ -830,13 +877,24 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
-                // Start Time and Stop Time
                 if (predictedRT.HasValue)
                 {
-                    writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2).ToString(CultureInfo));    // No negative retention times
-                    writer.Write(FieldSeparator);
-                    writer.Write((predictedRT.Value + windowRT / 2).ToString(CultureInfo));
-                    writer.Write(FieldSeparator);
+                    if (RetentionStartAndEnd)
+                    {
+                        // Start Time and Stop Time
+                        writer.Write(Math.Max(0, predictedRT.Value - windowRT/2).ToString(CultureInfo));
+                        // No negative retention times
+                        writer.Write(FieldSeparator);
+                        writer.Write((predictedRT.Value + windowRT/2).ToString(CultureInfo));
+                        writer.Write(FieldSeparator);
+                    }
+                    else
+                    {
+                        writer.Write(predictedRT.Value.ToString(CultureInfo));
+                        writer.Write(FieldSeparator);
+                        writer.Write(windowRT.ToString(CultureInfo));
+                        writer.Write(FieldSeparator);
+                    }
                 }
                 else
                 {
