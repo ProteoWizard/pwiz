@@ -3639,10 +3639,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList
     
     writer.startElement("ProteinDetectionList", attributes);
     
-    writeParamContainer(writer, pdl);
     for (vector<ProteinAmbiguityGroupPtr>::const_iterator it=pdl.proteinAmbiguityGroup.begin();
          it!= pdl.proteinAmbiguityGroup.end(); it++)
         write(writer, **it);
+    writeParamContainer(writer, pdl);
     writer.endElement();
 }
 

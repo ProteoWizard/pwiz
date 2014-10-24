@@ -928,8 +928,8 @@ namespace {
 
 bool hasValidFlankingSymbols(const PeptideEvidence& pe)
 {
-    return ((pe.pre >= 'A' && pe.pre <= 'Z') || pe.pre == '-') &&
-           ((pe.post >= 'A' && pe.post <= 'Z') || pe.post == '-');
+    return ((pe.pre >= 'A' && pe.pre <= 'Z') || pe.pre == '-' || (pe.isDecoy && pe.pre == '?')) &&
+           ((pe.post >= 'A' && pe.post <= 'Z') || pe.post == '-' || (pe.isDecoy && pe.post == '?'));
 }
 
 // uses cleavageAgent or cleavageAgentRegex to find the most specific peptide evidence;
