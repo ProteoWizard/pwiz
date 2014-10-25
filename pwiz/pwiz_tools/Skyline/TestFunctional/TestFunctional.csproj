@@ -161,6 +161,7 @@
     <Compile Include="IonMobilityTest.cs" />
     <Compile Include="IrtTest.cs" />
     <Compile Include="IsolationSchemeTest.cs" />
+    <Compile Include="LibraryBuildShareTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="LiveReportsFilterTest.cs" />
     <Compile Include="LongWaitTest.cs" />
@@ -266,6 +267,7 @@
     <None Include="IonMobilityTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
+    <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />

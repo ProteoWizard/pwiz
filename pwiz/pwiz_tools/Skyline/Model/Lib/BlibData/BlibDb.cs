@@ -526,8 +526,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                NumPeaks = (ushort) peaksInfo.Peaks.Count(),
                                                Copies = refSpectra.Copies,
                                                RetentionTime = specLiteKey.Time.RetentionTime,
-                                               IonMobilityValue = specLiteKey.Time.IonMobilityValue,
-                                               IonMobilityType = specLiteKey.Time.IonMobilityType,
+                                               IonMobilityValue = specLiteKey.Time.IonMobilityValue.GetValueOrDefault(),
+                                               IonMobilityType = specLiteKey.Time.IonMobilityType.GetValueOrDefault(),
                                                FileId = spectrumSourceId
                                            };
 
@@ -597,7 +597,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     RedundantRefSpectraId = specLiteKey != null ? specLiteKey.RedundantId : 0,
                     RetentionTime = spectrum.RetentionTime,
                     SpectrumSourceId = spectrumSourceId,
-                    BestSpectrum = spectrum.IsBest ? 1 : 0
+                    BestSpectrum = spectrum.IsBest ? 1 : 0,
+                    IonMobilityType = 0,
+                    IonMobilityValue = 0,
                 };
                 if (null != spectrum.IonMobilityInfo)
                 {

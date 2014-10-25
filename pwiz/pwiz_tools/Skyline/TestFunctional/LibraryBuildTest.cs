@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             _libraryName = libraryBaseName + "mascot";
             string libraryMascot = _libraryName + BiblioSpecLiteSpec.EXT;
             BuildLibraryValid(TestFilesDir.GetTestPath("mascot"), new[] { "F027319.dat" },
-                true, false, false, 101);
+                true, false, false, 121);
             Assert.IsTrue(File.Exists(TestFilesDir.GetTestPath(libraryMascot)));
 
             // Test successful builds
