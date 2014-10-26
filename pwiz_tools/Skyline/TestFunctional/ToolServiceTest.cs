@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestFunctional
         private const string TOOL_NAME = "Test Interactive Tool";
         private const string FILE_NAME = "TestToolAPI.sky";
 
-        [TestMethod]
+        //[TestMethod]
         public void TestToolService()
         {
             Run(@"TestFunctional\ToolServiceTest.zip"); //Not L10N
