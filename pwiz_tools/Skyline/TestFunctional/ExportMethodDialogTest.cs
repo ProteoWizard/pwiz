@@ -486,6 +486,7 @@ namespace pwiz.SkylineTestFunctional
 
                         // change Method type to "Triggered"
                         exportMethodDlg.MethodType = ExportMethodType.Triggered;
+                        exportMethodDlg.IsThermoStartAndEndTime = true;
                         Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                         exportMethodDlg.OkDialog(thermoActual);

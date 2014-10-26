@@ -390,7 +390,7 @@ namespace pwiz.Skyline.FileUI
         {
             panelThermoRt.Visible =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
-                (targetType == ExportMethodType.Scheduled && InstrumentType == ExportInstrumentType.THERMO);
+                (targetType != ExportMethodType.Standard && InstrumentType == ExportInstrumentType.THERMO);
             if (panelThermoColumns.Visible)
             {
                 panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height * 0.8);
@@ -1525,6 +1525,12 @@ namespace pwiz.Skyline.FileUI
         {
             get { return _exportProperties.DebugCycles; }
             set { _exportProperties.DebugCycles = value; }
+        }
+
+        public bool IsThermoStartAndEndTime
+        {
+            get { return cbUseStartAndEndRts.Checked; }
+            set { cbUseStartAndEndRts.Checked = value; }
         }
 
         #endregion

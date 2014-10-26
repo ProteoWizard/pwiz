@@ -487,6 +487,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new ThermoMassListExporter(document));
             exporter.AddEnergyRamp = AddEnergyRamp;
             exporter.AddTriggerReference = AddTriggerReference;
+            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.Export(fileName);
 
             return exporter;
