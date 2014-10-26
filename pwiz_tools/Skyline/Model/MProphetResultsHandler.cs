@@ -44,6 +44,8 @@ namespace pwiz.Skyline.Model
 
         private readonly Dictionary<PeakTransitionGroupIdKey, FeatureStatistics> _featureDictionary; 
 
+        private static bool IsFilterTestData { get { return false; } }
+
         private const string Q_VALUE_ANNOTATION = "QValue"; // Not L10N : for now, we are not localizing column headers
 
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; }}
@@ -54,7 +56,9 @@ namespace pwiz.Skyline.Model
         {
             Document = document;
             ScoringModel = scoringModel;
-            _calcs = ScoringModel.PeakFeatureCalculators;
+            _calcs = ScoringModel != null
+                ? ScoringModel.PeakFeatureCalculators
+                : PeakFeatureCalculator.Calculators.ToArray();
             _featureDictionary = new Dictionary<PeakTransitionGroupIdKey, FeatureStatistics>();
         }
 
@@ -66,6 +70,9 @@ namespace pwiz.Skyline.Model
         {
             _features = Document.GetPeakFeatures(_calcs, progressMonitor)
                 .Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any()).ToList();
+            if (ScoringModel == null)
+                return;
+
             var bestTargetPvalues = new List<double>();
             var targetIds = new List<PeakTransitionGroupIdKey>();
             foreach (var transitionGroupFeatures in _features)
@@ -266,6 +273,10 @@ namespace pwiz.Skyline.Model
                     "pValue",
                     "qValue"
                 };
+            if (IsFilterTestData)
+            {
+                namesArray.Add("FoundIonFilters");
+            }
             // ReSharper restore NonLocalizedString
 
             foreach (var name in namesArray)
@@ -291,19 +302,30 @@ namespace pwiz.Skyline.Model
                                           bool includeDecoys)
         {
             var id = features.Id.Key;
-            var featureStatistics = _featureDictionary[id];
-            var mProphetScores = featureStatistics.MprophetScores;
-            var pValues = featureStatistics.PValues;
-            double qValue = featureStatistics.QValue ?? double.NaN;
-            int bestScoresIndex = featureStatistics.BestIndex;
+            int bestScoresIndex = -1;
+            IList<double> mProphetScores = null;
+            IList<double> pValues = null;
+            double qValue = double.NaN;
+            FeatureStatistics featureStatistics;
+            if (_featureDictionary.TryGetValue(id, out featureStatistics))
+            {
+                bestScoresIndex = featureStatistics.BestIndex;
+                mProphetScores = featureStatistics.MprophetScores;
+                pValues = featureStatistics.PValues;
+                qValue = featureStatistics.QValue ?? double.NaN;
+            }
             if (features.Id.NodePep.IsDecoy && !includeDecoys)
                 return;
             int j = 0;
             foreach (var peakGroupFeatures in features.PeakGroupFeatures)
             {
                 if (!bestOnly || j == bestScoresIndex)
-                    WriteRow(writer, features, peakGroupFeatures, cultureInfo, mProphetScores[j],
-                             pValues[j], qValue);
+                {
+                    double mProphetScore = mProphetScores != null ? mProphetScores[j] : double.NaN;
+                    double pValue = pValues != null ? pValues[j] : double.NaN;
+                    WriteRow(writer, features, peakGroupFeatures, cultureInfo, mProphetScore,
+                             pValue, qValue);
+                }
                 ++j;
             }
         }
@@ -332,8 +354,13 @@ namespace pwiz.Skyline.Model
                     Convert.ToString(features.Id.NodePep.IsDecoy ? 1 : 0, cultureInfo),
                     ToFieldString((float) mProphetScore, cultureInfo),
                     ToFieldString((float) pValue, cultureInfo),
-                    ToFieldString((float) qValue, cultureInfo),
+                    ToFieldString((float) qValue, cultureInfo)
                 };
+            if (IsFilterTestData)
+            {
+                fieldsArray.Add(peakGroupFeatures.GetFilterPairsText(cultureInfo));
+            }
+
             foreach (var name in fieldsArray)
             {
                 writer.WriteDsvField(name, separator);

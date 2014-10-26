@@ -510,6 +510,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Default calculators for scoring on import
             new MQuestDefaultIntensityCalc(), 
+            new LegacyUnforcedCountScoreDefaultCalc(), 
             new MQuestDefaultIntensityCorrelationCalc(), 
             new MQuestDefaultWeightedCoElutionCalc(), 
             new MQuestDefaultWeightedShapeCalc(), 

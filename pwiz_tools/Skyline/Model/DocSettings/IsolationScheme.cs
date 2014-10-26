@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -134,6 +135,48 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return _prespecifiedIsolationWindows; }
             private set { _prespecifiedIsolationWindows = MakeReadOnly(value); }
+        }
+
+        public IsolationWindow GetIsolationWindow(double targetMz, double matchTolerance)
+        {
+            IsolationWindow isolationWindow = null;
+
+            if (!FromResults)
+            {
+                // Match pre-specified targets.
+                if (PrespecifiedIsolationWindows[0].Target.HasValue)
+                {
+                    foreach (var window in PrespecifiedIsolationWindows)
+                    {
+                        if (!window.TargetMatches(targetMz, matchTolerance)) continue;
+                        if (isolationWindow != null)
+                        {
+                            throw new InvalidDataException(
+                                string.Format(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__,
+                                    targetMz));
+                        }
+                        isolationWindow = window;
+                    }
+                }
+                // Find containing window.
+                else
+                {
+                    double? bestDeltaMz = null;
+                    // find the window with center closest to the target m/z
+                    foreach (var window in PrespecifiedIsolationWindows)
+                    {
+                        if (!window.Contains(targetMz)) continue;
+                        var winCenter = (window.IsolationStart + window.IsolationEnd) / 2.0;
+                        var deltaMz = Math.Abs(winCenter - targetMz);
+                        if (isolationWindow == null || deltaMz < bestDeltaMz)
+                        {
+                            isolationWindow = window;
+                            bestDeltaMz = deltaMz;
+                        }
+                    }
+                }
+            }
+            return isolationWindow;
         }
 
         #region Implementation of IXmlSerializable

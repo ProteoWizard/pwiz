@@ -601,42 +601,7 @@ namespace pwiz.Skyline.Model.Results
                 // Find isolation window.
             else if (isolationScheme.PrespecifiedIsolationWindows.Count > 0)
             {
-                IsolationWindow isolationWindow = null;
-
-                // Match pre-specified targets.
-                if (isolationScheme.PrespecifiedIsolationWindows[0].Target.HasValue)
-                {
-                    foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
-                    {
-                        if (!window.TargetMatches(isolationTargetMz, _instrument.MzMatchTolerance)) continue;
-                        if (isolationWindow != null)
-                        {
-                            throw new InvalidDataException(
-                                string.Format(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__,
-                                    isolationTargetMz));
-                        }
-                        isolationWindow = window;
-                    }
-                }
-
-                    // Find containing window.
-                else
-                {
-                    double? bestDeltaMz = null;
-                    // find the window with center closest to the target m/z
-                    foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
-                    {
-                        if (!window.Contains(isolationTargetMz)) continue;
-                        var winCenter = (window.IsolationStart + window.IsolationEnd)/2.0;
-                        var deltaMz = Math.Abs(winCenter - isolationTargetMz);
-                        if (isolationWindow == null || deltaMz < bestDeltaMz)
-                        {
-                            isolationWindow = window;
-                            bestDeltaMz = deltaMz;
-                        }
-                    }
-                }
-
+                var isolationWindow = isolationScheme.GetIsolationWindow(isolationTargetMz, _instrument.MzMatchTolerance);
                 if (isolationWindow == null)
                 {
                     _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth)] = new List<SpectrumFilterPair>();

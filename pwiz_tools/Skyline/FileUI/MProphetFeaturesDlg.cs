@@ -92,11 +92,11 @@ namespace pwiz.Skyline.FileUI
 
                 IPeakScoringModel currentPeakScoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
                 var mProphetScoringModel = currentPeakScoringModel as MProphetPeakScoringModel;
-                if (mProphetScoringModel == null)
-                {
-                    MessageDlg.Show(this, Resources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
-                    return;
-                }
+//                if (mProphetScoringModel == null)
+//                {
+//                    MessageDlg.Show(this, Resources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
+//                    return;
+//                }
                 var resultsHandler = new MProphetResultsHandler(Document, mProphetScoringModel);
 
                 using (var longWaitDlg = new LongWaitDlg

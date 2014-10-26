@@ -19,11 +19,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -158,7 +160,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         float endTime = summaryPeakData.EndTime;
                         bool isMaxPeakIndex = summaryPeakData.IsMaxPeakIndex;
                         listRunFeatures.Add(new PeakGroupFeatures(retentionTime, startTime, endTime,
-                            isMaxPeakIndex, listFeatures.ToArray()));
+                            isMaxPeakIndex, listFeatures.ToArray(), summaryPeakData.GetMzFilters(context)));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures);
@@ -350,6 +352,64 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 if (groupPeakData != null)
                     return groupPeakData.GetScore(calc.GetType());
                 return float.NaN;
+            }
+
+            public MzFilterPairs[] GetMzFilters(PeakScoringContext context)
+            {
+                var listMzFilters = new List<MzFilterPairs>();
+                var fullScan = context.Document.Settings.TransitionSettings.FullScan;
+                // Impossible to report precursor filter for results dependent DIA
+                if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme.FromResults)
+                        return listMzFilters.ToArray();
+                var instrument = context.Document.Settings.TransitionSettings.Instrument;
+                foreach (var transitionGroupPeakData in TransitionGroupPeakData)
+                {
+                    foreach (var transitionPeakData in transitionGroupPeakData.TranstionPeakData)
+                    {
+                        // Skip forced integration peaks
+                        if (transitionPeakData.PeakData == null)
+                            continue;
+
+                        // Default to SRM filters
+                        var mzFilter = new MzFilterPairs
+                        {
+                            TargetPrecursorMz = transitionGroupPeakData.NodeGroup.PrecursorMz,
+                            WidthPrecursorMz = 0.7,
+                            TargetProductMz = transitionPeakData.NodeTran.Mz,
+                            WidthProductMz = 0.7,
+                            IsForcedIntegration = transitionPeakData.PeakData.IsForcedIntegration
+                        };
+                        if (fullScan.IsEnabled)
+                        {
+                            if (transitionPeakData.NodeTran.IsMs1)
+                            {
+                                // Move product mz to precursor mz for isotope transitions
+                                mzFilter.TargetPrecursorMz = mzFilter.TargetProductMz.Value;
+                                mzFilter.WidthPrecursorMz = fullScan.GetPrecursorFilterWindow(mzFilter.TargetPrecursorMz);
+                                mzFilter.TargetProductMz = null;
+                                mzFilter.WidthProductMz = null;
+                            }
+                            else
+                            {
+                                if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
+                                {
+                                    mzFilter.WidthPrecursorMz = 2.0;
+                                }
+                                else if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
+                                {
+                                    var isolationWindow = fullScan.IsolationScheme.GetIsolationWindow(mzFilter.TargetPrecursorMz,
+                                        instrument.MzMatchTolerance);
+                                    Assume.IsNotNull(isolationWindow);
+                                    mzFilter.TargetPrecursorMz = (isolationWindow.Start + isolationWindow.End) / 2;
+                                    mzFilter.WidthPrecursorMz = isolationWindow.End - isolationWindow.Start;
+                                }
+                                mzFilter.WidthProductMz = fullScan.GetProductFilterWindow(mzFilter.TargetProductMz.Value);
+                            }
+                        }
+                        listMzFilters.Add(mzFilter);
+                    }
+                }
+                return listMzFilters.ToArray();
             }
         }
 
@@ -563,13 +623,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public sealed class PeakGroupFeatures
     {
-        public PeakGroupFeatures(float retentionTime, float startTime, float endTime, bool isMaxPeak, float[] features)
+        public PeakGroupFeatures(float retentionTime, float startTime, float endTime, bool isMaxPeak,
+            float[] features, MzFilterPairs[] filterPairs)
         {
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
             IsMaxPeak = isMaxPeak;
             Features = features;
+            FilterPairs = filterPairs;
         }
 
         public float RetentionTime { get; private set; }
@@ -577,5 +639,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public float EndTime { get; private set; }
         public bool IsMaxPeak { get; private set; } // Max peak picked during import
         public float[] Features { get; private set; }
+        public MzFilterPairs[] FilterPairs { get; private set; }
+
+        public string GetFilterPairsText(CultureInfo cultureInfo)
+        {
+            var sb = new StringBuilder();
+            foreach (var filterPairs in FilterPairs)
+            {
+                sb.Append('(');
+                sb.Append(filterPairs.TargetPrecursorMz.ToString(cultureInfo));
+                sb.Append(cultureInfo.TextInfo.ListSeparator).Append(filterPairs.WidthPrecursorMz.ToString(cultureInfo));
+                if (filterPairs.TargetProductMz.HasValue && filterPairs.WidthProductMz.HasValue)
+                {
+                    sb.Append(cultureInfo.TextInfo.ListSeparator).Append(filterPairs.TargetProductMz);
+                    sb.Append(cultureInfo.TextInfo.ListSeparator).Append(filterPairs.WidthProductMz);
+                }
+                sb.Append(cultureInfo.TextInfo.ListSeparator).Append(filterPairs.IsForcedIntegration ? 0 : 1);
+                sb.Append(')');
+            }
+            return sb.ToString();
+        }
+    }
+
+    public struct MzFilterPairs
+    {
+        public double TargetPrecursorMz { get; set; }
+        public double WidthPrecursorMz { get; set; }
+        public double? TargetProductMz { get; set; }
+        public double? WidthProductMz { get; set; }
+        public bool IsForcedIntegration { get; set; }
     }
 }
