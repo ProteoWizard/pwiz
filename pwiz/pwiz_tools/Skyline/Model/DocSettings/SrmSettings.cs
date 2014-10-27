@@ -1138,6 +1138,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (prediction.DeclusteringPotential != null &&
                         !defSet.DeclusterPotentialList.Contains(prediction.DeclusteringPotential))
                     defSet.DeclusterPotentialList.Add(prediction.DeclusteringPotential);
+                if (!Equals(prediction.OptimizedLibrary, OptimizationLibrary.NONE) &&
+                        Equals(defSet.GetOptimizationLibraryByName(prediction.OptimizedLibrary.Name), OptimizationLibrary.NONE))
+                    defSet.OptimizationLibraryList.Add(prediction.OptimizedLibrary);
             }
             if (TransitionSettings.Filter != null)
             {
