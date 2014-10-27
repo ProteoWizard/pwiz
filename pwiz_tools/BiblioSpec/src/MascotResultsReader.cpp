@@ -72,7 +72,8 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
                               0, // ignoreIonsScoreBelow 
                               0, // min peptide length
                               0, // singleHit 
-                       ms_peptidesummary::MSPEPSUM_NO_PROTEIN_GROUPING); 
+                       ms_peptidesummary::MSPEPSUM_NO_PROTEIN_GROUPING |
+                       ms_peptidesummary::MSPEPSUM_USE_HOMOLOGY_THRESH); 
 
     // create the spec reader, sharing the file and results objects
     delete specReader_;  

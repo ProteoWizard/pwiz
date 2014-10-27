@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Model.Lib
                                 );
                             if (hasIonMobilityColumns)
                             {
-                                var ionMobilityType = reader.GetInt32(4);
+                                var ionMobilityType = NullSafeToInteger(reader.GetValue(4));
                                 if (ionMobilityType > 0)
                                 {
                                     double ionMobility = reader.GetDouble(3);
@@ -1245,7 +1245,7 @@ namespace pwiz.Skyline.Model.Lib
                         IonMobilityInfo ionMobilityInfo = null;
                         if (iDriftTimeType >= 0)
                         {
-                            var type = reader.GetInt32(iDriftTimeType); // 0=none, 1=dt, 2=ccs
+                            var type = NullSafeToInteger(reader.GetValue(iDriftTimeType));
                             if (type > 0)
                             {
                                 ionMobilityInfo = new IonMobilityInfo(reader.GetDouble(iDriftTime), type != 1,
@@ -1399,6 +1399,14 @@ namespace pwiz.Skyline.Model.Lib
             return "(" + sb + ")"; // Not L10N
         }
 
+        private static int NullSafeToInteger(object value)
+        {
+            if (value is DBNull)
+            {
+                return 0;
+            }
+            return Convert.ToInt32(value);
+        } 
 
         #region Implementation of IXmlSerializable
         
