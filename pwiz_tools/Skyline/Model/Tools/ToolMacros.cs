@@ -342,10 +342,8 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string GetSkylineConnection()
         {
-            return _skylineConnectionGuid.ToString("D");  // Not L10N
+            return Program.MainToolService.ConnectionName;
         }
-
-        private static Guid _skylineConnectionGuid = Guid.NewGuid();
 
         /// <summary>
         /// Helper function to match on the ProgramPath Macro and extract the program title and version where relevant. 

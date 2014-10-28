@@ -401,7 +401,18 @@ namespace pwiz.Skyline.Model.Tools
                     }
                     
                 }
-
+//                else
+//                {
+//                    startInfo.RedirectStandardOutput = true;
+//                    startInfo.RedirectStandardError = true;
+//                    startInfo.CreateNoWindow = true;
+//                    startInfo.UseShellExecute = false;
+//                    p.EnableRaisingEvents = true;
+//                    p.OutputDataReceived +=
+//                        (sender, dataReceivedEventArgs) => Console.WriteLine(dataReceivedEventArgs.Data);
+//                    p.ErrorDataReceived +=
+//                        (sender, dataReceivedEventArgs) => Console.WriteLine(dataReceivedEventArgs.Data);
+//                }
                 try
                 {
                     p.StartInfo.UseShellExecute = false;

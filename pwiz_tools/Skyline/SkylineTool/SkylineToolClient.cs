@@ -16,43 +16,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.ServiceModel;
 
 namespace SkylineTool
 {
-    /// <summary>
-    /// Client object created by an interactive tool to communicate with
-    /// the tool service in the Skyline process that started the tool.
-    /// </summary>
     public class SkylineToolClient : IDisposable
     {
-        /// <summary>
-        /// Event for notification of document changes in Skyline.
-        /// </summary>
-        public event EventHandler DocumentChanged;
-
-        private readonly string _toolName;
+        public event EventHandler DocumentChanged; 
+        
         private readonly Client _client;
+        private readonly string _toolName;
+        private readonly DocumentChangeReceiver _documentChangeReceiver;
 
-        /// <summary>
-        /// Create the client object to communicate with Skyline. The connectionName
-        /// is normally passed to the tool from Skyline as a command line argument,
-        /// named $(SkylineConnection) in tool macros.
-        /// </summary>
-        /// <param name="toolName">Name of Skyline tool.</param>
-        /// <param name="connectionName">Name of connection to Skyline.</param>
-        public SkylineToolClient(string toolName, string connectionName)
+        public SkylineToolClient(string connectionName, string toolName)
         {
+            _client = new Client(connectionName);
             _toolName = toolName;
-            _client = new Client(this, connectionName);
+            _documentChangeReceiver = new DocumentChangeReceiver(Guid.NewGuid().ToString(), this);
+            _client.AddDocumentChangeReceiver(_documentChangeReceiver.ConnectionName);
         }
 
         public void Dispose()
         {
-            _client.Close();
+            _client.RemoveDocumentChangeReceiver(_documentChangeReceiver.ConnectionName);
+            _documentChangeReceiver.Dispose();
+            _client.Dispose();
         }
-        
+
+        public IReport GetReport(string reportName)
+        {
+            var reportCsv = _client.GetReport(_toolName + "," + reportName); // Not L10N
+            return new Report(reportCsv);
+        }
+
         public void Select(string link)
         {
             _client.Select(link);
@@ -60,22 +57,71 @@ namespace SkylineTool
 
         public string DocumentPath
         {
-            get { return _client.DocumentPath; }
+            get { return _client.GetDocumentPath(); }
         }
 
         public Version SkylineVersion
         {
-            get { return _client.Version; }
+            get
+            {
+                var versionString = _client.GetVersion();
+                return new Version(versionString);
+            }
         }
 
-        public IReport GetReport(string reportName)
+        private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver
         {
-            return new Report(_client.GetReport(_toolName, reportName));
+            private readonly SkylineToolClient _toolClient;
+
+            public DocumentChangeReceiver(string connectionName, SkylineToolClient toolClient)
+                : base(connectionName)
+            {
+                _toolClient = toolClient;
+            }
+
+            public void DocumentChanged()
+            {
+                if (_toolClient.DocumentChanged != null)
+                    _toolClient.DocumentChanged(_toolClient, null);
+            }
         }
 
-        public int RunTest(string testName)
+        private class Client : RemoteClient, ISkylineTool
         {
-            return _client.RunTest(testName);
+            public Client(string connectionName)
+                : base(connectionName)
+            {
+            }
+
+            public string GetReport(string toolReportName)
+            {
+                return RemoteCall("GetReport", true, toolReportName); // Not L10N
+            }
+
+            public void Select(string link)
+            {
+                RemoteCall("Select", false, link); // Not L10N
+            }
+
+            public string GetDocumentPath()
+            {
+                return RemoteCall("GetDocumentPath", true); // Not L10N
+            }
+
+            public string GetVersion()
+            {
+                return RemoteCall("GetVersion", true); // Not L10N
+            }
+
+            public void AddDocumentChangeReceiver(string receiverName)
+            {
+                RemoteCall("AddDocumentChangeReceiver", false, receiverName); // Not L10N
+            }
+
+            public void RemoveDocumentChangeReceiver(string receiverName)
+            {
+                RemoteCall("RemoveDocumentChangeReceiver", false, receiverName); // Not L10N
+            }
         }
 
         private class Report : IReport
@@ -127,91 +173,6 @@ namespace SkylineTool
                 return -1;
             }
         }
-
-        private class Client : ISkylineTool, ISkylineToolEvents
-        {
-            private const int MaxMessageLength = int.MaxValue;
-
-            private readonly DuplexChannelFactory<ISkylineTool> _channelFactory;
-            private readonly ISkylineTool _channel;
-            private readonly SkylineToolClient _parent;
-            private System.Timers.Timer _timer;
-
-            public Client(SkylineToolClient parent, string connectionName)
-            {
-                _parent = parent;
-                var binding = new NetNamedPipeBinding
-                {
-                    MaxReceivedMessageSize = MaxMessageLength,
-                    ReceiveTimeout = TimeSpan.MaxValue,
-                    SendTimeout = TimeSpan.MaxValue
-                };
-                _channelFactory = new DuplexChannelFactory<ISkylineTool>(
-                    new InstanceContext(this),
-                    binding,
-                    new EndpointAddress(SkylineToolService.GetAddress(connectionName)));
-                _channel = _channelFactory.CreateChannel();
-                NotifyDocumentChanged();
-            }
-
-            public void Close()
-            {
-                _channelFactory.Close();
-            }
-
-            public void DocumentChangedEvent()
-            {
-                if (_parent.DocumentChanged != null  && _timer == null)
-                {
-                    // We must execute the document change handler after the DocumentChanged event
-                    // returns, otherwise the tool service will deadlock.
-                    _timer = new System.Timers.Timer(100);
-                    _timer.Elapsed += DelayedDocumentChange;
-                    _timer.Start();
-                }
-            }
-
-            private void DelayedDocumentChange(object sender, System.Timers.ElapsedEventArgs e)
-            {
-                _timer.Elapsed -= DelayedDocumentChange;
-                _timer.Stop();
-                _timer = null;
-
-                if (_parent.DocumentChanged != null)
-                    _parent.DocumentChanged(_parent, null);
-            }
-
-
-            public string GetReport(string toolName, string reportName)
-            {
-                return _channel.GetReport(toolName, reportName);
-            }
-
-            public void Select(string link)
-            {
-                _channel.Select(link);
-            }
-
-            public string DocumentPath
-            {
-                get { return _channel.DocumentPath; }
-            }
-
-            public Version Version
-            {
-                get { return _channel.Version; }
-            }
-
-            public void NotifyDocumentChanged()
-            {
-                _channel.NotifyDocumentChanged();
-            }
-
-            public int RunTest(string testName)
-            {
-                return _channel.RunTest(testName);
-            }
-        }
     }
 
     public interface IReport
@@ -221,5 +182,35 @@ namespace SkylineTool
         double?[][] CellValues { get; }
         string Cell(int row, string column);
         double? CellValue(int row, string column);
+    }
+
+    public class Version
+    {
+        public int Major { get; private set; }
+        public int Minor { get; private set; }
+        public int Build { get; private set; }
+        public int Revision { get; private set; }
+
+        public Version(int major, int minor, int build, int revision)
+        {
+            Major = major;
+            Minor = minor;
+            Build = build;
+            Revision = revision;
+        }
+
+        public Version(string version)
+        {
+            var parts = version.Split(',');
+            Major = int.Parse(parts[0]);
+            Minor = int.Parse(parts[1]);
+            Build = int.Parse(parts[2]);
+            Revision = int.Parse(parts[3]);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0},{1},{2},{3}", Major, Minor, Build, Revision); // Not L10N
+        }
     }
 }

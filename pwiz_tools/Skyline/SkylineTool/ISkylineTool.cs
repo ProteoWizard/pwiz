@@ -17,8 +17,7 @@
  * limitations under the License.
  */
 
-using System.Runtime.Serialization;
-using System.ServiceModel;
+using System.IO;
 
 namespace SkylineTool
 {
@@ -26,54 +25,27 @@ namespace SkylineTool
     /// ISkylineTool is the main interface for interactive tools to communicate
     /// with the instance of Skyline that started the tool.
     /// </summary>
-    [ServiceContract(CallbackContract = typeof(ISkylineToolEvents))]
-    public interface ISkylineTool
+    public interface ISkylineTool : IRemotable
     {
-        [OperationContract]
-        string GetReport(string toolName, string reportName);
-
-        [OperationContract]
+        string GetReport(string toolReportName);
         void Select(string link);
-
-        string DocumentPath { [OperationContract] get; }
-
-        Version Version { [OperationContract] get; }
-
-        [OperationContract]
-        void NotifyDocumentChanged();
-
-        [OperationContract]
-        int RunTest(string testName);
+        string GetDocumentPath();
+        string GetVersion();
+        void AddDocumentChangeReceiver(string receiverName);
+        void RemoveDocumentChangeReceiver(string receiverName);
     }
 
-    /// <summary>
-    /// Interface to communicate Skyline events to an interactive tool.
-    /// </summary>
-    [ServiceContract]
-    public interface ISkylineToolEvents
+    public interface IDocumentChangeReceiver
     {
-        [OperationContract(IsOneWay = true)]
-        void DocumentChangedEvent();
+        void DocumentChanged();
     }
 
-    [DataContract]
-    public class Version
+    public interface IChromatogram
     {
-        [DataMember] 
-        public int Major { get; private set; }
-        [DataMember]
-        public int Minor { get; private set; }
-        [DataMember]
-        public int Build { get; private set; }
-        [DataMember]
-        public int Revision { get; private set; }
+        string Name { get; }
+        float[] Times { get; }
+        float[] Intensities { get; }
 
-        public Version(int major, int minor, int build, int revision)
-        {
-            Major = major;
-            Minor = minor;
-            Build = build;
-            Revision = revision;
-        }
+        void Write(BinaryWriter writer);
     }
 }

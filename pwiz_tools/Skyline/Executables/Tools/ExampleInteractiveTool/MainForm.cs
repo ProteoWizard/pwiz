@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel;
 using System.Windows.Forms;
 
 namespace ExampleInteractiveTool
@@ -38,25 +37,16 @@ namespace ExampleInteractiveTool
 
         public MainForm(string[] args)
         {
-            //System.Diagnostics.Debugger.Launch();
-
             InitializeComponent();
 
             // Create tool client and register for events.
             if (args.Length > 0)
             {
-                try
-                {
-                    _toolClient = new SkylineTool.SkylineToolClient("Example Interactive Tool", args[0]); // Not L10N
-                    _toolClient.DocumentChanged += OnDocumentChanged;
-                }
-                catch (EndpointNotFoundException)
-                {
-                    // Ignore exception so tool can be run stand-alone for debugging purposes.
-                }
+                _toolClient = new SkylineTool.SkylineToolClient(args[0], "Example Interactive Tool"); // Not L10N
+                _toolClient.DocumentChanged += OnDocumentChanged;
             }
 
-            _selectedReplicate = "All";
+            _selectedReplicate = "All"; // Not L10N
             replicatesToolStripMenuItem.DropDownItemClicked += ItemClicked;
 
             // Create a graph and fill it with data.
@@ -68,7 +58,7 @@ namespace ExampleInteractiveTool
         private void GraphClick(object sender, ClickEventArgs e)
         {
             // Select the peptide in Skyline when the user clicks on it.
-            _toolClient.Select(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]);
+            _toolClient.Select(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]); // Not L10N
         }
 
         private void CreateGraph()
@@ -98,7 +88,7 @@ namespace ExampleInteractiveTool
                 if (string.IsNullOrWhiteSpace(peptideName) || !double.TryParse(peakArea, out area))
                     continue;
 
-                if (_selectedReplicate == replicateName || _selectedReplicate == "All")
+                if (_selectedReplicate == replicateName || _selectedReplicate == "All") // Not L10N
                 {
                     // Add area to sum that was previously created.
                     if (peptideAreas.ContainsKey(peptideName))
@@ -122,15 +112,15 @@ namespace ExampleInteractiveTool
             // Rebuild Replicates menu.
             var items = replicatesToolStripMenuItem.DropDownItems;
             items.Clear();
-            items.Add("All");
-            items.Add("-");
+            items.Add("All"); // Not L10N
+            items.Add("-"); // Not L10N
             replicates.Sort();
             foreach (var replicate in replicates)
                 items.Add(replicate);
 
             // Put a check on the selected replicate.
             if (!replicates.Contains(_selectedReplicate))
-                _selectedReplicate = "All";
+                _selectedReplicate = "All"; // Not L10N
             SelectReplicate(_selectedReplicate);
 
             // Create array of peak areas in same order as peptide names.

@@ -16,24 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Windows.Forms;
 
-namespace ExampleInteractiveTool
+namespace SkylineTool
 {
-    static class Program
+    public interface IRemotable : IDisposable
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
-        {
-            //System.Diagnostics.Debugger.Launch();
-
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm(args));
-        }
+        string Quit();
     }
 }

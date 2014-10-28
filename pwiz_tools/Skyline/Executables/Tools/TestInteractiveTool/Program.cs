@@ -18,9 +18,7 @@
  */
 
 using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.Threading;
+using SkylineTool;
 
 namespace TestInteractiveTool
 {
@@ -30,32 +28,71 @@ namespace TestInteractiveTool
         private const int PeptideLinkColumn = 2;
         private const int PeptideReplicateLinkColumn = 4;
 
-        private static SkylineTool.SkylineToolClient _toolClient;
+        private static SkylineToolClient _toolClient;
+        private static TestToolService _testService;
         private static int _documentChangeCount;
 
         public static void Main(string[] args)
         {
             // Useful for debugging the tool after it starts.
-            //Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
 
-            Console.WriteLine("Tool starting...");
+            var toolConnection = args[0];
 
             // Open connection to Skyline.
-            _toolClient = new SkylineTool.SkylineToolClient("Test Interactive Tool", args[0]); // Not L10N
-            _toolClient.DocumentChanged += OnDocumentChanged;
-
-            using (var testToolApi = new SkylineTool.TestToolApi(args[0]))
+            using (_toolClient = new SkylineToolClient(toolConnection, "Test Interactive Tool")) // Not L10N
             {
-                while (true)
+                _toolClient.DocumentChanged += OnDocumentChanged;
+                _testService = new TestToolService(toolConnection + "-test");
+                Console.WriteLine("Test service running");
+                    
+                _testService.WaitForExit();
+                Console.WriteLine("Tool finished");
+            }
+        }
+
+        private class TestToolService : RemoteService, ITestTool
+        {
+            public TestToolService(string connectionName)
+                : base(connectionName)
+            {
+            }
+
+            public void TestSelect(string link)
+            {
+                Console.WriteLine("Select " + link);
+                SelectLink(link, PeptideLinkColumn);
+            }
+
+            public void TestSelectReplicate(string link)
+            {
+                Console.WriteLine("SelectReplicate " + link);
+                SelectLink(link, PeptideReplicateLinkColumn);
+            }
+
+            public string TestVersion()
+            {
+                Console.WriteLine("Version");
+                try
                 {
-                    var message = testToolApi.GetMessage();
-                    if (message == "quit")
-                    {
-                        testToolApi.ReturnMessage("true");
-                        break;
-                    }
-                    testToolApi.ReturnMessage(RunTest(message));
+                    return _toolClient.SkylineVersion.ToString();
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("EXCEPTION TestVersion: " + ex.StackTrace);
+                    throw;
+                }
+            }
+
+            public string TestDocumentPath()
+            {
+                Console.WriteLine("DocumentPath");
+                return _toolClient.DocumentPath;
+            }
+
+            public string GetDocumentChangeCount()
+            {
+                return _documentChangeCount.ToString("D");
             }
         }
 
@@ -67,68 +104,11 @@ namespace TestInteractiveTool
             _documentChangeCount++;
         }
 
-        private static string RunTest(string testName)
-        {
-            Console.WriteLine(testName);
-
-            // Split comma-separated arguments.
-            var args = testName.Split(',');
-            switch (args[0])
-            {
-                // Select a peptide in Skyline.
-                case "select":
-                    SelectLink(args[1], PeptideLinkColumn);
-                    break;
-
-                // Select a peptide and replicate in Skyline.
-                case "selectreplicate":
-                    SelectLink(args[1], PeptideReplicateLinkColumn);
-                    break;
-
-                // Verify that SkylineVersion works.
-                case "version":
-                {
-                    var version = _toolClient.SkylineVersion;
-                    return (version.Major >= 0 && version.Minor >= 0 && version.Build >= 0 && version.Revision >= 0)
-                        ? "true"
-                        : "false";
-                }
-
-                // Verify that DocumentPath works.
-                case "path":
-                {
-                    var path = _toolClient.DocumentPath;
-                    return path.EndsWith(args[1]) ? "true" : "false";
-                }
-
-                // Return the number of document changes that have been seen.
-                case "documentchanges":
-                    return _documentChangeCount.ToString(CultureInfo.InvariantCulture);
-
-                // Quit the tool.
-                case "quit":
-                    return Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
-            }
-
-            return "true";
-        }
-
         private static void SelectLink(string row, int linkColumn)
         {
-            var thread = new Thread(() =>
-            {
-                _toolClient.RunTest("TestInteractiveTool: Get peak area report");
-                var report = _toolClient.GetReport("Peak Area");
-                _toolClient.RunTest("TestInteractiveTool: Got report");
-                _toolClient.RunTest(string.Format(
-                    "TestInteractiveTool: Report {0},{1} ({2},{3})",
-                    report.Cells.Length, report.Cells[0].Length, row, linkColumn));
-                var link = report.Cells[int.Parse(row)][linkColumn];
-                _toolClient.RunTest("TestInteractiveTool: Select " + link);
-                _toolClient.Select(link);
-                _toolClient.RunTest("TestInteractiveTool: Link selected");
-            });
-            thread.Start();
+            var report = _toolClient.GetReport("Peak Area");
+            var link = report.Cells[int.Parse(row)][linkColumn];
+            _toolClient.Select(link);
         }
     }
 }

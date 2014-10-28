@@ -21,6 +21,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Tools;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -29,8 +30,9 @@ namespace pwiz.SkylineTestFunctional
     {
         private const string TOOL_NAME = "Test Interactive Tool";
         private const string FILE_NAME = "TestToolAPI.sky";
+        private TestToolClient _testToolClient;
 
-        //[TestMethod]
+        [TestMethod]
         public void TestToolService()
         {
             Run(@"TestFunctional\ToolServiceTest.zip"); //Not L10N
@@ -50,38 +52,36 @@ namespace pwiz.SkylineTestFunctional
                 true,
                 "Peak Area"))
             {
-                using (var testToolApi = new SkylineTool.TestToolApi(ToolConnection, true))
-                {
-                    tool.Run();
+                tool.Run();
 
-                    // Check version and path.
-                    CheckVersion(testToolApi);
-                    CheckPath(testToolApi, FILE_NAME);
+                _testToolClient = new TestToolClient(ToolConnection + "-test");
 
-//                    // Select peptides.
-//                    SelectPeptide(toolClient, 219, "VAQLPLSLK", "5600TT13-1070");
-//                    SelectPeptide(toolClient, 330, "ELSELSLLSLYGIHK", "5600TT13-1070");
-//
-//                    // Select peptides in specific replicates.
-//                    SelectPeptideReplicate(toolClient, 83, "TDFGIFR", "5600TT13-1076");
-//                    SelectPeptideReplicate(toolClient, 313, "SAPLPNDSQAR", "5600TT13-1073");
-//
-                    // Check document changes.
-                    CheckDocumentChanges(testToolApi);
+                // Check version and path.
+                CheckVersion();
+                CheckPath(FILE_NAME);
 
-                    // Kill the test tool.
-                    KillTool(testToolApi);
-                }
+                // Select peptides.
+                SelectPeptide(219, "VAQLPLSLK", "5600TT13-1070");
+                SelectPeptide(330, "ELSELSLLSLYGIHK", "5600TT13-1070");
+
+                // Select peptides in specific replicates.
+                SelectPeptideReplicate(83, "TDFGIFR", "5600TT13-1076");
+                SelectPeptideReplicate(313, "SAPLPNDSQAR", "5600TT13-1073");
+
+                // Check document changes.
+                CheckDocumentChanges();
+
+                // Exit the test tool.
+                _testToolClient.Exit();
             }
 
             // There is a race condition where undoing a change occasionally leaves the document in a dirty state.
             SkylineWindow.DiscardChanges = true;
         }
 
-        private static void SelectPeptide(SkylineTool.SkylineToolClient tool, int index, string peptideSequence, string replicate)
+        private void SelectPeptide(int index, string peptideSequence, string replicate)
         {
-            tool.RunTest("select," + index);
-            Thread.Sleep(2000); // HACK: this is not currently synchronized with the tool
+            _testToolClient.TestSelect(index.ToString("D"));
             RunUI(() =>
             {
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);
@@ -89,10 +89,9 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private static void SelectPeptideReplicate(SkylineTool.SkylineToolClient tool, int index, string peptideSequence, string replicate)
+        private void SelectPeptideReplicate(int index, string peptideSequence, string replicate)
         {
-            tool.RunTest("selectreplicate," + index);
-            Thread.Sleep(2000); // HACK: this is not currently synchronized with the tool
+            _testToolClient.TestSelectReplicate(index.ToString("D"));
             RunUI(() =>
             {
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);
@@ -100,30 +99,32 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private static void CheckDocumentChanges(SkylineTool.TestToolApi testToolApi)
+        private void CheckDocumentChanges()
         {
-            Assert.AreEqual("0", testToolApi.RunTool("documentchanges"));
+            Assert.AreEqual(0, DocumentChangeCount);
             RunUI(SkylineWindow.EditDelete);
             Thread.Sleep(500);  // Wait for document change event to propagate
-            Assert.AreEqual("1", testToolApi.RunTool("documentchanges"));
+            Assert.AreEqual(1, DocumentChangeCount);
             RunUI(SkylineWindow.Undo);
             Thread.Sleep(500);  // Wait for document change event to propagate
-            Assert.AreEqual("2", testToolApi.RunTool("documentchanges"));
+            Assert.AreEqual(2, DocumentChangeCount);
         }
 
-        private static void CheckVersion(SkylineTool.TestToolApi testToolApi)
+        private int DocumentChangeCount
         {
-            Assert.AreEqual("true", testToolApi.RunTool("version"));
+            get { return int.Parse(_testToolClient.GetDocumentChangeCount()); }
         }
 
-        private static void CheckPath(SkylineTool.TestToolApi testToolApi, string fileName)
+        private void CheckVersion()
         {
-            Assert.AreEqual("true", testToolApi.RunTool("path," + FILE_NAME));
+            var version = _testToolClient.TestVersion();
+            Assert.AreEqual(4, version.Split(',').Length);
         }
 
-        private static void KillTool(SkylineTool.TestToolApi testToolApi)
+        private void CheckPath(string fileName)
         {
-            Assert.AreEqual("true", testToolApi.RunTool("quit"));
+            var path = _testToolClient.TestDocumentPath();
+            Assert.IsTrue(path.Contains(fileName));
         }
 
         private static string ToolConnection

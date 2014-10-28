@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
-using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -39,6 +38,8 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 // Once-per-assembly initialization to perform logging with log4net.
+using SkylineTool;
+
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 
 namespace pwiz.Skyline
@@ -231,11 +232,11 @@ namespace pwiz.Skyline
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
 
-                MainWindow.Listen(DocumentChangedEventHandler);
-
-                using (new SkylineTool.SkylineToolService(typeof (SkylineToolService), ToolMacros.GetSkylineConnection()))
+                using (MainToolService = new ToolService())
                 {
+                    MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
                     Application.Run(MainWindow);
+                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
                 }
             }
             catch (Exception x)
@@ -253,24 +254,28 @@ namespace pwiz.Skyline
 
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
-            SkylineToolService.CallClients();
+            MainToolService.SendDocumentChange();
         }
 
-
-        private class SkylineToolService : SkylineTool.ISkylineTool
+        public class ToolService : RemoteService, ISkylineTool
         {
-            private static readonly List<SkylineTool.ISkylineToolEvents> _events = new List<SkylineTool.ISkylineToolEvents>();
-
-            public string GetReport(string toolName, string reportName)
+            private  readonly Dictionary<string, DocumentChangeSender> _documentChangeSenders = 
+                new Dictionary<string,DocumentChangeSender>();
+ 
+            public ToolService() : base(Guid.NewGuid().ToString())
             {
+            }
+
+            public string GetReport(string toolReportName)
+            {
+                var args = toolReportName.Split(',');
+                var toolName = args[0];
+                var reportName = args[1];
                 string report = null;
                 MainWindow.Invoke(new Action(() =>
                 {
-                    Console.WriteLine("SkylineToolService: GetReport");
                     report = ToolDescriptionHelpers.GetReport(MainWindow.DocumentUI, reportName, toolName, MainWindow);
-                    Console.WriteLine("SkylineToolService: report generated");
                 }));
-                Console.WriteLine("SkylineToolService: returning report");
                 return report;
             }
 
@@ -278,64 +283,82 @@ namespace pwiz.Skyline
             {
                 MainWindow.Invoke(new Action(() =>
                 {
-                    Console.WriteLine("SkylineToolService: Select " + link);
                     DocumentLocation documentLocation = DocumentLocation.Parse(link);
                     Bookmark bookmark = documentLocation.ToBookmark(MainWindow.DocumentUI);
                     MainWindow.NavigateToBookmark(bookmark);
                 }));
             }
 
-            public string DocumentPath
+            public string GetDocumentPath()
             {
-                get { return MainWindow.DocumentFilePath; }
+                return MainWindow.DocumentFilePath;
             }
 
-            public SkylineTool.Version Version
+            public string GetVersion()
             {
-                get
+                int major, minor, build, revision;
+                try
                 {
-                    int major, minor, build, revision;
-                    try
-                    {
-                        major = Install.MajorVersion;
-                        minor = Install.MinorVersion;
-                        build = Install.Build;
-                        revision = Install.Revision;
-                    }
-                    // ReSharper disable once EmptyGeneralCatchClause
-                    catch
-                    {
-                        major = minor = build = revision = 0;
-                    }
-                    return new SkylineTool.Version(major, minor, build, revision);
+                    major = Install.MajorVersion;
+                    minor = Install.MinorVersion;
+                    build = Install.Build;
+                    revision = Install.Revision;
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                    major = minor = build = revision = 0;
+                }
+                return string.Format("{0},{1},{2},{3}", major, minor, build, revision); // Not L10N
+            }
+
+            private readonly object _documentChangeSendersLock = new object();
+
+            public void AddDocumentChangeReceiver(string receiverName)
+            {
+                lock (_documentChangeSendersLock)
+                {
+                    _documentChangeSenders.Add(receiverName, new DocumentChangeSender(receiverName));
                 }
             }
 
-            public void NotifyDocumentChanged()
+            public void RemoveDocumentChangeReceiver(string receiverName)
             {
-                _events.Add(OperationContext.Current.GetCallbackChannel<SkylineTool.ISkylineToolEvents>());
-            }
-
-            public int RunTest(string message)
-            {
-                // This is used to pass debugging messages from a test tool (useful when trying to debug problems on TeamCity)
-                Console.WriteLine(message);
-                return 0;
-            }
-
-            public static void CallClients()
-            {
-                Action<SkylineTool.ISkylineToolEvents> invoke = callback => callback.DocumentChangedEvent();
-                for (int i = 0; i < _events.Count; i++)
+                lock (_documentChangeSendersLock)
                 {
-                    try
+                    var receiver = _documentChangeSenders[receiverName];
+                    _documentChangeSenders.Remove(receiverName);
+                    receiver.Dispose();
+                }
+            }
+
+            public void SendDocumentChange()
+            {
+                // We have to send document changes off the UI thread, because the client
+                // may respond by requesting further information on the UI thread, which
+                // would cause a deadlock.
+                var sendThread = new Thread(() =>
+                {
+                    lock (_documentChangeSendersLock)
                     {
-                        invoke(_events[i]);
+                        foreach (var documentChangeSender in _documentChangeSenders)
+                        {
+                            documentChangeSender.Value.DocumentChanged();
+                        }
                     }
-                    catch (Exception)
-                    {
-                        _events.RemoveAt(i--);
-                    }
+                });
+                sendThread.Start();
+            }
+
+            private class DocumentChangeSender : RemoteClient, IDocumentChangeReceiver
+            {
+                public DocumentChangeSender(string connectionName) : base(connectionName)
+                {
+                }
+
+                public void DocumentChanged()
+                {
+                    RemoteCall("DocumentChanged"); // Not L10N
                 }
             }
         }
@@ -404,6 +427,7 @@ namespace pwiz.Skyline
         }
 
         private static readonly object _unhandledExceptionLock = new object();
+        public static ToolService MainToolService;
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

@@ -75,20 +75,16 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IRemotable.cs" />
     <Compile Include="ISkylineTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteUtil.cs" />
+    <Compile Include="RemoteClient.cs" />
+    <Compile Include="RemoteService.cs" />
     <Compile Include="SkylineToolClient.cs" />
-    <Compile Include="SkylineToolService.cs" />
-    <Compile Include="TestToolApi.cs" />
+    <Compile Include="TestToolService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
