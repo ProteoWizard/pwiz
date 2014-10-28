@@ -147,6 +147,21 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public void ForceOnScreen()
+        {
+            var location = Location;
+            location.X = Math.Max(GetScreen(Left, Top).WorkingArea.Left,
+                Math.Min(location.X, GetScreen(Right, Top).WorkingArea.Right - Size.Width));
+            location.Y = Math.Max(GetScreen(Left, Top).WorkingArea.Top,
+                Math.Min(location.Y, GetScreen(Left, Bottom).WorkingArea.Bottom - Size.Height));
+            Location = location;
+        }
+
+        private static Screen GetScreen(int x, int y)
+        {
+            return Screen.FromPoint(new Point(x, y));
+        }
+
         public virtual void CancelDialog()
         {
             CancelButton.PerformClick();

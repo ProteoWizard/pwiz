@@ -154,10 +154,8 @@ namespace pwiz.Skyline.SettingsUI
                 StartPosition = FormStartPosition.Manual;
 
                 // Make sure the window is entirely on screen
-                var screen = Screen.FromPoint(location);
-                location.X = Math.Min(location.X, screen.WorkingArea.Right - Size.Width);
-                location.Y = Math.Min(location.Y, screen.WorkingArea.Bottom - Size.Height);
                 Location = location;
+                ForceOnScreen();
             }
 
             _matcher = new LibKeyModificationMatcher();

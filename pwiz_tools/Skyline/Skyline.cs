@@ -169,18 +169,20 @@ namespace pwiz.Skyline
             ToolReportCache.Instance.Register(this);
 
             // Get placement values before changing anything.
-            Point location = Settings.Default.MainWindowLocation;
             Size size = Settings.Default.MainWindowSize;
-            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
+            if (!size.IsEmpty)
+                Size = size;
 
             // Restore window placement.
+            Point location = Settings.Default.MainWindowLocation;
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;
+
                 Location = location;
+                ForceOnScreen();
             }
-            if (!size.IsEmpty)
-                Size = size;
+            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
             if (maximize)
                 WindowState = FormWindowState.Maximized;
 

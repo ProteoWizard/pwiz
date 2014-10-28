@@ -77,10 +77,14 @@ namespace pwiz.Skyline.Controls.Startup
             // Get placement values before changing anything.
 
             // Restore window placement.
+            if (!size.IsEmpty)
+                Size = size;
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;
+
                 Location = location;
+                ForceOnScreen();
             }
             else if (Owner == null)
             {
@@ -90,8 +94,6 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 CenterToParent();
             }
-            if (!size.IsEmpty)
-                Size = size;
             if (maximize)
                 WindowState = FormWindowState.Maximized;
             
