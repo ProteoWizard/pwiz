@@ -409,21 +409,22 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 // Check unique targets.
+                List<IsolationWindow> sortedWindowList;
                 if (cbSpecifyTarget.Checked)
                 {
 // ReSharper disable PossibleInvalidOperationException
                     // IsolationWindow constructor above checks for null Target.
-                    windowList.Sort(new IsolationWindowTargetComparer());
-                    for (int row = 1; row < windowList.Count; row++)
+                    sortedWindowList = windowList.OrderBy( o => o, new IsolationWindowTargetComparer()).ToList();
+                    for (int row = 1; row < sortedWindowList.Count; row++)
                     {
-                        if (windowList[row].Target.Value == windowList[row - 1].Target.Value)
+                        if (sortedWindowList[row].Target.Value == sortedWindowList[row - 1].Target.Value)
                         {
                             // Sort grid by Target so the user will see the duplicate Target values
                             // next to each other.  There isn't an easy way to do a secondary sort
                             // on the Start values, so just remove all the data from the grid and
                             // insert it in sorted order.
                             _gridViewDriver.Items.Clear();
-                            foreach (var isolationWindow in windowList)
+                            foreach (var isolationWindow in sortedWindowList)
                             {
                                 _gridViewDriver.Items.Add(new EditIsolationWindow(isolationWindow));
                             }
@@ -450,7 +451,7 @@ namespace pwiz.Skyline.SettingsUI
                     windowsPerScan = x;
                 }
                 // Check for overlap and gaps
-                List<IsolationWindow> sortedWindowList = windowList.OrderBy(o => o.Start).ToList();
+                sortedWindowList = windowList.OrderBy(o => o.Start).ToList();
                 bool gapsOk = false;
                 bool overlapsOk = false;
                 bool overlap = Overlap;

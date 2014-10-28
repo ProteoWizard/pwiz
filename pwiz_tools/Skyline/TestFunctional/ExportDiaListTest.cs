@@ -155,6 +155,59 @@ namespace pwiz.SkylineTestFunctional
             }
 
             {
+                // Check for export of an overlapped DIA method.
+                var fullScanDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() =>
+                {
+                    fullScanDlg.MaxInclusions = 5000;
+                    fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
+                    fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
+                });
+
+                // Open the isolation scheme dialog and calculate dialog.
+                var editDlg = ShowDialog<EditIsolationSchemeDlg>(fullScanDlg.AddIsolationScheme);
+                RunUI(() =>
+                {
+                    editDlg.IsolationSchemeName = "TestExport3";
+                    editDlg.UseResults = false;
+                });
+
+                // Define an overlapped isolation scheme. 
+                RunDlg<CalculateIsolationSchemeDlg>(
+                    editDlg.Calculate,
+                    calcDlg =>
+                    {
+                        calcDlg.Start = 500;
+                        calcDlg.End = 600;
+                        calcDlg.WindowWidth = 20;
+                        calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                        calcDlg.GenerateTarget = true;
+                        calcDlg.OkDialog();
+                    });
+                OkDialog(editDlg, editDlg.OkDialog);
+                OkDialog(fullScanDlg, fullScanDlg.OkDialog);
+
+                // Export overlapped isolation scheme.
+                string csvPath = TestContext.GetTestPath("TestExport3.csv");
+                RunDlg<ExportMethodDlg>(
+                    (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList)),
+                    exportMethodDlg =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE;
+                        Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                        Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
+                        Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
+                        Assert.IsFalse(exportMethodDlg.IsMaxTransitionsEnabled);
+
+                        exportMethodDlg.OkDialog(csvPath);
+                    });
+
+                // Check for expected output.
+                string csvOut = File.ReadAllText(csvPath);
+                Assert.IsTrue(csvOut == LineSeparateMzs(510, 530, 550, 570, 590, 610, 500, 520, 540, 560, 580, 600));
+            }
+
+            {
                 // Check errors for instruments that can't export a DIA method.
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
 
