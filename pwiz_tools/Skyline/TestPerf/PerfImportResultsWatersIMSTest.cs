@@ -119,7 +119,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var doc1 = WaitForDocumentLoaded(400000);
-            AssertEx.IsDocumentState(doc1, null, 4, 63, 7, 51);  // Was 4, 63, 4, 30 before drift time based charge state detection was added to final_fragments reader
+            AssertEx.IsDocumentState(doc1, null, 4, 63, 6, 42);  // Was 4, 63, 4, 30 before drift time based charge state detection was added to final_fragments reader
 
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
@@ -128,23 +128,28 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
 
-            var numPeaks = new[] {10, 10, 10, 10, 10, 10, 10};
+            var numPeaks = new[] {8, 10, 10, 10, 10, 10, 10};
             int npIndex = 0;
+            var errmsg = "";
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo));
+
                 foreach (var chromGroup in chromGroupInfo)
                 {
-                    Assert.AreEqual(numPeaks[npIndex++], chromGroup.NumPeaks); 
+                    if (numPeaks[npIndex] !=  chromGroup.NumPeaks)
+                        errmsg += String.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
+                    npIndex++;
                     foreach (var tranInfo in chromGroup.TransitionPointSets)
                     {
                         maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
                     }
                 }
             }
-            Assert.AreEqual( 3542.927, maxHeight, 1); 
+            Assert.IsTrue(errmsg.Length == 0, errmsg);
+            Assert.AreEqual(3617.529, maxHeight, 1); 
         }  
     }
 }
