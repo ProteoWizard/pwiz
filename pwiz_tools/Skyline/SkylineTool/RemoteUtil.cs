@@ -78,19 +78,19 @@ namespace SkylineTool
             _clientEvent.Release();
         }
 
+        public SharedFile Open()
+        {
+            return new SharedFile(SharedFileName);
+        }
+
         public string SharedFileName
         {
             get { return _connectionPrefix + "-file"; } // Not L10N
         }
 
-        public object RunMethod()
-        {
-            return _method.Invoke(_instance, null);
-        }
-
         public object RunMethod(string data)
         {
-            return _method.Invoke(_instance, new []{(object)data});
+            return _method.Invoke(_instance, data == null ? null : new []{(object)data});
         }
     }
 
@@ -122,6 +122,42 @@ namespace SkylineTool
         {
             _name = name;
             _mappedFile = MemoryMappedFile.CreateOrOpen(_name, MaxMessageSize);
+        }
+
+        public string Read()
+        {
+            using (var stream = _mappedFile.CreateViewStream())
+            {
+                using (var reader = new BinaryReader(stream))
+                {
+                    return reader.ReadString();
+                }
+            }
+        }
+
+        public void Write(object data)
+        {
+            using (var stream = _mappedFile.CreateViewStream())
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    if (data == null)
+                        writer.Write(string.Empty);
+                    else
+                    {
+                        var s = data as string;
+                        if (s != null)
+                            writer.Write(s);
+                        else
+                        {
+                            var chromatograms = (IChromatogram[])data;
+                            writer.Write(chromatograms.Length);
+                            foreach (var chromatogram in chromatograms)
+                                chromatogram.Write(writer);
+                        }
+                    }
+                }
+            }
         }
 
         public void Dispose() { _mappedFile.Dispose(); }

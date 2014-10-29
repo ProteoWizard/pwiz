@@ -41,7 +41,6 @@ namespace SkylineTool
         {
             _client.RemoveDocumentChangeReceiver(_documentChangeReceiver.ConnectionName);
             _documentChangeReceiver.Dispose();
-            _client.Dispose();
         }
 
         public IReport GetReport(string reportName)
@@ -86,7 +85,7 @@ namespace SkylineTool
             }
         }
 
-        private class Client : RemoteClient, ISkylineTool
+        private class Client : RemoteClient, IToolService
         {
             public Client(string connectionName)
                 : base(connectionName)
@@ -95,32 +94,32 @@ namespace SkylineTool
 
             public string GetReport(string toolReportName)
             {
-                return RemoteCall("GetReport", true, toolReportName); // Not L10N
+                return (string) RemoteCallFunction(GetReport, toolReportName);
             }
 
             public void Select(string link)
             {
-                RemoteCall("Select", false, link); // Not L10N
+                RemoteCall(Select, link);
             }
 
             public string GetDocumentPath()
             {
-                return RemoteCall("GetDocumentPath", true); // Not L10N
+                return (string) RemoteCallFunction(GetDocumentPath);
             }
 
             public string GetVersion()
             {
-                return RemoteCall("GetVersion", true); // Not L10N
+                return (string) RemoteCallFunction(GetVersion);
             }
 
             public void AddDocumentChangeReceiver(string receiverName)
             {
-                RemoteCall("AddDocumentChangeReceiver", false, receiverName); // Not L10N
+                RemoteCall(AddDocumentChangeReceiver, receiverName);
             }
 
             public void RemoveDocumentChangeReceiver(string receiverName)
             {
-                RemoteCall("RemoveDocumentChangeReceiver", false, receiverName); // Not L10N
+                RemoteCall(RemoveDocumentChangeReceiver, receiverName);
             }
         }
 

@@ -257,7 +257,7 @@ namespace pwiz.Skyline
             MainToolService.SendDocumentChange();
         }
 
-        public class ToolService : RemoteService, ISkylineTool
+        public class ToolService : RemoteService, IToolService
         {
             private  readonly Dictionary<string, DocumentChangeSender> _documentChangeSenders = 
                 new Dictionary<string,DocumentChangeSender>();
@@ -326,9 +326,7 @@ namespace pwiz.Skyline
             {
                 lock (_documentChangeSendersLock)
                 {
-                    var receiver = _documentChangeSenders[receiverName];
                     _documentChangeSenders.Remove(receiverName);
-                    receiver.Dispose();
                 }
             }
 
@@ -358,7 +356,7 @@ namespace pwiz.Skyline
 
                 public void DocumentChanged()
                 {
-                    RemoteCall("DocumentChanged"); // Not L10N
+                    RemoteCall(DocumentChanged);
                 }
             }
         }

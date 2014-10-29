@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using SkylineTool;
 
 namespace TestInteractiveTool
@@ -93,6 +94,12 @@ namespace TestInteractiveTool
             public string GetDocumentChangeCount()
             {
                 return _documentChangeCount.ToString("D");
+            }
+
+            public string Quit()
+            {
+                Exit();
+                return Process.GetCurrentProcess().Id.ToString("D"); // Not L10N
             }
         }
 

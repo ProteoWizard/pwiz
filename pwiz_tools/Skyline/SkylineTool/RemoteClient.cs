@@ -17,58 +17,35 @@
  * limitations under the License.
  */
 
-using System.IO;
+using System;
 
 namespace SkylineTool
 {
-    public class RemoteClient : IRemotable
+    public class RemoteClient : RemoteBase
     {
         protected RemoteClient(string connectionName)
         {
             ConnectionName = connectionName;
         }
 
-        public void Dispose()
-        {
-        }
-
         public string ConnectionName { get; private set; }
-
-        /// <summary>
-        /// Request the server to shutdown.
-        /// </summary>
-        public string Quit()
-        {
-            return RemoteCall("Quit", true); // Not L10N
-        }
 
         /// <summary>
         /// Make a remote call to the server.
         /// </summary>
         /// <param name="methodName">Name of method to execute on the server.</param>
-        /// <param name="hasReturn">True if method returns a value.</param>
-        /// <param name="data">Data to pass to the server method.</param>
-        /// <returns>Result string from server method.</returns>
-        protected string RemoteCall(string methodName, bool hasReturn = false, string data = null)
+        /// <param name="arg">Data to pass to the server method.</param>
+        /// <returns>Result from server method.</returns>
+        protected object RemoteCallName(string methodName, string arg)
         {
-            string result = null;
-
             // Create channel for communicating with the server.
             using (var channel = new Channel(ConnectionName, methodName))
             {
-                using (var sharedFile = new SharedFile(channel.SharedFileName))
+                using (var sharedFile = channel.Open())
                 {
-                    if (data != null)
-                    {
-                        // Write data to shared file.
-                        using (var stream = sharedFile.CreateViewStream())
-                        {
-                            using (var writer = new BinaryWriter(stream))
-                            {
-                                writer.Write(data);
-                            }
-                        }
-                    }
+                    // Write string argument to shared file.
+                    if (arg != null)
+                        sharedFile.Write(arg);
 
                     // Notify server that it can process the data.
                     channel.ReleaseServer();
@@ -77,20 +54,32 @@ namespace SkylineTool
                     channel.WaitClient();
 
                     // Read result from shared file.
-                    if (hasReturn)
-                    {
-                        using (var stream = sharedFile.CreateViewStream())
-                        {
-                            using (var reader = new BinaryReader(stream))
-                            {
-                                result = reader.ReadString();
-                            }
-                        }
-                    }
+                    if (HasReturnValue(methodName))
+                        return sharedFile.Read();
                 }
             }
 
-            return result;
+            return null;
+        }
+
+        protected object RemoteCall(Action action)
+        {
+            return RemoteCallName(action.Method.Name, null);
+        }
+
+        protected object RemoteCall(Action<string> action, string arg)
+        {
+            return RemoteCallName(action.Method.Name, arg);
+        }
+
+        protected object RemoteCallFunction(Func<object> func)
+        {
+            return RemoteCallName(func.Method.Name, null);
+        }
+
+        protected object RemoteCallFunction(Func<string, object> func, string arg)
+        {
+            return RemoteCallName(func.Method.Name, arg);
         }
     }
 }

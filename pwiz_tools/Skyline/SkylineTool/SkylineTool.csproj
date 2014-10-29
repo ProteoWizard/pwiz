@@ -77,9 +77,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IRemotable.cs" />
-    <Compile Include="ISkylineTool.cs" />
+    <Compile Include="IToolService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteBase.cs" />
     <Compile Include="RemoteUtil.cs" />
     <Compile Include="RemoteClient.cs" />
     <Compile Include="RemoteService.cs" />

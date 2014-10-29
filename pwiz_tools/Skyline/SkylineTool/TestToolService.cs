@@ -29,6 +29,7 @@ namespace SkylineTool
         string TestVersion();
         string TestDocumentPath();
         string GetDocumentChangeCount();
+        string Quit();
     }
 
     public class TestToolClient : RemoteClient, ITestTool
@@ -55,27 +56,32 @@ namespace SkylineTool
 
         public void TestSelect(string link)
         {
-            RemoteCall("TestSelect", false, link); // Not L10N
+            RemoteCall(TestSelect, link);
         }
 
         public void TestSelectReplicate(string link)
         {
-            RemoteCall("TestSelectReplicate", false, link); // Not L10N
+            RemoteCall(TestSelectReplicate, link);
         }
 
         public string TestVersion()
         {
-            return RemoteCall("TestVersion", true); // Not L10N
+            return (string) RemoteCallFunction(TestVersion);
         }
 
         public string TestDocumentPath()
         {
-            return RemoteCall("TestDocumentPath", true); // Not L10N
+            return (string) RemoteCallFunction(TestDocumentPath);
         }
 
         public string GetDocumentChangeCount()
         {
-            return RemoteCall("GetDocumentChangeCount", true); // Not L10N
+            return (string) RemoteCallFunction(GetDocumentChangeCount);
+        }
+
+        public string Quit()
+        {
+            return (string) RemoteCallFunction(Quit);
         }
     }
 }

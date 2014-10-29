@@ -22,10 +22,10 @@ using System.IO;
 namespace SkylineTool
 {
     /// <summary>
-    /// ISkylineTool is the main interface for interactive tools to communicate
+    /// IToolService is the main interface for interactive tools to communicate
     /// with the instance of Skyline that started the tool.
     /// </summary>
-    public interface ISkylineTool : IRemotable
+    public interface IToolService
     {
         string GetReport(string toolReportName);
         void Select(string link);

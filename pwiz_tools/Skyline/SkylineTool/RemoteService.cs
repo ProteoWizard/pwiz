@@ -20,16 +20,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
 using System.Threading;
 
 namespace SkylineTool
 {
-    public class RemoteService : IRemotable
+    public class RemoteService : RemoteBase, IDisposable
     {
         private readonly List<Channel> _channels = new List<Channel>();
-        private bool _quit;
+        private bool _exit;
         private readonly CountdownEvent _quitCountDown;
 
         /// <summary>
@@ -41,24 +39,15 @@ namespace SkylineTool
             ConnectionName = connectionName;
 
             // Create a service thread for each interface method.
-            foreach (var anInterface in GetType().FindInterfaces((type, criteria) => true, string.Empty))
+            foreach (var pair in MethodInfos)
             {
-                if (anInterface.Name == "IDisposable") // Not L10N
-                    continue;
-                var interfaceMap = GetType().GetInterfaceMap(anInterface);
-                foreach (var method in interfaceMap.TargetMethods)
-                {
-                    if (method.IsPublic)
-                    {
-                        // Start service thread.
-                        var worker = new BackgroundWorker();
-                        worker.DoWork += ServiceThread;
-                        var channel = new Channel(ConnectionName, this, method);
-                        worker.RunWorkerAsync(channel);
-                        _channels.Add(channel);
-                    }
-                }
-            } 
+                // Start service thread.
+                var worker = new BackgroundWorker();
+                worker.DoWork += ServiceThread;
+                var channel = new Channel(ConnectionName, this, pair.Value);
+                worker.RunWorkerAsync(channel);
+                _channels.Add(channel);
+            }
 
             // Counter to wait for all threads to exit.
             _quitCountDown = new CountdownEvent(_channels.Count);
@@ -66,9 +55,9 @@ namespace SkylineTool
 
         public void Dispose()
         {
-            if (!_quit)
+            if (!_exit)
             {
-                Quit();
+                Exit();
                 WaitForExit();
             }
             foreach (var channel in _channels)
@@ -78,12 +67,11 @@ namespace SkylineTool
 
         public string ConnectionName { get; private set; }
 
-        public string Quit()
+        protected void Exit()
         {
-            _quit = true;
+            _exit = true;
             foreach (var channel in _channels)
                 channel.ReleaseServer();
-            return Process.GetCurrentProcess().Id.ToString("D"); // Not L10N
         }
 
         /// <summary>
@@ -98,68 +86,31 @@ namespace SkylineTool
         {
             var channel = (Channel) e.Argument;
 
+            // Name the thread for easier identification in the debugger.
+            Thread.CurrentThread.Name = "*" + channel.Name; // Not L10N
+
             try
             {
-                // Name the thread for easier identification in the debugger.
-                Thread.CurrentThread.Name = "*" + channel.Name; // Not L10N
-
-                while (!_quit)
+                while (!_exit)
                 {
                     // Wait for a message from the client.
                     channel.WaitServer();
 
-                    if (_quit)
+                    if (_exit)
                         break;
 
                     // Create a shared file for communication.
-                    using (var sharedFile = new SharedFile(channel.SharedFileName))
+                    using (var sharedFile = channel.Open())
                     {
-                        object result;
-                        if (channel.HasArg)
-                        {
-                            // Read data from shared file.
-                            string data;
-                            using (var stream = sharedFile.CreateViewStream())
-                            {
-                                using (var reader = new BinaryReader(stream))
-                                {
-                                    data = reader.ReadString();
-                                }
-                            }
+                        // Read data from shared file.
+                        string data = channel.HasArg ? sharedFile.Read() : null;
 
-                            // Call service method.
-                            result = channel.RunMethod(data);
-                        }
-                        else
-                        {
-                            result = channel.RunMethod();
-                        }
+                        // Call service method.
+                        object result = channel.RunMethod(data);
 
+                        // Write result to shared file.
                         if (channel.HasReturn)
-                        {
-                            // Write result to shared file.
-                            using (var stream = sharedFile.CreateViewStream())
-                            {
-                                using (var writer = new BinaryWriter(stream))
-                                {
-                                    if (result == null)
-                                        writer.Write(string.Empty);
-                                    else
-                                    {
-                                        var s = result as string;
-                                        if (s != null)
-                                            writer.Write(s);
-                                        else
-                                        {
-                                            var chromatograms = (IChromatogram[]) result;
-                                            writer.Write(chromatograms.Length);
-                                            foreach (var chromatogram in chromatograms)
-                                                chromatogram.Write(writer);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                            sharedFile.Write(result);
 
                         // Signal client that the result is ready.
                         channel.ReleaseClient();
