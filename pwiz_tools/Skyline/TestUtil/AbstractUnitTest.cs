@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestUtil
         protected bool RunPerfTests
         {
             get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+            set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false";  }
         }
 
         /// <summary>
