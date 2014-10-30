@@ -36,7 +36,7 @@ namespace TestInteractiveTool
         public static void Main(string[] args)
         {
             // Useful for debugging the tool after it starts.
-            //System.Diagnostics.Debugger.Launch();
+            //Debugger.Launch();
 
             var toolConnection = args[0];
 
@@ -59,6 +59,54 @@ namespace TestInteractiveTool
             {
             }
 
+            public float TestFloat(float data)
+            {
+                return data*2;
+            }
+
+            public float[] TestFloatArray()
+            {
+                return new[] {1.0f, 2.0f};
+            }
+
+            public string TestString()
+            {
+                return "test";
+            }
+
+            public string[] TestStringArray()
+            {
+                return new[] {"two", "strings"};
+            }
+
+            public SkylineTool.Version[] TestVersionArray()
+            {
+                return new[]
+                {
+                    new SkylineTool.Version {Major = 1},
+                    new SkylineTool.Version {Minor = 2}
+                };
+            }
+
+            public Chromatogram[] TestChromatogramArray()
+            {
+                return new[]
+                {
+                    new Chromatogram
+                    {
+                        Mz = 1.0,
+                        Times = new[] {1.0f, 2.0f},
+                        Intensities = new[] {10.0f, 20.0f}
+                    },
+                    new Chromatogram
+                    {
+                        Mz = 2.0,
+                        Times = new[] {3.0f, 4.0f, 5.0f},
+                        Intensities = new[] {30.0f, 40.0f, 50.0f}
+                    }
+                };
+            }
+
             public void TestSelect(string link)
             {
                 Console.WriteLine("Select " + link);
@@ -71,12 +119,12 @@ namespace TestInteractiveTool
                 SelectLink(link, PeptideReplicateLinkColumn);
             }
 
-            public string TestVersion()
+            public SkylineTool.Version TestVersion()
             {
                 Console.WriteLine("Version");
                 try
                 {
-                    return _toolClient.SkylineVersion.ToString();
+                    return _toolClient.SkylineVersion;
                 }
                 catch (Exception ex)
                 {
@@ -91,15 +139,15 @@ namespace TestInteractiveTool
                 return _toolClient.DocumentPath;
             }
 
-            public string GetDocumentChangeCount()
+            public int GetDocumentChangeCount()
             {
-                return _documentChangeCount.ToString("D");
+                return _documentChangeCount;
             }
 
-            public string Quit()
+            public int Quit()
             {
                 Exit();
-                return Process.GetCurrentProcess().Id.ToString("D"); // Not L10N
+                return Process.GetCurrentProcess().Id;
             }
         }
 

@@ -63,8 +63,7 @@ namespace SkylineTool
         {
             get
             {
-                var versionString = _client.GetVersion();
-                return new Version(versionString);
+                return _client.GetVersion();
             }
         }
 
@@ -94,7 +93,7 @@ namespace SkylineTool
 
             public string GetReport(string toolReportName)
             {
-                return (string) RemoteCallFunction(GetReport, toolReportName);
+                return RemoteCallFunction(GetReport, toolReportName);
             }
 
             public void Select(string link)
@@ -104,12 +103,12 @@ namespace SkylineTool
 
             public string GetDocumentPath()
             {
-                return (string) RemoteCallFunction(GetDocumentPath);
+                return RemoteCallFunction(GetDocumentPath);
             }
 
-            public string GetVersion()
+            public Version GetVersion()
             {
-                return (string) RemoteCallFunction(GetVersion);
+                return (Version) RemoteCallFunction((Func<object>) GetVersion);
             }
 
             public void AddDocumentChangeReceiver(string receiverName)
@@ -181,35 +180,5 @@ namespace SkylineTool
         double?[][] CellValues { get; }
         string Cell(int row, string column);
         double? CellValue(int row, string column);
-    }
-
-    public class Version
-    {
-        public int Major { get; private set; }
-        public int Minor { get; private set; }
-        public int Build { get; private set; }
-        public int Revision { get; private set; }
-
-        public Version(int major, int minor, int build, int revision)
-        {
-            Major = major;
-            Minor = minor;
-            Build = build;
-            Revision = revision;
-        }
-
-        public Version(string version)
-        {
-            var parts = version.Split(',');
-            Major = int.Parse(parts[0]);
-            Minor = int.Parse(parts[1]);
-            Build = int.Parse(parts[2]);
-            Revision = int.Parse(parts[3]);
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0},{1},{2},{3}", Major, Minor, Build, Revision); // Not L10N
-        }
     }
 }

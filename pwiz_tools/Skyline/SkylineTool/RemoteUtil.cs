@@ -18,8 +18,11 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -88,9 +91,9 @@ namespace SkylineTool
             get { return _connectionPrefix + "-file"; } // Not L10N
         }
 
-        public object RunMethod(string data)
+        public object RunMethod(object data)
         {
-            return _method.Invoke(_instance, data == null ? null : new []{(object)data});
+            return _method.Invoke(_instance, data == null ? null : new []{data});
         }
     }
 
@@ -111,6 +114,12 @@ namespace SkylineTool
         public override string ToString() { return Name; }
     }
 
+    public interface IStreamable
+    {
+        void Read(BinaryReader reader);
+        void Write(BinaryWriter writer);
+    }
+
     internal class SharedFile : IDisposable
     {
         private readonly MemoryMappedFile _mappedFile;
@@ -124,13 +133,13 @@ namespace SkylineTool
             _mappedFile = MemoryMappedFile.CreateOrOpen(_name, MaxMessageSize);
         }
 
-        public string Read()
+        public object Read()
         {
             using (var stream = _mappedFile.CreateViewStream())
             {
                 using (var reader = new BinaryReader(stream))
                 {
-                    return reader.ReadString();
+                    return StreamIn(reader);
                 }
             }
         }
@@ -141,27 +150,100 @@ namespace SkylineTool
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    if (data == null)
-                        writer.Write(string.Empty);
-                    else
-                    {
-                        var s = data as string;
-                        if (s != null)
-                            writer.Write(s);
-                        else
-                        {
-                            var chromatograms = (IChromatogram[])data;
-                            writer.Write(chromatograms.Length);
-                            foreach (var chromatogram in chromatograms)
-                                chromatogram.Write(writer);
-                        }
-                    }
+                    StreamOut(data, writer);
                 }
             }
         }
 
+        public static void StreamOut(object data, BinaryWriter writer)
+        {
+            var type = data.GetType();
+            writer.Write(type.ToString());
+
+            var s = data as string;
+            if (s != null)
+            {
+                writer.Write(s);
+                return;
+            }
+
+            var array = data as Array;
+            if (array != null)
+            {
+                writer.Write(array.Length);
+                foreach (var element in array)
+                    StreamOutElement(element, writer);
+                return;
+            }
+
+            StreamOutElement(data, writer);
+        }
+
+        private static void StreamOutElement(object element, BinaryWriter writer)
+        {
+// ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
+            if (element is int)
+                writer.Write((int) element);
+            else if (element is float)
+                writer.Write((float) element);
+            else if (element is double)
+                writer.Write((double) element);
+            else if (element is string)
+                writer.Write((string) element);
+            else if (element is bool)
+                writer.Write((bool) element);
+            else if (element is IStreamable)
+                ((IStreamable) element).Write(writer);
+            else
+                throw new ArgumentException();
+// ReSharper restore CanBeReplacedWithTryCastAndCheckForNull
+        }
+
+
+        public static object StreamIn(BinaryReader reader)
+        {
+            var type = Type.GetType(reader.ReadString());
+            if (type == null)
+                throw new InvalidDataException();
+
+            if (type.IsArray)
+            {
+                int length = reader.ReadInt32();
+                var elementType = type.GetElementType();
+                var array = Array.CreateInstance(elementType, length);
+                for (int i = 0; i < length; i++)
+                    array.SetValue(StreamInElement(elementType, reader), i);
+                return array;
+            }
+
+            return StreamInElement(type, reader);
+        }
+
+        private static object StreamInElement(Type type, BinaryReader reader)
+        {
+            if (type == typeof (int))
+                return reader.ReadInt32();
+            if (type == typeof (float))
+                return reader.ReadSingle();
+            if (type == typeof (double))
+                return reader.ReadDouble();
+            if (type == typeof (string))
+                return reader.ReadString();
+            if (type == typeof (bool))
+                return reader.ReadBoolean();
+            if (type == typeof (int))
+                return reader.ReadInt32();
+            if (type == typeof (int))
+                return reader.ReadInt32();
+            var instance = Activator.CreateInstance(type);
+            var streamable = instance as IStreamable;
+            if (streamable == null) 
+                throw new InvalidDataException();
+            streamable.Read(reader);
+            return streamable;
+        }
+
         public void Dispose() { _mappedFile.Dispose(); }
-        public Stream CreateViewStream() { return _mappedFile.CreateViewStream(); }
         public override string ToString() { return _name; }
     }
 }

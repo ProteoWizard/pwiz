@@ -24,12 +24,20 @@ namespace SkylineTool
 {
     public interface ITestTool
     {
+        // Cross-process communication tests.
+        float TestFloat(float data);
+        float[] TestFloatArray();
+        string TestString();
+        string[] TestStringArray();
+        Version[] TestVersionArray();
+        Chromatogram[] TestChromatogramArray();
+
         void TestSelect(string link);
         void TestSelectReplicate(string link);
-        string TestVersion();
+        Version TestVersion();
         string TestDocumentPath();
-        string GetDocumentChangeCount();
-        string Quit();
+        int GetDocumentChangeCount();
+        int Quit();
     }
 
     public class TestToolClient : RemoteClient, ITestTool
@@ -41,7 +49,7 @@ namespace SkylineTool
 
         public void Exit()
         {
-            var processId = int.Parse(Quit());
+            var processId = Quit();
             try
             {
                 // Wait for tool to exit.  If it has already quit, this
@@ -54,6 +62,36 @@ namespace SkylineTool
             }
         }
 
+        public float TestFloat(float data)
+        {
+            return RemoteCallFunction(TestFloat, data);
+        }
+
+        public float[] TestFloatArray()
+        {
+            return RemoteCallFunction(TestFloatArray);
+        }
+
+        public string TestString()
+        {
+            return RemoteCallFunction(TestString);
+        }
+
+        public string[] TestStringArray()
+        {
+            return RemoteCallFunction(TestStringArray);
+        }
+
+        public Version[] TestVersionArray()
+        {
+            return RemoteCallFunction(TestVersionArray);
+        }
+
+        public Chromatogram[] TestChromatogramArray()
+        {
+            return RemoteCallFunction(TestChromatogramArray);
+        }
+
         public void TestSelect(string link)
         {
             RemoteCall(TestSelect, link);
@@ -64,24 +102,24 @@ namespace SkylineTool
             RemoteCall(TestSelectReplicate, link);
         }
 
-        public string TestVersion()
+        public Version TestVersion()
         {
-            return (string) RemoteCallFunction(TestVersion);
+            return RemoteCallFunction(TestVersion);
         }
 
         public string TestDocumentPath()
         {
-            return (string) RemoteCallFunction(TestDocumentPath);
+            return RemoteCallFunction(TestDocumentPath);
         }
 
-        public string GetDocumentChangeCount()
+        public int GetDocumentChangeCount()
         {
-            return (string) RemoteCallFunction(GetDocumentChangeCount);
+            return RemoteCallFunction(GetDocumentChangeCount);
         }
 
-        public string Quit()
+        public int Quit()
         {
-            return (string) RemoteCallFunction(Quit);
+            return RemoteCallFunction(Quit);
         }
     }
 }

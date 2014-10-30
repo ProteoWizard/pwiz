@@ -36,7 +36,7 @@ namespace SkylineTool
         /// <param name="methodName">Name of method to execute on the server.</param>
         /// <param name="arg">Data to pass to the server method.</param>
         /// <returns>Result from server method.</returns>
-        protected object RemoteCallName(string methodName, string arg)
+        protected object RemoteCallName(string methodName, object arg)
         {
             // Create channel for communicating with the server.
             using (var channel = new Channel(ConnectionName, methodName))
@@ -62,24 +62,24 @@ namespace SkylineTool
             return null;
         }
 
-        protected object RemoteCall(Action action)
+        protected void RemoteCall(Action action)
         {
-            return RemoteCallName(action.Method.Name, null);
+            RemoteCallName(action.Method.Name, null);
         }
 
-        protected object RemoteCall(Action<string> action, string arg)
+        protected void RemoteCall<T>(Action<T> action, T arg)
         {
-            return RemoteCallName(action.Method.Name, arg);
+            RemoteCallName(action.Method.Name, arg);
         }
 
-        protected object RemoteCallFunction(Func<object> func)
+        protected T RemoteCallFunction<T>(Func<T> func)
         {
-            return RemoteCallName(func.Method.Name, null);
+            return (T) RemoteCallName(func.Method.Name, null);
         }
 
-        protected object RemoteCallFunction(Func<string, object> func, string arg)
+        protected TReturn RemoteCallFunction<T, TReturn>(Func<T, TReturn> func, T arg)
         {
-            return RemoteCallName(func.Method.Name, arg);
+            return (TReturn) RemoteCallName(func.Method.Name, arg);
         }
     }
 }

@@ -103,7 +103,7 @@ namespace SkylineTool
                     using (var sharedFile = channel.Open())
                     {
                         // Read data from shared file.
-                        string data = channel.HasArg ? sharedFile.Read() : null;
+                        object data = channel.HasArg ? sharedFile.Read() : null;
 
                         // Call service method.
                         object result = channel.RunMethod(data);

@@ -294,22 +294,21 @@ namespace pwiz.Skyline
                 return MainWindow.DocumentFilePath;
             }
 
-            public string GetVersion()
+            public SkylineTool.Version GetVersion()
             {
-                int major, minor, build, revision;
+                var version = new SkylineTool.Version();
                 try
                 {
-                    major = Install.MajorVersion;
-                    minor = Install.MinorVersion;
-                    build = Install.Build;
-                    revision = Install.Revision;
+                    version.Major = Install.MajorVersion;
+                    version.Minor = Install.MinorVersion;
+                    version.Build = Install.Build;
+                    version.Revision = Install.Revision;
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
-                    major = minor = build = revision = 0;
                 }
-                return string.Format("{0},{1},{2},{3}", major, minor, build, revision); // Not L10N
+                return version;
             }
 
             private readonly object _documentChangeSendersLock = new object();
