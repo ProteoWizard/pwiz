@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
                 mzidFile = argv[i];
             else if (bal::iends_with(argv[i], ".dat") || bal::iends_with(argv[i], ".dat"))
                 datFile = argv[i];
-            else
+            else if (!bal::starts_with(argv[i], "-"))
                 throw runtime_error(string("no support for extra argument \"") + argv[i] + "\"");
         }
 
