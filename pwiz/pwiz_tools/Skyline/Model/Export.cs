@@ -1644,7 +1644,8 @@ namespace pwiz.Skyline.Model
         static internal string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
         {
             var mods = new ExplicitMods(nodePep,
-                                        settings.PeptideSettings.Modifications.StaticModifications,
+                                        settings.PeptideSettings.Modifications.StaticModifications
+                                            .Where(mod => !mod.IsVariable).ToArray(),
                                         Settings.Default.StaticModList,
                                         new List<TypedModifications>(),
                                         null);
@@ -1660,6 +1661,11 @@ namespace pwiz.Skyline.Model
                 }
                 if (nodePep.ExplicitMods.StaticModifications != null)
                 {
+                    if (!nodePep.ExplicitMods.IsVariableStaticMods)
+                    {
+                        // Explicit modifications (not variable) override the settings
+                        staticMods.Clear();
+                    }
                     foreach (var explicitMod in nodePep.ExplicitMods.StaticModifications)
                         staticMods.Add(explicitMod);
                 }
