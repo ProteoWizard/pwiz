@@ -183,8 +183,8 @@ void test()
     unit_assert_operator_equal(2, unimod::modifications(filter(oxidation->deltaAverageMass, 0, false, indeterminate, Site::Methionine | Site::Alanine, Position::Anywhere))->Count);
 
 
-    // 18 mods are 28 +/- 1 (but 1 of them is an isotope label not yet supported)
-    unit_assert_operator_equal(17, unimod::modifications(filter(28, 1, true, indeterminate))->Count);
+    // 18 mods are 28 +/- 1
+    unit_assert_operator_equal(18, unimod::modifications(filter(28, 1, true, indeterminate))->Count);
 
     // only two of those mods happen post-translationally on protein N-termini
     unit_assert_operator_equal(2, unimod::modifications(filter(28, 1, true, indeterminate, Site::Any,
