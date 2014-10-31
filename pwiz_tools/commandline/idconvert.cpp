@@ -440,6 +440,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     vector<IdentDataPtr> iddList;
     Reader::Config readerConfig;
     readerConfig.iterationListenerRegistry = pILR;
+    readerConfig.ignoreProteinDetectionList = config.writeConfig.format == IdentDataFile::Format_pepXML;
     readers.read(filename, iddList, readerConfig);
 
     for (size_t i=0; i < iddList.size(); ++i)

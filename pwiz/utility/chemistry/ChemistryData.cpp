@@ -37,6 +37,9 @@ using namespace pwiz::chemistry::Element;
 Isotope isotopes_H[] = { {1.0078250321, 0.999885}, {2.014101778, 0.000115}, {3.0160492675, 0}, };
 const int isotopes_H_size = sizeof(isotopes_H)/sizeof(Isotope);
 
+Isotope isotopes_2H[] = { {2.014101778, 1} };
+const int isotopes_2H_size = sizeof(isotopes_2H)/sizeof(Isotope);
+
 Isotope isotopes_He[] = { {3.0160293097, 1.37e-06}, {4.0026032497, 0.99999863}, };
 const int isotopes_He_size = sizeof(isotopes_He)/sizeof(Isotope);
 
@@ -52,11 +55,20 @@ const int isotopes_B_size = sizeof(isotopes_B)/sizeof(Isotope);
 Isotope isotopes_C[] = { {12, 0.9893}, {13.0033548378, 0.0107}, {14.003241988, 0}, };
 const int isotopes_C_size = sizeof(isotopes_C)/sizeof(Isotope);
 
+Isotope isotopes_13C[] = { {13.0033548378, 1} };
+const int isotopes_13C_size = sizeof(isotopes_13C)/sizeof(Isotope);
+
 Isotope isotopes_N[] = { {14.0030740052, 0.99632}, {15.0001088984, 0.00368}, };
 const int isotopes_N_size = sizeof(isotopes_N)/sizeof(Isotope);
 
+Isotope isotopes_15N[] = { {15.0001088984, 1} };
+const int isotopes_15N_size = sizeof(isotopes_15N)/sizeof(Isotope);
+
 Isotope isotopes_O[] = { {15.9949146221, 0.99757}, {16.9991315, 0.00038}, {17.9991604, 0.00205}, };
 const int isotopes_O_size = sizeof(isotopes_O)/sizeof(Isotope);
+
+Isotope isotopes_18O[] = { {17.9991604, 1} };
+const int isotopes_18O_size = sizeof(isotopes_18O)/sizeof(Isotope);
 
 Isotope isotopes_F[] = { {18.9984032, 1}, };
 const int isotopes_F_size = sizeof(isotopes_F)/sizeof(Isotope);
@@ -380,13 +392,17 @@ const int isotopes_Uuh_size = sizeof(isotopes_Uuh)/sizeof(Isotope);
 PWIZ_API_DECL Element elements_[] =
 {
     { H, "H", 1, 1.00794, isotopes_H, isotopes_H_size },
+    { _2H, "_2H", 1, isotopes_2H[0].mass, isotopes_2H, isotopes_2H_size },
     { He, "He", 2, 4.002602, isotopes_He, isotopes_He_size },
     { Li, "Li", 3, 6.941, isotopes_Li, isotopes_Li_size },
     { Be, "Be", 4, 9.012182, isotopes_Be, isotopes_Be_size },
     { B, "B", 5, 10.811, isotopes_B, isotopes_B_size },
     { C, "C", 6, 12.0107, isotopes_C, isotopes_C_size },
+    { _13C, "_13C", 6, isotopes_13C[0].mass, isotopes_13C, isotopes_13C_size },
     { N, "N", 7, 14.0067, isotopes_N, isotopes_N_size },
+    { _15N, "_15N", 7, isotopes_15N[0].mass, isotopes_15N, isotopes_15N_size },
     { O, "O", 8, 15.9994, isotopes_O, isotopes_O_size },
+    { _18O, "_18O", 8, isotopes_18O[0].mass, isotopes_18O, isotopes_18O_size },
     { F, "F", 9, 18.9984032, isotopes_F, isotopes_F_size },
     { Ne, "Ne", 10, 20.1797, isotopes_Ne, isotopes_Ne_size },
     { Na, "Na", 11, 22.98977, isotopes_Na, isotopes_Na_size },

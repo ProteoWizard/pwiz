@@ -4245,10 +4245,13 @@ struct HandlerAnalysisData : public SAXParser::Handler
         }
         else if (name == "ProteinDetectionList")
         {
-            ad->proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList());
-            handlerProteinDetectionList_.version = version;
-            handlerProteinDetectionList_.pdl = ad->proteinDetectionListPtr.get();
-            return Status(Status::Delegate, &handlerProteinDetectionList_);
+            if (analysisDataFlag != IgnoreProteinDetectionList)
+            {
+                ad->proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList());
+                handlerProteinDetectionList_.version = version;
+                handlerProteinDetectionList_.pdl = ad->proteinDetectionListPtr.get();
+                return Status(Status::Delegate, &handlerProteinDetectionList_);
+            }
         }
         else
             throw runtime_error("[IO::HandlerAnalysisData] Unexpected element name: " + name);

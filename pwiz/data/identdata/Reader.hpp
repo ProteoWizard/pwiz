@@ -46,10 +46,12 @@ class PWIZ_API_DECL Reader
     struct PWIZ_API_DECL Config
     {
         bool ignoreSequenceCollectionAndAnalysisData;
+        bool ignoreProteinDetectionList;
         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry;
 
-        Config(bool ignoreSequenceCollectionAndAnalysisData = false)
+        Config(bool ignoreSequenceCollectionAndAnalysisData = false, bool ignoreProteinDetectionList = false)
         :   ignoreSequenceCollectionAndAnalysisData(ignoreSequenceCollectionAndAnalysisData),
+            ignoreProteinDetectionList(ignoreProteinDetectionList),
             iterationListenerRegistry(NULL)
         {}
     };

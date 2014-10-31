@@ -1290,7 +1290,7 @@ PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
                 else if (mod.location == (int) peptide.peptideSequence.length()+1)
                     residues.push_back('c');
                 else
-                    throw runtime_error("[identdata::snapModificationsToUnimod] no residues specified for a non-terminal modification");
+                    throw runtime_error("[identdata::snapModificationsToUnimod] no residues specified for a non-terminal modification in peptide \"" + peptide.id + "\"");
             }
 
             mod.cvParams.clear();

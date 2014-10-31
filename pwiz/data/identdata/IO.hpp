@@ -208,7 +208,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const BibliographicReferen
 PWIZ_API_DECL void read(std::istream& is, BibliographicReference& bibliographicReference);
 
 
-enum PWIZ_API_DECL AnalysisDataFlag {IgnoreAnalysisData, ReadAnalysisData};
+enum PWIZ_API_DECL AnalysisDataFlag {IgnoreAnalysisData, ReadAnalysisData, IgnoreProteinDetectionList};
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dataCollection,

@@ -494,7 +494,7 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         if (sd.numResidues > 0)
             attributes.add("size_of_residues", sd.numResidues);
         attributes.add("type", sd.hasCVParam(MS_database_type_amino_acid) ? "AA" : "NA");
-        xmlWriter.startElement("search_database", attributes,XMLWriter::EmptyElement);
+        xmlWriter.startElement("search_database", attributes, XMLWriter::EmptyElement);
 
         // create a cumulative enzyme name for multiple enzymes like "Trypsin + AspN + Chymotrypsin"
         string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
@@ -593,6 +593,15 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
             attributes.clear();
             attributes.add("name", userParam.name);
             attributes.add("value", userParam.value);
+            xmlWriter.startElement("parameter", attributes, XMLWriter::EmptyElement);
+        }
+
+        CVParam decoyPrefix = sd.cvParam(MS_decoy_DB_accession_regexp);
+        if (!decoyPrefix.empty())
+        {
+            attributes.clear();
+            attributes.add("name", "DecoyPrefix");
+            attributes.add("value", decoyPrefix.value);
             xmlWriter.startElement("parameter", attributes, XMLWriter::EmptyElement);
         }
     }

@@ -77,7 +77,7 @@ namespace Element {
 /// enumeration of the elements
 enum PWIZ_API_DECL Type
 {
-    C, H, O, N, S, P,
+    C, H, O, N, S, P, _13C, _2H, _18O, _15N,
     He, Li, Be, B, F, Ne, 
     Na, Mg, Al, Si, Cl, Ar, K, Ca, 
     Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, 
