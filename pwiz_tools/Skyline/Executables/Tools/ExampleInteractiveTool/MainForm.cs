@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using SkylineTool;
 
 namespace ExampleInteractiveTool
 {
@@ -44,6 +45,7 @@ namespace ExampleInteractiveTool
             {
                 _toolClient = new SkylineTool.SkylineToolClient(args[0], "Example Interactive Tool"); // Not L10N
                 _toolClient.DocumentChanged += OnDocumentChanged;
+                _toolClient.SelectionChanged += OnSelectionChanged;
             }
 
             _selectedReplicate = "All"; // Not L10N
@@ -156,6 +158,12 @@ namespace ExampleInteractiveTool
         {
             // Create graph on UI thread.
             Invoke(new Action(CreateGraph));
+        }
+
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
+        {
+            // Create graph on UI thread.
+            Invoke(new Action(() => MessageBox.Show(eventArgs.SelectedLink)));
         }
 
         private void InfoClick(object sender, EventArgs e)

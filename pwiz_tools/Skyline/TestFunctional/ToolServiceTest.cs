@@ -58,34 +58,7 @@ namespace pwiz.SkylineTestFunctional
                 _testToolClient = new TestToolClient(ToolConnection + "-test");
 
                 // Check inter-process communication.
-                Assert.AreEqual(4.0f, _testToolClient.TestFloat(2.0f));
-                var floatArray = _testToolClient.TestFloatArray();
-                Assert.IsTrue(ArrayUtil.EqualsDeep(floatArray, new []{1.0f, 2.0f}));
-                var stringArray = _testToolClient.TestStringArray();
-                Assert.IsTrue(ArrayUtil.EqualsDeep(stringArray, new []{"two", "strings"}));
-                var versionArray = _testToolClient.TestVersionArray();
-                Assert.IsTrue(ArrayUtil.EqualsDeep(versionArray, new[]
-                {
-                    new Version {Major = 1},
-                    new Version {Minor = 2}
-                }));
-                var chromatogramArray = _testToolClient.TestChromatogramArray();
-                Assert.IsTrue(ArrayUtil.EqualsDeep(chromatogramArray, new[]
-                {
-                    new Chromatogram
-                    {
-                        Mz = 1.0,
-                        Times = new[] {1.0f, 2.0f},
-                        Intensities = new[] {10.0f, 20.0f}
-                    },
-                    new Chromatogram
-                    {
-                        Mz = 2.0,
-                        Times = new[] {3.0f, 4.0f, 5.0f},
-                        Intensities = new[] {30.0f, 40.0f, 50.0f}
-                    }
-                }));
-
+                CheckCommunication();
 
                 // Check version and path.
                 CheckVersion();
@@ -108,6 +81,37 @@ namespace pwiz.SkylineTestFunctional
 
             // There is a race condition where undoing a change occasionally leaves the document in a dirty state.
             SkylineWindow.DiscardChanges = true;
+        }
+
+        private void CheckCommunication()
+        {
+            Assert.AreEqual(4.0f, _testToolClient.TestFloat(2.0f));
+            var floatArray = _testToolClient.TestFloatArray();
+            Assert.IsTrue(ArrayUtil.EqualsDeep(floatArray, new[] { 1.0f, 2.0f }));
+            var stringArray = _testToolClient.TestStringArray();
+            Assert.IsTrue(ArrayUtil.EqualsDeep(stringArray, new[] { "two", "strings" }));
+            var versionArray = _testToolClient.TestVersionArray();
+            Assert.IsTrue(ArrayUtil.EqualsDeep(versionArray, new[]
+                {
+                    new Version {Major = 1},
+                    new Version {Minor = 2}
+                }));
+            var chromatogramArray = _testToolClient.TestChromatogramArray();
+            Assert.IsTrue(ArrayUtil.EqualsDeep(chromatogramArray, new[]
+                {
+                    new Chromatogram
+                    {
+                        Mz = 1.0,
+                        Times = new[] {1.0f, 2.0f},
+                        Intensities = new[] {10.0f, 20.0f}
+                    },
+                    new Chromatogram
+                    {
+                        Mz = 2.0,
+                        Times = new[] {3.0f, 4.0f, 5.0f},
+                        Intensities = new[] {30.0f, 40.0f, 50.0f}
+                    }
+                }));
         }
 
         private void SelectPeptide(int index, string peptideSequence, string replicate)

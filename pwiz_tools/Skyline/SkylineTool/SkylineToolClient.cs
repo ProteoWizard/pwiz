@@ -24,6 +24,7 @@ namespace SkylineTool
     public class SkylineToolClient : IDisposable
     {
         public event EventHandler DocumentChanged; 
+        public event SelectionChangedEventHandler SelectionChanged; 
         
         private readonly Client _client;
         private readonly string _toolName;
@@ -81,6 +82,12 @@ namespace SkylineTool
             {
                 if (_toolClient.DocumentChanged != null)
                     _toolClient.DocumentChanged(_toolClient, null);
+            }
+
+            public void SelectionChanged(string link)
+            {
+                if (_toolClient.SelectionChanged != null)
+                    _toolClient.SelectionChanged(_toolClient, new SelectionChangedEventArgs(link));
             }
         }
 
@@ -180,5 +187,17 @@ namespace SkylineTool
         double?[][] CellValues { get; }
         string Cell(int row, string column);
         double? CellValue(int row, string column);
+    }
+
+    public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs args);
+
+    public class SelectionChangedEventArgs : EventArgs
+    {
+        public string SelectedLink { get; private set; }
+
+        public SelectionChangedEventArgs(string selectedLink)
+        {
+            SelectedLink = selectedLink;
+        }
     }
 }

@@ -908,6 +908,13 @@ namespace pwiz.Skyline
             // Update any visible graphs
             UpdateGraphPanes();
             UpdateNodeCountStatus();
+
+            // Notify interested tools.
+            if (Program.MainToolService != null)
+            {
+                var bookmark = new Bookmark(SequenceTree.SelectedPath);
+                Program.MainToolService.SendSelectionChange(bookmark.IdentityPath.ToString());
+            }
         }
 
         private bool StatementCompletionAction(Action<TextBox> act)

@@ -347,6 +347,24 @@ namespace pwiz.Skyline
                 sendThread.Start();
             }
 
+            public void SendSelectionChange(string link)
+            {
+                // We have to send document changes off the UI thread, because the client
+                // may respond by requesting further information on the UI thread, which
+                // would cause a deadlock.
+                var sendThread = new Thread(() =>
+                {
+                    lock (_documentChangeSendersLock)
+                    {
+                        foreach (var documentChangeSender in _documentChangeSenders)
+                        {
+                            documentChangeSender.Value.SelectionChanged(link);
+                        }
+                    }
+                });
+                sendThread.Start();
+            }
+
             private class DocumentChangeSender : RemoteClient, IDocumentChangeReceiver
             {
                 public DocumentChangeSender(string connectionName) : base(connectionName)
@@ -356,6 +374,11 @@ namespace pwiz.Skyline
                 public void DocumentChanged()
                 {
                     RemoteCall(DocumentChanged);
+                }
+
+                public void SelectionChanged(string link)
+                {
+                    RemoteCall(SelectionChanged, link);
                 }
             }
         }

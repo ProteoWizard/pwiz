@@ -39,6 +39,7 @@ namespace SkylineTool
     public interface IDocumentChangeReceiver
     {
         void DocumentChanged();
+        void SelectionChanged(string link);
     }
 
     public class Version : IStreamable
