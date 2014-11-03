@@ -20,7 +20,7 @@
 //
 
 /*
- * $Id: Match.h, v 2.0 2008/11/20 09:53:52 Ning Zhang Exp $
+ * $Id$
  */
 //header file for Match class
 

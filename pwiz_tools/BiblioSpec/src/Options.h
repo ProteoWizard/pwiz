@@ -23,7 +23,7 @@
  *Options class to represent command line options 
  *that users input.
  *
- * $Id: Options.h, v 1.0 2008/10/31 09:53:52 Ning Zhang Exp $
+ * $Id$
  */
 
 

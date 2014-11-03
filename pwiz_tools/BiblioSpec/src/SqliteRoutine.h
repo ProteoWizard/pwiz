@@ -25,7 +25,7 @@
  *
  * Adopted from Jimmy Eng's sqt2sqlite.c
  *
- *$Id: SqliteRoutine.h, v 1.0 2009/02/06 09:53:52 Ning Zhang Exp $
+ *$Id$
  */
 
 

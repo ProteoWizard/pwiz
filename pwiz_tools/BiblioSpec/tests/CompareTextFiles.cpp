@@ -19,9 +19,9 @@
 // limitations under the License.
 //
 
+#include "Compare.h"
 #include "pwiz/utility/misc/unit.hpp"
 #include <stdlib.h>
-#include "Compare.h"
 
 
 // Take as input two text files and report if the differ.  Optionally

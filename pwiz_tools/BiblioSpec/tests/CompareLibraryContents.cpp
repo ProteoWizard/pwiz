@@ -19,12 +19,12 @@
 // limitations under the License.
 //
 
+#include "Compare.h"
 #include "pwiz/utility/misc/unit.hpp"
 #include <cstring>
 #include <stdlib.h>
 #include "sqlite3.h"
 #include "smart_stmt.h"
-#include "Compare.h"
 
 using namespace BiblioSpec;
 

@@ -23,7 +23,7 @@
  *This class is to select all the library RefSpectrum given
  *an experiment precursorMZ and charge.
  *
- * $Id: LibReader.h,v 1.0 2008/10/24 09:53:52 Ning Zhang Exp $
+ * $Id$
  *
  ****************************************************************/
 

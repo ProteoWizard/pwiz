@@ -23,7 +23,7 @@
  *BlibSearch main program using sqlite3 format input and library files.
  *
  * Renamed from SearchMain.cpp
- * $Id: SearchMain.cpp, v 1.0 2008/10/30 09:53:52 Ning Zhang Exp $
+ * $Id$
  */
 
 

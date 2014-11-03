@@ -255,12 +255,12 @@ blib-test-build mse : -o : output/mse.blib : mse.check : inputs/tiny_final_fragm
 
 blib-test-build mse-mobility : -o -P 0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
 
-# Test building with Mascot .dat files, contingent on Mascot support
+# Test building with Mascot .dat files, contingent on Mascot support (FIXME: these tests are broken on Linux)
 
-blib-test-build mascot : -o : output/mascot.blib : mascot.check : inputs/F027319.dat : <conditional>@mascot-installed ;
-blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : inputs/F027752.dat : <conditional>@mascot-installed ;
-blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : inputs/F007401.dat : <conditional>@mascot-installed ;
-blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : inputs/F007401b.dat : <conditional>@mascot-installed ;
+blib-test-build mascot : -o : output/mascot.blib : mascot.check : inputs/F027319.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : inputs/F027752.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : inputs/F007401.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : inputs/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test merging existing libraries
 

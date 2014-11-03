@@ -33,7 +33,7 @@
 /********************************************************************
  * Since the library is now stored in sqlite3 format, there are some 
  * changes based on that.
- * $Id: RefSpectrum.h,v 1.0 2008/10/16 09:53:52 Ning Zhang Exp $
+ * $Id$
  ********************************************************************/
 
 #ifndef REFSPECTRUM_H
