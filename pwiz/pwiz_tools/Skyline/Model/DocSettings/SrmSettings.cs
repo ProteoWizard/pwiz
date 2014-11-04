@@ -1674,8 +1674,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
-                return new SrmSettingsDiff
-                { DiffPeptides = false, DiffTransitionGroups = false, DiffTransitions = false };
+                return new SrmSettingsDiff(false)
+                { DiffPeptideProps = true, DiffTransitionGroupProps = true, DiffTransitionProps = true };
             }
         }
 // ReSharper restore InconsistentNaming
