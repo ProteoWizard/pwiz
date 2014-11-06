@@ -183,9 +183,11 @@ lib blib
   : # requirements
     <link>static
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
+    <library>pwiz-boost-libraries
   : # default-build
   : # usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
+    <library>pwiz-boost-libraries
  ;
 
 # all the pwiz and boost libraries required
@@ -211,7 +213,6 @@ exe BlibBuild
     BlibBuild.cpp
     blib
     blibbuild
-    pwiz-boost-libraries
   : # requirements
     <link>static
     <conditional>@mascot-define
