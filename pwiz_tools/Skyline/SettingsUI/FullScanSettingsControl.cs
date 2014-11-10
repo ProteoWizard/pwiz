@@ -584,7 +584,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverIsolationScheme.SelectedIndexChangedEvent(sender, e);
             
             // If we have a callback function and the isolation scheme _did_ really change its value, we invoke the handler
-            if (IsolationSchemeChangedEvent != null && _prevval_comboIsolationScheme != IsolationScheme)
+            if (IsolationSchemeChangedEvent != null && !Equals(_prevval_comboIsolationScheme, IsolationScheme))
             {
                 IsolationSchemeChangedEvent.Invoke(sender, e);
             }
