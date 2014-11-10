@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -24,6 +26,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -150,6 +154,80 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(msgDlg.Message, Resources.CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
                     msgDlg.OkDialog();
                 });
+
+            // Paste peptides
+            const int precursorCharge = 2;
+            List<Tuple<string, int>> peptidePaste = new List<Tuple<string, int>>
+            {
+                new Tuple<string, int>("FVEGLPINDFSR", 3),
+                new Tuple<string, int>("FVEGLPINDFSR", 2),
+                new Tuple<string, int>("FVEGLPINDFSR", 0),
+                new Tuple<string, int>("DLNELQALIEAHFENR", 0),
+                new Tuple<string, int>("C[+57.0]QPLELAGLGFAELQDLC[+57.0]R", 3),
+                new Tuple<string, int>("PEPTIDER", 5),
+                new Tuple<string, int>("PEPTIDER", 15)
+            };
+            var peptidePasteSb = new StringBuilder();
+            foreach (var pep in peptidePaste)
+                peptidePasteSb.AppendLine(pep.Item1 + Transition.GetChargeIndicator(pep.Item2));
+
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                document = SkylineWindow.Document;
+                document = document.ChangeSettings(document.Settings.ChangeTransitionFilter(f => f.ChangePrecursorCharges(new[] {precursorCharge})));
+                SetClipboardText(peptidePasteSb.ToString());
+                SkylineWindow.Paste();
+            });
+            document = WaitForDocumentChange(document);
+            Assert.AreEqual(peptidePaste.Count, document.TransitionGroupCount);
+            for (int i = 0; i < document.TransitionGroupCount; i++)
+            {
+                TransitionGroupDocNode transition = document.TransitionGroups.ElementAt(i);
+                string seq = transition.TransitionGroup.Peptide.Sequence;
+                int charge = transition.PrecursorCharge;
+                Assert.AreEqual(FastaSequence.StripModifications(peptidePaste[i].Item1), seq);
+                var pastedCharge = peptidePaste[i].Item2;
+                Assert.AreEqual(pastedCharge != 0 ? pastedCharge : precursorCharge, charge);
+            }
+
+            // Undo paste
+            RunUI(() => SkylineWindow.Undo());
+            document = WaitForDocumentChange(document);
+            // Change precursor charges
+            int[] precursorCharges = {2, 3, 4};
+            RunUI(() => SkylineWindow.ModifyDocument("Change precursor charges", doc => doc.ChangeSettings((document.Settings.ChangeTransitionFilter(f => f.ChangePrecursorCharges(precursorCharges))))));
+            document = WaitForDocumentChange(document);
+            // Re-paste in peptides
+            RunUI(() => SkylineWindow.Paste());
+            document = WaitForDocumentChange(document);
+            int curTransitionGroup = 0;
+            foreach (var peptide in peptidePaste)
+            {
+                if (peptide.Item2 > 0)
+                {
+                    // Pasted peptides with a charge indicator should have a single precursor with the specified charge state
+                    TransitionGroupDocNode group = document.TransitionGroups.ElementAt(curTransitionGroup++);
+                    string seq = group.TransitionGroup.Peptide.Sequence;
+                    int charge = group.PrecursorCharge;
+                    Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
+                    var pastedCharge = peptide.Item2;
+                    Assert.AreEqual(pastedCharge, charge);
+                }
+                else
+                {
+                    // Pasted peptides with no charge indicator should have a precursor for every charge state in transition filter settings
+                    for (int j = 0; j < precursorCharges.Count(); j++)
+                    {
+                        TransitionGroupDocNode group = document.TransitionGroups.ElementAt(curTransitionGroup++);
+                        string seq = group.TransitionGroup.Peptide.Sequence;
+                        int charge = group.PrecursorCharge;
+                        Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
+                        Assert.AreEqual(precursorCharges[j], charge);
+                    }
+                }
+            }
+            Assert.AreEqual(curTransitionGroup, document.TransitionGroupCount);
         }
 
         // Check that actual clipboard text and HTML match the expected clipboard text and HTML.

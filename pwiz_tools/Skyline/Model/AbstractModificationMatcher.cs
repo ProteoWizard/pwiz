@@ -439,6 +439,7 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode CreateDocNodeFromSettings(string seq, Peptide peptide, SrmSettingsDiff diff,
              out TransitionGroupDocNode nodeGroupMatched)
         {
+            seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             if (peptide == null)
             {
                 string seqUnmod = FastaSequence.StripModifications(seq);

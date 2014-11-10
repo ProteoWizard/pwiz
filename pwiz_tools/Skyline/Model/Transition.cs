@@ -20,10 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -174,6 +177,26 @@ namespace pwiz.Skyline.Model
             return charge < 5
                 ? pluses.Substring(0, Math.Min(charge, pluses.Length))
                 : string.Format("{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+        }
+
+        public static string StripChargeIndicators(string text, int min, int max)
+        {
+            var sequences = new List<string>();
+            foreach (var line in text.Split('\n').Select(seq => seq.Trim()))
+            {
+                int chargePos = -1;
+                for (int i = max; i >= min; i--)
+                {
+                    var charge = GetChargeIndicator(i);
+                    if (line.EndsWith(charge))
+                    {
+                        chargePos = line.LastIndexOf(charge, StringComparison.CurrentCulture);
+                        break;
+                    }
+                }
+                sequences.Add(chargePos == -1 ? line : line.Substring(0, chargePos));
+            }
+            return TextUtil.LineSeparate(sequences);
         }
 
         public static int? GetChargeFromIndicator(string text, int min, int max)

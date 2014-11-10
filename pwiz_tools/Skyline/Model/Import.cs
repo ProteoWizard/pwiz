@@ -1603,6 +1603,7 @@ namespace pwiz.Skyline.Model
     {
         private readonly StringBuilder _sequence = new StringBuilder();
         private readonly List<PeptideDocNode> _peptides;
+        private readonly Dictionary<int, int> _charges;
         private readonly SrmSettings _settings;
         private readonly Enzyme _enzyme;
         private readonly bool _customName;
@@ -1640,6 +1641,7 @@ namespace pwiz.Skyline.Model
             _settings = settings;
             _enzyme = _settings.PeptideSettings.Enzyme;
             _peptides = new List<PeptideDocNode>();
+            _charges = new Dictionary<int, int>();
             _groupLibTriples = new List<TransitionGroupLibraryIrtTriple>();
             _activeTransitionInfos = new List<ExTransitionInfo>();
             _irtPeptides = new List<KeyValuePair<string, double>>();
@@ -1731,6 +1733,8 @@ namespace pwiz.Skyline.Model
 
         public void AppendSequence(string seqMod)
         {
+            int? charge = Transition.GetChargeFromIndicator(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            seqMod = Transition.StripChargeIndicators(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             var seq = FastaSequence.StripModifications(seqMod);
             // Auto manage the children unless there is at least one modified sequence in the fasta
             _autoManageChildren = _autoManageChildren && Equals(seq, seqMod);
@@ -1754,6 +1758,8 @@ namespace pwiz.Skyline.Model
                     nodePep = new PeptideDocNode(peptide);
                 }
                 _peptides.Add(nodePep);
+                if (charge.HasValue)
+                    _charges.Add(nodePep.Id.GlobalIndex, charge.Value);
             }
         }
 
@@ -2153,7 +2159,22 @@ namespace pwiz.Skyline.Model
                 nodePepGroup = (PeptideGroupDocNode) nodePepGroup.ChangeAutoManageChildren(false);
             // Materialize children, so that we have accurate accounting of
             // peptide and transition counts.
-            return nodePepGroup.ChangeSettings(_settings, diff);
+            nodePepGroup = nodePepGroup.ChangeSettings(_settings, diff);
+
+            List<DocNode> newChildren = new List<DocNode>();
+            foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+            {
+                var nodePepAdd = nodePep;
+                int charge;
+                if (_charges.TryGetValue(nodePep.Id.GlobalIndex, out charge))
+                {
+                    var settingsCharge = _settings.ChangeTransitionFilter(f => f.ChangePrecursorCharges(new[] {charge}));
+                    nodePepAdd = (PeptideDocNode) nodePep.ChangeSettings(settingsCharge, diff)
+                                                         .ChangeAutoManageChildren(false);
+                }
+                newChildren.Add(nodePepAdd);
+            }
+            return (PeptideGroupDocNode) nodePepGroup.ChangeChildren(newChildren);
         }
     }
 

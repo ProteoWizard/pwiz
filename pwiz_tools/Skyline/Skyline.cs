@@ -1180,7 +1180,8 @@ namespace pwiz.Skyline
             // If the text contains numbers, see if it can be imported as a mass list.
             // It is definitly not a sequence, if it has numbers.  Whereas, sequences do
             // allow internal white space including tabs.
-            else if (MassListImporter.IsColumnar(text, out provider, out separator, out columnTypes))
+            else if (MassListImporter.IsColumnar(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
+                     out provider, out separator, out columnTypes))
             {
                 // If no numeric type is found, try the second line.  Ther first may be
                 // a header row.
@@ -1230,7 +1231,7 @@ namespace pwiz.Skyline
                 // First make sure it looks like a sequence.
                 List<double> lineLengths = new List<double>();
                 int lineLen = 0;
-                var textNoMods = FastaSequence.StripModifications(text);
+                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
                 foreach (char c in textNoMods)
                 {
                     if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.') // Not L10N
@@ -1312,8 +1313,11 @@ namespace pwiz.Skyline
             var listFilterPeptides = new List<string>();
             for (int i = 0; i < pepSequences.Length; i++)
             {
-                string pepSeqMod = CleanPeptideSequence(pepSequences[i]);
+                int? charge = Transition.GetChargeFromIndicator(pepSequences[i].Trim(), TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                string pepSeqMod = CleanPeptideSequence(Transition.StripChargeIndicators(pepSequences[i], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
                 string pepSeqClean = FastaSequence.StripModifications(pepSeqMod);
+                if (charge.HasValue)
+                    pepSeqMod += Transition.GetChargeIndicator(charge.Value);
                 if (string.IsNullOrEmpty(pepSeqMod))
                     continue;
                 if (pepSeqClean.Contains(".")) // Not L10N
