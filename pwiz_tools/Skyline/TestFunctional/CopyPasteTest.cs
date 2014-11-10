@@ -180,10 +180,10 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Paste();
             });
             document = WaitForDocumentChange(document);
-            Assert.AreEqual(peptidePaste.Count, document.TransitionGroupCount);
-            for (int i = 0; i < document.TransitionGroupCount; i++)
+            Assert.AreEqual(peptidePaste.Count, document.PeptideTransitionGroupCount);
+            for (int i = 0; i < document.PeptideTransitionGroupCount; i++)
             {
-                TransitionGroupDocNode transition = document.TransitionGroups.ElementAt(i);
+                TransitionGroupDocNode transition = document.PeptideTransitionGroups.ElementAt(i);
                 string seq = transition.TransitionGroup.Peptide.Sequence;
                 int charge = transition.PrecursorCharge;
                 Assert.AreEqual(FastaSequence.StripModifications(peptidePaste[i].Item1), seq);
@@ -207,7 +207,7 @@ namespace pwiz.SkylineTestFunctional
                 if (peptide.Item2 > 0)
                 {
                     // Pasted peptides with a charge indicator should have a single precursor with the specified charge state
-                    TransitionGroupDocNode group = document.TransitionGroups.ElementAt(curTransitionGroup++);
+                    TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
                     string seq = group.TransitionGroup.Peptide.Sequence;
                     int charge = group.PrecursorCharge;
                     Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
@@ -219,7 +219,7 @@ namespace pwiz.SkylineTestFunctional
                     // Pasted peptides with no charge indicator should have a precursor for every charge state in transition filter settings
                     for (int j = 0; j < precursorCharges.Count(); j++)
                     {
-                        TransitionGroupDocNode group = document.TransitionGroups.ElementAt(curTransitionGroup++);
+                        TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
                         string seq = group.TransitionGroup.Peptide.Sequence;
                         int charge = group.PrecursorCharge;
                         Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
-            Assert.AreEqual(curTransitionGroup, document.TransitionGroupCount);
+            Assert.AreEqual(curTransitionGroup, document.PeptideTransitionGroupCount);
         }
 
         // Check that actual clipboard text and HTML match the expected clipboard text and HTML.
