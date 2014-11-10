@@ -634,13 +634,12 @@ namespace pwiz.SkylineTestFunctional
 
             // Finally, close and re-open the document to see MissingFileDlg
             int pepCount = SkylineWindow.Document.PeptideCount;
-            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(),
-                dlg => dlg.Btn1Click());
+            RunUI(() => SkylineWindow.NewDocument(true));
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
             RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
                 dlg => dlg.OkDialog());
             Assert.AreEqual(pepCount, SkylineWindow.Document.PeptideCount);
-            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.NewDocument(true));
             RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
                 dlg => dlg.CancelDialog());
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);

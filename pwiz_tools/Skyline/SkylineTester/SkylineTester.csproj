@@ -160,12 +160,6 @@
     <Compile Include="MyTreeView.Designer.cs">
       <DependentUpon>MyTreeView.cs</DependentUpon>
     </Compile>
-    <Compile Include="NightlyLogsWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="NightlyLogsWindow.Designer.cs">
-      <DependentUpon>NightlyLogsWindow.cs</DependentUpon>
-    </Compile>
     <Compile Include="ProcessUtilities.cs" />
     <Compile Include="SkylineTesterWindow.cs">
       <SubType>Form</SubType>
@@ -207,9 +201,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MemoryChartWindow.resx">
       <DependentUpon>MemoryChartWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="NightlyLogsWindow.resx">
-      <DependentUpon>NightlyLogsWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SkylineTesterWindow.resx">
       <DependentUpon>SkylineTesterWindow.cs</DependentUpon>

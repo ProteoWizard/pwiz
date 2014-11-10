@@ -56,7 +56,7 @@ namespace SkylineTester
         public string ExeDir { get; private set; }
         public string DefaultLogFile { get; private set; }
         public string NightlyLogFile { get; set; }
-        public Summary Summary { get; private set; }
+        public Summary Summary { get; set; }
         public Summary.Run NewNightlyRun { get; set; }
         public int TestsRun { get; set; }
         public string LastTestResult { get; set; }
@@ -151,10 +151,6 @@ namespace SkylineTester
                 Size = size;
             if (maximize)
                 WindowState = FormWindowState.Maximized;
-
-            if (string.IsNullOrEmpty(Settings.Default.NightlyLogsDir))
-                Settings.Default.NightlyLogsDir =
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), DefaultNightlyLogsDir);
         }
 
         public SkylineTesterWindow(string[] args)
@@ -647,19 +643,6 @@ namespace SkylineTester
         }
 
 
-        private void setNightlyLogsFolderToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            using (var nightlyWindow = new NightlyLogsWindow())
-            {
-                nightlyWindow.NightlyLogsDir = Settings.Default.NightlyLogsDir;
-                if (nightlyWindow.ShowDialog(this) == DialogResult.OK)
-                {
-                    Settings.Default.NightlyLogsDir = nightlyWindow.NightlyLogsDir;
-                    Settings.Default.Save();
-                }
-            }
-        }
-
         private void exit_Click(object sender, EventArgs e)
         {
             Close();
@@ -801,6 +784,13 @@ namespace SkylineTester
                     continue;
                 }
 
+                var label = control as Label;
+                if (label != null)
+                {
+                    label.Text = element.Value;
+                    continue;
+                }
+
                 throw new ApplicationException("Attempted to load unknown control type.");
             }
         }
@@ -877,6 +867,13 @@ namespace SkylineTester
                 if (menuItem != null)
                 {
                     element.Add(new XElement(menuItem.Name, menuItem.Checked));
+                    continue;
+                }
+
+                var label = child as Label;
+                if (label != null)
+                {
+                    element.Add(new XElement(label.Name, label.Text));
                     continue;
                 }
 
@@ -979,15 +976,15 @@ namespace SkylineTester
         public TextBox          NightlyBranchUrl            { get { return nightlyBranchUrl; } }
         public RadioButton      NightlyBuildTrunk           { get { return nightlyBuildTrunk; } }
         public DomainUpDown     NightlyBuildType            { get { return nightlyBuildType; } }
-        public Button           NightlyDeleteBuild          { get { return nightlyDeleteBuild; } }
         public Button           NightlyDeleteRun            { get { return nightlyDeleteRun; } }
         public NumericUpDown    NightlyDuration             { get { return nightlyDuration; } }
+        public CheckBox         NightlyExit                 { get { return nightlyExit; } }
         public Label            NightlyLabelDuration        { get { return nightlyLabelDuration; } }
         public Label            NightlyLabelFailures        { get { return nightlyLabelFailures; } }
         public Label            NightlyLabelLeaks           { get { return nightlyLabelLeaks; } }
         public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
-        public TextBox          NightlyRoot                 { get { return nightlyRoot; } }
+        public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
         public CheckBox         NightlyTestSmallMolecules { get { return nightlyTestSmallMolecules; } }
         public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }

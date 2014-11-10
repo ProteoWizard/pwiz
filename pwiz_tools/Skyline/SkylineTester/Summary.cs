@@ -49,8 +49,10 @@ namespace SkylineTester
 
         public string GetLogFile(Run run)
         {
-            var logFile = "{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}-{5:D2}.log".With(
-                run.Date.Year, run.Date.Month, run.Date.Day, run.Date.Hour, run.Date.Minute, run.Date.Second);
+            var logFile = "{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}.log".With(
+                Environment.MachineName,
+                run.Date.Year, run.Date.Month, run.Date.Day, 
+                run.Date.Hour, run.Date.Minute, run.Date.Second);
             return Path.Combine(Path.GetDirectoryName(SummaryFile) ?? "", logFile);
         }
 

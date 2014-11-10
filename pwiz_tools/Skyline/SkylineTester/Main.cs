@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using SkylineTester.Properties;
 using TestRunnerLib;
 using ZedGraph;
 using Timer = System.Windows.Forms.Timer;
@@ -135,6 +134,11 @@ namespace SkylineTester
             if (!Path.IsPathRooted(root))
                 root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), root);
             return root;
+        }
+
+        public string GetLogsDir()
+        {
+            return Path.Combine(GetNightlyRoot(), "Logs");
         }
 
         public DirectoryInfo GetSkylineDirectory(string startDirectory)
@@ -258,7 +262,7 @@ namespace SkylineTester
         {
             if (Summary == null)
             {
-                var summaryLog = Path.Combine(Settings.Default.NightlyLogsDir, SummaryLog);
+                var summaryLog = Path.Combine(GetLogsDir(), SummaryLog);
                 Summary = new Summary(summaryLog);
             }
         }
@@ -374,6 +378,7 @@ namespace SkylineTester
             graphFailures = InitGraph("Failures");
             graphMemoryHistory = InitGraph("Memory used");
 
+            nightlyTrendsTable.Controls.Clear();
             nightlyTrendsTable.Controls.Add(graphMemoryHistory, 0, 0);
             nightlyTrendsTable.Controls.Add(graphFailures, 0, 0);
             nightlyTrendsTable.Controls.Add(graphDuration, 0, 0);

@@ -28,7 +28,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
-using SkylineTester.Properties;
 using ZedGraph;
 
 namespace SkylineTester
@@ -63,7 +62,6 @@ namespace SkylineTester
             if (MainWindow.NightlyBuildType.SelectedIndex == -1)
                 MainWindow.NightlyBuildType.SelectedIndex = 0;
 
-            MainWindow.NightlyDeleteBuild.Enabled = Directory.Exists(MainWindow.GetNightlyRoot());
             MainWindow.NightlyDeleteRun.Enabled = MainWindow.Summary.Runs.Count > 0;
 
             UpdateThumbnail();
@@ -180,6 +178,10 @@ namespace SkylineTester
             UpdateNightly();
             MainWindow.Summary.Save();
             MainWindow.NewNightlyRun = null;
+
+            if (MainWindow.NightlyExit.Checked)
+                RunUI(() => MainWindow.Close());
+            
             return true;
         }
 
@@ -194,6 +196,12 @@ namespace SkylineTester
             _labels.Clear();
             _findTest.Clear();
 
+            if (File.Exists(MainWindow.DefaultLogFile))
+                Try.Multi<Exception>(() => File.Delete(MainWindow.DefaultLogFile), 4, false);
+            var logsDirectory = MainWindow.GetLogsDir();
+            if (!Directory.Exists(logsDirectory))
+                Directory.CreateDirectory(logsDirectory);
+
             MainWindow.SetStatus("Running nightly pass...");
             var architecture = MainWindow.NightlyBuildType.SelectedIndex == 0 ? 32 : 64;
             MainWindow.SelectBuild(architecture == 32 ? SkylineTesterWindow.BuildDirs.nightly32 : SkylineTesterWindow.BuildDirs.nightly64);
@@ -201,12 +209,6 @@ namespace SkylineTester
             MainWindow.ResetElapsedTime();
 
             MainWindow.TestsRun = 0;
-
-            if (File.Exists(MainWindow.DefaultLogFile))
-                Try.Multi<Exception>(() => File.Delete(MainWindow.DefaultLogFile), 4, false);
-            var nightlyDirectory = Settings.Default.NightlyLogsDir;
-            if (!Directory.Exists(nightlyDirectory))
-                Directory.CreateDirectory(nightlyDirectory);
             MainWindow.LastTestResult = null;
             MainWindow.NewNightlyRun = new Summary.Run
             {
@@ -240,7 +242,8 @@ namespace SkylineTester
             var branchUrl = MainWindow.NightlyBuildTrunk.Checked
                 ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
-            TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), architectureList, true, false, true);
+            var buildRoot = Path.Combine(MainWindow.GetNightlyRoot(), "pwiz");
+            TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, true);
 
             MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1" + (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : "") + (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : ""));
             MainWindow.CommandShell.Add("# Nightly finished.");
@@ -560,8 +563,6 @@ namespace SkylineTester
             {
                 deleteWindow.ShowDialog();
             }
-
-            MainWindow.NightlyDeleteBuild.Enabled = Directory.Exists(root);
         }
 
 
@@ -574,10 +575,23 @@ namespace SkylineTester
             })
             {
                 if (dlg.ShowDialog(MainWindow) == DialogResult.OK)
-                    MainWindow.NightlyRoot.Text = dlg.SelectedPath;
-            }
+                {
+                    var nightlyRoot = dlg.SelectedPath;
+                    var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    if (nightlyRoot.StartsWith(userFolder))
+                        nightlyRoot = nightlyRoot.Remove(0, userFolder.Length+1);
+                    MainWindow.NightlyRoot.Text = nightlyRoot;
 
-            MainWindow.NightlyDeleteBuild.Enabled = Directory.Exists(MainWindow.GetNightlyRoot());
+                    MainWindow.Summary = null;
+                    MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
+                    MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
+                        ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
+                        : null;
+
+                    MainWindow.InitNightly();
+                    Enter();
+                }
+            }
         }
 
         private void CreateGraph(string name, ZedGraphControl graph, Color color, string[] labels, double[] data)

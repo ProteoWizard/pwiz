@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SkylineTester.Properties {
+namespace SkylineNightly.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -25,49 +25,25 @@ namespace SkylineTester.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point WindowLocation {
+        [global::System.Configuration.DefaultSettingValueAttribute("9:00 PM")]
+        public string StartTime {
             get {
-                return ((global::System.Drawing.Point)(this["WindowLocation"]));
+                return ((string)(this["StartTime"]));
             }
             set {
-                this["WindowLocation"] = value;
+                this["StartTime"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Size WindowSize {
+        [global::System.Configuration.DefaultSettingValueAttribute("SkylineNightly")]
+        public string NightlyFolder {
             get {
-                return ((global::System.Drawing.Size)(this["WindowSize"]));
+                return ((string)(this["NightlyFolder"]));
             }
             set {
-                this["WindowSize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool WindowMaximized {
-            get {
-                return ((bool)(this["WindowMaximized"]));
-            }
-            set {
-                this["WindowMaximized"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SavedSettings {
-            get {
-                return ((string)(this["SavedSettings"]));
-            }
-            set {
-                this["SavedSettings"] = value;
+                this["NightlyFolder"] = value;
             }
         }
     }

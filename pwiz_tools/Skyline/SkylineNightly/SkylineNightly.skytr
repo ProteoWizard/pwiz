@@ -1,0 +1,11 @@
+<SkylineTester>
+  <tabs>tabNightly</tabs>
+  <nightlyStartTime></nightlyStartTime>
+  <nightlyRoot></nightlyRoot>
+  <nightlyDuration>9</nightlyDuration>
+  <nightlyBuildType>1</nightlyBuildType>
+  <nightlyBuildTrunk>true</nightlyBuildTrunk>
+  <nightlyRunPerfTests>false</nightlyRunPerfTests>
+  <nightlyBranch>false</nightlyBranch>
+  <nightlyExit>true</nightlyExit>
+</SkylineTester>
