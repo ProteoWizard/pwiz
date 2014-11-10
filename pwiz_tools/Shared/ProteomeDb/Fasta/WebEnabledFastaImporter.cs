@@ -268,8 +268,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                         {
                             // shave off any alternatives (might look like "IPI:IPI00197700.1|SWISS-PROT:P04638|ENSEMBL:ENSRNOP00000004662|REFSEQ:NP_037244")
                             searchterm = searchterm.Split('|')[0];
-                            // a reasonable accession value will have at least one digit in it
-                            if ("0123456789".Any(searchterm.Contains) && !" \t".Any(searchterm.Contains))  // Not L10N
+                            // a reasonable accession value will have at least one digit in it, and won't have things like tabs and parens and braces that confuse web services
+                            if ("0123456789".Any(searchterm.Contains) && !" \t()[]".Any(searchterm.Contains))  // Not L10N
                                 headerResult.SetWebSearchTerm(new WebSearchTerm(searchterm[0], searchterm.Substring(1))); // we'll need to hit the webservices to get this missing info
                         }
                     }
@@ -1114,8 +1114,18 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 reviewedOnly = false;
                             }
                         }
-                        catch (WebException)
+                        catch (WebException ex)
                         {
+                            if (ex.Status == WebExceptionStatus.ProtocolError
+                                && (((HttpWebResponse)ex.Response).StatusCode) == HttpStatusCode.BadRequest)
+                            {
+                                // malformed search, stop trying
+                                if (searchterms.Count == 1)
+                                {
+                                    proteins[0].SetWebSearchCompleted(); // No more need for lookup
+                                    return 1; // We resolved one
+                                }
+                            } 
                             if (retries == 0)
                                 return -1;  // just try again later
                             Thread.Sleep(1000);
@@ -1127,8 +1137,18 @@ namespace pwiz.ProteomeDatabase.Fasta
                         }
                     }
                 }
-                catch (WebException)
+                catch (WebException ex)
                 {
+                    if (ex.Status == WebExceptionStatus.ProtocolError
+                        && (((HttpWebResponse)ex.Response).StatusCode) == HttpStatusCode.BadRequest)
+                    {
+                        // malformed search, stop trying
+                        if (proteins.Count() == 1)
+                        {
+                            proteins[0].SetWebSearchCompleted(); // No more need for lookup
+                            return 1; // We resolved one
+                        }
+                    } 
                     if (retries==0)
                         return -1;  // just try again later
                     Thread.Sleep(1000);
@@ -1144,10 +1164,15 @@ namespace pwiz.ProteomeDatabase.Fasta
                     // now see if responses are ambiguous or not
                     if (proteins.Count() == 1)
                     {
-                        // any responses must belong to this protein.
-                        // can get multiple results for single uniprot code, but we'll ignore those
+                        // Any responses must belong to this protein - or this isn't a protein at all (user named it "peptide6" for example).
+                        // Can get multiple results for single uniprot code, but we'll ignore those
                         // since we're not in the market for alternative proteins (in fact we're likely 
-                        // resolving metadtat for one here).
+                        // resolving metadata for one here).
+                        if (responses.Count > 10) // That's a lot of ambiguity
+                        {
+                            proteins[0].SetWebSearchCompleted(); // We aren't going to get an answer
+                            break;
+                        }
 
                         // prefer the data we got from web search to anything we parsed.
                         var oldMetadata = proteins[0].GetProteinMetadata();

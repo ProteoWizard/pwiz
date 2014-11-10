@@ -391,6 +391,24 @@ namespace CommonTest
                             species: "Cleveland", gene: "France")
                     }),
 
+                new FastaHeaderParserTest( // Deal with inputs that are too short - search would be huge
+                    ">ABC", 
+                    new[]
+                    {
+                        new FastaHeaderReaderResult(accession: novalue, name: "ABC",
+                            preferredname: novalue,
+                            description: novalue, species: novalue, gene: novalue, websearchcode: WebEnabledFastaImporter.SEARCHDONE_TAG)
+                    }),
+
+                new FastaHeaderParserTest( // Deal with inputs that contain characters that look like search directives
+                    ">eat[19]:fish(b)", 
+                    new[]
+                    {
+                        new FastaHeaderReaderResult(accession: novalue, name: "eat[19]:fish(b)",
+                            preferredname: novalue,
+                            description: novalue, species: novalue, gene: novalue, websearchcode: WebEnabledFastaImporter.SEARCHDONE_TAG)
+                    }),
+
                 new FastaHeaderParserTest( // failure is expected with uniprot service
                     ">CGI_99999999", // no such thing
                     new[]
