@@ -814,7 +814,7 @@ namespace SkylineTester
             this.groupBox15.Controls.Add(this.testsJapanese);
             this.groupBox15.Controls.Add(this.testsChinese);
             this.groupBox15.Controls.Add(this.testsEnglish);
-            this.groupBox15.Location = new System.Drawing.Point(11, 214);
+            this.groupBox15.Location = new System.Drawing.Point(11, 234);
             this.groupBox15.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Padding = new System.Windows.Forms.Padding(4);
@@ -883,7 +883,7 @@ namespace SkylineTester
             // windowsGroup
             // 
             this.windowsGroup.Controls.Add(this.offscreen);
-            this.windowsGroup.Location = new System.Drawing.Point(11, 148);
+            this.windowsGroup.Location = new System.Drawing.Point(11, 168);
             this.windowsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.windowsGroup.Name = "windowsGroup";
             this.windowsGroup.Padding = new System.Windows.Forms.Padding(4);
@@ -914,7 +914,7 @@ namespace SkylineTester
             this.iterationsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.iterationsGroup.Name = "iterationsGroup";
             this.iterationsGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.iterationsGroup.Size = new System.Drawing.Size(280, 90);
+            this.iterationsGroup.Size = new System.Drawing.Size(280, 105);
             this.iterationsGroup.TabIndex = 17;
             this.iterationsGroup.TabStop = false;
             this.iterationsGroup.Text = "Run options";
@@ -928,7 +928,7 @@ namespace SkylineTester
             this.testsTestSmallMolecules.Name = "testsTestSmallMolecules";
             this.testsTestSmallMolecules.Size = new System.Drawing.Size(180, 17);
             this.testsTestSmallMolecules.TabIndex = 14;
-            this.testsTestSmallMolecules.Text = "CustomIons in alternating passes";
+            this.testsTestSmallMolecules.Text = "Small molecule testing";
             this.toolTip1.SetToolTip(this.testsTestSmallMolecules, "Insert a special custom ion node into most tests on every other pass, starting wi" +
         "th pass 2");
             this.testsTestSmallMolecules.UseVisualStyleBackColor = true;
@@ -1610,7 +1610,7 @@ namespace SkylineTester
             this.qualityTestSmallMolecules.Name = "qualityTestSmallMolecules";
             this.qualityTestSmallMolecules.Size = new System.Drawing.Size(180, 17);
             this.qualityTestSmallMolecules.TabIndex = 13;
-            this.qualityTestSmallMolecules.Text = "CustomIons in alternating passes";
+            this.qualityTestSmallMolecules.Text = "Small molecule testing";
             this.toolTip1.SetToolTip(this.qualityTestSmallMolecules, "Insert a special custom ion node into most tests on every other pass, starting wi" +
         "th pass 2");
             this.qualityTestSmallMolecules.UseVisualStyleBackColor = true;
@@ -2139,7 +2139,7 @@ namespace SkylineTester
             this.nightlyTestSmallMolecules.Name = "nightlyTestSmallMolecules";
             this.nightlyTestSmallMolecules.Size = new System.Drawing.Size(180, 17);
             this.nightlyTestSmallMolecules.TabIndex = 34;
-            this.nightlyTestSmallMolecules.Text = "CustomIons in alternating passes";
+            this.nightlyTestSmallMolecules.Text = "Small molecule testing";
             this.toolTip1.SetToolTip(this.nightlyTestSmallMolecules, "add a special custom ion node to most tests on every other pass, starting with pa" +
         "ss 2");
             this.nightlyTestSmallMolecules.UseVisualStyleBackColor = true;
