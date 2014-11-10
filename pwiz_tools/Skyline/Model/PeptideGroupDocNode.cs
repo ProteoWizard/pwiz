@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NHibernate.Criterion;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
@@ -90,14 +91,22 @@ namespace pwiz.Skyline.Model
         /// Node level depths below this node
         /// </summary>
 // ReSharper disable InconsistentNaming
-        public enum Level { Peptides, TransitionGroups, Transitions }
+        public enum Level { Molecules, TransitionGroups, Transitions }
 // ReSharper restore InconsistentNaming
 
-        public int PeptideCount { get { return GetCount((int)Level.Peptides); } }
+        public int MoleculeCount { get { return GetCount((int)Level.Molecules); } }
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
-        public IEnumerable<PeptideDocNode> Peptides { get { return Children.Cast<PeptideDocNode>(); } }
+        public int PeptideCount { get { return Peptides.Count(); } }
+
+        public bool IsEmpty { get { return !Molecules.Any(); }}  // If empty, it's neither proteomic nor non-proteomic
+        public bool IsProteomic { get { return !SmallMolecules.Any(); } } // Default assumption for an empty PeptideGroupDocNode is that it's proteomic (probably undergoing population from a protein)
+        public bool IsNonProteomic { get { return SmallMolecules.Any(); } }
+
+        public IEnumerable<PeptideDocNode> Molecules { get { return Children.Cast<PeptideDocNode>(); } }
+        public IEnumerable<PeptideDocNode> SmallMolecules { get { return Molecules.Where(p => p.Peptide.IsCustomIon); } }
+        public IEnumerable<PeptideDocNode> Peptides { get { return Molecules.Where(p => !p.Peptide.IsCustomIon); } }
 
         public PeptideGroupDocNode ChangeName(string name)
         {
@@ -307,7 +316,9 @@ namespace pwiz.Skyline.Model
                 IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
                 foreach (PeptideDocNode nodePep in Children)
                 {
-                    if (nodePep.HasExplicitMods && !nodePep.HasVariableMods)
+                    if (nodePep.Peptide.IsCustomIon) // Modifications mean nothing to custom ions
+                        yield return nodePep;
+                    else if (nodePep.HasExplicitMods && !nodePep.HasVariableMods)
                         yield return nodePep;
                     else if (!setNonExplicit.Contains(nodePep.Peptide))
                     {

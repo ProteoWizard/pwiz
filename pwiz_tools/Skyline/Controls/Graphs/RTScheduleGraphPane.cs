@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Controls.Graphs
             List<PrecursorScheduleBase> listSchedules = new List<PrecursorScheduleBase>();
             double xMax = double.MinValue, xMin = double.MaxValue;
 
-            foreach (var nodePep in document.Peptides)
+            foreach (var nodePep in document.Molecules)
             {
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {

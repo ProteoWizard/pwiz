@@ -71,6 +71,7 @@ namespace TestRunnerLib
         public int LastTestDuration { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
+        public bool TestSmallMolecules{ get; set; }
         public bool LiveReports { get; set; }
 
         public RunTests(
@@ -80,6 +81,7 @@ namespace TestRunnerLib
             bool internet,
             bool showStatus,
             bool perftests,
+            bool testsmallmolecules,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -133,6 +135,7 @@ namespace TestRunnerLib
 
             AccessInternet = internet;
             RunPerfTests = perftests;
+            TestSmallMolecules= testsmallmolecules;
             LiveReports = true;
 
             // Disable logging.
@@ -199,6 +202,7 @@ namespace TestRunnerLib
             // Set the TestContext.
             TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
             TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
+            TestContext.Properties["TestSmallMolecules"] = TestSmallMolecules.ToString();
             TestContext.Properties["LiveReports"] = LiveReports.ToString();
             if (test.SetTestContext != null)
             {

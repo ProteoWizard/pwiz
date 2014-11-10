@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Irt
                 if (nodePep.IsDecoy)
                     continue;
 
-                string seqMod = document.Settings.GetLookupSequence(nodePep);
+                string seqMod = document.Settings.GetSourceTextId(nodePep);
                 if (!dictSeqToPeptide.ContainsKey(seqMod))
                     dictSeqToPeptide.Add(seqMod, nodePep);
             }

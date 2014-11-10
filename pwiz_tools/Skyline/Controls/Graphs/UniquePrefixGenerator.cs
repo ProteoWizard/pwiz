@@ -18,86 +18,119 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
-    /// Generate unique short identifiers for peptides.
+    /// Generate unique short identifiers for peptides and custom molecules.
     /// </summary>
     public class UniquePrefixGenerator
     {
-        private readonly Dictionary<string, Dictionary<string, List<string>>> _prefixDictionary =
+        private readonly Dictionary<string, Dictionary<string, List<string>>> _peptidePrefixDictionary =
+            new Dictionary<string, Dictionary<string, List<string>>>();
+        private readonly Dictionary<string, Dictionary<string, List<string>>> _customIonPrefixDictionary =
             new Dictionary<string, Dictionary<string, List<string>>>();
         private readonly int _minLength;
+        private readonly int _commonStartLength; // For non-peptide names, remove any common leading characters
         private const char Ellipsis = '…';
 
         /// <summary>
-        /// Create a prefix generator for the given sequences.
+        /// Create a prefix generator for the given list of sequences and molecule names.
         /// </summary>
-        /// <param name="seqs">Sequences with modifications.</param>
+        /// <param name="names">Pairs with text and flag indicating whether text is a peptide sequence.</param>
         /// <param name="minLength">The minimum prefix length to generate.</param>
-        public UniquePrefixGenerator(IEnumerable<string> seqs, int minLength)
+        public UniquePrefixGenerator(IEnumerable<Tuple<string, bool>> names, int minLength)
         {
             _minLength = minLength;
+            var namelist = names.ToList();
 
-            foreach (var s in seqs)
+            // Find longest common leading string in non-peptide names
+            List<string> molecules = namelist.Where(n => n != null && !n.Item2 && n.Item1 != null).Select(s => s.Item1).ToList();
+            if (molecules.Count > 1)
             {
-                if (s != null)
-                    AddString(StripModifications(s));
+                string commonLead = molecules.First(x => x.Length == molecules.Select(y => y.Length).Min()); // Find shortest in list
+                while (commonLead.Length > 0 && !molecules.All(s => s.StartsWith(commonLead)))
+                    commonLead = commonLead.Substring(0, commonLead.Length - 1);
+                _commonStartLength = (commonLead.Length > minLength) ? commonLead.Length : 0; // Very short common leads are OK
+                // In case of ["foo bar C10", "foo bar C12"] we'd like to just drop "foo bar " and get ["C10", "C12"]
+                if (_commonStartLength > minLength && (commonLead.LastIndexOf(' ') >= _commonStartLength - minLength))
+                    _commonStartLength = commonLead.LastIndexOf(' ')+1;
+            }
+            else
+            {
+                _commonStartLength = 0;
+            }
+
+            foreach (var s in namelist)
+            {
+                if ((s != null) && (s.Item1 != null))
+                {
+                    bool isPeptide = s.Item2;
+                    AddString(isPeptide ? StripModifications(s.Item1) : s.Item1.Substring(_commonStartLength), isPeptide);
+                }
             }
         }
 
-        /// <summary>
-        /// Return a unique prefix for the given sequence (which must have been included in the
-        /// list of sequences given to the constructor).
-        /// </summary>
-        public string GetUniquePrefix(string seq)
+        private string ShorterOf(string elided, string original)
         {
-            if (seq == null)
+            return (elided.Length < original.Length) ? elided : original;
+        }
+
+        /// <summary>
+        /// Return a unique prefix for the given identifier (which must have been included in the
+        /// list of identifiers given to the constructor).
+        /// </summary>
+        public string GetUniquePrefix(string identifier, bool isPeptideSeq)
+        {
+            if (identifier == null)
                 return null;
-            seq = StripModifications(seq);
+            if (isPeptideSeq)
+                identifier = StripModifications(identifier);
+            else
+                identifier = identifier.Substring(_commonStartLength);
 
             // Get sequences that match this prefix, and ones that match both prefix and suffix.
-            var prefix = GetPrefix(seq);
-            var matchingPrefixes = _prefixDictionary[prefix];
-            var suffix = GetSuffix(seq);
+            var prefix = GetPrefix(identifier);
+            var matchingPrefixes = isPeptideSeq ? _peptidePrefixDictionary[prefix] : _customIonPrefixDictionary[prefix];
+            var suffix = GetSuffix(identifier);
             var matchingPrefixAndSuffix = matchingPrefixes[suffix];
 
-            // If there is only one sequence with this prefix, return the prefix.
+            // If there is only one sequence with this prefix, return the prefix (unless the identifer is already short enough).
             if (matchingPrefixes.Count == 1 && matchingPrefixAndSuffix.Count == 1)
-                return prefix;
+                return ShorterOf((identifier.Length > (_minLength * 2)+1) ? prefix + Ellipsis : identifier, identifier);
 
             // If there is only one sequence with this prefix/suffix, return the combo.
             if (matchingPrefixAndSuffix.Count == 1)
-                return (seq.Length > _minLength * 2) ? prefix + Ellipsis + suffix : seq;
+                return ShorterOf((identifier.Length > (_minLength*2)+1) ? prefix + Ellipsis + suffix : identifier, identifier);
 
             // If the matching sequences can be differentiated by length, use length specifier.
             int matchingLengthCount = 0;
             foreach (var s in matchingPrefixAndSuffix)
             {
-                if (s.Length == seq.Length)
+                if (s.Length == identifier.Length)
                     matchingLengthCount++;
             }
             if (matchingLengthCount == 1)
-                return string.Format("{0}({1})", prefix, seq.Length - _minLength); // Not L10N
+                return ShorterOf(string.Format("{0}({1})", prefix, identifier.Length - _minLength), identifier); // Not L10N
 
             // Use ellipses to indicate common parts of matching sequences.
             var matches = new List<string>();
             foreach (var s in matchingPrefixAndSuffix)
             {
-                if (!s.Equals(seq))
+                if (!s.Equals(identifier))
                     matches.Add(s);
             }
             int lastDifference = _minLength;
-            for (int i = _minLength; i < seq.Length; i++)
+            for (int i = _minLength; i < identifier.Length; i++)
             {
                 // Remove any matches that don't match the current character of this sequence.
                 int matchCount = matches.Count;
                 for (int j = matchCount - 1; j >= 0; j--)
                 {
-                    if (matches[j][i] != seq[i])
+                    if (matches[j][i] != identifier[i])
                         matches.RemoveAt(j);
                 }
 
@@ -106,13 +139,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (matchCount > matches.Count)
                 {
                     if (lastDifference < i)
-                        prefix += Ellipsis;
+                        prefix += ((i > lastDifference+1) ? Ellipsis : identifier[lastDifference]);  // silly to replace single char with ellipsis
                     lastDifference = i + 1;
-                    prefix += seq[i];
+                    prefix += identifier[i];
 
                     // If there are no remaining matches, we are done.
                     if (matches.Count == 0)
-                        return (i < seq.Length - 1) ? prefix + Ellipsis : prefix;
+                        return ShorterOf( (i < identifier.Length - 1) ? prefix + Ellipsis : prefix, identifier);
                 }
             }
 
@@ -147,43 +180,45 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Add a sequence to the prefix generator.
+        /// Add a string to the prefix generator.
         /// </summary>
-        /// <param name="seq">Sequence with modifications stripped.</param>
-        private void AddString(string seq)
+        /// <param name="name">Sequence with modifications stripped, or molecule name.</param>
+        /// <param name="isSequence">if true, treat name as a peptide sequence</param>
+        private void AddString(string name, bool isSequence)
         {
             // Add to dictionary of sequences with this prefix.
-            var prefix = GetPrefix(seq);
+            var prefix = GetPrefix(name);
             Dictionary<string, List<string>> prefixMatches;
-            if (!_prefixDictionary.TryGetValue(prefix, out prefixMatches))
-                _prefixDictionary[prefix] = prefixMatches = new Dictionary<string, List<string>>();
+            var dict = isSequence ? _peptidePrefixDictionary : _customIonPrefixDictionary;
+            if (!dict.TryGetValue(prefix, out prefixMatches))
+               dict[prefix] = prefixMatches = new Dictionary<string, List<string>>();
 
             // Add to dictionary of sequences with this prefix and suffix.
-            var suffix = GetSuffix(seq);
+            var suffix = GetSuffix(name);
             List<string> prefixSuffixMatches;
             if (!prefixMatches.TryGetValue(suffix, out prefixSuffixMatches))
                 prefixMatches[suffix] = prefixSuffixMatches = new List<string>();
 
             // Add to list of sequences that have the same prefix and suffix.
-            if (!prefixSuffixMatches.Contains(seq))
-                prefixSuffixMatches.Add(seq);
+            if (!prefixSuffixMatches.Contains(name))
+                prefixSuffixMatches.Add(name);
         }
 
         /// <summary>
-        /// Return the first n letters for the given sequence.
+        /// Return the first n letters for the given sequence or molecule.
         /// </summary>
-        private string GetPrefix(string seq)
+        private string GetPrefix(string name)
         {
-            return seq.Substring(0, Math.Min(seq.Length, _minLength));
+            return name.Substring(0, Math.Min(name.Length, _minLength));
         }
 
         /// <summary>
-        /// Return the last n letters for the given sequence.
+        /// Return the last n letters for the given sequence or molecule.
         /// </summary>
-        private string GetSuffix(string seq)
+        private string GetSuffix(string name)
         {
-            return (seq.Length > _minLength)
-                ? seq.Substring(Math.Max(_minLength, seq.Length - _minLength))
+            return (name.Length > _minLength)
+                ? name.Substring(Math.Max(_minLength, name.Length - _minLength))
                 : string.Empty;
         }
     }

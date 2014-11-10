@@ -49,43 +49,43 @@ namespace pwiz.SkylineTestA
             var docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
                 true, IdentityPath.ROOT, out path);
             // One of the prolines should have caused an extra transition
-            Assert.AreEqual(4, docPeptide.TransitionCount);
-            Assert.IsTrue(docPeptide.Transitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8)); // y8
+            Assert.AreEqual(4, docPeptide.PeptideTransitionCount);
+            Assert.IsTrue(docPeptide.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8)); // y8
             
             // Switch to the legacy version of the proline fragment where min length is 1
             var docLegacyProline = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] { MeasuredIonList.NTERM_PROLINE_LEGACY })));
-            Assert.AreEqual(5, docLegacyProline.TransitionCount);
+            Assert.AreEqual(5, docLegacyProline.PeptideTransitionCount);
             // Allow b-ions
             var docLegacyProlineB = docLegacyProline.ChangeSettings(docLegacyProline.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeIonTypes(new[] { IonType.b, IonType.y })));
-            Assert.AreEqual(9, docLegacyProlineB.TransitionCount);
+            Assert.AreEqual(9, docLegacyProlineB.PeptideTransitionCount);
 
             // Add C-terminal Glu and Asp to the original peptide document
             var docGluAsp = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new List<MeasuredIon>(filter.MeasuredIons) { MeasuredIonList.CTERM_GLU_ASP })));
-            Assert.AreEqual(5, docGluAsp.TransitionCount);
-            Assert.IsTrue(docGluAsp.Transitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 3)); // y3
+            Assert.AreEqual(5, docGluAsp.PeptideTransitionCount);
+            Assert.IsTrue(docGluAsp.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 3)); // y3
 
             // Use the legacy version instead
             var docGluAspLegacy = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new List<MeasuredIon>(filter.MeasuredIons) { MeasuredIonList.CTERM_GLU_ASP_LEGACY })));
-            Assert.AreEqual(6, docGluAspLegacy.TransitionCount);
-            Assert.IsTrue(docGluAspLegacy.Transitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 2)); // y2
+            Assert.AreEqual(6, docGluAspLegacy.PeptideTransitionCount);
+            Assert.IsTrue(docGluAspLegacy.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 2)); // y2
 
             // Add Proline to the C-terminal modification
             var docGluAspPro = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] { new MeasuredIon("C-term GAP", "EDP", null, SequenceTerminus.C, 1) })));
-            Assert.AreEqual(8, docGluAspPro.TransitionCount);
-            Assert.IsTrue(docGluAspPro.Transitions.Contains(nodeTran =>
+            Assert.AreEqual(8, docGluAspPro.PeptideTransitionCount);
+            Assert.IsTrue(docGluAspPro.PeptideTransitions.Contains(nodeTran =>
                 nodeTran.Transition.Ordinal == 2 || // y2
                 nodeTran.Transition.Ordinal == 8)); // y8
 
             // Restrict
             var docGluAspProRestrict = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] { new MeasuredIon("C-term GAP", "EDP", "P", SequenceTerminus.C, 1) })));
-            Assert.AreEqual(6, docGluAspProRestrict.TransitionCount);
-            Assert.IsFalse(docGluAspProRestrict.Transitions.Contains(nodeTran =>
+            Assert.AreEqual(6, docGluAspProRestrict.PeptideTransitionCount);
+            Assert.IsFalse(docGluAspProRestrict.PeptideTransitions.Contains(nodeTran =>
                 nodeTran.Transition.Ordinal == 2 || // not y2
                 nodeTran.Transition.Ordinal == 8)); // not y8
         }
@@ -96,28 +96,33 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ReporterIonTest()
         {
+            // Test the code that updates old-style formulas
+            Assert.AreEqual("C5C'H13N2", BioMassCalc.AddH("C5C'H12N2"));
+            Assert.AreEqual("CO2H", BioMassCalc.AddH("CO2"));
+
             var docOriginal = new SrmDocument(SrmSettingsList.GetDefault());
             IdentityPath path;
             SrmDocument docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
                 true, IdentityPath.ROOT, out path);
             // One of the prolines should have caused an extra transition
-            Assert.AreEqual(4, docPeptide.TransitionCount);
-            Assert.IsTrue(docPeptide.Transitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8));
+            Assert.AreEqual(4, docPeptide.PeptideTransitionCount);
+            Assert.IsTrue(docPeptide.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8));
 
-            var reporterIon = new MeasuredIon("Water", "H2O", null, null, new[] {1, 2, 3});
+            var reporterIons = new[] { new MeasuredIon("Water", "H2O", null, null, 1), new MeasuredIon("Water", "H2O", null, null, 2), new MeasuredIon("Water", "H2O", null, null, 3), MeasuredIonList.NTERM_PROLINE };
             SrmDocument docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
-                filter.ChangeMeasuredIons(new[] {MeasuredIonList.NTERM_PROLINE, reporterIon})));
-            Assert.AreEqual(7, docReporterIon.TransitionCount);
+                filter.ChangeMeasuredIons(reporterIons)));
+            AssertEx.IsDocumentTransitionCount(docReporterIon, 7);
 
             //Check With Monoisotopic
-            double mass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, "H2O");
+            double mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H2O");
             for (int i = 0; i < 3; i ++)
             {
-                TransitionDocNode tranNode = docReporterIon.Transitions.ElementAt(i);
+                TransitionDocNode tranNode = docReporterIon.MoleculeTransitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
-                Assert.AreEqual(reporterIon, tran.CustomIon);
+                Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(SequenceMassCalc.GetMZ(mass + BioMassCalc.MassProton, i + 1), tranNode.Mz);
+                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron/100);
+                Assert.AreEqual(BioMassCalc.CalculateMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Check with Average
@@ -126,49 +131,50 @@ namespace pwiz.SkylineTestA
             TransitionSettings tranSettings = docReporterIon.Settings.TransitionSettings.ChangePrediction(predSettings);
             SrmSettings srmSettings = docReporterIon.Settings.ChangeTransitionSettings(tranSettings);
             SrmDocument averageDocument = docReporterIon.ChangeSettings(srmSettings);
-            mass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, "H2O");
+            mass = BioMassCalc.AVERAGE.CalculateMassFromFormula("H2O");
             for (int i = 0; i < 3; i++)
             {
-                TransitionDocNode tranNode = averageDocument.Transitions.ElementAt(i);
+                TransitionDocNode tranNode = averageDocument.MoleculeTransitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
-                Assert.AreEqual(reporterIon, tran.CustomIon);
+                Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(SequenceMassCalc.GetMZ(mass + BioMassCalc.MassProton, i + 1), tranNode.Mz);
+                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.CalculateMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Make sure the rest of the transitions aren't reporter ions
             for (int i = 3; i < 7; i ++)
             {
-                Transition tran = docReporterIon.Transitions.ElementAt(i).Transition;
-                Assert.AreNotEqual(tran.CustomIon, reporterIon);
+                Transition tran = docReporterIon.MoleculeTransitions.ElementAt(i).Transition;
+                Assert.AreNotEqual(tran.CustomIon, reporterIons);
             }
-            var optionalIon = new MeasuredIon("Water", "H2O", null, null, new[] {1}, true);
+            var optionalIon = new MeasuredIon("Water", "H2O", null, null,1, true);
             SrmDocument optionalDoc = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] {optionalIon})));
-            Assert.AreEqual(3, optionalDoc.TransitionCount);
+            Assert.AreEqual(3, optionalDoc.PeptideTransitionCount);
             optionalDoc = optionalDoc.ChangeSettings(optionalDoc.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] {optionalIon.ChangeIsOptional(false)})));
-            Assert.AreEqual(4, optionalDoc.TransitionCount);
-            Assert.AreEqual(optionalIon.ChangeIsOptional(false),
-                optionalDoc.Transitions.ElementAt(0).Transition.CustomIon);
+            AssertEx.IsDocumentTransitionCount(optionalDoc, 4);
+            Assert.AreEqual(optionalIon.ChangeIsOptional(false).CustomIon,
+                optionalDoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             optionalDoc =
                 optionalDoc.ChangeSettings(
                     optionalDoc.Settings.ChangeTransitionFilter(
                         filter => filter.ChangeMeasuredIons(new[] {optionalIon.ChangeIsOptional(true)})));
 
 
-            TransitionGroupDocNode nodeGroup = optionalDoc.TransitionGroups.ElementAt(0);
+            TransitionGroupDocNode nodeGroup = optionalDoc.MoleculeTransitionGroups.ElementAt(0);
             var filteredNodes =
                 TransitionGroupTreeNode.GetChoices(nodeGroup, optionalDoc.Settings,
-                    optionalDoc.Peptides.ElementAt(0).ExplicitMods, true)
+                    optionalDoc.Molecules.ElementAt(0).ExplicitMods, true)
                     .Cast<TransitionDocNode>()
-                    .Where(node => Equals(node.Transition.CustomIon, optionalIon));
+                    .Where(node => Equals(node.Transition.CustomIon, optionalIon.CustomIon));
 
             var unfilteredNodes =
                 TransitionGroupTreeNode.GetChoices(nodeGroup, optionalDoc.Settings,
-                    optionalDoc.Peptides.ElementAt(0).ExplicitMods, false)
+                    optionalDoc.Molecules.ElementAt(0).ExplicitMods, false)
                     .Cast<TransitionDocNode>()
-                    .Where(node => Equals(node.Transition.CustomIon, optionalIon));
+                    .Where(node => Equals(node.Transition.CustomIon, optionalIon.CustomIon));
 
             Assert.AreEqual(0,filteredNodes.Count());
             Assert.AreEqual(1,unfilteredNodes.Count());
@@ -189,9 +195,9 @@ namespace pwiz.SkylineTestA
             IdentityPath path;
             var docPeptides = docOriginal.ImportFasta(new StringReader(">peptides\nESTIGNSAFELLLEVAK\nTVYHAGTK"),
                 true, IdentityPath.ROOT, out path);
-            AssertEx.IsDocumentState(docPeptides, revisionIndex++, 1, 2, 40);
+            AssertEx.IsDocumentState(docPeptides, revisionIndex++, 1, 2, 2, 40);
             // Both precursors should contain 1 and 2 ions
-            foreach (var nodeGroup in docPeptides.TransitionGroups)
+            foreach (var nodeGroup in docPeptides.PeptideTransitionGroups)
             {
                 Assert.IsTrue(nodeGroup.Children.Contains(node => ((TransitionDocNode)node).Transition.Ordinal == 1));
                 Assert.IsTrue(nodeGroup.Children.Contains(node => ((TransitionDocNode)node).Transition.Ordinal == 2));
@@ -201,7 +207,7 @@ namespace pwiz.SkylineTestA
             settings = settings.ChangeTransitionInstrument(instrument => instrument.ChangeIsDynamicMin(true));
             var docDynamicMin = docPeptides.ChangeSettings(settings);
             AssertEx.IsDocumentState(docDynamicMin, revisionIndex++, 1, 2, 35);
-            var arrayNodeGroups = docDynamicMin.TransitionGroups.ToArray();
+            var arrayNodeGroups = docDynamicMin.PeptideTransitionGroups.ToArray();
             // The larger precursor should no longer have 1 or 2 ions
             Assert.IsFalse(arrayNodeGroups[0].Children.Contains(node =>
                 ((TransitionDocNode)node).Transition.Ordinal == 1 ||
@@ -215,7 +221,7 @@ namespace pwiz.SkylineTestA
             var docHighMinDynamicMz = docDynamicMin.ChangeSettings(settings);
             AssertEx.IsDocumentState(docHighMinDynamicMz, revisionIndex++, 1, 2, 1, 22);
             // Because of the dynamic minimum for product ions, the remaining precursor should not have changed
-            var nodeGroupHigh = docHighMinDynamicMz.TransitionGroups.ToArray()[0];
+            var nodeGroupHigh = docHighMinDynamicMz.PeptideTransitionGroups.ToArray()[0];
             Assert.AreSame(arrayNodeGroups[0], nodeGroupHigh);
 
             // Remove dynamic minimum, and verify that product ions are removed
@@ -256,8 +262,8 @@ namespace pwiz.SkylineTestA
                                             .ChangeFragmentRangeFirstName("ion 4")
                                             .ChangeFragmentRangeLastName("last ion - 3"));
             var docLibUnfiltered = document.ChangeSettings(settings);
-            Assert.AreEqual(10, docLibUnfiltered.TransitionCount);
-            Assert.AreEqual(1, docLibUnfiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(10, docLibUnfiltered.PeptideTransitionCount);
+            Assert.AreEqual(1, docLibUnfiltered.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Transition.Ordinal < 4 || nodeTran.Transition.Ordinal > nodeTran.Transition.Group.Peptide.Sequence.Length - 4));
 
             // Using a precursor filter should have no impact now, since the filter is being ignored
@@ -269,29 +275,29 @@ namespace pwiz.SkylineTestA
             // Switch to filtered picking
             settings = settings.ChangeTransitionLibraries(library => library.ChangePick(TransitionLibraryPick.filter));
             var docLibFiltered = docLibUnfiltered.ChangeSettings(settings);
-            Assert.AreEqual(10, docLibFiltered.TransitionCount);
+            Assert.AreEqual(10, docLibFiltered.PeptideTransitionCount);
             // Should have removed the ions outside the previously specified range
-            Assert.IsFalse(docLibFiltered.Transitions.Contains(nodeTran =>
+            Assert.IsFalse(docLibFiltered.PeptideTransitions.Contains(nodeTran =>
                 nodeTran.Transition.Ordinal < 4 || nodeTran.Transition.Ordinal > nodeTran.Transition.Group.Peptide.Sequence.Length - 4));
             // But should contain ions within the precursor window
-            double precursorMz = docLibFiltered.TransitionGroups.ToArray()[0].PrecursorMz;
+            double precursorMz = docLibFiltered.PeptideTransitionGroups.ToArray()[0].PrecursorMz;
             const int countInWindow = 2;
             const double maxDelta = TransitionFilter.MAX_EXCLUSION_WINDOW/2;
-            Assert.AreEqual(countInWindow, docLibFiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(countInWindow, docLibFiltered.PeptideTransitions.Count(nodeTran =>
                 Math.Abs(precursorMz - nodeTran.Mz) < maxDelta));
 
             // Set a precursor m/z window for real this time
             settingsP = settings.ChangeTransitionFilter(filter =>
                 filter.ChangePrecursorMzWindow(TransitionFilter.MAX_EXCLUSION_WINDOW));
             var docPrecursorMzWindow = docLibFiltered.ChangeSettings(settingsP);
-            Assert.AreEqual(10, docPrecursorMzWindow.TransitionCount);
+            Assert.AreEqual(10, docPrecursorMzWindow.PeptideTransitionCount);
             // Make sure transitions in the window were removed
-            Assert.IsFalse(docPrecursorMzWindow.Transitions.Contains(nodeTran =>
+            Assert.IsFalse(docPrecursorMzWindow.PeptideTransitions.Contains(nodeTran =>
                 Math.Abs(precursorMz - nodeTran.Mz) < maxDelta));
             // But other transitions remain unchanged
-            Assert.AreEqual(docPrecursorMzWindow.TransitionCount - countInWindow,
-                docPrecursorMzWindow.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
-                    .Intersect(docLibFiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
+            Assert.AreEqual(docPrecursorMzWindow.PeptideTransitionCount - countInWindow,
+                docPrecursorMzWindow.PeptideTransitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
+                    .Intersect(docLibFiltered.PeptideTransitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
 
             // Reset the settings, and make sure the transitions return to previous state
             var docReset = docPrecursorMzWindow.ChangeSettings(settings);
@@ -301,9 +307,9 @@ namespace pwiz.SkylineTestA
             settings = settings.ChangeTransitionLibraries(library => library.ChangeIonCount(3))
                                .ChangeTransitionFilter(filter => filter.ChangeIonTypes(new[] {IonType.y}));
             var docThreeTran = docReset.ChangeSettings(settings);
-            Assert.AreEqual(3, docThreeTran.TransitionCount);
+            Assert.AreEqual(3, docThreeTran.PeptideTransitionCount);
             // Make sure ions below precursor m/z are present
-            Assert.AreEqual(2, docThreeTran.Transitions.Count(nodeTran => nodeTran.Mz < precursorMz));
+            Assert.AreEqual(2, docThreeTran.PeptideTransitions.Count(nodeTran => nodeTran.Mz < precursorMz));
 
             // Change the filter and picking to library-plus-filter
             // with a more restricted filter.
@@ -314,9 +320,9 @@ namespace pwiz.SkylineTestA
                                         filter.ChangeFragmentRangeFirstName("m/z > precursor")
                                             .ChangeFragmentRangeLastName("3 ions"));
             var docLibPlus = docThreeTran.ChangeSettings(settings);
-            Assert.AreEqual(5, docLibPlus.TransitionCount);
+            Assert.AreEqual(5, docLibPlus.PeptideTransitionCount);
             // Make sure ions below precursor m/z are present
-            Assert.AreEqual(3, docLibPlus.Transitions.Count(nodeTran => nodeTran.Mz > precursorMz));
+            Assert.AreEqual(3, docLibPlus.PeptideTransitions.Count(nodeTran => nodeTran.Mz > precursorMz));
         }
 
         /// <summary>
@@ -358,8 +364,8 @@ namespace pwiz.SkylineTestA
                                                 new IsolationScheme("Test", isolationWindows)));
             var docLibUnfiltered = document.ChangeSettings(settings);
     
-            Assert.AreEqual(10, docLibUnfiltered.TransitionCount);
-            Assert.AreEqual(1, docLibUnfiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(10, docLibUnfiltered.PeptideTransitionCount);
+            Assert.AreEqual(1, docLibUnfiltered.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Transition.Ordinal < 4 || nodeTran.Transition.Ordinal > nodeTran.Transition.Group.Peptide.Sequence.Length - 4));
 
             // Using a precursor filter should have no impact now, since the filter is being ignored
@@ -371,28 +377,28 @@ namespace pwiz.SkylineTestA
             // Should contain ions within the precursor window      
             const int countInWindow = 2;
             const int countInOverlapWindow = 5;
-            Assert.AreEqual(countInWindow, docLibUnfiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(countInWindow, docLibUnfiltered.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 800 && nodeTran.Mz < 900));
-            Assert.AreEqual(countInOverlapWindow, docLibUnfiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(countInOverlapWindow, docLibUnfiltered.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 750 && nodeTran.Mz < 1250));
 
             // Switch to filtered picking
             settings = settings.ChangeTransitionLibraries(library => library.ChangePick(TransitionLibraryPick.filter));
             var docLibFiltered = docLibUnfiltered.ChangeSettings(settings);
-            Assert.AreEqual(10, docLibFiltered.TransitionCount);
+            Assert.AreEqual(10, docLibFiltered.PeptideTransitionCount);
 
             // Should not contain any more ions in the specified DIA window
-            Assert.AreEqual(0, docLibFiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(0, docLibFiltered.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 800 && nodeTran.Mz < 900));
 
             // But should contain ions within the extended precursor window
             const int countInOverlapWindowNew = 4;
-            Assert.AreEqual(countInOverlapWindowNew, docLibFiltered.Transitions.Count(nodeTran =>
+            Assert.AreEqual(countInOverlapWindowNew, docLibFiltered.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 750 && nodeTran.Mz < 1250));
             // But other transitions remain unchanged
-            Assert.AreEqual(docLibUnfiltered.TransitionCount - countInWindow,
-                docLibFiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
-                    .Intersect(docLibUnfiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
+            Assert.AreEqual(docLibUnfiltered.PeptideTransitionCount - countInWindow,
+                docLibFiltered.PeptideTransitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
+                    .Intersect(docLibUnfiltered.PeptideTransitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
 
             // Add more windows to the document
             isolationWindows.Add(new IsolationWindow(750, 850));  // overlapping windows
@@ -404,13 +410,13 @@ namespace pwiz.SkylineTestA
             var docFilterAdditionalWindows = docLibFiltered.ChangeSettings(settingsNew);
             
             // Check that now no more transitions are between 750 and 1250
-            Assert.AreEqual(8, docFilterAdditionalWindows.TransitionCount);
-            Assert.AreEqual(0, docFilterAdditionalWindows.Transitions.Count(nodeTran =>
+            Assert.AreEqual(8, docFilterAdditionalWindows.PeptideTransitionCount);
+            Assert.AreEqual(0, docFilterAdditionalWindows.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 750 && nodeTran.Mz < 1250));
             // But other transitions remain unchanged
-            Assert.AreEqual(docLibUnfiltered.TransitionCount - countInOverlapWindow,
-                docFilterAdditionalWindows.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
-                    .Intersect(docLibUnfiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
+            Assert.AreEqual(docLibUnfiltered.PeptideTransitionCount - countInOverlapWindow,
+                docFilterAdditionalWindows.PeptideTransitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
+                    .Intersect(docLibUnfiltered.PeptideTransitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
 
             // Reset the settings, and make sure the transitions return to previous state
             var docReset = docFilterAdditionalWindows.ChangeSettings(settings);
@@ -420,8 +426,8 @@ namespace pwiz.SkylineTestA
             var settingsNoFilter = settings.ChangeTransitionFilter(filter =>
                                        filter.ChangeExclusionUseDIAWindow(false));
             var docNoFilterAgain = docLibFiltered.ChangeSettings(settingsNoFilter);
-            Assert.AreEqual(10, docNoFilterAgain.TransitionCount);
-            Assert.AreEqual(countInOverlapWindow, docNoFilterAgain.Transitions.Count(nodeTran =>
+            Assert.AreEqual(10, docNoFilterAgain.PeptideTransitionCount);
+            Assert.AreEqual(countInOverlapWindow, docNoFilterAgain.PeptideTransitions.Count(nodeTran =>
                 nodeTran.Mz > 750 && nodeTran.Mz < 1250));
         }
 

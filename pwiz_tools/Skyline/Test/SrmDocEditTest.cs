@@ -50,6 +50,9 @@ namespace pwiz.SkylineTest
             int maxMz = docFasta.Settings.TransitionSettings.Instrument.MaxMz - 120;
             foreach (PeptideGroupDocNode nodeGroup in docFasta.Children)
             {
+                if (SrmDocument.IsSpecialNonProteomicTestDocNode(nodeGroup))
+                    continue;
+               
                 Assert.IsInstanceOfType(nodeGroup.Id, typeof(FastaSequence));
 
                 int lastEnd = docFasta.Settings.PeptideSettings.Filter.ExcludeNTermAAs - 1;
@@ -103,7 +106,7 @@ namespace pwiz.SkylineTest
 
             // Make sure old document is unmodified.
             Assert.AreEqual(0, document.RevisionIndex);
-            Assert.AreEqual(0, document.TransitionCount);
+            Assert.AreEqual(0, document.PeptideTransitionCount);
 
             // Re-paste of fasta should have no impact.
             // path = IdentityPath.ROOT; use null as substitute for Root
@@ -127,6 +130,8 @@ namespace pwiz.SkylineTest
 
             foreach (PeptideDocNode nodePeptide in nodePepList.Children)
             {
+                if (SrmDocument.IsSpecialNonProteomicTestDocNode(nodePeptide))
+                    continue;
                 char prev = nodePeptide.Peptide.PrevAA;
                 char next = nodePeptide.Peptide.NextAA;
                 if (prev != 'X' || next != 'X')
@@ -191,7 +196,7 @@ namespace pwiz.SkylineTest
 
             //    b. Different paptides
             path = docPeptides2.GetPathTo(0);
-            IdentityPath pathFirstPep = docPeptides3.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            IdentityPath pathFirstPep = docPeptides3.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             docPeptides3 = docPeptides2.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES2), true, path, out path);
             AssertEx.IsDocumentState(docPeptides3, 4, 4, 140, 448);
             Assert.AreSame(docPeptides2.Children[0].Id, docPeptides3.Children[0].Id);
@@ -203,7 +208,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, docPeptides3.FindNodeIndex(pathFirstPep));
 
             // 4. At a peptide in a peptide list
-            path = docPeptides2.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            path = docPeptides2.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             docPeptides3 = docPeptides2.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES2), true, path, out path);
             AssertEx.IsDocumentState(docPeptides3, 4, 4, 140, 448);
             Assert.AreSame(docPeptides2.Children[0].Id, docPeptides3.Children[0].Id);
@@ -292,7 +297,7 @@ namespace pwiz.SkylineTest
             AssertEx.ThrowsException<InvalidOperationException>(() =>
                 docPeptides2.MoveNode(from, docPeptides2.GetPathTo(0), out path));
             AssertEx.ThrowsException<InvalidOperationException>(() =>
-                docPeptides3.MoveNode(docPeptides2.GetPathTo((int) SrmDocument.Level.Peptides, 0), to, out path));
+                docPeptides3.MoveNode(docPeptides2.GetPathTo((int) SrmDocument.Level.Molecules, 0), to, out path));
             AssertEx.ThrowsException<InvalidOperationException>(() =>
                 docPeptides3.MoveNode(docPeptides2.GetPathTo((int)SrmDocument.Level.Transitions, 0), to, out path));
         }

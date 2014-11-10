@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Model
                 }
                 else if (AddTriggerReference)
                 {
-                    if (_setRTStandards.Contains(Document.Settings.GetModifiedSequence(nodePep)))
+                    if (nodePep.IsProteomic && _setRTStandards.Contains(Document.Settings.GetModifiedSequence(nodePep)))
                     {
                         writer.Write(1000);  // Trigger
                         writer.Write(FieldSeparator);
@@ -765,7 +765,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);                                    
             }
             // Write modified sequence for the light peptide molecular structure
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+            writer.Write(GetCompound(nodePep));
             writer.Write(FieldSeparator);
             writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
             writer.Write(FieldSeparator);
@@ -838,7 +838,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string compound = Document.Settings.GetModifiedSequence(nodePep);
+            string compound = GetCompound(nodePep);
             if (!CompoundCounts.ContainsKey(compound))
             {
                 CompoundCounts[compound] = 0;
@@ -934,7 +934,7 @@ namespace pwiz.Skyline.Model
 
             #region object overrides
 
-            public bool Equals(GroupStepKey other)
+            private bool Equals(GroupStepKey other)
             {
                 return _groupGlobalIndex == other._groupGlobalIndex && _step == other._step;
             }
@@ -997,8 +997,8 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep) +
-                "_" + nodeTranGroup.TransitionGroup.LabelType.ToString().Replace(' ', '_')); // Not L10N
+            writer.Write(GetCompound(nodePep) +
+                  "_" + nodeTranGroup.TransitionGroup.LabelType.ToString().Replace(' ', '_')); // Not L10N
             if (step != 0)
                 writer.Write("_" + step); // Not L10N
             writer.Write(FieldSeparator);
@@ -1212,7 +1212,7 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             // Compound Name
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+            writer.Write(GetCompound(nodePep));
             for (int i = 0; i < nodeTranGroup.TransitionGroup.PrecursorCharge; ++i)
                 writer.Write('+');
             writer.Write(FieldSeparator);
@@ -1596,7 +1596,7 @@ namespace pwiz.Skyline.Model
             // Write special ID for AB software
             // Use light modified sequence for peptide molecular structure, with decimal points replaced by underscores
             // because AB uses periods as field separators
-            string modifiedPepSequence = GetSequenceWithModsString(nodePep, Document.Settings); // Not L10N;
+            string modifiedPepSequence = GetSequenceWithModsString(nodePep, Document.Settings);
 
             int charge = nodeTranGroup.TransitionGroup.PrecursorCharge;
             if (OptimizeType == null)
@@ -1702,6 +1702,9 @@ namespace pwiz.Skyline.Model
 
         static internal string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
         {
+            if (nodePep.Peptide.IsCustomIon)
+                return nodePep.Peptide.CustomIon.DisplayName;
+
             var mods = new ExplicitMods(nodePep,
                                         settings.PeptideSettings.Modifications.StaticModifications,
                                         Settings.Default.StaticModList,
@@ -2052,8 +2055,8 @@ namespace pwiz.Skyline.Model
             writer.Write(nodePepGroup.Name);
             writer.Write(FieldSeparator);
             // Write modified sequence for the light peptide molecule
-            string modifiedSequence = Document.Settings.GetModifiedSequence(nodePep);
-            string compoundName = string.Format("{0}.{1}", modifiedSequence, nodeTranGroup.TransitionGroup.LabelType); // Not L10N
+            string compound = GetCompound(nodePep);
+            string compoundName = string.Format("{0}.{1}", compound, nodeTranGroup.TransitionGroup.LabelType); // Not L10N
             writer.Write(compoundName);
 
             writer.Write(FieldSeparator);
@@ -2420,8 +2423,8 @@ namespace pwiz.Skyline.Model
             }
             string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
             string comment = string.Format("{0} ({1})", // Not L10N
-                                           Document.Settings.GetModifiedSequence(nodePep),
-                                           nodeTranGroup.TransitionGroup.LabelType);
+                GetCompound(nodePep),
+                nodeTranGroup.TransitionGroup.LabelType);
 
             Write(writer, precursorMz, string.Empty, string.Empty, z, "Positive", start, end, collisionEnergy, comment); // Not L10N
         }
@@ -2502,7 +2505,7 @@ namespace pwiz.Skyline.Model
             // and this allows for 512 peptide charge states and not just 512 precursors.
 //            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+            writer.Write(GetCompound(nodePep));
             writer.Write('.'); // Not L10N
             writer.Write(nodeTranGroup.TransitionGroup.PrecursorCharge);
             if (step != 0)
@@ -2545,7 +2548,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
 
             // Extra information not used by instrument
-            writer.Write(nodePep.Peptide.Sequence);
+            writer.Write(nodePep.RawUnmodifiedTextId);
             writer.Write(FieldSeparator);
             writer.Write(nodeTran.Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
             writer.Write(FieldSeparator);

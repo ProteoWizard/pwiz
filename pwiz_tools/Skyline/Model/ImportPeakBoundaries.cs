@@ -183,11 +183,11 @@ namespace pwiz.Skyline.Model
             var trackAdjustedResults = new HashSet<ResultsKey>();
             var modMatcher = new ModificationMatcher();
             // Make the dictionary of modified peptide strings to doc nodes and paths
-            for (int i = 0; i < Document.PeptideCount; ++i)
+            for (int i = 0; i < Document.MoleculeCount; ++i)
             {
-                IdentityPath peptidePath = Document.GetPathTo((int) SrmDocument.Level.Peptides, i);
+                IdentityPath peptidePath = Document.GetPathTo((int) SrmDocument.Level.Molecules, i);
                 PeptideDocNode peptideNode = (PeptideDocNode) Document.FindNode(peptidePath);
-                var peptidePair = new Tuple<string, bool>(peptideNode.ModifiedSequence, peptideNode.IsDecoy);
+                var peptidePair = new Tuple<string, bool>(peptideNode.RawTextId, peptideNode.IsDecoy);
                 IList<IdentityPath> idPathList;
                 // Each (sequence, isDecoy) pair can be associated with more than one peptide, 
                 // to handle the case of duplicate peptides in the doucment.
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
                 }
                 nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
-                modifiedPeptideString = nodeForModPep.ModifiedSequence;
+                modifiedPeptideString = nodeForModPep.RawTextId; // Modified sequence, or custom ion name
                 string fileName = dataFields.GetField(Field.filename);
                 bool isDecoy = dataFields.IsDecoy(linesRead);
                 var peptideIdentifier = new Tuple<string, bool>(modifiedPeptideString, isDecoy);
@@ -382,9 +382,9 @@ namespace pwiz.Skyline.Model
             {
                 var set = chromatogramSets[i];
                 var nameSet = set.Name;
-                for (int k = 0; k < docNew.PeptideCount; ++k)
+                for (int k = 0; k < docNew.MoleculeCount; ++k)
                 {
-                    IdentityPath pepPath = docNew.GetPathTo((int)SrmDocument.Level.Peptides, k);
+                    IdentityPath pepPath = docNew.GetPathTo((int)SrmDocument.Level.Molecules, k);
                     var pepNode = (PeptideDocNode)Document.FindNode(pepPath);
                     if (pepNode.IsDecoy)
                         continue;
@@ -394,6 +394,9 @@ namespace pwiz.Skyline.Model
                     {
                         var groupPath = new IdentityPath(pepPath, groupNode.Id);
                         var chromInfos = groupNode.Results[i];
+                        if (chromInfos == null)
+                            continue;
+
                         foreach (var groupChromInfo in chromInfos)
                         {
                             if (groupChromInfo == null)

@@ -31,24 +31,27 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class IsotopeDistInfo : Immutable
     {
-        private readonly double _monoisotopicMassH;
+        private readonly double _monoisotopicMass;
         private readonly int _charge;
+        private readonly bool _isMassH;
         private ReadOnlyCollection<MzRankProportion> _expectedDistribution;
 
         public IsotopeDistInfo(MassDistribution massDistribution,
-                               double monoisotopicMassH,
+                               double monoisotopicMass,
+                               bool isMassH, // Is monoisotopicMass M+H, or just M as in small molecule use?
                                int charge,
                                Func<double, double> calcFilterWindow,
                                double massResolution,
                                double minimumAbundance)
         {
-            _monoisotopicMassH = monoisotopicMassH;
+            _monoisotopicMass = monoisotopicMass;
             _charge = charge;
+            _isMassH = isMassH;
 
             // Get peak center of mass values for the given resolution
             var q1FilterValues = MassDistribution.NewInstance(massDistribution, massResolution, 0).Keys.ToList();
             // Find the monoisotopic m/z and make sure it is exactly the expected number
-            double monoMz = SequenceMassCalc.GetMZ(_monoisotopicMassH, _charge);
+            double monoMz = isMassH ? SequenceMassCalc.GetMZ(_monoisotopicMass, _charge) : BioMassCalc.CalculateMz(_monoisotopicMass, _charge);
             double monoMzDist = monoMz;
             int monoMassIndex = 0;
             for (int i = 0; i < q1FilterValues.Count; i++)
@@ -77,7 +80,7 @@ namespace pwiz.Skyline.Model.Results
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
-            var key = new PrecursorModSeq(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
+            var key = new PrecursorTextId(q1FilterValues[monoMassIndex], null, ChromExtractor.summed);
             var filter = new SpectrumFilterPair(key, 0, null, null, null, null, 0, false, false);
             filter.AddQ1FilterValues(q1FilterValues, calcFilterWindow);
 
@@ -94,6 +97,8 @@ namespace pwiz.Skyline.Model.Results
             // Always include the M-1 peak, even if it is expected to have zero intensity
             if (startIndex > monoMassIndex - 1)
                 startIndex = monoMassIndex - 1;
+            if (startIndex < 0)
+                startIndex = 0;
             int endIndex = expectedSpectrum.Intensities.LastIndexOf(inten => inten >= minimumAbundance) + 1;
             int countPeaks = endIndex - startIndex;
             var listProportionIndices = new List<KeyValuePair<float, int>>(countPeaks);
@@ -182,10 +187,10 @@ namespace pwiz.Skyline.Model.Results
         {
             // Return the original monoisotopic mass + H, if requested to maintain an exact match.
             if (massIndex == 0 && !decoyMassShift.HasValue)
-                return _monoisotopicMassH;
+                return _monoisotopicMass;
             // Otherwize use the charge to convert from the peak center m/z values
             double shift = SequenceMassCalc.GetPeptideInterval(decoyMassShift);    // Correct for shift applied to the distribution
-            return SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge);
+            return _isMassH ? SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge) : BioMassCalc.CalculateMassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge);
         }
 
         #region object overrides
@@ -194,7 +199,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other._monoisotopicMassH.Equals(_monoisotopicMassH) &&
+            return other._monoisotopicMass.Equals(_monoisotopicMass) &&
                 other._charge == _charge &&
                 ArrayUtil.EqualsDeep(other._expectedDistribution, _expectedDistribution) &&
                 other.MonoMassIndex == MonoMassIndex &&
@@ -213,7 +218,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                int result = _monoisotopicMassH.GetHashCode();
+                int result = _monoisotopicMass.GetHashCode();
                 result = (result*397) ^ _charge;
                 result = (result*397) ^ (_expectedDistribution != null ? _expectedDistribution.GetHashCodeDeep() : 0);
                 result = (result*397) ^ MonoMassIndex;

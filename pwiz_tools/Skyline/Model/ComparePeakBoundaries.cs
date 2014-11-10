@@ -132,8 +132,8 @@ namespace pwiz.Skyline.Model
                 _docCompare = Importer.Import(FilePath, progressMonitor, lineCount, true, !ApexPresent);
             }
             var matches = new List<PeakBoundsMatch>();
-            var truePeptides = DocOriginal.Peptides.ToList();
-            var pickedPeptides = _docCompare.Peptides.ToList();
+            var truePeptides = DocOriginal.Molecules.ToList();
+            var pickedPeptides = _docCompare.Molecules.ToList();
             int nTruePeptides = truePeptides.Count;
             var chromatogramSets = DocOriginal.Settings.MeasuredResults.Chromatograms;
             for (int i = 0; i < chromatogramSets.Count; i++)

@@ -372,7 +372,7 @@ namespace pwiz.SkylineTestFunctional
                     var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
                     Assert.IsNotNull(findResultsForm);
                     // There are 6 peptides for which scores are missing
-                    Assert.AreEqual(findResultsForm.ItemCount, 6);
+                    Assert.AreEqual(6, findResultsForm.ItemCount);
                     for (int i = 0; i < 6; ++i)
                     {
                         findResultsForm.ActivateItem(i);

@@ -199,7 +199,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (regression == null)
                     continue;
 
-                foreach (var nodeGroup in document.TransitionGroups)
+                foreach (var nodeGroup in document.MoleculeTransitionGroups)
                 {
                     regressionData.Add(regression, nodeGroup, i);
                 }

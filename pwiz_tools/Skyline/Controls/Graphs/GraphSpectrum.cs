@@ -371,12 +371,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeptideLibraries libraries = settings.PeptideSettings.Libraries;
                 TransitionGroup group = nodeGroup.TransitionGroup;
                 TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
-                string lookupSequence = group.Peptide.Sequence;
+                string lookupSequence = group.Peptide.TextId; // Sequence or custom ion id
                 ExplicitMods lookupMods = null;
                 if (nodePepTree != null)
                 {
-                    lookupSequence = nodePepTree.DocNode.LookupSequence;
-                    lookupMods = nodePepTree.DocNode.LookupMods;
+                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTextId;
+                    lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
                 try
                 {
@@ -882,6 +882,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddItem(types, IonType.c, Set.ShowCIons);
                 AddItem(types, IonType.x, Set.ShowXIons);
                 AddItem(types, IonType.a, Set.ShowAIons);
+                // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
                 AddItem(types, IonType.precursor, Set.ShowPrecursorIon);
                 return types;
             }

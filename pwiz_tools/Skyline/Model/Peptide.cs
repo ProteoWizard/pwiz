@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -52,15 +53,26 @@ namespace pwiz.Skyline.Model
             Validate();
         }
 
+        public Peptide(DocNodeCustomIon customIon)
+        {
+            CustomIon = customIon;
+
+            Validate();
+        }
+
         public FastaSequence FastaSequence { get { return _fastaSequence; } }
 
-        public string Sequence { get; private set; }
+        public string Sequence { get; private set; } // If this is null, expect CustomIon not null
         public int? Begin { get; private set; }
         public int? End { get; private set; } // non-inclusive
         public int MissedCleavages { get; private set; }
         public bool IsDecoy { get; private set; }
+        public DocNodeCustomIon CustomIon { get; private set;} // If this is null, expect Sequence not null
+        public bool IsCustomIon { get { return (CustomIon != null); }}
+        public int Length { get { return Sequence != null ? Sequence.Length : 0; }}
 
-        public int Length { get { return Sequence.Length; } }
+        // CONSIDER: Polymorphism?
+        public string TextId { get { return IsCustomIon ? CustomIon.DisplayName : Sequence; } }
 
         public int Order { get { return Begin ?? 0; } }
 
@@ -104,48 +116,56 @@ namespace pwiz.Skyline.Model
             return group1.LabelType.CompareTo(group2.LabelType);
         }
 
-        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods mods, bool useFilter)
+        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, PeptideDocNode nodePep, ExplicitMods mods, bool useFilter)
         {
-            IList<int> precursorCharges = settings.TransitionSettings.Filter.PrecursorCharges;
-            if (!useFilter)
+            if (IsCustomIon)
             {
-                precursorCharges = new List<int>();
-                for (int i = TransitionGroup.MIN_PRECURSOR_CHARGE; i < TransitionGroup.MAX_PRECURSOR_CHARGE; i++)
-                    precursorCharges.Add(i);
+                if (nodePep.GetNonProteomicChildren().Any())
+                    yield return nodePep.GetNonProteomicChildren().First();  // Just return the precursor transition - we don't do multiple charges for custom ions
             }
-
-            var modSettings = settings.PeptideSettings.Modifications;
-
-            double precursorMassLight = settings.GetPrecursorMass(IsotopeLabelType.light, Sequence, mods);
-            var listPrecursorMasses = new List<KeyValuePair<IsotopeLabelType, double>>
-                { new KeyValuePair<IsotopeLabelType, double>(IsotopeLabelType.light, precursorMassLight) };
-
-            foreach (var typeMods in modSettings.GetHeavyModifications())
+            else
             {
-                IsotopeLabelType labelType = typeMods.LabelType;
-                double precursorMass = precursorMassLight;
-                if (settings.HasPrecursorCalc(labelType, mods))
-                    precursorMass = settings.GetPrecursorMass(labelType, Sequence, mods);
-
-                listPrecursorMasses.Add(new KeyValuePair<IsotopeLabelType, double>(labelType, precursorMass));
-            }
-
-            foreach (int charge in precursorCharges)
-            {
-                if (useFilter && !settings.Accept(settings, this, mods, charge))
-                    continue;
-
-                for (int i = 0; i < listPrecursorMasses.Count; i++)
+                IList<int> precursorCharges = settings.TransitionSettings.Filter.PrecursorCharges;
+                if (!useFilter)
                 {
-                    var pair = listPrecursorMasses[i];
-                    IsotopeLabelType labelType = pair.Key;
-                    double precursorMass = pair.Value;
-                    // Only return a heavy group, if the precursor masses differ
-                    // between the light and heavy calculators
-                    if (i == 0 || precursorMass != precursorMassLight)
+                    precursorCharges = new List<int>();
+                    for (int i = TransitionGroup.MIN_PRECURSOR_CHARGE; i < TransitionGroup.MAX_PRECURSOR_CHARGE; i++)
+                        precursorCharges.Add(i);
+                }
+
+                var modSettings = settings.PeptideSettings.Modifications;
+
+                double precursorMassLight = settings.GetPrecursorMass(IsotopeLabelType.light, Sequence, mods);
+                var listPrecursorMasses = new List<KeyValuePair<IsotopeLabelType, double>>
+                {new KeyValuePair<IsotopeLabelType, double>(IsotopeLabelType.light, precursorMassLight)};
+
+                foreach (var typeMods in modSettings.GetHeavyModifications())
+                {
+                    IsotopeLabelType labelType = typeMods.LabelType;
+                    double precursorMass = precursorMassLight;
+                    if (settings.HasPrecursorCalc(labelType, mods))
+                        precursorMass = settings.GetPrecursorMass(labelType, Sequence, mods);
+
+                    listPrecursorMasses.Add(new KeyValuePair<IsotopeLabelType, double>(labelType, precursorMass));
+                }
+
+                foreach (int charge in precursorCharges)
+                {
+                    if (useFilter && !settings.Accept(settings, this, mods, charge))
+                        continue;
+
+                    for (int i = 0; i < listPrecursorMasses.Count; i++)
                     {
-                        if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass, charge)))
-                            yield return new TransitionGroup(this, charge, labelType);
+                        var pair = listPrecursorMasses[i];
+                        IsotopeLabelType labelType = pair.Key;
+                        double precursorMass = pair.Value;
+                        // Only return a heavy group, if the precursor masses differ
+                        // between the light and heavy calculators
+                        if (i == 0 || precursorMass != precursorMassLight)
+                        {
+                            if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass,charge)))
+                                yield return new TransitionGroup(this, charge, labelType);
+                        }
                     }
                 }
             }
@@ -259,12 +279,16 @@ namespace pwiz.Skyline.Model
 
         private void Validate()
         {
-            if (_fastaSequence == null)
+            if (IsCustomIon)
+            {
+                CustomIon.Validate();
+            }
+            else if (_fastaSequence == null)
             {
                 if (Begin.HasValue || End.HasValue)
                     throw new InvalidDataException(Resources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
 
-                // No FastaSequence checked the sequence, so check it hear.
+                // No FastaSequence checked the sequence, so check it here.
                 FastaSequence.ValidateSequence(Sequence);
             }
             else
@@ -297,6 +321,7 @@ namespace pwiz.Skyline.Model
                 obj.Begin.Equals(Begin) &&
                 obj.End.Equals(End) &&
                 obj.MissedCleavages == MissedCleavages &&
+                Equals(obj.CustomIon, CustomIon) &&
                 obj.IsDecoy == IsDecoy;
         }
 
@@ -313,17 +338,21 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = (_fastaSequence != null ? _fastaSequence.GetHashCode() : 0);
-                result = (result*397) ^ Sequence.GetHashCode();
+                result = (result*397) ^ (Sequence != null ? Sequence.GetHashCode() : 0);
                 result = (result*397) ^ (Begin.HasValue ? Begin.Value : 0);
                 result = (result*397) ^ (End.HasValue ? End.Value : 0);
                 result = (result*397) ^ MissedCleavages;
                 result = (result*397) ^ IsDecoy.GetHashCode();
+                result = (result*397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return result;
             }
         }
 
         public override string ToString()
         {
+            if (IsCustomIon)
+                return CustomIon.DisplayName;
+
             if (!Begin.HasValue || !End.HasValue)
             {
                 if (MissedCleavages == 0)
@@ -511,11 +540,13 @@ namespace pwiz.Skyline.Model
                 ? modifications.ChangeIsVariableStaticMods(false)
                 : modifications;
             IsDecoy = peptide.IsDecoy;
+            CustomIon = peptide.CustomIon;
         }
 
         private string Sequence { get; set; }
         private ExplicitMods Modifications { get; set; }
         private bool IsDecoy { get; set; }
+        private CustomIon CustomIon { get; set; }
 
         #region object overrides
 
@@ -523,7 +554,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Sequence, Sequence) &&
+            return Equals(CustomIon, other.CustomIon) &&
+                Equals(other.Sequence, Sequence) &&
                 Equals(other.Modifications, Modifications) &&
                 Equals(other.IsDecoy, IsDecoy);
         }
@@ -543,6 +575,7 @@ namespace pwiz.Skyline.Model
                 int hashCode = (Sequence != null ? Sequence.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Modifications != null ? Modifications.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ IsDecoy.GetHashCode();
+                hashCode = (hashCode * 397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return hashCode;
             }
         }

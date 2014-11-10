@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -35,16 +34,18 @@ namespace pwiz.Skyline.SettingsUI
     {
         private FragmentLoss _loss;
         private readonly IEnumerable<FragmentLoss> _existing;
+        private readonly FormulaBox _formulaBox;
 
         public EditFragmentLossDlg(IEnumerable<FragmentLoss> existing)
         {
             InitializeComponent();
 
             _existing = existing;
-
-            Bitmap bm = Resources.PopupBtn;
-            bm.MakeTransparent(Color.Fuchsia);
-            btnLossFormulaPopup.Image = bm;
+            _formulaBox = new FormulaBox(Resources.EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_,Resources.EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_,Resources.EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_)
+            {
+                Location = new Point(12,9)
+            };
+            Controls.Add(_formulaBox);
         }
 
         public FragmentLoss Loss
@@ -55,21 +56,20 @@ namespace pwiz.Skyline.SettingsUI
                 _loss = value;
                 if (_loss == null)
                 {
-                    textLossFormula.Text = string.Empty;
-                    textLossMonoMass.Text = string.Empty;
-                    textLossAverageMass.Text = string.Empty;                    
+                    _formulaBox.Formula = string.Empty;
+                    _formulaBox.MonoMass = null;
+                    _formulaBox.AverageMass = null;
                 }
                 else if (!string.IsNullOrEmpty(_loss.Formula))
                 {
-                    textLossFormula.Text = _loss.Formula;
+                    _formulaBox.Formula = _loss.Formula;
                 }
                 else
                 {
-                    textLossFormula.Text = string.Empty;
-                    textLossMonoMass.Text = (_loss.MonoisotopicMass != 0 ?
-                        _loss.MonoisotopicMass.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
-                    textLossAverageMass.Text = (_loss.AverageMass != 0 ?
-                        _loss.AverageMass.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
+                    _formulaBox.MonoMass = (_loss.MonoisotopicMass != 0 ?
+                        _loss.MonoisotopicMass: (double?)null);
+                    _formulaBox.AverageMass = (_loss.AverageMass != 0 ?
+                        _loss.AverageMass : (double?)null);
                 }
             }
         }
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var helper = new MessageBoxHelper(this);
 
-            string formulaLoss = textLossFormula.Text;
+            string formulaLoss = _formulaBox.Formula;
             double? monoLoss = null;
             double? avgLoss = null;
             if (!string.IsNullOrEmpty(formulaLoss))
@@ -89,40 +89,38 @@ namespace pwiz.Skyline.SettingsUI
                     double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formulaLoss);
                     if (FragmentLoss.MIN_LOSS_MASS > massMono || FragmentLoss.MIN_LOSS_MASS > massAverage)
                     {
-                        helper.ShowTextBoxError(textLossFormula,
-                                                string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,
+                        _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,
                                                               FragmentLoss.MIN_LOSS_MASS));
                         return;
                     }
                     if (massMono > FragmentLoss.MAX_LOSS_MASS || massAverage > FragmentLoss.MAX_LOSS_MASS)
                     {
-                        helper.ShowTextBoxError(textLossFormula,
-                                                string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__,
+                        _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__,
                                                               FragmentLoss.MAX_LOSS_MASS));
                         return;
                     }
                 }
                 catch (ArgumentException x)
                 {
-                    helper.ShowTextBoxError(textLossFormula, x.Message);
+                    _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;
                 }
             }
-            else if (!string.IsNullOrEmpty(textLossMonoMass.Text) ||
-                    !string.IsNullOrEmpty(textLossAverageMass.Text))
+            else if (_formulaBox.MonoMass != null ||
+                    _formulaBox.AverageMass != null)
             {
                 formulaLoss = null;
                 double mass;
-                if (!helper.ValidateDecimalTextBox(textLossMonoMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
+                if (!_formulaBox.ValidateMonoMass(helper, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 monoLoss = mass;
-                if (!helper.ValidateDecimalTextBox(textLossAverageMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
+                if (!_formulaBox.ValidateAverageMass(helper, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 avgLoss = mass;
             }
             else
             {
-                helper.ShowTextBoxError(textLossFormula, Resources.EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
+                _formulaBox.ShowTextBoxErrorFormula(helper,Resources.EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
                 return;
             }
 
@@ -142,109 +140,6 @@ namespace pwiz.Skyline.SettingsUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
-        }
-
-        private void textLossFormula_TextChanged(object sender, EventArgs e)
-        {
-            UpdateLosses();
-        }
-
-        private void UpdateLosses()
-        {
-            string formula = textLossFormula.Text;
-            if (string.IsNullOrEmpty(formula))
-            {
-                textLossMonoMass.Text = textLossAverageMass.Text = string.Empty;
-                textLossMonoMass.Enabled = textLossAverageMass.Enabled = true;
-            }
-            else
-            {
-                textLossMonoMass.Enabled = textLossAverageMass.Enabled = false;
-                try
-                {
-                    textLossMonoMass.Text = SequenceMassCalc.ParseModMass(
-                        BioMassCalc.MONOISOTOPIC, formula).ToString(LocalizationHelper.CurrentCulture);
-                    textLossAverageMass.Text = SequenceMassCalc.ParseModMass(
-                        BioMassCalc.AVERAGE, formula).ToString(LocalizationHelper.CurrentCulture);
-                    textLossFormula.ForeColor = Color.Black;
-                }
-                catch (ArgumentException)
-                {
-                    textLossFormula.ForeColor = Color.Red;
-                    textLossMonoMass.Text = textLossAverageMass.Text = string.Empty;
-                }
-            }
-        }
-
-        private static void textLossFormula_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            // Force uppercase in this control.
-            // Atoms have been added containing lower case chars
-            // e.KeyChar = char.ToUpper(e.KeyChar);
-        }
-
-        private void btnLossFormulaPopup_Click(object sender, EventArgs e)
-        {
-            contextFormula.Show(this, panelLossFormula.Left + btnLossFormulaPopup.Right + 1,
-                panelLossFormula.Top + btnLossFormulaPopup.Top);
-        }
-
-        private void AddFormulaSymbol(string symbol)
-        {
-            textLossFormula.Text += symbol;
-            textLossFormula.Focus();
-            textLossFormula.SelectionLength = 0;
-            textLossFormula.SelectionStart = textLossFormula.Text.Length;
-        }
-
-        private void hContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.H);
-        }
-
-        private void h2ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.H2);
-        }
-
-        private void cContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.C);
-        }
-
-        private void c13ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.C13);
-        }
-
-        private void nContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.N);
-        }
-
-        private void n15ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.N15);
-        }
-
-        private void oContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.O);
-        }
-
-        private void o18ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.O18);
-        }
-
-        private void pContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.P);
-        }
-
-        private void sContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.S);
         }
     }
 }

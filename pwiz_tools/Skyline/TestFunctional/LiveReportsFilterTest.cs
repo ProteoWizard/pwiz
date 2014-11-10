@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
             );
             RunUI(()=>documentGrid.ChooseView("Precursors"));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            Assert.AreEqual(12, documentGrid.RowCount);
+            Assert.AreEqual(12 + (TestSmallMolecules ? 1 : 0), documentGrid.RowCount);
             var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
             {
                 var precursorMzColumn = documentGrid.FindColumn(PropertyPath.Root.Property("Mz"));

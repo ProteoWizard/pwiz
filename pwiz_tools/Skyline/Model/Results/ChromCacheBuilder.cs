@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return from nodePep in _document.Peptides
+                return from nodePep in _document.Molecules
                        from nodeGroup in nodePep.Children.Cast<TransitionGroupDocNode>()
                        select new PeptidePrecursorMz(nodePep, nodeGroup, nodeGroup.PrecursorMz);
             }
@@ -620,8 +620,8 @@ namespace pwiz.Skyline.Model.Results
             if (nodePep == null)
                 return;
 
-            string lookupSequence = nodePep.LookupSequence;
-            var lookupMods = nodePep.LookupMods;
+            string lookupSequence = nodePep.SourceUnmodifiedTextId;
+            var lookupMods = nodePep.SourceExplicitMods;
             double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePaths[_currentFileIndex],
                                                                            lookupSequence,
                                                                            lookupMods);
@@ -767,7 +767,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (_conversion != null)
                 {
-                    double? score = _calculator.ScoreSequence(nodePep.LookupModifiedSequence);
+                    double? score = _calculator.ScoreSequence(nodePep.SourceUnmodifiedTextId);
                     if (!score.HasValue)
                         return null;
                     return _conversion.GetY(score.Value);
@@ -830,7 +830,7 @@ namespace pwiz.Skyline.Model.Results
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
-                if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedSequence))
+                if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.RawTextId)) // ModifiedSequence for peptides, other id for customIons
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
@@ -1265,7 +1265,7 @@ namespace pwiz.Skyline.Model.Results
                                                                chromDataSet.StatusId,
                                                                chromDataSet.StatusRank);
 
-                        header.CalcSeqIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listSeqBytes);
+                        header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
 
                         int? transitionPeakCount = null;
                         foreach (var chromData in chromDataSet.Chromatograms)

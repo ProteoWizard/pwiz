@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(document, null, 3, 9, 10, 78);
 
             // p. 3 Select first peptide
-            RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Peptides, 0));
+            RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             PauseForScreenShot("Main window", 3);
 
             // p. 4 Configure Document for Thermo raw files
@@ -190,13 +190,13 @@ namespace pwiz.SkylineTestTutorial
             }
 
             WaitForDocumentLoaded();
-            foreach (var nodeGroup in SkylineWindow.Document.TransitionGroups)
+            foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
                 Assert.IsFalse(nodeGroup.HasLibInfo && nodeGroup.Transitions.All(nodeTran => !nodeTran.HasLibInfo));
             }
 
             // All transition groups should now have a precursor transition
-            foreach (var nodeGroup in SkylineWindow.Document.TransitionGroups)
+            foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
                 Assert.AreEqual(IonType.precursor, nodeGroup.Transitions.First().Transition.IonType);
             }
@@ -251,12 +251,13 @@ namespace pwiz.SkylineTestTutorial
                     var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
                     RunUI(() =>
                     {
-                        Assert.AreEqual(10, previewReportDlg.RowCount);
+                        var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                        Assert.AreEqual(expectedRows, previewReportDlg.RowCount);
                         Assert.AreEqual(4, previewReportDlg.ColumnCount);
                         var precursors =
-                            SkylineWindow.Document.TransitionGroups.ToArray();
+                            SkylineWindow.Document.MoleculeTransitionGroups.ToArray();
                         const int precursorIndex = 3;
-                        for (int i = 0; i < 10; i++)
+                        for (int i = 0; i < expectedRows; i++)
                         {
                             Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
                         }
@@ -314,7 +315,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(10, previewReportDlg.RowCount);
                         Assert.AreEqual(4, previewReportDlg.ColumnCount);
                         var precursors =
-                            SkylineWindow.Document.TransitionGroups.ToArray();
+                            SkylineWindow.Document.MoleculeTransitionGroups.ToArray();
                         const int precursorIndex = 3;
                         for (int i = 0; i < 10; i++)
                         {
@@ -422,7 +423,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main window with data imported", 19);
 
             const double minDotp = 0.9;
-            foreach (var nodeGroup in SkylineWindow.Document.TransitionGroups)
+            foreach (var nodeGroup in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 double dotp = nodeGroup.Results[0][0].LibraryDotProduct ?? 0;
                 Assert.IsTrue(Math.Round(dotp, 2) >= minDotp, string.Format("Library dot-product {0} found below {1}", dotp, minDotp));
@@ -588,7 +589,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ExpandPrecursors());
 
             // Assert each peptide contains 3 precursors transitions.
-            foreach (var nodeGroup in SkylineWindow.Document.TransitionGroups)
+            foreach (var nodeGroup in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 for (int i = 0; i < nodeGroup.Children.Count; i++)
                 {

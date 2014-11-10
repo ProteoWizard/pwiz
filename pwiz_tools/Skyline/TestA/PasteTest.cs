@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestA
             var arrayPeptides = _study7Doc.Peptides.ToArray();
             var arrayPastePeptides = study7PasteDoc.Peptides.ToArray();
             Assert.AreEqual(arrayPeptides.Length, arrayPastePeptides.Length);
-            Assert.AreEqual(_study7Doc, study7PasteDoc);
+            AssertEx.DocsEqual(_study7Doc, study7PasteDoc); // DocsEqual gives a more verbose failure message using XML output
 
             // Test implicit mods in source document become explicit mods in target document.
             ResetDocuments();
@@ -108,12 +108,12 @@ namespace pwiz.SkylineTestA
             var labelType13C = new IsotopeLabelType(labelTypeName13C, IsotopeLabelType.light.SortOrder + 1);
             _yeastDoc = ChangePeptideModifications(_yeastDoc,
                  new[] {new TypedModifications(labelType13C, HEAVY_MODS_13_C)});
-            Assert.IsTrue(_yeastDoc.TransitionGroups.Contains(nodeGroup =>
+            Assert.IsTrue(_yeastDoc.PeptideTransitionGroups.Contains(nodeGroup =>
                 Equals(nodeGroup.TransitionGroup.LabelType, labelType13C)));
            // Test pasting into the same document with new label type.
             _yeastDoc = CopyPaste(_yeastDoc, null, _yeastDoc, pathRoot);
             // Check all transition have correct label type references.
-            Assert.IsFalse(_yeastDoc.TransitionGroups.Contains(nodeGroup =>
+            Assert.IsFalse(_yeastDoc.PeptideTransitionGroups.Contains(nodeGroup =>
                 {
                     IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
                     return !ReferenceEquals(labelType,
@@ -129,29 +129,29 @@ namespace pwiz.SkylineTestA
 
             // If only specific children are selected, test that only these children get copied.
             ResetDocuments();
-            var arrayTrans = _study7Doc.Transitions.ToArray();
+            var arrayTrans = _study7Doc.PeptideTransitions.ToArray();
             IList<DocNode> selNodes = new List<DocNode>();
             for (int i = 0; i < arrayTrans.Length; i += 2)
             {
                 selNodes.Add(arrayTrans[i]);
             }
             _study7Doc = CopyPaste(_study7Doc, selNodes, _study7Doc, pathRoot);
-            Assert.AreEqual(arrayTrans.Length + selNodes.Count, _study7Doc.TransitionCount);
+            Assert.AreEqual(arrayTrans.Length + selNodes.Count, _study7Doc.PeptideTransitionCount);
 
             // Test after pasting to a peptide list, all children have been updated to point to the correct parent.
             ResetDocuments();
             _study7Doc = CopyPaste(_yeastDoc, new[] { _yeastDoc.Peptides.ToArray()[0] }, _study7Doc,
-                                  _study7Doc.GetPathTo((int) SrmDocument.Level.PeptideGroups, 0));
+                                  _study7Doc.GetPathTo((int) SrmDocument.Level.MoleculeGroups, 0));
             Assert.AreEqual(_yeastDoc.Peptides.ToArray()[0].Peptide, _study7Doc.Peptides.ToArray()[0].Peptide);
             Assert.AreEqual(_study7Doc.Peptides.ToArray()[0].Peptide,
-                          _study7Doc.TransitionGroups.ToArray()[0].TransitionGroup.Peptide);
-            Assert.AreEqual(_study7Doc.TransitionGroups.ToArray()[0].TransitionGroup,
-                          _study7Doc.Transitions.ToArray()[0].Transition.Group);
+                          _study7Doc.PeptideTransitionGroups.ToArray()[0].TransitionGroup.Peptide);
+            Assert.AreEqual(_study7Doc.PeptideTransitionGroups.ToArray()[0].TransitionGroup,
+                          _study7Doc.PeptideTransitions.ToArray()[0].Transition.Group);
 
             // If only specific transition are selected for a peptide, but all transition groups are included, test AutoManageChildren is true.
             ResetDocuments();
             selNodes = new List<DocNode>();
-            foreach (TransitionGroupDocNode transGroup in _study7Doc.TransitionGroups)
+            foreach (TransitionGroupDocNode transGroup in _study7Doc.PeptideTransitionGroups)
             {
                 selNodes.Add(transGroup.Children[0]);
             }

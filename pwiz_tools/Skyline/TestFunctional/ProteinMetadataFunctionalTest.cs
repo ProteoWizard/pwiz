@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -53,14 +54,14 @@ namespace pwiz.SkylineTestFunctional
             // Formerly this little .sky file would not update its (unsearchable) protein metdata on load
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Mutant Peptides  with Braf AG A00Y - Cut Down.sky")));
             var doc = WaitForDocumentLoaded();
-            var nodeProt = doc.PeptideGroups.First();
+            var nodeProt = doc.MoleculeGroups.First();
             var metadata = nodeProt.ProteinMetadata;
             Assert.IsFalse(metadata.NeedsSearch());
 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ProteinMetadataFunctionalTests.sky")));
 
             doc = WaitForDocumentLoaded();
-            nodeProt = doc.PeptideGroups.First();
+            nodeProt = doc.MoleculeGroups.First();
             metadata = nodeProt.ProteinMetadata;
 
             // Examine the various View | Targets | By* modes
@@ -90,19 +91,19 @@ namespace pwiz.SkylineTestFunctional
                         RunUI(() => SkylineWindow.sortProteinsByNameToolStripMenuItem_Click(null, null));
                         break;
                     case ProteinDisplayMode.ByAccession:
-                        expectedTopName = "YFL038C";
+                        expectedTopName = TestSmallMolecules ? "ZZZTESTINGNONPROTEOMICMOLECULEGROUP" : "YFL038C";
                         RunUI(() => SkylineWindow.sortProteinsByAccessionToolStripMenuItem_Click(null, null));
                         break;
                     case ProteinDisplayMode.ByPreferredName:
                         RunUI(() => SkylineWindow.sortProteinsByPreferredNameToolStripMenuItem_Click(null, null));
-                        expectedTopName = "YAL016W";
+                        expectedTopName = TestSmallMolecules ? "ZZZTESTINGNONPROTEOMICMOLECULEGROUP" : "YAL016W";
                         break;
                     case ProteinDisplayMode.ByGene:
                         RunUI(() => SkylineWindow.sortProteinsByGeneToolStripMenuItem_Click(null, null));
-                        expectedTopName = "YGL234W";
+                        expectedTopName = TestSmallMolecules ? "ZZZTESTINGNONPROTEOMICMOLECULEGROUP" : "YGL234W";
                         break;
                 }
-                var actualTopName = WaitForDocumentLoaded().PeptideGroups.First().Name.ToUpperInvariant();
+                var actualTopName = WaitForDocumentLoaded().MoleculeGroups.First().Name.ToUpperInvariant();
                 Assert.AreEqual(expectedTopName, actualTopName);
             }
 
@@ -130,9 +131,9 @@ namespace pwiz.SkylineTestFunctional
                 });
 
             // Check that IPI:IPI00197700.1 got an accession number P04638
-            WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals("IPI:IPI00197700.1", pg.Name)));
+            WaitForCondition(() => SkylineWindow.Document.MoleculeGroups.Any(pg => Equals("IPI:IPI00197700.1", pg.Name)));
             doc = WaitForDocumentLoaded();
-            nodeProt = doc.PeptideGroups.First(pg => Equals("IPI:IPI00197700.1", pg.Name));
+            nodeProt = doc.MoleculeGroups.First(pg => Equals("IPI:IPI00197700.1", pg.Name));
             Assert.AreEqual("P04638", nodeProt.ProteinMetadata.Accession);
 
             // Now make our fake fasta into a protdb file, and check statement completion against that
@@ -158,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
                 sequenceTree.CommitEditBox(false);
             });
             doc = WaitForDocumentChange(doc);
-            nodeProt = doc.PeptideGroups.First(pg => Equals("NP_313205", pg.Name));
+            nodeProt = doc.MoleculeGroups.First(pg => Equals("NP_313205", pg.Name));
             Assert.AreEqual("P0A7T9", nodeProt.ProteinMetadata.Accession);
 
             var snapshot = SkylineWindow.Document;
@@ -176,9 +177,9 @@ namespace pwiz.SkylineTestFunctional
                 // ReSharper restore LocalizableElement
                 sequenceTree.CommitEditBox(false);
             });
-            WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
+            WaitForCondition(() => SkylineWindow.Document.MoleculeGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
             doc = WaitForDocumentChange(doc);
-            nodeProt = doc.PeptideGroups.First(pg => Equals(uniRef100A5Di11, pg.Name));
+            nodeProt = doc.MoleculeGroups.First(pg => Equals(uniRef100A5Di11, pg.Name));
             Assert.AreEqual(a5Di11, nodeProt.ProteinMetadata.Accession);
 
             // Paste in some junk and make sure we handle the View Targets By* gracefully
@@ -192,14 +193,14 @@ namespace pwiz.SkylineTestFunctional
                 sequenceTree.CommitEditBox(false);
             });
             doc = WaitForDocumentChange(doc);
-            var nodeText = SkylineWindow.SequenceTree.GetSequenceNodes().Last().Text;
+            var nodeText = SkylineWindow.SequenceTree.GetSequenceNodes().Last(n => !SrmDocument.IsSpecialNonProteomicTestDocNode(n.DocNode)).Text;
             var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, badname);  // As in PeptideGroupTreeNode.cs
             Assert.AreEqual(failsafe, nodeText);
 
 
             // Revert those changes, so we can insert another way
             SkylineWindow.SetDocument(snapshot, doc);
-            WaitForCondition(() => !SkylineWindow.Document.PeptideGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
+            WaitForCondition(() => !SkylineWindow.Document.MoleculeGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
             doc = SkylineWindow.Document;
 
             // Test for pasting accession number in protein paste dialog, and having it populate with correct name
@@ -213,9 +214,9 @@ namespace pwiz.SkylineTestFunctional
                 pasteProteinsDlgA.PasteProteins();
             });
             OkDialog(pasteProteinsDlgA, pasteProteinsDlgA.OkDialog);
-            WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
+            WaitForCondition(() => SkylineWindow.Document.MoleculeGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
             doc = WaitForDocumentChange(doc);
-            nodeProt = doc.PeptideGroups.First(pg => Equals(uniRef100A5Di11, pg.Name));
+            nodeProt = doc.MoleculeGroups.First(pg => Equals(uniRef100A5Di11, pg.Name));
             Assert.AreEqual(a5Di11, nodeProt.ProteinMetadata.Accession);
 
             // See what happens when you paste in a gene name shared by a couple of proteins
@@ -231,9 +232,9 @@ namespace pwiz.SkylineTestFunctional
                 pasteProteinsDlgB.PasteProteins();
             });
             OkDialog(pasteProteinsDlgB, pasteProteinsDlgB.OkDialog);
-            WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(ipi00197700, pg.Name)));
+            WaitForCondition(() => SkylineWindow.Document.MoleculeGroups.Any(pg => Equals(ipi00197700, pg.Name)));
             doc = WaitForDocumentChange(doc);
-            nodeProt = doc.PeptideGroups.First(pg => Equals(ipi00197700, pg.Name));
+            nodeProt = doc.MoleculeGroups.First(pg => Equals(ipi00197700, pg.Name));
             Assert.AreEqual(dupeGene, nodeProt.ProteinMetadata.Gene);
 
             // Test for pasting in protein PasteDlg with sequence and metadata - metadata values are same as DocumentGrid column names
@@ -256,9 +257,9 @@ namespace pwiz.SkylineTestFunctional
                 pasteProteinsDlg.PasteProteins();
             });
             OkDialog(pasteProteinsDlg, pasteProteinsDlg.OkDialog);
-            WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(pasteProteinName, pg.Name)));
+            WaitForCondition(() => SkylineWindow.Document.MoleculeGroups.Any(pg => Equals(pasteProteinName, pg.Name)));
             doc = WaitForDocumentChange(doc);
-            nodeProt = doc.PeptideGroups.First(pg => Equals(pasteProteinName, pg.Name));
+            nodeProt = doc.MoleculeGroups.First(pg => Equals(pasteProteinName, pg.Name));
             Assert.AreEqual(pasteProteinAccession, nodeProt.ProteinMetadata.Accession);
 
             // Verify DocumentGrid's use of protein metadata - last line should agree with var pasteProteinText

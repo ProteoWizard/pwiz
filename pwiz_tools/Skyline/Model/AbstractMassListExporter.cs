@@ -160,6 +160,11 @@ namespace pwiz.Skyline.Model
             fileIterator.NextFile();
         }
 
+        public string GetCompound(PeptideDocNode nodePep)
+        {
+            return nodePep.Peptide.IsCustomIon ? nodePep.Peptide.CustomIon.DisplayName : Document.Settings.GetModifiedSequence(nodePep);
+        }
+
         private RequiredPeptideSet GetRequiredPeptides(bool single)
         {
             return single
@@ -216,7 +221,7 @@ namespace pwiz.Skyline.Model
 
         private void ExportNormal(FileIterator fileIterator, bool single)
         {
-            foreach (PeptideGroupDocNode seq in Document.PeptideGroups)
+            foreach (PeptideGroupDocNode seq in Document.MoleculeGroups)
             {
                 // Skip peptide groups with no transitions
                 if (seq.TransitionCount == 0)
@@ -312,7 +317,7 @@ namespace pwiz.Skyline.Model
             var listSchedules = new List<PeptideSchedule>();
             var listRequired = new List<PeptideSchedule>();
             var listUnscheduled = new List<PeptideSchedule>();
-            foreach (PeptideGroupDocNode nodePepGroup in Document.PeptideGroups)
+            foreach (PeptideGroupDocNode nodePepGroup in Document.MoleculeGroups)
             {
                 foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                 {
@@ -343,7 +348,7 @@ namespace pwiz.Skyline.Model
                         if (!peptideSchedule.CanSchedule)
                         {
                             throw new IOException(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled,
-                                                                Document.Settings.GetModifiedSequence(nodePep)));
+                                                                Document.Settings.GetDisplayName(nodePep)));
                         }
                         listRequired.Add(peptideSchedule);
                     }

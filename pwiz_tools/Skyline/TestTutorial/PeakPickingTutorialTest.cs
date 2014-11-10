@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestTutorial
             const string peptideSeqHighlight = "LPDGNGIELCR";
             RunUI(() =>
                 {
-                    var nodeGroup = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[71];
+                    var nodeGroup = SkylineWindow.DocumentUI.PeptideTransitionGroups.ToArray()[71];
                     Assert.AreEqual(nodeGroup.TransitionGroup.Peptide.Sequence, peptideSeqHighlight);
                     var chromGroupInfo = nodeGroup.ChromInfos.ToList()[0];
                     Assert.IsNotNull(chromGroupInfo.RetentionTime);
@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
             RunUI(() =>
             {
-                var nodeGroup = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[70];
+                var nodeGroup = SkylineWindow.DocumentUI.PeptideTransitionGroups.ToArray()[70];
                 Assert.AreEqual(nodeGroup.TransitionGroup.Peptide.Sequence, peptideSeqHighlight);
                 var chromGroupInfo = nodeGroup.ChromInfos.ToList()[0];
                 Assert.IsNotNull(chromGroupInfo.RetentionTime);
@@ -400,7 +400,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<RescoreResultsDlg>("Re-score Results form", 25);
 
             RunUI(() => rescoreResultsDlg.Rescore(false));
-            WaitForCondition(5 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 5 minutes
+            WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 10 minutes (usually needs less, but code coverage analysis can be slow)
             WaitForClosedForm(rescoreResultsDlg);
             WaitForClosedForm(manageResults);
             WaitForConditionUI(() => FindOpenForm<AllChromatogramsGraph>() == null);
@@ -472,7 +472,7 @@ namespace pwiz.SkylineTestTutorial
 
             findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             Assert.IsNotNull(findResultsForm);
-            Assert.AreEqual(findResultsForm.ItemCount, 34);
+            Assert.AreEqual(34 + (TestSmallMolecules ? 1 : 0), findResultsForm.ItemCount);
         }
 
         private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, int coeffIndex)

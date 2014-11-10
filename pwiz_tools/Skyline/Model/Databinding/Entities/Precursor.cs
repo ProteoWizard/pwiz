@@ -100,8 +100,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return SequenceMassCalc.PersistentNeutral(
-                    SequenceMassCalc.GetMH(DocNode.PrecursorMz, DocNode.TransitionGroup.PrecursorCharge));
+                return DocNode.GetPrecursorIonPersistentNeutralMass();
             }
         }
 
@@ -142,6 +141,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 var peptideDocNode = Peptide.DocNode;
+                if (!peptideDocNode.IsProteomic)
+                    return TextUtil.EXCEL_NA;
                 return SrmDocument.Settings.GetPrecursorCalc(
                     DocNode.TransitionGroup.LabelType, peptideDocNode.ExplicitMods)
                                   .GetModifiedSequence(peptideDocNode.Peptide.Sequence, true);

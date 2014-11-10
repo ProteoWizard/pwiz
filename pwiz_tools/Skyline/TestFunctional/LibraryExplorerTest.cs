@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestFunctional
             // Peptides will be added back in a different order
             AssertEx.IsDocumentState(docAddBack, null,
                 docOriginal.PeptideGroupCount, docOriginal.PeptideCount,
-                docOriginal.TransitionGroupCount, docOriginal.TransitionCount);
+                docOriginal.PeptideTransitionGroupCount, docOriginal.PeptideTransitionCount);
             TestSamePeptides(docOriginal.Peptides);
 
             // Test missing transition groups added correctly.
@@ -852,10 +852,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestForDuplicateTransitionGroups()
         {
-            foreach (var tranGroup in SkylineWindow.Document.TransitionGroups)
+            foreach (var tranGroup in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 TransitionGroupDocNode @group = tranGroup;
-                Assert.AreEqual(1, SkylineWindow.Document.TransitionGroups.Count(docTranGroup =>
+                Assert.AreEqual(1, SkylineWindow.Document.PeptideTransitionGroups.Count(docTranGroup =>
                                                                                  ReferenceEquals(docTranGroup, group)));
             }
         }

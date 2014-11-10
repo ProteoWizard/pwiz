@@ -201,6 +201,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsMod(string sequence)
         {
+            if (sequence == null) // As when looking at a non-peptide molecule
+                return false;
+
             for (int i = 0; i < sequence.Length; i++)
             {
                 if (IsMod(sequence[i], i, sequence.Length))
@@ -797,20 +800,23 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             List<ExplicitMod> listImplicitMods = new List<ExplicitMod>();
 
-            string seq = Peptide.Sequence;
-            for (int i = 0; i < seq.Length; i++)
+            if (!Peptide.IsCustomIon)
             {
-                char aa = seq[i];
-                foreach (StaticMod mod in mods)
+                string seq = Peptide.Sequence;
+                for (int i = 0; i < seq.Length; i++)
                 {
-                    // Skip explicit mods, since only considering implicit
-                    if (mod.IsExplicit || !mod.IsMod(aa, i, seq.Length))
-                        continue;
-                    // Always use the modification from the settings to ensure expected
-                    // equality comparisons.
-                    StaticMod modAdd;
-                    if (listSettingsMods.TryGetValue(mod.Name, out modAdd))
-                        listImplicitMods.Add(new ExplicitMod(i, modAdd));
+                    char aa = seq[i];
+                    foreach (StaticMod mod in mods)
+                    {
+                        // Skip explicit mods, since only considering implicit
+                        if (mod.IsExplicit || !mod.IsMod(aa, i, seq.Length))
+                            continue;
+                        // Always use the modification from the settings to ensure expected
+                        // equality comparisons.
+                        StaticMod modAdd;
+                        if (listSettingsMods.TryGetValue(mod.Name, out modAdd))
+                            listImplicitMods.Add(new ExplicitMod(i, modAdd));
+                    }
                 }
             }
 
@@ -955,20 +961,23 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
         {
             var modsNew = new List<ExplicitMod>();
-            foreach (var mod in explicitMods)
+            if (!Peptide.IsCustomIon)
             {
-                string name = mod.Modification.Name;
-                int iStaticMod = staticMods.IndexOf(mg => Equals(name, mg.Name));
-                // If the modification by this name has been removed, then remove
-                // it from the modification list.
-                if (iStaticMod == -1)
-                    continue;
-                var staticMod = staticMods[iStaticMod];
-                if(!staticMod.IsMod(Peptide.Sequence[mod.IndexAA], mod.IndexAA, Peptide.Sequence.Length))
-                    continue;
-                modsNew.Add(mod.Modification.EquivalentAll(staticMod)
-                                ? mod
-                                : mod.ChangeModification(staticMod));
+                foreach (var mod in explicitMods)
+                {
+                    string name = mod.Modification.Name;
+                    int iStaticMod = staticMods.IndexOf(mg => Equals(name, mg.Name));
+                    // If the modification by this name has been removed, then remove
+                    // it from the modification list.
+                    if (iStaticMod == -1)
+                        continue;
+                    var staticMod = staticMods[iStaticMod];
+                    if(!staticMod.IsMod(Peptide.Sequence[mod.IndexAA], mod.IndexAA, Peptide.Sequence.Length))
+                        continue;
+                    modsNew.Add(mod.Modification.EquivalentAll(staticMod)
+                        ? mod
+                        : mod.ChangeModification(staticMod));
+                }
             }
             ArrayUtil.AssignIfEqualsDeep(modsNew, explicitMods);
             if (ArrayUtil.ReferencesEqual(modsNew, explicitMods))

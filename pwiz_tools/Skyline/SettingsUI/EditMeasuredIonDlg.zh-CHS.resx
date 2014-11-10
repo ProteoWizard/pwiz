@@ -756,52 +756,52 @@
   <data name=">>contextFormula.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelCharges.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelCharge.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelCharges.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelCharge.Location" type="System.Drawing.Point, System.Drawing">
     <value>30, 356</value>
   </data>
-  <data name="labelCharges.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="labelCharge.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 13</value>
   </data>
-  <data name="labelCharges.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelCharge.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
   </data>
-  <data name="labelCharges.Text" xml:space="preserve">
+  <data name="labelCharge.Text" xml:space="preserve">
     <value>电荷(&amp;H)</value>
   </data>
-  <data name=">>labelCharges.Name" xml:space="preserve">
-    <value>labelCharges</value>
+  <data name=">>labelCharge.Name" xml:space="preserve">
+    <value>labelCharge</value>
   </data>
-  <data name=">>labelCharges.Type" xml:space="preserve">
+  <data name=">>labelCharge.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelCharges.Parent" xml:space="preserve">
+  <data name=">>labelCharge.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelCharges.ZOrder" xml:space="preserve">
+  <data name=">>labelCharge.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="textCharges.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textCharge.Location" type="System.Drawing.Point, System.Drawing">
     <value>33, 372</value>
   </data>
-  <data name="textCharges.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textCharge.Size" type="System.Drawing.Size, System.Drawing">
     <value>87, 20</value>
   </data>
-  <data name="textCharges.TabIndex" type="System.Int32, mscorlib">
+  <data name="textCharge.TabIndex" type="System.Int32, mscorlib">
     <value>21</value>
   </data>
-  <data name=">>textCharges.Name" xml:space="preserve">
-    <value>textCharges</value>
+  <data name=">>textCharge.Name" xml:space="preserve">
+    <value>textCharge</value>
   </data>
-  <data name=">>textCharges.Type" xml:space="preserve">
+  <data name=">>textCharge.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textCharges.Parent" xml:space="preserve">
+  <data name=">>textCharge.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textCharges.ZOrder" xml:space="preserve">
+  <data name=">>textCharge.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnMz.Enabled" type="System.Boolean, mscorlib">

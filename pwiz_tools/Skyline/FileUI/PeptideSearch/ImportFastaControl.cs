@@ -181,7 +181,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private static bool HasPrecursorTransitions(SrmDocument doc)
         {
-            return doc.Transitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
+            return doc.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
         }
 
         private static SrmDocument ChangeAutoManageChildren(SrmDocument doc, PickLevel which, bool autoPick)

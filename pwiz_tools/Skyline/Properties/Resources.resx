@@ -2202,12 +2202,6 @@ Are you sure you want to continue?</value>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
-  <data name="PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number" xml:space="preserve">
-    <value>The precursor m/z must be a number.</value>
-  </data>
-  <data name="PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number" xml:space="preserve">
-    <value>The product m/z must be a number.</value>
-  </data>
   <data name="PasteDlg_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
     <value>Failed getting data from the clipboard.</value>
   </data>
@@ -3132,12 +3126,6 @@ Are you sure you want to continue?</value>
   <data name="ExportMethodDlg_ValidateSettings__0__must_contain_a_value" xml:space="preserve">
     <value>{0} must contain a value.</value>
   </data>
-  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__has__2__transitions_which_exceeds_the_current_maximum__3__" xml:space="preserve">
-    <value>The precursor {0} for the peptide {1} has {2} transitions, which exceeds the current maximum {3}.</value>
-  </data>
-  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__requires__2__transitions_to_optimize_which_exceeds_the_current_maximum__3__" xml:space="preserve">
-    <value>The precursor {0} for the peptide {1} requires {2} transitions to optimize, which exceeds the current maximum {3}.</value>
-  </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings" xml:space="preserve">
     <value>Check the calculator settings.</value>
   </data>
@@ -3636,9 +3624,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SkylineWindow_exportIsolationListMenuItem_Click_There_is_no_isolation_list_data_to_export" xml:space="preserve">
     <value>There is no isolation list data to export.</value>
-  </data>
-  <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features" xml:space="preserve">
-    <value>The document must contain peptides for which to export features.</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
     <value>Export ESP Features</value>
@@ -4931,6 +4916,12 @@ Are you sure you want to continue?</value>
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Molecule" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Molecule.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MoleculeList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MoleculeList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="TransitionGroupLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -5426,9 +5417,6 @@ Are you sure you want to continue?</value>
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>Bad chromatogram data for charge {0} state of peptide {1}</value>
   </data>
-  <data name="ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0__of_peptide__1_" xml:space="preserve">
-    <value>One or more missing chromatograms at charge state {0} of peptide {1}</value>
-  </data>
   <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>The document must have imported results.</value>
   </data>
@@ -5449,9 +5437,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ExportChromatogramDlg_OkDialog_At_least_one_file_must_be_selected" xml:space="preserve">
     <value>At least one file must be selected</value>
-  </data>
-  <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_which_to_export_chromatograms" xml:space="preserve">
-    <value>The document must have peptides for which to export chromatograms.</value>
   </data>
   <data name="ExportChromatogramDlg_OkDialog_At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
     <value>At least one chromatogram type must be selected.</value>
@@ -5666,9 +5651,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>The document must have imported results.</value>
   </data>
-  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_" xml:space="preserve">
-    <value>The document must have peptides in order to reintegrate chromatograms.</value>
-  </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
     <value>Unexpected document change during operation.</value>
   </data>
@@ -5677,9 +5659,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>The document must have imported results.</value>
-  </data>
-  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features_" xml:space="preserve">
-    <value>The document must contain peptides for which to export features.</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
     <value>Reintegration of results requires a trained peak scoring model.</value>
@@ -6916,9 +6895,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="ComparePeakBoundaries_ComparePeakBoundaries__0___external_" xml:space="preserve">
     <value>{0} [external]</value>
   </data>
-  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_peptides_in_order_to_compare_model_peak_picking_" xml:space="preserve">
-    <value>The document must have peptides in order to compare model peak picking.</value>
-  </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>The document must be fully loaded in order to compare model peak picking.</value>
   </data>
@@ -7927,5 +7903,185 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_" xml:space="preserve">
     <value>Continue peak boundary import ignoring this charge state?</value>
+  </data>
+  <data name="TransitionGroupTreeNode_RenderTip_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="PeptideTreeNode_RenderTip_Neutral_Mass" xml:space="preserve">
+    <value>Neutral Mass</value>
+  </data>
+  <data name="Transition_Validate_A_transition_of_ion_type__0__can_t_have_a_custom_ion" xml:space="preserve">
+    <value>A transition of ion type {0} can't have a custom ion</value>
+  </data>
+  <data name="CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
+    <value>Custom ions must specify a formula or valid monoisotopic and average masses.</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
+    <value>A&amp;verage mass:</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_" xml:space="preserve">
+    <value>&amp;Monoisotopic mass:</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_The_custom_molecule_already_exists_" xml:space="preserve">
+    <value>The custom molecule already exists.</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>Custom molecules must have a mass greater than or equal to {0}.</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>Custom molecules must have a mass less than or equal to {0}.</value>
+  </data>
+  <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
+    <value>Chemical formula:</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_" xml:space="preserve">
+    <value>A&amp;verage loss:</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_" xml:space="preserve">
+    <value>&amp;Monoisotopic loss:</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_" xml:space="preserve">
+    <value>Neutral loss &amp;chemical formula:</value>
+  </data>
+  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_" xml:space="preserve">
+    <value>The mass of the custom ion exceeeds the maximum of {0}.</value>
+  </data>
+  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__" xml:space="preserve">
+    <value>The mass of the custom ion is less than the minimum of {0}.</value>
+  </data>
+  <data name="PasteDlg_GetMoleculeTransition_Product_m_z__0__isn_t_close_enough_to_the_nearest_possible_m_z__1___delta_2___" xml:space="preserve">
+    <value>Product m/z {0} isn't close enough to the nearest possible m/z {1} (delta{2}).</value>
+  </data>
+  <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
+    <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>
+  </data>
+  <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_" xml:space="preserve">
+    <value>Molecule Group {0}</value>
+  </data>
+  <data name="CustomIon_DisplayName_Ion__0_" xml:space="preserve">
+    <value>Ion {0}</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_custom_molecule__0_" xml:space="preserve">
+    <value>Add custom molecule {0}</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_custom_product_ion__0_" xml:space="preserve">
+    <value>Add custom product ion {0}</value>
+  </data>
+  <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
+    <value>The document must contain peptides to generate decoys.</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_product_ion__0_" xml:space="preserve">
+    <value>Modify product ion {0}</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_protein_" xml:space="preserve">
+    <value>Custom molecules cannot be added to a protein.</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
+    <value>Custom molecules cannot be added to a peptide list.</value>
+  </data>
+  <data name="SkylineWindow_ModifyTransition_Modify_Transition" xml:space="preserve">
+    <value>Modify Transition</value>
+  </data>
+  <data name="SkylineWindow_ModifyPeptide_Modify_Custom_Ion" xml:space="preserve">
+    <value>Modify Custom Ion</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_Custom_Molecule" xml:space="preserve">
+    <value>Add Custom Molecule</value>
+  </data>
+  <data name="Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_" xml:space="preserve">
+    <value>A transition of ion type {0} must have a custom ion.</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_" xml:space="preserve">
+    <value>The precursor m/z for this molecule is out of range for your instrument settings.</value>
+  </data>
+  <data name="SkylineWindow_AddMolecule_Add_Transition" xml:space="preserve">
+    <value>Add Transition</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Possible_loss_of_data_could_occur_if_you_switch_to__0___Do_you_want_to_continue_" xml:space="preserve">
+    <value>Possible loss of data could occur if you switch to {0}. Do you want to continue?</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_m_z" xml:space="preserve">
+    <value>Product m/z</value>
+  </data>
+  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__" xml:space="preserve">
+    <value>The precursor {0} for {1} has {2} transitions, which exceeds the current maximum {3}.</value>
+  </data>
+  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__requires__2__transitions_to_optimize__which_exceeds_the_current_maximum__3__" xml:space="preserve">
+    <value>The precursor {0} for {1} requires {2} transitions to optimize, which exceeds the current maximum {3}.</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Protein_name" xml:space="preserve">
+    <value>Protein name</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Protein_description" xml:space="preserve">
+    <value>Protein description</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecule_Class" xml:space="preserve">
+    <value>Molecule Class</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Short_Name" xml:space="preserve">
+    <value>Short Name</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
+    <value>Precursor Formula</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Formula" xml:space="preserve">
+    <value>Product Formula</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Charge" xml:space="preserve">
+    <value>Precursor Charge</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Charge" xml:space="preserve">
+    <value>Product Charge</value>
+  </data>
+  <data name="PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number_" xml:space="preserve">
+    <value>The precursor m/z must be a number.</value>
+  </data>
+  <data name="PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number_" xml:space="preserve">
+    <value>The product m/z must be a number.</value>
+  </data>
+  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
+    <value>Error on line {0}: Precursor needs values for any two of: Formula, m/z or Charge.</value>
+  </data>
+  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
+    <value>Error on line {0}: Product needs values for any two of: Formula, m/z or Charge.</value>
+  </data>
+  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
+    <value>Error on line {0}: Precursor formula and m/z value do not agree for any charge state.</value>
+  </data>
+  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
+    <value>Error on line {0}: Product formula and m/z value do not agree for any charge state.</value>
+  </data>
+  <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>The document must contain targets for which to export features.</value>
+  </data>
+  <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_targets_for_which_to_export_chromatograms_" xml:space="preserve">
+    <value>The document must have targets for which to export chromatograms.</value>
+  </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_" xml:space="preserve">
+    <value>The document must have targets in order to reintegrate chromatograms.</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>The document must have targets in order to compare model peak picking.</value>
+  </data>
+  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
+    <value>The document must contain targets for which to export features.</value>
+  </data>
+  <data name="TransitionInfo_ReadXmlAttributes_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_" xml:space="preserve">
+    <value>The reporter ion {0} was not found in the transition filter settings.</value>
+  </data>
+  <data name="MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_" xml:space="preserve">
+    <value>Multiple charge states for custom ions are no longer supported.</value>
+  </data>
+  <data name="ChromatogramExporter_ExportGroupNode_One_or_more_missing_chromatograms_at_charge_state__0__of__1_" xml:space="preserve">
+    <value>One or more missing chromatograms at charge state {0} of {1}</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_" xml:space="preserve">
+    <value>Ion &amp;chemical formula:</value>
   </data>
 </root>

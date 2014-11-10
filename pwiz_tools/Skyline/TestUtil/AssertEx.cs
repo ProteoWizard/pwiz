@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -273,6 +274,51 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private static void OldSchemaValidationCallBack(object sender, ValidationEventArgs args)
+        {
+            throw (new Exception(String.Format("XML Validation error:" + args.Message)));
+        }
+
+        /// <summary>
+        /// Checks validity of a document in a string against its declared schema
+        /// </summary>
+        public static void ValidatesAgainstSchema(string xmlText)
+        {
+            var verStart = xmlText.IndexOf("format_version=\"", StringComparison.Ordinal) + 16; // Not L10N
+            string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal)); // Not L10N
+            var assembly = Assembly.GetAssembly(typeof(AssertEx));
+            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", schemaVer); // Not L10N
+            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);   
+            Assert.IsNotNull(schemaFile, "could not locate a schema file called "+schemaFileName);
+            using (var schemaReader = new XmlTextReader(schemaFile))
+            {
+                var schema = XmlSchema.Read(schemaReader, OldSchemaValidationCallBack);
+                var readerSettings = new XmlReaderSettings
+                {
+                    ValidationType = ValidationType.Schema
+                };
+                readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ProcessInlineSchema;
+                readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
+                readerSettings.ValidationEventHandler += OldSchemaValidationCallBack;
+                readerSettings.Schemas.Add(schema);
+
+                using (var reader = XmlReader.Create(new StringReader(xmlText), readerSettings))
+                {
+                    try
+                    {
+                        while (reader.Read())
+                        {
+                        }
+                        reader.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Assert.Fail(e.Message + "  XML text:\r\n" + xmlText);
+                    }
+                }
+            }
+        }
+
         private static void ValidationCallBack(object sender, ValidationEventArgs args)
         {
             throw (new Exception(String.Format(CultureInfo.InvariantCulture, "XML Validation error using Skyline_{0}.xsd:", SrmDocument.FORMAT_VERSION) + args.Message));
@@ -335,10 +381,10 @@ namespace pwiz.SkylineTestUtil
             }
 
             IsDocumentState(docImport, 1,
-                                     docExport.PeptideGroupCount,
-                                     docExport.PeptideCount,
-                                     docExport.TransitionGroupCount,
-                                     docExport.TransitionCount);
+                                     docExport.MoleculeGroupCount,
+                                     docExport.MoleculeCount,
+                                     docExport.MoleculeTransitionGroupCount,
+                                     docExport.MoleculeTransitionCount);
             return docImport;
         }
 
@@ -374,8 +420,12 @@ namespace pwiz.SkylineTestUtil
             return sb.ToString();
         }
 
-        public static void NoDiff(string target, string actual)
+        public static void NoDiff(string target, string actual, string helpMsg=null)
         {
+            if (helpMsg == null)
+                helpMsg = String.Empty;
+            else
+                helpMsg += " ";
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
@@ -387,11 +437,11 @@ namespace pwiz.SkylineTestUtil
                     if (lineTarget == null && lineActual == null)
                         return;
                     if (lineTarget == null)
-                        Assert.Fail("Target stops at line {0}.", count);
+                        Assert.Fail(helpMsg + "Target stops at line {0}.", count);
                     if (lineActual == null)
-                        Assert.Fail("Actual stops at line {0}.", count);
+                        Assert.Fail(helpMsg + "Actual stops at line {0}.", count);
                     if (lineTarget != lineActual)
-                        Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                        Assert.Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     count++;
                 }
 
@@ -419,7 +469,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false)
+        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0)
         {
 
             int count = 1;
@@ -430,16 +480,27 @@ namespace pwiz.SkylineTestUtil
                 if (lineTarget == null && lineActual == null)
                     return;
                 if (lineTarget == null)
-                    Assert.Fail("Target stops at line {0}.", count);
+                {
+                    while ((lineActual != null) && (allowedExtraLinesInActual > 0))  // As in test mode where we add a special non-proteomic molecule node to every document
+                    {
+                        lineActual = readerActual.ReadLine();
+                        allowedExtraLinesInActual--;
+                    }
+                    if (lineActual != null)
+                        Assert.Fail("Target stops at line {0}.", count);
+                }
                 else if (lineActual == null)
+                {
                     Assert.Fail("Actual stops at line {0}.", count);
+                }
                 else if (lineTarget != lineActual)
                 {
-                    var culture = CultureInfo.InvariantCulture; // for the moment at least, we are hardcoded for commas in CSV
-                    string[] fieldsTarget = lineTarget.Split(new[] { ',' });
-                    string[] fieldsActual = lineActual.Split(new[] { ',' });
+                    var culture = CultureInfo.InvariantCulture;
+                        // for the moment at least, we are hardcoded for commas in CSV
+                    string[] fieldsTarget = lineTarget.Split(new[] {','});
+                    string[] fieldsActual = lineActual.Split(new[] {','});
                     if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
-                        Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);                        
+                        Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     for (int i = 0; i < countFields; i++)
                     {
                         if (exceptIndex.HasValue && exceptIndex.Value == i)
@@ -449,23 +510,47 @@ namespace pwiz.SkylineTestUtil
                         {
                             // test numerics with the precision presented in the output text
                             double dTarget, dActual;
-                            if (allowForTinyNumericDifferences && 
+                            if (allowForTinyNumericDifferences &&
                                 Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
                                 Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
                             {
                                 // how much of that was decimal places?
-                                var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int)dTarget).Length;
-                                var precActual = fieldsActual[i].Length - String.Format("{0}.", (int)dActual).Length;
+                                var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int) dTarget).Length;
+                                var precActual = fieldsActual[i].Length - String.Format("{0}.", (int) dActual).Length;
                                 var prec = Math.Max(Math.Min(precTarget, precActual), 0);
-                                double toler = .5 * ((prec == 0) ? 0 : Math.Pow(10, -prec)); // so .001 is seen as close enough to .0009
+                                double toler = .5*((prec == 0) ? 0 : Math.Pow(10, -prec));
+                                    // so .001 is seen as close enough to .0009
                                 if (Math.Abs(dTarget - dActual) <= toler)
                                     continue;
                             }
                             Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                         }
                     }
-                    count++;
                 }
+                count++;
+            }
+        }
+
+        public static void DocsEqual(SrmDocument expected, SrmDocument actual)
+        {
+            if (!Equals(expected, actual))
+            {
+                // If the documents don't agree, try to show where in XML
+                string expectedXML = null;
+                RoundTrip(expected, ref expectedXML); // Just for the XML output
+                string actualXML = null;
+                RoundTrip(actual, ref actualXML); // Just for the XML output
+                NoDiff(expectedXML, actualXML, "AssertEx.DocsEqual failed.  Expressing as XML to aid in debugging:");  // This should throw
+                Assert.AreEqual(expected, actual);  // In case NoDiff doesn't throw (as when problem is actually in XML read or write)
+            }
+        }
+
+        public static void Cloned(SrmDocument expected, SrmDocument actual)
+        {
+            DocsEqual(expected, actual);
+            if (!ReferenceEquals(expected, actual))
+            {
+                Assert.AreNotSame(expected, actual);
             }
         }
 
@@ -504,12 +589,22 @@ namespace pwiz.SkylineTestUtil
             return sb.ToString();
         }
 
+        public static void IsDocumentTransitionGroupCount(SrmDocument document, int? transitionGroupCount, int? transitionCount = null)
+        {
+            IsDocumentState(document, null, null, null, transitionGroupCount, transitionCount);
+        }
+
+        public static void IsDocumentTransitionCount(SrmDocument document, int? transitionCount)
+        {
+            IsDocumentState(document, null, null, null, null, transitionCount);
+        }
+
         public static void IsDocumentState(SrmDocument document, int? revision, int groups, int peptides, int transitions)
         {
             IsDocumentState(document, revision, groups, peptides, peptides, transitions);
         }
 
-        static string DocumentStateAssertAreEqual(string itemName, object expected, object actual)
+        static string DocumentStateTestAreEqual(string itemName, object expected, object actual)
         {
             if (!Equals(expected, actual))
             {
@@ -518,18 +613,53 @@ namespace pwiz.SkylineTestUtil
             return string.Empty;
         }
 
-        public static void IsDocumentState(SrmDocument document, int? revision, int groups, int peptides,
-                                           int tranGroups, int transitions)
+        public static string DocumentStateTestResultString(SrmDocument document, int? revision, int? groups, int? molecules,
+            int? tranGroups, int? transitions)
         {
             string errmsg = string.Empty;
             if (revision != null)
             {
-                errmsg += DocumentStateAssertAreEqual("RevisionIndex", revision, document.RevisionIndex);
+                if (Settings.Default.TestSmallMolecules && (revision == (document.RevisionIndex - 1)))
+                    revision++;
+                        // Presumably this got bumped up during document deserialization in our special test mode
+                errmsg += DocumentStateTestAreEqual("RevisionIndex", revision, document.RevisionIndex);
             }
-            errmsg += DocumentStateAssertAreEqual("PeptideGroupCount", groups, document.PeptideGroupCount);
-            errmsg += DocumentStateAssertAreEqual("PeptideCount", peptides, document.PeptideCount);
-            errmsg += DocumentStateAssertAreEqual("TransitionGroupCount", tranGroups, document.TransitionGroupCount);
-            errmsg += DocumentStateAssertAreEqual("TransitionCount", transitions, document.TransitionCount);
+            if (Settings.Default.TestSmallMolecules)
+            {
+                // We'll have added a node at the end that the test writer didn't anticipate - bump the counts accordingly
+                if (groups.HasValue)
+                    groups = document.MoleculeGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
+                        .Aggregate(groups, (current, @group) => current + 1);
+                if (molecules.HasValue)
+                    molecules = document.Molecules.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
+                        .Aggregate(molecules, (current, @molecule) => current + 1);
+                if (tranGroups.HasValue)
+                    tranGroups =
+                        document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
+                            .Aggregate(tranGroups, (current, @transgroup) => current + 1);
+                if (transitions.HasValue)
+                {
+                    foreach (var tg in document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode))
+                    {
+                        transitions += tg.TransitionCount;
+                    }
+                }
+            }
+            if (groups.HasValue)
+                errmsg += DocumentStateTestAreEqual("MoleculeGroupCount", groups, document.MoleculeGroupCount);
+            if (molecules.HasValue)
+                errmsg += DocumentStateTestAreEqual("MoleculeCount", molecules, document.MoleculeCount);
+            if (tranGroups.HasValue)
+                errmsg += DocumentStateTestAreEqual("MoleculeTransitionGroupCount", tranGroups, document.MoleculeTransitionGroupCount);
+            if (transitions.HasValue)
+                errmsg += DocumentStateTestAreEqual("MoleculeTransitionCount", transitions, document.MoleculeTransitionCount);
+            return errmsg;
+        }
+
+        public static void IsDocumentState(SrmDocument document, int? revision, int? groups, int? peptides,
+                                           int? tranGroups, int? transitions)
+        {
+            var errmsg = DocumentStateTestResultString(document, revision, groups, peptides, tranGroups, transitions);
             if (errmsg.Length > 0)
                 Assert.Fail(errmsg);
 

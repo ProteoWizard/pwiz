@@ -504,8 +504,11 @@ namespace pwiz.SkylineTestUtil
             set
             {
                 _isPauseForScreenShots = value;
-                if (_isPauseForScreenShots) 
+                if (_isPauseForScreenShots)
+                {
                     Program.PauseSeconds = -1;
+                    Settings.Default.TestSmallMolecules = false; // Extra test node will mess up the pretty pictures
+                }
             }
         }
 
@@ -881,8 +884,8 @@ namespace pwiz.SkylineTestUtil
             AssertEx.IsDocumentState(SkylineWindow.Document, null,
                                      docStart.PeptideGroupCount,
                                      docStart.PeptideCount - 1,
-                                     docStart.TransitionGroupCount - nodePeptide.TransitionGroupCount,
-                                     docStart.TransitionCount - nodePeptide.TransitionCount);
+                                     docStart.PeptideTransitionGroupCount - nodePeptide.TransitionGroupCount,
+                                     docStart.PeptideTransitionCount - nodePeptide.TransitionCount);
         }
 
         public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)

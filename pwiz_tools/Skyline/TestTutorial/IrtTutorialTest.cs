@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
                       {
                           SkylineWindow.ShowRTReplicateGraph();
                           SkylineWindow.AutoZoomBestPeak();
-                          SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+                          SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int) SrmDocument.Level.Molecules, 0);
                       });
             // Ensure graphs look like p. 3 and 4
             WaitForGraphs();
@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestTutorial
                 int iPeptide = i;
                 RunUI(() =>
                 {
-                    SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int)SrmDocument.Level.Peptides, iPeptide);
+                    SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int)SrmDocument.Level.Molecules, iPeptide);
                 });
                 WaitForGraphs();
                 RunUI(() =>
@@ -249,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
                       {
 
                           Assert.AreEqual("iRT-C18 Standard Peptides", SkylineWindow.SelectedNode.Text); // Not L10N
-                          Assert.AreEqual(1231, SkylineWindow.DocumentUI.TransitionCount);
+                          Assert.AreEqual(1231, SkylineWindow.DocumentUI.PeptideTransitionCount);
 
                           SkylineWindow.SaveDocument(GetTestPath("iRT Human+Standard.sky")); // Not L10N
                           SkylineWindow.SaveDocument(GetTestPath("iRT Human+Standard Calibrate.sky")); // Not L10N
@@ -263,7 +263,7 @@ namespace pwiz.SkylineTestTutorial
                         refineDlg.OkDialog();
                     });
             var docLightOnly = WaitForDocumentChange(docHumanAndStandard);
-            Assert.AreEqual(632, docLightOnly.TransitionCount);
+            Assert.AreEqual(632, docLightOnly.PeptideTransitionCount);
 
             // Create auto-calculate regression RT predictor, p. 10
             const string irtPredictorName = "iRT-C18"; // Not L10N
@@ -305,7 +305,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(exportMethodDlg);
 
                 Assert.AreEqual(332, File.ReadAllLines(GetTestPath(calibrateBasename + "_0001.csv")).Length); // Not L10N
-                Assert.AreEqual(333, File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
+                Assert.AreEqual(333 + (TestSmallMolecules ? 2 : 0), File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
             }
 
             // Import human peptide calibration results p. 12
@@ -515,7 +515,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            Assert.AreEqual(1223, File.ReadAllLines(GetTestPath(scheduledBasename + "_0001.csv")).Length); // Not L10N
+            Assert.AreEqual(1223 + (TestSmallMolecules ? 4 : 0), File.ReadAllLines(GetTestPath(scheduledBasename + "_0001.csv")).Length); // Not L10N
             Assert.IsFalse(File.Exists(GetTestPath("iRT Human+Standard_0002.csv"))); // Not L10N
 
             // Import scheduled data, p. 23
@@ -628,7 +628,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.OpenFile(GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
                                                                         "Yeast+Standard (refined) - 2min.sky"))));
             WaitForDocumentLoaded();
-            RunUI(() =>  SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Peptides, 0));
+            RunUI(() =>  SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             WaitForGraphs();
 
             // Verify numbers that show up in the screenshot

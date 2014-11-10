@@ -56,8 +56,8 @@ namespace pwiz.SkylineTestA
             // during document load
             var docLoaded = docContainer.Document;
             Assert.AreEqual(6, docLoaded.PeptideCount);
-            Assert.AreEqual(36, docLoaded.TransitionCount);
-            var transitions = docLoaded.Transitions.ToArray();
+            Assert.AreEqual(36, docLoaded.PeptideTransitionCount);
+            var transitions = docLoaded.PeptideTransitions.ToArray();
             Assert.AreEqual("y12", transitions[0].FragmentIonName);
             Assert.AreEqual(1, transitions[0].LibInfo.Rank);
             Assert.AreEqual("y12", transitions[3].FragmentIonName);
@@ -75,8 +75,8 @@ namespace pwiz.SkylineTestA
 
             // Check that document changed to be in synch with the library
             Assert.AreEqual(3, docChangedLoaded.PeptideCount);
-            Assert.AreEqual(18, docChangedLoaded.TransitionCount);
-            var transitionsNew = docChangedLoaded.Transitions.ToArray();
+            Assert.AreEqual(18, docChangedLoaded.PeptideTransitionCount);
+            var transitionsNew = docChangedLoaded.PeptideTransitions.ToArray();
             Assert.AreEqual("y7", transitionsNew[0].FragmentIonName);
             Assert.AreEqual(1, transitionsNew[0].LibInfo.Rank);
             Assert.AreEqual("y7", transitionsNew[3].FragmentIonName);

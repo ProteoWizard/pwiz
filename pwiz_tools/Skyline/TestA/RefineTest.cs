@@ -55,11 +55,11 @@ namespace pwiz.SkylineTestA
             refineSettings.MinPeptidesPerProtein = 1;
             // Remove the precursor with only 2 transitions
             refineSettings.MinTransitionsPepPrecursor = 3;
-            Assert.AreEqual(document.TransitionGroupCount - 1, refineSettings.Refine(document).TransitionGroupCount);
+            Assert.AreEqual(document.PeptideTransitionGroupCount - 1, refineSettings.Refine(document).PeptideTransitionGroupCount);
             refineSettings.MinTransitionsPepPrecursor = null;
             // Remove the heavy precursor
             refineSettings.RefineLabelType = IsotopeLabelType.heavy;
-            Assert.AreEqual(document.TransitionGroupCount - 1, refineSettings.Refine(document).TransitionGroupCount);
+            Assert.AreEqual(document.PeptideTransitionGroupCount - 1, refineSettings.Refine(document).PeptideTransitionGroupCount);
             // Remove everything but the heavy precursor
             refineSettings.RefineLabelType = IsotopeLabelType.light;
             var docRefined = refineSettings.Refine(document);
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestA
             for (int i = 0; i < 3; i++)
                 Assert.AreSame(document.Children[i], docRefined.Children[i]);
             var nodePepGroupRefined = (PeptideGroupDocNode) docRefined.Children[3];
-            Assert.AreEqual(1, nodePepGroupRefined.PeptideCount);
+            Assert.AreEqual(1, nodePepGroupRefined.MoleculeCount);
             Assert.AreEqual(1, nodePepGroupRefined.TransitionGroupCount);
             Assert.AreEqual(5, nodePepGroupRefined.TransitionCount);
 
@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestA
             refineSettings.DotProductThreshold = dotProductThreshold;
             docRefined = refineSettings.Refine(document);
             int missingResults = 0;
-            foreach (var nodeGroup in docRefined.TransitionGroups)
+            foreach (var nodeGroup in docRefined.PeptideTransitionGroups)
             {
                 if (!nodeGroup.HasResults || nodeGroup.Results[0] == null)
                     missingResults++;
@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestA
                     Assert.IsTrue(nodeGroup.Results[0][0].LibraryDotProduct >= dotProductThreshold);
             }
             Assert.AreNotEqual(0, missingResults);
-            Assert.IsTrue(missingResults < docRefined.TransitionGroupCount);
+            Assert.IsTrue(missingResults < docRefined.PeptideTransitionGroupCount);
 
             // Further refine with retention time refinement
             refineSettings.RTRegressionThreshold = 0.95;
@@ -148,25 +148,25 @@ namespace pwiz.SkylineTestA
             Assert.AreNotEqual(docRefinedRT.PeptideCount, docRefinedRatio.PeptideCount);
             Assert.IsTrue(ArrayUtil.EqualsDeep(docRefinedRatio.Children,
                 refineSettings.Refine(docRefinedRT).Children));
-            foreach (var nodeGroup in docRefinedRatio.TransitionGroups)
+            foreach (var nodeGroup in docRefinedRatio.PeptideTransitionGroups)
             {
                 Assert.IsTrue(nodeGroup.HasResults);
                 Assert.IsTrue(nodeGroup.HasLibInfo);
                 Assert.AreEqual(1.0, nodeGroup.Results[0][0].PeakCountRatio);
             }
             Assert.AreEqual(2, docRefinedRatio.PeptideGroupCount);
-            Assert.AreEqual(7, docRefinedRatio.TransitionGroupCount);
+            Assert.AreEqual(7, docRefinedRatio.PeptideTransitionGroupCount);
 
             // Pick only most intense transtions
             refineSettings.MaxPeakRank = 4;
             var docRefineMaxPeaks = refineSettings.Refine(document);
-            Assert.AreEqual(28, docRefineMaxPeaks.TransitionCount);
+            Assert.AreEqual(28, docRefineMaxPeaks.PeptideTransitionCount);
             // Make sure the remaining peaks really started as the right rank,
             // and did not change.
             var dictIdTran = new Dictionary<int, TransitionDocNode>();
-            foreach (var nodeTran in document.Transitions)
+            foreach (var nodeTran in document.PeptideTransitions)
                 dictIdTran.Add(nodeTran.Id.GlobalIndex, nodeTran);
-            foreach (var nodeGroup in docRefineMaxPeaks.TransitionGroups)
+            foreach (var nodeGroup in docRefineMaxPeaks.PeptideTransitionGroups)
             {
                 Assert.AreEqual(refineSettings.MaxPeakRank, nodeGroup.TransitionCount);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestA
             var docRefinePepMaxPeaks = refineSettings.Refine(document);
             // 4 groups, one unmeasured and one with only 3 peptides
             Assert.AreEqual(13, docRefinePepMaxPeaks.PeptideCount);
-            Assert.AreEqual(docRefinePepMaxPeaks.PeptideCount, docRefinePepMaxPeaks.TransitionGroupCount);
+            Assert.AreEqual(docRefinePepMaxPeaks.PeptideCount, docRefinePepMaxPeaks.PeptideTransitionGroupCount);
 
             // Add heavy labeled precursors for everything
             var settingsNew = docRefineMaxPeaks.Settings.ChangeTransitionFilter(f => f.ChangeAutoSelect(false));
@@ -196,7 +196,7 @@ namespace pwiz.SkylineTestA
             var docPrepareAdd = docRefineMaxPeaks.ChangeSettings(settingsNew);
             refineSettings = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true};
             var docHeavy = refineSettings.Refine(docPrepareAdd);
-            Assert.AreEqual(docRefineMaxPeaks.TransitionCount*2, docHeavy.TransitionCount);
+            Assert.AreEqual(docRefineMaxPeaks.PeptideTransitionCount*2, docHeavy.PeptideTransitionCount);
             // Verify that the precursors were added with the right transitions
             foreach (var nodePep in docHeavy.Peptides)
             {

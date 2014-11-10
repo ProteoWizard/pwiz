@@ -108,6 +108,8 @@ namespace pwiz.Skyline.Controls
             peptide_lib_decoy,
             tran_group_lib_decoy,
             fragment_lib_decoy,
+            molecule,
+            molecule_list,
         }
 
         public enum StateImageId
@@ -154,6 +156,8 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.PeptideDecoyLib);
             ImageList.Images.Add(Resources.TransitionGroupLibDecoy);
             ImageList.Images.Add(Resources.FragmentLibDecoy);
+            ImageList.Images.Add(Resources.Molecule);
+            ImageList.Images.Add(Resources.MoleculeList);
 
             StateImageList = new ImageList();
             StateImageList.Images.Add(Resources.Peak);
@@ -346,7 +350,7 @@ namespace pwiz.Skyline.Controls
             if (IsPeptideMissingColor)
             {
                 _peptideGraphInfos.Clear();
-                foreach (var peptideGroup in Document.PeptideGroups)
+                foreach (var peptideGroup in Document.MoleculeGroups)
                 {
                     foreach (var peptideNode in peptideGroup.Children)
                     {
@@ -355,7 +359,7 @@ namespace pwiz.Skyline.Controls
                             continue;
                         _peptideGraphInfos[peptideNode.Id.GlobalIndex] = new PeptideGraphInfo
                         {
-                            Color = ColorGenerator.GetColor(peptideGroup.Name, peptideDocNode.ModifiedSequence)
+                            Color = ColorGenerator.GetColor(peptideGroup.Name, peptideDocNode.RawTextId)
                         };
                     }
                 }
@@ -366,7 +370,7 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                return Document.Peptides.Any(nodePep => !_peptideGraphInfos.ContainsKey(nodePep.Peptide.GlobalIndex));
+                return Document.Molecules.Any(nodePep => !_peptideGraphInfos.ContainsKey(nodePep.Peptide.GlobalIndex));
             }
         }
 

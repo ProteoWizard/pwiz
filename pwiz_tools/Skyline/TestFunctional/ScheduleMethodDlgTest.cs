@@ -57,6 +57,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
+
             // Open 160109_Mix1_calcurve.sky under TestFunctional\ManageResultsTest.zip
             string documentPath = TestFilesDir.GetTestPath("160109_Mix1_calcurve.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
@@ -115,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedResultsIndex = replicateIndex;
                 SkylineWindow.RemovePeak(
                     document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0),
-                    document.TransitionGroups.ToArray()[0],
+                    document.PeptideTransitionGroups.ToArray()[0],
                     null);
             });
 

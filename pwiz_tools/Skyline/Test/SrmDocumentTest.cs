@@ -26,6 +26,8 @@ using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.V01;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -54,19 +56,50 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ReporterIonDocumentSerializeTest()
         {
-            SrmDocument document = AssertEx.Deserialize<SrmDocument>(DOC_REPORTER_IONS);
-            Assert.AreEqual(1,document.PeptideCount);
-            Assert.AreEqual(5,document.TransitionCount);
-            MeasuredIon customIon = new MeasuredIon("Water","H2O3",null,null, new [] {1,2});
-            Assert.AreEqual(customIon,
-                document.Settings.TransitionSettings.Filter.MeasuredIons.Where(ion => ion.Name.Equals("Water"))
-                    .ElementAt(0));
-            for (int i = 0; i < 2; i ++)
+            // Test both the older (v1.9) and current ways of handling custom ions
+            for (int style = 0; style < 2; style++)
             {
-                Assert.AreEqual(document.Transitions.ElementAt(i).Transition.CustomIon,customIon);
+                string xmlText = (style==0) ? 
+                    DOC_REPORTER_IONS_19 : // Old style
+                    DOC_REPORTER_IONS_262; // new style
+                AssertEx.ValidatesAgainstSchema(xmlText);
+                SrmDocument document = AssertEx.Deserialize<SrmDocument>(xmlText);
+                AssertEx.IsDocumentState(document, null, null, 1, null, 5);
+                MeasuredIon customIon1 = new MeasuredIon("Water", "H3O3", null, null, 1);
+                MeasuredIon customIon2 = new MeasuredIon("Water2", "H3O3", null, null, 2);
+                Assert.AreEqual(customIon1,
+                    document.Settings.TransitionSettings.Filter.MeasuredIons.Where(ion => ion.Name.Equals("Water"))
+                        .ElementAt(0));
+                for (int i = 0; i < 2; i ++)
+                {
+                    Assert.AreEqual(document.MoleculeTransitions.ElementAt(i).Transition.CustomIon, (i==0) ? customIon1.CustomIon : customIon2.CustomIon);
+                }
+                AssertEx.Serializable(document);
             }
+            AssertEx.ValidatesAgainstSchema(DOC_REPORTER_IONS_INCORRECT_NAME); // Matches schema, but
+            AssertEx.DeserializeError<SrmDocument>(DOC_REPORTER_IONS_INCORRECT_NAME); // Contains a bad internal reference to a reporter ion
+        }
 
-            AssertEx.DeserializeError<SrmDocument>(DOC_REPORTER_IONS_INCORRECT_NAME);
+        [TestMethod]
+        public void MoleculeDocumentSerializeTest()
+        {
+            AssertEx.ValidatesAgainstSchema(DOC_MOLECULES);
+            var doc = AssertEx.Deserialize<SrmDocument>(DOC_MOLECULES);
+            AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
+            var transition = new DocNodeCustomIon(60, 60, "molecule");
+            var transition2 = new DocNodeCustomIon(55, 55, "molecule fragment");
+            var precursor = new DocNodeCustomIon(60, 60, "molecule");
+            Assert.AreEqual(BioMassCalc.CalculateMz(precursor.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, BioMassCalc.MassElectron / 100);
+            Assert.AreEqual(BioMassCalc.CalculateMz(transition.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(0).Mz, BioMassCalc.MassElectron / 100);
+            Assert.AreEqual(BioMassCalc.CalculateMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz, BioMassCalc.MassElectron / 100);
+            Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomIon);
+            Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
+            Assert.AreEqual(transition, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
+            Assert.AreEqual(transition2, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon);
+            Assert.AreEqual(precursor, doc.Molecules.ElementAt(0).Peptide.CustomIon);
+            Assert.AreEqual(1,doc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);
+            Assert.AreEqual(1,doc.MoleculeTransitions.ElementAt(0).Transition.Charge);
+            AssertEx.ValidatesAgainstSchema(doc);
         }
 
         /// <summary>
@@ -77,21 +110,12 @@ namespace pwiz.SkylineTest
         public void DocumentNodeCountsTest()
         {
             SrmDocument doc = AssertEx.Deserialize<SrmDocument>(DOC_0_1_BOVINE);
-            Assert.AreEqual(2, doc.PeptideGroupCount);
-            Assert.AreEqual(2, doc.PeptideCount);
-            Assert.AreEqual(2, doc.TransitionGroupCount);
-            Assert.AreEqual(3, doc.TransitionCount);
+            AssertEx.IsDocumentState(doc, null, 2, 2, 2, 3);
             doc = AssertEx.Deserialize<SrmDocument>(DOC_0_1_PEPTIDES);
-            Assert.AreEqual(3, doc.PeptideGroupCount);
-            Assert.AreEqual(6, doc.PeptideCount);
-            Assert.AreEqual(5, doc.TransitionGroupCount);
-            Assert.AreEqual(13, doc.TransitionCount);
+            AssertEx.IsDocumentState(doc, null, 3, 6, 5, 13);
             PeptideGroupDocNode nodeGroup = (PeptideGroupDocNode) doc.Children[1];
             SrmDocument docNew = (SrmDocument) doc.RemoveChild(nodeGroup);
-            Assert.AreEqual(2, docNew.PeptideGroupCount);
-            Assert.AreEqual(4, docNew.PeptideCount);
-            Assert.AreEqual(4, docNew.TransitionGroupCount);
-            Assert.AreEqual(12, docNew.TransitionCount);
+            AssertEx.IsDocumentState(docNew, null, 2, 4, 4, 12);
             try
             {
                 docNew.ReplaceChild(nodeGroup);                
@@ -112,15 +136,9 @@ namespace pwiz.SkylineTest
             }
             PeptideGroupDocNode nodeGroupNew = (PeptideGroupDocNode) nodeGroup.RemoveChild(nodeGroup.Children[0]);
             docNew = (SrmDocument) doc.ReplaceChild(nodeGroupNew);
-            Assert.AreEqual(3, docNew.PeptideGroupCount);
-            Assert.AreEqual(5, docNew.PeptideCount);
-            Assert.AreEqual(4, docNew.TransitionGroupCount);
-            Assert.AreEqual(12, docNew.TransitionCount);
+            AssertEx.IsDocumentState(docNew, null, 3, 5, 4, 12);
             docNew = (SrmDocument) docNew.ChangeChildren(new[] {nodeGroup});
-            Assert.AreEqual(1, docNew.PeptideGroupCount);
-            Assert.AreEqual(2, docNew.PeptideCount);
-            Assert.AreEqual(1, docNew.TransitionGroupCount);
-            Assert.AreEqual(1, docNew.TransitionCount);
+            AssertEx.IsDocumentState(docNew, null, 1, 2, 1, 1);
         }
 
         /// <summary>
@@ -130,6 +148,8 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExportProteinsTest()
         {
+            TestSmallMolecules = false; // This test is quite specific to the input data set
+
             SrmDocument document = AssertEx.Deserialize<SrmDocument>(DOC_0_1_PEPTIDES_NO_EMPTY);
             var exporter = new ThermoMassListExporter(document)
                                {
@@ -152,7 +172,7 @@ namespace pwiz.SkylineTest
             Array.Sort(names);
             for (int i = 0; i < arrayTranCounts.Length; i++)
             {
-                Assert.AreEqual(arrayTranCounts[i], LineCount(exporter.MemoryOutput[names[i]].ToString()),
+                Assert.AreEqual(arrayTranCounts[i] + (Settings.Default.TestSmallMolecules ? 2-i : 0) , LineCount(exporter.MemoryOutput[names[i]].ToString()),
                                 "Transitions not distributed correctly");                
             }
         }
@@ -173,6 +193,9 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExport_0_1_Test()
         {
+            //This is just for testing version 1 xml documents which couldn't have Custom Ions in them anyway
+            TestSmallMolecules = false;
+
             int count = EqualCsvs(DOC_0_1_BOVINE, 4, ThermoExporters, ExportStrategy.Single, 2, null,
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
@@ -392,13 +415,13 @@ namespace pwiz.SkylineTest
 
         private static void CheckImportSimilarity(SrmDocument document, SrmDocument docImport)
         {
-            CheckImportSimilarity(document.PeptideGroups, docImport.PeptideGroups,
+            CheckImportSimilarity(document.MoleculeGroups, docImport.MoleculeGroups,
                 (g1, g2) => Assert.AreEqual(g1.Name, g2.Name));
-            CheckImportSimilarity(document.Peptides, docImport.Peptides,
+            CheckImportSimilarity(document.Molecules, docImport.Molecules,
                 (p1, p2) => Assert.AreEqual(p1.Peptide.Sequence, p2.Peptide.Sequence));
-            CheckImportSimilarity(document.TransitionGroups, docImport.TransitionGroups,
+            CheckImportSimilarity(document.MoleculeTransitionGroups, docImport.MoleculeTransitionGroups,
                 (g1, g2) => Assert.AreEqual(g1.PrecursorMz, g2.PrecursorMz));
-            CheckImportSimilarity(document.Transitions, docImport.Transitions,
+            CheckImportSimilarity(document.MoleculeTransitions, docImport.MoleculeTransitions,
                 (t1, t2) => Assert.AreEqual(t1.Mz, t2.Mz));
         }
 
@@ -661,7 +684,8 @@ namespace pwiz.SkylineTest
             "  </selected_proteins>\n" +
             "</srm_settings>";
 
-        private const string DOC_REPORTER_IONS = "<srm_settings format_version=\"1.7\" software_version=\"Skyline \">\n" +
+        private const string DOC_MOLECULES =
+                "<srm_settings format_version=\"2.62\" software_version=\"Skyline (64-bit) \">\n" +
                 "  <settings_summary name=\"Default\">\n" +
                 "    <peptide_settings>\n" +
                 "      <enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"C\" />\n" +
@@ -686,7 +710,61 @@ namespace pwiz.SkylineTest
                 "        </predict_collision_energy>\n" +
                 "      </transition_prediction>\n" +
                 "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
-                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1,2\" />\n" +
+                "        <measured_ion name=\"N-terminal to Proline\" cut=\"P\" sense=\"N\" min_length=\"3\" />\n" +
+                "      </transition_filter>\n" +
+                "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
+                "      <transition_integration />\n" +
+                "      <transition_instrument min_mz=\"50\" max_mz=\"1500\" mz_match_tolerance=\"0.055\" />\n" +
+                "    </transition_settings>\n" +
+                "    <data_settings />\n" +
+                "  </settings_summary>\n" +
+                "  <peptide_list label_name=\"Molecule Group\" websearch_status=\"X\" auto_manage_children=\"false\">\n" +
+                "    <molecule mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
+                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\">\n" +
+                "        <transition  mass_average=\"60\" mass_monoisotopic=\"60\" fragment_type=\"precursor\">\n" +
+                "          <precursor_mz>59.999451</precursor_mz>\n" +
+                "          <product_mz>59.999451</product_mz>\n" +
+                "          <collision_energy>4.704984</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" mass_average=\"55\" mass_monoisotopic=\"55\" custom_ion_name=\"molecule fragment\" product_charge=\"1\">\n" +
+                "          <precursor_mz>59.999451</precursor_mz>\n" +
+                "          <product_mz>54.999451</product_mz>\n" +
+                "          <collision_energy>4.704984</collision_energy>\n" +
+                "        </transition>\n" +
+                "      </precursor>\n" +
+                "    </molecule>\n" +
+                "  </peptide_list>\n" +
+                "</srm_settings>";
+
+        private const string DOC_REPORTER_IONS_262 = "<srm_settings format_version=\"2.62\" software_version=\"Skyline \">\n" +
+                "  <settings_summary name=\"Default\">\n" +
+                "    <peptide_settings>\n" +
+                "      <enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"C\" />\n" +
+                "      <digest_settings max_missed_cleavages=\"0\" />\n" +
+                "      <peptide_prediction use_measured_rts=\"true\" measured_rt_window=\"2\" use_spectral_library_drift_times=\"false\" />\n" +
+                "      <peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\">\n" +
+                "        <peptide_exclusions />\n" +
+                "      </peptide_filter>\n" +
+                "      <peptide_libraries pick=\"library\" />\n" +
+                "      <peptide_modifications max_variable_mods=\"3\" max_neutral_losses=\"1\">\n" +
+                "        <static_modifications>\n" +
+                "          <static_modification name=\"Carbamidomethyl (C)\" aminoacid=\"C\" formula=\"H3C2NO\" unimod_id=\"4\" short_name=\"CAM\" />\n" +
+                "        </static_modifications>\n" +
+                "        <heavy_modifications />\n" +
+                "      </peptide_modifications>\n" +
+                "    </peptide_settings>\n" +
+                "    <transition_settings>\n" +
+                "      <transition_prediction precursor_mass_type=\"Monoisotopic\" fragment_mass_type=\"Monoisotopic\" optimize_by=\"None\">\n" +
+                "        <predict_collision_energy name=\"Thermo TSQ Vantage\" step_size=\"1\" step_count=\"5\">\n" +
+                "          <regression_ce charge=\"2\" slope=\"0.03\" intercept=\"2.905\" />\n" +
+                "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
+                "        </predict_collision_energy>\n" +
+                "      </transition_prediction>\n" +
+                "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+                "        <measured_ion name=\"Water\" ion_formula=\"H3O3\" charge=\"1\" />\n" + // Note: Formerly we left an H out of a formula so we'd get the right masses when the ionization code stuck an extra H in the calculation
+                "        <measured_ion name=\"Water2\" ion_formula=\"H3O3\" charge=\"2\" />\n" +  
+                "        <measured_ion name=\"Water3\" mass_monoisotopic=\"19.01783\" mass_average=\"18.01528\" charge=\"2\" />\n" +
+                "        <measured_ion name=\"Water4\" mass_monoisotopic=\"18.01056\" mass_average=\"18.01528\" charge=\"2\" />\n" +
                 "      </transition_filter>\n" +
                 "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
                 "      <transition_integration />\n" +
@@ -701,7 +779,7 @@ namespace pwiz.SkylineTest
                 "          <precursor_mz>640.817127</precursor_mz>\n" +
                 "          <product_mz>50.000394</product_mz>\n" +
                 "        </transition>\n" +
-                "        <transition measured_ion_name=\"Water\" product_charge=\"2\">\n" +
+                "        <transition measured_ion_name=\"Water2\" product_charge=\"2\">\n" +
                 "          <precursor_mz>640.817127</precursor_mz>\n" +
                 "          <product_mz>25.503835</product_mz>\n" +
                 "        </transition>\n" +
@@ -725,7 +803,7 @@ namespace pwiz.SkylineTest
                 "  </peptide_list>\n" +
                 "</srm_settings>";
 
-        private const string DOC_REPORTER_IONS_INCORRECT_NAME = "<srm_settings format_version=\"1.7\" software_version=\"Skyline \">\n" +
+        private const string DOC_REPORTER_IONS_19 = "<srm_settings format_version=\"1.9\" software_version=\"Skyline \">\n" +
                 "  <settings_summary name=\"Default\">\n" +
                 "    <peptide_settings>\n" +
                 "      <enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"C\" />\n" +
@@ -750,7 +828,74 @@ namespace pwiz.SkylineTest
                 "        </predict_collision_energy>\n" +
                 "      </transition_prediction>\n" +
                 "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
-                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1,2\" />\n" +
+                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1\" />\n" + // Note: Formerly we left an H out of a formula so we'd get the right masses when the ionization code stuck an extra H in the calculation
+                "        <measured_ion name=\"Water2\" formula=\"H2O3\" charges=\"2\" />\n" +  
+                "        <measured_ion name=\"Water3\" mass_monoisotopic=\"19.01783\" mass_average=\"18.01528\" charges=\"2\" />\n" + 
+                "        <measured_ion name=\"Water4\" mass_monoisotopic=\"18.01056\" mass_average=\"18.01528\" charges=\"2\" />\n" + 
+                "      </transition_filter>\n" +
+                "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
+                "      <transition_integration />\n" +
+                "      <transition_instrument min_mz=\"50\" max_mz=\"1500\" mz_match_tolerance=\"0.055\" />\n" +
+                "    </transition_settings>\n" +
+                "    <data_settings />\n" +
+                "  </settings_summary>\n" +
+                "  <peptide_list label_name=\"peptides1\" label_description=\"Bacteriocin amylovorin-L (Amylovorin-L471) (Lactobin-A)\" accession=\"P80696\" gene=\"amyL\" species=\"Lactobacillus amylovorus\" preferred_name=\"AMYL_LACAM\" websearch_status=\"X#Upeptides1\" auto_manage_children=\"false\">\n" +
+                "    <peptide sequence=\"EFPDVAVFSGGR\" modified_sequence=\"EFPDVAVFSGGR\" calc_neutral_pep_mass=\"1279.619701\" num_missed_cleavages=\"0\">\n" +
+                "      <precursor charge=\"2\" calc_neutral_mass=\"1279.619701\" precursor_mz=\"640.817127\" collision_energy=\"22.129514\" modified_sequence=\"EFPDVAVFSGGR\">\n" +
+                "        <transition measured_ion_name=\"Water\" product_charge=\"1\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>50.000394</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"Water2\" product_charge=\"2\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>25.503835</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"9\" calc_neutral_mass=\"906.45593\" product_charge=\"1\" cleavage_aa=\"D\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>907.463206</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"8\" calc_neutral_mass=\"791.428987\" product_charge=\"1\" cleavage_aa=\"V\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>792.436263</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"7\" calc_neutral_mass=\"692.360573\" product_charge=\"1\" cleavage_aa=\"A\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>693.367849</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "      </precursor>\n" +
+                "    </peptide>\n" +
+                "  </peptide_list>\n" +
+                "</srm_settings>";
+
+        private const string DOC_REPORTER_IONS_INCORRECT_NAME = "<srm_settings format_version=\"2.62\" software_version=\"Skyline \">\n" +
+                "  <settings_summary name=\"Default\">\n" +
+                "    <peptide_settings>\n" +
+                "      <enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"C\" />\n" +
+                "      <digest_settings max_missed_cleavages=\"0\" />\n" +
+                "      <peptide_prediction use_measured_rts=\"true\" measured_rt_window=\"2\" use_spectral_library_drift_times=\"false\" />\n" +
+                "      <peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\">\n" +
+                "        <peptide_exclusions />\n" +
+                "      </peptide_filter>\n" +
+                "      <peptide_libraries pick=\"library\" />\n" +
+                "      <peptide_modifications max_variable_mods=\"3\" max_neutral_losses=\"1\">\n" +
+                "        <static_modifications>\n" +
+                "          <static_modification name=\"Carbamidomethyl (C)\" aminoacid=\"C\" formula=\"H3C2NO\" unimod_id=\"4\" short_name=\"CAM\" />\n" +
+                "        </static_modifications>\n" +
+                "        <heavy_modifications />\n" +
+                "      </peptide_modifications>\n" +
+                "    </peptide_settings>\n" +
+                "    <transition_settings>\n" +
+                "      <transition_prediction precursor_mass_type=\"Monoisotopic\" fragment_mass_type=\"Monoisotopic\" optimize_by=\"None\">\n" +
+                "        <predict_collision_energy name=\"Thermo TSQ Vantage\" step_size=\"1\" step_count=\"5\">\n" +
+                "          <regression_ce charge=\"2\" slope=\"0.03\" intercept=\"2.905\" />\n" +
+                "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
+                "        </predict_collision_energy>\n" +
+                "      </transition_prediction>\n" +
+                "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+                "        <measured_ion name=\"Water\" ion_formula=\"H2O3\" charge=\"1\" />\n" +
                 "      </transition_filter>\n" +
                 "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
                 "      <transition_integration />\n" +

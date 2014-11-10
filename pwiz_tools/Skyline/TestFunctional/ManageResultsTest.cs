@@ -358,8 +358,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that the transition information has been moved around
             // as expected, but nothing newly created
-            var enumTranOrig = docOrig.Transitions.GetEnumerator();
-            foreach (var nodeTran in docNew.Transitions)
+            var enumTranOrig = docOrig.PeptideTransitions.GetEnumerator();
+            foreach (var nodeTran in docNew.PeptideTransitions)
             {
                 Assert.IsTrue(enumTranOrig.MoveNext());
                 
@@ -388,8 +388,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure group nodes have equal chromatogram info to ensure user modifications
             // are preserved.
-            var enumTranGroupOrig = docOrig.TransitionGroups.GetEnumerator();
-            foreach (var nodeGroup in docNew.TransitionGroups)
+            var enumTranGroupOrig = docOrig.PeptideTransitionGroups.GetEnumerator();
+            foreach (var nodeGroup in docNew.PeptideTransitionGroups)
             {
                 Assert.IsTrue(enumTranGroupOrig.MoveNext());
 

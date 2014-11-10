@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
                       {
-                          SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
+                          SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
                           Settings.Default.ArrangeGraphsOrder = GroupGraphsOrder.Document.ToString();
                           Settings.Default.ArrangeGraphsReversed = false;
                           SkylineWindow.ArrangeGraphsTiled();
@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                int transitionCount = SkylineWindow.DocumentUI.TransitionGroups.First().TransitionCount;
+                int transitionCount = SkylineWindow.DocumentUI.PeptideTransitionGroups.First().TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
             PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light", 10);
@@ -221,12 +221,12 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                int transitionCount = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[1].TransitionCount;
+                int transitionCount = SkylineWindow.DocumentUI.PeptideTransitionGroups.ToArray()[1].TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
             PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for heavy", 10);
 
-            RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides, 0));
+            RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Molecules, 0));
             WaitForGraphs();
             // Heavy normalization
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_ratio_view));

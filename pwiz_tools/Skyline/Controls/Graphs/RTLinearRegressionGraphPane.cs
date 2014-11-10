@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peptideIndex != null)
             {
                 var document = GraphSummary.DocumentUIContainer.DocumentUI;
-                var pathSelect = document.GetPathTo((int) SrmDocument.Level.Peptides,
+                var pathSelect = document.GetPathTo((int) SrmDocument.Level.Molecules,
                                                     peptideIndex.IndexDoc);
                 SelectPeptide(pathSelect);
                 return true;
@@ -406,6 +406,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _peptidesIndexes = new List<PeptideDocumentIndex>();
                 _peptidesTimes = new List<MeasuredRetentionTime>();
                 int index = -1;
+                // CONSIDER: Retention time prediction for small molecules?
                 foreach (var nodePeptide in document.Peptides)
                 {
                     index++;
@@ -422,7 +423,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         rt = 0;
 
                     _peptidesIndexes.Add(new PeptideDocumentIndex(nodePeptide, index));
-                    string modSeq = _document.Settings.GetLookupSequence(nodePeptide);
+                    string modSeq = _document.Settings.GetSourceTextId(nodePeptide);
                     _peptidesTimes.Add(new MeasuredRetentionTime(modSeq, rt.Value));
                 }
 

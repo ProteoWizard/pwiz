@@ -58,6 +58,8 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            TestSmallMolecules = false; // No collision energy optimization for small molecules yet
+
             // Remove all results files with the wrong extension for the current locale
             foreach (var fileName in Directory.GetFiles(TestFilesDir.FullPath, "*_REP*.*", SearchOption.AllDirectories))
             {
@@ -213,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentChange(docCurrent);
 
-            foreach (var nodeTran in SkylineWindow.Document.Transitions)
+            foreach (var nodeTran in SkylineWindow.Document.MoleculeTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults);
                 Assert.AreEqual(2, nodeTran.Results.Count);
@@ -251,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Make sure imported data is of the expected shape.
-            foreach (var nodeTran in SkylineWindow.Document.Transitions)
+            foreach (var nodeTran in SkylineWindow.Document.MoleculeTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults);
                 Assert.AreEqual(2, nodeTran.Results.Count);
@@ -360,7 +362,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             SrmDocument docCurrent = SkylineWindow.Document;
-            int transitions = docCurrent.TransitionCount/docCurrent.TransitionGroupCount;
+            int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
                 Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
@@ -420,7 +422,7 @@ namespace pwiz.SkylineTestFunctional
             stepCount = stepCount*2 + 1;
 
             string[] lines = File.ReadAllLines(filePath);
-            Assert.AreEqual(document.TransitionCount*stepCount, lines.Length);
+            Assert.AreEqual(document.PeptideTransitionCount * stepCount + (Settings.Default.TestSmallMolecules ? 2 : 0), lines.Length);
 
             int stepsSeen = 0;
             double lastPrecursorMz = 0;
@@ -490,7 +492,7 @@ namespace pwiz.SkylineTestFunctional
 
             int iLine = 0;
             var dictLightCEs = new Dictionary<string, double>();
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 if (nodeGroup.IsLight)
                     dictLightCEs.Clear();

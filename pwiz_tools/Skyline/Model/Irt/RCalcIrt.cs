@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Irt
                 var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.PeptideModSeq);
                 foreach (var nodePep in document.Peptides)
                 {
-                    string modifiedSeq = document.Settings.GetLookupSequence(nodePep);
+                    string modifiedSeq = document.Settings.GetSourceTextId(nodePep);
                     DbIrtPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {

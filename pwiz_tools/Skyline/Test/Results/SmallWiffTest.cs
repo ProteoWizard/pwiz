@@ -109,7 +109,7 @@ namespace pwiz.SkylineTest.Results
             AssertEx.IsDocumentState(docResults, 6, 9, 9, 18, 54);
             Assert.IsTrue(docResults.Settings.MeasuredResults.IsLoaded);
 
-            foreach (var nodeTran in docResults.Transitions)
+            foreach (var nodeTran in docResults.PeptideTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults);
                 Assert.AreEqual(2, nodeTran.Results.Count);

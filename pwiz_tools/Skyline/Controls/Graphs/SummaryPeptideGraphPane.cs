@@ -234,10 +234,10 @@ namespace pwiz.Skyline.Controls.Graphs
                              PaneKey paneKey)
             {
                 RetentionTimeTransformOp = retentionTimeTransformOp;
-                // Determine the shortest possible unique ID for each peptide
-                var sequences = new List<string>();
-                foreach (var nodePep in document.Peptides)
-                    sequences.Add(nodePep.ModifiedSequence);
+                // Determine the shortest possible unique ID for each peptide or molecule
+                var sequences = new List<Tuple<string, bool>>();
+                foreach (var nodePep in document.Molecules)
+                    sequences.Add(new Tuple<string, bool>(nodePep.RawTextId, nodePep.IsProteomic));
                 var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
 
                 int pointListCount = 0;
@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool displayTotals = (displayType == DisplayTypeChrom.total);
                 if (displayTotals)
                 {
-                    foreach (var nodeGroup in document.TransitionGroups)
+                    foreach (var nodeGroup in document.MoleculeTransitionGroups)
                     {
                         if (!paneKey.IncludesTransitionGroup(nodeGroup))
                         {
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    foreach (var nodeGroup in document.TransitionGroups)
+                    foreach (var nodeGroup in document.MoleculeTransitionGroups)
                     {
                         if (!paneKey.IncludesTransitionGroup(nodeGroup))
                         {
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();
-                foreach (PeptideGroupDocNode nodeGroupPep in document.PeptideGroups)
+                foreach (PeptideGroupDocNode nodeGroupPep in document.MoleculeGroups)
                 {
                     if (AreaGraphController.AreaScope == AreaScope.protein)
                     {
@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (addLabel)
                     {
-                        string label = uniquePrefixGenerator.GetUniquePrefix(nodePep.ModifiedSequence) +
+                        string label = uniquePrefixGenerator.GetUniquePrefix(nodePep.RawTextId, nodePep.IsProteomic) +
                                        (chargeCount > 1
                                             ? Transition.GetChargeIndicator(transitionGroup.PrecursorCharge)
                                             : string.Empty);

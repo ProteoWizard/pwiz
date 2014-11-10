@@ -75,7 +75,7 @@ namespace pwiz.Skyline.SettingsUI
             LoadList(selectedItemLast, chosen);
         }
 
-        public virtual void LoadList(string selectedItemLast, IList<TItem> chosen)
+        public void LoadList(string selectedItemLast, IList<TItem> chosen)
         {
             ListBox.BeginUpdate();
             ListBox.Items.Clear();
@@ -92,16 +92,21 @@ namespace pwiz.Skyline.SettingsUI
                 
                 int i = ListBox.Items.Add(name);
 
-                if (CheckedListBox != null)
-                {
-                    // Set checkbox state from chosen list.
-                    CheckedListBox.SetItemChecked(i, chosen.Contains(item));
-                }
+                SetCheckedBoxes(chosen, i, item);
                 // Select the previous selection if it is seen.
                 if (ListBox.Items[i].ToString() == selectedItemLast)
                     ListBox.SelectedIndex = i;
             }
             ListBox.EndUpdate();
+        }
+
+        protected virtual void SetCheckedBoxes(IList<TItem> chosen, int i, TItem item)
+        {
+            if (CheckedListBox != null)
+            {
+                // Set checkbox state from chosen list.
+                CheckedListBox.SetItemChecked(i, chosen.Contains(item));
+            }
         }
 
         public void EditList()

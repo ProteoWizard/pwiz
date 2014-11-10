@@ -112,7 +112,7 @@ namespace pwiz.SkylineTest
             SrmDocument docFasta2 = docCnbr.ChangeSettings(settings);
             Assert.AreEqual(docFasta.RevisionIndex + 2, docFasta2.RevisionIndex);
             Assert.AreEqual(docFasta.PeptideCount, docFasta2.PeptideCount);
-            Assert.AreEqual(docFasta.TransitionCount, docFasta2.TransitionCount);
+            Assert.AreEqual(docFasta.PeptideTransitionCount, docFasta2.PeptideTransitionCount);
 
             // Allow missed cleavages, and verify changes
             docFasta2 = docFasta.ChangeSettings(settings.ChangePeptideSettings(
@@ -278,7 +278,7 @@ namespace pwiz.SkylineTest
             // Use charge that will cause filtering on instrument maximum m/z
             docFasta2 = docFasta.ChangeSettings(settings.ChangeTransitionFilter(
                 f => f.ChangePrecursorCharges(new[] {1})));
-            Assert.IsTrue(docFasta.TransitionGroupCount < docFasta2.TransitionGroupCount);
+            Assert.IsTrue(docFasta.PeptideTransitionGroupCount < docFasta2.PeptideTransitionGroupCount);
             Assert.AreEqual(docFasta.PeptideCount, docFasta2.PeptideCount);
         }
 
@@ -328,10 +328,10 @@ namespace pwiz.SkylineTest
             // Check ion types including precursor
             var docPrec = docFasta2.ChangeSettings(docFasta2.Settings.ChangeTransitionFilter(f =>
                 f.ChangeIonTypes(new[] { IonType.y, IonType.precursor })));
-            Assert.AreEqual(docFasta2.TransitionCount + docFasta2.TransitionGroupCount, docPrec.TransitionCount);
+            Assert.AreEqual(docFasta2.PeptideTransitionCount + docFasta2.PeptideTransitionGroupCount, docPrec.PeptideTransitionCount);
             docPrec = docFasta2.ChangeSettings(docFasta2.Settings.ChangeTransitionFilter(f =>
                 f.ChangeIonTypes(new[] { IonType.precursor })));
-            Assert.AreEqual(docFasta2.TransitionGroupCount, docPrec.TransitionCount);
+            Assert.AreEqual(docFasta2.PeptideTransitionGroupCount, docPrec.PeptideTransitionCount);
             AssertEx.Serializable(docPrec, AssertEx.DocumentCloned);
 
             // TODO: Finish this test
@@ -392,15 +392,15 @@ namespace pwiz.SkylineTest
             CompareMasses precursorCompare, CompareMasses fragmentCompare)
         {
             // Check transition groups
-            var tranGroupsBefore = docBefore.TransitionGroups.ToArray();
-            var tranGroupsAfter = docAfter.TransitionGroups.ToArray();
+            var tranGroupsBefore = docBefore.MoleculeTransitionGroups.ToArray();
+            var tranGroupsAfter = docAfter.MoleculeTransitionGroups.ToArray();
             Assert.AreEqual(tranGroupsBefore.Length, tranGroupsAfter.Length);
             for (int i = 0; i < tranGroupsBefore.Length; i++)
                 precursorCompare(tranGroupsBefore[i].PrecursorMz, tranGroupsAfter[i].PrecursorMz); // 60?
 
             // Check transitions
-            var transBefore = docBefore.Transitions.ToArray();
-            var transAfter = docAfter.Transitions.ToArray();
+            var transBefore = docBefore.MoleculeTransitions.ToArray();
+            var transAfter = docAfter.MoleculeTransitions.ToArray();
             Assert.AreEqual(transBefore.Length, transAfter.Length);
             for (int i = 0; i < transBefore.Length; i++)
                 fragmentCompare(transBefore[i].Mz, transAfter[i].Mz);

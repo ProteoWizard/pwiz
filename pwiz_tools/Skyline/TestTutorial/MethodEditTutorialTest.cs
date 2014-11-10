@@ -304,7 +304,7 @@ namespace pwiz.SkylineTestTutorial
             // Checking Peptide Uniqueness, p. 18
             RunUI(() =>
             {
-                var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 2];
+                var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - (TestSmallMolecules ? 3 : 2)];
                 SkylineWindow.SequenceTree.SelectedNode = node;
             });
 
@@ -345,7 +345,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                     {
-                        var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 3];
+                        var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - (TestSmallMolecules ? 4 : 3)];
                         SkylineWindow.SequenceTree.SelectedNode = node;
                     });
                 var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
@@ -429,10 +429,10 @@ namespace pwiz.SkylineTestTutorial
                 var csvname = String.Format("{0}_{1}.csv", basename, n.ToString("D4")); // Not L10N
 
                 // AssertEx.FieldsEqual is hard-coded with CultureInfo.InvariantCulture, but so is transition list CSV export, so OK
-                using (TextReader target = new StreamReader(TestFilesDirs[0].GetTestPath(csvname)))
-                using (TextReader actual = new StreamReader(TestFilesDirs[1].GetTestPath(csvname)))
+                using (TextReader actual = new StreamReader(TestFilesDirs[0].GetTestPath(csvname)))
+                using (TextReader target = new StreamReader(TestFilesDirs[1].GetTestPath(csvname)))
                 {
-                    AssertEx.FieldsEqual(target, actual, 6, null, true);
+                    AssertEx.FieldsEqual(target, actual, 6, null, true, TestSmallMolecules ? 3 : 0);
                 }
             }
         }
@@ -462,7 +462,7 @@ namespace pwiz.SkylineTestTutorial
         private static void CheckTransitionCount(string peptideSequence, int count)
         {
             var doc = SkylineWindow.Document;
-            var nodePeptide = doc.Peptides.FirstOrDefault(nodePep =>
+            var nodePeptide = doc.Molecules.FirstOrDefault(nodePep =>
                 Equals(peptideSequence, nodePep.Peptide.Sequence));
             Assert.IsNotNull(nodePeptide);
             Assert.IsTrue(nodePeptide.TransitionCount == count);

@@ -295,8 +295,8 @@ namespace pwiz.Skyline.SettingsUI
         public SrmDocument AddPeptides(SrmDocument document, ILongWaitBroker broker, IdentityPath toPath, out IdentityPath selectedPath)
         {
             if (toPath != null &&
-                toPath.Depth == (int)SrmDocument.Level.PeptideGroups &&
-                ReferenceEquals(toPath.GetIdentity((int)SrmDocument.Level.PeptideGroups), SequenceTree.NODE_INSERT_ID))
+                toPath.Depth == (int)SrmDocument.Level.MoleculeGroups &&
+                ReferenceEquals(toPath.GetIdentity((int)SrmDocument.Level.MoleculeGroups), SequenceTree.NODE_INSERT_ID))
             {
                 toPath = null;
             }
@@ -724,7 +724,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)
         {
-            foreach (PeptideGroupDocNode peptideGroupDocNode in document.PeptideGroups)
+            foreach (PeptideGroupDocNode peptideGroupDocNode in document.MoleculeGroups)
             {
                 if (peptideGroupDocNode.Name == name)
                 {

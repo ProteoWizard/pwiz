@@ -71,7 +71,7 @@ namespace pwiz.Skyline.EditUI
             // Last row is empty (used to add more rows)
             var dictNameToName = new Dictionary<string, string>();
             var setNamesExisting = new HashSet<string>();
-            foreach (var nodePepGroup in _document.PeptideGroups)
+            foreach (var nodePepGroup in _document.MoleculeGroups)
                 setNamesExisting.Add(nodePepGroup.Name);
             foreach (var proteinNames in _gridViewDriver.Items)
             {
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.EditUI
         public void PopulateGrid()
         {
             _gridViewDriver.Populate(
-                _document.PeptideGroups.Select(nodePepGroup => nodePepGroup.Name)
+                _document.MoleculeGroups.Select(nodePepGroup => nodePepGroup.Name)
                                        .Distinct()
                                        .Select(name => new RenameProteins{ CurrentName = name, NewName = null}));
         }
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.EditUI
                 using (var reader = new StreamReader(fastaFile))
                 {
                     var dictSeqToNames = new Dictionary<string, List<string>>();
-                    foreach (var nodePepGroup in _document.PeptideGroups)
+                    foreach (var nodePepGroup in _document.MoleculeGroups)
                     {
                         string sequence = nodePepGroup.PeptideGroup.Sequence;
                         if (string.IsNullOrEmpty(sequence))
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
 
-                _gridViewDriver.Populate(_document.PeptideGroups
+                _gridViewDriver.Populate(_document.MoleculeGroups
                     .Where(nodePepGroup => dictExistToNewName.ContainsKey(nodePepGroup.Name))
                     .Select(nodePepGroup => new RenameProteins
                     {
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.EditUI
         private void UseAccessionOrPreferredNameorGene(ProteinDisplayMode mode)
         {
             var dictNodeToNewName = new Dictionary<string, string>();
-            foreach (var nodePepGroup in _document.PeptideGroups)
+            foreach (var nodePepGroup in _document.MoleculeGroups)
             {
                 string newname;
                 if (!dictNodeToNewName.TryGetValue(nodePepGroup.Name, out newname))
@@ -294,7 +294,7 @@ namespace pwiz.Skyline.EditUI
             }
 
 
-            _gridViewDriver.Populate(_document.PeptideGroups
+            _gridViewDriver.Populate(_document.MoleculeGroups
                 .Where(nodePepGroup => dictNodeToNewName.ContainsKey(nodePepGroup.Name))
                 .Select(nodePepGroup => new RenameProteins
                 {

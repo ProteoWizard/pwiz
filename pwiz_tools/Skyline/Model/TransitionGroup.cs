@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model
         public int PrecursorCharge { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public int? DecoyMassShift { get; private set; }
-       
+        public bool IsCustomIon{ get { return Peptide.IsCustomIon; } }
         public string LabelTypeText
         {
             get { return (!LabelType.IsLight ? " (" + LabelType + ")" : string.Empty); } // Not L10N
@@ -104,13 +104,7 @@ namespace pwiz.Skyline.Model
         }
 
         public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings,
-                                                             ExplicitMods mods,
-                                                             double precursorMz)
-        {
-            return GetTransitions(settings, mods, precursorMz, null, null, null, false);
-        }
-
-        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings,
+                                                             TransitionGroupDocNode groupDocNode,
                                                              ExplicitMods mods,
                                                              double precursorMz,
                                                              IsotopeDistInfo isotopeDist,
@@ -181,17 +175,29 @@ namespace pwiz.Skyline.Model
                     yield return nodeTran;
             }
 
-            foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
+            // Return special ions from settings, if this is a peptide
+            if (!IsCustomIon)
             {
-                if(useFilter && measuredIon.IsOptional)
-                    continue;
-                foreach (int charge in measuredIon.Charges)
+                // This is a peptide, but it may have custom transitions, check those
+                foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
                 {
-                    var tran = new Transition(this, charge, measuredIon);
-                    double massH = settings.GetFragmentMass(IsotopeLabelType.light, null, tran, null);
-                    yield return new TransitionDocNode(tran, null, massH, null, null);
+                    if (useFilter && measuredIon.IsOptional)
+                        continue;
+                    var tran = new Transition(this, measuredIon.Charge, null, measuredIon.CustomIon);
+                    double mass = settings.GetFragmentMass(IsotopeLabelType.light, null, tran, null);
+                    yield return new TransitionDocNode(tran, null, mass, null, null);
                 }
             }
+
+            foreach (var nodeTran in groupDocNode.Transitions.Where(tran => tran.Transition.IsCustomAndEditable()))
+            {
+                double massH = settings.GetFragmentMass(IsotopeLabelType.light, null, nodeTran.Transition, null);
+                yield return CreateTransitionNode(nodeTran.Transition.IonType, 0, nodeTran.Transition.Charge, massH,
+                    nodeTran.Losses, transitionRanks, nodeTran.Transition.CustomIon);
+            }
+
+            if (sequence == null) // Completely custom
+                yield break;
 
             // If picking relies on library information
             if (useFilter && pick != TransitionLibraryPick.none)
@@ -300,14 +306,48 @@ namespace pwiz.Skyline.Model
                                                              bool libraryFilter,
                                                              bool useFilter)
         {
-            string sequence = Peptide.Sequence;
-
             var tranSettings = settings.TransitionSettings;
             var fullScan = tranSettings.FullScan;
             MassType massType = tranSettings.Prediction.FragmentMassType;
             int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
             int maxMz = tranSettings.Instrument.MaxMz;
             bool precursorMS1 = fullScan.IsEnabledMs;
+
+            if (IsCustomIon)
+            {
+                var ionMz =
+                    BioMassCalc.CalculateMz(
+                        Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType),
+                        PrecursorCharge);
+                if (!useFilter ||
+                    !libraryFilter || 
+                    IsMatched(transitionRanks, 
+                        ionMz, IonType.precursor,
+                        PrecursorCharge, null))
+                {
+                    if (precursorMS1 && isotopeDist != null)
+                    {
+                        foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
+                        {
+                            double precursorMS1Mass = isotopeDist.GetMassI(i);
+                            ionMz = BioMassCalc.CalculateMz(precursorMS1Mass, PrecursorCharge);
+                            if (minMz > ionMz || ionMz > maxMz)
+                                continue;
+                            var isotopeDistInfo = new TransitionIsotopeDistInfo(isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
+                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks, Peptide.CustomIon);
+                        }
+                    }
+                    else
+                    {
+                        var transition = new Transition(this, PrecursorCharge, null, Peptide.CustomIon, IonType.precursor);
+                        double massH = Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType);
+                        yield return new TransitionDocNode(transition, null, massH, null, null);
+                    }
+                }
+                yield break;
+            }
+
+            string sequence = Peptide.Sequence;
             bool precursorNoProducts = precursorMS1 && !fullScan.IsEnabledMsMs &&
                 tranSettings.Filter.IonTypes.Count == 1 && tranSettings.Filter.IonTypes[0] == IonType.precursor;
             double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
@@ -368,6 +408,10 @@ namespace pwiz.Skyline.Model
         public static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,
             PeptideModifications pepMods, ExplicitMods mods, MassType massType)
         {
+            if (sequence == null)
+            {
+                return new IList<ExplicitLoss>[0];
+            }
             // First build a list of the amino acids in this peptide which can be experience loss,
             // and the losses which apply to them.
             IList<KeyValuePair<IList<TransitionLoss>, int>> listIndexedListLosses = null;
@@ -466,17 +510,17 @@ namespace pwiz.Skyline.Model
         }
 
         private TransitionDocNode CreateTransitionNode(int massIndex, double precursorMassH, TransitionIsotopeDistInfo isotopeDistInfo,
-            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, CustomIon customIon = null)
         {
-            Transition transition = new Transition(this, massIndex);
+            Transition transition = new Transition(this, massIndex, customIon);
             var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks) : null;
             return new TransitionDocNode(transition, losses, precursorMassH, isotopeDistInfo, info);
         }
 
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,
-            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, CustomIon customIon = null)
         {
-            Transition transition = new Transition(this, type, cleavageOffset, 0, charge);
+            Transition transition = new Transition(this, type, cleavageOffset, 0, charge, null, customIon);
             var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(massH, losses), transitionRanks);
             return new TransitionDocNode(transition, losses, massH, null, info);
         }

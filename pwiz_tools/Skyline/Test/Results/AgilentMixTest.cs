@@ -67,7 +67,7 @@ namespace pwiz.SkylineTest.Results
             docContainer.AssertComplete();
             docResults = docContainer.Document;
             AssertResult.IsDocumentResultsState(docResults, replicateName,
-                doc.PeptideCount, doc.TransitionGroupCount, 0, doc.TransitionCount, 0);
+                doc.PeptideCount, doc.PeptideTransitionGroupCount, 0, doc.PeptideTransitionCount, 0);
 
             // Release file handles
             docContainer.Release();

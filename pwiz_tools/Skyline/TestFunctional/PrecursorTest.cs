@@ -48,13 +48,16 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            // The transition list produced by the special test nodes doesn't parse as peptides, which this test expects
+            TestSmallMolecules = false;
+
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             // Delete the last protein because its peptide has an explicit modification
             // which just gets in the way for this test.
-            SelectNode(SrmDocument.Level.PeptideGroups, SkylineWindow.Document.PeptideGroupCount - 1);
+            SelectNode(SrmDocument.Level.MoleculeGroups, SkylineWindow.Document.PeptideGroupCount - 1);
             RunUI(SkylineWindow.EditDelete);
 
             // Select the first precursor and inspect its graph
@@ -84,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             WaitForDocumentChange(docCurrent);
             docCurrent = SkylineWindow.Document;
-            Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.Transitions)[0].Transition.IonType,
+            Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.PeptideTransitions)[0].Transition.IonType,
                 "First transition is not precursor type.");
             SelectNode(SrmDocument.Level.Transitions, 0);
             VerifySelectedIon(precursorLabel);
@@ -119,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
             docCurrent = SkylineWindow.Document;
 
             // Delete remaining 2 proteins
-            SelectNode(SrmDocument.Level.PeptideGroups, 0);
+            SelectNode(SrmDocument.Level.MoleculeGroups, 0);
             RunUI(() =>
                       {
                           SkylineWindow.EditDelete();
@@ -131,8 +134,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Paste());
 
             Assert.AreEqual(2, GetPrecursorTranstionCount());
-            Assert.AreEqual(docCurrent.TransitionCount, SkylineWindow.Document.TransitionCount);
-            Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.Transitions)[0].Transition.IonType,
+            Assert.AreEqual(docCurrent.PeptideTransitionCount, SkylineWindow.Document.PeptideTransitionCount);
+            Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.PeptideTransitions)[0].Transition.IonType,
                 "First transition is not precursor type.");
 
             SelectNode(SrmDocument.Level.Transitions, 0);
@@ -162,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
         private static int GetPrecursorTranstionCount()
         {
             int countPrecursors = 0;
-            foreach (var nodeGroup in SkylineWindow.Document.TransitionGroups)
+            foreach (var nodeGroup in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {

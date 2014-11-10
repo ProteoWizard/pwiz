@@ -1062,7 +1062,7 @@ namespace pwiz.Skyline
         private void exportIsolationListMenuItem_Click(object sender, EventArgs e)
         {
             var isolationScheme = DocumentUI.Settings.TransitionSettings.FullScan.IsolationScheme;
-            if (Document.PeptideCount == 0 && (isolationScheme == null || isolationScheme.FromResults))
+            if (Document.MoleculeCount == 0 && (isolationScheme == null || isolationScheme.FromResults))
             {
                 MessageDlg.Show(this,
                     Resources.SkylineWindow_exportIsolationListMenuItem_Click_There_is_no_isolation_list_data_to_export);
@@ -1114,9 +1114,9 @@ namespace pwiz.Skyline
 
         public void ShowExportEspFeaturesDialog()
         {
-            if (DocumentUI.PeptideCount == 0)
+            if (DocumentUI.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features);
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_);
                 return;
             }
 
@@ -1139,7 +1139,7 @@ namespace pwiz.Skyline
                 try
                 {
                     EspFeatureCalc.WriteFeatures(dlg.FileName,
-                        DocumentUI.Peptides.Select(nodePep => nodePep.Peptide.Sequence), LocalizationHelper.CurrentCulture);
+                        DocumentUI.Molecules.Select(nodePep => nodePep.Peptide.Sequence), LocalizationHelper.CurrentCulture);
                 }
                 catch (IOException x)
                 {
@@ -1163,9 +1163,9 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_);
                 return;
             }
-            if (DocumentUI.PeptideCount == 0)
+            if (DocumentUI.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_which_to_export_chromatograms);
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_targets_for_which_to_export_chromatograms_);
                 return;
             }
 
@@ -1188,9 +1188,9 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
                 return;
             }
-            if (documentOrig.PeptideCount == 0)
+            if (documentOrig.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_);
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
                 return;
             }
             if (!documentOrig.IsLoaded)
@@ -1225,9 +1225,9 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
                 return;
             }
-            if (document.PeptideCount == 0)
+            if (document.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_have_peptides_in_order_to_compare_model_peak_picking_);
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_);
                 return;
             }
             if (!document.IsLoaded)
@@ -1253,9 +1253,9 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_);
                 return;
             }
-            if (DocumentUI.PeptideCount == 0)
+            if (DocumentUI.MoleculeCount == 0)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features_);
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_);
                 return;
             }
 
@@ -1429,8 +1429,8 @@ namespace pwiz.Skyline
                 return;
 
             selectPath = null;
-            var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
-            foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)
+            var enumGroupsCurrent = docCurrent.MoleculeGroups.GetEnumerator();
+            foreach (PeptideGroupDocNode nodePepGroup in docNew.MoleculeGroups)
             {
                 if (enumGroupsCurrent.MoveNext() &&
                     !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
@@ -1986,7 +1986,7 @@ namespace pwiz.Skyline
 
         public void ImportResults()
         {
-            if (DocumentUI.TransitionCount == 0)
+            if (DocumentUI.MoleculeTransitionCount == 0)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_);
                 return;
@@ -2044,7 +2044,7 @@ namespace pwiz.Skyline
             {
                 return true;
             }
-            if (!fullScan.IsEnabledMsMs && !document.Transitions.Any(transition => transition.IsMs1))
+            if (!fullScan.IsEnabledMsMs && !document.MoleculeTransitions.Any(transition => transition.IsMs1))
             {
                 return true;
             }

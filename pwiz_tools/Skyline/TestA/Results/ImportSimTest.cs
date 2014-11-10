@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestA.Results
             docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 3);
 
             // Check expected Mz range.
-            foreach (var nodeTran in docContainer.Document.Transitions)
+            foreach (var nodeTran in docContainer.Document.PeptideTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
                 if (nodeTran.Results[0] == null)

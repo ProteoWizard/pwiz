@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestA.Results
             {
                 // Import with symmetric isolation window
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.TransitionGroups.First();
+                nodeGroup = docResults.PeptideTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                 Assert.AreEqual(0.25, ratio, 0.05);
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(docContainer.SetDocument(docAsym, doc, false));
 
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.TransitionGroups.First();
+                nodeGroup = docResults.PeptideTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
                 Assert.AreEqual(1.05, ratio, 0.05);
@@ -108,7 +108,7 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
 
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.TransitionGroups.First();
+                nodeGroup = docResults.PeptideTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
                 Assert.AreEqual(1.05, ratio, 0.05);
@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
 
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.TransitionGroups.First();
+                nodeGroup = docResults.PeptideTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
                 Assert.AreEqual(1.05, ratio, 0.05);
@@ -180,7 +180,7 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(docContainer.SetDocument(docOneWindow, doc, false));
 
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 0, 2, 0);
-                nodeGroup = docResults.TransitionGroups.First();
+                nodeGroup = docResults.PeptideTransitionGroups.First();
                 Assert.IsNull(nodeGroup.Results[0][0].Ratio);
 
                 // Revert to original document, and get rid of results cache

@@ -367,7 +367,7 @@ namespace pwiz.SkylineTestA
 
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Thermo_test.csv")));
             Assert.IsTrue(File.Exists(thermoPath));
-            Assert.AreEqual(doc.TransitionCount, File.ReadAllLines(thermoPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(thermoPath).Length);
 
 
             /////////////////////////
@@ -383,7 +383,7 @@ namespace pwiz.SkylineTestA
             //check for success
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv")));
             Assert.IsTrue(File.Exists(agilentPath));
-            Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(agilentPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(agilentPath).Length);
 
             /////////////////////////
             // AB Sciex test
@@ -399,7 +399,7 @@ namespace pwiz.SkylineTestA
             //check for success
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv")));
             Assert.IsTrue(File.Exists(sciexPath));
-            Assert.AreEqual(doc.TransitionCount, File.ReadAllLines(sciexPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(sciexPath).Length);
 
             /////////////////////////
             // Waters test
@@ -414,7 +414,7 @@ namespace pwiz.SkylineTestA
             //check for success
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv")));
             Assert.IsTrue(File.Exists(watersPath));
-            Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(watersPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(watersPath).Length);
         }
 
         [TestMethod]
@@ -483,6 +483,9 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ConsoleExportTrigger()
         {
+            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
+            TestSmallMolecules = false; 
+
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string failurePath = testFilesDir.GetTestPath("Failure_test.csv");
@@ -557,7 +560,7 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
             Assert.IsTrue(File.Exists(agilentTriggeredPath));
-            Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(agilentTriggeredPath).Length);
+            Assert.AreEqual(doc.PeptideTransitionCount + 1, File.ReadAllLines(agilentTriggeredPath).Length);
         }
 
         [TestMethod]
@@ -568,6 +571,9 @@ namespace pwiz.SkylineTestA
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string outPath = testFilesDir.GetTestPath("Output_file.sky");
             string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
+
+            // The special mode for exercising non-proteomic molecules just doesn't make sense with this test
+            TestSmallMolecules = false; 
 
             // Import the first RAW file (or mzML for international)
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +

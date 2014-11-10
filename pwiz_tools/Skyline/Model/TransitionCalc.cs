@@ -32,13 +32,14 @@ namespace pwiz.Skyline.Model
         /// <param name="massH">The mass to calculate charge for</param>
         /// <param name="mz">The desired m/z value the charge should produce</param>
         /// <param name="tolerance">How far off the actual m/z is allowed to be</param>
+        /// <param name="isCustomIon">Is this a custom ion (and thus ionized by electron loss instead of proton gain)?</param>
         /// <param name="min">Minimum charge to consider</param>
         /// <param name="max">Maximum charge to consider</param>
         /// <param name="massShifts">Possible mass shifts that may have been applied to decoys</param>
         /// <param name="massShiftType"></param>
         /// <param name="massShift">Mass shift required to to achieve this charge state or zero</param>
         /// <returns>A matching charge or the closest non-matching charge negated.</returns>
-        public static int CalcCharge(double massH, double mz, double tolerance, int min, int max,
+        public static int CalcCharge(double massH, double mz, double tolerance, bool isCustomIon, int min, int max,
             ICollection<int> massShifts, MassShiftType massShiftType, out int massShift)
         {
             Debug.Assert(min <= max);
@@ -50,7 +51,7 @@ namespace pwiz.Skyline.Model
 
             for (int i = min; i <= max; i++)
             {
-                double delta = mz - SequenceMassCalc.GetMZ(massH, i);
+                double delta = mz - ( isCustomIon ? BioMassCalc.CalculateMz(massH, i) : SequenceMassCalc.GetMZ(massH, i) );
                 double deltaAbs = Math.Abs(delta);
                 int potentialShift = (int) Math.Round(deltaAbs);
                 double fractionalDelta = deltaAbs - potentialShift;
@@ -87,10 +88,11 @@ namespace pwiz.Skyline.Model
         public static int CalcPrecursorCharge(double precursorMassH,
                                               double precursorMz,
                                               double tolerance,
+                                              bool isCustomIon,
                                               bool isDecoy,
                                               out int massShift)
         {
-            return CalcCharge(precursorMassH, precursorMz, tolerance,
+            return CalcCharge(precursorMassH, precursorMz, tolerance, isCustomIon,
                 TransitionGroup.MIN_PRECURSOR_CHARGE,
                 TransitionGroup.MAX_PRECURSOR_CHARGE,
                 TransitionGroup.MassShifts,
@@ -98,10 +100,10 @@ namespace pwiz.Skyline.Model
                 out massShift);
         }
 
-        private static int CalcProductCharge(double productMassH, double productMz, double tolerance,
+        private static int CalcProductCharge(double productMassH, double productMz, double tolerance, bool isCustomIon,
                                              int maxCharge, MassShiftType massShiftType, out int massShift)
         {
-            return CalcCharge(productMassH, productMz, tolerance,
+            return CalcCharge(productMassH, productMz, tolerance, isCustomIon,
                 Transition.MIN_PRODUCT_CHARGE,
                 maxCharge,
                 Transition.MassShifts,
@@ -140,7 +142,7 @@ namespace pwiz.Skyline.Model
             {
                 double productMass = productPrecursorMass - (lossesTrial != null ? lossesTrial.Mass : 0);
                 int potentialMassShift;
-                int charge = CalcProductCharge(productMass, productMz, tolerance, precursorCharge,
+                int charge = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
                                                massShiftType, out potentialMassShift);
                 if (charge == precursorCharge)
                 {
@@ -186,7 +188,7 @@ namespace pwiz.Skyline.Model
                         if (lossesTrial != null)
                             productMass -= lossesTrial.Mass;
                         int potentialMassShift;
-                        int charge = CalcProductCharge(productMass, productMz, tolerance, precursorCharge,
+                        int charge = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
                                                        massShiftType, out potentialMassShift);
                         if (charge > 0)
                         {

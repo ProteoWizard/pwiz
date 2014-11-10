@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Optimization
                 // Calculate the minimal set of optimizations needed for this document
                 var persistOptimizations = new List<DbOptimization>();
                 var dictOptimizations = _database.GetOptimizations().ToDictionary(opt => opt.Key);
-                foreach (PeptideGroupDocNode seq in document.PeptideGroups)
+                foreach (PeptideGroupDocNode seq in document.MoleculeGroups)
                 {
                     // Skip peptide groups with no transitions
                     if (seq.TransitionCount == 0)
@@ -99,13 +99,13 @@ namespace pwiz.Skyline.Model.Optimization
                     {
                         foreach (TransitionGroupDocNode group in peptide.Children)
                         {
-                            string sequence = document.Settings.GetLookupSequence(peptide);
+                            string modSeq = document.Settings.GetSourceTextId(peptide); 
                             int charge = group.PrecursorCharge;
                             foreach (TransitionDocNode transition in group.Children)
                             {
                                 foreach (var optType in Enum.GetValues(typeof(OptimizationType)).Cast<OptimizationType>())
                                 {
-                                    var optimizationKey = new OptimizationKey(optType, sequence, charge, transition.Mz);
+                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.Mz);
                                     DbOptimization dbOptimization;
                                     if (dictOptimizations.TryGetValue(optimizationKey, out dbOptimization))
                                     {

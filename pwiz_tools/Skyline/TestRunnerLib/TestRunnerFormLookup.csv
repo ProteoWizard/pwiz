@@ -28,12 +28,12 @@ ColumnChooser,TestStandardTypeWithOldReports
 ComparePeakPickingDlg,TestPeakBoundaryCompare
 ConfigureToolsDlg,TestQuasarTutorial
 CreateIrtCalculatorDlg,TestAssayLibraryImport
-CustomIonMzDlg,*
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentGridForm,TestReportSummary
 EditCEDlg,TestOptimization
 EditChorusAccountDlg,*
+EditCustomMoleculeDlg, EditCustomMoleculeDlgTest
 EditDPDlg,TestEditDialogs
 EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes

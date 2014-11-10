@@ -609,20 +609,35 @@ namespace pwiz.Skyline.Model
             int charge = TransitionGroup.PrecursorCharge;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
             var calc = settings.GetPrecursorCalc(labelType, mods);
-            double massH = calc.GetPrecursorMass(seq);
-            double mz = SequenceMassCalc.GetMZ(massH, charge) +
+            double mass = TransitionGroup.Peptide.IsCustomIon
+                ? TransitionGroup.Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType)
+                : calc.GetPrecursorMass(seq);
+            double mz = ( TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateMz(mass, charge) : SequenceMassCalc.GetMZ(mass, charge) ) +
                 SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
             if (TransitionGroup.DecoyMassShift.HasValue)
-                massH = SequenceMassCalc.GetMH(mz, charge);
+                mass = SequenceMassCalc.GetMH(mz, charge);
 
             isotopeDist = null;
             var fullScan = settings.TransitionSettings.FullScan;
             if (fullScan.IsHighResPrecursor)
             {
-                var massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
-                if (TransitionGroup.DecoyMassShift.HasValue)
-                    massDist = ShiftMzDistribution(massDist, TransitionGroup.DecoyMassShift.Value);
-                isotopeDist = new IsotopeDistInfo(massDist, massH, charge,
+                MassDistribution massDist;
+                if (!TransitionGroup.IsCustomIon)
+                {
+                    massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
+                    if (TransitionGroup.DecoyMassShift.HasValue)
+                        massDist = ShiftMzDistribution(massDist, TransitionGroup.DecoyMassShift.Value);
+                }
+                else if (TransitionGroup.Peptide.CustomIon.Formula != null)
+                {
+                    massDist = calc.GetMZDistributionFromFormula(TransitionGroup.Peptide.CustomIon.Formula,
+                        charge, fullScan.IsotopeAbundances);
+                }
+                else
+                {
+                    massDist = calc.GetMZDistributionSinglePoint(mass);
+                }
+                isotopeDist = new IsotopeDistInfo(massDist, mass, !TransitionGroup.Peptide.IsCustomIon, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
                     // Centering resolution must be inversely proportional to charge state
                     // High charge states can bring major peaks close enough toghether to
@@ -696,7 +711,7 @@ namespace pwiz.Skyline.Model
 
                 // TODO: Use TransitionLossKey
                 Dictionary<TransitionLossKey, DocNode> mapIdToChild = CreateTransitionLossToChildMap();
-                foreach (TransitionDocNode nodeTran in TransitionGroup.GetTransitions(settingsNew, mods,
+                foreach (TransitionDocNode nodeTran in GetTransitions(settingsNew, mods,
                         precursorMz, isotopeDist, libInfo, transitionRanks, true))
                 {
                     TransitionDocNode nodeTranResult;
@@ -831,6 +846,13 @@ namespace pwiz.Skyline.Model
                 nodeResult = nodeResult.UpdateResults(settingsNew, diff, nodePep, this);
 
             return nodeResult;
+        }
+
+        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
+            IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
+        {
+            return TransitionGroup.GetTransitions(settings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
+                useFilter);
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
@@ -1943,6 +1965,25 @@ namespace pwiz.Skyline.Model
             return AreEquivalentChildren(Children, nodeGroup.Children);
         }
 
+        /// <summary>
+        /// Calculate precursor ion mass, paying attention to whether this is a peptide or a small molecule
+        /// </summary>
+        public double GetPrecursorIonMass()
+        {
+            var precursorCharge = TransitionGroup.PrecursorCharge;
+            var precursorMz = PrecursorMz;
+            return TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateMassFromMz(precursorMz, precursorCharge) : SequenceMassCalc.GetMH(precursorMz, precursorCharge);
+        }
+
+        /// <summary>
+        /// Return precursor's neutral mass rounded for XML I/O
+        /// </summary>
+        public double GetPrecursorIonPersistentNeutralMass()
+        {
+            double ionMass = GetPrecursorIonMass();
+            return TransitionGroup.Peptide.IsCustomIon ? Math.Round(ionMass, SequenceMassCalc.MassPrecision) : SequenceMassCalc.PersistentNeutral(ionMass);
+        }
+
         #region Property change methods
 
         public TransitionGroupDocNode ChangeLibInfo(SpectrumHeaderInfo prop)
@@ -2341,5 +2382,6 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+
     }
 }

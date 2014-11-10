@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestA
 
             // Turn off auto-manage children on all peptides
             var listPepGroups = new List<DocNode>();
-            foreach (PeptideGroupDocNode nodePepGroup in docMulti.PeptideGroups)
+            foreach (PeptideGroupDocNode nodePepGroup in docMulti.MoleculeGroups)
             {
                 var listPeptides = new List<DocNode>();
                 foreach (PeptideDocNode nodePep in nodePepGroup.Children)
@@ -112,6 +112,8 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void MultiLabelTypeListTest()
         {
+            TestSmallMolecules = false; // TODO bspratt - sort out export/import of transition lists for non-proteomic molecules
+
             int startRev = 0;
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
 
@@ -170,25 +172,25 @@ namespace pwiz.SkylineTestA
                             new TypedModifications(labelTypeAll, new[] {mod15N})
                         }));
             document = document.ChangeSettings(settings);
-            Assert.AreEqual(6, document.TransitionGroupCount);
+            Assert.AreEqual(6, document.PeptideTransitionGroupCount);
 
             // Add modifications to light and heavy AA in the first peptide
-            path = document.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            path = document.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             var nodePepMod = (PeptideDocNode) document.FindNode(path);
             var explicitMod = new ExplicitMods(nodePepMod.Peptide,
                 new[] {new ExplicitMod(pepSequence1.IndexOf('C'), modOther)},
                 new[] {new TypedExplicitModifications(nodePepMod.Peptide, labelTypeAA, new ExplicitMod[0])});
             document = document.ChangePeptideMods(path, explicitMod, staticMods, heavyMods);
-            Assert.AreEqual(5, document.TransitionGroupCount);
+            Assert.AreEqual(5, document.PeptideTransitionGroupCount);
 
             // Add a modification to heavy All in the second peptide
-            path = document.GetPathTo((int)SrmDocument.Level.Peptides, 1);
+            path = document.GetPathTo((int)SrmDocument.Level.Molecules, 1);
             nodePepMod = (PeptideDocNode)document.FindNode(path);
             explicitMod = new ExplicitMods(nodePepMod.Peptide, null,
                 new[] { new TypedExplicitModifications(nodePepMod.Peptide, labelTypeAll,
                             new[] {new ExplicitMod(pepSequence2.IndexOf('V'), modV13C)}) });
             document = document.ChangePeptideMods(path, explicitMod, staticMods, heavyMods);
-            Assert.AreEqual(5, document.TransitionGroupCount);
+            Assert.AreEqual(5, document.PeptideTransitionGroupCount);
 
             AssertEx.Serializable(document, 3, AssertEx.DocumentCloned);
         }

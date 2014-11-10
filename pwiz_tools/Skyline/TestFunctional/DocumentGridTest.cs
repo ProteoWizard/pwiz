@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(exportLiveReportDlg, exportLiveReportDlg.CancelClick);
             WaitForCondition(() => peptideReplicatesForm.IsComplete);
-            AssertRowCount(SkylineWindow.Document.PeptideCount, peptideReplicatesForm);
+            AssertRowCount(SkylineWindow.Document.MoleculeCount, peptideReplicatesForm);
             Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
 
             // Import one replicate
@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             WaitForResultsImport();
-            Assert.AreEqual(SkylineWindow.Document.PeptideCount, peptideReplicatesForm.RowCount);
+            Assert.AreEqual(SkylineWindow.Document.MoleculeCount, peptideReplicatesForm.RowCount);
 
             // Now that we have one replicate in the document, we can show the Results Grid.  It should have one row
             var liveResultsGrid = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => peptideReplicatesForm.IsComplete);
             // The DocumentGrid which is showing "PeptideReplicates" should be showing the Cartesian product 
             // of peptides and replicates
-            AssertRowCount(SkylineWindow.Document.PeptideCount * 2, peptideReplicatesForm);
+            AssertRowCount(SkylineWindow.Document.PeptideCount * 2 + (TestSmallMolecules ? 1 : 0), peptideReplicatesForm);
 
             // The Results Grid should show the two replicates
             WaitForConditionUI(() => liveResultsGrid.IsComplete);

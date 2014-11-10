@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
             RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
                 dlg => dlg.OkDialog());
-            SelectNode(SrmDocument.Level.Peptides, 0);
+            SelectNode(SrmDocument.Level.Molecules, 0);
             WaitForGraphs();
             RunUI(() => Assert.IsFalse(SkylineWindow.GraphSpectrum.HasSpectrum));
 
@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded);
 
             var docOrig = SkylineWindow.Document;
-            var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Molecules, 0);
 
             // Select the first transition group
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
@@ -148,8 +148,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.EditDelete);
 
             // Verify not possible to synch at various levels
-            VerifyCannotSynch(SrmDocument.Level.PeptideGroups);
-            VerifyCannotSynch(SrmDocument.Level.Peptides);
+            VerifyCannotSynch(SrmDocument.Level.MoleculeGroups);
+            VerifyCannotSynch(SrmDocument.Level.Molecules);
             VerifyCannotSynch(SrmDocument.Level.TransitionGroups);
 
             // Undo and make sure it is possible to synch again
@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Pick different charge states of the same label type,
             // and make sure it is not possible to synchronize siblings
-            SelectNode(SrmDocument.Level.Peptides, 0);
+            SelectNode(SrmDocument.Level.Molecules, 0);
             var pickListPep = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {

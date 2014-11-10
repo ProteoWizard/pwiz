@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
         public virtual double Mz { get; set; }
         public virtual int Charge { get; set; }
         public virtual double NeutralMass { get; set; }
-        public virtual string ModifiedSequence { get; set; }
+        public virtual string ModifiedSequence { get; set; }  // CONSIDER: bspratt/nicksh More appropriately called TextId?
         public virtual double CollisionEnergy { get; set; }
         public virtual double DeclusteringPotential { get; set; }
         public virtual double TotalArea { get; set; }

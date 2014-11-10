@@ -464,8 +464,8 @@ namespace pwiz.Skyline.Model.Lib
                 if (b == 'C')
                 {
                     // All C's in these libraries assume carbamidomehtyl cysteine
-                    string seqString = Encoding.Default.GetString(sequence, 0, len);
-                    byte[] bytes = Encoding.Default.GetBytes(seqString.Replace("C", "C[+57.0]")); // Not L10N
+                    string seqString = Encoding.UTF8.GetString(sequence, 0, len);
+                    byte[] bytes = Encoding.UTF8.GetBytes(seqString.Replace("C", "C[+57.0]")); // Not L10N
                     len = bytes.Length;
                     return bytes;
                 }
@@ -683,11 +683,11 @@ namespace pwiz.Skyline.Model.Lib
                     // Sequence
                     int len = sequence.Length;
                     seqBuffer[len] = 0;
-                    Encoding.Default.GetBytes(sequence, 0, len, seqBuffer, 0);
+                    Encoding.UTF8.GetBytes(sequence, 0, len, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, len + 1);
                     // Modifications
                     const string zeros = "000000000000000000000000000000000000000000000000000"; // Not L10N
-                    Encoding.Default.GetBytes(zeros.Substring(0, len), 0, len, seqBuffer, 0);
+                    Encoding.UTF8.GetBytes(zeros.Substring(0, len), 0, len, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, len + 1);
                     // Peaks
                     foreach (var mi in peaksInfo.Peaks)

@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -44,6 +43,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly bool _editing;
         private readonly bool _heavy;
         private bool _showLoss = true; // Design mode with loss UI showing
+        private readonly FormulaBox _formulaBox;
 
         public EditStaticModDlg(StaticMod modEditing, IEnumerable<StaticMod> existing, bool heavy)
         {
@@ -61,19 +61,27 @@ namespace pwiz.Skyline.SettingsUI
             comboTerm.Items.Add(ModTerminus.N.ToString());
             comboTerm.Items.Add(ModTerminus.C.ToString());
 
+            //Formula Box
+            var location = heavy
+                ? new Point(panelAtoms.Location.X + cb13C.Location.X, panelAtoms.Location.Y + cb13C.Location.Y)
+                : cbChemicalFormula.Location;
+            _formulaBox = new FormulaBox(Resources.EditStaticModDlg_EditStaticModDlg_Chemical_formula_,
+                Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
+                Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
+            {
+                Location = location
+            };
+            Controls.Add(_formulaBox);
+
             ComboNameVisible = !_editing;
             TextNameVisible = _editing;
 
             UpdateListAvailableMods();
 
             cbVariableMod.Visible = !heavy;
-            labelChemicalFormula.Visible = !heavy;
+            _formulaBox.FormulaVisible = !heavy;
             cbChemicalFormula.Visible = heavy;
             cbChemicalFormula.Checked = !heavy || Settings.Default.ShowHeavyFormula;
-
-            Bitmap bm = Resources.PopupBtn;
-            bm.MakeTransparent(Color.Fuchsia);
-            btnFormulaPopup.Image = bm;
 
             if (heavy)
             {                
@@ -117,8 +125,8 @@ namespace pwiz.Skyline.SettingsUI
                     comboTerm.SelectedIndex = 0;
                     cbVariableMod.Checked = false;
                     Formula = string.Empty;
-                    textMonoMass.Text = string.Empty;
-                    textAverageMass.Text = string.Empty;
+                    _formulaBox.MonoMass = null;
+                    _formulaBox.AverageMass = null;
                     cb13C.Checked = false;
                     cb15N.Checked = false;
                     cb18O.Checked = false;
@@ -148,10 +156,10 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         Formula = string.Empty;
-                        textMonoMass.Text = (modification.MonoisotopicMass.HasValue ?
-                            modification.MonoisotopicMass.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
-                        textAverageMass.Text = (modification.AverageMass.HasValue ?
-                            modification.AverageMass.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
+                        _formulaBox.MonoMass = (modification.MonoisotopicMass.HasValue ?
+                            modification.MonoisotopicMass.Value: (double?)null);
+                        _formulaBox.AverageMass = (modification.AverageMass.HasValue ?
+                            modification.AverageMass.Value: (double?)null);
                         // Force the label atom check boxes to show, if any are checked
                         if (modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
@@ -180,8 +188,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public string Formula
         {
-            get { return textFormula.Text; }
-            set { textFormula.Text = value; }
+            get { return _formulaBox.Formula; }
+            set { _formulaBox.Formula = value; }
         }
 
         public IEnumerable<FragmentLoss> Losses
@@ -325,7 +333,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (ArgumentException x)
                 {
-                    helper.ShowTextBoxError(textFormula, x.Message);
+                    _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;
                 }
             }
@@ -334,14 +342,14 @@ namespace pwiz.Skyline.SettingsUI
                 formula = null;
 
                 // Allow formula and both masses to be empty, if losses are present
-                if (!string.IsNullOrEmpty(textMonoMass.Text) || !string.IsNullOrEmpty(textAverageMass.Text) || losses == null)
+                if ( NotZero(_formulaBox.MonoMass)  || NotZero(_formulaBox.AverageMass)|| losses == null)
                 {
                     // TODO: Maximum and minimum masses should be formalized and applied everywhere
                     double mass;
-                    if (!helper.ValidateDecimalTextBox(textMonoMass, -1500, 5000, out mass))
+                    if (!_formulaBox.ValidateMonoMass(helper, -1500, 5000, out mass))
                         return;
                     monoMass = mass;
-                    if (!helper.ValidateDecimalTextBox(textAverageMass, -1500, 5000, out mass))
+                    if (!_formulaBox.ValidateAverageMass(helper, -1500, 5000, out mass))
                         return;
                     avgMass = mass;
                 }
@@ -367,7 +375,7 @@ namespace pwiz.Skyline.SettingsUI
             
             // Store state of the chemical formula checkbox for next use.
             if (cbChemicalFormula.Visible)
-                Settings.Default.ShowHeavyFormula = panelFormula.Visible;
+                Settings.Default.ShowHeavyFormula = _formulaBox.FormulaVisible;
 
             var newMod = new StaticMod(name,
                                          aas,
@@ -449,6 +457,11 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
+        private bool NotZero(double? val)
+        {
+            return val != null && val != 0;
+        }
+        
         private bool ModNameAvailable(string name)
         {
             // But not any other existing modification
@@ -499,7 +512,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void cbChemicalFormula_CheckedChanged(object sender, EventArgs e)
         {
-            panelFormula.Visible = cbChemicalFormula.Checked;
+            _formulaBox.FormulaVisible = cbChemicalFormula.Checked;
             panelAtoms.Visible = !cbChemicalFormula.Checked;
             UpdateMasses();
         }
@@ -523,28 +536,16 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // If the mass edit boxes are already enabled, don't clear what a user
                 // may have typed in them.
-                if (!textMonoMass.Enabled)
-                    textMonoMass.Text = string.Empty;
-                if (!textAverageMass.Enabled)
-                    textAverageMass.Text = string.Empty;
-                textMonoMass.Enabled = textAverageMass.Enabled = (labelAtoms == LabelAtoms.None);
+                if (!_formulaBox.MassEnabled)
+                {
+                    _formulaBox.MonoMass = null;
+                    _formulaBox.AverageMass = null;
+                }
+                _formulaBox.MassEnabled = (labelAtoms == LabelAtoms.None);
             }
             else
             {
-                textMonoMass.Enabled = textAverageMass.Enabled = false;
-                try
-                {
-                    textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC,
-                        formula).ToString(LocalizationHelper.CurrentCulture);
-                    textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE,
-                        formula).ToString(LocalizationHelper.CurrentCulture);
-                    textFormula.ForeColor = Color.Black;
-                }
-                catch (ArgumentException)
-                {
-                    textFormula.ForeColor = Color.Red;
-                    textMonoMass.Text = textAverageMass.Text = string.Empty;
-                }
+                _formulaBox.Formula = formula;
             }
         }
 
@@ -564,69 +565,6 @@ namespace pwiz.Skyline.SettingsUI
                 listNeutralLosses.Focus();
         }
 
-        private void btnFormulaPopup_Click(object sender, EventArgs e)
-        {
-            contextFormula.Show(this, panelFormula.Left + btnFormulaPopup.Right + 1,
-                panelFormula.Top + btnFormulaPopup.Top);
-        }
-
-        private void AddFormulaSymbol(string symbol)
-        {
-            Formula += symbol;
-            textFormula.Focus();
-            textFormula.SelectionLength = 0;
-            textFormula.SelectionStart = Formula.Length;
-        }
-
-        private void hContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.H);
-        }
-
-        private void h2ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.H2);
-        }
-
-        private void cContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.C);
-        }
-
-        private void c13ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.C13);
-        }
-
-        private void nContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.N);
-        }
-
-        private void n15ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.N15);
-        }
-
-        private void oContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.O);
-        }
-
-        private void o18ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.O18);
-        }
-
-        private void pContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.P);
-        }
-
-        private void sContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.S);
-        }
 
         private const char SEPARATOR_AA = ','; // Not L10N
 

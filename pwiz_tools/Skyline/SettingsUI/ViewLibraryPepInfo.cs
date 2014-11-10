@@ -100,7 +100,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public string GetAASequence(byte[] lookupPool)
         {
-            return Encoding.Default.GetString(lookupPool, IndexLookup, SequenceLength);
+            return Encoding.UTF8.GetString(lookupPool, IndexLookup, SequenceLength);
         }
 
         /// <summary>

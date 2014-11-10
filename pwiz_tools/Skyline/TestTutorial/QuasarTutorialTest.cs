@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SelectedPath =
-                    SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0);
+                    SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0);
             });
             WaitForGraphs();
             DataGridView resultsGrid;

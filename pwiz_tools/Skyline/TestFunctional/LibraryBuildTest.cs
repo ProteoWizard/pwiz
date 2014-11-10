@@ -168,7 +168,7 @@ namespace pwiz.SkylineTestFunctional
             var docCurrent = SkylineWindow.Document;
             // Select the heavyR peptide
             PeptideTreeNode nodePepTree = null;
-            IdentityPath pathPep = docCurrent.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            IdentityPath pathPep = docCurrent.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             RunUI(() =>
                 {
                     sequenceTree.SelectedPath = pathPep;
@@ -196,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 AssertLibInfo(docCurrent, nodeGroup);
             // Which means all transition groups should now have spectrum info
-            foreach (var nodeGroup in docCurrent.TransitionGroups)
+            foreach (var nodeGroup in docCurrent.PeptideTransitionGroups)
                 AssertLibInfo(docCurrent, nodeGroup);
 
             // New document
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(pasteFilteredPeptideDlg.NoDialog);
             Assert.IsTrue(WaitForCondition(() => SkylineWindow.Document.PeptideCount == setPeptides.Count),
                 string.Format("Expecting {0} peptides, found {1}.", setPeptides.Count, SkylineWindow.Document.PeptideCount));
-            Assert.AreEqual(setPeptides.Count, SkylineWindow.Document.TransitionGroupCount,
+            Assert.AreEqual(setPeptides.Count, SkylineWindow.Document.PeptideTransitionGroupCount,
                 "Expecting precursors for peptides matched to library spectrum.");
         }
 
@@ -328,16 +328,16 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsTrue(WaitForCondition(() => SkylineWindow.Document.PeptideCount == peptideCount),
                 string.Format("Expecting {0} peptides, found {1}.", peptideCount, SkylineWindow.Document.PeptideCount));
-            if (peptideCount - missingSpectraCount != SkylineWindow.Document.TransitionGroupCount)
+            if (peptideCount - missingSpectraCount != SkylineWindow.Document.PeptideTransitionGroupCount)
             {
-                string peptideSeqs = string.Join(", ", (from nodeGroup in SkylineWindow.Document.TransitionGroups
+                string peptideSeqs = string.Join(", ", (from nodeGroup in SkylineWindow.Document.PeptideTransitionGroups
                                                        select nodeGroup.TransitionGroup.Peptide.Sequence).ToArray());
-                Assert.AreEqual(peptideCount - missingSpectraCount, SkylineWindow.Document.TransitionGroupCount,
+                Assert.AreEqual(peptideCount - missingSpectraCount, SkylineWindow.Document.PeptideTransitionGroupCount,
                     string.Format("Expecting precursors for peptides matched to library spectrum. Found precursors for {0}.", peptideSeqs));                
             }
 
             var docCurrent = SkylineWindow.Document;
-            foreach (var nodeGroup in docCurrent.TransitionGroups)
+            foreach (var nodeGroup in docCurrent.PeptideTransitionGroups)
                 AssertLibInfo(docCurrent, nodeGroup);
         }
 

@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Util
         /// <returns>Returns true if the checksum values is successflly calculated</returns>
         public bool TryMakeForString(string s)
         {
-            return !string.IsNullOrEmpty(s) && TryMakeForBuff(Encoding.Default.GetBytes(s));
+            return !string.IsNullOrEmpty(s) && TryMakeForBuff(Encoding.UTF8.GetBytes(s));
         }
 
         /// <summary>

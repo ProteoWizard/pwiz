@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestA
         private static void ValidateDecoys(SrmDocument document, SrmDocument decoysDoc, bool modifiesSequences)
         {
             AssertEx.IsDocumentState(decoysDoc, 1, document.PeptideGroupCount + 1, document.PeptideCount*2,
-                document.TransitionGroupCount*2, document.TransitionCount*2);
+                document.PeptideTransitionGroupCount*2, document.PeptideTransitionCount*2);
 
             // Check for the existence of the Decoys peptide group and that everything under it is marked as a decoy. 
             var nodePeptideGroupDecoy = decoysDoc.PeptideGroups.Single(nodePeptideGroup => nodePeptideGroup.IsDecoy);
@@ -88,9 +88,9 @@ namespace pwiz.SkylineTestA
                         SequenceMassCalc.NormalizeModifiedSequence(nodePep.SourceKey.ModifiedSequence));
                     if (nodePep.HasExplicitMods)
                         Assert.IsNotNull(nodePep.SourceKey.ExplicitMods);
-                    Assert.IsTrue(dictModsToPep.TryGetValue(nodePep.LookupModifiedSequence, out nodePepSource));
+                    Assert.IsTrue(dictModsToPep.TryGetValue(nodePep.SourceTextId, out nodePepSource));
                     var sourceKey = new ModifiedSequenceMods(nodePepSource.Peptide.Sequence, nodePepSource.ExplicitMods);
-                    Assert.AreEqual(sourceKey.ExplicitMods, nodePep.LookupMods);
+                    Assert.AreEqual(sourceKey.ExplicitMods, nodePep.SourceExplicitMods);
                 }
                 for (int i = 0; i < nodePep.TransitionGroupCount; i++)
                 {

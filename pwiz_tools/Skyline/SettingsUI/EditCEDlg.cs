@@ -363,7 +363,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (regression == null)
                     continue;
 
-                foreach (var nodeGroup in document.TransitionGroups)
+                foreach (var nodeGroup in document.MoleculeTransitionGroups)
                 {
                     int charge = nodeGroup.TransitionGroup.PrecursorCharge;
                     if (arrayData[charge] == null)

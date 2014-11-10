@@ -1296,7 +1296,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     newDoc = pepMatcher.AddPeptides(newDoc, null, toPath,
                                       out selectedPath);
-                    if (newDoc.TransitionGroupCount == doc.TransitionGroupCount)
+                    if (newDoc.PeptideTransitionGroupCount == doc.PeptideTransitionGroupCount)
                         return doc;
                     if(!_matcher.HasMatches)
                             return newDoc;
@@ -1413,7 +1413,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Calculate changes that will occur.
             var peptideCountDiff = newDocument.PeptideCount - startingDocument.PeptideCount;
-            var groupCountDiff = newDocument.TransitionGroupCount - startingDocument.TransitionGroupCount;
+            var groupCountDiff = newDocument.PeptideTransitionGroupCount - startingDocument.PeptideTransitionGroupCount;
             if (peptideCountDiff + groupCountDiff == 0)
             {
                 MessageDlg.Show(this, Resources.ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document);
@@ -1424,7 +1424,7 @@ namespace pwiz.Skyline.SettingsUI
                 : string.Empty;
             string msg = string.Format(Resources.ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document,
                                         proteins, peptideCountDiff, groupCountDiff,
-                                        newDocument.TransitionCount - startingDocument.TransitionCount);
+                                        newDocument.PeptideTransitionCount - startingDocument.PeptideTransitionCount);
             var numSkipped = pepMatcher.SkippedPeptideCount;          
             var hasSkipped = numSkipped > 0;
             var numUnmatchedPeptides = PeptidesCount - numMatchedPeptides;
@@ -1478,7 +1478,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     var newDoc = doc;
                     newDoc = pepMatcher.AddPeptides(newDoc, null, toPath, out selectedPath);
-                    if (newDoc.TransitionGroupCount == doc.TransitionGroupCount)
+                    if (newDoc.PeptideTransitionGroupCount == doc.PeptideTransitionGroupCount)
                         return doc;
                     if (!_matcher.HasMatches)
                         return newDoc;

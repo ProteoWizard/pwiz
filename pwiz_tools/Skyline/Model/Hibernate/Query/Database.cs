@@ -214,15 +214,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 SaveResults(_session, docInfo);
 
                 // Progress reporting numbers
-                int peptideCount = srmDocument.PeptideCount;
+                int peptideCount = srmDocument.MoleculeCount;
                 int peptideTotal = 0;
 
-                foreach (PeptideGroupDocNode nodeGroup in srmDocument.PeptideGroups)
+                foreach (PeptideGroupDocNode nodeGroup in srmDocument.MoleculeGroups)
                 {
                     PeptideGroup peptideGroup = nodeGroup.PeptideGroup;
                     DbProtein dbProtein = new DbProtein(nodeGroup.ProteinMetadata)
                     {
-                        Sequence = peptideGroup.Sequence,
+                        Sequence = nodeGroup.IsProteomic ? peptideGroup.Sequence : nodeGroup.Name,
                         Note = nodeGroup.Note
                     };
                     AddAnnotations(docInfo, dbProtein, nodeGroup.Annotations);
@@ -318,9 +318,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             DbProtein dbProtein, PeptideDocNode nodePeptide)
         {
             Peptide peptide = nodePeptide.Peptide;
-            string seq = peptide.Sequence;
-            string seqModified = nodePeptide.ModifiedSequenceDisplay;
-            string seqModKey = docInfo.Settings.GetModifiedSequence(nodePeptide);
+            string seq = nodePeptide.RawUnmodifiedTextId;   // Returns Sequence for peptides, DisplayName for small molecules
+            string seqModified = nodePeptide.RawTextIdDisplay;  // Returns ModifiedSequenceDisplay for peptides, DisplayName for small molecules  (CONSIDER: some other value for small molecules?  Formula if name already use in DisplayName?)
             Assume.IsNotNull(seqModified);
             DbPeptide dbPeptide = new DbPeptide
             {
@@ -336,9 +335,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 AverageMeasuredRetentionTime = nodePeptide.AverageMeasuredRetentionTime,
             };
             double? scoreCalc = null;
-            if (docInfo.PeptidePrediction.RetentionTime != null)
+            // FUTURE: Allow predicted retention times for small molecules
+            if (docInfo.PeptidePrediction.RetentionTime != null && nodePeptide.IsProteomic)
             {
-                scoreCalc = docInfo.PeptidePrediction.RetentionTime.Calculator.ScoreSequence(seqModKey);
+                scoreCalc = docInfo.PeptidePrediction.RetentionTime.Calculator.ScoreSequence(nodePeptide.RawTextId);
                 dbPeptide.RetentionTimeCalculatorScore = scoreCalc;
                 if (scoreCalc.HasValue)
                 {
@@ -465,8 +465,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             var predictTran = docInfo.Settings.TransitionSettings.Prediction;
 
             var calcPre = docInfo.Settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePeptide.ExplicitMods);
-            string seq = nodeGroup.TransitionGroup.Peptide.Sequence;
-            string seqModified = calcPre.GetModifiedSequence(seq, true);
+            string seq = nodeGroup.TransitionGroup.Peptide.TextId; // Returns Sequence for peptides, custom ion name for small molecules
+            string seqModified = nodeGroup.TransitionGroup.Peptide.IsCustomIon ? TextUtil.EXCEL_NA : calcPre.GetModifiedSequence(seq, true);
 
             TransitionGroup tranGroup = nodeGroup.TransitionGroup;
             IsotopeLabelType labelType = tranGroup.LabelType;
@@ -476,7 +476,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             ModifiedSequence = seqModified,
                                             Charge = tranGroup.PrecursorCharge,
                                             IsotopeLabelType = tranGroup.LabelType,
-                                            NeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeGroup.PrecursorMz, tranGroup.PrecursorCharge)),
+                                            NeutralMass = nodeGroup.GetPrecursorIonPersistentNeutralMass(),
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
                                             Note = nodeGroup.Note,
                                             IsDecoy = nodeGroup.IsDecoy,
@@ -666,7 +666,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                           {
                                               Precursor = dbPrecursor,
                                               ProductCharge = transition.Charge,
-                                              ProductNeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeTran.Mz, transition.Charge)),
+                                              ProductNeutralMass = nodeTran.GetIonPersistentNeutralMass(),
                                               ProductMz = SequenceMassCalc.PersistentMZ(nodeTran.Mz),
                                               FragmentIon = fragmentIon,
                                               FragmentIonType = transition.IonType.ToString(),
@@ -823,7 +823,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     for (int i = 0; i < MeasuredResults.Chromatograms.Count; i++)
                     {
                         var dictTotalAreas = new Dictionary<IsotopeLabelType, double>();
-                        foreach (var nodeGroup in srmDocument.TransitionGroups)
+                        foreach (var nodeGroup in srmDocument.MoleculeTransitionGroups)
                         {
                             // It should not be possible to not have results when
                             // the settings have results, but just to be safe

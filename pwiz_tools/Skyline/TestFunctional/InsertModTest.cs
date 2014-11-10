@@ -102,11 +102,11 @@ namespace pwiz.SkylineTestFunctional
                 // Check error and grid cell selection for a bad product m/z
                 VerifyTransitionListError(insertTransDlg, insertListText, 757.420279, 888.8888, 8, 2);
                 // Non-numeric product m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 908.447222, "x", Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number, 1, 2);
+                VerifyTransitionListError(insertTransDlg, insertListText, 908.447222, "x", Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number_, 1, 2);
                 // Check error and grid cell selection for a bad precursor m/z
                 VerifyTransitionListError(insertTransDlg, insertListText, 648.352161, 777.7777, 6, 1);
                 // Non-numeric precursor m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 762.033412, "x", Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number, 0, 1);
+                VerifyTransitionListError(insertTransDlg, insertListText, 762.033412, "x", Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number_, 0, 1);
                 // Empty peptide
                 VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "", Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank, 9, 0);
                 // Bad peptide
@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static int GetLossCount(SrmDocument document, int minLosses)
         {
-            return document.Transitions.Count(nodeTran => nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses);
+            return document.PeptideTransitions.Count(nodeTran => nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses);
         }
 
         private static string I18n(string text)

@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model
                             if (!allowDuplicates)
                                 listMasses.Add(modArr);
                             double mass;
-                            string massString = Encoding.Default.GetString(modArr);
+                            string massString = Encoding.UTF8.GetString(modArr);
                             if (double.TryParse(massString,
                                                 NumberStyles.Float | NumberStyles.AllowThousands,
                                                 CultureInfo.InvariantCulture,
@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Model
         {
             var newMods = MatcherPepMods;
             var docModifications = document.Settings.PeptideSettings.Modifications;
-            var docPeptides = document.Peptides.ToArray();
+            var docPeptides = document.Molecules.ToArray();
             List<StaticMod> lightMods = new List<StaticMod>(docModifications.StaticModifications);
             List<StaticMod> heavyMods = new List<StaticMod>(docModifications.HeavyModifications);
             // Merge light mods.
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Model
         public override PeptideModifications GetDocModifications(SrmDocument document)
         {
             var modsNew = base.GetDocModifications(document);
-            var docPeptides = document.Peptides.ToArray();
+            var docPeptides = document.Molecules.ToArray();
             // Remove any new implicit mods that are not used.
             var prevStaticMods = Settings.PeptideSettings.Modifications.StaticModifications;
             var listLightModsNew = new List<StaticMod>(modsNew.StaticModifications);

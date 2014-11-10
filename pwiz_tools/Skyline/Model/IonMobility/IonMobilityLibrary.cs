@@ -90,9 +90,9 @@ namespace pwiz.Skyline.Model.IonMobility
                 var dbPeptides = _database.GetPeptides().ToList();
                 var persistPeptides = new List<ValidatingIonMobilityPeptide>();
                 var dictPeptides = dbPeptides.ToDictionary(pep => pep.PeptideModSeq);
-                foreach (var peptide in document.Peptides)
+                foreach (var peptide in document.Molecules)
                 {
-                    string modifiedSeq = document.Settings.GetLookupSequence(peptide);
+                    string modifiedSeq = document.Settings.GetSourceTextId(peptide);
                     DbIonMobilityPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {

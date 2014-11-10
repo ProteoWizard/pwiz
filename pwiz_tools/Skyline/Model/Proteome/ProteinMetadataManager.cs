@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.Proteome
 
                 // And finally write back to the document
                 var listProteins = new List<PeptideGroupDocNode>();
-                foreach (PeptideGroupDocNode node in docOrig.PeptideGroups)
+                foreach (PeptideGroupDocNode node in docOrig.MoleculeGroups)
                 {
                     if (_processedNodes.ContainsKey(node.Id.GlobalIndex))
                     {

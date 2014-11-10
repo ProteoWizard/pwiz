@@ -120,6 +120,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                                   ? SequenceTree.ImageId.peptide_lib_decoy
                                   : SequenceTree.ImageId.peptide_decoy);
             }
+            if (!nodePep.IsProteomic)
+            {
+                return (int)SequenceTree.ImageId.molecule;
+            }
             if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
             {
                 return (int) (nodePep.HasLibInfo
@@ -241,9 +245,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // Calculate text sequence values for the peptide display string
             var listTextSequences = new List<TextSequence>();
-
+            if (nodePep.Peptide.IsCustomIon)
+                listTextSequences.Add(CreatePlainTextSequence(nodePep.Peptide.CustomIon.DisplayName, fonts));
             // If no modifications, use a single plain text sequence
-            if (!heavyMods && !listTypeSequences[0].Text.Contains("[")) // Not L10N: For identifying modifications
+            else if (!heavyMods && !listTypeSequences[0].Text.Contains("[")) // Not L10N: For identifying modifications
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
@@ -390,7 +395,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             return new TextSequence
                        {
-                           Text = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true),
+                           Text = nodePep.IsProteomic
+                               ? calc.GetModifiedSequence(nodePep.Peptide.Sequence, true)
+                               : nodePep.Peptide.TextId,
                            Font = fonts.GetModFont(labelType),
                            Color = ModFontHolder.GetModColor(labelType)
                        };
@@ -553,7 +560,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             var mods = DocNode.ExplicitMods;
             var listChildrenNew = new List<DocNode>();
-            foreach (TransitionGroup group in DocNode.Peptide.GetTransitionGroups(DocSettings, mods, useFilter))
+            foreach (TransitionGroup group in DocNode.GetTransitionGroups(DocSettings, mods, useFilter))
             {
                 // The maximum allowable precursor charge may be larger than it makes sense to show
                 if (group.PrecursorCharge <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK ||
@@ -632,6 +639,17 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 Peptide peptide = nodePep.Peptide;
+                SizeF size;
+                if (peptide.IsCustomIon)
+                {
+                    table.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, peptide.CustomIon.Name, rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, peptide.CustomIon.Formula, rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Neutral_Mass,
+                        peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType).ToString(LocalizationHelper.CurrentCulture), rt);
+                    size = table.CalcDimensions(g);
+                    table.Draw(g);
+                    return new Size((int)Math.Round(size.Width + 2), (int)Math.Round(size.Height + 2));
+                }
 
                 if (nodePep.Children.Count > 1)
                 {
@@ -652,7 +670,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (nodePep.Rank.HasValue)
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Rank, nodePep.Rank.Value.ToString(LocalizationHelper.CurrentCulture), rt);
                
-                SizeF size = table.CalcDimensions(g);
+                size = table.CalcDimensions(g);
                 if (draw)
                     table.Draw(g);
 
@@ -683,6 +701,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             foreach (var labelType in settings.PeptideSettings.Modifications.GetModificationTypes())
             {
+                if (nodePep.Peptide.IsCustomIon)
+                    continue;
                 // Only return the modified sequence, if the peptide actually as a child
                 // of this type.
                 if (!nodePep.HasChildType(labelType))
@@ -691,7 +711,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (calc == null)
                     continue;
 
-                string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true);
+                string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true); // Never have to worry about this being a custom ion, we already checked
 
                 // Only return if the modified sequence contains modifications
                 if (modSequence.Contains('[')) // Not L10N

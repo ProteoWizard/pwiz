@@ -59,6 +59,30 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false";  }
         }
 
+        private bool? _testSmallMolecules;
+        public bool TestSmallMolecules
+        {
+            get
+            {
+                if (_testSmallMolecules.HasValue)
+                {
+                    if (Settings.Default.TestSmallMolecules != _testSmallMolecules.Value)
+                        _testSmallMolecules = Settings.Default.TestSmallMolecules;  // Probably changed by IsPauseForScreenShots, honor that
+                }
+                else
+                {
+                    _testSmallMolecules = GetBoolValue("TestSmallMolecules", false); 
+                    Settings.Default.TestSmallMolecules = _testSmallMolecules.Value; // Communicate this value to Skyline via Settings.Default
+                }
+                return _testSmallMolecules.Value;
+            }
+            set
+            {
+                // Communicate this value to Skyline via Settings.Default
+                Settings.Default.TestSmallMolecules = (_testSmallMolecules = value).Value;
+            }
+        }
+
         /// <summary>
         /// Perf tests (long running, huge-data-downloading) should be declared
         /// in the TestPerf namespace so that they can be skipped when the RunPerfTests 
@@ -160,6 +184,9 @@ namespace pwiz.SkylineTestUtil
 //            log.Info(TestContext.TestName + " started");
 
             Settings.Init();
+
+            // ReSharper disable once UnusedVariable
+            var dummy = TestSmallMolecules; // First access turns on the non-proteomic test node behavior if needed
 
             STOPWATCH.Restart();
             Initialize();

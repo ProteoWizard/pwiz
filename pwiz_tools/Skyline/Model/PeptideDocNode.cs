@@ -106,15 +106,42 @@ namespace pwiz.Skyline.Model
 
         public string ModifiedSequenceDisplay { get; private set; }
 
-        public string LookupSequence { get { return SourceKey != null ? SourceKey.Sequence : Peptide.Sequence; } }
+        public string RawTextId { get { return CustomDisplayNameOrText(ModifiedSequence); } }
 
-        public ExplicitMods LookupMods { get { return SourceKey != null ? SourceKey.ExplicitMods : ExplicitMods; }}
+        public string RawUnmodifiedTextId { get { return CustomDisplayNameOrText(Peptide.Sequence); }}
 
-        public string LookupModifiedSequence { get { return SourceKey != null ? SourceKey.ModifiedSequence : ModifiedSequence; } }
+        public string RawTextIdDisplay { get { return CustomDisplayNameOrText(ModifiedSequenceDisplay); } }
+
+        private string CustomDisplayNameOrText(string text)
+        {
+            return Peptide.IsCustomIon ? Peptide.CustomIon.DisplayName : text;
+        }
+
+        /// <summary>
+        /// For decoy peptides, returns modified sequence of the source peptide
+        /// For non-decoy peptides, returns modified sequence
+        /// For non-peptides, returns the display name (Name or Formula or masses)
+        /// </summary>
+        public string SourceTextId { get { return SourceKey != null ? SourceKey.ModifiedSequence : RawTextId; } }
+
+        /// <summary>
+        /// For decoy peptides, returns unmodified sequence of the source peptide
+        /// For non-decoy peptides, returns unmodified sequence
+        /// For non-peptides, returns the display name (Name or Formula or masses)
+        /// </summary>
+        public string SourceUnmodifiedTextId { get { return SourceKey != null ? SourceKey.Sequence : RawUnmodifiedTextId; } }
+
+        /// <summary>
+        /// Explicit modifications for this peptide or a source peptide for a decoy
+        /// Combined with SourceUnmodifiedTextId to form a unique key
+        /// </summary>
+        public ExplicitMods SourceExplicitMods { get { return SourceKey != null ? SourceKey.ExplicitMods : ExplicitMods; } }
 
         public bool HasExplicitMods { get { return ExplicitMods != null; } }
 
         public bool HasVariableMods { get { return HasExplicitMods && ExplicitMods.IsVariableStaticMods; } }
+
+        public bool IsProteomic { get { return !Peptide.IsCustomIon; } }
 
         public bool AreVariableModsPossible(int maxVariableMods, IList<StaticMod> modsVarAvailable)
         {
@@ -390,6 +417,9 @@ namespace pwiz.Skyline.Model
 
         private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
         {
+            if (!IsProteomic)
+                return this; // Settings have no effect on custom ions
+
             var calcPre = settingsNew.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
             string modifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
             string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);
@@ -432,6 +462,35 @@ namespace pwiz.Skyline.Model
                                                      im.Results = prop;
                                                      im.BestResult = im.CalcBestResult();
                                                  });
+        }
+
+        // Note: this returns a node with a different ID, which has to be Inserted rather than Replaced
+        public PeptideDocNode ChangeCustomIon(SrmSettings settings, DocNodeCustomIon customIon, int charge)
+        {
+            var peptide = new Peptide(customIon);
+            var children = new List<TransitionGroupDocNode>();
+            foreach (var child in TransitionGroups)
+            {
+                children.Add(ChangeTransitionGroup(settings, child, new TransitionGroup(peptide, charge,
+                    child.TransitionGroup.LabelType, true, child.TransitionGroup.DecoyMassShift)));
+            }
+            return new PeptideDocNode(peptide, settings, ExplicitMods, SourceKey, children.ToArray(), AutoManageChildren);
+        }
+
+        private TransitionGroupDocNode ChangeTransitionGroup(SrmSettings settings, TransitionGroupDocNode nodeGroup, TransitionGroup group)
+        {
+            var children = new List<TransitionDocNode>();
+            foreach (var nodeTran in nodeGroup.Transitions)
+            {
+                var transition = nodeTran.Transition;
+                var tranNew = new Transition(group, transition.IonType, transition.CleavageOffset,
+                    transition.MassIndex, transition.Charge, transition.DecoyMassShift, transition.CustomIon);
+                var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
+                    nodeTran.GetIonMass(), nodeTran.IsotopeDistInfo, nodeTran.LibInfo, nodeTran.Results);
+                children.Add(nodeTranNew);
+            }
+            return new TransitionGroupDocNode(group, nodeGroup.Annotations, settings, ExplicitMods, nodeGroup.LibInfo, nodeGroup.Results,
+                children.ToArray(), AutoManageChildren);
         }
 
         #endregion
@@ -616,7 +675,7 @@ namespace pwiz.Skyline.Model
                                              ReferenceEquals(rankId, LibrarySpec.PEP_RANK_PICKED_INTENSITY);
 
                 Dictionary<Identity, DocNode> mapIdToChild = CreateIdContentToChildMap();
-                foreach (TransitionGroup tranGroup in Peptide.GetTransitionGroups(settingsNew, explicitMods, true))
+                foreach (TransitionGroup tranGroup in GetTransitionGroups(settingsNew, explicitMods, true))
                 {
                     TransitionGroupDocNode nodeGroup;
                     SrmSettingsDiff diffNode = diff;
@@ -725,6 +784,19 @@ namespace pwiz.Skyline.Model
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
             return nodeResult;
+        }
+
+        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter)
+        {
+            return Peptide.GetTransitionGroups(settings, this, explicitMods, useFilter);
+        }
+
+        public TransitionGroup[] GetNonProteomicChildren()
+        {
+            return
+                TransitionGroups.Where(tranGroup => tranGroup.TransitionGroup.IsCustomIon)
+                    .Select(groupNode => groupNode.TransitionGroup)
+                    .ToArray();
         }
 
         /// <summary>
@@ -906,12 +978,13 @@ namespace pwiz.Skyline.Model
                                              transition.CleavageOffset,
                                              transition.MassIndex,
                                              transition.Charge,
-                                             decoyMassShift);
+                                             decoyMassShift,
+                                             tranGroup.Peptide.CustomIon);
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
                 double massH;
                 if (tranNew.IsCustom())
                 {
-                    massH = tranNew.CustomIon.GetMassH(settings.TransitionSettings.Prediction.FragmentMassType);
+                    massH = tranNew.CustomIon.GetMass(settings.TransitionSettings.Prediction.FragmentMassType);
                 }
                 else
                 {
@@ -1404,7 +1477,7 @@ namespace pwiz.Skyline.Model
         private struct TransitionKey
         {
             private readonly IonType _ionType;
-            private readonly MeasuredIon _ion;
+            private readonly CustomIon _ion;
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
             private readonly int? _decoyMassShift;

@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model
         }
         public static string GetLocalizedString(this IonType val)
         {
-            return LOCALIZED_VALUES[(int) val + 2]; // To include precursor
+            return LOCALIZED_VALUES[(int) val + 2]; // To include precursor and custom
         }
 
         public static IonType GetEnum(string enumValue)
@@ -96,12 +96,12 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Prioritized list of all possible product ion charges
+        /// Prioritized list of default product ion charges
         /// </summary>
         public static readonly int[] ALL_CHARGES = { 1, 2, 3 };
 
         /// <summary>
-        /// Prioritize, paired list of all possible product ion types
+        /// Prioritize, paired list of non-custom product ion types
         /// </summary>
         public static readonly IonType[] ALL_TYPES =
             {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a};
@@ -121,9 +121,9 @@ namespace pwiz.Skyline.Model
             return type == IonType.precursor;
         }
 
-        public static bool IsCustom(IonType type)
+        public static bool IsCustom(IonType type, TransitionGroup parent)
         {
-            return type == IonType.custom;
+            return type == IonType.custom || (type == IonType.precursor && parent.IsCustomIon);
         }
 
         public static IonType[] GetTypePairs(ICollection<IonType> types)
@@ -210,8 +210,9 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="group">The <see cref="TransitionGroup"/> which the transition represents</param>
         /// <param name="massIndex">Isotope mass shift</param>
-        public Transition(TransitionGroup group, int massIndex)
-            : this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, group.PrecursorCharge)
+        /// <param name="customIon">Non-null if this is a custom transition</param>
+        public Transition(TransitionGroup group, int massIndex, CustomIon customIon = null)
+            :this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, group.PrecursorCharge, null, customIon)
         {            
         }
 
@@ -220,30 +221,33 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public Transition(TransitionGroup group, int charge, MeasuredIon customIon)
+        public Transition(TransitionGroup group, int charge, int? massIndex, CustomIon customIon, IonType type=IonType.custom)
+            :this(group, type, null, massIndex, charge, null, customIon)
         {
-            _group = group;
-            IonType = IonType.custom;
-            Charge = charge;
-            CustomIon = customIon;
         }
 
-        public Transition(TransitionGroup group, IonType type, int offset, int massIndex, int charge, int? decoyMassShift)
+        public Transition(TransitionGroup group, IonType type, int? offset, int? massIndex, int charge, int? decoyMassShift, CustomIon customIon = null)
         {
             _group = group;
 
             IonType = type;
-            CleavageOffset = offset;
-            MassIndex = massIndex;
+            CleavageOffset = offset ?? 0;
+            MassIndex = massIndex ?? 0;
             Charge = charge;
             DecoyMassShift = decoyMassShift;
-
+            if (customIon == null && IsCustom(type, group) && IsPrecursor(type))
+                CustomIon = group.Peptide.CustomIon;
+            else
+                CustomIon = customIon;
             // Derived values
-            Peptide peptide = group.Peptide;
-            Ordinal = OffsetToOrdinal(type, offset, peptide.Length);
-            AA = (IsNTerminal() ? peptide.Sequence[offset] :
-                peptide.Sequence[offset + 1]);
-
+            if (!IsCustom(type, group))
+            {
+                Peptide peptide = group.Peptide;
+                Ordinal = OffsetToOrdinal(type, (int)offset, peptide.Length);
+                AA = (IsNTerminal()
+                    ? peptide.Sequence[(int)offset]
+                    : peptide.Sequence[(int)offset + 1]);
+            }
             Validate();
         }
 
@@ -259,7 +263,7 @@ namespace pwiz.Skyline.Model
         public int MassIndex { get; private set; }
         public int? DecoyMassShift { get; private set; }
 
-        public MeasuredIon CustomIon { get; private set; }
+        public CustomIon CustomIon { get; private set; } // May be instantiated as a DocNodeCustomIon or SettingsCustomIon
 
         // Derived values
         public int Ordinal { get; private set; }
@@ -272,9 +276,8 @@ namespace pwiz.Skyline.Model
 
         public string GetFragmentIonName(CultureInfo cultureInfo)
         {
-            if (IsCustom())
-                return CustomIon.Name;
-
+            if (IsCustom() && !IsPrecursor())
+                return CustomIon.ToString();
             string ionName = ReferenceEquals(cultureInfo, CultureInfo.InvariantCulture)
                 ? IonType.ToString() : IonType.GetLocalizedString();
             if (!IsPrecursor())
@@ -299,7 +302,12 @@ namespace pwiz.Skyline.Model
 
         public bool IsCustom()
         {
-            return IsCustom(IonType);
+            return IsCustom(IonType, Group);
+        }
+
+        public bool IsCustomAndEditable()
+        {
+            return !IsPrecursor() && IsCustom() && CustomIon is DocNodeCustomIon;
         }
 
         public char FragmentNTermAA
@@ -334,29 +342,46 @@ namespace pwiz.Skyline.Model
                     string.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
                                                              Charge, MIN_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
             }
-
-            if (Ordinal < 1)
-                throw new InvalidDataException(string.Format(Resources.Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__, Ordinal));
-            if (IsPrecursor())
+            if (CustomIon != null)
             {
-                if (Ordinal != Group.Peptide.Length)
-                    throw new InvalidDataException(string.Format(Resources.Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide));
-            }
-            else if (Ordinal > Group.Peptide.Length - 1)
-            {
-                throw new InvalidDataException(
-                    string.Format(Resources.Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__,
-                                                             Ordinal, Group.Peptide.Length - 1, Group.Peptide.Sequence));
-            }
-
-            if (DecoyMassShift.HasValue)
-            {
-                if ((DecoyMassShift.Value < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift.Value > MAX_PRODUCT_DECOY_MASS_SHIFT) &&
-                        !MPROPHET_REVERSED_MASS_SHIFTS.Contains(i => i == DecoyMassShift.Value))
+                if (!IsCustom())
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__,
-                                      DecoyMassShift, MIN_PRODUCT_DECOY_MASS_SHIFT, MAX_PRODUCT_DECOY_MASS_SHIFT));
+                        string.Format(
+                            Resources.Transition_Validate_A_transition_of_ion_type__0__can_t_have_a_custom_ion, IonType));
+                }    
+            }
+            else if (IsCustom())
+            {
+                    throw new InvalidDataException(
+                        string.Format(
+                           Resources.Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_, IonType));
+            }
+            else
+            {
+                if (Ordinal < 1)
+                    throw new InvalidDataException(string.Format(Resources.Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__, Ordinal));
+                if (IsPrecursor())
+                {
+                    if (Ordinal != Group.Peptide.Length)
+                        throw new InvalidDataException(string.Format(Resources.Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide));
+                }
+                else if (Ordinal > Group.Peptide.Length - 1)
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__,
+                            Ordinal, Group.Peptide.Length - 1, Group.Peptide.Sequence));
+                }
+
+                if (DecoyMassShift.HasValue)
+                {
+                    if ((DecoyMassShift.Value < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift.Value > MAX_PRODUCT_DECOY_MASS_SHIFT) &&
+                        !MPROPHET_REVERSED_MASS_SHIFTS.Contains(i => i == DecoyMassShift.Value))
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__,
+                                DecoyMassShift, MIN_PRODUCT_DECOY_MASS_SHIFT, MAX_PRODUCT_DECOY_MASS_SHIFT));
+                    }
                 }
             }
         }
@@ -367,15 +392,10 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool Equivalent(Transition obj)
         {
-            if (IsCustom() && obj.IsCustom())
-            {
-                return Equals(obj.IonType, IonType) &&
-                       Equals(Charge, obj.Charge) &&
-                       Equals(CustomIon, obj.CustomIon);
-            }
             return Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
                 obj.Charge == Charge &&
+                Equals(obj.CustomIon, CustomIon) &&
                 (obj.DecoyMassShift.Equals(DecoyMassShift) || 
                 // Deal with strange case of mProphet golden standard data set
                 (obj.DecoyMassShift.HasValue && DecoyMassShift.HasValue &&
@@ -389,12 +409,9 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (IsCustom())
-                return Equals(CustomIon, obj.CustomIon) &&
-                       Equals(Charge, obj.Charge);
-            
             return Equals(obj._group, _group) &&
-                Equals(obj.IonType, IonType) &&
+                obj.IonType == IonType &&
+                Equals(obj.CustomIon, CustomIon) && 
                 obj.CleavageOffset == CleavageOffset &&
                 obj.MassIndex == MassIndex &&
                 obj.Charge == Charge && 
@@ -432,6 +449,10 @@ namespace pwiz.Skyline.Model
                        GetMassIndexText(MassIndex);
             }
 
+            if (IsCustom())
+            {
+                return CustomIon.ToString();
+            }
             return string.Format("{0} - {1}{2}{3}{4}", // Not L10N
                                  AA,
                                  IonType.ToString().ToLowerInvariant(),

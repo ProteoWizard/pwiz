@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(7, GetLossCount(docLibLoss, 1));
 
             string lossLabel = "-" + Math.Round(phosphoLossMod.Losses[0].MonoisotopicMass, 1);
-            for (int i = 0; i < docLibLoss.TransitionGroupCount; i++)
+            for (int i = 0; i < docLibLoss.PeptideTransitionGroupCount; i++)
             {
                 var pathTranGroup = docLibLoss.GetPathTo((int) SrmDocument.Level.TransitionGroups, i);
                 var nodeGroup = (TransitionGroupDocNode) docLibLoss.FindNode(pathTranGroup);
@@ -160,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
             var docComplex = WaitForDocumentChange(docLibLoss);
 
             // The document has 2 variable mod peptides at the protein terminus
-            Assert.AreEqual(docLibLoss.TransitionGroupCount*2 - 2, docComplex.TransitionGroupCount);
+            Assert.AreEqual(docLibLoss.PeptideTransitionGroupCount*2 - 2, docComplex.PeptideTransitionGroupCount);
             Assert.AreEqual(4, GetLossCount(docComplex, 2));
             Assert.AreEqual(16, GetLossCount(docComplex, 1));
             foreach (var nodePep in docComplex.Peptides)
@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
             // CONSIDER: Can't check cloned because of libraries.  Maybe add a new method for this
             // AssertEx.Serializable(docComplex, AssertEx.DocumentCloned);
 
-            SelectNode(SrmDocument.Level.Peptides, 1);
+            SelectNode(SrmDocument.Level.Molecules, 1);
             WaitForGraphs();
 
             // Verify that the ion labels in the graph match those in the tree view
@@ -215,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
         private static int GetLossCount(SrmDocument document, int minLosses)
         {
             int count = 0;
-            foreach (var nodeTran in document.Transitions)
+            foreach (var nodeTran in document.PeptideTransitions)
             {
                 if (nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses)
                     count++;

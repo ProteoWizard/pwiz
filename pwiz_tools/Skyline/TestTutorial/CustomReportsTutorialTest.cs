@@ -481,7 +481,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForConditionUI(() => previewReportDlg.IsComplete);
                 RunUI(() =>
                 {
-                    Assert.AreEqual(20, previewReportDlg.RowCount);
+                    Assert.AreEqual(20 + (TestSmallMolecules ? 1 : 0), previewReportDlg.RowCount);
                     Assert.AreEqual(58, previewReportDlg.ColumnCount);
                 });
                 PauseForScreenShot<DocumentGridForm>("Preview form", 8);
@@ -550,8 +550,9 @@ namespace pwiz.SkylineTestTutorial
                 exportReportDlg1.ReportName = customReportName; // Not L10N
             });
             var previewDlg = ShowDialog<DocumentGridForm>(exportReportDlg1.ShowPreview);
-            WaitForCondition(() => previewDlg.RowCount == 20);
-            Assert.AreEqual(20, previewDlg.RowCount);
+            var expectedRows = 20 + (TestSmallMolecules ? 1 : 0);
+            WaitForCondition(() => previewDlg.RowCount == expectedRows);
+            Assert.AreEqual(expectedRows, previewDlg.RowCount);
             Assert.AreEqual(58, previewDlg.ColumnCount);
             RunUI(previewDlg.Close);
 
@@ -621,7 +622,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
-                    Assert.AreEqual(rowCount / 2, previewReportDlg.RowCount);
+                    Assert.AreEqual((rowCount / 2) + (TestSmallMolecules ? 1 : 0), previewReportDlg.RowCount);
                 });
                 PauseForScreenShot<DocumentGridForm>("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"", 17);
                 OkDialog(previewReportDlg, previewReportDlg.Close);

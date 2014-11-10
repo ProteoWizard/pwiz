@@ -391,7 +391,7 @@ namespace pwiz.SkylineTestA
                 ++i;
             }
             int j = 0;
-            foreach (TransitionGroupDocNode groupNode in docNew.TransitionGroups)
+            foreach (TransitionGroupDocNode groupNode in docNew.PeptideTransitionGroups)
             {
                 var groupChromInfo = groupNode.ChromInfos.ToList()[fileId];
                 // Make sure charge on each transition group is correct

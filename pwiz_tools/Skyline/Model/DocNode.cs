@@ -664,6 +664,8 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Creates a clone of the current node with a list of new children added
         /// at the end of its child list.
+        /// Special case: if the last member of the child list is our special nonproteomic
+        /// test node, ensure that it remains the last member.
         /// </summary>
         /// <param name="childrenAdd">New children to add</param>
         /// <returns>A new parent node with the children at the end of its child list</returns>
@@ -674,11 +676,19 @@ namespace pwiz.Skyline.Model
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
 
+            // Support for small molecule work - most tests have a special node added to see if it breaks anything
+            bool hasSpecialTestNode = childrenNew.Any() && SrmDocument.IsSpecialNonProteomicTestDocNode(childrenNew.Last());
+            if (hasSpecialTestNode)
+                childrenNew.RemoveAt(childrenNew.Count-1);
+
             foreach(DocNode childAdd in childrenAdd)
             {
                 childrenNew.Add(childAdd);
                 AddCounts(childAdd, nodeCountStack);
             }
+
+            if (hasSpecialTestNode)
+                childrenNew.Add(Children.Last()); // Restorethe special test node, at the end
 
             return ChangeChildren(childrenNew, nodeCountStack);
         }

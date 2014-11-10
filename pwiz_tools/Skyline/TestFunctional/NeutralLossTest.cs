@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var docLossMultiHeavy = WaitForDocumentChange(docLossMultiAdded);
-            Assert.AreEqual(4, docLossMultiHeavy.TransitionGroupCount);
+            Assert.AreEqual(4, docLossMultiHeavy.PeptideTransitionGroupCount);
             Assert.AreEqual(8, GetLossCount(docLossMultiHeavy, 1));
             Assert.AreEqual(2, GetLossCount(docLossMultiHeavy, 2));
 
@@ -322,7 +322,7 @@ namespace pwiz.SkylineTestFunctional
         private static int GetLossCount(SrmDocument document, int minLosses)
         {
             int count = 0;
-            foreach (var nodeTran in document.Transitions)
+            foreach (var nodeTran in document.PeptideTransitions)
             {
                 if (nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses)
                     count++;

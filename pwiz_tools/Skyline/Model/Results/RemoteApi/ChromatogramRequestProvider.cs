@@ -67,9 +67,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return chromatogramRequestDocument;
             }
             var peptidesBySequence = new Dictionary<string, PeptideDocNode>();
-            foreach (var peptide in _srmDocument.Peptides)
+            foreach (var peptide in _srmDocument.Molecules)
             {
-                peptidesBySequence[peptide.ModifiedSequence] = peptide;
+                peptidesBySequence[peptide.RawTextId] = peptide;
             }
             var chromatogramGroups = new List<ChromatogramRequestDocumentChromatogramGroup>();
             foreach (var chromatogramGroup in chromatogramRequestDocument.ChromatogramGroup)

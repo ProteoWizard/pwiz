@@ -28,35 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditStaticModDlg));
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.labelChemicalFormula = new System.Windows.Forms.Label();
-            this.textFormula = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.textMonoMass = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.textAverageMass = new System.Windows.Forms.TextBox();
             this.labelAA = new System.Windows.Forms.Label();
             this.comboAA = new System.Windows.Forms.ComboBox();
             this.comboTerm = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.btnFormulaPopup = new System.Windows.Forms.Button();
-            this.contextFormula = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.hContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.h2ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.c13ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.nContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.n15ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.oContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.o18ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panelFormula = new System.Windows.Forms.Panel();
             this.panelAtoms = new System.Windows.Forms.Panel();
             this.cb2H = new System.Windows.Forms.CheckBox();
             this.cb18O = new System.Windows.Forms.CheckBox();
@@ -75,8 +55,6 @@
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
-            this.contextFormula.SuspendLayout();
-            this.panelFormula.SuspendLayout();
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
             this.toolBarLosses.SuspendLayout();
@@ -106,38 +84,6 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // labelChemicalFormula
-            // 
-            resources.ApplyResources(this.labelChemicalFormula, "labelChemicalFormula");
-            this.labelChemicalFormula.Name = "labelChemicalFormula";
-            // 
-            // textFormula
-            // 
-            resources.ApplyResources(this.textFormula, "textFormula");
-            this.textFormula.Name = "textFormula";
-            this.textFormula.TextChanged += new System.EventHandler(this.textFormula_TextChanged);
-            this.textFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textFormula_KeyPress);
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
-            // textMonoMass
-            // 
-            resources.ApplyResources(this.textMonoMass, "textMonoMass");
-            this.textMonoMass.Name = "textMonoMass";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            // 
-            // textAverageMass
-            // 
-            resources.ApplyResources(this.textAverageMass, "textAverageMass");
-            this.textAverageMass.Name = "textAverageMass";
-            // 
             // labelAA
             // 
             resources.ApplyResources(this.labelAA, "labelAA");
@@ -163,96 +109,6 @@
             // 
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
-            // 
-            // btnFormulaPopup
-            // 
-            resources.ApplyResources(this.btnFormulaPopup, "btnFormulaPopup");
-            this.btnFormulaPopup.Name = "btnFormulaPopup";
-            this.btnFormulaPopup.UseVisualStyleBackColor = true;
-            this.btnFormulaPopup.Click += new System.EventHandler(this.btnFormulaPopup_Click);
-            // 
-            // contextFormula
-            // 
-            this.contextFormula.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.hContextMenuItem,
-            this.h2ContextMenuItem,
-            this.cContextMenuItem,
-            this.c13ContextMenuItem,
-            this.nContextMenuItem,
-            this.n15ContextMenuItem,
-            this.oContextMenuItem,
-            this.o18ToolStripMenuItem,
-            this.pContextMenuItem,
-            this.sContextMenuItem});
-            this.contextFormula.Name = "contextMenuStrip1";
-            resources.ApplyResources(this.contextFormula, "contextFormula");
-            // 
-            // hContextMenuItem
-            // 
-            this.hContextMenuItem.Name = "hContextMenuItem";
-            resources.ApplyResources(this.hContextMenuItem, "hContextMenuItem");
-            this.hContextMenuItem.Click += new System.EventHandler(this.hContextMenuItem_Click);
-            // 
-            // h2ContextMenuItem
-            // 
-            this.h2ContextMenuItem.Name = "h2ContextMenuItem";
-            resources.ApplyResources(this.h2ContextMenuItem, "h2ContextMenuItem");
-            this.h2ContextMenuItem.Click += new System.EventHandler(this.h2ContextMenuItem_Click);
-            // 
-            // cContextMenuItem
-            // 
-            this.cContextMenuItem.Name = "cContextMenuItem";
-            resources.ApplyResources(this.cContextMenuItem, "cContextMenuItem");
-            this.cContextMenuItem.Click += new System.EventHandler(this.cContextMenuItem_Click);
-            // 
-            // c13ContextMenuItem
-            // 
-            this.c13ContextMenuItem.Name = "c13ContextMenuItem";
-            resources.ApplyResources(this.c13ContextMenuItem, "c13ContextMenuItem");
-            this.c13ContextMenuItem.Click += new System.EventHandler(this.c13ContextMenuItem_Click);
-            // 
-            // nContextMenuItem
-            // 
-            this.nContextMenuItem.Name = "nContextMenuItem";
-            resources.ApplyResources(this.nContextMenuItem, "nContextMenuItem");
-            this.nContextMenuItem.Click += new System.EventHandler(this.nContextMenuItem_Click);
-            // 
-            // n15ContextMenuItem
-            // 
-            this.n15ContextMenuItem.Name = "n15ContextMenuItem";
-            resources.ApplyResources(this.n15ContextMenuItem, "n15ContextMenuItem");
-            this.n15ContextMenuItem.Click += new System.EventHandler(this.n15ContextMenuItem_Click);
-            // 
-            // oContextMenuItem
-            // 
-            this.oContextMenuItem.Name = "oContextMenuItem";
-            resources.ApplyResources(this.oContextMenuItem, "oContextMenuItem");
-            this.oContextMenuItem.Click += new System.EventHandler(this.oContextMenuItem_Click);
-            // 
-            // o18ToolStripMenuItem
-            // 
-            this.o18ToolStripMenuItem.Name = "o18ToolStripMenuItem";
-            resources.ApplyResources(this.o18ToolStripMenuItem, "o18ToolStripMenuItem");
-            this.o18ToolStripMenuItem.Click += new System.EventHandler(this.o18ToolStripMenuItem_Click);
-            // 
-            // pContextMenuItem
-            // 
-            this.pContextMenuItem.Name = "pContextMenuItem";
-            resources.ApplyResources(this.pContextMenuItem, "pContextMenuItem");
-            this.pContextMenuItem.Click += new System.EventHandler(this.pContextMenuItem_Click);
-            // 
-            // sContextMenuItem
-            // 
-            this.sContextMenuItem.Name = "sContextMenuItem";
-            resources.ApplyResources(this.sContextMenuItem, "sContextMenuItem");
-            this.sContextMenuItem.Click += new System.EventHandler(this.sContextMenuItem_Click);
-            // 
-            // panelFormula
-            // 
-            this.panelFormula.Controls.Add(this.btnFormulaPopup);
-            this.panelFormula.Controls.Add(this.textFormula);
-            resources.ApplyResources(this.panelFormula, "panelFormula");
-            this.panelFormula.Name = "panelFormula";
             // 
             // panelAtoms
             // 
@@ -396,17 +252,11 @@
             this.Controls.Add(this.cbVariableMod);
             this.Controls.Add(this.labelRelativeRT);
             this.Controls.Add(this.comboRelativeRT);
-            this.Controls.Add(this.panelFormula);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.btnLoss);
             this.Controls.Add(this.comboTerm);
-            this.Controls.Add(this.labelChemicalFormula);
             this.Controls.Add(this.comboAA);
             this.Controls.Add(this.labelAA);
-            this.Controls.Add(this.textAverageMass);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.textMonoMass);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.textName);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCancel);
@@ -418,9 +268,6 @@
             this.MinimizeBox = false;
             this.Name = "EditStaticModDlg";
             this.ShowInTaskbar = false;
-            this.contextFormula.ResumeLayout(false);
-            this.panelFormula.ResumeLayout(false);
-            this.panelFormula.PerformLayout();
             this.panelAtoms.ResumeLayout(false);
             this.panelAtoms.PerformLayout();
             this.panelLoss.ResumeLayout(false);
@@ -438,29 +285,10 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.Label labelChemicalFormula;
-        private System.Windows.Forms.TextBox textFormula;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textMonoMass;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textAverageMass;
         private System.Windows.Forms.Label labelAA;
         private System.Windows.Forms.ComboBox comboAA;
         private System.Windows.Forms.ComboBox comboTerm;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Button btnFormulaPopup;
-        private System.Windows.Forms.ContextMenuStrip contextFormula;
-        private System.Windows.Forms.ToolStripMenuItem hContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem c13ContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem nContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem n15ContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem oContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem o18ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem pContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem sContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem h2ContextMenuItem;
-        private System.Windows.Forms.Panel panelFormula;
         private System.Windows.Forms.Panel panelAtoms;
         private System.Windows.Forms.CheckBox cb13C;
         private System.Windows.Forms.CheckBox cb2H;

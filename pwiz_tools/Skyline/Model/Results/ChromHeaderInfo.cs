@@ -192,8 +192,8 @@ namespace pwiz.Skyline.Model.Results
         private const byte NO_MAX_PEAK = 0xFF;
 
         /// <summary>
-        /// Constructs header struct with SeqIndex and SeqCount left to be initialized
-        /// in a subsequent call to <see cref="CalcSeqIndex"/>.
+        /// Constructs header struct with TextIdIndex and TextIdCount left to be initialized
+        /// in a subsequent call to <see cref="CalcTextIdIndex"/>.
         /// </summary>
         public ChromGroupHeaderInfo5(double precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Cunstructs header struct with all values populated.
         /// </summary>
-        public ChromGroupHeaderInfo5(double precursor, int seqIndex, int seqLen, int fileIndex,
+        public ChromGroupHeaderInfo5(double precursor, int textIdIndex, int textIdLen, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
                                      int numPoints, int compressedSize, long location, FlagValues flags,
@@ -217,8 +217,8 @@ namespace pwiz.Skyline.Model.Results
             : this()
         {
             Precursor = precursor;
-            SeqIndex = seqIndex;
-            SeqLen = CheckUShort(seqLen);
+            TextIdIndex = textIdIndex;
+            TextIdLen = CheckUShort(textIdLen);
             FileIndex = CheckUShort(fileIndex);
             NumTransitions = CheckUShort(numTransitions);
             StartTransitionIndex = startTransitionIndex;
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model.Results
         //          disk from which it gets loaded directly into memory.
         //          The order and size of each element has been very carefully
         //          considered to avoid wasted space due to alignment.
-        public int SeqIndex { get; private set; }
+        public int TextIdIndex { get; private set; }
         public int StartTransitionIndex { get; private set; }
         public int StartPeakIndex { get; private set; }
         public int StartScoreIndex { get; private set; }
@@ -284,7 +284,7 @@ namespace pwiz.Skyline.Model.Results
         public int CompressedSize { get; private set; }
         public ushort FlagBits { get; private set; }
         public ushort FileIndex { get; private set; }
-        public ushort SeqLen { get; private set; }
+        public ushort TextIdLen { get; private set; }
         public ushort NumTransitions { get; private set; }
         public byte NumPeaks { get; private set; }        // The number of peaks stored per chrom should be well under 128
         public byte MaxPeakIndexInternal { get; private set; }    // and MaxPeakIndex needs to be allowed to be -1 or 0xFF
@@ -341,26 +341,26 @@ namespace pwiz.Skyline.Model.Results
             StartScoreIndex = -1;
         }
 
-        public void CalcSeqIndex(string modSeq,
-            Dictionary<string, int> dictSequenceToByteIndex,
-            List<byte> listSeqBytes)
+        public void CalcTextIdIndex(string textId,
+            Dictionary<string, int> dictTextIdToByteIndex,
+            List<byte> listTextIdBytes)
         {
-            if (modSeq == null)
+            if (textId == null)
             {
-                SeqIndex = -1;
-                SeqLen = 0;
+                TextIdIndex = -1;
+                TextIdLen = 0;
             }
             else
             {
-                int modSeqIndex;
-                if (!dictSequenceToByteIndex.TryGetValue(modSeq, out modSeqIndex))
+                int textIdIndex;
+                if (!dictTextIdToByteIndex.TryGetValue(textId, out textIdIndex))
                 {
-                    modSeqIndex = listSeqBytes.Count;
-                    listSeqBytes.AddRange(Encoding.Default.GetBytes(modSeq));
-                    dictSequenceToByteIndex.Add(modSeq, modSeqIndex);
+                    textIdIndex = listTextIdBytes.Count;
+                    listTextIdBytes.AddRange(Encoding.UTF8.GetBytes(textId));
+                    dictTextIdToByteIndex.Add(textId, textIdIndex);
                 }
-                SeqIndex = modSeqIndex;
-                SeqLen = (ushort) modSeq.Length;
+                TextIdIndex = textIdIndex;
+                TextIdLen = (ushort) textId.Length;
             }
         }
 
@@ -1495,9 +1495,9 @@ namespace pwiz.Skyline.Model.Results
         public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0,
             0, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false);
 
-        public ChromKey(byte[] seqBytes,
-                        int seqIndex,
-                        int seqLen,
+        public ChromKey(byte[] textIdBytes,
+                        int textIdIndex,
+                        int textIdLen,
                         double precursor,
                         double product,
                         double extractionWidth,
@@ -1507,7 +1507,7 @@ namespace pwiz.Skyline.Model.Results
                         ChromExtractor extractor,
                         bool calculatedMzs,
                         bool hasScanIds)
-            : this(seqIndex != -1 ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
+            : this(textIdIndex != -1 ? Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen) : null,
                    precursor,
                    ionMobilityValue,
                    ionMobilityExtractionWidth,
@@ -1521,7 +1521,7 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public ChromKey(string modifiedSequence,
+        public ChromKey(string textId,
                         double precursor,
                         double? ionMobilityValue,
                         double ionMobilityExtractionWidth,
@@ -1534,7 +1534,7 @@ namespace pwiz.Skyline.Model.Results
                         bool hasScanIds)
             : this()
         {
-            ModifiedSequence = modifiedSequence;
+            TextId = textId;
             Precursor = precursor;
             IonMobilityValue = (float)(ionMobilityValue ?? 0);
             IonMobilityExtractionWidth = (float)ionMobilityExtractionWidth;
@@ -1547,7 +1547,7 @@ namespace pwiz.Skyline.Model.Results
             HasScanIds = hasScanIds;
         }
 
-        public string ModifiedSequence { get; private set; }
+        public string TextId { get; private set; }  // Modified sequence or custom ion id
         public double Precursor { get; private set; }
         public float IonMobilityValue { get; private set; } // Dimensionless here - depends on source files
         public float IonMobilityExtractionWidth { get; private set; } // Dimensionless here - depends on source files
@@ -1567,7 +1567,7 @@ namespace pwiz.Skyline.Model.Results
         /// <returns>A new ChromKey with adjusted product m/z and cleared CE value</returns>
         public ChromKey ChangeOptimizationStep(int step)
         {
-            return new ChromKey(ModifiedSequence,
+            return new ChromKey(TextId,
                                 Precursor,
                                 IonMobilityValue,
                                 IonMobilityExtractionWidth,
@@ -1585,8 +1585,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            if (ModifiedSequence != null)
-                return string.Format("{0:F04}, {1:F04} im{4:F04} - {2} - {3}", Precursor, Product, Source, ModifiedSequence, IonMobilityValue); // Not L10N
+            if (TextId != null)
+                return string.Format("{0:F04}, {1:F04} im{4:F04} - {2} - {3}", Precursor, Product, Source, TextId, IonMobilityValue); // Not L10N
             return string.Format("{0:F04}, {1:F04} im{3:F04} - {2}", Precursor, Product, Source, IonMobilityValue); // Not L10N
         }
 
@@ -1626,27 +1626,27 @@ namespace pwiz.Skyline.Model.Results
 
         private int ComparePrecursors(ChromKey key, Func<double, double, int> compareMz)
         {
-            // Order by precursor m/z, peptide sequence, extraction method
+            // Order by precursor m/z, peptide sequence/custom ion id, extraction method
             int c = compareMz(Precursor, key.Precursor);
             if (c != 0)
                 return c;
-            c = CompareSequence(key);
+            c = CompareTextId(key);
             if (c != 0)
                 return c;
             return Extractor - key.Extractor;
         }
 
-        private int CompareSequence(ChromKey key)
+        private int CompareTextId(ChromKey key)
         {
-            if (ModifiedSequence != null && key.ModifiedSequence != null)
+            if (TextId != null && key.TextId != null)
             {
-                int c = string.CompareOrdinal(ModifiedSequence, key.ModifiedSequence);
+                int c = string.CompareOrdinal(TextId, key.TextId);
                 if (c != 0)
                     return c;
             }
-            else if (ModifiedSequence != null)
+            else if (TextId != null)
                 return 1;
-            else if (key.ModifiedSequence != null)
+            else if (key.TextId != null)
                 return -1;
             return 0;   // both null
         }

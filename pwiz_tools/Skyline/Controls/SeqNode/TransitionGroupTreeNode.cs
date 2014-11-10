@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             group.GetLibraryInfo(settings, mods, useFilter, ref libInfo, transitionRanks);
 
             var listChoices = new List<DocNode>();
-            foreach (TransitionDocNode nodeTran in group.GetTransitions(settings, mods,
+            foreach (TransitionDocNode nodeTran in nodeGroup.GetTransitions(settings, mods,
                     nodeGroup.PrecursorMz, nodeGroup.IsotopeDist, libInfo, transitionRanks, useFilter))
             {
                 listChoices.Add(nodeTran);               
@@ -412,6 +412,26 @@ namespace pwiz.Skyline.Controls.SeqNode
                                      Size sizeMax,
                                      bool draw)
         {
+            if (nodeGroup.TransitionGroup.IsCustomIon)
+            {
+                var customTable = new TableDesc();
+                using (RenderTools rt = new RenderTools())
+                {
+                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.Peptide.CustomIon.Name, rt);
+                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
+                        nodeGroup.TransitionGroup.PrecursorCharge.ToString(LocalizationHelper.CurrentCulture), rt);
+                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
+                        string.Format("{0:F04}", nodeGroup.PrecursorMz), rt); // Not L10N
+                    if (nodePep.Peptide.CustomIon.Formula != null)
+                    {
+                        customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
+                            nodePep.Peptide.CustomIon.Formula, rt);
+                    }
+                    SizeF size = customTable.CalcDimensions(g);
+                    customTable.Draw(g);
+                    return new Size((int) size.Width + 2, (int) size.Height + 2);
+                }
+            }
             ExplicitMods mods = (nodePep != null ? nodePep.ExplicitMods : null);
             IEnumerable<DocNode> choices = GetChoices(nodeGroup, settings, mods, true).ToArray();
             HashSet<DocNode> chosen = new HashSet<DocNode>(nodeGroup.Children);
@@ -424,7 +444,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             Transition tranSelected = (nodeTranSelected != null ? nodeTranSelected.Transition : null);
 
             IFragmentMassCalc calc = settings.GetFragmentCalc(nodeGroup.TransitionGroup.LabelType, mods);
-            string aa = nodeGroup.TransitionGroup.Peptide.Sequence;
+            string aa = nodeGroup.TransitionGroup.Peptide.Sequence;  // We handled custom ions above, and returned
             double[,] masses = calc.GetFragmentIonMasses(aa);
 
             var filter = settings.TransitionSettings.Filter;
@@ -462,7 +482,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                                           string.Format("{0:F04}", precursorMz), rt); // Not L10N
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
-                                          string.Format("{0:F04}", SequenceMassCalc.GetMH(precursorMz, precursorCharge)), // Not L10N
+                                          string.Format("{0:F04}", nodeGroup.GetPrecursorIonMass()), // Not L10N
                                           rt);
                 int? decoyMassShift = nodeGroup.TransitionGroup.DecoyMassShift;
                 if (decoyMassShift.HasValue)

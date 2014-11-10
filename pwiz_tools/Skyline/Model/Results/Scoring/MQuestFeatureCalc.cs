@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
                 var settings = context.Document.Settings;
                 var predictor = settings.PeptideSettings.Prediction.RetentionTime;
-                string seqModified = settings.GetLookupSequence(summaryPeakData.NodePep);
+                string seqModified = settings.GetSourceTextId(summaryPeakData.NodePep);
                 if (predictor != null)
                 {
                     prediction = new RetentionTimePrediction(predictor.GetRetentionTime(seqModified, fileId),

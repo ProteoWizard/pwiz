@@ -55,6 +55,9 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            // Lest we get "To export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document."
+            TestSmallMolecules = false;
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
 
             TestFilesZipPaths = new[]
@@ -118,6 +121,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            TestSmallMolecules = false; // The presence of the extra test node without any results is incompatible with what's being tested here.
+
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             d => d.ChangeSettings(SrmSettingsList.GetDefault())));
@@ -259,7 +264,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedPath =
-                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
+                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
                 SkylineWindow.GraphSpectrumSettings.ShowAIons = true;
                 SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
                 SkylineWindow.GraphSpectrumSettings.ShowYIons = true;
@@ -463,7 +468,7 @@ namespace pwiz.SkylineTestTutorial
             for (int i = 0; i < 5; i++) // just do the first 5
             {
                 int iPeptide = i;
-                var path = docAfter.GetPathTo((int) SrmDocument.Level.Peptides, iPeptide);
+                var path = docAfter.GetPathTo((int) SrmDocument.Level.Molecules, iPeptide);
                 RunUI(() =>
                 {
                     SkylineWindow.SelectedPath = path;
@@ -562,7 +567,7 @@ namespace pwiz.SkylineTestTutorial
             IList<string> result = null;
             RunUI(() => 
             {
-                var pathPep = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Peptides, pepIndex);
+                var pathPep = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Molecules, pepIndex);
                 SkylineWindow.SelectedPath = pathPep;
                 var graphChrom = SkylineWindow.GraphChromatograms.ToArray()[chromIndex];
                 // ToArray in RunUI() to avoid trying to enumerate off the UI thread
@@ -624,7 +629,7 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUIWithDocumentWait(() => // adjust integration
             {
-                var pathPep = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Peptides, pepIndex);
+                var pathPep = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Molecules, pepIndex);
                 SkylineWindow.SelectedPath = pathPep;
 
                 var nodeGroup = SkylineWindow.DocumentUI.Peptides.ElementAt(pepIndex).TransitionGroups.First();
@@ -673,7 +678,7 @@ namespace pwiz.SkylineTestTutorial
             string screenshotPromptA = null, int? pageA = null, string screenshotPromptB = null, int? pageB = null)
         {
             var doc = SkylineWindow.Document;
-            var pepPath = doc.GetPathTo((int)SrmDocument.Level.Peptides, pepIndex);
+            var pepPath = doc.GetPathTo((int)SrmDocument.Level.Molecules, pepIndex);
             var nodeGroup = doc.Peptides.ElementAt(pepIndex).TransitionGroups.First();
             var groupPath = new IdentityPath(pepPath, nodeGroup.TransitionGroup);
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = groupPath);

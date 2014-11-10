@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Model.Results
         {
             ChromSource = chromSource;
             TypeOfScans = timeSharing;
-            PrecursorCollectorMap = new List<Tuple<PrecursorModSeq, ChromDataCollector>>();
+            PrecursorCollectorMap = new List<Tuple<PrecursorTextId, ChromDataCollector>>();
             if (timeSharing == TimeSharing.shared)
             {
                 SharedTimesCollector = new ChromCollector();
@@ -626,7 +626,7 @@ namespace pwiz.Skyline.Model.Results
             ScanIdsCollector.Add(scanId);
         }
 
-        public IList<Tuple<PrecursorModSeq, ChromDataCollector>> PrecursorCollectorMap { get; private set; }
+        public IList<Tuple<PrecursorTextId, ChromDataCollector>> PrecursorCollectorMap { get; private set; }
 
         public int Count { get { return PrecursorCollectorMap.Count; } }
 
@@ -635,11 +635,11 @@ namespace pwiz.Skyline.Model.Results
             double precursorMz = spectrum.PrecursorMz;
             double? ionMobilityValue = spectrum.IonMobilityValue;
             double ionMobilityExtractionWidth = spectrum.IonMobilityExtractionWidth;
-            string modifiedSequence = spectrum.ModifiedSequence;
+            string textId = spectrum.TextId;
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.Mzs.Length;
             ChromDataCollector collector;
-            var key = new PrecursorModSeq(precursorMz, modifiedSequence, extractor);
+            var key = new PrecursorTextId(precursorMz, textId, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);
@@ -647,8 +647,8 @@ namespace pwiz.Skyline.Model.Results
                 collector = PrecursorCollectorMap[index].Item2;
             else
             {
-                collector = new ChromDataCollector(modifiedSequence, precursorMz, ionMobilityValue, ionMobilityExtractionWidth, index, IsGroupedTime);
-                PrecursorCollectorMap[index] = new Tuple<PrecursorModSeq, ChromDataCollector>(key, collector);
+                collector = new ChromDataCollector(textId, precursorMz, ionMobilityValue, ionMobilityExtractionWidth, index, IsGroupedTime);
+                PrecursorCollectorMap[index] = new Tuple<PrecursorTextId, ChromDataCollector>(key, collector);
             }
 
             int ionCount = collector.ProductIntensityMap.Count;
@@ -700,7 +700,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Add data for chromatogram graph.
             if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
-                _allChromData.Add(spectrum.ModifiedSequence, spectrum.FilterIndex, ChromSource, (float)time, spectrum.Intensities);
+                _allChromData.Add(spectrum.TextId, spectrum.FilterIndex, ChromSource, (float)time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.

@@ -627,6 +627,7 @@
     <Compile Include="Model\AbstractDiaExporter.cs" />
     <Compile Include="Model\AbstractMassListExporter.cs" />
     <Compile Include="Model\ComparePeakBoundaries.cs" />
+    <Compile Include="Model\CustomIon.cs" />
     <Compile Include="Model\Databinding\AnnotationPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
     <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
@@ -959,7 +960,7 @@
     </Compile>
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\PeptideFinder.cs" />
-    <Compile Include="Model\Results\PrecursorModSeq.cs" />
+    <Compile Include="Model\Results\PrecursorTextId.cs" />
     <Compile Include="Model\Results\RatioValue.cs" />
     <Compile Include="Model\Results\RemoteApi\ChorusAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\ChorusContents.cs" />
@@ -1031,17 +1032,23 @@
     <Compile Include="SettingsUI\AddRetentionTimePredictorDlg.Designer.cs">
       <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\CustomIonMzDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\CustomIonMzDlg.Designer.cs">
-      <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\DiaIsolationWindowsGraphForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SettingsUI\DiaIsolationWindowsGraphForm.Designer.cs">
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditCustomMoleculeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditCustomMoleculeDlg.Designer.cs">
+      <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\FormulaBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\FormulaBox.Designer.cs">
+      <DependentUpon>FormulaBox.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\IonMobility\ChargeRegressionTable.cs" />
     <Compile Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.cs">
@@ -1960,6 +1967,8 @@
     <EmbeddedResource Include="Resources\StartPage\WizardImportTransition.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideIcon.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearch.png" />
+    <EmbeddedResource Include="Resources\Molecule.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeList.bmp" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2020,16 +2029,6 @@
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.zh-CHS.resx">
       <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\CustomIonMzDlg.ja.resx">
-      <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\CustomIonMzDlg.resx">
-      <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\CustomIonMzDlg.zh-CHS.resx">
-      <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.ja.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2052,6 +2051,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.zh-CHS.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.resx">
+      <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditDPDlg.ja.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
@@ -2082,6 +2085,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.ja.resx">
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FormulaBox.resx">
+      <DependentUpon>FormulaBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.resx">
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>

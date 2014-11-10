@@ -217,7 +217,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForLibraries();
 
-            SelectNode(SrmDocument.Level.Peptides, 0);
+            SelectNode(SrmDocument.Level.Molecules, 0);
             WaitForGraphs();
             string prefix = Path.GetFileNameWithoutExtension(DOCUMENT_NAME);
             RunUI(() =>
@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);
                 Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
             });
-            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.Document.PeptideCount - 1);
+            SelectNode(SrmDocument.Level.Molecules, SkylineWindow.Document.PeptideCount - 1);
             //*
             WaitForGraphs();
             RunUI(() =>
@@ -317,7 +317,7 @@ namespace pwiz.SkylineTestFunctional
         private static void DeleteLastProtein()
         {
             var docCurrent = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            SelectNode(SrmDocument.Level.PeptideGroups, docCurrent.PeptideGroupCount - 1);
+            SelectNode(SrmDocument.Level.MoleculeGroups, docCurrent.PeptideGroupCount - 1);
             RunUI(SkylineWindow.EditDelete);
             WaitForDocumentChange(docCurrent);
         }
@@ -325,7 +325,7 @@ namespace pwiz.SkylineTestFunctional
         private static void DeleteLastPeptide()
         {
             var docCurrent = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            SelectNode(SrmDocument.Level.Peptides, docCurrent.PeptideCount - 1);
+            SelectNode(SrmDocument.Level.Molecules, docCurrent.PeptideCount - 1);
             RunUI(SkylineWindow.EditDelete);
             WaitForDocumentChange(docCurrent);
         }

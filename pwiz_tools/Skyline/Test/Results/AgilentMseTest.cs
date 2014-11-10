@@ -74,7 +74,7 @@ namespace pwiz.SkylineTest.Results
                 // expecting just one peptide result in this small data set
                 if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
                 {
-                    Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs");
+                    Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node "+nodePep.RawTextId);
                     Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
                     nPeptides++;
                 }

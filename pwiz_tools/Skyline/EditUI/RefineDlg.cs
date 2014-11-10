@@ -259,7 +259,7 @@ namespace pwiz.Skyline.EditUI
             if (_settings.GetPrecursorCalc(labelType, null) != null)
                 return true;
 
-            return _document.Peptides.Any(nodePep =>
+            return _document.Molecules.Any(nodePep =>
                 _settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods) != null);
         }
 

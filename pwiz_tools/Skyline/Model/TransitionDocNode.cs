@@ -54,7 +54,10 @@ namespace pwiz.Skyline.Model
             Losses = losses;
             if (losses != null)
                 massH -= losses.Mass;
-            Mz = SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift);
+            if (id.IsCustom())
+                Mz = BioMassCalc.CalculateMz(massH, id.Charge);
+            else
+                Mz = SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift);
             IsotopeDistInfo = isotopeDistInfo;
             LibInfo = libInfo;
             Results = results;
@@ -67,6 +70,13 @@ namespace pwiz.Skyline.Model
         public TransitionLossKey Key { get { return new TransitionLossKey(Transition, Losses); } }
 
         public double Mz { get; private set; }
+
+        public double GetIonMass()
+        {
+            return Transition.IsCustom()
+                ? BioMassCalc.CalculateMassFromMz(Mz, Transition.Charge)
+                : SequenceMassCalc.GetMH(Mz, Transition.Charge);            
+        }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
 
@@ -303,6 +313,17 @@ namespace pwiz.Skyline.Model
             return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
+        /// <summary>
+        /// Return product's neutral mass rounded for XML I/O
+        /// </summary>
+        public double GetIonPersistentNeutralMass()
+        {
+            double ionMass = GetIonMass();
+            return Transition.IsCustom() ? Math.Round(ionMass, SequenceMassCalc.MassPrecision) : SequenceMassCalc.PersistentNeutral(ionMass);
+        }
+
+
+
         public DocNode EnsureChildren(TransitionGroupDocNode parent, SrmSettings settings)
         {
             // Make sure node points to correct parent.
@@ -312,6 +333,7 @@ namespace pwiz.Skyline.Model
             var transition = Transition.IsCustom()
                 ? new Transition(parent.TransitionGroup,
                     Transition.Charge,
+                    Transition.MassIndex,
                     Transition.CustomIon)
                 : new Transition(parent.TransitionGroup,
                                 Transition.IonType,

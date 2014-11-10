@@ -111,7 +111,7 @@ namespace pwiz.SkylineTest.Results
 
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
                 // Adding unloaded results should add a new null result.
-                foreach (var nodeTran in docResults.Transitions)
+                foreach (var nodeTran in docResults.PeptideTransitions)
                 {
                     Assert.IsTrue(nodeTran.HasResults);
                     Assert.AreEqual(listChromatograms.Count, nodeTran.Results.Count);
@@ -125,8 +125,8 @@ namespace pwiz.SkylineTest.Results
 
                 Assert.IsTrue(docResults.Settings.MeasuredResults.IsLoaded);
 
-                var transOld = doc.Transitions.ToArray();
-                var transNew = docResults.Transitions.ToArray();
+                var transOld = doc.PeptideTransitions.ToArray();
+                var transNew = docResults.PeptideTransitions.ToArray();
                 Assert.AreEqual(transOld.Length, transNew.Length);
                 int countPeaks = 0;
                 for (int i = 0; i < transNew.Length; i++)
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTest.Results
                     }
                 }
                 // Allow 2 missed peaks
-                Assert.IsTrue(countPeaks >= transNew.Length - 2);
+                Assert.IsTrue(countPeaks >= transNew.Length - (TestSmallMolecules ? 1 : 0) - 2);
 
                 // Check results calculations for peptides and groups
                 foreach (var nodePep in docResults.Peptides)
@@ -201,6 +201,8 @@ namespace pwiz.SkylineTest.Results
             for (int i = 0; i < doc.Children.Count; i++)
             {
                 PeptideGroupDocNode nodePepGroup1 = (PeptideGroupDocNode) doc.Children[i];
+                if (TestSmallMolecules && nodePepGroup1.Name.Equals(SrmDocument.TestingNonProteomicMoleculeGroupName))
+                    continue;
                 PeptideGroupDocNode nodePepGroup2 = (PeptideGroupDocNode) docPersisted.Children[i];
                 Assert.AreNotSame(nodePepGroup1, nodePepGroup2);
                 for (int j = 0; j < nodePepGroup1.Children.Count; j++)

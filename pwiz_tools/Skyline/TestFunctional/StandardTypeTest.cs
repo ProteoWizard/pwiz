@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
            
             // Test Set Standard Type menus
             // Non-peptide selected (CONSIDER: Should this allow setting standard type on all peptides?)
-            SelectNode(SrmDocument.Level.PeptideGroups, 0);
+            SelectNode(SrmDocument.Level.MoleculeGroups, 0);
             RunUI(() => SkylineWindow.ShowTreeNodeContextMenu(new Point(0, 0)));
             RunUI(() =>
                 {
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.ContextMenuTreeNode.Close();
                 });
             // Select first peptide, which is not actually an iRT standard
-            SelectNode(SrmDocument.Level.Peptides, 0);
+            SelectNode(SrmDocument.Level.Molecules, 0);
             RunUI(() => SkylineWindow.ShowTreeNodeContextMenu(new Point(0, 0)));
             RunUI(() =>
             {
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
 
-            var peptidePath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Peptides, SELECTED_PEPTIDE_INDEX);
+            var peptidePath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, SELECTED_PEPTIDE_INDEX);
             RunUI(() =>
             {
                 AreaReplicateGraphPane pane;
@@ -256,7 +256,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var doc = SkylineWindow.DocumentUI;
                 int countReplicates = doc.Settings.MeasuredResults.Chromatograms.Count;
-                Assert.AreEqual(doc.TransitionCount * countReplicates, previewReportDlg.RowCount);
+                Assert.AreEqual(doc.PeptideTransitionCount * countReplicates, previewReportDlg.RowCount);
                 Assert.AreEqual(columnsToAdd.Length, previewReportDlg.ColumnCount);
                 int iStandardType = previewReportDlg.FindColumn(PropertyPath.Parse("Precursor.Peptide.StandardType")).Index;
                 int iLabelType = previewReportDlg.FindColumn(PropertyPath.Parse("Precursor.IsotopeLabelType")).Index;
@@ -422,7 +422,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var doc = SkylineWindow.DocumentUI;
                 int countReplicates = doc.Settings.MeasuredResults.Chromatograms.Count;
-                Assert.AreEqual(doc.TransitionCount*countReplicates, previewReportDlg.RowCount);
+                Assert.AreEqual(doc.PeptideTransitionCount*countReplicates, previewReportDlg.RowCount);
                 Assert.AreEqual(columnsToAdd.Length, previewReportDlg.ColumnCount);
                 var headerNames = previewReportDlg.ColumnHeaderNames.ToArray();
                 int iStandardType = headerNames.IndexOf(name => Equals(name, "StandardType"));

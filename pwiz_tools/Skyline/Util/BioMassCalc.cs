@@ -124,6 +124,7 @@ namespace pwiz.Skyline.Util
         public const string Co = "Co";  // Cobalt
         public const string Mn = "Mn";  // Manganese
         public const string Mg = "Mg";  // Magnesium
+        public const string Si = "Si";  //Silicon
         // ReSharper restore NonLocalizedString
 // ReSharper restore InconsistentNaming
 
@@ -182,6 +183,11 @@ namespace pwiz.Skyline.Util
         public static double MassProton
         {
             get { return 1.007276; }
+        }
+
+        public static double MassElectron
+        {
+            get { return 0.00054857990946; } // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass
         }
 
         /// <summary>
@@ -253,6 +259,7 @@ namespace pwiz.Skyline.Util
             AddMass(Co, 58.9331976, 58.933195);
             AddMass(Mn, 54.9380471, 54.938045);
             AddMass(Mg, 23.9850423, 24.305);
+            AddMass(Si, 27.9769265, 28.085); // Per Wikipedia
         }
 
         public MassType MassType { get; private set; }
@@ -264,7 +271,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="desc">The molecule description string</param>
         /// <returns>The mass of the specified molecule</returns>
-        public double CalculateMass(string desc)
+        public double CalculateMassFromFormula(string desc)
         {
             string parse = desc;
             double totalMass = ParseMass(ref parse);
@@ -274,6 +281,87 @@ namespace pwiz.Skyline.Util
                     Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula);
 
             return totalMass;
+        }
+
+        /// <summary>
+        /// Calculate effect of charge on mass due to electon loss
+        /// </summary>
+        /// <param name="mass">mass without charge</param>
+        /// <param name="charge">charge state</param>
+        /// <returns></returns>
+        static public double CalculateMassWithElectronLoss(double mass, int charge)
+        {
+            return mass - charge * MassElectron;
+        }
+
+        /// <summary>
+        /// work back from mz to mass, accounting for electron loss
+        /// </summary>
+        /// <returns></returns>
+        static public double CalculateMassFromMz(double mz, int charge)
+        {
+            return (mz + MassElectron) * charge;
+        }
+
+        public double CalculateMz(string desc, int charge)
+        {
+            var mass = CalculateMassFromFormula(desc);
+            return  CalculateMz(mass, charge);
+        }
+
+        static public double CalculateMz(double mass, int charge)
+        {
+            return CalculateMassWithElectronLoss(mass, charge) / charge;
+        }
+
+        /// <summary>
+        /// For fixing up old custom ion formulas in which we artificially
+        /// reduced the hydrogen count by one, in anticipation of our
+        /// calculations adding it back in because they thought that was
+        /// the only kind of ionization
+        /// </summary>
+        /// <param name="formula">the formula that needs an H added</param>
+        /// <returns></returns>
+        static public string AddH(string formula)
+        {
+            bool foundH = false;
+            string result = string.Empty;
+            string desc = formula;
+            desc = desc.Trim();
+            while (desc.Length > 0)
+            {
+                string sym = NextSymbol(desc);
+                double massAtom = AVERAGE.GetMass(sym);
+
+                // Stop if unrecognized atom found.
+                if (massAtom == 0)
+                {
+                    // CONSIDER: Throw with a useful message?
+                    break;
+                }
+                result += sym;
+                desc = desc.Substring(sym.Length);
+                int endCount = 0;
+                while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
+                    endCount++;
+
+                if (sym == H)
+                {
+                    foundH = true;
+                    int count = 1;
+                    if (endCount > 0)
+                        count = int.Parse(desc.Substring(0, endCount), CultureInfo.InvariantCulture);
+                    result += (count + 1).ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    result += desc.Substring(0, endCount);
+                }
+                desc = desc.Substring(endCount).TrimStart();
+            }
+            if (!foundH)  // CONSIDER: bspratt is this really what we want?  CO2 -> CO2H?
+                result +=  H; 
+            return result;
         }
 
         /// <summary>

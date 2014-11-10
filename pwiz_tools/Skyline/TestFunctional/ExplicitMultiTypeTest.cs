@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check and save original document information
             var docOrig = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Peptides, 1);
+            var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Molecules, 1);
             var peptideImplicit = (PeptideDocNode) docOrig.FindNode(pathPeptide);
             Assert.AreEqual(1, peptideImplicit.Children.Count);
             Assert.IsNull(peptideImplicit.ExplicitMods);

@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
             AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Name"));
             CheckPreview(viewEditor, (preview, document) =>
             {
-                Assert.AreEqual(document.PeptideGroupCount, preview.RowCount);
+                Assert.AreEqual(document.MoleculeGroupCount, preview.RowCount);
                 var columnHeaderNames = new List<string>(preview.ColumnHeaderNames);
                 Assert.AreEqual(1, columnHeaderNames.Count);
                 Assert.AreEqual("ProteinName", columnHeaderNames[0]); // Not L10N
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
                 PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"));
             CheckPreview(viewEditor, (preview, document) =>
             {
-                Assert.AreEqual(document.TransitionGroupCount, preview.RowCount);
+                Assert.AreEqual(document.MoleculeTransitionGroupCount, preview.RowCount);
                 CollectionAssert.AreEqual(viewEditor.ChooseColumnsTab.ColumnNames, preview.ColumnHeaderNames);
             });
 
@@ -111,8 +111,9 @@ namespace pwiz.SkylineTestFunctional
                 PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"));
             CheckPreview(viewEditor, (preview, document) =>
             {
-                int expectedRows = document.TransitionGroupCount *
-                                   document.Settings.MeasuredResults.Chromatograms.Count;
+                int expectedRows = document.PeptideTransitionGroupCount *
+                                   document.Settings.MeasuredResults.Chromatograms.Count +
+                                   (TestSmallMolecules ? 1 : 0);
                 Assert.AreEqual(expectedRows, preview.RowCount);
                 CollectionAssert.AreEqual(viewEditor.ChooseColumnsTab.ColumnNames, preview.ColumnHeaderNames);
             });
@@ -122,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
             string[] precursorColumnNames =
                 CheckPreview(viewEditor, (preview, document) =>
                 {
-                    Assert.AreEqual(document.TransitionGroupCount, preview.RowCount);
+                    Assert.AreEqual(document.MoleculeTransitionGroupCount, preview.RowCount);
                     VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(viewEditor.ChooseColumnsTab.ColumnNames), "BestRetentionTime"); // Not L10N
                 });
 
@@ -137,7 +138,7 @@ namespace pwiz.SkylineTestFunctional
             // Not L10N
             CheckPreview(viewEditor, (preview, document) =>
             {
-                Assert.AreEqual(document.TransitionCount, preview.RowCount);
+                Assert.AreEqual(document.MoleculeTransitionCount, preview.RowCount);
                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime"); // Not L10N
             });
 
@@ -146,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
             // Not L10N
             CheckPreview(viewEditor, (preview, document) =>
             {
-                Assert.AreEqual(document.TransitionCount, preview.RowCount);
+                Assert.AreEqual(document.MoleculeTransitionCount, preview.RowCount);
                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime", "Area"); // Not L10N
             });
 
@@ -156,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
                 CheckPreview(viewEditor, (preview, document) =>
                 {
                     int replicateCount = document.Settings.MeasuredResults.Chromatograms.Count;
-                    Assert.AreEqual(document.TransitionCount * replicateCount, preview.RowCount);
+                    Assert.AreEqual(document.PeptideTransitionCount * replicateCount + (TestSmallMolecules ? 2 : 0), preview.RowCount);
                     
                     CollectionAssert.AreEqual(viewEditor.ChooseColumnsTab.ColumnNames, preview.ColumnHeaderNames);
                 });
@@ -192,7 +193,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => exportLiveReportDlg.ReportName = precursorReportName);
             string precursorReport = TestFilesDir.GetTestPath("PrecursorRTSummary.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(precursorReport, ','));
-            VerifyReportFile(precursorReport, docFinal.TransitionGroupCount, precursorColumnNames, true);
+            VerifyReportFile(precursorReport, docFinal.MoleculeTransitionGroupCount, precursorColumnNames, true);
 
             exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
 
@@ -204,7 +205,7 @@ namespace pwiz.SkylineTestFunctional
             string transitionReport = TestFilesDir.GetTestPath("TransitionRTAreaSummary.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(transitionReport, ','));
             VerifyReportFile(transitionReport,
-                docFinal.TransitionCount * docFinal.Settings.MeasuredResults.Chromatograms.Count,
+                docFinal.PeptideTransitionCount * docFinal.Settings.MeasuredResults.Chromatograms.Count + (TestSmallMolecules ? 2 : 0),
                 transitionColumnNames, true);
         }
 
@@ -234,7 +235,7 @@ namespace pwiz.SkylineTestFunctional
                        new Identifier("Peptides", "Precursors", "Charge"));
             CheckPreview(pivotReportDlg, (preview, document) =>
                              {
-                                 Assert.AreEqual(document.TransitionGroupCount, preview.RowCount);
+                                 Assert.AreEqual(document.PeptideTransitionGroupCount, preview.RowCount);
                                  VerifyNoPivotedColumns(preview, new List<string>(pivotReportDlg.ColumnNames));
                              });
 
@@ -244,7 +245,7 @@ namespace pwiz.SkylineTestFunctional
                        new Identifier("Peptides", "Precursors", "PrecursorResults", "BestRetentionTime"));
             CheckPreview(pivotReportDlg, (preview, document) =>
                              {
-                                 int expectedRows = document.TransitionGroupCount*
+                                 int expectedRows = document.PeptideTransitionGroupCount*
                                                     document.Settings.MeasuredResults.Chromatograms.Count;
                                  Assert.AreEqual(expectedRows, preview.RowCount);
                                  VerifyNoPivotedColumns(preview, new List<string>(pivotReportDlg.ColumnNames));
@@ -255,7 +256,7 @@ namespace pwiz.SkylineTestFunctional
             string[] precursorColumnNames =
                 CheckPreview(pivotReportDlg, (preview, document) =>
                              {
-                                 Assert.AreEqual(document.TransitionGroupCount, preview.RowCount);
+                                 Assert.AreEqual(document.PeptideTransitionGroupCount, preview.RowCount);
                                  VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(pivotReportDlg.ColumnNames), "BestRetentionTime"); // Not L10N
                              });
 
@@ -269,7 +270,7 @@ namespace pwiz.SkylineTestFunctional
             AddColumns(pivotReportDlg, new Identifier("Peptides", "Precursors", "Transitions", "TransitionResultsSummary", "CvArea")); // Not L10N
             CheckPreview(pivotReportDlg, (preview, document) =>
                              {
-                                 Assert.AreEqual(document.TransitionCount, preview.RowCount);
+                                 Assert.AreEqual(document.PeptideTransitionCount, preview.RowCount);
                                  VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(pivotReportDlg.ColumnNames), "BestRetentionTime"); // Not L10N
                              });
 
@@ -277,7 +278,7 @@ namespace pwiz.SkylineTestFunctional
             AddColumns(pivotReportDlg, new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area")); // Not L10N
             CheckPreview(pivotReportDlg, (preview, document) =>
                              {
-                                 Assert.AreEqual(document.TransitionCount, preview.RowCount);
+                                 Assert.AreEqual(document.PeptideTransitionCount, preview.RowCount);
                                  VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(pivotReportDlg.ColumnNames), "BestRetentionTime", "Area"); // Not L10N
                              });
 
@@ -287,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
                 CheckPreview(pivotReportDlg, (preview, document) =>
                              {
                                  int replicateCount = document.Settings.MeasuredResults.Chromatograms.Count;
-                                 Assert.AreEqual(document.TransitionCount*replicateCount, preview.RowCount);
+                                 Assert.AreEqual(document.PeptideTransitionCount*replicateCount, preview.RowCount);
                                  VerifyNoPivotedColumns(preview, new List<string>(pivotReportDlg.ColumnNames));
                              });
 
@@ -322,7 +323,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => exportReportDlg.ReportName = precursorReportName);
             string precursorReport = TestFilesDir.GetTestPath("PrecursorRTSummary.csv");
             OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(precursorReport, ','));
-            VerifyReportFile(precursorReport, docFinal.TransitionGroupCount, precursorColumnNames);
+            VerifyReportFile(precursorReport, docFinal.PeptideTransitionGroupCount, precursorColumnNames);
 
             exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
 
@@ -330,11 +331,11 @@ namespace pwiz.SkylineTestFunctional
             string transitionReport = TestFilesDir.GetTestPath("TransitionRTAreaSummary.csv");
             OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(transitionReport, ','));
             VerifyReportFile(transitionReport,
-                             docFinal.TransitionCount*docFinal.Settings.MeasuredResults.Chromatograms.Count,
+                             docFinal.PeptideTransitionCount*docFinal.Settings.MeasuredResults.Chromatograms.Count,
                              transitionColumnNames);
         }
 
-        private static void VerifyReportFile(string fileName, int rowCount, IList<string> columnNames, bool invariantFormat = false)
+        private void VerifyReportFile(string fileName, int rowCount, IList<string> columnNames, bool invariantFormat = false)
         {
             var formatProvider = invariantFormat ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
             string[] lines = File.ReadAllLines(fileName);
@@ -351,18 +352,24 @@ namespace pwiz.SkylineTestFunctional
                     string value = values[j];
 
                     if (columnName.Equals("PeptideSequence"))
-                        Assert.IsTrue(FastaSequence.IsSequence(value));
+                        Assert.IsTrue(FastaSequence.IsSequence(value) || (TestSmallMolecules && value.StartsWith("zzz")));
                     else if (columnName.StartsWith("Cv"))
                     {
-                        Assert.IsTrue(value.EndsWith("%"));
-                        Assert.IsTrue(double.Parse(value.Substring(0, value.Length - 1), NumberStyles.Float, formatProvider) > 0);
+                        Assert.IsTrue(TestSmallMolecules || value.EndsWith("%"));
+                        Assert.IsTrue(TestSmallMolecules || double.Parse(value.Substring(0, value.Length - 1), NumberStyles.Float, formatProvider) > 0);
                     }
                     else if (!columnName.Equals("ProteinName"))
                     {
                         double valueParsed;
                         if (!double.TryParse(value, NumberStyles.Float, formatProvider, out valueParsed))
-                            Assert.Fail("Failed parsing {0} as a double", value);
-                        Assert.IsTrue(valueParsed > 0);
+                        {
+                            if (!(TestSmallMolecules && value==TextUtil.EXCEL_NA))
+                                Assert.Fail("Failed parsing {0} as a double", value);
+                        }
+                        else
+                        {
+                            Assert.IsTrue(valueParsed > 0);
+                        }
                     }
                 }
             }

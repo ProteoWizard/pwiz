@@ -122,8 +122,8 @@ namespace pwiz.Skyline.EditUI
 
                 // Handle insert node path
                 if (_selectedPath != null &&
-                    _selectedPath.Depth == (int)SrmDocument.Level.PeptideGroups &&
-                    ReferenceEquals(_selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups), SequenceTree.NODE_INSERT_ID))
+                    _selectedPath.Depth == (int)SrmDocument.Level.MoleculeGroups &&
+                    ReferenceEquals(_selectedPath.GetIdentity((int)SrmDocument.Level.MoleculeGroups), SequenceTree.NODE_INSERT_ID))
                 {
                     _selectedPath = null;
                 }
@@ -334,11 +334,11 @@ namespace pwiz.Skyline.EditUI
                     }
                     // Add to the end, if no insert node
                     var to = selectedPath;
-                    if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
+                    if (to == null || to.Depth < (int)SrmDocument.Level.MoleculeGroups)
                         document = (SrmDocument)document.Add(peptideGroupDocNode);
                     else
                     {
-                        Identity toId = selectedPath.GetIdentity((int) SrmDocument.Level.PeptideGroups);
+                        Identity toId = selectedPath.GetIdentity((int) SrmDocument.Level.MoleculeGroups);
                         document = (SrmDocument) document.Insert(toId, peptideGroupDocNode);
                     }
                     selectedPath = new IdentityPath(peptideGroupDocNode.Id);
@@ -518,11 +518,11 @@ namespace pwiz.Skyline.EditUI
                 var nodeGroupPep = new PeptideGroupDocNode(fastaSequence, pastedMetadata, new PeptideDocNode[0]);
                 nodeGroupPep = nodeGroupPep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
                 var to = selectedPath;
-                if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
+                if (to == null || to.Depth < (int)SrmDocument.Level.MoleculeGroups)
                     document = (SrmDocument)document.Add(nodeGroupPep);
                 else
                 {
-                    Identity toId = selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
+                    Identity toId = selectedPath.GetIdentity((int)SrmDocument.Level.MoleculeGroups);
                     document = (SrmDocument)document.Insert(toId, nodeGroupPep);
                 }
                 selectedPath = new IdentityPath(nodeGroupPep.Id);
@@ -534,183 +534,499 @@ namespace pwiz.Skyline.EditUI
         private static readonly ColumnIndices TRANSITION_LIST_COL_INDICES = new ColumnIndices(
             0, 1, 2, 3);
 
+        private const int INDEX_MOLECULE_GROUP = 0;
+        private const int INDEX_MOLECULE = 1;
+        private const int INDEX_MOLECULE_FORMULA = 2;
+        private const int INDEX_PRODUCT_FORMULA = 3;
+        private const int INDEX_MOLECULE_MZ = 4;
+        private const int INDEX_PRODUCT_MZ = 5;
+        private const int INDEX_MOLECULE_CHARGE = 6;
+        private const int INDEX_PRODUCT_CHARGE = 7;
+
+        private int ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, out double monoMass, out double averageMass)
+        {
+            // Is the ion's formula the old style where user expected us to add a hydrogen?
+            var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            int massShift;
+            var ion = new DocNodeCustomIon(moleculeFormula);
+            monoMass = ion.GetMass(MassType.Monoisotopic);
+            averageMass = ion.GetMass(MassType.Average);
+            double mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType == MassType.Monoisotopic)
+                ? monoMass
+                : averageMass;
+            var charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
+                TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0],
+                TransitionCalc.MassShiftType.none, out massShift);
+            if (charge < 0)
+            {
+                // That formula and this mz don't yield a reasonable charge state - try adding an H
+                var ion2 = new DocNodeCustomIon(BioMassCalc.AddH(ion.Formula));
+                monoMass = ion2.GetMass(MassType.Monoisotopic);
+                averageMass = ion2.GetMass(MassType.Average);
+                mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType == MassType.Monoisotopic)
+                    ? monoMass
+                    : averageMass;
+                charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
+                    TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0], TransitionCalc.MassShiftType.none, out massShift);
+                if (charge > 0)
+                {
+                    moleculeFormula = ion2.Formula;
+                }
+                else
+                {
+                    monoMass = 0;
+                    averageMass = 0;
+                }
+            }
+            return charge;
+        }
+
+        private double ValidateFormulaWithCharge(SrmDocument document, string moleculeFormula, int charge, out double monoMass, out double averageMass)
+        {
+            var massType = document.Settings.TransitionSettings.Prediction.PrecursorMassType;
+            var ion = new DocNodeCustomIon(moleculeFormula);
+            double mass = ion.GetMass(massType);
+            monoMass = ion.GetMass(MassType.Monoisotopic);
+            averageMass = ion.GetMass(MassType.Average);
+            return BioMassCalc.CalculateMz(mass, charge);
+        }
+
+        private class MoleculeInfo
+        {
+            public string Formula { get; private set; }
+            public double Mz { get; private set; }
+            public int Charge { get; private set; }
+            public double MonoMass { get; private set; }
+            public double AverageMass { get; private set; }
+
+            public MoleculeInfo(string formula, int charge, double mz, double monoMass, double averageMass)
+            {
+                Formula = formula;
+                Charge = charge;
+                Mz = mz;
+                MonoMass = monoMass;
+                AverageMass = averageMass;
+            }
+        }
+
+        // We need some combination of:
+        //  Formula and mz
+        //  Formula and charge
+        //  mz and charge
+        private MoleculeInfo ReadPrecursorOrProductColumns(SrmDocument document, 
+            DataGridViewRow row, 
+            bool getPrecursorColumns)
+        {
+            int indexFormula = getPrecursorColumns ? INDEX_MOLECULE_FORMULA : INDEX_PRODUCT_FORMULA;
+            int indexMz = getPrecursorColumns ? INDEX_MOLECULE_MZ : INDEX_PRODUCT_MZ;
+            int indexCharge = getPrecursorColumns ? INDEX_MOLECULE_CHARGE : INDEX_PRODUCT_CHARGE;
+            var formula = Convert.ToString(row.Cells[indexFormula].Value);
+            double mz;
+            if (!double.TryParse(Convert.ToString(row.Cells[indexMz].Value), out mz))
+                mz = 0;
+            int charge;
+            if (!int.TryParse(Convert.ToString(row.Cells[indexCharge].Value), out charge))
+                charge =  0;
+            double monoMass;
+            double averageMmass;
+            string errMessage = String.Format(getPrecursorColumns
+                ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
+                : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index+1);
+            int errColumn = indexFormula;
+            if (NullForEmpty(formula) != null)
+            {
+                // We have a formula
+                if (mz > 0)
+                {
+                    // Is the ion's formula the old style where user expected us to add a hydrogen? 
+                    charge = ValidateFormulaWithMz(document, ref formula, mz, out monoMass, out averageMmass);
+                    row.Cells[indexFormula].Value = formula;
+                    if (charge > 0)
+                    {
+                        row.Cells[indexCharge].Value = charge;
+                        return new MoleculeInfo(formula, charge, mz, monoMass, averageMmass);
+                    }
+                    errMessage = String.Format(getPrecursorColumns
+                        ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
+                        : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
+                }
+                else if (charge != 0)
+                {
+                    // Get the mass from the formula, and mz from that and charge
+                    mz = ValidateFormulaWithCharge(document, formula, charge, out monoMass, out averageMmass);
+                    row.Cells[indexMz].Value = mz;
+                    return new MoleculeInfo(formula, charge, mz, monoMass, averageMmass);
+                }
+                errColumn = indexMz;
+            } 
+            else if (mz != 0 && charge != 0)
+            {
+                // No formula, just use charge and m/z
+                monoMass = averageMmass = BioMassCalc.CalculateMassWithElectronLoss(mz, charge);
+                return new MoleculeInfo(formula, charge, mz, monoMass, averageMmass);
+            }
+            ShowTransitionError(new PasteError
+            {
+                Column = errColumn,
+                Line = row.Index,
+                Message = errMessage
+            });
+            return null;
+        }
+
         private SrmDocument AddTransitionList(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageTransitionList)
                 return document;
-
-            var backgroundProteome = GetBackgroundProteome(document);
-            var sbTransitionList = new StringBuilder();
-            var dictNameSeq = new Dictionary<string, FastaSequence>();
-            // Add all existing FASTA sequences in the document to the name to seq dictionary
-            // Including named peptide lists would cause the import code to give matching names
-            // in this list new names (e.g. with 1, 2, 3 appended).  In this code, the names
-            // are intended to be merged.
-            foreach (var nodePepGroup in document.Children.Cast<PeptideGroupDocNode>().Where(n => !n.IsPeptideList))
+            if (IsMolecule)
             {
-                if (!dictNameSeq.ContainsKey(nodePepGroup.Name))
-                    dictNameSeq.Add(nodePepGroup.Name, (FastaSequence) nodePepGroup.PeptideGroup);
-            }
-
-            // Check for simple errors and build strings for import
-            for (int i = 0; i < gridViewTransitionList.Rows.Count; i++)
-            {
-                var row = gridViewTransitionList.Rows[i];
-                var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
-                var proteinName = Convert.ToString(row.Cells[colTransitionProteinName.Index].Value);
-                var precursorMzText = Convert.ToString(row.Cells[colTransitionPrecursorMz.Index].Value);
-                var productMzText = Convert.ToString(row.Cells[colTransitionProductMz.Index].Value);
-                if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
+                for(int i = 0; i < gridViewTransitionList.RowCount - 1; i ++)
                 {
-                    continue;
-                }
-                if (string.IsNullOrEmpty(peptideSequence))
-                {
-                    ShowTransitionError(new PasteError
-                                            {
-                                                Column = colTransitionPeptide.Index,
-                                                Line = i,
-                                                Message = Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank
-                                            });
-                    return null;
-                }
-                if (!FastaSequence.IsExSequence(peptideSequence))
-                {
-                    ShowTransitionError(new PasteError
-                                            {
-                                                Column = colTransitionPeptide.Index,
-                                                Line = i,
-                                                Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
-                                            });
-                    return null;
-                }
-                double mz;
-                if (!double.TryParse(precursorMzText, out mz))
-                {
-                    ShowTransitionError(new PasteError
-                                            {
-                                                Column = colTransitionPrecursorMz.Index,
-                                                Line = i,
-                                                Message = Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number
-                                            });
-                    return null;
-                }
-                if (!double.TryParse(productMzText, out mz))
-                {
-                    ShowTransitionError(new PasteError
-                                            {
-                                                Column = colTransitionProductMz.Index,
-                                                Line = i,
-                                                Message = Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number
-                                            });
-                    return null;
-                }
-
-                const char sep = TRANSITION_LIST_SEPARATOR;
-                // Add columns in order specified by TRANSITION_LIST_COL_INDICES
-                sbTransitionList
-                    .Append(proteinName).Append(sep)
-                    .Append(peptideSequence).Append(sep)
-                    .Append(precursorMzText).Append(sep)
-                    .Append(productMzText).AppendLine();
-                // Build FASTA sequence text in cases where it is known
-                if (!dictNameSeq.ContainsKey(proteinName))
-                {
-                    var fastaSeq = backgroundProteome.GetFastaSequence(proteinName);
-                    if (fastaSeq != null)
-                        dictNameSeq.Add(proteinName, fastaSeq);
-                }
-            }
-
-            if (sbTransitionList.Length == 0)
-                return document;
-
-            // Do the actual import into PeptideGroupDocNodes
-            IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
-            try
-            {
-                List<TransitionImportErrorInfo> errorList;
-                List<KeyValuePair<string, double>> irtPeptides;
-                List<SpectrumMzInfo> librarySpectra;
-                var importer = new MassListImporter(document, LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
-                // TODO: support long-wait broker
-                peptideGroupDocNodes = importer.Import(new StringReader(sbTransitionList.ToString()),
-                                                       null,
-                                                       -1,
-                                                       TRANSITION_LIST_COL_INDICES,
-                                                       dictNameSeq,
-                                                       out irtPeptides,
-                                                       out librarySpectra,
-                                                       out errorList);
-                if (errorList.Any())
-                {
-                    var firstError = errorList[0];
-                    if (firstError.Row.HasValue)
+                    DataGridViewRow row = gridViewTransitionList.Rows[i];
+                    var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get moecule values
+                    if (precursor == null)
+                        return null;
+                    var product = ReadPrecursorOrProductColumns(document, row, false); // get product values
+                    if (product == null)
                     {
-                        throw new LineColNumberedIoException(firstError.ErrorMessage, firstError.Row.Value, firstError.Column ?? -1);    
+                        return null;
+                    }
+
+                    bool pepGroupFound = false;
+                    foreach (var pepGroup in document.MoleculeGroups)
+                    {
+                        var pathPepGroup = new IdentityPath(pepGroup.Id);
+                        if (pepGroup.Name == Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value))
+                        {
+                            pepGroupFound = true;
+                            bool pepFound = false;
+                            foreach (var pep in pepGroup.SmallMolecules)
+                            {
+                                var pepPath = new IdentityPath(pathPepGroup, pep.Id);
+                                if (!string.IsNullOrEmpty(pep.Peptide.CustomIon.Formula) && Equals(pep.Peptide.CustomIon.Formula, Convert.ToString(row.Cells[INDEX_MOLECULE].Value)))
+                                {
+                                    pepFound = true;
+                                    bool tranGroupFound = false;
+                                    foreach (var tranGroup in pep.TransitionGroups)
+                                    {
+                                        var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
+                                        if (Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance)
+                                        {
+                                            tranGroupFound = true;
+                                            var tranFound = false;
+                                            var tranNode = GetMoleculeTransition(document, row, pep.Peptide, tranGroup.TransitionGroup);
+                                            if (tranNode == null)
+                                                return null;
+                                            foreach (var tran in tranGroup.Transitions)
+                                            {
+                                                if (Equals(tranNode.Transition.CustomIon,tran.Transition.CustomIon))
+                                                {
+                                                    tranFound = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!tranFound)
+                                            {
+                                                document = (SrmDocument) document.Add(pathGroup, tranNode);
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (!tranGroupFound)
+                                    {
+                                        var node = GetMoleculeTransitionGroup(document, row, pep.Peptide);
+                                        if (node == null)
+                                            return null;
+                                        document =
+                                            (SrmDocument)
+                                                document.Add(pepPath, node);
+                                    }
+                                    break;
+                                }   
+                            }
+                            if (!pepFound)
+                            {
+                                var node = GetMoleculePeptide(document, row, pepGroup.PeptideGroup);
+                                if (node == null)
+                                    return null;
+                                document =
+                                    (SrmDocument)
+                                        document.Add(pathPepGroup,node);
+                            }
+                            break;
+                        }
+                    }
+                    if (!pepGroupFound)
+                    {
+                        var node = GetMoleculePeptideGroup(document, row);
+                        if (node == null)
+                            return null;
+                        IdentityPath first;
+                        IdentityPath next;
+                        document =
+                                document.AddPeptideGroups(new[] {node}, false,null
+                                    , out first,out next);
+                    }
+                }
+            }
+            else
+            {
+                var backgroundProteome = GetBackgroundProteome(document);
+                var sbTransitionList = new StringBuilder();
+                var dictNameSeq = new Dictionary<string, FastaSequence>();
+                // Add all existing FASTA sequences in the document to the name to seq dictionary
+                // Including named peptide lists would cause the import code to give matching names
+                // in this list new names (e.g. with 1, 2, 3 appended).  In this code, the names
+                // are intended to be merged.
+                foreach (var nodePepGroup in document.Children.Cast<PeptideGroupDocNode>().Where(n => !n.IsPeptideList))
+                {
+                    if (!dictNameSeq.ContainsKey(nodePepGroup.Name))
+                        dictNameSeq.Add(nodePepGroup.Name, (FastaSequence) nodePepGroup.PeptideGroup);
+                }
+
+                // Check for simple errors and build strings for import
+                for (int i = 0; i < gridViewTransitionList.Rows.Count; i++)
+                {
+                    var row = gridViewTransitionList.Rows[i];
+                    var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
+                    var proteinName = Convert.ToString(row.Cells[colTransitionProteinName.Index].Value);
+                    var precursorMzText = Convert.ToString(row.Cells[colTransitionPrecursorMz.Index].Value);
+                    var productMzText = Convert.ToString(row.Cells[colTransitionProductMz.Index].Value);
+                    if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
+                    {
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(peptideSequence))
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = colTransitionPeptide.Index,
+                            Line = i,
+                            Message = Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank
+                        });
+                        return null;
+                    }
+                    if (!FastaSequence.IsExSequence(peptideSequence))
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = colTransitionPeptide.Index,
+                            Line = i,
+                            Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
+                        });
+                        return null;
+                    }
+                    double mz;
+                    if (!double.TryParse(precursorMzText, out mz))
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = colTransitionPrecursorMz.Index,
+                            Line = i,
+                            Message = Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number_
+                        });
+                        return null;
+                    }
+                    if (!double.TryParse(productMzText, out mz))
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = colTransitionProductMz.Index,
+                            Line = i,
+                            Message = Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number_
+                        });
+                        return null;
+                    }
+
+                    const char sep = TRANSITION_LIST_SEPARATOR;
+                    // Add columns in order specified by TRANSITION_LIST_COL_INDICES
+                    sbTransitionList
+                        .Append(proteinName).Append(sep)
+                        .Append(peptideSequence).Append(sep)
+                        .Append(precursorMzText).Append(sep)
+                        .Append(productMzText).AppendLine();
+                    // Build FASTA sequence text in cases where it is known
+                    if (!dictNameSeq.ContainsKey(proteinName))
+                    {
+                        var fastaSeq = backgroundProteome.GetFastaSequence(proteinName);
+                        if (fastaSeq != null)
+                            dictNameSeq.Add(proteinName, fastaSeq);
+                    }
+                }
+
+                if (sbTransitionList.Length == 0)
+                    return document;
+
+                // Do the actual import into PeptideGroupDocNodes
+                IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
+                try
+                {
+                    List<TransitionImportErrorInfo> errorList;
+                    List<KeyValuePair<string, double>> irtPeptides;
+                    List<SpectrumMzInfo> librarySpectra;
+                    var importer = new MassListImporter(document, LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
+                    // TODO: support long-wait broker
+                    peptideGroupDocNodes = importer.Import(new StringReader(sbTransitionList.ToString()),
+                        null,
+                        -1,
+                        TRANSITION_LIST_COL_INDICES,
+                        dictNameSeq,
+                        out irtPeptides,
+                        out librarySpectra,
+                        out errorList);
+                    if (errorList.Any())
+                    {
+                        var firstError = errorList[0];
+                        if (firstError.Row.HasValue)
+                        {
+                            throw new LineColNumberedIoException(firstError.ErrorMessage, firstError.Row.Value, firstError.Column ?? -1);
+                        }
+                        else
+                        {
+                            throw new InvalidDataException(firstError.ErrorMessage);
+                        }
+                    }
+                }
+                catch (LineColNumberedIoException x)
+                {
+                    var columns = new[]
+                    {
+                        colTransitionProteinName,
+                        colPeptideSequence,
+                        colTransitionPrecursorMz,
+                        colTransitionProductMz
+                    };
+
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = x.ColumnIndex >= 0 ? columns[x.ColumnIndex].Index : 0,
+                        Line = (int) x.LineNumber - 1,
+                        Message = x.PlainMessage
+                    });
+                    return null;
+                }
+                catch (InvalidDataException x)
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Message = x.Message
+                    });
+                    return null;
+                }
+
+                // Insert the resulting nodes into the document tree, merging when possible
+                bool after = false;
+                foreach (var nodePepGroup in peptideGroupDocNodes)
+                {
+                    PeptideGroupDocNode nodePepGroupExist = FindPeptideGroupDocNode(document, nodePepGroup);
+                    if (nodePepGroupExist != null)
+                    {
+                        var nodePepGroupNew = nodePepGroupExist.Merge(nodePepGroup);
+                        if (!ReferenceEquals(nodePepGroupExist, nodePepGroupNew))
+                            document = (SrmDocument) document.ReplaceChild(nodePepGroupNew);
+
                     }
                     else
                     {
-                        throw new InvalidDataException(firstError.ErrorMessage);
+                        // Add to the end, if no insert node
+                        var to = selectedPath;
+                        if (to == null || to.Depth < (int) SrmDocument.Level.MoleculeGroups)
+                            document = (SrmDocument) document.Add(nodePepGroup);
+                        else
+                        {
+                            Identity toId = selectedPath.GetIdentity((int) SrmDocument.Level.MoleculeGroups);
+                            document = (SrmDocument) document.Insert(toId, nodePepGroup, after);
+                        }
+                        selectedPath = new IdentityPath(nodePepGroup.Id);
+                        // All future insertions should be after, to avoid reversing the list
+                        after = true;
                     }
-                }
-            }
-            catch(LineColNumberedIoException x)
-            {
-                var columns = new[]
-                                  {
-                                      colTransitionProteinName,
-                                      colPeptideSequence,
-                                      colTransitionPrecursorMz,
-                                      colTransitionProductMz
-                                  };
-
-                ShowTransitionError(new PasteError
-                                        {
-                                            Column = x.ColumnIndex >= 0 ? columns[x.ColumnIndex].Index : 0,
-                                            Line = (int) x.LineNumber - 1,
-                                            Message = x.PlainMessage
-                                        });
-                return null;
-            }
-            catch (InvalidDataException x)
-            {
-                ShowTransitionError(new PasteError
-                                        {
-                                            Message = x.Message
-                                        });
-                return null;
-            }
-
-            // Insert the resulting nodes into the document tree, merging when possible
-            bool after = false;
-            foreach (var nodePepGroup in peptideGroupDocNodes)
-            {
-                PeptideGroupDocNode nodePepGroupExist = FindPeptideGroupDocNode(document, nodePepGroup);
-                if (nodePepGroupExist != null)
-                {
-                    var nodePepGroupNew = nodePepGroupExist.Merge(nodePepGroup);
-                    if (!ReferenceEquals(nodePepGroupExist, nodePepGroupNew))
-                        document = (SrmDocument)document.ReplaceChild(nodePepGroupNew);
-                    
-                }
-                else
-                {
-                    // Add to the end, if no insert node
-                    var to = selectedPath;
-                    if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
-                        document = (SrmDocument)document.Add(nodePepGroup);
-                    else
-                    {
-                        Identity toId = selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
-                        document = (SrmDocument)document.Insert(toId, nodePepGroup, after);
-                    }
-                    selectedPath = new IdentityPath(nodePepGroup.Id);
-                    // All future insertions should be after, to avoid reversing the list
-                    after = true;
                 }
             }
             return document;
+        }
+
+        private PeptideGroupDocNode GetMoleculePeptideGroup(SrmDocument document, DataGridViewRow row)
+        {
+            var pepGroup = new PeptideGroup();
+            var pep = GetMoleculePeptide(document, row, pepGroup);
+            if (pep == null)
+                return null;
+            var name = Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value);
+            if (string.IsNullOrEmpty(name))
+                name = document.GetPeptideGroupId(true);
+            var metadata = new ProteinMetadata(name, string.Empty).SetWebSearchCompleted();  // FUTURE: some kind of lookup for small molecules
+            return new PeptideGroupDocNode(pepGroup, metadata, new[] {pep});
+        }
+
+        private PeptideDocNode GetMoleculePeptide(SrmDocument document, DataGridViewRow row, PeptideGroup group)
+        {
+
+            DocNodeCustomIon ion;
+            try
+            {
+                var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+                ion = new DocNodeCustomIon(moleculeInfo.Formula, moleculeInfo.MonoMass, moleculeInfo.AverageMass,
+                    Convert.ToString(row.Cells[INDEX_MOLECULE].Value)); // Short name
+            }
+            catch (ArgumentException e)
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column    = INDEX_MOLECULE_FORMULA,
+                    Line = row.Index, 
+                    Message = e.Message
+                });
+                return null;
+            }
+            
+
+            var pep = new Peptide(ion);
+            var tranGroup = GetMoleculeTransitionGroup(document, row, pep);
+            if (tranGroup == null)
+                return null;
+            return new PeptideDocNode(pep,document.Settings,null,null,new[]{tranGroup},true);
+        }
+
+        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, DataGridViewRow row, Peptide pep)
+        {
+            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+            if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_MOLECULE_MZ,
+                    Line = row.Index,
+                    Message = string.Format(Resources.PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_, moleculeInfo.Mz)
+                });
+                return null;
+            }
+            var group = new TransitionGroup(pep, moleculeInfo.Charge, IsotopeLabelType.light);
+            var tran = GetMoleculeTransition(document, row, pep, group);
+            if (tran == null)
+                return null;
+            return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
+                null, null, new[] {tran}, true);
+        }
+
+        private TransitionDocNode GetMoleculeTransition(SrmDocument document, DataGridViewRow row, Peptide pep, TransitionGroup group)
+        {
+            var massType =
+                document.Settings.TransitionSettings.Prediction.FragmentMassType;
+
+            var molecule = ReadPrecursorOrProductColumns(document, row, false); // Re-read the product columns
+            if (molecule == null)
+            {
+                return null;
+            }
+            DocNodeCustomIon ion = new DocNodeCustomIon(molecule.Formula, molecule.MonoMass, molecule.AverageMass);
+            var ionType = ion.Equals(pep.CustomIon)
+                ? IonType.precursor
+                : IonType.custom;
+            double mass = ion.GetMass(massType);
+
+            var transition = new Transition(group, molecule.Charge, null, ion, ionType);
+            return new TransitionDocNode(transition, document.Annotations, null, mass, null, null, null);
         }
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, PeptideGroupDocNode nodePepGroup)
@@ -724,17 +1040,17 @@ namespace pwiz.Skyline.EditUI
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)
         {
-            return document.PeptideGroups.FirstOrDefault(n => Equals(name, n.Name));
+            return document.MoleculeGroups.FirstOrDefault(n => Equals(name, n.Name));
         }
 
         private PeptideGroupDocNode GetSelectedPeptideGroupDocNode(SrmDocument document, IdentityPath selectedPath)
         {
             var to = selectedPath;
-            if (to != null && to.Depth >= (int)SrmDocument.Level.PeptideGroups)
-                return (PeptideGroupDocNode) document.FindNode(to.GetIdentity((int) SrmDocument.Level.PeptideGroups));
+            if (to != null && to.Depth >= (int)SrmDocument.Level.MoleculeGroups)
+                return (PeptideGroupDocNode) document.FindNode(to.GetIdentity((int) SrmDocument.Level.MoleculeGroups));
 
             PeptideGroupDocNode lastPeptideGroupDocuNode = null;
-            foreach (PeptideGroupDocNode peptideGroupDocNode in document.PeptideGroups)
+            foreach (PeptideGroupDocNode peptideGroupDocNode in document.MoleculeGroups)
             {
                 lastPeptideGroupDocuNode = peptideGroupDocNode;
             }
@@ -761,6 +1077,7 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 var tab = GetTabPage(value);
+                radioMolecule.Visible = radioPeptide.Visible = radioPeptide.Checked = (value  == PasteFormat.transition_list);
                 for (int i = tabControl1.Controls.Count - 1; i >= 0; i--)
                 {
                     if (tabControl1.Controls[i] != tab)
@@ -1447,6 +1764,90 @@ namespace pwiz.Skyline.EditUI
 
         #endregion
 
+        private void radioPeptide_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateMoleculeType();
+        }
+
+        private void UpdateMoleculeType()
+        {
+            bool isPeptide = radioPeptide.Checked;
+
+            //Skip updating if nothing needs to be changed
+            if ((isPeptide && gridViewTransitionList.ColumnCount == 5) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
+                return;
+
+            int rowCount = gridViewTransitionList.RowCount - 1;
+
+            if (rowCount > 0)
+            {
+                if (
+                    MultiButtonMsgDlg.Show(this,
+                        string.Format(
+                            Resources.PasteDlg_UpdateMoleculeType_Possible_loss_of_data_could_occur_if_you_switch_to__0___Do_you_want_to_continue_,
+                            isPeptide ? radioPeptide.Text : radioMolecule.Text), MultiButtonMsgDlg.BUTTON_YES) ==
+                    DialogResult.Cancel)
+                {
+                    radioPeptide.Checked = !isPeptide;
+                    return;
+                }
+            }
+
+            var peptideGroupNames = new string[rowCount];
+            var peptideNames = new string[rowCount];
+            var precursorMzs = new string[rowCount];
+            var productMzs = new string[rowCount];
+
+            for (int i = 0; i < rowCount; i ++)
+            {
+                peptideGroupNames[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 0 : 3)].Value);
+                peptideNames[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 1 : 0)].Value);
+                precursorMzs[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 4 : 1)].Value);
+                productMzs[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 5 : 2)].Value);
+            }
+
+            gridViewTransitionList.Columns.Clear();
+                        
+            if (isPeptide)
+            {
+                gridViewTransitionList.Columns.Add("Peptide", Resources.PasteDlg_UpdateMoleculeType_Peptide); // Not L10N
+                gridViewTransitionList.Columns.Add("Precursor", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);  // Not L10N
+                gridViewTransitionList.Columns.Add("Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z); // Not L10N
+                gridViewTransitionList.Columns.Add("Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name); // Not L10N
+                gridViewTransitionList.Columns.Add("Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description); // Not L10N
+            }
+            else
+            {
+                gridViewTransitionList.Columns.Add("MoleculeGroup", Resources.PasteDlg_UpdateMoleculeType_Molecule_Class); // Not L10N
+                gridViewTransitionList.Columns.Add("Name", Resources.PasteDlg_UpdateMoleculeType_Short_Name); // Not L10N
+                gridViewTransitionList.Columns.Add("PreFormula", Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula); // Not L10N
+                gridViewTransitionList.Columns.Add("ProdFormula", Resources.PasteDlg_UpdateMoleculeType_Product_Formula); // Not L10N
+                gridViewTransitionList.Columns.Add("MzPre", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z); // Not L10N
+                gridViewTransitionList.Columns.Add("MzProd", Resources.PasteDlg_UpdateMoleculeType_Product_m_z); // Not L10N
+                gridViewTransitionList.Columns.Add("ChargePre", Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge); // Not L10N
+                gridViewTransitionList.Columns.Add("ChargeProd", Resources.PasteDlg_UpdateMoleculeType_Product_Charge); // Not L10N
+            }
+
+            for (int i = 0; i < rowCount; i ++)
+            {
+                if (isPeptide)
+                {
+                    gridViewTransitionList.Rows.Add(peptideNames[i], precursorMzs[i], productMzs[i],
+                        peptideGroupNames[i], string.Empty);
+                }
+                else
+                {
+                    gridViewTransitionList.Rows.Add(peptideGroupNames[i], peptideNames[i], string.Empty,
+                        string.Empty, precursorMzs[i], productMzs[i]);
+                }
+            }
+        }
+
+        public bool IsMolecule
+        {
+            get { return radioMolecule.Checked; } 
+            set { radioMolecule.Checked = value; }
+        }
     }
 
     public enum PasteFormat

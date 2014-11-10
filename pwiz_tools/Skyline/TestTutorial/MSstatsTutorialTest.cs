@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SelectedPath =
-                    SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0);
+                    SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0);
             });
             WaitForDocumentLoaded();
             WaitForGraphs();
@@ -158,7 +158,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.ShowResultsGrid(false));
 
-            SelectNode(SrmDocument.Level.PeptideGroups, 36);
+            SelectNode(SrmDocument.Level.MoleculeGroups, 36);
             var popupPickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
                 {

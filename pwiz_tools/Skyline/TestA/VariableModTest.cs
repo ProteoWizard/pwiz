@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestA
             Assert.AreNotSame(docYeast, docYeast2);
 
             // Even when automanage children is turned off
-            var docNoAuto = (SrmDocument)docMoYeast.ChangeChildren((from node in docYeast2.PeptideGroups
+            var docNoAuto = (SrmDocument)docMoYeast.ChangeChildren((from node in docYeast2.MoleculeGroups
                                                                    select node.ChangeAutoManageChildren(false)).ToArray());
             var docYeastNoAuto = docNoAuto.ChangeSettings(docYeast.Settings);
             Assert.AreEqual(0, GetVariableModCount(docYeastNoAuto));
@@ -166,14 +166,14 @@ namespace pwiz.SkylineTestA
 
             // Repeat with auto-manage turned off to make sure it also removes
             // variable modifications which are made invalide by changing the limit
-            var docMultiNoAuto = (SrmDocument)docVarAaMulti.ChangeChildren((from node in docVarAaMulti.PeptideGroups
+            var docMultiNoAuto = (SrmDocument)docVarAaMulti.ChangeChildren((from node in docVarAaMulti.MoleculeGroups
                                                                             select node.ChangeAutoManageChildren(false)).ToArray());
             var docMulti2NoAuto = docMultiNoAuto.ChangeSettings(docVar2AaMulti.Settings);
-            Assert.IsTrue(ArrayUtil.ReferencesEqual(docVar2AaMulti.Peptides.ToArray(),
-                                                    docMulti2NoAuto.Peptides.ToArray()));
+            Assert.IsTrue(ArrayUtil.ReferencesEqual(docVar2AaMulti.Molecules.ToArray(),
+                                                    docMulti2NoAuto.Molecules.ToArray()));
             var docMulti1NoAuto = docMulti2NoAuto.ChangeSettings(docVar1AaMulti.Settings);
-            Assert.IsTrue(ArrayUtil.ReferencesEqual(docVar1AaMulti.Peptides.ToArray(),
-                                                    docMulti1NoAuto.Peptides.ToArray()));
+            Assert.IsTrue(ArrayUtil.ReferencesEqual(docVar1AaMulti.Molecules.ToArray(),
+                                                    docMulti1NoAuto.Molecules.ToArray()));
             var docMultiNoAutoReset = docMulti1NoAuto.ChangeSettings(docVarAaMulti.Settings);
             Assert.AreSame(docMulti1NoAuto.Children, docMultiNoAutoReset.Children);
 
@@ -196,8 +196,8 @@ namespace pwiz.SkylineTestA
             var docVarHeavyMulti = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(
                 mods => mods.ChangeHeavyModifications(HEAVY_MODS_MULTI)));
 
-            var varHeavyGroups = docVarHeavy.TransitionGroups.ToArray();
-            var varHeavyMultiPeptides = docVarHeavyMulti.TransitionGroups.ToArray();
+            var varHeavyGroups = docVarHeavy.PeptideTransitionGroups.ToArray();
+            var varHeavyMultiPeptides = docVarHeavyMulti.PeptideTransitionGroups.ToArray();
             Assert.AreEqual(varHeavyGroups.Length, varHeavyMultiPeptides.Length);
             for (int i = 0; i < varHeavyGroups.Length; i++)
                 Assert.AreEqual(varHeavyGroups[i].PrecursorMz, varHeavyMultiPeptides[i].PrecursorMz);
@@ -361,7 +361,7 @@ namespace pwiz.SkylineTestA
 
             AssertEx.Serializable(docList);
             AssertEx.IsDocumentState(docList, 3, 68, 134, 157, 481);
-            foreach (var nodeTran in docList.Transitions)
+            foreach (var nodeTran in docList.PeptideTransitions)
             {
                 var it = nodeTran.Transition.IonType;
                 Assert.IsTrue(it == IonType.y || it == IonType.b || it == IonType.precursor, "Found unexpected non b, y or precursor ion type.");

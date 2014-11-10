@@ -111,12 +111,13 @@ namespace SkylineTester
             _updateTimer.Tick += (s, a) => RunUI(UpdateQuality);
             _updateTimer.Start();
 
-            var args = "offscreen=on quality=on{0} pass0={1} pass1={2} {3} {4}".With(
+            var args = "offscreen=on quality=on{0} pass0={1} pass1={2} {3}{4}{5}".With(
                 MainWindow.QualityPassDefinite.Checked ? " loop=" + int.Parse(MainWindow.QualityPassCount.Text) : "",
                 MainWindow.Pass0.Checked.ToString(),
                 MainWindow.Pass1.Checked.ToString(),
                 MainWindow.QualityChooseTests.Checked ? TabTests.GetTestList() : "",
-                MainWindow.QualityChooseTests.Checked ? "perftests=on" : "");  // In case any perf tests are explicitly selected - no harm if they aren't
+                MainWindow.QualityChooseTests.Checked ? " perftests=on" : "",  // In case any perf tests are explicitly selected - no harm if they aren't
+                MainWindow.QualtityTestSmallMolecules.Checked ? " testsmallmolecules=on" : "");
             MainWindow.AddTestRunner(args);
 
             MainWindow.RunCommands();

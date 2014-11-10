@@ -59,9 +59,13 @@ namespace pwiz.SkylineTestFunctional
 
             AbiTofTest();
 
+            // Avoid "The current document contains peptides without enough information to rank transitions for triggered acquisition."
+            var save = TestSmallMolecules;
+            TestSmallMolecules = false;
             AgilentThermoABSciexTriggeredTest();
 
             BrukerTOFMethodTest();
+            TestSmallMolecules = save;
 
             ABSciexShortNameTest();
         }
@@ -588,7 +592,13 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(exportMethodDlg);
             }
 
-            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), File.ReadAllText(modsShortNameActual));
+            var actual = File.ReadAllText(modsShortNameActual);
+            if (TestSmallMolecules)
+            {
+                for (int i=0; i++ < 4;)
+                    actual = actual.Substring(0, actual.LastIndexOf('\n') - 1); // Trim test molecule related lines
+            }
+            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), actual);
 
         }
 

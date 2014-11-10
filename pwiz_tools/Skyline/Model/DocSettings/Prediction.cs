@@ -258,8 +258,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 // have changed.  This is important to avoid an infinite loop when
                 // not enough information is present to actually calculate the Conversion
                 // parameter.
-                var enumPrevious = previous.TransitionGroups.GetEnumerator();
-                foreach (var nodeGroup in document.TransitionGroups)
+                var enumPrevious = previous.PeptideTransitionGroups.GetEnumerator();
+                foreach (var nodeGroup in document.PeptideTransitionGroups)
                 {
                     if (!enumPrevious.MoveNext())
                         return true;
@@ -1125,6 +1125,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public MeasuredRetentionTime(string peptideSequence, double retentionTime, bool allowNegative = false)
         {
+            Assume.IsFalse(String.IsNullOrEmpty(peptideSequence));
             PeptideSequence = peptideSequence;
             RetentionTime = retentionTime;
             _allowNegative = allowNegative;
@@ -1152,6 +1153,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
+            // FUTURE: May need to add support for small molecules
             if (!FastaSequence.IsExSequence(PeptideSequence))
             {
                 throw new InvalidDataException(string.Format(Resources.MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide,

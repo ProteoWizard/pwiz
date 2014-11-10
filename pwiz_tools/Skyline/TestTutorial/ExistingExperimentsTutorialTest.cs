@@ -374,19 +374,24 @@ namespace pwiz.SkylineTestTutorial
                 });
             RunUI(() =>
             {
-                foreach (PeptideDocNode nodePep in SkylineWindow.Document.Peptides)
+                foreach (PeptideDocNode nodePep in SkylineWindow.Document.Molecules)
                 {
                     string sequence = nodePep.Peptide.Sequence;
                     int imageIndex = PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree);
-                    if (sequence.StartsWith("YLA")) // Not L10N
+                    if ((sequence != null) && sequence.StartsWith("YLA")) // Not L10N
                     {
                         Assert.AreEqual((int)SequenceTree.StateImageId.keep, imageIndex,
                             string.Format("Expected keep icon for the peptide {0}, found {1}", sequence, imageIndex));
                     }
-                    else
+                    else if (sequence != null)
                     {
                         Assert.AreEqual((int)SequenceTree.StateImageId.peak, imageIndex,
                             string.Format("Expected peak icon for the peptide {0}, found {1}", sequence, imageIndex));
+                    }
+                    else // Custom Ion
+                    {
+                        Assert.AreEqual((int)SequenceTree.StateImageId.peak_blank, imageIndex,
+                            string.Format("Expected peak_blank icon for the custom ion {0}, found {1}", nodePep.RawTextId, imageIndex));
                     }
                 }
             });
@@ -444,7 +449,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           SkylineWindow.SelectedPath =
-                              SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.PeptideGroups, 0);
+                              SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.MoleculeGroups, 0);
                       });
             WaitForGraphs();
             if (IsEnableLiveReports)

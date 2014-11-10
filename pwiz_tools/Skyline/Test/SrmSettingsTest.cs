@@ -716,8 +716,12 @@ namespace pwiz.SkylineTest
                 " cut=\"P\" sense=\"N\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"H4P2O5\" charges=\"1\"/>");
+            // Old style (as detected by use of "charges" instead of "charge"), mass is assumed to be M-H
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS-2*BioMassCalc.MassProton).ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
+            // Modern style, mass is assumed to be the actual ion mass (which will decrease by charge*massElectron)
+            AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
+                " mass_monoisotopic=\"" + (MeasuredIon.MIN_REPORTER_MASS).ToString(CultureInfo.InvariantCulture) + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS).ToString(CultureInfo.InvariantCulture) + "\" charge=\"1\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name =\"Reporter Formula\" formula = \"H2O\" charges = \"1\" optional = \"true\"/>");
 
             // No name
@@ -745,9 +749,9 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
                 " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + 1).ToString(CultureInfo.InvariantCulture) + "\"/>");
             // Reporter with bad formulas
-            AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"\" charges=\"1\"/>");
-            AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"He3\" charges=\"1\"/>");
             // Reporter with formulas producing out of range masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +

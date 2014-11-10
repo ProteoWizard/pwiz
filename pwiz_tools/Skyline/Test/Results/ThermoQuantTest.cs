@@ -173,7 +173,7 @@ namespace pwiz.SkylineTest.Results
             docResults = docContainer.Document;
             // Make sure all groups have at least 5 transitions (of 6) with ratios
             int ratioGroupMissingCount = 0;
-            foreach (var nodeGroup in docResults.TransitionGroups)
+            foreach (var nodeGroup in docResults.PeptideTransitionGroups)
             {
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
                 {
@@ -224,7 +224,7 @@ namespace pwiz.SkylineTest.Results
             // Remove the first light transition, checking that this removes the ratio
             // from the corresponding heavy transition, but not the entire group, until
             // after all light transitions have been removed.
-            IdentityPath pathFirstPep = docResults.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            IdentityPath pathFirstPep = docResults.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             var nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
             Assert.AreEqual(2, nodePep.Children.Count);
             var nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
@@ -266,9 +266,8 @@ namespace pwiz.SkylineTest.Results
             bool firstAdd = true;
             var nodeGroupLightOrig = (TransitionGroupDocNode) doc.FindNode(pathGroupLight);
             DocNode[] lightChildrenOrig = nodeGroupLightOrig.Children.ToArray();
-            foreach (var nodeTran in nodeGroupLightOrig.TransitionGroup.GetTransitions(docResults.Settings,
-                                                                                       null,
-                                                                                       nodeGroupLightOrig.PrecursorMz))
+            foreach (var nodeTran in nodeGroupLightOrig.GetTransitions(docResults.Settings,
+                null, nodeGroupLightOrig.PrecursorMz, null, null, null, false))
             {
                 var transition = nodeTran.Transition;
                 if (!firstAdd && lightChildrenOrig.IndexOf(node => Equals(node.Id, transition)) == -1)

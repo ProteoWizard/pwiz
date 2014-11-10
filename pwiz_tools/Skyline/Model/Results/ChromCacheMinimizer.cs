@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Results
                     .ToDictionary(kvp => kvp.Key, kvp=>kvp.Value);
             var chromGroups = new ChromatogramGroupInfo[ChromGroupHeaderInfos.Count];
             var transitionGroups = new List<TransitionGroupDocNode>[ChromGroupHeaderInfos.Count];
-            foreach (var nodePep in Document.Peptides)
+            foreach (var nodePep in Document.Molecules)
             {
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
@@ -569,8 +569,8 @@ namespace pwiz.Skyline.Model.Results
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
                 var header = new ChromGroupHeaderInfo5(originalHeader.Precursor,
-                                                      originalHeader.SeqIndex,
-                                                      originalHeader.SeqLen,
+                                                      originalHeader.TextIdIndex,
+                                                      originalHeader.TextIdLen,
                                                       fileIndex,
                                                       _transitions.Count - startTransitionIndex,
                                                       startTransitionIndex,

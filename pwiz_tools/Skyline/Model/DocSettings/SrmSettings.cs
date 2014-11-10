@@ -269,8 +269,12 @@ namespace pwiz.Skyline.Model.DocSettings
                                       Transition transition, IsotopeDistInfo isotopeDist)
         {
             if (transition.IsCustom())
-                return transition.CustomIon.GetMassH(TransitionSettings.Prediction.FragmentMassType);
+            {
+                // Return the ion mass before electron removal
+                return transition.CustomIon.GetMass(TransitionSettings.Prediction.FragmentMassType);
+            }
 
+            // Return the singly protonated mass of the peptide fragment
             return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }
 
@@ -291,16 +295,22 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
         }
 
+        public string GetDisplayName(PeptideDocNode nodePep)
+        {
+            return nodePep.Peptide.IsCustomIon ? nodePep.Peptide.CustomIon.DisplayName : GetModifiedSequence(nodePep);
+        }
+
         public string GetModifiedSequence(PeptideDocNode nodePep)
         {
+            Assume.IsFalse(nodePep.Peptide.IsCustomIon);
             Assume.IsNotNull(nodePep.ModifiedSequence);
             return nodePep.ModifiedSequence;
         }
 
-        public string GetLookupSequence(PeptideDocNode nodePep)
+        public string GetSourceTextId(PeptideDocNode nodePep)
         {
-            Assume.IsNotNull(nodePep.LookupModifiedSequence);
-            return nodePep.LookupModifiedSequence;
+            Assume.IsNotNull(nodePep.SourceTextId);
+            return nodePep.SourceTextId;
         }
 
         private static readonly SequenceMassCalc MONOISOTOPIC_MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);
@@ -323,9 +333,17 @@ namespace pwiz.Skyline.Model.DocSettings
             // Always use the light m/z value to ensure regression values are consistent between light and heavy
             if (!nodeGroup.TransitionGroup.LabelType.IsLight)
             {
-                double massH = GetPrecursorMass(IsotopeLabelType.light,
-                    nodePep.Peptide.Sequence, nodePep.ExplicitMods);
-                mz = SequenceMassCalc.GetMZ(massH, nodeGroup.TransitionGroup.PrecursorCharge);
+                if (nodePep.Peptide.IsCustomIon)
+                {
+                    double mass = nodePep.Peptide.CustomIon.GetMass(TransitionSettings.Prediction.PrecursorMassType);
+                    mz = BioMassCalc.CalculateMz(mass, nodeGroup.TransitionGroup.PrecursorCharge);
+                }
+                else
+                {
+                    double massH = GetPrecursorMass(IsotopeLabelType.light,
+                        nodePep.Peptide.Sequence, nodePep.ExplicitMods);
+                    mz = SequenceMassCalc.GetMZ(massH, nodeGroup.TransitionGroup.PrecursorCharge);
+                }
             }
             return mz;
         }
@@ -648,6 +666,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool TryGetLibInfo(string sequence, int charge, ExplicitMods mods,
             out IsotopeLabelType type, out SpectrumHeaderInfo libInfo)
         {
+            if (sequence == null)
+            {
+                type = null;
+                libInfo = null;
+                return false;
+            }
             var libraries = PeptideSettings.Libraries;
             foreach (var typedSequence in GetTypedSequences(sequence, mods))
             {
@@ -704,8 +728,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
         {
-            string lookupSequence = nodePep.LookupSequence;
-            var lookupMods = nodePep.LookupMods;
+            string lookupSequence = nodePep.SourceUnmodifiedTextId;
+            var lookupMods = nodePep.SourceExplicitMods;
             if (filePath != null)
             {
                 var times = GetRetentionTimes(filePath, lookupSequence, lookupMods);
@@ -1028,9 +1052,11 @@ namespace pwiz.Skyline.Model.DocSettings
             // could be found in the libraries.  This will be corrected when
             // the libraries are loaded.
             if (libraries.IsLoaded && 
-                // Only check the library, if this is already a variable modification,
-                // or the library contains some form of the peptide.
-                ((mods != null && mods.IsVariableStaticMods) || LibrariesContainAny(peptide.Sequence)))
+                // Only check the library, if this is a custom ion or a peptide that already has
+                // a variable modification, or the library contains some form of the peptide.
+                // This is a performance improvement over checking every variable modification
+                // of a peptide when it is not even in the library.
+                (peptide.IsCustomIon || (mods != null && mods.IsVariableStaticMods) || LibrariesContainAny(peptide.Sequence)))
             {
                 // Only allow variable modifications, if the peptide has no modifications
                 // or already checking variable modifications, and there is reason to check
@@ -1639,6 +1665,8 @@ namespace pwiz.Skyline.Model.DocSettings
         string GetModifiedSequence(string seq, SequenceModFormatType format, bool explicitModsOnly);
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
+        MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances);
+        MassDistribution GetMZDistributionSinglePoint(double mass);
     }
 
     public interface IFragmentMassCalc

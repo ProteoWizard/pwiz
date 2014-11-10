@@ -915,10 +915,7 @@ namespace pwiz.Skyline.FileUI
 
         private bool ValidatePrecursorFit(SrmDocument document, int maxTransitions, bool showMessages)
         {
-            string messageFormat = (OptimizeType == null ?
-                Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__has__2__transitions_which_exceeds_the_current_maximum__3__ :
-                Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__requires__2__transitions_to_optimize_which_exceeds_the_current_maximum__3__);
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 int tranRequired = nodeGroup.Children.Count;
                 if (OptimizeType != null)
@@ -927,9 +924,14 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (showMessages)
                     {
+                        string messageFormat = (OptimizeType == null ?
+                            Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__ :
+                            Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__requires__2__transitions_to_optimize__which_exceeds_the_current_maximum__3__);
+                        string targetName = nodeGroup.TransitionGroup.Peptide.TextId;
+
                         MessageDlg.Show(this, string.Format(messageFormat,
                             SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz) + Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
-                            nodeGroup.TransitionGroup.Peptide.Sequence,
+                            targetName,
                             tranRequired,
                             maxTransitions));
                     }

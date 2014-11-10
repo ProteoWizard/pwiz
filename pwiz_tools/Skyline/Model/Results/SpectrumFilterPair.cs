@@ -27,13 +27,13 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
-        public SpectrumFilterPair(PrecursorModSeq precursorModSeq, int id, double? minTime, double? maxTime,
+        public SpectrumFilterPair(PrecursorTextId precursorTextId, int id, double? minTime, double? maxTime,
             double? minDriftTimeMsec, double? maxDriftTimeMsec, double highEnergyDriftTimeOffsetMsec, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
-            ModifiedSequence = precursorModSeq.ModifiedSequence;
-            Q1 = precursorModSeq.PrecursorMz;
-            Extractor = precursorModSeq.Extractor;
+            ModifiedSequence = precursorTextId.TextId;
+            Q1 = precursorTextId.PrecursorMz;
+            Extractor = precursorTextId.Extractor;
             MinTime = minTime;
             MaxTime = maxTime;
             MinDriftTimeMsec = minDriftTimeMsec;

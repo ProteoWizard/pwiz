@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedPaths = new List<IdentityPath>
                 {
                     SkylineWindow.SequenceTree.SelectedPath,
-                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0)
+                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0)
                 };
             });
             var editNoteDlg = ShowDialog<EditNoteDlg>(SkylineWindow.EditNote);
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedPath = 
-                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0);
+                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0);
             });
             var editNoteDlg4 = ShowDialog<EditNoteDlg>(SkylineWindow.EditNote);
             RunUI(() =>
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedPath =
-                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
+                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
             // Set matching annotations to match the protein, except for the noteText which is different.
             var editNoteDlg1 = ShowDialog<EditNoteDlg>(SkylineWindow.EditNote);
@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedPaths = new List<IdentityPath>
                 {
                     SkylineWindow.SequenceTree.SelectedPath, 
-                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0)
+                    SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0)
                 };
             });
             WaitForClosedForm(editNoteDlg1);

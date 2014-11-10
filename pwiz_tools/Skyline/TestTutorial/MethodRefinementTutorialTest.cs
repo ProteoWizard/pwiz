@@ -263,7 +263,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphSpectrum(false);
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 0);
                 SkylineWindow.SelectedNode.Expand();
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
 
             PauseForScreenShot("Targetes view clipped from the main window", 14); // Not L10N
@@ -348,7 +348,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.AreEqual(73, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(219, SkylineWindow.Document.TransitionCount);
+                Assert.AreEqual(219, SkylineWindow.Document.PeptideTransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
@@ -402,7 +402,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.RemoveMissingResults);
             WaitForDocumentChange(docCurrent);
             Assert.AreEqual(86, SkylineWindow.Document.PeptideCount);
-            Assert.AreEqual(255, SkylineWindow.Document.TransitionCount);
+            Assert.AreEqual(255, SkylineWindow.Document.PeptideTransitionCount);
 
             // Measuring Retention Times, p. 17
             {

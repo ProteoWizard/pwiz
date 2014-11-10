@@ -355,15 +355,15 @@ namespace pwiz.Skyline.Model
             // _massAmmonia = _massCalc.CalculateMass("NH3");
 
             // ReSharper disable NonLocalizedString
-            _massDiffA = -_massCalc.CalculateMass("CO");
+            _massDiffA = -_massCalc.CalculateMassFromFormula("CO");
             _massDiffB = 0.0;
-            _massDiffC = _massCalc.CalculateMass("NH3");
-            _massDiffY = _massCalc.CalculateMass("H2O");
-            _massDiffX = _massCalc.CalculateMass("CO2");
-            _massDiffZ = _massDiffY - _massCalc.CalculateMass("NH2");
+            _massDiffC = _massCalc.CalculateMassFromFormula("NH3");
+            _massDiffY = _massCalc.CalculateMassFromFormula("H2O");
+            _massDiffX = _massCalc.CalculateMassFromFormula("CO2");
+            _massDiffZ = _massDiffY - _massCalc.CalculateMassFromFormula("NH2");
 
-            _massCleaveN = _massCalc.CalculateMass("H");
-            _massCleaveC = _massCalc.CalculateMass("OH");
+            _massCleaveN = _massCalc.CalculateMassFromFormula("H");
+            _massCleaveC = _massCalc.CalculateMassFromFormula("OH");
             // ReSharper restore NonLocalizedString
 
             // These numbers are set intentionally smaller than any known instrument
@@ -623,6 +623,7 @@ namespace pwiz.Skyline.Model
             return mod;
 
         }
+
         public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances)
         {
             return GetMzDistribution(seq, charge, abundances, null);
@@ -632,6 +633,23 @@ namespace pwiz.Skyline.Model
         {
             double unexplainedMass;
             Molecule molecule = GetFormula(seq, mods, out unexplainedMass);
+            return GetMzDistribution(molecule, charge, abundances, unexplainedMass, true);
+        }
+
+        public MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances)
+        {
+            Molecule molecule = Molecule.Parse(formula);
+            return GetMzDistribution(molecule, charge, abundances, 0, false);
+        }
+
+        public MassDistribution GetMZDistributionSinglePoint(double mass)
+        {
+            return MassDistribution.NewInstance(new SortedDictionary<double, double> {{mass, 1}}, _massResolution, _minimumAbundance);
+        }
+
+// ReSharper disable once ParameterTypeCanBeEnumerable.Local
+        private MassDistribution GetMzDistribution(Molecule molecule, int charge, IsotopeAbundances abundances, double unexplainedMass, bool isMassH)
+        {
             // Low resolution to get back only peaks at Dalton (i.e. neutron) boundaries
             var md = new MassDistribution(_massResolution, _minimumAbundance);
             var result = md;
@@ -639,12 +657,10 @@ namespace pwiz.Skyline.Model
             {
                 result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
             }
-            return result.OffsetAndDivide(unexplainedMass + charge*BioMassCalc.MassProton, charge);
+            return result.OffsetAndDivide(unexplainedMass + charge* (isMassH ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
         }
 
-// ReSharper disable ReturnTypeCanBeEnumerable.Local
         private Molecule GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)
-// ReSharper restore ReturnTypeCanBeEnumerable.Local
         {
             var formula = new FormulaBuilder(_massCalc);
             var modMasses = GetModMasses(mods);
@@ -709,7 +725,7 @@ namespace pwiz.Skyline.Model
                     double unexplainedMass = _unexplainedMass;
                     foreach (var atomCount in _dictAtomCounts.Where(p => p.Value < 0))
                     {
-                        unexplainedMass += _massCalc.CalculateMass(atomCount.Key + (-atomCount.Value));
+                        unexplainedMass += _massCalc.CalculateMassFromFormula(atomCount.Key + (-atomCount.Value));
                     }
                     return unexplainedMass;
                 }
@@ -946,7 +962,7 @@ namespace pwiz.Skyline.Model
             {
                 string formula = AMINO_FORMULAS[i];
                 if (formula != null)
-                    _aminoMasses[i] = _massCalc.CalculateMass(formula);
+                    _aminoMasses[i] = _massCalc.CalculateMassFromFormula(formula);
             }
 
             // Not L10N
@@ -955,12 +971,12 @@ namespace pwiz.Skyline.Model
             // Handle values for non-amino acids
             // Wikipedia says Aspartic acid or Asparagine
             _aminoMasses['b'] = _aminoMasses['B'] =
-                (_massCalc.CalculateMass("C4H5NO3") + _massCalc.CalculateMass("C4H6N2O2")) / 2; // Not L10N
+                (_massCalc.CalculateMassFromFormula("C4H5NO3") + _massCalc.CalculateMassFromFormula("C4H6N2O2")) / 2; // Not L10N
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;
             _aminoMasses['x'] = _aminoMasses['X'] = 111.060000;	// Why?
             // Wikipedia says Glutamic acid or Glutamine
             _aminoMasses['z'] = _aminoMasses['Z'] =
-                (_massCalc.CalculateMass("C5H6ON2") + _massCalc.CalculateMass("C5H8N2O2")) / 2; // Not L10N
+                (_massCalc.CalculateMassFromFormula("C5H6ON2") + _massCalc.CalculateMassFromFormula("C5H8N2O2")) / 2; // Not L10N
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
@@ -1093,6 +1109,16 @@ namespace pwiz.Skyline.Model
 
         {
             return _massCalcBase.GetMzDistribution(seq, charge, abundances, _mods);
+        }
+
+        public MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances)
+        {
+            return _massCalcBase.GetMZDistributionFromFormula(formula, charge, abundances);
+        }
+
+        public MassDistribution GetMZDistributionSinglePoint(double mass)
+        {
+            return  _massCalcBase.GetMZDistributionSinglePoint(mass);
         }
 
         public double[,] GetFragmentIonMasses(string seq)

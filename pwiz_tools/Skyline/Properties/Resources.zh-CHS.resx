@@ -2202,12 +2202,6 @@
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>无针对此蛋白质的序列</value>
   </data>
-  <data name="PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number" xml:space="preserve">
-    <value>母离子质荷比必须是数字。</value>
-  </data>
-  <data name="PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number" xml:space="preserve">
-    <value>子离子质荷比必须是数字。</value>
-  </data>
   <data name="PasteDlg_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
     <value>从剪切板获取数据失败。</value>
   </data>
@@ -3636,9 +3630,6 @@
   </data>
   <data name="SkylineWindow_exportIsolationListMenuItem_Click_There_is_no_isolation_list_data_to_export" xml:space="preserve">
     <value>没有需要导出的采集列表。</value>
-  </data>
-  <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features" xml:space="preserve">
-    <value>文档必须包含针对其导出特性的肽。</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_Export_ESP_Features" xml:space="preserve">
     <value>导出 ESP 特性</value>
@@ -5423,9 +5414,6 @@
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>针对肽{1}在电荷{0}态下的不适当色谱图数据</value>
   </data>
-  <data name="ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0__of_peptide__1_" xml:space="preserve">
-    <value>肽{1}在电荷态{0}下的一个或多个缺失色谱图</value>
-  </data>
   <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>文档必须拥有导入的结果。</value>
   </data>
@@ -5446,9 +5434,6 @@
   </data>
   <data name="ExportChromatogramDlg_OkDialog_At_least_one_file_must_be_selected" xml:space="preserve">
     <value>必须至少选定一个文件</value>
-  </data>
-  <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_peptides_for_which_to_export_chromatograms" xml:space="preserve">
-    <value>文档必须包含针对其导出色谱图的肽。</value>
   </data>
   <data name="ExportChromatogramDlg_OkDialog_At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
     <value>必须至少选定一个色谱图类型。</value>
@@ -5663,9 +5648,6 @@
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>文档必须拥有导入的结果。</value>
   </data>
-  <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_" xml:space="preserve">
-    <value>文档必须具有肽，以重新合并色谱图。</value>
-  </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
     <value>操作过程中的意外文档修改。</value>
   </data>
@@ -5674,9 +5656,6 @@
   </data>
   <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>文档必须拥有导入的结果。</value>
-  </data>
-  <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features_" xml:space="preserve">
-    <value>文档必须包含针对其导出特性的肽。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
     <value>结果的重新合并需要训练过的峰排名模型。</value>
@@ -6912,9 +6891,6 @@
   </data>
   <data name="ComparePeakBoundaries_ComparePeakBoundaries__0___external_" xml:space="preserve">
     <value>{0} [外部]</value>
-  </data>
-  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_peptides_in_order_to_compare_model_peak_picking_" xml:space="preserve">
-    <value>文档必须具有肽，以比较模型峰值拣选。</value>
   </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>文档必须完全加载，以比较模型峰值拣选。</value>

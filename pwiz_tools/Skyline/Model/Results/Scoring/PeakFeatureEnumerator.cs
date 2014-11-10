@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                                IProgressMonitor progressMonitor = null)
         {
             // Get features for each peptide
-            int totalPeptides = document.PeptideCount;
+            int totalPeptides = document.MoleculeCount;
             int currentPeptide = 0;
             var status = new ProgressStatus(string.Empty);
 
@@ -48,9 +48,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 runEnumDict.Add(fileInfo.FileIndex, runEnumDict.Count + 1);
             }
 
-            foreach (var nodePepGroup in document.PeptideGroups)
+            foreach (var nodePepGroup in document.MoleculeGroups)
             {
-                foreach (var nodePep in nodePepGroup.Peptides)
+                foreach (var nodePep in nodePepGroup.Molecules)
                 {
                     if (nodePep.TransitionGroupCount == 0)
                         continue;
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         {
                             progressMonitor.UpdateProgress(status =
                                 status.ChangeMessage(string.Format(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_,
-                                    nodePep.ModifiedSequenceDisplay))
+                                    nodePep.RawTextIdDisplay)) // Modified sequence, or custom ion name
                                       .ChangePercentComplete(percentComplete));
                         }
                     }
@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var sb = new StringBuilder();
             if (NodePep.IsDecoy)
                 sb.Append("DECOY_"); // Not L10N
-            sb.Append(NodePep.ModifiedSequence);
+            sb.Append(NodePep.RawTextId); // Modified sequence, or display name for custom ion
             if (!LabelType.IsLight)
                 sb.Append("_").Append(LabelType); // Not L10N
             sb.Append("_run").Append(Run); // Not L10N

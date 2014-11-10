@@ -21,32 +21,32 @@ using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public struct PrecursorModSeq
+    public struct PrecursorTextId
     {
-        public PrecursorModSeq(double precursorMz, string modifiedSequence, ChromExtractor extractor) : this()
+        public PrecursorTextId(double precursorMz, string textId, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
-            ModifiedSequence = modifiedSequence;
+            TextId = textId;
             Extractor = extractor;
         }
 
         public double PrecursorMz { get; private set; }
-        public string ModifiedSequence { get; private set; }
+        public string TextId { get; private set; }  // Peptide Modifed Sequence or custom ion ID
         public ChromExtractor Extractor { get; private set; }
 
         #region object overrides
 
-        public bool Equals(PrecursorModSeq other)
+        public bool Equals(PrecursorTextId other)
         {
             return PrecursorMz.Equals(other.PrecursorMz) &&
-                string.Equals(ModifiedSequence, other.ModifiedSequence) &&
+                string.Equals(TextId, other.TextId) &&
                 Extractor == other.Extractor;
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is PrecursorModSeq && Equals((PrecursorModSeq) obj);
+            return obj is PrecursorTextId && Equals((PrecursorTextId) obj);
         }
 
         public override int GetHashCode()
@@ -54,31 +54,31 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = PrecursorMz.GetHashCode();
-                hashCode = (hashCode*397) ^ (ModifiedSequence != null ? ModifiedSequence.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (TextId != null ? TextId.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (int) Extractor;
                 return hashCode;
             }
         }
 
-        private sealed class PrecursorMzModifiedSequenceComparer : IComparer<PrecursorModSeq>
+        private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>
         {
-            public int Compare(PrecursorModSeq x, PrecursorModSeq y)
+            public int Compare(PrecursorTextId x, PrecursorTextId y)
             {
                 int c = Comparer.Default.Compare(x.PrecursorMz, y.PrecursorMz);
                 if (c != 0)
                     return c;
-                c = string.CompareOrdinal(x.ModifiedSequence, y.ModifiedSequence);
+                c = string.CompareOrdinal(x.TextId, y.TextId);
                 if (c != 0)
                     return c;
                 return x.Extractor - y.Extractor;
             }
         }
 
-        private static readonly IComparer<PrecursorModSeq> PRECURSOR_MOD_SEQ_COMPARER_INSTANCE = new PrecursorMzModifiedSequenceComparer();
+        private static readonly IComparer<PrecursorTextId> PRECURSOR_TEXT_ID_COMPARER_INSTANCE = new PrecursorMzTextIdComparer();
 
-        public static IComparer<PrecursorModSeq> PrecursorModSeqComparerInstance
+        public static IComparer<PrecursorTextId> PrecursorTextIdComparerInstance
         {
-            get { return PRECURSOR_MOD_SEQ_COMPARER_INSTANCE; }
+            get { return PRECURSOR_TEXT_ID_COMPARER_INSTANCE; }
         }
 
         #endregion

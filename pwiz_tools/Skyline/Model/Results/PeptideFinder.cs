@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Results
         public PeptideFinder(SrmDocument document)
         {
             // Create list of Peptide/PrecursorMz pairs.
-            foreach (var peptideDocNode in document.Peptides)
+            foreach (var peptideDocNode in document.Molecules)
             {
                 foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
                 {
@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Results
             // Return color seed only if the match is within allowed tolerance.
             return Math.Abs(closestMatch.PrecursorMz - precursorMz) > _mzMatchTolerance
                 ? null
-                : closestMatch.NodePeptide.ModifiedSequence;
+                : closestMatch.NodePeptide.RawTextId;
         }
 
         private sealed class PeptidePrecursorMz

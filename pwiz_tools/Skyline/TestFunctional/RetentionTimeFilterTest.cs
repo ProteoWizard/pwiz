@@ -96,6 +96,8 @@ namespace pwiz.SkylineTestFunctional
                     foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                     {
                         var peptide = tuple.Item1;
+                        if (!peptide.IsProteomic)
+                            continue;
                         var transitionGroup = tuple.Item2;
                         var predictedRetentionTime = ssrCalcRegression.GetRetentionTime(
                             document.Settings.GetModifiedSequence(peptide.Peptide.Sequence,
@@ -135,7 +137,7 @@ namespace pwiz.SkylineTestFunctional
                     double windowRtIgnored;
 
                     var schedulingPeptide =
-                        documentForScheduling.Peptides.First(pep => ReferenceEquals(pep.Peptide, tuple.Item1.Peptide));
+                        documentForScheduling.Molecules.First(pep => ReferenceEquals(pep.Peptide, tuple.Item1.Peptide));
                     var schedulingTransitionGroup = (TransitionGroupDocNode) schedulingPeptide.FindNode(tuple.Item2.TransitionGroup);
                     double? predictedRt = prediction.PredictRetentionTime(documentForScheduling, 
                         schedulingPeptide, 
@@ -148,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                     AssertChromatogramWindow(document, chromatogramSet, predictedRt.Value - FILTER_LENGTH, predictedRt.Value + FILTER_LENGTH, tuple.Item3);
                 }
-                Assert.AreEqual(countNull, 1);
+                Assert.AreEqual(1 + (TestSmallMolecules ? 1 : 0), countNull);
             }
 
             // Test using iRT with auto-calculated regression
@@ -247,7 +249,7 @@ namespace pwiz.SkylineTestFunctional
         private IEnumerable<Tuple<PeptideDocNode, TransitionGroupDocNode, ChromatogramGroupInfo[]>> 
             LoadAllChromatograms(SrmDocument document, ChromatogramSet chromatogramSet)
         {
-            foreach (var peptide in document.Peptides)
+            foreach (var peptide in document.Molecules)
             {
                 foreach (var transitionGroup in peptide.TransitionGroups)
                 {

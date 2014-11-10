@@ -790,7 +790,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             foreach (var librarySpec in pepLibraries.LibrarySpecs)
             {
                 string libraryName = librarySpec.Name;
-                if (document.TransitionGroups.Contains(nodeGroup =>
+                if (document.MoleculeTransitionGroups.Contains(nodeGroup =>
                         nodeGroup.HasLibInfo && Equals(nodeGroup.LibInfo.LibraryName, libraryName)))
                 {
                     setUsedLibrarySpecs.Add(librarySpec);   

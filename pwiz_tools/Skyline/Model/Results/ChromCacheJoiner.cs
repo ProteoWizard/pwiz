@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private Stream _inStream;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
-        private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _dictTextIdToByteIndex = new Dictionary<string, int>();
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest,
                                 IList<string> cacheFilePaths, ILoadMonitor loader, ProgressStatus status,
@@ -139,8 +139,8 @@ namespace pwiz.Skyline.Model.Results
                                             offsetPeaks,
                                             offsetScores,
                                             offsetPoints,
-                                            _dictSequenceToByteIndex,
-                                            _listSeqBytes);
+                                            _dictTextIdToByteIndex,
+                                            _listTextIdBytes);
                     }
                     _listGroups.AddRange(rawData.ChromatogramEntries);
 

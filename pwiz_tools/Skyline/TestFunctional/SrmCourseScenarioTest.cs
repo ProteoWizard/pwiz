@@ -196,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyUserSets(SrmDocument document, UserSetCount[] userSetGroups, UserSetCount[] userSetTrans)
         {
             var counts = new int[userSetGroups.Length];
-            foreach (var chromInfo in document.TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            foreach (var chromInfo in document.PeptideTransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
             {
                 var userSet = chromInfo.UserSet;
                 counts[userSetGroups.IndexOf(us => Equals(us.UserSet, userSet))]++;
@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(userSetGroups[i].Count, counts[i]);
             }
             counts = new int[userSetTrans.Length];
-            foreach (var chromInfo in document.Transitions.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            foreach (var chromInfo in document.PeptideTransitions.SelectMany(nodeGroup => nodeGroup.ChromInfos))
             {
                 var userSet = chromInfo.UserSet;
                 counts[userSetTrans.IndexOf(us => Equals(us.UserSet, userSet))]++;

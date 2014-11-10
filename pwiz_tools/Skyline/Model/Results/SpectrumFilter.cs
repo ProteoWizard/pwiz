@@ -61,8 +61,8 @@ namespace pwiz.Skyline.Model.Results
             _instrument = document.Settings.TransitionSettings.Instrument;
             _acquisitionMethod = _fullScan.AcquisitionMethod;
 
-            var comparer = PrecursorModSeq.PrecursorModSeqComparerInstance;
-            var dictPrecursorMzToFilter = new SortedDictionary<PrecursorModSeq, SpectrumFilterPair>(comparer);
+            var comparer = PrecursorTextId.PrecursorTextIdComparerInstance;
+            var dictPrecursorMzToFilter = new SortedDictionary<PrecursorTextId, SpectrumFilterPair>(comparer);
 
             if (EnabledMs || EnabledMsMs)
             {
@@ -71,10 +71,10 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-                    var key = new PrecursorModSeq(0, null, ChromExtractor.summed);  // TIC
+                    var key = new PrecursorTextId(0, null, ChromExtractor.summed);  // TIC
                     dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
                         _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
-                    key = new PrecursorModSeq(0, null, ChromExtractor.base_peak);   // BPC
+                    key = new PrecursorTextId(0, null, ChromExtractor.base_peak);   // BPC
                     dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
                         _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
                 }
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Results
                     ? document.Settings.GetIonMobilities(msDataFileUri)
                     : null;
 
-                foreach (var nodePep in document.Peptides)
+                foreach (var nodePep in document.Molecules)
                 {
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.Results
                         double windowDT;
                         double highEnergyDriftTimeOffsetMsec = 0;
                         DriftTimeInfo centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey(nodePep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, out windowDT);
+                            new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, out windowDT);
                         if (centerDriftTime.DriftTimeMsec(false).HasValue)
                         {
                             startDriftTimeMsec = centerDriftTime.DriftTimeMsec(false) - windowDT / 2; // Get the low energy drift time
@@ -184,9 +184,9 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         SpectrumFilterPair filter;
-                        string seq = nodePep.ModifiedSequence;
+                        string textId = nodePep.RawTextId; // Modified Sequence for peptides, or some other string for custom ions
                         double mz = nodeGroup.PrecursorMz;
-                        var key = new PrecursorModSeq(mz, seq, ChromExtractor.summed);
+                        var key = new PrecursorTextId(mz, textId, ChromExtractor.summed);
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
                             filter = new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count, minTime, maxTime,

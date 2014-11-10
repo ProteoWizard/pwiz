@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("PeptideSequence")]
         public string Sequence
         {
-            get { return DocNode.Peptide.Sequence; }
+            get { return ToString(); } // Will show custom ion name if this isn't actually a peptide proper
         }
 
         [InvariantDisplayName("PeptideModifiedSequence")]
@@ -80,8 +80,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return SrmDocument.Settings.GetPrecursorCalc(IsotopeLabelType.light, DocNode.ExplicitMods)
-                                  .GetModifiedSequence(Sequence, true);
+                return DocNode.Peptide.IsCustomIon
+                    ? TextUtil.EXCEL_NA
+                    : SrmDocument.Settings.GetPrecursorCalc(IsotopeLabelType.light, DocNode.ExplicitMods)
+                        .GetModifiedSequence(Sequence, true);
             }
         }
 
@@ -145,7 +147,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return retentionTimeRegression.GetRetentionTime(SrmDocument.Settings.GetLookupSequence(DocNode));
+                return retentionTimeRegression.GetRetentionTime(SrmDocument.Settings.GetSourceTextId(DocNode));
             }
         }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
@@ -172,7 +174,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return Sequence;
+            var peptide = DocNode.Peptide;
+            return peptide.IsCustomIon
+                ? peptide.CustomIon.ToString()
+                : peptide.Sequence;
         }
 
         [InvariantDisplayName("PeptideDocumentLocation")]

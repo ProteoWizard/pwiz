@@ -120,26 +120,26 @@ namespace pwiz.Skyline.Model
                     outlierIds.Add(nodePep.Id.GlobalIndex);
             }
 
-            HashSet<string> includedPeptides = (RemoveRepeatedPeptides ? new HashSet<string>() : null);
-            HashSet<string> repeatedPeptides = (RemoveDuplicatePeptides ? new HashSet<string>() : null);
-            Dictionary<string, List<int>> acceptedPeptides = null;
+            HashSet<RefinementIdentity> includedPeptides = (RemoveRepeatedPeptides ? new HashSet<RefinementIdentity>() : null);
+            HashSet<RefinementIdentity> repeatedPeptides = (RemoveDuplicatePeptides ? new HashSet<RefinementIdentity>() : null);
+            Dictionary<RefinementIdentity, List<int>> acceptedPeptides = null;
             if (AcceptedPeptides != null)
             {
-                acceptedPeptides = new Dictionary<string, List<int>>();
+                acceptedPeptides = new Dictionary<RefinementIdentity, List<int>>();
                 foreach (var peptideCharge in AcceptedPeptides)
                 {
                     List<int> charges;
-                    if (!acceptedPeptides.TryGetValue(peptideCharge.Sequence, out charges))
+                    if (!acceptedPeptides.TryGetValue(new RefinementIdentity(peptideCharge.Sequence), out charges))
                     {
                         charges = (peptideCharge.Charge.HasValue ? new List<int> {peptideCharge.Charge.Value} : null);
-                        acceptedPeptides.Add(peptideCharge.Sequence, charges);
+                        acceptedPeptides.Add(new RefinementIdentity(peptideCharge.Sequence), charges);
                     }
                     else if (charges != null)
                     {
                         if (peptideCharge.Charge.HasValue)
                             charges.Add(peptideCharge.Charge.Value);
                         else
-                            acceptedPeptides[peptideCharge.Sequence] = null;
+                            acceptedPeptides[new RefinementIdentity(peptideCharge.Sequence)] = null;
                     }
                 }
             }
@@ -151,24 +151,28 @@ namespace pwiz.Skyline.Model
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
                 PeptideGroupDocNode nodePepGroupRefined = nodePepGroup;
-                // If auto-managing all peptides, make sure this flag is set correctly,
-                // and update the peptides list, if necessary.
-                if (AutoPickPeptidesAll && nodePepGroup.AutoManageChildren == AutoPickChildrenOff)
+                if (!nodePepGroup.IsNonProteomic) // Is this actually a protein?  If not, this check makes no sense, so skip it.  TODO: bspratt am I thinking right here?
                 {
-                    nodePepGroupRefined = (PeptideGroupDocNode) nodePepGroupRefined.ChangeAutoManageChildren(!AutoPickChildrenOff);
-                    var settings = document.Settings;
-                    if (!AutoPickChildrenOff && !settings.PeptideSettings.Filter.AutoSelect)
-                        settings = settings.ChangePeptideFilter(filter => filter.ChangeAutoSelect(true));
-                    nodePepGroupRefined = nodePepGroupRefined.ChangeSettings(settings,
-                        new SrmSettingsDiff(true, false, false, false, false, false));
+                    // If auto-managing all peptides, make sure this flag is set correctly,
+                    // and update the peptides list, if necessary.
+                    if (AutoPickPeptidesAll && nodePepGroup.AutoManageChildren == AutoPickChildrenOff)
+                    {
+                        nodePepGroupRefined =
+                            (PeptideGroupDocNode) nodePepGroupRefined.ChangeAutoManageChildren(!AutoPickChildrenOff);
+                        var settings = document.Settings;
+                        if (!AutoPickChildrenOff && !settings.PeptideSettings.Filter.AutoSelect)
+                            settings = settings.ChangePeptideFilter(filter => filter.ChangeAutoSelect(true));
+                        nodePepGroupRefined = nodePepGroupRefined.ChangeSettings(settings,
+                            new SrmSettingsDiff(true, false, false, false, false, false));
+                    }
+
+                    nodePepGroupRefined =
+                        Refine(nodePepGroupRefined, document, outlierIds,
+                            includedPeptides, repeatedPeptides, acceptedPeptides);
+
+                    if (nodePepGroupRefined.Children.Count < minPeptides)
+                        continue;
                 }
-
-                nodePepGroupRefined =
-                    Refine(nodePepGroupRefined, document, outlierIds,
-                        includedPeptides, repeatedPeptides, acceptedPeptides);
-
-                if (nodePepGroupRefined.Children.Count < minPeptides)
-                    continue;
 
                 listPepGroups.Add(nodePepGroupRefined);
             }
@@ -183,8 +187,10 @@ namespace pwiz.Skyline.Model
                     var listPeptides = new List<PeptideDocNode>();
                     foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                     {
-                        string pepModSeq = document.Settings.GetModifiedSequence(nodePep);
-                        if (!repeatedPeptides.Contains(pepModSeq))
+                        var identity = nodePep.Peptide.IsCustomIon
+                            ? new RefinementIdentity(nodePep.Peptide.CustomIon)
+                            : new RefinementIdentity(document.Settings.GetModifiedSequence(nodePep));
+                        if (!repeatedPeptides.Contains(identity))
                             listPeptides.Add(nodePep);
                     }
 
@@ -206,9 +212,9 @@ namespace pwiz.Skyline.Model
         private PeptideGroupDocNode Refine(PeptideGroupDocNode nodePepGroup,
                                            SrmDocument document,
                                            ICollection<int> outlierIds,
-                                           ICollection<string> includedPeptides,
-                                           ICollection<string> repeatedPeptides,
-                                           Dictionary<string, List<int>> acceptedPeptides)
+                                           ICollection<RefinementIdentity> includedPeptides,
+                                           ICollection<RefinementIdentity> repeatedPeptides,
+                                           Dictionary<RefinementIdentity, List<int>> acceptedPeptides)
         {
             var listPeptides = new List<PeptideDocNode>();
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
@@ -220,7 +226,7 @@ namespace pwiz.Skyline.Model
                 // then skip it.
                 List<int> acceptedCharges = null;
                 if (acceptedPeptides != null &&
-                    !acceptedPeptides.TryGetValue(AcceptModified ? nodePep.ModifiedSequence : nodePep.Peptide.Sequence, out acceptedCharges))
+                    !acceptedPeptides.TryGetValue(AcceptModified ? new RefinementIdentity(nodePep.RawTextId) : new RefinementIdentity(nodePep.RawUnmodifiedTextId), out acceptedCharges))
                 {
                     continue;
                 }
@@ -264,17 +270,19 @@ namespace pwiz.Skyline.Model
 
                 if (includedPeptides != null)
                 {
-                    string pepModSeq = document.Settings.GetModifiedSequence(nodePepRefined);
+                    var identity = nodePepRefined.Peptide.IsCustomIon
+                        ? new RefinementIdentity(nodePep.Peptide.CustomIon)
+                        : new RefinementIdentity(document.Settings.GetModifiedSequence(nodePepRefined)); 
                     // Skip peptides already added
-                    if (includedPeptides.Contains(pepModSeq))
+                    if (includedPeptides.Contains(identity))
                     {
                         // Record repeated peptides for removing duplicate peptides later
                         if (repeatedPeptides != null)
-                            repeatedPeptides.Add(pepModSeq);
+                            repeatedPeptides.Add(identity);
                         continue;                        
                     }
                     // Record all peptides seen
-                    includedPeptides.Add(pepModSeq);
+                    includedPeptides.Add(identity);
                 }
 
                 listPeptides.Add(nodePepRefined);
@@ -570,7 +578,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument RemoveDecoys(SrmDocument document)
         {
             // Remove the existing decoys
-            return (SrmDocument) document.RemoveAll(document.PeptideGroups.Where(nodePeptideGroup => nodePeptideGroup.IsDecoy)
+            return (SrmDocument) document.RemoveAll(document.MoleculeGroups.Where(nodePeptideGroup => nodePeptideGroup.IsDecoy)
                                                         .Select(nodePeptideGroup => nodePeptideGroup.Id.GlobalIndex).ToArray()); 
         }
 
@@ -754,7 +762,7 @@ namespace pwiz.Skyline.Model
                 else if (transition.IsPrecursor() && decoyGroup.DecoyMassShift.HasValue)
                     productMassShift = decoyGroup.DecoyMassShift.Value;
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
-                                                     transition.MassIndex, transition.Charge, productMassShift);
+                                                     transition.MassIndex, transition.Charge, productMassShift, transition.CustomIon);
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, 0,
                                                             nodeTran.IsotopeDistInfo, nodeTran.LibInfo));
             }
@@ -955,6 +963,43 @@ namespace pwiz.Skyline.Model
             public int Ordinal { get; private set; }
             public bool AbovePrecusorMz { get; private set; }
             public int Index { get; private set; }
+        }
+
+        private sealed class RefinementIdentity
+        {
+            public RefinementIdentity(CustomIon customIon)
+            {
+                CustomIon = customIon;
+            }
+
+            public RefinementIdentity(string sequence)
+            {
+                Sequence = sequence;
+            }
+
+            private CustomIon CustomIon { get; set; }
+            private string Sequence { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (!(obj is RefinementIdentity)) return false;
+                return Equals((RefinementIdentity) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                int result = Sequence != null ? Sequence.GetHashCode() : 0;
+                result = (result*397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
+                return result;
+            }
+
+            private bool Equals(RefinementIdentity identity)
+            {
+                return Equals(identity.Sequence, Sequence) &&
+                       Equals(identity.CustomIon, CustomIon);
+            }
         }
     }
 }

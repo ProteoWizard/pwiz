@@ -243,8 +243,18 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeGroup == null)
                 return string.Empty;
 
-            var seq = nodeGroup.TransitionGroup.Peptide.Sequence;
-            return string.Format("{0} - {1:F04}{2}{3}", seq, nodeGroup.PrecursorMz, // Not L10N
+            var seq = nodeGroup.TransitionGroup.Peptide.Sequence; // Not using Peptide.RawTextId, see comment below
+            if (nodeGroup.TransitionGroup.IsCustomIon)
+            {
+                // Showing precursor m/z, so avoid showing ion masses as in DisplayName
+                var customIon = nodeGroup.TransitionGroup.Peptide.CustomIon;
+                seq = customIon.Name ?? customIon.Formula;
+            }
+            string prefix = string.Empty;
+            if (seq != null)
+                prefix = seq + " - ";   // Not L10N
+            
+            return string.Format("{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz, // Not L10N
                                  Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
                                  nodeGroup.TransitionGroup.LabelTypeText);            
         }

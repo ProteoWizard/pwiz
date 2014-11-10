@@ -242,7 +242,7 @@ namespace SkylineTester
                 : MainWindow.NightlyBranchUrl.Text;
             TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), architectureList, true, false, true);
 
-            MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1" + (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : ""));
+            MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1" + (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : "") + (MainWindow.NightlyTestSmallMolecules.Checked ? " testsmallmolecules=on" : ""));
             MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();

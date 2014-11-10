@@ -595,6 +595,7 @@ namespace SkylineTester
                 runLoops,
                 runLoopsCount,
                 runIndefinitely,
+                testsTestSmallMolecules,
                 offscreen,
                 testsEnglish,
                 testsChinese,
@@ -623,7 +624,8 @@ namespace SkylineTester
                 // Quality
                 qualityPassDefinite,
                 qualityPassCount,
-                qualityPassIndefinite, 
+                qualityPassIndefinite,
+                qualityTestSmallMolecules,
                 pass0,
                 pass1,
                 qualityAllTests,
@@ -635,6 +637,7 @@ namespace SkylineTester
                 nightlyBuildType,
                 nightlyBuildTrunk,
                 nightlyRunPerfTests,
+                nightlyTestSmallMolecules,
                 nightlyBranch,
                 nightlyBranchUrl,
                 nightlyRoot);
@@ -986,6 +989,7 @@ namespace SkylineTester
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
         public TextBox          NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
+        public CheckBox         NightlyTestSmallMolecules { get { return nightlyTestSmallMolecules; } }
         public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
         public Label            NightlyTestName             { get { return nightlyTestName; } }
@@ -1004,6 +1008,7 @@ namespace SkylineTester
         public NumericUpDown    QualityPassCount            { get { return qualityPassCount; } }
         public RadioButton      QualityPassDefinite         { get { return qualityPassDefinite; } }
         public Label            QualityTestName             { get { return qualityTestName; } }
+        public CheckBox         QualtityTestSmallMolecules { get { return qualityTestSmallMolecules; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public Button           RunBuild                    { get { return runBuild; } }
         public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
@@ -1022,6 +1027,7 @@ namespace SkylineTester
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
+        public CheckBox         TestsTestSmallMolecules { get { return testsTestSmallMolecules; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
         public CheckBox         TestsChinese                { get { return testsChinese; } }
         public CheckBox         TestsEnglish                { get { return testsEnglish; } }

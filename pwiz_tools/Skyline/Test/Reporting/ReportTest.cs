@@ -196,7 +196,7 @@ namespace pwiz.SkylineTest.Reporting
                 ResultSet resultSet = report.Execute(database);
                 Assert.AreEqual(26, resultSet.ColumnInfos.Count);
                 // The file contains one transition that does not map to the imported results
-                Assert.AreEqual(srmDocument.TransitionCount / 2 - 1, resultSet.RowCount);
+                Assert.AreEqual(srmDocument.PeptideTransitionCount / 2 - 1, resultSet.RowCount);
             }
         }
     }

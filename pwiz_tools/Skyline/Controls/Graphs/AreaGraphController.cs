@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    paneKeys = GraphSummary.StateProvider.SelectionDocument.TransitionGroups.Select(
+                    paneKeys = GraphSummary.StateProvider.SelectionDocument.MoleculeTransitionGroups.Select(
                             group => new PaneKey(group.TransitionGroup.LabelType)).Distinct().ToArray();
                 }
             }

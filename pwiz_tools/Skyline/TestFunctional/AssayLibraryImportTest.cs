@@ -209,8 +209,8 @@ namespace pwiz.SkylineTestFunctional
                 var docCurrent = SkylineWindow.DocumentUI;
                 // All of the transitions are there except for the ones with errors
                 ValidateDocAndIrt(docCurrent, 16, 361, 10);
-                Assert.AreEqual(docCurrent.TransitionCount, 109);
-                Assert.AreEqual(docCurrent.TransitionGroupCount, 22);
+                Assert.AreEqual(docCurrent.PeptideTransitionCount, 109);
+                Assert.AreEqual(docCurrent.PeptideTransitionGroupCount, 22);
                 // Spectral library results are there
                 var currentLibraries = docCurrent.Settings.PeptideSettings.Libraries;
                 Assert.IsTrue(currentLibraries.HasLibraries);
@@ -487,7 +487,7 @@ namespace pwiz.SkylineTestFunctional
             // Document starts empty with no transitions and no iRT calculator
             // 355 transitions, libraries, and iRT times are imported, including libraries for the iRT times
             var docCalcGood = LoadDocument(documentBlank);
-            Assert.AreEqual(0, docCalcGood.Transitions.Count());
+            Assert.AreEqual(0, docCalcGood.PeptideTransitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcGood = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -521,7 +521,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(355, library.SpectrumCount);
             });
             bool foundLibraryCheck = false;
-            foreach (var groupNode in SkylineWindow.Document.TransitionGroups)
+            foreach (var groupNode in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 Assert.IsTrue(groupNode.HasLibInfo);
                 Assert.IsTrue(groupNode.HasLibRanks);
@@ -556,7 +556,7 @@ namespace pwiz.SkylineTestFunctional
             var irtOriginal = TestFilesDir.GetTestPath("irtOriginal.irtdb");
             var docReload = LoadDocument(documentBlank);
             Assert.IsNull(docReload.Settings.PeptideSettings.Prediction.RetentionTime);
-            Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideTransitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcExisting = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -599,7 +599,7 @@ namespace pwiz.SkylineTestFunctional
             var oldPeptides = db.GetPeptides().ToList();
             var standardSeq = from peptide in oldPeptides where peptide.Standard select peptide.Sequence;
             standardSeq = standardSeq.ToList();
-            foreach (var groupNode in SkylineWindow.Document.TransitionGroups)
+            foreach (var groupNode in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 // Every node other than iRT standards now has library info
                 if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Sequence))
@@ -620,7 +620,7 @@ namespace pwiz.SkylineTestFunctional
             // 27. Successful import and succesful load of existing database, with overwrite of iRT's, plus overwrite of library
             var docImport = LoadDocument(documentBlank);
             Assert.IsNull(docImport.Settings.PeptideSettings.Prediction.RetentionTime);
-            Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideTransitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcExistingOverwrite = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -659,7 +659,7 @@ namespace pwiz.SkylineTestFunctional
                 var library = libraries.Libraries[0];
                 Assert.AreEqual(345, library.SpectrumCount);
             });
-            foreach (var groupNode in SkylineWindow.Document.TransitionGroups)
+            foreach (var groupNode in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 // Every node other than iRT standards now has library info
                 if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Sequence))
@@ -697,7 +697,7 @@ namespace pwiz.SkylineTestFunctional
             // 29. Start with blank document, skip iRT's entirely but import library intensities, show this works out fine
             var docLibraryOnly = LoadDocument(documentBlank);
             Assert.IsNull(docLibraryOnly.Settings.PeptideSettings.Prediction.RetentionTime);
-            Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideTransitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textNoError), importIrt => importIrt.Btn1Click());
             var libraryDlgLibOnly = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(libraryDlgLibOnly, libraryDlgLibOnly.Btn0Click);
@@ -784,7 +784,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var docInterleaved = SkylineWindow.DocumentUI;
                 Assert.AreEqual(6, docInterleaved.PeptideCount);
-                Assert.AreEqual(60, docInterleaved.TransitionCount);
+                Assert.AreEqual(60, docInterleaved.PeptideTransitionCount);
                 var libraries = docInterleaved.Settings.PeptideSettings.Libraries;
                 Assert.IsTrue(libraries.HasLibraries);
                 Assert.IsTrue(libraries.IsLoaded);
@@ -793,7 +793,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Consensus_Dario_iRT_new_blank-assay", libraries.LibrarySpecs[0].Name);
                 var library = libraries.Libraries[0];
                 Assert.AreEqual(12, library.SpectrumCount);
-                foreach (var groupNode in docInterleaved.TransitionGroups)
+                foreach (var groupNode in docInterleaved.PeptideTransitionGroups)
                 {
                     Assert.IsTrue(groupNode.HasLibInfo);
                     Assert.IsTrue(groupNode.HasLibRanks);

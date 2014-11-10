@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.Irt
         public double? ScoreSequence(string seq)
         {
             double irt;
-            if (DictStandards.TryGetValue(seq, out irt) || DictLibrary.TryGetValue(seq, out irt))
+            if (seq != null && (DictStandards.TryGetValue(seq, out irt) || DictLibrary.TryGetValue(seq, out irt)))
                 return irt;
             return null;
         }

@@ -162,9 +162,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex);
             }
-            else if (Transition.IsCustom(tran.IonType))
+            else if (tran.IsCustom())
             {
-                labelPrefix = tran.CustomIon.Name;
+                labelPrefix = tran.CustomIon.DisplayName;
             }
             else
             {

@@ -1549,7 +1549,7 @@ namespace pwiz.Skyline.Model.Lib
         private readonly byte[] _key;
 
         public LibKey(string sequence, int charge)
-            : this(Encoding.Default.GetBytes(sequence), 0, sequence.Length, charge)
+            : this(Encoding.UTF8.GetBytes(sequence), 0, sequence.Length, charge)
         {
         }
 
@@ -1565,7 +1565,7 @@ namespace pwiz.Skyline.Model.Lib
             _key = key;
         }
 
-        public string Sequence { get { return Encoding.Default.GetString(_key, 1, _key.Length - 1); } }
+        public string Sequence { get { return Encoding.UTF8.GetString(_key, 1, _key.Length - 1); } }
         public int Charge { get { return _key[0]; } }
         public bool IsModified { get { return _key.Contains((byte)'['); } } // Not L10N
 
@@ -1820,7 +1820,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public LibKeyOld(byte[] sequence, int start, int len, int charge)
-            : this(Encoding.Default.GetString(sequence, start, len), charge)
+            : this(Encoding.UTF8.GetString(sequence, start, len), charge)
         {
         }
 

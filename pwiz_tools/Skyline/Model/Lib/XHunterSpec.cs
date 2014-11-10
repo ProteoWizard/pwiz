@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.Lib
                         break;
                 }
 
-                string header = Encoding.Default.GetString(libHeader, 0, i);
+                string header = Encoding.UTF8.GetString(libHeader, 0, i);
                 Match match = REGEX_HEADER.Match(header);
                 if (match.Success)
                 {
@@ -454,7 +454,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             if (modTotal != 0)
                                 sb.Append(SequenceMassCalc.GetModDiffDescription(modTotal));
-                            sb.Append(Encoding.Default.GetString(specSequence, iLast, iPos - iLast));
+                            sb.Append(Encoding.UTF8.GetString(specSequence, iLast, iPos - iLast));
 
                             modTotal = 0;
                         }
@@ -463,8 +463,8 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     if (modTotal != 0)
                         sb.Append(SequenceMassCalc.GetModDiffDescription(modTotal));
-                    sb.Append(Encoding.Default.GetString(specSequence, iLast, seqLength - iLast));
-                    sequence = Encoding.Default.GetBytes(sb.ToString());
+                    sb.Append(Encoding.UTF8.GetString(specSequence, iLast, seqLength - iLast));
+                    sequence = Encoding.UTF8.GetBytes(sb.ToString());
                     seqLength = sb.Length;
                 }
 
@@ -753,7 +753,7 @@ namespace pwiz.Skyline.Model.Lib
                 
                 byte[] header = new byte[256 - 8];
                 const string headerText = @"HLF v=2 s=test.hlf d=2009.02.04"; // Not L10N
-                Encoding.Default.GetBytes(headerText, 0, headerText.Length, header, 0);
+                Encoding.UTF8.GetBytes(headerText, 0, headerText.Length, header, 0);
 
                 outStream.Write(header, 0, header.Length);
 
@@ -809,7 +809,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(sequence.Length), 0, sizeof(int));
 
                     // Sequence
-                    Encoding.Default.GetBytes(sequence, 0, sequence.Length, seqBuffer, 0);
+                    Encoding.UTF8.GetBytes(sequence, 0, sequence.Length, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, sequence.Length);
 
                     // Peaks

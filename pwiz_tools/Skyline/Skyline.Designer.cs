@@ -41,6 +41,8 @@ namespace pwiz.Skyline
             this.deleteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.pickChildrenContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addMoleculeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addTransitionMoleculeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setStandardTypeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -439,6 +441,8 @@ namespace pwiz.Skyline
             this.deleteContextMenuItem,
             this.toolStripSeparator1,
             this.pickChildrenContextMenuItem,
+            this.addMoleculeContextMenuItem,
+            this.addTransitionMoleculeContextMenuItem,
             this.removePeakContextMenuItem,
             this.setStandardTypeContextMenuItem,
             this.modifyPeptideContextMenuItem,
@@ -489,6 +493,18 @@ namespace pwiz.Skyline
             this.pickChildrenContextMenuItem.Name = "pickChildrenContextMenuItem";
             resources.ApplyResources(this.pickChildrenContextMenuItem, "pickChildrenContextMenuItem");
             this.pickChildrenContextMenuItem.Click += new System.EventHandler(this.pickChildrenContextMenuItem_Click);
+            // 
+            // addMoleculeContextMenuItem
+            // 
+            this.addMoleculeContextMenuItem.Name = "addMoleculeContextMenuItem";
+            resources.ApplyResources(this.addMoleculeContextMenuItem, "addMoleculeContextMenuItem");
+            this.addMoleculeContextMenuItem.Click += new System.EventHandler(this.addMoleculeContextMenuItem_Click);
+            // 
+            // addTransitionMoleculeContextMenuItem
+            // 
+            this.addTransitionMoleculeContextMenuItem.Name = "addTransitionMoleculeContextMenuItem";
+            resources.ApplyResources(this.addTransitionMoleculeContextMenuItem, "addTransitionMoleculeContextMenuItem");
+            this.addTransitionMoleculeContextMenuItem.Click += new System.EventHandler(this.addTransitionMoleculeContextMenuItem_Click);
             // 
             // removePeakContextMenuItem
             // 
@@ -3583,8 +3599,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByGeneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem compareModelsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem startPageMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addMoleculeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arrangeColumnMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arrangeRowMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addTransitionMoleculeContextMenuItem;
     }
 }
 

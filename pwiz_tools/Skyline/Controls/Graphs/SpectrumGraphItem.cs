@@ -60,7 +60,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     libraryNamePrefix += " - "; // Not L10N
 
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
-                string sequence = transitionGroup.Peptide.Sequence;
+                string sequence = transitionGroup.Peptide.IsCustomIon
+                    ? transitionGroup.Peptide.CustomIon.DisplayName
+                    : transitionGroup.Peptide.Sequence;
                 int charge = transitionGroup.PrecursorCharge;
                 var labelType = SpectrumInfo.LabelType;
                 return labelType.IsLight
@@ -180,6 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case IonType.y: color = COLOR_Y; break;
                     case IonType.c: color = COLOR_C; break;
                     case IonType.z: color = COLOR_Z; break;
+                    // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
                     case IonType.precursor: color = COLOR_PRECURSOR; break;
                 }
 
@@ -214,6 +217,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
+                // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
             }
             if (IsMatch(rmi.PredictedMz))

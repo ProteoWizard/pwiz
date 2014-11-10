@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check and save original document information
             var docOrig = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Peptides, docOrig.PeptideCount - 3);
+            var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Molecules, docOrig.PeptideCount - 3);
             var peptideOrig = (PeptideDocNode) docOrig.FindNode(pathPeptide);
             Assert.AreEqual(2, peptideOrig.Children.Count);
             Assert.IsNull(peptideOrig.ExplicitMods);
@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
             // Check that variable modification worked, and that the peptide of
             // interest is variably modified.
             Assert.IsTrue(docOrig.PeptideCount < docVarMod.PeptideCount);
-            pathPeptide = docVarMod.GetPathTo((int)SrmDocument.Level.Peptides, docVarMod.PeptideCount - 4);
+            pathPeptide = docVarMod.GetPathTo((int)SrmDocument.Level.Molecules, docVarMod.PeptideCount - 4);
             var peptideVarMod = (PeptideDocNode)docVarMod.FindNode(pathPeptide);
             Assert.AreEqual(2, peptideVarMod.Children.Count);
             Assert.IsTrue(peptideVarMod.HasVariableMods,
@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
             var docNoStaticMods = WaitForDocumentChange(docResetImplicit);
 
             // Explicitly modify the first peptide
-            var pathPeptideFirst = docNoStaticMods.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            var pathPeptideFirst = docNoStaticMods.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             var peptideUnmod = (PeptideDocNode) docNoStaticMods.FindNode(pathPeptideFirst);
             RunUI(() => SkylineWindow.SelectedPath = pathPeptideFirst);
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, dlg =>
@@ -245,7 +245,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docRestored = SkylineWindow.Document;
-            var pathPeptideFirstNew = docRestored.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            var pathPeptideFirstNew = docRestored.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             var peptideExplicitVarModNew = docRestored.FindNode(pathPeptideFirstNew);
             Assert.AreEqual(peptideExplicitVarMod, peptideExplicitVarModNew,
                 "Saved peptide with explicit variable modification was not restored correctly.");

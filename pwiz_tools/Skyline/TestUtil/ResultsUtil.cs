@@ -75,7 +75,8 @@ namespace pwiz.SkylineTestUtil
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
             try
             {
-                return (SrmDocument)xmlSerializer.Deserialize(stream);
+                SrmDocument result = (SrmDocument)xmlSerializer.Deserialize(stream);
+                return result;
             }
             catch (Exception x)
             {
@@ -164,13 +165,13 @@ namespace pwiz.SkylineTestUtil
             Assert.AreNotEqual(-1, index, string.Format("Replicate {0} not found", replicateName));
             int peptidesActual = 0;
 
-            foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.Results[index] != null))
+            foreach (var nodePep in document.Molecules.Where(nodePep => (nodePep.Results != null && nodePep.Results[index] != null)))
             {
                 peptidesActual += nodePep.Results[index].Sum(chromInfo => chromInfo.PeakCountRatio >= 0.5 ? 1 : 0);
             }
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
-            foreach (var nodeGroup in document.TransitionGroups.Where(nodeGroup => nodeGroup.Results[index] != null))
+            foreach (var nodeGroup in document.MoleculeTransitionGroups.Where(nodeGroup => ( nodeGroup.Results != null && nodeGroup.Results[index] != null)))
             {
                 foreach (var chromInfo in nodeGroup.Results[index])
                 {
@@ -185,7 +186,7 @@ namespace pwiz.SkylineTestUtil
             }
             int transitionsActual = 0;
             int transitionsHeavyActual = 0;
-            foreach (var nodeTran in document.Transitions.Where(nodeTran => nodeTran.Results[index] != null))
+            foreach (var nodeTran in document.MoleculeTransitions.Where(nodeTran => (nodeTran.Results != null && nodeTran.Results[index] != null)))
             {
                 foreach (var chromInfo in nodeTran.Results[index])
                 {
@@ -246,9 +247,16 @@ namespace pwiz.SkylineTestUtil
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var results = document.Settings.MeasuredResults;
             int missingPeaks = 0;
-            foreach (var pair in document.PeptidePrecursorPairs)
+            foreach (var pair in document.MoleculePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo1;
+                if (Settings.Default.TestSmallMolecules && pair.NodePep.Peptide.IsCustomIon &&
+                    pair.NodePep.Peptide.CustomIon.ToString().Equals(SrmDocument.TestingNonProteomicMoleculeName))
+                {
+                    Assert.IsFalse(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
+                    tolerance, true, out chromGroupInfo1));
+                    continue;
+                }
                 Assert.IsTrue(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo1));
                 Assert.AreEqual(1, chromGroupInfo1.Length);

@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // variable scheduling windows
                 if (!useMeasured || !singleWindow || MeasuredRTWindow == RetentionTime.TimeWindow)
                 {
-                    string modifiedSequence = document.Settings.GetLookupSequence(nodePep);
+                    string modifiedSequence = document.Settings.GetSourceTextId(nodePep);
                     if (null != replicateFilter && document.Settings.HasResults)
                     {
                         var retentionTimes = new List<double>();
@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Otherwise, if every precursor has enough result information
             // to predict a retention time, then this document can be scheduled.
             bool anyTimes = false;
-            foreach (var nodePep in document.Peptides)
+            foreach (var nodePep in document.Molecules)
             {
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
@@ -792,6 +792,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
         {
             allowVariableMods = false;
+
+            if (peptide.IsCustomIon)
+                return false;
 
             // Must begin after excluded C-terminal AAs
             if (peptide.Begin.HasValue && peptide.Begin.Value < ExcludeNTermAAs)

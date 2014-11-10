@@ -311,15 +311,5 @@ namespace pwiz.Skyline.Controls.Startup {
                 return ResourceManager.GetString("TargetedMSMS_zip", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The reporter ion {0} was not found in the transition filter settings..
-        /// </summary>
-        internal static string TransitionInfo_ReadXml_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_ {
-            get {
-                return ResourceManager.GetString("TransitionInfo_ReadXml_The_reporter_ion__0__was_not_found_in_the_transition_filte" +
-                        "r_settings_", resourceCulture);
-            }
-        }
     }
 }

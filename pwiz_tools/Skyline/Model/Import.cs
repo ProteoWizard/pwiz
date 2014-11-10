@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model
         {
             // Set starting values for limit counters
             _countPeptides = Document.PeptideCount;
-            _countIons = Document.TransitionCount;
+            _countIons = Document.PeptideTransitionCount;
 
             // Store set of existing FASTA sequences to keep from duplicating
             HashSet<FastaSequence> set = new HashSet<FastaSequence>();
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model
             FastaSequence fastaSeq = nodeGroup.Id as FastaSequence;
             if (fastaSeq != null && set.Contains(fastaSeq))
                 return;
-            if (nodeGroup.PeptideCount == 0)
+            if (nodeGroup.MoleculeCount == 0)
             {
                 EmptyPeptideGroupCount++;
 
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (EmptyPeptideGroupCount == MaxEmptyPeptideGroupCount + 1)
                     {
-                        var nonEmptyGroups = listGroups.Where(g => g.PeptideCount > 0).ToArray();
+                        var nonEmptyGroups = listGroups.Where(g => g.MoleculeCount > 0).ToArray();
                         listGroups.Clear();
                         listGroups.AddRange(nonEmptyGroups);
 
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             listGroups.Add(nodeGroup);
-            _countPeptides += nodeGroup.PeptideCount;
+            _countPeptides += nodeGroup.MoleculeCount;
             _countIons += nodeGroup.TransitionCount;
         }
 
@@ -349,7 +349,7 @@ namespace pwiz.Skyline.Model
 
             // Set starting values for limit counters
             _countPeptides = Document.PeptideCount;
-            _countIons = Document.TransitionCount;
+            _countIons = Document.PeptideTransitionCount;
 
             List<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
             PeptideGroupBuilder seqBuilder = null;
@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Model
             librarySpectra.AddRange(builder.LibrarySpectra);
             if (builder.PeptideGroupErrorInfo.Count > 0)
                 errorList.AddRange(builder.PeptideGroupErrorInfo);
-            _countPeptides += nodeGroup.PeptideCount;
+            _countPeptides += nodeGroup.MoleculeCount;
             _countIons += nodeGroup.TransitionCount;
         }
 
@@ -591,7 +591,7 @@ namespace pwiz.Skyline.Model
                         nodeForModPep = ModMatcher.CreateDocNodeFromSettings(modifiedSequence, null, SrmSettingsDiff.ALL, out nodeGroupMatched);
                         NodeDictionary.Add(modifiedSequence, nodeForModPep);
                     }
-                    info.ModifiedSequence = nodeForModPep == null ? null : nodeForModPep.ModifiedSequence;
+                    info.ModifiedSequence = nodeForModPep == null ? null : nodeForModPep.RawTextId;
                 }
                 var nodesToConsider = nodeForModPep != null ? 
                                       new List<PeptideDocNode> {nodeForModPep} :
@@ -602,7 +602,7 @@ namespace pwiz.Skyline.Model
                     var defaultLabelType = info.DefaultLabelType;
                     double precursorMassH = Settings.GetPrecursorMass(defaultLabelType, info.PeptideSequence, variableMods);
                     int precursorMassShift;
-                    int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance,
+                    int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
                                                               info.IsDecoy, out precursorMassShift);
                     if (precursorCharge > 0)
                     {
@@ -620,7 +620,7 @@ namespace pwiz.Skyline.Model
                     foreach (var labelType in peptideMods.GetHeavyModifications().Select(typeMods => typeMods.LabelType))
                     {
                         precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideSequence, variableMods);
-                        precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance,
+                        precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
                                                               info.IsDecoy, out precursorMassShift);
                         if (precursorCharge > 0)
                         {
@@ -682,10 +682,11 @@ namespace pwiz.Skyline.Model
             private static int CalcPrecursorCharge(double precursorMassH,
                                                    double precursorMz,
                                                    double tolerance,
+                                                   bool isCustomIon,
                                                    bool isDecoy,
                                                    out int massShift)
             {
-                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isDecoy, out massShift);
+                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isCustomIon, isDecoy, out massShift);
             }
 
             private ExTransitionInfo CalcTransitionExplanations(ExTransitionInfo info, long lineNum, out TransitionImportErrorInfo errorInfo)
@@ -812,7 +813,7 @@ namespace pwiz.Skyline.Model
                             continue;
 
                         int massShift;
-                        int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isDecoy, out massShift);
+                        int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift);
                         if (charge > 0)
                         {
                             indexPrec = i;

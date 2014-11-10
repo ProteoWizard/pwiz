@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -32,7 +34,7 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestUniquePrefix()
         {
-            var testStrings = new [,]
+            var testSequences = new[,]
             {
                 // Original name on left, expected result on right.
                 {null, null},
@@ -44,16 +46,17 @@ namespace pwiz.SkylineTestA
                 {"ABCD", "ABCD"},
                 {"ABCDE", "ABCDE"},
                 {"ABCDEF", "ABCDEF"},
-                {"ABCDEFG", "ABC…EFG"},
-                {"ABCDEFG", "ABC…EFG"}, // duplicate name (on purpose)
+                {"ABCDEFG", "ABCDEFG"},
+                {"ABCDEFG", "ABCDEFG"}, // duplicate name (on purpose)
                 {"ABCDEFGH", "ABC…FGH"},
                 {"ABCDEFGHI", "ABC…GHI"},
 
                 {"ABCE", "ABCE"},
 
-                {"ABDEFGHI", "ABD"},
+                {"ABDEFGHI", "ABD…"},
 
-                {"ABEFGHI", "ABE…GHI"},
+                {"ABEFGHI", "ABEFGHI"},
+                {"ABEFGHIJ", "ABE…HIJ"},
                 {"ABEFHI", "ABEFHI"},
 
                 {"ABFFFGHI", "ABF(5)"},
@@ -66,18 +69,54 @@ namespace pwiz.SkylineTestA
                 {"ABGAABAAbAGHI", "ABG…B…b…"},
                 {"ABGAAB[80]AAB[99]AGHI", "ABG…b…b…"}
             };
+            var testCustomIons = new[,]
+            {
+                // Original name on left, expected result on right.
+                {"C32:0", "C32:0"},
+                {"C32:1", "C32:1"},
+                {"C32:2", "C32:2"},
+                {"C32:2", "C32:2"}, // Duplicated on purpose
+                {"C30:0", "C30:0"},
+                {"C[30]:0", "C[30]:0"},
+                {"C[400]:0", "C[4…"},
+                {"C12:0 fish breath", "C12…"},
+                {"C15:0 fish breath", "C15(14)"},
+                {"C15:0 doggy breath", "C15(15)"},
+                {"C16:0 fishy breath", "C16…f…"},
+                {"C16:0 doggy breath", "C16…d…"},
+                {"C14", "C14"},
+                {"C14:1", "C14:1"},
+                {"C14:1-OH", "C14:1…"},
+                {"C14:2", "C14:2"},
+                {"C14:2-OH", "C14:2…"}
+            };
 
-            var strings = new List<string>();
-            for (int i = 0; i < testStrings.GetLength(0); i++)
+            for (var loop = 2; loop > 0; loop--)
             {
-                strings.Add(testStrings[i, 0]);
-            }
-            var prefixGenerator = new UniquePrefixGenerator(strings, 3);
-            for (int i = 0; i < testStrings.GetLength(0); i++)
-            {
-                var expected = testStrings[i, 1];
-                var uniquePrefix = prefixGenerator.GetUniquePrefix(testStrings[i, 0]);
-                Assert.AreEqual(expected, uniquePrefix);
+                var strings = new List<Tuple<string, bool>>();
+                var commontext = (loop == 1) ? String.Empty : "Delta Niner Foxtrot "; // non-peptides should strip leading common text
+
+                for (int i = 0; i < testSequences.GetLength(0); i++)
+                {
+                    strings.Add(new Tuple<string, bool>(testSequences[i, 0], true));
+                }
+                for (int i = 0; i < testCustomIons.GetLength(0); i++)
+                {
+                    strings.Add(new Tuple<string, bool>(commontext + testCustomIons[i, 0], false));
+                }
+                var prefixGenerator = new UniquePrefixGenerator(strings, 3);
+                for (int i = 0; i < testSequences.GetLength(0); i++)
+                {
+                    var expected = testSequences[i, 1];
+                    var uniquePrefix = prefixGenerator.GetUniquePrefix(testSequences[i, 0], true);
+                    Assert.AreEqual(expected, uniquePrefix);
+                }
+                for (int i = 0; i < testCustomIons.GetLength(0); i++)
+                {
+                    var expected = testCustomIons[i, 1];
+                    var uniquePrefix = prefixGenerator.GetUniquePrefix(commontext + testCustomIons[i, 0], false);
+                    Assert.AreEqual(expected, uniquePrefix);
+                }
             }
         }
     }

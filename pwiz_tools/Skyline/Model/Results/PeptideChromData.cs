@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (var set in _dataSets.ToArray())
             {
-                if (!set.Load(provider, NodePep != null ? NodePep.ModifiedSequence : null))
+                if (!set.Load(provider, NodePep != null ? NodePep.RawTextId : null))
                     _dataSets.Remove(set);
             }
             return _dataSets.Count > 0;

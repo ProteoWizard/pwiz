@@ -722,8 +722,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePepTree != null)
                 {
                     nodePeps = new[] {nodePepTree.DocNode};
-                    lookupSequence = nodePepTree.DocNode.LookupSequence;
-                    lookupMods = nodePepTree.DocNode.LookupMods;
+                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTextId;
+                    lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
                 nodeGroups = new[] {nodeGroupTree.DocNode};
                 groupPaths = new[] {nodeGroupTree.Path};
@@ -745,8 +745,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroups[i] = nodeGroup;
                         groupPaths[i] = new IdentityPath(pathParent, nodeGroup.Id);
                     }
-                    lookupSequence = nodePepTree.DocNode.LookupSequence;
-                    lookupMods = nodePepTree.DocNode.LookupMods;
+                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTextId;
+                    lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
             }
 
@@ -1872,9 +1872,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 lookupChromGroupInfoIndex[_nodeGroups[i].Id.GlobalIndex] = i;
 
             // Generate a unique short identifier for each peptide.
-            var peptideNames = new string[peptideDocNodes.Count];
+            var peptideNames = new Tuple<string,bool>[peptideDocNodes.Count];
             for (int i = 0; i < peptideDocNodes.Count; i++)
-                peptideNames[i] = peptideDocNodes[i].ModifiedSequence;
+                peptideNames[i] = new Tuple<string,bool>(peptideDocNodes[i].RawTextId, peptideDocNodes[i].IsProteomic);
             var uniqueNames = new UniquePrefixGenerator(peptideNames, 3);
 
             var displayPeptides = new List<DisplayPeptide>();
@@ -1987,7 +1987,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     fontSize,
                     lineWidth)
                 {
-                    CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.ModifiedSequence)
+                    CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.RawTextId, peptideDocNode.IsProteomic)
                 };
                 var graphPaneKey = new PaneKey();
                 var curveItem = _graphHelper.AddChromatogram(graphPaneKey, graphItem);
@@ -2002,6 +2002,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 string lookupSequence,
                                                 ExplicitMods lookupMods)
         {
+            // FUTURE: Fix this when we can predict retention time for small molecules
+            if (lookupSequence == null)
+            {
+                return;
+            }
             SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms,
                 nodeGroups, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,

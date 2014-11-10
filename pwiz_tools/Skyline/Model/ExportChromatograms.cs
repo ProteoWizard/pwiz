@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model
 
                     }
                 }
-                foreach (var peptideNode in Document.Peptides)
+                foreach (var peptideNode in Document.Molecules)
                 {
                     foreach (TransitionGroupDocNode groupNode in peptideNode.Children)
                         ExportGroupNode(peptideNode, groupNode, chromatograms, filesToExport, chromSources, writer, cultureInfo);
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model
                                      TextWriter writer,
                                      CultureInfo cultureInfo)
         {
-            string peptideModifiedSequence = _settings.GetModifiedSequence(peptideNode);
+            string peptideModifiedSequence = _settings.GetDisplayName(peptideNode);
             int precursorCharge = groupNode.TransitionGroup.PrecursorCharge;
             string labelType = groupNode.TransitionGroup.LabelType.Name;
             var filesInChrom = chromatograms.MSDataFilePaths.Select(path=>path.GetFileName()).ToList();
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model
             }
             if (arrayChromInfo.Length != chromatograms.FileCount)
             {
-                throw new InvalidDataException(string.Format(Resources.ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0__of_peptide__1_,
+                throw new InvalidDataException(string.Format(Resources.ChromatogramExporter_ExportGroupNode_One_or_more_missing_chromatograms_at_charge_state__0__of__1_,
                                                precursorCharge, peptideModifiedSequence));
             }
             foreach (var chromGroupInfo in arrayChromInfo)

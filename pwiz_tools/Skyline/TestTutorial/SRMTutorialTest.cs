@@ -263,7 +263,7 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(pepSettings2, pepSettings2.OkDialog);
             WaitForLibrary(20213);
-            WaitForCondition(() => SkylineWindow.Document.TransitionCount != 313);
+            WaitForCondition(() => SkylineWindow.Document.PeptideTransitionCount != 313);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 96, 450);
 
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);

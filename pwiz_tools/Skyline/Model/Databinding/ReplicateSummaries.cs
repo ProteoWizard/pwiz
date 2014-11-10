@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Databinding
         private IDictionary<IsotopeLabelType, double> CalculateTotalAreas(int replicateIndex)
         {
             var dictTotalAreas = new Dictionary<IsotopeLabelType, double>();
-            foreach (var nodeGroup in Document.TransitionGroups)
+            foreach (var nodeGroup in Document.MoleculeTransitionGroups)
             {
                 if (!nodeGroup.HasResults || nodeGroup.Results[replicateIndex] == null)
                     continue;

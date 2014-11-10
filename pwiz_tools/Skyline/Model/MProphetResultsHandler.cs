@@ -348,8 +348,8 @@ namespace pwiz.Skyline.Model
                     Convert.ToString(peakGroupFeatures.RetentionTime, cultureInfo),
                     Convert.ToString(peakGroupFeatures.StartTime, cultureInfo),
                     Convert.ToString(peakGroupFeatures.EndTime, cultureInfo),
-                    features.Id.NodePep.Peptide.Sequence,
-                    features.Id.NodePep.ModifiedSequence,
+                    features.Id.NodePep.RawUnmodifiedTextId, // Unmodified sequence, or custom ion name
+                    features.Id.NodePep.RawTextId, // Modified sequence, or custom ion name
                     features.Id.NodePepGroup.Name,
                     Convert.ToString(features.Id.NodePep.IsDecoy ? 1 : 0, cultureInfo),
                     ToFieldString((float) mProphetScore, cultureInfo),

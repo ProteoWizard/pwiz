@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestA
         {
             SrmDocument docStudy7 = CreateStudy7Doc();
             string transitionList = ExportCsv(docStudy7);
-            Assert.AreEqual(69, transitionList.Split('\n').Length);
+            Assert.AreEqual(69 + (TestSmallMolecules ? 2 : 0), transitionList.Split('\n').Length); // Special test mode may add an extra doc node
 
             var modifications = docStudy7.Settings.PeptideSettings.Modifications;
             var listStaticMods = modifications.StaticModifications;
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestA
                 {
                     removedMods.Add(i, peptide.ExplicitMods);
 
-                    IdentityPath path = docStudy7.GetPathTo((int) SrmDocument.Level.Peptides, i);
+                    IdentityPath path = docStudy7.GetPathTo((int) SrmDocument.Level.Molecules, i);
                     docStudy7 = docStudy7.ChangePeptideMods(path, null, listStaticMods, listHeavyMods);
                 }
                 i++;
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestA
 
             foreach (var pair in removedMods)
             {
-                IdentityPath path = docStudy7.GetPathTo((int)SrmDocument.Level.Peptides, pair.Key);
+                IdentityPath path = docStudy7.GetPathTo((int)SrmDocument.Level.Molecules, pair.Key);
                 docStudy7 = docStudy7.ChangePeptideMods(path, pair.Value, listStaticMods, listHeavyMods);
             }
 
@@ -111,12 +111,12 @@ namespace pwiz.SkylineTestA
             // Replace the heavy precursor that was removed
             // TODO: Yuck.  Would be nice to have a way to do this without duplicating
             //       so much of the logic in PeptideDocNode and PeptideTreeNode
-            var pepPath = docStudy7.GetPathTo((int) SrmDocument.Level.Peptides, 10);
+            var pepPath = docStudy7.GetPathTo((int) SrmDocument.Level.Molecules, 10);
             var nodePep = (PeptideDocNode) docStudy7.FindNode(pepPath);
             var mods = nodePep.ExplicitMods;
             var nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
             var settings = docStudy7.Settings;
-            foreach (var tranGroup in nodePep.Peptide.GetTransitionGroups(settings, mods, false))
+            foreach (var tranGroup in nodePep.GetTransitionGroups(settings, mods, false))
             {
                 if (tranGroup.PrecursorCharge == nodeGroupLight.TransitionGroup.PrecursorCharge &&
                         !tranGroup.LabelType.IsLight)
@@ -153,7 +153,7 @@ namespace pwiz.SkylineTestA
         {
             SrmDocument docStudy7 = CreateStudy7Doc();
             string transitionList = ExportCsv(docStudy7);
-            Assert.AreEqual(69, transitionList.Split('\n').Length);
+            Assert.AreEqual(TestSmallMolecules ? 71: 69, transitionList.Split('\n').Length); // Did special test mode add a docnode to the end?
 
             var settings = docStudy7.Settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(false));
             settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(ATOMIC_HEAVY_MODS));
@@ -250,7 +250,7 @@ namespace pwiz.SkylineTestA
             var modV = new StaticMod("Heavy V", "V", null, LabelAtoms.C13|LabelAtoms.N15);
             listHeavyMods.Add(modV);
 
-            IdentityPath path = docStudy7.GetPathTo((int)SrmDocument.Level.Peptides, 0);
+            IdentityPath path = docStudy7.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             var peptideMod = (PeptideDocNode) docStudy7.FindNode(path);
             var explicitMods = peptideMod.ExplicitMods;
             explicitMods = explicitMods.ChangeHeavyModifications(new[] {explicitMods.HeavyModifications[0].ChangeModification(modV)});
@@ -287,7 +287,7 @@ namespace pwiz.SkylineTestA
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
 
             // No change to the peptide, but change an orthoganal modification
-            path = docStudy7.GetPathTo((int)SrmDocument.Level.Peptides, docStudy7.Peptides.Count() - 1);
+            path = docStudy7.GetPathTo((int)SrmDocument.Level.Molecules, docStudy7.Peptides.Count() - 1);
             peptideMod = (PeptideDocNode)docStudy7.FindNode(path);
             doc13V = docStudy7.ChangePeptideMods(path, peptideMod.ExplicitMods, listStaticMods, listHeavyMods);
 

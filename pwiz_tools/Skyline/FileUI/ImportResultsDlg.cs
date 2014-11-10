@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI
         public ImportResultsDlg(SrmDocument document, string savedPath)
         {
             _documentSavedPath = savedPath;
-            _warnOnMultiInjection = (document.TransitionCount < MIN_MULTIPLE_TRANSITIONS);
+            _warnOnMultiInjection = (document.MoleculeTransitionCount < MIN_MULTIPLE_TRANSITIONS);
 
             InitializeComponent();
 

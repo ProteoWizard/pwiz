@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double ProductNeutralMass
         {
-            get { return SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(DocNode.Mz, DocNode.Transition.Charge)); }
+            get { return DocNode.GetIonPersistentNeutralMass(); }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double ProductMz

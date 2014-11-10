@@ -594,7 +594,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 var newOptimizations = new HashSet<DbOptimization>();
-                foreach (PeptideGroupDocNode seq in document.PeptideGroups)
+                foreach (PeptideGroupDocNode seq in document.MoleculeGroups)
                 {
                     // Skip peptide groups with no transitions and skip decoys
                     if (seq.TransitionCount == 0 || seq.IsDecoy)
@@ -603,7 +603,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         foreach (TransitionGroupDocNode group in peptide.Children)
                         {
-                            string sequence = document.Settings.GetLookupSequence(peptide);
+                            string sequence = document.Settings.GetSourceTextId(peptide);
                             int charge = group.PrecursorCharge;
                             foreach (TransitionDocNode transition in group.Children)
                             {

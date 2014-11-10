@@ -45,6 +45,8 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void NeutralLossListTest()
         {
+            TestSmallMolecules = false; // No concept of neutral loss for small molecules
+
             var phosphoLossMod = new StaticMod("Phospho Loss", "S, T, Y", null, false, "HPO3",
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("H3PO4"), });
 
@@ -56,12 +58,12 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(0, GetLossCount(docFasta, 1));
 
             // Insert losses into the first transition group
-            var pathPeptide = docFasta.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            var pathPeptide = docFasta.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             var nodePep = (PeptideDocNode) docFasta.FindNode(pathPeptide);
             var nodeGroup = (TransitionGroupDocNode) nodePep.Children[0];
             var listChildren = new List<DocNode>(nodeGroup.Children);
-            foreach (var nodeTran in nodeGroup.TransitionGroup.GetTransitions(docFasta.Settings,
-                nodePep.ExplicitMods, nodeGroup.PrecursorMz))
+            foreach (var nodeTran in nodeGroup.GetTransitions(docFasta.Settings, 
+                nodePep.ExplicitMods, nodeGroup.PrecursorMz, null, null, null, false))
             {
                 if (!nodeTran.HasLoss)
                     continue;
@@ -93,7 +95,7 @@ namespace pwiz.SkylineTestA
 
         private static int GetLossCount(SrmDocument document, int minLosses)
         {
-            return document.Transitions.Count(nodeTran => nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses);
+            return document.PeptideTransitions.Count(nodeTran => nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses);
         }
     }
 }

@@ -46,11 +46,11 @@ namespace pwiz.Skyline.EditUI
             this.gridViewProteins = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinAccession = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinPreferredName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinGene = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinSpecies = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPagePeptideList = new System.Windows.Forms.TabPage();
             this.gridViewPeptides = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,6 +63,8 @@ namespace pwiz.Skyline.EditUI
             this.colTransitionProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.radioMolecule = new System.Windows.Forms.RadioButton();
+            this.radioPeptide = new System.Windows.Forms.RadioButton();
             this.panelError = new System.Windows.Forms.Panel();
             this.tbxError = new System.Windows.Forms.TextBox();
             this.panelButtons = new System.Windows.Forms.Panel();
@@ -184,6 +186,11 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.colProteinDescription, "colProteinDescription");
             this.colProteinDescription.Name = "colProteinDescription";
             // 
+            // colProteinSequence
+            // 
+            resources.ApplyResources(this.colProteinSequence, "colProteinSequence");
+            this.colProteinSequence.Name = "colProteinSequence";
+            // 
             // colProteinAccession
             // 
             resources.ApplyResources(this.colProteinAccession, "colProteinAccession");
@@ -203,11 +210,6 @@ namespace pwiz.Skyline.EditUI
             // 
             resources.ApplyResources(this.colProteinSpecies, "colProteinSpecies");
             this.colProteinSpecies.Name = "colProteinSpecies";
-            // 
-            // colProteinSequence
-            // 
-            resources.ApplyResources(this.colProteinSequence, "colProteinSequence");
-            this.colProteinSequence.Name = "colProteinSequence";
             // 
             // tabPagePeptideList
             // 
@@ -315,6 +317,21 @@ namespace pwiz.Skyline.EditUI
             this.colTransitionProteinDescription.Name = "colTransitionProteinDescription";
             this.colTransitionProteinDescription.ReadOnly = true;
             // 
+            // radioMolecule
+            // 
+            resources.ApplyResources(this.radioMolecule, "radioMolecule");
+            this.radioMolecule.Name = "radioMolecule";
+            this.radioMolecule.TabStop = true;
+            this.radioMolecule.UseVisualStyleBackColor = true;
+            // 
+            // radioPeptide
+            // 
+            resources.ApplyResources(this.radioPeptide, "radioPeptide");
+            this.radioPeptide.Name = "radioPeptide";
+            this.radioPeptide.TabStop = true;
+            this.radioPeptide.UseVisualStyleBackColor = true;
+            this.radioPeptide.CheckedChanged += new System.EventHandler(this.radioPeptide_CheckedChanged);
+            // 
             // panelError
             // 
             this.panelError.Controls.Add(this.tbxError);
@@ -329,7 +346,9 @@ namespace pwiz.Skyline.EditUI
             // 
             // panelButtons
             // 
+            this.panelButtons.Controls.Add(this.radioMolecule);
             this.panelButtons.Controls.Add(this.btnValidate);
+            this.panelButtons.Controls.Add(this.radioPeptide);
             this.panelButtons.Controls.Add(this.btnInsert);
             this.panelButtons.Controls.Add(this.btnCancel);
             resources.ApplyResources(this.panelButtons, "panelButtons");
@@ -362,6 +381,7 @@ namespace pwiz.Skyline.EditUI
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.panelButtons.ResumeLayout(false);
+            this.panelButtons.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -399,5 +419,7 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinGene;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSpecies;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
+        private System.Windows.Forms.RadioButton radioPeptide;
+        private System.Windows.Forms.RadioButton radioMolecule;
     }
 }

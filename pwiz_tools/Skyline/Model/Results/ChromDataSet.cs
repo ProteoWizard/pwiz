@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string ModifiedSequence
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.ModifiedSequence : null; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.TextId : null; }
         }
 
         public double PrecursorMz

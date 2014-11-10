@@ -65,12 +65,12 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        public override string ChildHeading
+        public override string ChildHeading  // TODO(bspratt) distinguish Molecule from Peptide
         {
             get { return string.Format(Resources.PeptideGroupTreeNode_ChildHeading__0__, Text); }
         }
 
-        public override string ChildUndoHeading
+        public override string ChildUndoHeading // TODO(bspratt) distinguish Molecule from Peptide
         {
             get { return string.Format(Resources.PeptideGroupTreeNode_ChildUndoHeading__0__, Text); }
         }
@@ -90,7 +90,15 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public int TypeImageIndex
         {
-            get { return (int) (DocNode.IsDecoy ? SequenceTree.ImageId.protein_decoy : SequenceTree.ImageId.protein); }
+            get
+            {
+                if (DocNode.IsNonProteomic)
+                    return (int)SequenceTree.ImageId.molecule_list;
+                else if (DocNode.IsDecoy)
+                    return (int) SequenceTree.ImageId.protein_decoy;
+                else
+                    return (int) SequenceTree.ImageId.protein; 
+            }
         }
 
         protected override void UpdateChildren(bool materialize)

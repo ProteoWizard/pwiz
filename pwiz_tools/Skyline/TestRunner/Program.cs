@@ -61,7 +61,8 @@ namespace TestRunner
                 "loop=0;repeat=1;pause=0;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;" +
-                "perftests=off;"+
+                "perftests=off;" +
+                "testsmallmolecules=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -239,6 +240,7 @@ namespace TestRunner
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
+            bool testsmallmolecules = commandLineArgs.ArgAsBool("testsmallmolecules");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
@@ -264,7 +266,7 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, showStatus, perftests,
+                demoMode, buildMode, offscreen, internet, showStatus, perftests, testsmallmolecules,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 
@@ -313,6 +315,7 @@ namespace TestRunner
                 runTests.AccessInternet = false;
                 runTests.LiveReports = false;
                 runTests.RunPerfTests = false;
+                runTests.TestSmallMolecules = false;
                 runTests.CheckCrtLeaks = CrtLeakThreshold;
                 bool warnedPass0PerfTest = false;
                 for (int testNumber = 0; testNumber < testList.Count; testNumber++)
@@ -335,6 +338,7 @@ namespace TestRunner
                 runTests.AccessInternet = internet;
                 runTests.LiveReports = true;
                 runTests.RunPerfTests = perftests;
+                runTests.TestSmallMolecules = testsmallmolecules;
                 runTests.CheckCrtLeaks = 0;
 
                 foreach (var removeTest in removeList)
@@ -444,6 +448,7 @@ namespace TestRunner
 
             int perfPass = pass; // We'll run perf tests just once per language
             bool warnedPass2PerfTest = false;
+            bool flip=true;
 
             for (; pass < passEnd; pass++)
             {
@@ -483,6 +488,7 @@ namespace TestRunner
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
                 removeList.Clear();
+                runTests.TestSmallMolecules = testsmallmolecules && (flip = !flip); // Do this in every other pass, so we get it both ways
             }
 
             return runTests.FailureCount == 0;

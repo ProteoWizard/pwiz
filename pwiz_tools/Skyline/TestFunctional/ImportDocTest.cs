@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsDocumentState(docAdd, null,
                 docInitial.PeptideGroupCount + docAdded.PeptideGroupCount,
                 docInitial.PeptideCount + docAdded.PeptideCount,
-                docInitial.TransitionCount + docAdded.TransitionCount);
+                docInitial.PeptideTransitionCount + docAdded.PeptideTransitionCount);
 
             Assert.AreEqual(3, docAdded.Settings.MeasuredResults.Chromatograms.Count);
             var chromatograms = docAdd.Settings.MeasuredResults.Chromatograms;
@@ -188,7 +188,7 @@ namespace pwiz.SkylineTestFunctional
                             (int) (state.TransitionGroupResults*fOld + stateAdded.TransitionGroupResults*fAdded));
             Assert.AreEqual(stateAdd.TransitionResults,
                             (int) (state.TransitionResults*fOld + stateAdded.TransitionResults*fAdded));
-            foreach (var nodeGroup in docAdd.TransitionGroups)
+            foreach (var nodeGroup in docAdd.PeptideTransitionGroups)
             {
                 for (int i = 0; i < 5; i++)
                     Assert.AreEqual(1, nodeGroup.Results[i].Count);
@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(missingNames[0], chromatograms[2].Name);
             Assert.AreEqual(1, chromatograms[2].MSDataFileInfos.Count);
             stateAdd.AreEqual(docNames);
-            foreach (var nodeGroup in docNames.TransitionGroups)
+            foreach (var nodeGroup in docNames.PeptideTransitionGroups)
             {
                 Assert.AreEqual(2, nodeGroup.Results[0].Count);
                 Assert.AreEqual(2, nodeGroup.Results[1].Count);
@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestFunctional
                 state.TransitionGroupResults + stateOrderAdded.TransitionGroupResults);
             Assert.AreEqual(stateOrder.TransitionResults,
                 state.TransitionResults + stateOrderAdded.TransitionResults);
-            foreach (var nodeGroup in docOrder.TransitionGroups)
+            foreach (var nodeGroup in docOrder.PeptideTransitionGroups)
             {
                 Assert.AreEqual(1, nodeGroup.Results[0].Count);
             }
@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsDocumentState(docOrder2, null,
                 docInitial.PeptideGroupCount + docAdded.PeptideGroupCount + docAdded2.PeptideGroupCount,
                 docInitial.PeptideCount + docAdded.PeptideCount + docAdded2.PeptideCount,
-                docInitial.TransitionCount + docAdded.TransitionCount + docAdded2.TransitionCount);
+                docInitial.PeptideTransitionCount + docAdded.PeptideTransitionCount + docAdded2.PeptideTransitionCount);
 
             chromatograms = docOrder2.Settings.MeasuredResults.Chromatograms;
             Assert.AreEqual(3, chromatograms.Count);
@@ -325,7 +325,7 @@ namespace pwiz.SkylineTestFunctional
                             (int)(state.TransitionGroupResults*fOld + stateAdded.TransitionGroupResults*fAdded + stateAdded2.TransitionGroupResults*fAdded2));
             Assert.AreEqual(stateOrder2.TransitionResults,
                             (int)(state.TransitionResults*fOld + stateAdded.TransitionResults*fAdded + stateAdded2.TransitionResults*fAdded2));
-            foreach (var nodeGroup in docOrder2.TransitionGroups)
+            foreach (var nodeGroup in docOrder2.PeptideTransitionGroups)
             {
                 Assert.AreEqual(3, nodeGroup.Results[0].Count);
                 Assert.AreEqual(2, nodeGroup.Results[1].Count);

@@ -127,7 +127,7 @@ namespace pwiz.Skyline.EditUI
             foreach (var child in PeptideGroupDocNode.Children)
             {
                 var nodePep = child as PeptideDocNode;
-                if (nodePep != null)
+                if (nodePep != null && nodePep.IsProteomic)
                 {
                     _peptideDocNodes.Add(nodePep);
                 }

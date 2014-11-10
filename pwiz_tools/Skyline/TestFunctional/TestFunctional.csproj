@@ -137,6 +137,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
+    <Compile Include="EditCustomMoleculeDlgTest.cs" />
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="ArrangeGraphsTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
@@ -174,6 +175,7 @@
     <Compile Include="MultiSelectTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />
+    <Compile Include="PasteMoleculesTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
@@ -183,6 +185,7 @@
     <Compile Include="PythonInstallerTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
+    <Compile Include="ReporterIonTest.cs" />
     <Compile Include="ReportSharingTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="RetentionTimeAlignmentTest.cs" />
@@ -285,6 +288,7 @@
     <None Include="ManageResultsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />
+    <None Include="PasteMoleculeTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PrecursorTest.zip" />

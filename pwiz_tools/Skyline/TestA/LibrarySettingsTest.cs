@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestA
             // Check expected library inforamation
             foreach (var nodePeptide in docLoaded.Peptides)
                 Assert.IsNull(nodePeptide.Rank);
-            foreach (var nodeTran in docLoaded.Transitions)
+            foreach (var nodeTran in docLoaded.PeptideTransitions)
             {
                 Assert.IsTrue(nodeTran.HasLibInfo);
                 Assert.IsTrue(nodeTran.LibInfo.Rank <= 3);
@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestA
             try
             {
                 AssertEx.IsDocumentState(docActual, 0, docTarget.PeptideGroupCount, docTarget.PeptideCount,
-                    docTarget.TransitionGroupCount, docTarget.TransitionCount);
+                    docTarget.PeptideTransitionGroupCount, docTarget.PeptideTransitionCount);
                 docActual = docActual.ChangeSettings(docActual.Settings.ConnectLibrarySpecs(FindLibrarySpec));
                 Assert.IsTrue(docContainer.SetDocument(docActual, null, true));
                 SrmDocument docLoaded = docContainer.Document;
@@ -229,12 +229,12 @@ namespace pwiz.SkylineTestA
 
         private static bool HasAllLibraryInfo(SrmDocument document)
         {
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodeGroup in document.PeptideTransitionGroups)
             {
                 if (!nodeGroup.HasLibInfo)
                     return false;
             }
-            foreach (var nodeTran in document.Transitions)
+            foreach (var nodeTran in document.PeptideTransitions)
             {
                 if (!nodeTran.HasLibInfo)
                     return false;
@@ -286,10 +286,10 @@ namespace pwiz.SkylineTestA
                 l.ChangeIonMatchTolerance(TransitionLibraries.MAX_MATCH_TOLERANCE));
             SrmDocument docHighTol = docLoaded.ChangeSettings(settings);
 
-            Assert.AreEqual(docLowTol.TransitionCount, docHighTol.TransitionCount);
+            Assert.AreEqual(docLowTol.PeptideTransitionCount, docHighTol.PeptideTransitionCount);
 
-            var transLow = docLowTol.Transitions.ToArray();
-            var transHigh = docHighTol.Transitions.ToArray();
+            var transLow = docLowTol.PeptideTransitions.ToArray();
+            var transHigh = docHighTol.PeptideTransitions.ToArray();
             int diffCount = 0;
             for (int i = 0; i < transLow.Length; i++)
             {
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestA
             }
             Assert.AreEqual(2, diffCount);
 
-            Assert.IsTrue(ArrayUtil.ReferencesEqual(docLoaded.TransitionGroups.ToArray(), docHighTol.TransitionGroups.ToArray()));
+            Assert.IsTrue(ArrayUtil.ReferencesEqual(docLoaded.PeptideTransitionGroups.ToArray(), docHighTol.PeptideTransitionGroups.ToArray()));
             Assert.IsTrue(HasMaxTransitionRank(docHighTol, 3));
 
             SrmSettings setThrow = settings;
@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestA
 
         private static bool HasMaxTransitionRank(SrmDocument doc, int rank)
         {
-            foreach (TransitionDocNode nodeTran in doc.Transitions)
+            foreach (TransitionDocNode nodeTran in doc.PeptideTransitions)
             {
                 if (!nodeTran.HasLibInfo || nodeTran.LibInfo.Rank > rank)
                     return false;
@@ -341,7 +341,7 @@ namespace pwiz.SkylineTestA
 
         private static bool HasMinTransitionOrdinal(SrmDocument doc, int ordinal)
         {
-            foreach (TransitionDocNode nodeTran in doc.Transitions)
+            foreach (TransitionDocNode nodeTran in doc.PeptideTransitions)
             {
                 if (nodeTran.Transition.Ordinal < ordinal)
                     return false;
@@ -385,7 +385,7 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(HasLibraryInfo(docLoaded, typeof(NistSpectrumHeaderInfo)));
 
             // Remove the rank 1 transition from each transition group
-            TransitionDocNode[] transitionNodes = docLoaded.Transitions.ToArray();
+            TransitionDocNode[] transitionNodes = docLoaded.PeptideTransitions.ToArray();
             for (int i = 0; i < transitionNodes.Length; i++)
             {
                 var nodeTran = transitionNodes[i];
@@ -403,7 +403,7 @@ namespace pwiz.SkylineTestA
 
         private static bool HasLibraryInfo(SrmDocument document, Type headerType)
         {
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodeGroup in document.PeptideTransitionGroups)
             {
                 if (nodeGroup.HasLibInfo && headerType.IsInstanceOfType(nodeGroup.LibInfo))
                     return true;

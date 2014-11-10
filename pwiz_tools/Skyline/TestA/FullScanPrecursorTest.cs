@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestA
                 filter.ChangeIonTypes(new[] { IonType.precursor })));
             // All precursors should have 3 precursor transitions (M, M+1 and M+2)
             AssertEx.IsDocumentState(docPrecOnly, 3, 1, 4, 5, 15);
-            Assert.IsFalse(docPrecOnly.Transitions.Any(nodeTran => nodeTran.Transition.IonType != IonType.precursor));
+            Assert.IsFalse(docPrecOnly.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType != IonType.precursor));
 
             // Use low resolution MS1 filtering
             var docLowMs1 = docPrecOnly.ChangeSettings(docPrecOnly.Settings.ChangeTransitionFullScan(fs =>
