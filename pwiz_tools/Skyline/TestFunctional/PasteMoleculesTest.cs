@@ -79,7 +79,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 pasteDlg.IsMolecule = true;
             });
-            SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false);
+            // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv"))); 
             RunUI(pasteDlg.PasteTransitions);
             OkDialog(pasteDlg,pasteDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
