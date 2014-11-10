@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestFunctional
             const string pasteProteinGene = "Gene";
             const string pasteProteinSpecies = "Species";
             var pasteProteinText = String.Join("\t", pasteProteinName, pasteProteinDescription,
-                "MFEQFDLDSELLASINKIGYTKPTSIQELVIPQAMV", pasteProteinAccession, pasteProteinPreferredName,
+                "MFEQFDLDSELLASINK   IGYTKPTSIQELVIPQAMV", pasteProteinAccession, pasteProteinPreferredName,  // Note the whitespace embedded in the sequence - UI should deal with that
                 pasteProteinGene, pasteProteinSpecies);
             SetClipboardTextUI(pasteProteinText);
             PasteDlg pasteProteinsDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteProteinsDlg);

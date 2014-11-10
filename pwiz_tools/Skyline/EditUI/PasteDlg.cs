@@ -466,7 +466,8 @@ namespace pwiz.Skyline.EditUI
                     // Fill in any gaps in pasted metadata with that in protdb
                     pastedMetadata = pastedMetadata.Merge(protdbMetadata);
                 }
-                var fastaSequenceString = Convert.ToString(row.Cells[colProteinSequence.Index].Value);
+                // Strip any whitespace (tab, newline etc) In case it was copied out of a FASTA file
+                var fastaSequenceString = new string(Convert.ToString(row.Cells[colProteinSequence.Index].Value).Where(c => !Char.IsWhiteSpace(c)).ToArray()); 
                 if (!string.IsNullOrEmpty(fastaSequenceString))
                 {
                         try
