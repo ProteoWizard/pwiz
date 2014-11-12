@@ -23,6 +23,9 @@ IF NOT EXIST "%MYRIMATCH%" (echo MyriMatch not found; add the location of myrima
 FOR %%I IN (msgfplus.jar) DO (set MSGF=%%~$PATH:I)
 IF NOT EXIST "%MSGF%" (echo MS-GF+ not found; add the location of the MSGFPlus.jar to your PATH environment variable. & exit /b 1)
 
+FOR %%I IN (comet.exe) DO (set COMET=%%~$PATH:I)
+IF NOT EXIST "%COMET%" (echo Comet not found; add the location of comet.exe to your PATH environment variable. & exit /b 1)
+
 set JAVA=""
 IF EXIST "%PROGRAMFILES(X86)%\Java\jre7\bin\java.exe" set JAVA="%PROGRAMFILES(X86)%\Java\jre7\bin\java.exe"
 IF EXIST "%PROGRAMFILES%\Java\jre7\bin\java.exe" set JAVA="%PROGRAMFILES%\Java\jre7\bin\java.exe"
@@ -55,7 +58,14 @@ IF NOT EXIST "%FILE_BASENAME%-msgf.mzid" (
 
 REM Search with X-Tandem!
 
-REM Search with Comet
+REM Search with Comet, using a different config for Thermo than for other vendors
+IF NOT EXIST "%FILE_BASENAME%-cm.pep.xml" (
+	IF /I "%FILE_EXT%"==".RAW" (
+		%COMET% "%MZML_FILENAME%" -Pcomet.params.high-low -D"%PROTEIN_DATABASE%"
+	) ELSE (
+		%COMET% "%MZML_FILENAME%" -Pcomet.params.high-high -D"%PROTEIN_DATABASE%"
+	)
+)
 
 REM Search with Pepitome
 

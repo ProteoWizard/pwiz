@@ -44,7 +44,8 @@ public enum class QuantitationMethod
     ITRAQ4plex,
     ITRAQ8plex,
     TMT2plex,
-    TMT6plex
+    TMT6plex,
+    TMT10plex
 };
 
 

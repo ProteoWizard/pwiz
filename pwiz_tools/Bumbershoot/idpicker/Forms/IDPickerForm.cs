@@ -1259,6 +1259,7 @@ namespace IDPicker
                     toolStripStatusLabel.Text = "Loading qonverter settings...";
                     statusStrip.Refresh();
                     session = sessionFactory.OpenSession();
+                    session.DefaultReadOnly = true;
 
 
                     // check for embedded gene metadata;

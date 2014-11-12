@@ -568,18 +568,20 @@ namespace IDPicker.Forms
                     HeaderText = "iTRAQ-" + ion.ToString(),
                     Name = "iTRAQ-" + ion.ToString() + "Column",
                     ReadOnly = true,
+                    Tag = iTRAQ_ReporterIonColumns.Count,
                     Width = 100
                 };
                 iTRAQ_ReporterIonColumns.Add(column);
             }
 
-            foreach (int ion in new int[] { 126, 127, 128, 129, 130, 131 })
+            foreach (string ion in new string[] { "126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131" })
             {
                 var column = new DataGridViewTextBoxColumn
                 {
-                    HeaderText = "TMT-" + ion.ToString(),
-                    Name = "TMT-" + ion.ToString() + "Column",
+                    HeaderText = "TMT-" + ion,
+                    Name = "TMT-" + ion + "Column",
                     ReadOnly = true,
+                    Tag = TMT_ReporterIonColumns.Count,
                     Width = 100
                 };
                 TMT_ReporterIonColumns.Add(column);
@@ -714,28 +716,29 @@ namespace IDPicker.Forms
             bool pivotIsTMT = pivotMode.Text.Contains("TMT");
 
             var reporterIonColumns = new List<DataGridViewTextBoxColumn>();
-            int reporterIonFirstColumnIndex = 0;
 
             lock (session)
             {
                 var quantitationMethods = new Set<QuantitationMethod>(session.Query<SpectrumSource>().Select(o => o.QuantitationMethod).Distinct());
-                if (quantitationMethods.Count == 1 && quantitationMethods.Contains(QuantitationMethod.None))
+                if (quantitationMethods.All(o => o == QuantitationMethod.None || o == QuantitationMethod.LabelFree))
                     reporterIonColumns = null;
                 else if (quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
                     // add all iTRAQ columns
                     iTRAQ_ReporterIonColumns.ForEach(o => reporterIonColumns.Add(o));
                 else if (quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex))
-                {
                     // add iTRAQ4plex-only columns
                     iTRAQ_ReporterIonColumns.GetRange(1, 4).ForEach(o => reporterIonColumns.Add(o));
-                    reporterIonFirstColumnIndex = 1;
-                }
-                else if (quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                else if (quantitationMethods.Contains(QuantitationMethod.TMT10plex))
                     // add all TMT columns
                     TMT_ReporterIonColumns.ForEach(o => reporterIonColumns.Add(o));
+                else if (quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                    // add TMT6plex-only columns
+                    TMT_ReporterIonColumns.Where(o => new List<int> {0, 2, 4, 6, 8, 9}.Contains((int) o.Tag)).ForEach(o => reporterIonColumns.Add(o));
                 else if (quantitationMethods.Contains(QuantitationMethod.TMT2plex))
                     // add TMT2plex-only columns
-                    TMT_ReporterIonColumns.GetRange(0, 2).ForEach(o => reporterIonColumns.Add(o));
+                    TMT_ReporterIonColumns.Where(o => new List<int> {0, 2}.Contains((int) o.Tag)).ForEach(o => reporterIonColumns.Add(o));
+                //else if(quantitationMethods.Contains(QuantitationMethod.LabelFree))
+
             }
 
             if (exportNetGestaltWithTrackSampleInfoMenuItem.Checked)
@@ -825,13 +828,12 @@ namespace IDPicker.Forms
                                     fileStream.Write("\t0");
                             else
                             {
-                                int i = reporterIonFirstColumnIndex - 1;
                                 if (exportNetGestaltAsLogMenuItem.Checked)
                                     foreach (var c in reporterIonColumns)
-                                        fileStream.Write("\t{0}", (array[++i] > 0 ? Math.Log(array[i]) : 0.0).ToString("f2"));
+                                        fileStream.Write("\t{0}", (array[(int) c.Tag] > 0 ? Math.Log(array[(int) c.Tag]) : 0.0).ToString("f2"));
                                 else
                                     foreach (var c in reporterIonColumns)
-                                        fileStream.Write("\t{0}", array[++i].ToString("f2"));
+                                        fileStream.Write("\t{0}", array[(int) c.Tag].ToString("f2"));
                             }
                         }
                         else
@@ -1875,23 +1877,22 @@ namespace IDPicker.Forms
                         columnsIrrelevantForGrouping.Add(chromosomeColumn);
                         columnsIrrelevantForGrouping.Add(geneFamilyColumn);
                     }
+                    
+                    iTRAQ_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
 
                     var quantitationMethods = new Set<QuantitationMethod>(session.Query<SpectrumSource>().Select(o => o.QuantitationMethod).Distinct());
-                    if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex) &&
-                        !quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
-                        // hide all iTRAQ columns
-                        iTRAQ_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
-                    else if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
-                        // hide iTRAQ8plex-only columns
-                        iTRAQ_ReporterIonColumns.Except(iTRAQ_ReporterIonColumns.GetRange(1, 4)).ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    if (quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
+                        iTRAQ_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Remove(o));
+                    else if (quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex))
+                        iTRAQ_ReporterIonColumns.GetRange(1, 4).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
 
-                    if (!quantitationMethods.Contains(QuantitationMethod.TMT2plex) &&
-                        !quantitationMethods.Contains(QuantitationMethod.TMT6plex))
-                        // hide all TMT columns
-                        TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
-                    else if (!quantitationMethods.Contains(QuantitationMethod.TMT6plex))
-                        // hide TMT6plex-only columns
-                        TMT_ReporterIonColumns.GetRange(2, 4).ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    if (quantitationMethods.Contains(QuantitationMethod.TMT10plex))
+                        TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Remove(o));
+                    else if (quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                        TMT_ReporterIonColumns.Where(o => new List<int> {0, 2, 4, 6, 8, 9}.Contains((int) o.Tag)).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
+                    else if (quantitationMethods.Contains(QuantitationMethod.TMT2plex))
+                        TMT_ReporterIonColumns.Where(o => new List<int> {0, 2}.Contains((int) o.Tag)).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
                 }
 
             // if visibility is not forced, use grouping mode to set automatic visibility

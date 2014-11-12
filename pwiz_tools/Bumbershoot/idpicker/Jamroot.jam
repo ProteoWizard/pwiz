@@ -449,6 +449,14 @@ rule install-location ( properties * )
     return <location>$(location) ;
 }
 
+rule install-identdata-dependencies ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    local dependencies ;
+    if [ path.exists $(PWIZ_SOURCE)/pwiz/data/identdata ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/data/identdata//install_pwiz_identdata/$(location) ; }
+    return $(dependencies) ;
+}
+
 rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
@@ -692,6 +700,7 @@ install install
         <conditional>@dotNET-dependencies
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
+        <conditional>@install-identdata-dependencies
         <dependency>.//VERSION
     ;
 

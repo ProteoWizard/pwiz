@@ -173,13 +173,14 @@ namespace IDPicker.DataModel
             PersistentDataFilter = persistentDataFilter;
             OriginalPersistentDataFilter = new PersistentDataFilter(persistentDataFilter);
 
-            DistinctMatchFormat = new DistinctMatchFormat()
-            {
-                AreModificationsDistinct = true,
-                IsAnalysisDistinct = false,
-                IsChargeDistinct = true,
-                ModificationMassRoundToNearest = 1m
-            };
+            if (DistinctMatchFormat == null)
+                DistinctMatchFormat = new DistinctMatchFormat()
+                {
+                    AreModificationsDistinct = true,
+                    IsAnalysisDistinct = false,
+                    IsChargeDistinct = true,
+                    ModificationMassRoundToNearest = 1m
+                };
         }
 
 

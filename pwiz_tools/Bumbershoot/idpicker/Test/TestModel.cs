@@ -479,6 +479,8 @@ namespace Test
         [ClassInitialize()]
         public static void ClassInitialize (TestContext testContext)
         {
+            Directory.SetCurrentDirectory(testContext.TestDeploymentDir);
+
             File.Delete("testModel.idpDB");
 
             var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", new SessionFactoryConfig { CreateSchema = true });
@@ -569,6 +571,43 @@ namespace Test
             Assert.AreEqual("ABCD", new AminoAcidSequence("ABCD").ToString());
             Assert.AreEqual("ZZZZZ", new AminoAcidSequence("ZZZZZ").ToString());
             Assert.AreEqual("RAZAMATAZ", new AminoAcidSequence("RAZAMATAZ").ToString());
+        }
+
+        [TestMethod]
+        public void TestGhostEntities() // test that no entity type gets dirty simply by querying it
+        {
+            session.DefaultReadOnly = true;
+            Assert.IsFalse(session.IsDirty());
+
+            var pro1 = session.Get<Protein>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var pep1 = session.Get<Peptide>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var pi1 = session.Get<PeptideInstance>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var psm1 = session.Get<PeptideSpectrumMatch>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var a1 = session.Get<Analysis>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var ap1 = session.Get<AnalysisParameter>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var s1 = session.Get<Spectrum>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var ss1 = session.Get<SpectrumSource>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var ssg1 = session.Get<SpectrumSourceGroup>(1L);
+            Assert.IsFalse(session.IsDirty());
+
+            var ssgl1 = session.Get<SpectrumSourceGroupLink>(1L);
+            Assert.IsFalse(session.IsDirty());
         }
 
         [TestMethod]

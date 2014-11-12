@@ -94,6 +94,15 @@ struct path_stringer
     result_type operator()(const bfs::path& x) const { return x.string(); }
 };
 
+int testCommand(const string& command)
+{
+    cout << "Running command: " << command << endl;
+    bpt::ptime start = bpt::microsec_clock::universal_time();
+    int result = system(command.c_str());
+    cout << endl << "Returned exit code " << result << "; time elapsed " << bpt::to_simple_string(bpt::microsec_clock::universal_time() - start) << endl;
+    return result;
+}
+
 
 void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 {
@@ -114,14 +123,14 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     // <idpQonvertPath> <matchPaths>
     string command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-    cout << endl << command << endl;
-    unit_assert_operator_equal(0, system(command.c_str()));
+    unit_assert_operator_equal(0, testCommand(command));
 
     vector<bfs::path> idpDbFiles;
     BOOST_FOREACH(const bfs::path& idFile, idFiles)
     {
         idpDbFiles.push_back(idFile);
-        idpDbFiles.back().replace_extension(".idpDB");
+        string idpDbFilepath = bal::replace_all_copy(idpDbFiles.back().string(), ".pep.xml", ".pepXML");
+        idpDbFiles.back() = bfs::path(idpDbFilepath).replace_extension(".idpDB");
 
         unit_assert(bfs::exists(idpDbFiles.back()));
         sqlite3pp::database db(idpDbFiles.back().string());
@@ -146,6 +155,14 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
             else
                 unit_assert_operator_equal("MS-GF+ Beta (v10072) (FragmentMethod=HCD, Instrument=QExactive, NumTolerableTermini=1, parent tolerance minus value=50.0 ppm, parent tolerance plus value=50.0 ppm)", analysisName);
         }
+        else if (softwareName == "Comet")
+        {
+            unit_assert(bal::contains(analysisName, "fragment_bin_tol"));
+            if (bal::contains(analysisName, "fragment_bin_tol=1.000500"))
+                unit_assert_operator_equal("Comet 2014.02 (fragment tolerance minus value=1.000500 u, fragment tolerance plus value=1.000500 u, fragment_bin_offset=0.400000, fragment_bin_tol=1.000500, theoretical_fragment_ions=1)", analysisName);
+            else
+                unit_assert_operator_equal("Comet 2014.02 (fragment tolerance minus value=0.020000 u, fragment tolerance plus value=0.020000 u, fragment_bin_offset=0.020000, fragment_bin_tol=0.020000, theoretical_fragment_ions=0)", analysisName);
+        }
         else
             throw runtime_error("[testIdpQonvert] Software name is not one of the expected values.");
     }
@@ -154,14 +171,13 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     // test overwrite of existing idpDBs (should succeed, but idpDBs should be unmodified since idpDBs exist)
     cout << endl << command << endl;
     string oldHash = SHA1Calculator::hashFile(idpDbFiles[0].string());
-    unit_assert_operator_equal(0, system(command.c_str()));
+    unit_assert_operator_equal(0, testCommand(command));
     unit_assert_operator_equal(oldHash, SHA1Calculator::hashFile(idpDbFiles[0].string()));
 
     {
         // test embedding gene metadata in existing idpDB
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -EmbedGeneMetadata 1%1%") % commandQuote % idpQonvertPath % idpDbFiles[0].string()).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
         unit_assert(sqlite3pp::query(db, "SELECT GeneId FROM Protein").begin()->get<string>(0).length() > 0);
@@ -170,8 +186,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     {
         // test embedding gene metadata while overwriting existing idpDBs (should succeed with OverwriteExistingFiles=1)
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -EmbedGeneMetadata 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
         unit_assert(sqlite3pp::query(db, "SELECT GeneId FROM Protein").begin()->get<string>(0).length() > 0);
@@ -180,10 +195,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     {
         // test overwrite of existing idpDBs (should succeed with OverwriteExistingFiles=1, idpDB file hashes should not match due to timestamp difference, gene metadata should be gone)
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-        cout << endl << command << endl;
-        boost::this_thread::sleep(bpt::seconds(1));
-        unit_assert_operator_equal(0, system(command.c_str()));
-        unit_assert(oldHash != SHA1Calculator::hashFile(idpDbFiles[0].string()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
         unit_assert(sqlite3pp::query(db, "SELECT GeneId FROM Protein").begin()->get<string>(0).length() == 0);
@@ -192,8 +204,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     {
         // test ONLY embedding gene metadata in existing idpDB; the bogus DecoyPrefix should be ignored
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XYZ -EmbedGeneMetadata 1 -EmbedOnly 1%1%") % commandQuote % idpQonvertPath % idpDbFiles[0].string()).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
         unit_assert(sqlite3pp::query(db, "SELECT GeneId FROM Protein").begin()->get<string>(0).length() > 0);
@@ -207,12 +218,10 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
         brokenPepXML.close();
 
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX%1%") % commandQuote % idpQonvertPath % brokenPepXmlFilename).str();
-        cout << endl << command << endl;
-        unit_assert(0 < system(command.c_str()));
+        unit_assert(0 < testCommand(command));
 
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -SkipSourceOnError 1%1%") % commandQuote % idpQonvertPath % brokenPepXmlFilename).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
     }
 
 
@@ -224,8 +233,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
         // test it when importing pepXML
         {
             command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -EmbedSpectrumScanTimes 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-            cout << endl << command << endl;
-            unit_assert_operator_equal(0, system(command.c_str()));
+            unit_assert_operator_equal(0, testCommand(command));
 
             sqlite3pp::database db(idpDbFiles[0].string());
             unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM Spectrum WHERE ScanTimeInSeconds > 0").begin()->get<int>(0) > 0);
@@ -234,8 +242,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
         // test it on an existing idpDB
         {
             command = (format("%1%\"%2%\" \"%3%\" -EmbedSpectrumScanTimes 1 -EmbedOnly 1%1%") % commandQuote % idpQonvertPath % idpDbFiles[0]).str();
-            cout << endl << command << endl;
-            unit_assert_operator_equal(0, system(command.c_str()));
+            unit_assert_operator_equal(0, testCommand(command));
 
             sqlite3pp::database db(idpDbFiles[0].string());
             unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM Spectrum WHERE ScanTimeInSeconds > 0").begin()->get<int>(0) > 0);
@@ -248,8 +255,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
         // test it when importing pepXML
         {
             command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -EmbedSpectrumSources 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-            cout << endl << command << endl;
-            unit_assert_operator_equal(0, system(command.c_str()));
+            unit_assert_operator_equal(0, testCommand(command));
 
             sqlite3pp::database db(idpDbFiles[0].string());
             unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM Spectrum WHERE ScanTimeInSeconds > 0").begin()->get<int>(0) > 0);
@@ -259,8 +265,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
         // test it on an existing idpDB
         {
             command = (format("%1%\"%2%\" \"%3%\" -EmbedSpectrumSources 1 -EmbedOnly 1%1%") % commandQuote % idpQonvertPath % idpDbFiles[0]).str();
-            cout << endl << command << endl;
-            unit_assert_operator_equal(0, system(command.c_str()));
+            unit_assert_operator_equal(0, testCommand(command));
 
             sqlite3pp::database db(idpDbFiles[0].string());
             unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM Spectrum WHERE ScanTimeInSeconds > 0").begin()->get<int>(0) > 0);
@@ -270,33 +275,10 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
 
     // test embedding quantitation
-    // ITRAQ4plex
-    {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ4plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
-
-        sqlite3pp::database db(idpDbFiles[0].string());
-        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
-        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE iTRAQ_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
-    }
-
-    // ITRAQ8plex
-    {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ8plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
-
-        sqlite3pp::database db(idpDbFiles[0].string());
-        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
-        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE iTRAQ_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
-    }
-
     // TMT2plex
     {
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod TMT2plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
@@ -306,12 +288,41 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     // TMT6plex
     {
         command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod TMT6plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE TMT_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
+    }
+
+    // TMT10plex
+    {
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod TMT10plex -ReporterIonMzTolerance 0.003mz%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        unit_assert_operator_equal(0, testCommand(command));
+
+        sqlite3pp::database db(idpDbFiles[0].string());
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE TMT_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
+    }
+
+    // ITRAQ4plex
+    {
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ4plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        unit_assert_operator_equal(0, testCommand(command));
+
+        sqlite3pp::database db(idpDbFiles[0].string());
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE iTRAQ_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
+    }
+
+    // ITRAQ8plex
+    {
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ8plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        unit_assert_operator_equal(0, testCommand(command));
+
+        sqlite3pp::database db(idpDbFiles[0].string());
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE iTRAQ_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
     }
 }
 
@@ -333,8 +344,7 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
 
     // <idpAssemblePath> <matchPaths>
     string command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\"%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-    cout << endl << command << endl;
-    unit_assert_operator_equal(0, system(command.c_str()));
+    unit_assert_operator_equal(0, testCommand(command));
 
     unit_assert(bfs::exists(mergedOutputFilepath));
     sqlite3pp::database db(mergedOutputFilepath);
@@ -351,8 +361,7 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
 
     // test that rerunning on the merged idpDB with the same filter settings will not change the database
     command = (format("%1%\"%2%\" \"%3%\"%1%") % commandQuote % idpAssemblePath % mergedOutputFilepath).str();
-    cout << endl << command << endl;
-    unit_assert_operator_equal(0, system(command.c_str()));
+    unit_assert_operator_equal(0, testCommand(command));
     unit_assert_operator_equal(defaultHash, SHA1Calculator::hashFile(mergedOutputFilepath));
 
     // test filter arguments: that each filter results in the correct FilterHistory changes
@@ -360,50 +369,43 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
         // [-MaxFDRScore <real>]
         mergedOutputFilepath = (testDataPath / "merged-MaxFDRScore.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MaxFDRScore 0.1%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(0.1, sqlite3pp::query(db, "SELECT MaximumQValue FROM FilterHistory").begin()->get<double>(0)); }
 
         // [-MinDistinctPeptides <integer>]
         mergedOutputFilepath = (testDataPath / "merged-MinDistinctPeptides.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MinDistinctPeptides 5%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(5, sqlite3pp::query(db, "SELECT MinimumDistinctPeptides FROM FilterHistory").begin()->get<double>(0)); }
 
         // [-MinSpectra <integer>]
         mergedOutputFilepath = (testDataPath / "merged-MinSpectra.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MinSpectra 5%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(5, sqlite3pp::query(db, "SELECT MinimumSpectra FROM FilterHistory").begin()->get<double>(0)); }
 
         // [-MinAdditionalPeptides <integer>]
         mergedOutputFilepath = (testDataPath / "merged-MinAdditionalPeptides.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MinAdditionalPeptides 15%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(15, sqlite3pp::query(db, "SELECT MinimumAdditionalPeptides FROM FilterHistory").begin()->get<double>(0)); }
 
         // [-MinSpectraPerDistinctMatch <integer>]
         mergedOutputFilepath = (testDataPath / "merged-MinSpectraPerDistinctMatch.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MinSpectraPerDistinctMatch 2%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(2, sqlite3pp::query(db, "SELECT MinimumSpectraPerDistinctMatch FROM FilterHistory").begin()->get<double>(0)); }
 
         // [-MinSpectraPerDistinctPeptide <integer>]
         mergedOutputFilepath = (testDataPath / "merged-MinSpectraPerDistinctPeptide.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MinSpectraPerDistinctPeptide 2%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(2, sqlite3pp::query(db, "SELECT MinimumSpectraPerDistinctPeptide FROM FilterHistory").begin()->get<double>(0)); }
 
         // [-MaxProteinGroupsPerPeptide <integer>]
         mergedOutputFilepath = (testDataPath / "merged-MaxProteinGroupsPerPeptide.idpDB").string();
         command = (format("%1%\"%2%\" \"%3%\" -MergedOutputFilepath \"%4%\" -MaxProteinGroupsPerPeptide 2%1%") % commandQuote % idpAssemblePath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"") % mergedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         { sqlite3pp::database db(mergedOutputFilepath); unit_assert_operator_equal(2, sqlite3pp::query(db, "SELECT MaximumProteinGroupsPerPeptide FROM FilterHistory").begin()->get<double>(0)); }
     }
 
@@ -427,8 +429,7 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
             assemblyFile.close();
 
             command = (format("%1%\"%2%\" \"%3%\" -AssignSourceHierarchy \"%4%\"%1%") % commandQuote % idpAssemblePath % mergedOutputFilepath % assemblyeFilepath).str();
-            cout << endl << command << endl;
-            unit_assert_operator_equal(0, system(command.c_str()));
+            unit_assert_operator_equal(0, testCommand(command));
             sqlite3pp::database db(mergedOutputFilepath);
             unit_assert_operator_equal(3, sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSourceGroup").begin()->get<int>(0));
             unit_assert_operator_equal("/", sqlite3pp::query(db, "SELECT Name FROM SpectrumSourceGroup WHERE Id=1").begin()->get<string>(0));
@@ -447,8 +448,7 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
             assemblyFile.close();
 
             command = (format("%1%\"%2%\" \"%3%\" -AssignSourceHierarchy \"%4%\"%1%") % commandQuote % idpAssemblePath % mergedOutputFilepath % assemblyeFilepath).str();
-            cout << endl << command << endl;
-            unit_assert_operator_equal(0, system(command.c_str()));
+            unit_assert_operator_equal(0, testCommand(command));
             sqlite3pp::database db(mergedOutputFilepath);
             unit_assert_operator_equal(5, sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSourceGroup").begin()->get<int>(0));
             unit_assert_operator_equal(1, sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSourceGroup WHERE Name='/201203/624176'").begin()->get<int>(0));
@@ -460,27 +460,34 @@ void testIdpAssemble(const string& idpQonvertPath, const string& idpAssemblePath
 
     // test filtering a single file
     command = (format("%1%\"%2%\" \"%3%\" -MaxFDRScore 0.1%1%") % commandQuote % idpAssemblePath % mergedOutputFilepath).str();
-    cout << endl << command << endl;
-    unit_assert_operator_equal(0, system(command.c_str()));
+    unit_assert_operator_equal(0, testCommand(command));
     int filteredSpectraAfterMerge; { sqlite3pp::database db((testDataPath / "merged-MaxFDRScore.idpDB").string()); filteredSpectraAfterMerge = sqlite3pp::query(db, "SELECT FilteredSpectra FROM FilterHistory").begin()->get<int>(0); }
     int filteredSpectraAfterFilter; { sqlite3pp::database db(mergedOutputFilepath); filteredSpectraAfterFilter = sqlite3pp::query(db, "SELECT FilteredSpectra FROM FilterHistory LIMIT 1 OFFSET 1").begin()->get<int>(0); }
     unit_assert_operator_equal(filteredSpectraAfterMerge, filteredSpectraAfterFilter);
 
     // test embedding quantitation on a new file; the values embedded here will be tested in idpQuery
-    // ITRAQ4plex
     // ITRAQ8plex
-    // TMT2plex
-    // TMT6plex
     {
         string mergedQuantifiedOutputFilepath = (testDataPath / "merged-ITRAQ8plex.idpDB").string();
         bfs::copy_file(mergedOutputFilepath, mergedQuantifiedOutputFilepath);
         command = (format("%1%\"%2%\" \"%3%\" -QuantitationMethod ITRAQ8plex -EmbedOnly 1%1%") % commandQuote % idpQonvertPath % mergedQuantifiedOutputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(mergedQuantifiedOutputFilepath);
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
         unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE iTRAQ_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
+    }
+
+    // TMT10plex
+    {
+        string mergedQuantifiedOutputFilepath = (testDataPath / "merged-TMT10plex.idpDB").string();
+        bfs::copy_file(mergedOutputFilepath, mergedQuantifiedOutputFilepath);
+        command = (format("%1%\"%2%\" \"%3%\" -QuantitationMethod TMT10plex -EmbedOnly 1 -ReporterIonMzTolerance 0.003mz%1%") % commandQuote % idpQonvertPath % mergedQuantifiedOutputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
+
+        sqlite3pp::database db(mergedQuantifiedOutputFilepath);
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumSource WHERE QuantitationMethod > 0").begin()->get<int>(0) > 0);
+        unit_assert(sqlite3pp::query(db, "SELECT COUNT(*) FROM SpectrumQuantitation WHERE TMT_ReporterIonIntensities IS NOT NULL").begin()->get<int>(0) > 0);
     }
 }
 
@@ -546,44 +553,37 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
     BOOST_FOREACH(const string& groupColumn, groupColumns)
     {
         command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,iTRAQ4plex,PivotITRAQByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,TMT2plex,PivotTMTByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT2plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT6plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        command = (format("%1%\"%2%\" %3% %4%,TMT10plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
-        bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT6plex-" + groupColumn + ".tsv"));
+        bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT10plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % quantifiedInputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(quantifiedOutputFilepath));
         bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
     }
@@ -591,13 +591,12 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
 
     // test that Gene and GeneGroup modes issue an error when gene metadata is not embedded
     command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % "Gene" % mainColumns % inputFilepath).str();
-    cout << endl << command << endl;
-    unit_assert(0 < system(command.c_str()));
+    unit_assert(0 < testCommand(command));
     unit_assert(!bfs::exists(outputFilepath));
 
     command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % "GeneGroup" % mainColumns % inputFilepath).str();
     cout << endl << command << endl;
-    unit_assert(0 < system(command.c_str()));
+    unit_assert(0 < testCommand(command));
     unit_assert(!bfs::exists(outputFilepath));
 
 
@@ -609,44 +608,44 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
     BOOST_FOREACH(const string& groupColumn, groupColumns)
     {
         command = (format("%1%\"%2%\" %3% %4% \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,iTRAQ4plex,PivotITRAQByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv"));
+        {
+            ifstream outputFile((testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv")).string().c_str());
+            string line;
+            getline(outputFile, line);
+            unit_assert_operator_equal("Accession	GeneId	GeneGroup	DistinctPeptides	DistinctMatches	FilteredSpectra	IsDecoy	Cluster	ProteinGroup	Length	PercentCoverage	Sequence	Description	TaxonomyId	GeneName	GeneFamily	Chromosome	GeneDescription	", line);
+            // TODO: figure out how to test the output of the second line
+        }
 
         command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,TMT2plex,PivotTMTByGroup \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT2plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
         bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT6plex-" + groupColumn + ".tsv"));
 
-        command = (format("%1%\"%2%\" %3% %4%,TMT6plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        command = (format("%1%\"%2%\" %3% %4%,TMT10plex,PivotTMTBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % inputFilepath).str();
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(outputFilepath));
-        bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT6plex-" + groupColumn + ".tsv"));
+        bfs::rename(outputFilepath, testDataPath / ("merged-empty-TMT10plex-" + groupColumn + ".tsv"));
 
         command = (format("%1%\"%2%\" %3% %4%,iTRAQ8plex,PivotITRAQBySource \"%5%\"%1%") % commandQuote % idpQueryPath % groupColumn % mainColumns % quantifiedInputFilepath).str();
-        cout << endl << command << endl;
-        unit_assert_operator_equal(0, system(command.c_str()));
+        unit_assert_operator_equal(0, testCommand(command));
         unit_assert(bfs::exists(quantifiedOutputFilepath));
         bfs::rename(quantifiedOutputFilepath, testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv"));
     }

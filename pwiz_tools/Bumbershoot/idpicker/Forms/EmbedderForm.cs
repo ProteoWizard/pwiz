@@ -47,6 +47,9 @@ namespace IDPicker.Forms
         private bool embeddedChanges; // true if the embedded data has changed
         private Dictionary<int, object[]> _savedRowSettings;
 
+        public bool CancelRequested { get; private set; }
+        public bool EmbedInProgress { get; private set; }
+
         public EmbedderForm (NHibernate.ISession session)
         {
             this.session = session.SessionFactory.OpenSession();
@@ -60,6 +63,9 @@ namespace IDPicker.Forms
             extensionsTextBox.Text = Properties.Settings.Default.SourceExtensions;
             embeddedChanges = false;
             _savedRowSettings = new Dictionary<int, object[]>();
+
+            CancelRequested = false;
+            EmbedInProgress = false;
 
             if (Owner != null && StartPosition == FormStartPosition.CenterParent)
                 Location = new Point(Owner.Location.X + Owner.Width / 2 - Width / 2,
@@ -148,7 +154,11 @@ namespace IDPicker.Forms
                 embedScanTimeOnlyBox.Text = "Embed scan times only";
             deleteAllButton.Enabled = hasEmbeddedSources;
             embedAllButton.Enabled = hasNonEmbeddedSources;
+            okButton.Text = "Close";
             okButton.Enabled = true;
+
+            CancelRequested = false;
+            EmbedInProgress = false;
 
             if (TaskbarManager.IsPlatformSupported)
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
@@ -168,8 +178,8 @@ namespace IDPicker.Forms
 
         private class EmbedderIterationListener : IterationListener
         {
-            Form form;
-            public EmbedderIterationListener (Form form) { this.form = form; }
+            EmbedderForm form;
+            public EmbedderIterationListener(EmbedderForm form) { this.form = form; }
 
             public override Status update (UpdateMessage updateMessage)
             {
@@ -184,9 +194,7 @@ namespace IDPicker.Forms
                     TaskbarManager.Instance.SetProgressValue(updateMessage.iterationIndex + 1, updateMessage.iterationCount);
                 }
 
-                return IterationListener.Status.Ok;
-
-                // TODO: support cancel
+                return form.CancelRequested ? IterationListener.Status.Cancel : IterationListener.Status.Ok;
             }
         }
 
@@ -195,7 +203,7 @@ namespace IDPicker.Forms
             var searchPath = new StringBuilder(searchPathTextBox.Text);
             string extensions = extensionsTextBox.Text;
             Application.UseWaitCursor = true;
-            deleteAllButton.Enabled = embedAllButton.Enabled = okButton.Enabled = false;
+            deleteAllButton.Enabled = embedAllButton.Enabled = false;
             embeddedChanges = true;
 
             try
@@ -221,7 +229,7 @@ namespace IDPicker.Forms
                 quantitationMethodBySource[id] = new Embedder.QuantitationConfiguration
                 {
                     QuantitationMethod = (QuantitationMethod)methodIndex,
-                    ReporterIonMzTolerance = new MZTolerance(0.015, MZTolerance.Units.MZ)
+                    ReporterIonMzTolerance = new MZTolerance(((QuantitationMethod)methodIndex == QuantitationMethod.TMT10plex) ? 0.003 : 0.015, MZTolerance.Units.MZ)
                 };
                 _savedRowSettings[id] = new object[] { row.Cells[quantitationMethodColumn.Index].Value, row.Cells[quantitationSettingsColumn.Index].Value };
                 if (quantitationMethodBySource[id].QuantitationMethod == QuantitationMethod.LabelFree)
@@ -229,6 +237,9 @@ namespace IDPicker.Forms
                         row.Cells[quantitationSettingsColumn.Index].Value as Embedder.XICConfiguration ??
                         new Embedder.XICConfiguration();
             }
+
+            okButton.Text = "Cancel";
+            EmbedInProgress = true;
 
             new Thread(() =>
             {
@@ -251,16 +262,24 @@ namespace IDPicker.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (!ex.Message.Contains("no filepath"))
+                    if (ex.Message.Contains("QuantitationConfiguration"))
+                    {
+                        string message = ex.Message.Replace("[QuantitationConfiguration] ", "");
+                        message = Char.ToUpper(message[0]) + message.Substring(1);
+                        MessageBox.Show(message);
+                    }
+                    else if (ex.Message.Contains("no filepath"))
+                    {
+                        bool multipleMissingFilepaths = ex.Message.Contains("\n");
+                        string missingFilepaths = ex.Message.Replace("\n", "\r\n");
+                        missingFilepaths = missingFilepaths.Replace("[embed] no", "No");
+                        missingFilepaths = missingFilepaths.Replace("[embedScanTime] no", "No");
+                        MessageBox.Show(missingFilepaths + "\r\n\r\nCheck that " +
+                                        (multipleMissingFilepaths ? "these source files" : "this source file") +
+                                        " can be found in the search path with one of the specified extensions.");
+                    }
+                    else
                         Program.HandleException(ex);
-
-                    bool multipleMissingFilepaths = ex.Message.Contains("\n");
-                    string missingFilepaths = ex.Message.Replace("\n", "\r\n");
-                    missingFilepaths = missingFilepaths.Replace("[embed] no", "No");
-                    missingFilepaths = missingFilepaths.Replace("[embedScanTime] no", "No");
-                    MessageBox.Show(missingFilepaths + "\r\n\r\nCheck that " +
-                                    (multipleMissingFilepaths ? "these source files" : "this source file") +
-                                    " can be found in the search path with one of the specified extensions.");
                 }
                 BeginInvoke(new MethodInvoker(() => Refresh()));
             }).Start();
@@ -282,6 +301,8 @@ namespace IDPicker.Forms
 
             if (TaskbarManager.IsPlatformSupported)
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Indeterminate);
+
+            Refresh();
 
             new Thread(() =>
             {
@@ -309,51 +330,54 @@ namespace IDPicker.Forms
 
         private void okButton_Click (object sender, EventArgs e)
         {
-            DialogResult = embeddedChanges ? DialogResult.OK : DialogResult.Cancel;
-            Close();
+            if (EmbedInProgress)
+            {
+                CancelRequested = true;
+                okButton.Enabled = false;
+            }
+            else
+            {
+                DialogResult = embeddedChanges ? DialogResult.OK : DialogResult.Cancel;
+                Close();
+            }
         }
 
         private void dataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            try
+            if (e.RowIndex < 0)
+                return;
+            if (e.ColumnIndex == quantitationMethodColumn.Index)
             {
-                if (e.ColumnIndex == quantitationMethodColumn.Index)
+                embedAllButton.Enabled = true;
+
+                var selectedRows =
+                    dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(o => o.OwningRow).ToList();
+                if (selectedRows.Count > 1)
+                    selectedRows.ForEach(
+                        o => o.Cells[e.ColumnIndex].Value = dataGridView[e.ColumnIndex, e.RowIndex].Value);
+
+                var rowID = (int)dataGridView[idColumn.Index, e.RowIndex].Value;
+                var xicConfig = dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value;
+                if (xicConfig is Embedder.XICConfiguration &&
+                    dataGridView[quantitationMethodColumn.Index, e.RowIndex].Value.ToString() != "Label free")
                 {
-                    embedAllButton.Enabled = true;
-
-                    var selectedRows =
-                        dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(o => o.OwningRow).ToList();
-                    if (selectedRows.Count > 1)
-                        selectedRows.ForEach(
-                            o => o.Cells[e.ColumnIndex].Value = dataGridView[e.ColumnIndex, e.RowIndex].Value);
-
-                    var rowID = (int)dataGridView[idColumn.Index, e.RowIndex].Value;
-                    var xicConfig = dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value;
-                    if (xicConfig is Embedder.XICConfiguration &&
-                        dataGridView[quantitationMethodColumn.Index, e.RowIndex].Value.ToString() != "Label free")
-                    {
-                        if (dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value is
-                            Embedder.XICConfiguration)
-                            _savedRowSettings[rowID] = new object[] { "Label free", dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value };
-                        dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = "n/a";
-                    }
-                    else if (_savedRowSettings.ContainsKey(rowID) &&
-                             _savedRowSettings[rowID][1] is Embedder.XICConfiguration)
-                        dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = _savedRowSettings[rowID][1];
-                    else
-                        dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = new Embedder.XICConfiguration();
-                    dataGridView.InvalidateCell(quantitationSettingsColumn.Index, e.RowIndex);
-
-                    if (dataGridView.Rows.Cast<DataGridViewRow>()
-                                    .Any(x => x.Cells[quantitationMethodColumn.Index].Value.ToString() != "None"))
-                        embedScanTimeOnlyBox.Text = "Embed scan times and quantitation only";
-                    else
-                        embedScanTimeOnlyBox.Text = "Embed scan times only";
+                    if (dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value is
+                        Embedder.XICConfiguration)
+                        _savedRowSettings[rowID] = new object[] { "Label free", dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value };
+                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = "n/a";
                 }
-            }
-            catch
-            {
-                //sometimes e.RowIndex isn't valid
+                else if (_savedRowSettings.ContainsKey(rowID) &&
+                            _savedRowSettings[rowID][1] is Embedder.XICConfiguration)
+                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = _savedRowSettings[rowID][1];
+                else
+                    dataGridView[quantitationSettingsColumn.Index, e.RowIndex].Value = new Embedder.XICConfiguration();
+                dataGridView.InvalidateCell(quantitationSettingsColumn.Index, e.RowIndex);
+
+                if (dataGridView.Rows.Cast<DataGridViewRow>()
+                                .Any(x => x.Cells[quantitationMethodColumn.Index].Value.ToString() != "None"))
+                    embedScanTimeOnlyBox.Text = "Embed scan times and quantitation only";
+                else
+                    embedScanTimeOnlyBox.Text = "Embed scan times only";
             }
         }
 

@@ -97,6 +97,7 @@ BOOST_ENUM_VALUES(ProteinColumn, SqlColumn,
     (iTRAQ8plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities), 0)", SQLITE_BLOB))
     (TMT2plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB))
     (TMT6plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB))
+    (TMT10plex)(make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB))
     (PivotMatchesByGroup)(make_pair("0", SQLITE_INTEGER))
     (PivotMatchesBySource)(make_pair("0", SQLITE_INTEGER))
     (PivotPeptidesByGroup)(make_pair("0", SQLITE_INTEGER))
@@ -166,13 +167,54 @@ Description
 */
 
 
-template <typename ArrayType>
-void writeBlobArray(const void* blob, ostream& os, size_t offset, size_t length)
+struct ReporterIon
 {
+    const char* name;
+    size_t index;
+};
+
+ReporterIon iTRAQ_ions[8] =
+{
+    { "113", 0 },
+    { "114", 1 },
+    { "115", 2 },
+    { "116", 3 },
+    { "117", 4 },
+    { "118", 5 },
+    { "119", 6 },
+    { "121", 7 }
+};
+ReporterIon itraq4plexIons[4] = { iTRAQ_ions[1], iTRAQ_ions[2], iTRAQ_ions[3], iTRAQ_ions[4] };
+ReporterIon itraq8plexIons[8] = { iTRAQ_ions[0], iTRAQ_ions[1], iTRAQ_ions[2], iTRAQ_ions[3], iTRAQ_ions[4], iTRAQ_ions[5], iTRAQ_ions[6], iTRAQ_ions[7] };
+
+ReporterIon TMT_ions[10] =
+{
+    { "126", 0 },
+    { "127N", 1 },
+    { "127C", 2 },
+    { "128N", 3 },
+    { "128C", 4 },
+    { "129N", 5 },
+    { "129C", 6 },
+    { "130N", 7 },
+    { "130C", 8 },
+    { "131", 9 }
+};
+ReporterIon tmt2plexIons[2] = { TMT_ions[0], TMT_ions[2] };
+ReporterIon tmt6plexIons[6] = { TMT_ions[0], TMT_ions[2], TMT_ions[4], TMT_ions[6], TMT_ions[8], TMT_ions[9] };
+ReporterIon tmt10plexIons[10] = { TMT_ions[0], TMT_ions[1], TMT_ions[2], TMT_ions[3], TMT_ions[4], TMT_ions[5], TMT_ions[6], TMT_ions[7], TMT_ions[8], TMT_ions[9] };
+
+
+template <typename ArrayType>
+void writeBlobArray(const void* blob, ostream& os, const vector<ReporterIon>& arrayInfo)
+{
+    if (arrayInfo.empty())
+        return;
+
     if (blob == NULL)
     {
         os << "0";
-        for (++offset; offset < length; ++offset)
+        for (size_t i=1; i < arrayInfo.size(); ++i)
             os << "\t0";
         return;
     }
@@ -180,7 +222,8 @@ void writeBlobArray(const void* blob, ostream& os, size_t offset, size_t length)
     const ArrayType* blobArray = reinterpret_cast<const ArrayType*>(blob);
     streamsize oldPrecision = os.precision(0);
     ios::fmtflags oldFlags = os.flags(ios::fixed);
-    copy(blobArray+offset, blobArray+offset+length, ostream_iterator<ArrayType>(os, "\t"));
+    for (size_t i = 0; i < arrayInfo.size(); ++i)
+        os << blobArray[arrayInfo[i].index] << '\t';
     os.seekp(-1, ios::cur);
     os.precision(oldPrecision);
     os.flags(oldFlags);
@@ -278,6 +321,43 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
 }
 
 
+// get the most inclusive set of reporter ion headers (i.e. if both TMT10 and 6 are used, write TMT10's headers)
+vector<string> getReporterIonHeaders(const ReporterIon ions[], const set<QuantitationMethod>& quantitationMethods)
+{
+    vector<string> reporterIonColumnHeaders;
+
+    if (quantitationMethods.empty() ||
+        quantitationMethods.count(QuantitationMethod::None) + quantitationMethods.count(QuantitationMethod::LabelFree) == quantitationMethods.size())
+        return reporterIonColumnHeaders;
+
+    if (&ions[0] == &iTRAQ_ions[0])
+    {
+        if (quantitationMethods.count(QuantitationMethod::ITRAQ8plex) > 0)
+            for (size_t i = 0, end = sizeof(itraq8plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("iTRAQ-") + itraq8plexIons[i].name);
+        else if (quantitationMethods.count(QuantitationMethod::ITRAQ4plex) > 0)
+            for (size_t i = 0, end = sizeof(itraq4plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("iTRAQ-") + itraq4plexIons[i].name);
+    }
+    else if (&ions[0] == &TMT_ions[0])
+    {
+        if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
+            for (size_t i = 0, end = sizeof(tmt10plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("TMT-") + tmt10plexIons[i].name);
+        else if (quantitationMethods.count(QuantitationMethod::TMT6plex) > 0)
+            for (size_t i = 0, end = sizeof(tmt6plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("TMT-") + tmt6plexIons[i].name);
+        else if (quantitationMethods.count(QuantitationMethod::TMT2plex) > 0)
+            for (size_t i = 0, end = sizeof(tmt2plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("TMT-") + tmt2plexIons[i].name);
+    }
+    else
+        throw runtime_error("[getReporterIonHeaders] unrecognized reporter ion array");
+
+    return reporterIonColumnHeaders;
+}
+
+
 int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                  const vector<ProteinColumn>& enumColumns,
                  const vector<SqlColumn>& selectedColumns,
@@ -312,8 +392,6 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     else if (groupBy == GroupBy::Gene) groupByString = "pro.GeneId";
     else if (groupBy == GroupBy::GeneGroup) groupByString = "pro.GeneGroup";
 
-    int iTRAQ_masses[8] = { 113, 114, 115, 116, 117, 118, 119, 121 };
-    int TMT_masses[6] = { 126, 127, 128, 129, 130, 131 };
         
     PivotDataByColumnMap pivotDataByColumn;
     PivotDataByColumnMap::const_iterator findAbstractColumnItr;
@@ -324,46 +402,72 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     bool hasSpectrumQuantitation = false;
     bool hasPrecursorQuantitation = false;
 
-    sqlite::query itraqPlexQuery(idpDB, "SELECT DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16) = '0000000000000000' AND "
-                                        "COUNT(DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16)) = 1 "
-                                        "OR COUNT(*) = 0 "
-                                        "FROM SpectrumQuantitation");
-    bool hasITRAQ113 = false;
+    sqlite::query quantitationMethodsQuery(idpDB, "SELECT DISTINCT QuantitationMethod FROM SpectrumSource");
+    set<QuantitationMethod> quantitationMethods;
+    BOOST_FOREACH(sqlite::query::rows row, quantitationMethodsQuery)
+        quantitationMethods.insert(QuantitationMethod::get_by_index(row.get<int>(0)).get());
 
-    sqlite::query tmtPlexQuery(idpDB, "SELECT DISTINCT substr(hex(TMT_ReporterIonIntensities), 33, 16) = '0000000000000000' AND "
-                                      "COUNT(DISTINCT substr(hex(TMT_ReporterIonIntensities), 33, 16)) = 1 "
-                                      "OR COUNT(*) = 0 "
-                                      "FROM SpectrumQuantitation");
-    bool hasTMT128 = false;
+    vector<ReporterIon> itraqMethodIons, tmtMethodIons;
+    if (quantitationMethods.count(QuantitationMethod::ITRAQ8plex) > 0)
+        itraqMethodIons.assign(itraq8plexIons, itraq8plexIons+8);
+    else if (quantitationMethods.count(QuantitationMethod::ITRAQ4plex) > 0)
+        itraqMethodIons.assign(itraq4plexIons, itraq4plexIons + 4);
+
+    if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
+        tmtMethodIons.assign(tmt10plexIons, tmt10plexIons + 10);
+    else if (quantitationMethods.count(QuantitationMethod::TMT6plex) > 0)
+        tmtMethodIons.assign(tmt6plexIons, tmt10plexIons + 6);
+    else if (quantitationMethods.count(QuantitationMethod::TMT2plex) > 0)
+        tmtMethodIons.assign(tmt2plexIons, tmt10plexIons + 2);
+
+    bool hasITRAQ = false;
+    bool hasTMT = false;
 
     // write column headers
     for (size_t i=0; i < tokens.size(); ++i)
     {
-        if (tokens[i] == "iTRAQ4plex")
+        if (tokens[i] == "iTRAQ4plex" && !hasITRAQ)
         {
+            hasITRAQ = true;
             hasSpectrumQuantitation = true;
-            for(int j=1; j < 5; ++j) outputStream << "iTRAQ-" << iTRAQ_masses[j] << '\t';
+            if (!itraqMethodIons.empty())
+                BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
+                    outputStream << header << '\t';
         }
-        else if (tokens[i] == "iTRAQ8plex")
+        else if (tokens[i] == "iTRAQ8plex" && !hasITRAQ)
         {
+            hasITRAQ = true;
             hasSpectrumQuantitation = true;
-            for(int j=0; j < 8; ++j) outputStream << "iTRAQ-" << iTRAQ_masses[j] << '\t';
+            if (!itraqMethodIons.empty())
+                BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
+                    outputStream << header << '\t';
         }
-        else if (tokens[i] == "TMT2plex")
+        else if (tokens[i] == "TMT2plex" && !hasTMT)
         {
+            hasTMT = true;
             hasSpectrumQuantitation = true;
-            for(int j=0; j < 2; ++j) outputStream << "TMT-" << TMT_masses[j] << '\t';
+            if (!itraqMethodIons.empty())
+                BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
+                    outputStream << header << '\t';
         }
-        else if (tokens[i] == "TMT6plex")
+        else if (tokens[i] == "TMT6plex" && !hasTMT)
         {
+            hasTMT = true;
             hasSpectrumQuantitation = true;
-            for(int j=0; j < 6; ++j) outputStream << "TMT-" << TMT_masses[j] << '\t';
+            if (!itraqMethodIons.empty())
+                BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
+                    outputStream << header << '\t';
+        }
+        else if (tokens[i] == "TMT10plex" && !hasTMT)
+        {
+            hasTMT = true;
+            hasSpectrumQuantitation = true;
+            if (!itraqMethodIons.empty())
+                BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
+                    outputStream << header << '\t';
         }
         else if (bal::starts_with(tokens[i], "Pivot"))
         {
-            hasITRAQ113 = itraqPlexQuery.begin()->get<int>(0) == 0;
-            hasTMT128 = tmtPlexQuery.begin()->get<int>(0) == 0;
-
             string sql = bal::ends_with(tokens[i], "Source") ? "SELECT Name, Id FROM SpectrumSource ORDER BY Name"
                                                              : "SELECT Name, Id FROM SpectrumSourceGroup ORDER BY Name";
             sqlite::query q(idpDB, sql.c_str());
@@ -372,21 +476,23 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
 
             if (bal::contains(tokens[i], "ITRAQ"))
             {
-                BOOST_FOREACH(sqlite::query::rows row, q)
-                {
-                    for(int j = hasITRAQ113 ? 0 : 1; j < (hasITRAQ113 ? 8 : 5); ++j)
-                        outputStream << row.get<string>(0) << " (iTRAQ-" << iTRAQ_masses[j] << ")\t";
-                    pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
-                }
+                if (!itraqMethodIons.empty())
+                    BOOST_FOREACH(sqlite::query::rows row, q)
+                    {
+                        BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
+                            outputStream << row.get<string>(0) << " (" << header << ")\t";
+                        pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
+                    }
             }
             else if (bal::contains(tokens[i], "TMT"))
             {
-                BOOST_FOREACH(sqlite::query::rows row, q)
-                {
-                    for(int j = 0; j < (hasTMT128 ? 6 : 2); ++j)
-                        outputStream << row.get<string>(0) << " (TMT-" << iTRAQ_masses[j] << ")\t";
-                    pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
-                }
+                if (!tmtMethodIons.empty())
+                    BOOST_FOREACH(sqlite::query::rows row, q)
+                    {
+                        BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
+                            outputStream << row.get<string>(0) << " (" << header << ")\t";
+                        pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
+                    }
             }
             else
             {
@@ -398,7 +504,8 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                 }
             }
 
-            pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i]);
+            if (!pivotColumnIds.empty())
+                pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i]);
         }
         else
         {
@@ -498,16 +605,21 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                 case SQLITE_BLOB:
                     switch (enumColumns[i].index())
                     {
-                        case ProteinColumn::iTRAQ4plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 1, 5); break;
-                        case ProteinColumn::iTRAQ8plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 0, 8); break;
-                        case ProteinColumn::TMT2plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 0, 2); break;
-                        case ProteinColumn::TMT6plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 0, 6); break;
+                        case ProteinColumn::iTRAQ4plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, itraqMethodIons); break;
+                        case ProteinColumn::iTRAQ8plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, itraqMethodIons); break;
+                        case ProteinColumn::TMT2plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, tmtMethodIons); break;
+                        case ProteinColumn::TMT6plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, tmtMethodIons); break;
+                        case ProteinColumn::TMT10plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, tmtMethodIons); break;
                             
                         case ProteinColumn::PivotITRAQByGroup:
                         case ProteinColumn::PivotITRAQBySource:
                         case ProteinColumn::PivotTMTByGroup:
                         case ProteinColumn::PivotTMTBySource:
                         {
+                            if (itraqMethodIons.empty() && (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource) ||
+                                tmtMethodIons.empty() && (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource))
+                                break;
+
                             if (findAbstractColumnItr == pivotDataByColumn.end())
                                 throw runtime_error("unable to get pivot data for column " + lexical_cast<string>(i));
 
@@ -522,9 +634,9 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                 for (size_t j=0; j < pivotColumnIds.size(); ++j)
                                 {
                                     if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
-                                        writeBlobArray<double>(NULL, outputStream, 0, hasITRAQ113 ? 8 : 4);
+                                        writeBlobArray<double>(NULL, outputStream, itraqMethodIons);
                                     else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
-                                        writeBlobArray<double>(NULL, outputStream, 0, hasTMT128 ? 6 : 2);
+                                        writeBlobArray<double>(NULL, outputStream, tmtMethodIons);
                                     
                                     if (j < pivotColumnIds.size()-1)
                                         outputStream << '\t';
@@ -536,20 +648,16 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                                     if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotITRAQBySource)
                                     {
                                         if (findPivotColumnItr == findIdItr->second.end())
-                                            writeBlobArray<double>(NULL, outputStream, 0, hasITRAQ113 ? 8 : 4);
-                                        else if (hasITRAQ113)
-                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 0, 8);
+                                            writeBlobArray<double>(NULL, outputStream, itraqMethodIons);
                                         else
-                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 1, 4);
+                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, itraqMethodIons);
                                     }
                                     else if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
                                     {
                                         if (findPivotColumnItr == findIdItr->second.end())
-                                            writeBlobArray<double>(NULL, outputStream, 0, hasTMT128 ? 6 : 2);
-                                        else if (hasTMT128)
-                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 0, 6);
+                                            writeBlobArray<double>(NULL, outputStream, tmtMethodIons);
                                         else
-                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, 0, 2);
+                                            writeBlobArray<double>(boost::get<const void*>(findPivotColumnItr->second), outputStream, tmtMethodIons);
                                     }
                                     
                                     if (j < pivotColumnIds.size()-1)

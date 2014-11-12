@@ -63,6 +63,7 @@ BOOST_ENUM(QuantitationMethod,
     (ITRAQ8plex)
     (TMT2plex)
     (TMT6plex)
+    (TMT10plex)
 );
 
 // allow enum values to be the LHS of an equality expression
@@ -83,10 +84,12 @@ namespace sqlite = sqlite3pp;
 struct QuantitationConfiguration
 {
     QuantitationConfiguration(QuantitationMethod quantitationMethod = QuantitationMethod::None,
-                              MZTolerance reporterIonMzTolerance = MZTolerance(0.015, MZTolerance::MZ));
+                              MZTolerance reporterIonMzTolerance = MZTolerance(0.015, MZTolerance::MZ),
+                              bool normalizeIntensities = true);
 
     QuantitationMethod quantitationMethod;
     MZTolerance reporterIonMzTolerance;
+    bool normalizeIntensities;
 };
 
 

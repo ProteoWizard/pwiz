@@ -549,8 +549,15 @@ struct Merger::Impl
             }
         }
 
+        // update IDPicker version and creation date of the target file
         db.execute("UPDATE About SET SoftwareVersion = '" + IDPicker::Version::str() + "', StartTime = datetime('now')");
+
+        // clear filter history
         db.execute("DELETE FROM FilterHistory");
+
+        // remove old quantitation data
+        db.execute("UPDATE SpectrumSource SET QuantitationMethod = 0");
+        db.execute("DELETE FROM SpectrumQuantitation");
 
         string sql = (getNewMaxIdsSql % "merged").str();
         sqlite3pp::query maxIdRowQuery(db, sql.c_str());

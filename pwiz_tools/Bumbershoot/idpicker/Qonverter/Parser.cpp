@@ -290,7 +290,7 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
 {
     map<string, vector<AnalysisPtr> > sameNameAnalysesByName;
     vector<pair<string, string> > a_b, b_a;
-    set<string> differingParameters;
+    map<string, set<string> > differingParametersByAnalysisName;
 
     int iterationIndex = 0;
     BOOST_FOREACH(const string& filepath, inputFilepaths)
@@ -320,8 +320,8 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
                     break;
                 }
 
-                BOOST_FOREACH_FIELD((string& key)(string& value), a_b) differingParameters.insert(key);
-                BOOST_FOREACH_FIELD((string& key)(string& value), b_a) differingParameters.insert(key);
+                BOOST_FOREACH_FIELD((string& key)(string& value), a_b) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
+                BOOST_FOREACH_FIELD((string& key)(string& value), b_a) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
             }
 
             if (!sameAnalysis.get())
@@ -344,6 +344,7 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
     BOOST_FOREACH(const SameNameAnalysesPair& itr, sameNameAnalysesByName)
     BOOST_FOREACH(const AnalysisPtr& analysis, itr.second)
     {
+        const set<string>& differingParameters = differingParametersByAnalysisName[analysis->name];
         // change the analysis names based on their values for the differing parameters
         if (!differingParameters.empty())
         {
@@ -486,9 +487,11 @@ struct ParserImpl
         sqlite::command insertAnalysisParameter(idpDb, "INSERT INTO AnalysisParameter (Id, Analysis, Name, Value) VALUES (?,?,?,?)");
 
         string spectraDataName = mzid.dataCollection.inputs.spectraData[0]->name;
+        bal::replace_all(spectraDataName, "\\", "/");
         if (spectraDataName.empty())
         {
-            const string& location = mzid.dataCollection.inputs.spectraData[0]->location;
+            string location = mzid.dataCollection.inputs.spectraData[0]->location;
+            bal::replace_all(location, "\\", "/");
             spectraDataName = Parser::sourceNameFromFilename(bfs::path(location).filename().string());
 
             if (spectraDataName.empty())
