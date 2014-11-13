@@ -1865,7 +1865,6 @@ namespace SkylineTester
             this.nightlyRoot.Name = "nightlyRoot";
             this.nightlyRoot.Size = new System.Drawing.Size(222, 36);
             this.nightlyRoot.TabIndex = 29;
-            this.nightlyRoot.Text = "Documents\\SkylineNightly";
             // 
             // nightlyBrowseBuild
             // 
