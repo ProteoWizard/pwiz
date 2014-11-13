@@ -29,7 +29,7 @@ namespace ExampleInteractiveTool
     /// </summary>
     public partial class MainForm : Form
     {
-        private readonly SkylineTool.SkylineToolClient _toolClient;
+        private readonly SkylineToolClient _toolClient;
         private readonly Graph _graph;
         private List<string> _peptides;
         private List<string> _peptideLinks;
@@ -43,7 +43,7 @@ namespace ExampleInteractiveTool
             // Create tool client and register for events.
             if (args.Length > 0)
             {
-                _toolClient = new SkylineTool.SkylineToolClient(args[0], "Example Interactive Tool"); // Not L10N
+                _toolClient = new SkylineToolClient(args[0], "Example Interactive Tool"); // Not L10N
                 _toolClient.DocumentChanged += OnDocumentChanged;
                 _toolClient.SelectionChanged += OnSelectionChanged;
             }
