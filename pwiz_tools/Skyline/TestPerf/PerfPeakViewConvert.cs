@@ -36,7 +36,7 @@ namespace TestPerf
             if (!RunPerfTests)
                 return; // PerfTests only run when the global "allow perf tests" flag is set
 
-            const string testFilesDir = @"D:\Processing\Ludwig_ABRF_sPRG_study\PeakView";
+            const string testFilesDir = @"D:\Processing\HeldManual\PeakView";
             string rtFile = Path.Combine(testFilesDir, "PeakViewRt.txt");
             string scoreFile = Path.Combine(testFilesDir, "PeakViewScore.txt");
             string qValueFile = Path.Combine(testFilesDir, "PeakViewFDR.txt");
@@ -69,7 +69,7 @@ namespace TestPerf
                 WriteHeader(writer);
                 for (int i = 0; i < nPeaks; ++i)
                 {
-                    string file = rtPeakData[i].File;
+                    string file = rtPeakData[i].SimplifiedFile;
                     string modifiedSequence = rtPeakData[i].ModifiedSequence;
                     bool decoy = rtPeakData[i].Decoy;
                     Assert.AreEqual(decoy, scorePeakData[i].Decoy);
@@ -193,6 +193,18 @@ namespace TestPerf
             public string ModifiedSequence { get; private set; }
             public string File { get; private set; }
             public bool Decoy { get; private set; }
+
+            public string SimplifiedFile 
+            {
+                get
+                {
+                    const char paren = '(';
+                    int firstParen = File.IndexOf(paren);
+                    string substring = File.Substring(firstParen + 1);
+                    int secondParen = substring.IndexOf(paren);
+                    return substring.Substring(0, secondParen - 1);
+                }
+            }
         }
     }
 }

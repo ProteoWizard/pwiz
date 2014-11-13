@@ -220,6 +220,8 @@ namespace pwiz.Skyline.Model
 
     public class PeakBoundsMatch
     {
+        public const double DELTA = 1e-4;
+
         public TransitionGroupChromInfo ChromInfoTrue { get; private set; }
         public TransitionGroupChromInfo ChromInfoPicked { get; private set; }
         public MatchKey Key { get; private set; }
@@ -245,8 +247,8 @@ namespace pwiz.Skyline.Model
                 return TrueStartBoundary != null &&
                         TrueEndBoundary != null &&
                         PickedApex != null &&
-                        TrueStartBoundary < PickedApex &&
-                        PickedApex < TrueEndBoundary;
+                        TrueStartBoundary - DELTA <= PickedApex &&
+                        PickedApex <= TrueEndBoundary + DELTA;
             } 
         }
 
