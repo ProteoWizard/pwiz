@@ -299,7 +299,7 @@ namespace Test
             Assert.AreEqual(11, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
-            TestModel.ClassInitialize(null);
+            TestModel.ClassInitialize(TestContext);
             testModelFile(testModel, "testModel.idpDB");
 
             string filename = null;
