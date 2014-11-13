@@ -774,7 +774,14 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             if (config.outputPath == "-")
                 MSDataFile::write(msd, cout, config.writeConfig, pILR);
             else
+            {
+                // String compare of filenames is case-sensitive, which is a problem on Windows. bfs::equivalent() fixes this.
+                if (filename == outputFilename || bfs::equivalent(filename, outputFilename))
+                {
+                    throw user_error("Output filepath is the same as input filepath");
+                }
                 MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+            }
         }
         catch (exception& e)
         {
