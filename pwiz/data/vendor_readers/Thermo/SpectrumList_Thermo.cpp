@@ -510,8 +510,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 }
 
                 // if the monoisotopic m/z is outside the isolation window (due to Thermo firmware bug), reset it to isolation m/z
-                if (isolationWidth == 0 && (selectedIonMz < (isolationMz-defaultIsolationWindowLowerOffset)) || (selectedIonMz > (isolationMz+defaultIsolationWindowUpperOffset)))
-                    selectedIonMz = isolationMz;
+                if (isolationWidth <= 2.0)
+                {
+                    if ((selectedIonMz < (isolationMz - defaultIsolationWindowLowerOffset * 2)) || (selectedIonMz >(isolationMz + defaultIsolationWindowUpperOffset)))
+                        selectedIonMz = isolationMz;
+                }
                 else if ((selectedIonMz < (isolationMz-isolationWidth)) || (selectedIonMz > (isolationMz+isolationWidth)))
                     selectedIonMz = isolationMz;
 
