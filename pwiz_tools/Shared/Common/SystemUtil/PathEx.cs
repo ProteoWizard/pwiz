@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.IO;
 
 namespace pwiz.Common.SystemUtil
@@ -98,5 +99,33 @@ namespace pwiz.Common.SystemUtil
             parts.RemoveAt(iRemove);
             return string.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture), parts.ToArray());
         }
+
+        // From http://stackoverflow.com/questions/3795023/downloads-folder-not-special-enough
+        // Get the path for the Downloads directory, avoiding the assumption that it's under the 
+        // user's personal directory (it's possible to relocate it under newer versions of Windows)
+        public static string GetDownloadsPath()
+        {
+            string path = null;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                IntPtr pathPtr;
+                int hr = SHGetKnownFolderPath(ref FolderDownloads, 0, IntPtr.Zero, out pathPtr);
+                if (hr == 0)
+                {
+                    path = Marshal.PtrToStringUni(pathPtr);
+                    Marshal.FreeCoTaskMem(pathPtr);
+                    return path;
+                }
+            }
+            path = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+            path = Path.Combine(path ?? String.Empty, "Downloads"); // Not L10N
+            return path;
+        }
+
+        private static Guid FolderDownloads = new Guid("374DE290-123F-4565-9164-39C4925E467B"); // Not L10N
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]  // Not L10N
+        private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
+
+
     }
 }

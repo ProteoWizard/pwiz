@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -132,8 +132,7 @@ namespace pwiz.SkylineTestUtil
                     // Downloads folder for future use
                     if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://")) // Not L10N
                     {
-                        string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads");
+                        string downloadsFolder = PathEx.GetDownloadsPath();
                         string urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
                         string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N

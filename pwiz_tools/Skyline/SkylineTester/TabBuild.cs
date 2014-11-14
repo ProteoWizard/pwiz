@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineTester
 {
@@ -141,8 +141,7 @@ namespace SkylineTester
 
             if (nukeBuild || updateBuild)
             {
-                string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                string tutorialsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads", "Tutorials");
+                string tutorialsFolder = Path.Combine(PathEx.GetDownloadsPath(), "Tutorials");
                 commandShell.Add("#@ Deleting Tutorials directory...\n");
                 commandShell.Add("# Deleting Tutorials directory...");
                 commandShell.Add("rmdir /s {0}", tutorialsFolder);
