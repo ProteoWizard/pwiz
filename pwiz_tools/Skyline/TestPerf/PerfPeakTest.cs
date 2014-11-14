@@ -229,12 +229,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     AddFile(comparePeakPickingDlg, fileName, filePath, dialogSkips[i]);
                     ++i;
                 }
+                comparePeakPickingDlg.ComboYAxis = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s;
                 var trimmedDoc = Path.GetFileNameWithoutExtension(skylineDocument);
                 foreach (var comparePeakBoundaries in comparePeakPickingDlg.ComparePeakBoundariesList)
                 {
                     PointPairList rocPoints;
                     PointPairList qqPoints;
-                    ComparePeakPickingDlg.MakeRocLists(comparePeakBoundaries, out rocPoints);
+                    ComparePeakPickingDlg.MakeRocLists(comparePeakBoundaries, ComparePeakPickingDlg.NormalizeType.frac_manual, out rocPoints);
                     ComparePeakPickingDlg.MakeQValueLists(comparePeakBoundaries, out qqPoints);
                     double peptides01 = GetCurveThreshold(rocPoints, LOW_SIG);
                     double peptides05 = GetCurveThreshold(rocPoints, HIGH_SIG);

@@ -6814,12 +6814,6 @@
   <data name="AddPeakCompareDlg_OkDialog_Comparing_Imported_Files" xml:space="preserve">
     <value>比较导入的文件</value>
   </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph_ROC_plot_comparison" xml:space="preserve">
-    <value>ROC 图比较</value>
-  </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph_Q_q_comparison" xml:space="preserve">
-    <value>Q-q 比较</value>
-  </data>
   <data name="CompareElement_CompareElement__Compare____" xml:space="preserve">
     <value>&lt;比较...&gt;</value>
   </data>

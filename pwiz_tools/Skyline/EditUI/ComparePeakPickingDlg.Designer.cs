@@ -57,8 +57,13 @@ namespace pwiz.Skyline.EditUI
             this.btnOk = new System.Windows.Forms.Button();
             this.dataGridViewScoreDetails = new System.Windows.Forms.TabControl();
             this.tabROC = new System.Windows.Forms.TabPage();
+            this.checkBoxIDLabels = new System.Windows.Forms.CheckBox();
+            this.checkBoxXRange = new System.Windows.Forms.CheckBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.comboBoxYAxis = new System.Windows.Forms.ComboBox();
             this.zedGraphRoc = new ZedGraph.ZedGraphControl();
             this.tabQq = new System.Windows.Forms.TabPage();
+            this.checkBoxExpectedFp = new System.Windows.Forms.CheckBox();
             this.zedGraphQq = new ZedGraph.ZedGraphControl();
             this.tabDetails = new System.Windows.Forms.TabPage();
             this.label2 = new System.Windows.Forms.Label();
@@ -81,11 +86,6 @@ namespace pwiz.Skyline.EditUI
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.dataGridViewScoreComparison = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.bindingSourceScoreCompare = new System.Windows.Forms.BindingSource(this.components);
-            this.buttonAdd = new System.Windows.Forms.Button();
-            this.buttonEdit = new System.Windows.Forms.Button();
-            this.checkedListCompare = new System.Windows.Forms.CheckedListBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -99,6 +99,18 @@ namespace pwiz.Skyline.EditUI
             this.rightApex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.startTrue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endTrue = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.bindingSourceScoreCompare = new System.Windows.Forms.BindingSource(this.components);
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.buttonApply = new System.Windows.Forms.Button();
+            this.label7 = new System.Windows.Forms.Label();
+            this.textBoxFilesQCutoff = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.comboBoxFilesYAxis = new System.Windows.Forms.ComboBox();
+            this.zedGraphFiles = new ZedGraph.ZedGraphControl();
+            this.buttonAdd = new System.Windows.Forms.Button();
+            this.buttonEdit = new System.Windows.Forms.Button();
+            this.checkedListCompare = new System.Windows.Forms.CheckedListBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.dataGridViewScoreDetails.SuspendLayout();
             this.tabROC.SuspendLayout();
             this.tabQq.SuspendLayout();
@@ -108,6 +120,7 @@ namespace pwiz.Skyline.EditUI
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewScoreComparison)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceScoreCompare)).BeginInit();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -132,15 +145,49 @@ namespace pwiz.Skyline.EditUI
             this.dataGridViewScoreDetails.Controls.Add(this.tabQq);
             this.dataGridViewScoreDetails.Controls.Add(this.tabDetails);
             this.dataGridViewScoreDetails.Controls.Add(this.tabPage1);
+            this.dataGridViewScoreDetails.Controls.Add(this.tabPage2);
             this.dataGridViewScoreDetails.Name = "dataGridViewScoreDetails";
             this.dataGridViewScoreDetails.SelectedIndex = 0;
             // 
             // tabROC
             // 
+            this.tabROC.Controls.Add(this.checkBoxIDLabels);
+            this.tabROC.Controls.Add(this.checkBoxXRange);
+            this.tabROC.Controls.Add(this.label5);
+            this.tabROC.Controls.Add(this.comboBoxYAxis);
             this.tabROC.Controls.Add(this.zedGraphRoc);
             resources.ApplyResources(this.tabROC, "tabROC");
             this.tabROC.Name = "tabROC";
             this.tabROC.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxIDLabels
+            // 
+            resources.ApplyResources(this.checkBoxIDLabels, "checkBoxIDLabels");
+            this.checkBoxIDLabels.Checked = true;
+            this.checkBoxIDLabels.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxIDLabels.Name = "checkBoxIDLabels";
+            this.checkBoxIDLabels.UseVisualStyleBackColor = true;
+            this.checkBoxIDLabels.CheckedChanged += new System.EventHandler(this.checkBoxIDLabels_CheckedChanged);
+            // 
+            // checkBoxXRange
+            // 
+            resources.ApplyResources(this.checkBoxXRange, "checkBoxXRange");
+            this.checkBoxXRange.Name = "checkBoxXRange";
+            this.checkBoxXRange.UseVisualStyleBackColor = true;
+            this.checkBoxXRange.CheckedChanged += new System.EventHandler(this.checkBoxClipBottom_CheckedChanged);
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // comboBoxYAxis
+            // 
+            resources.ApplyResources(this.comboBoxYAxis, "comboBoxYAxis");
+            this.comboBoxYAxis.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxYAxis.FormattingEnabled = true;
+            this.comboBoxYAxis.Name = "comboBoxYAxis";
+            this.comboBoxYAxis.SelectedIndexChanged += new System.EventHandler(this.comboBoxYAxis_SelectedIndexChanged);
             // 
             // zedGraphRoc
             // 
@@ -163,10 +210,20 @@ namespace pwiz.Skyline.EditUI
             // 
             // tabQq
             // 
+            this.tabQq.Controls.Add(this.checkBoxExpectedFp);
             this.tabQq.Controls.Add(this.zedGraphQq);
             resources.ApplyResources(this.tabQq, "tabQq");
             this.tabQq.Name = "tabQq";
             this.tabQq.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxExpectedFp
+            // 
+            resources.ApplyResources(this.checkBoxExpectedFp, "checkBoxExpectedFp");
+            this.checkBoxExpectedFp.Checked = true;
+            this.checkBoxExpectedFp.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxExpectedFp.Name = "checkBoxExpectedFp";
+            this.checkBoxExpectedFp.UseVisualStyleBackColor = true;
+            this.checkBoxExpectedFp.CheckedChanged += new System.EventHandler(this.checkBoxExpectedFp_CheckedChanged);
             // 
             // zedGraphQq
             // 
@@ -378,32 +435,6 @@ namespace pwiz.Skyline.EditUI
             this.dataGridViewScoreComparison.Name = "dataGridViewScoreComparison";
             this.dataGridViewScoreComparison.ReadOnly = true;
             // 
-            // buttonAdd
-            // 
-            resources.ApplyResources(this.buttonAdd, "buttonAdd");
-            this.buttonAdd.Name = "buttonAdd";
-            this.buttonAdd.UseVisualStyleBackColor = true;
-            this.buttonAdd.Click += new System.EventHandler(this.buttonAdd_Click);
-            // 
-            // buttonEdit
-            // 
-            resources.ApplyResources(this.buttonEdit, "buttonEdit");
-            this.buttonEdit.Name = "buttonEdit";
-            this.buttonEdit.UseVisualStyleBackColor = true;
-            this.buttonEdit.Click += new System.EventHandler(this.buttonEdit_Click);
-            // 
-            // checkedListCompare
-            // 
-            resources.ApplyResources(this.checkedListCompare, "checkedListCompare");
-            this.checkedListCompare.FormattingEnabled = true;
-            this.checkedListCompare.Name = "checkedListCompare";
-            this.checkedListCompare.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListCompare_ItemCheck);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.DataPropertyName = "FileName";
@@ -519,6 +550,92 @@ namespace pwiz.Skyline.EditUI
             this.endTrue.Name = "endTrue";
             this.endTrue.ReadOnly = true;
             // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.buttonApply);
+            this.tabPage2.Controls.Add(this.label7);
+            this.tabPage2.Controls.Add(this.textBoxFilesQCutoff);
+            this.tabPage2.Controls.Add(this.label6);
+            this.tabPage2.Controls.Add(this.comboBoxFilesYAxis);
+            this.tabPage2.Controls.Add(this.zedGraphFiles);
+            resources.ApplyResources(this.tabPage2, "tabPage2");
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // buttonApply
+            // 
+            resources.ApplyResources(this.buttonApply, "buttonApply");
+            this.buttonApply.Name = "buttonApply";
+            this.buttonApply.UseVisualStyleBackColor = true;
+            this.buttonApply.Click += new System.EventHandler(this.buttonApply_Click);
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
+            // textBoxFilesQCutoff
+            // 
+            resources.ApplyResources(this.textBoxFilesQCutoff, "textBoxFilesQCutoff");
+            this.textBoxFilesQCutoff.Name = "textBoxFilesQCutoff";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
+            // comboBoxFilesYAxis
+            // 
+            resources.ApplyResources(this.comboBoxFilesYAxis, "comboBoxFilesYAxis");
+            this.comboBoxFilesYAxis.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFilesYAxis.FormattingEnabled = true;
+            this.comboBoxFilesYAxis.Name = "comboBoxFilesYAxis";
+            this.comboBoxFilesYAxis.SelectedIndexChanged += new System.EventHandler(this.comboBoxFilesYAxis_SelectedIndexChanged);
+            // 
+            // zedGraphFiles
+            // 
+            resources.ApplyResources(this.zedGraphFiles, "zedGraphFiles");
+            this.zedGraphFiles.IsEnableHPan = false;
+            this.zedGraphFiles.IsEnableHZoom = false;
+            this.zedGraphFiles.IsEnableVPan = false;
+            this.zedGraphFiles.IsEnableVZoom = false;
+            this.zedGraphFiles.IsEnableWheelZoom = false;
+            this.zedGraphFiles.IsShowCopyMessage = false;
+            this.zedGraphFiles.Name = "zedGraphFiles";
+            this.zedGraphFiles.ScrollGrace = 0D;
+            this.zedGraphFiles.ScrollMaxX = 0D;
+            this.zedGraphFiles.ScrollMaxY = 0D;
+            this.zedGraphFiles.ScrollMaxY2 = 0D;
+            this.zedGraphFiles.ScrollMinX = 0D;
+            this.zedGraphFiles.ScrollMinY = 0D;
+            this.zedGraphFiles.ScrollMinY2 = 0D;
+            // 
+            // buttonAdd
+            // 
+            resources.ApplyResources(this.buttonAdd, "buttonAdd");
+            this.buttonAdd.Name = "buttonAdd";
+            this.buttonAdd.UseVisualStyleBackColor = true;
+            this.buttonAdd.Click += new System.EventHandler(this.buttonAdd_Click);
+            // 
+            // buttonEdit
+            // 
+            resources.ApplyResources(this.buttonEdit, "buttonEdit");
+            this.buttonEdit.Name = "buttonEdit";
+            this.buttonEdit.UseVisualStyleBackColor = true;
+            this.buttonEdit.Click += new System.EventHandler(this.buttonEdit_Click);
+            // 
+            // checkedListCompare
+            // 
+            resources.ApplyResources(this.checkedListCompare, "checkedListCompare");
+            this.checkedListCompare.FormattingEnabled = true;
+            this.checkedListCompare.Name = "checkedListCompare";
+            this.checkedListCompare.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListCompare_ItemCheck);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // ComparePeakPickingDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -537,7 +654,9 @@ namespace pwiz.Skyline.EditUI
             this.ShowInTaskbar = false;
             this.dataGridViewScoreDetails.ResumeLayout(false);
             this.tabROC.ResumeLayout(false);
+            this.tabROC.PerformLayout();
             this.tabQq.ResumeLayout(false);
+            this.tabQq.PerformLayout();
             this.tabDetails.ResumeLayout(false);
             this.tabDetails.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewScore)).EndInit();
@@ -546,6 +665,8 @@ namespace pwiz.Skyline.EditUI
             this.tabPage1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewScoreComparison)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceScoreCompare)).EndInit();
+            this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -599,5 +720,17 @@ namespace pwiz.Skyline.EditUI
         private DataGridViewTextBoxColumn rightApex;
         private DataGridViewTextBoxColumn startTrue;
         private DataGridViewTextBoxColumn endTrue;
+        private Label label5;
+        private ComboBox comboBoxYAxis;
+        private TabPage tabPage2;
+        private ZedGraphControl zedGraphFiles;
+        private Label label6;
+        private ComboBox comboBoxFilesYAxis;
+        private Label label7;
+        private TextBox textBoxFilesQCutoff;
+        private Button buttonApply;
+        private CheckBox checkBoxXRange;
+        private CheckBox checkBoxIDLabels;
+        private CheckBox checkBoxExpectedFp;
     }
 }

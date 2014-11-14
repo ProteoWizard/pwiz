@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestTutorial
         /// to regenerate checkpoint files for non-full-import mode,
         /// when something changes in the test.
         /// </summary>
-        private bool IsFullImportMode { get { return true; } }
+        private bool IsFullImportMode { get { return false; } }
 
         protected override void DoTest()
         {

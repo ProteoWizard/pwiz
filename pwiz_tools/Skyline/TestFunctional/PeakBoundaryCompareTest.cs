@@ -405,8 +405,8 @@ namespace pwiz.SkylineTestFunctional
                                             int detailsChoices, 
                                             int compareChoices)
         {
-            Assert.AreEqual(comparePeakPickingDlg.CountRocCurves, rocCurves);
-            Assert.AreEqual(Math.Max(comparePeakPickingDlg.CountQCurves - 1, 0), qCurves);
+            Assert.AreEqual(Math.Max(comparePeakPickingDlg.CountRocCurves - 1, 0), rocCurves);
+            Assert.AreEqual(Math.Max(comparePeakPickingDlg.CountQCurves - 2, 0), qCurves);
             Assert.AreEqual(comparePeakPickingDlg.CountDetailsItems, detailsChoices);
             Assert.AreEqual(comparePeakPickingDlg.CountCompare1Items, compareChoices);
             Assert.AreEqual(comparePeakPickingDlg.CountCompare2Items, compareChoices);
