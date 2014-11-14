@@ -87,7 +87,7 @@ namespace seems
             this.nativeIdFormat = nativeIdFormat;
             if ((nativeIdFormat != CVID.CVID_Unknown) && (nativeIdFormat != CVID.MS_no_nativeID_format))
             {
-                string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).def;
+                string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).def.Replace("Native format defined by ", "");
                 string[] nameValuePairs = nativeIdDefinition.Split( " ".ToCharArray() );
                 for( int i = 0; i < nameValuePairs.Length; ++i )
                 {
@@ -126,7 +126,7 @@ namespace seems
         {
             spectrumList[spectrum.Index] = spectrum;
 
-            Spectrum s = spectrum.Element;
+            Spectrum s = spectrum.Element; //GetElement(false);
             DataProcessing dp = spectrum.DataProcessing;
             Scan scan = null;
             InstrumentConfiguration ic = null;
