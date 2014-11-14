@@ -41,9 +41,9 @@ namespace pwiz.SkylineTestTutorial
                 "20130311_DIA_Pit02"
             };
 
-        private const string DIA_START_CHECKPOINT = "HoofnagleBlank.sky";
-        private const string DIA_SETUP_CHECKPOINT = "HoofnagleDIASetup.sky";
-        private const string DIA_IMPORTED_CHECKPOINT = "HoofnagleDIAImported.sky";
+        private const string DIA_START_CHECKPOINT = "DIABlank.sky";
+        private const string DIA_SETUP_CHECKPOINT = "DIASetup.sky";
+        private const string DIA_IMPORTED_CHECKPOINT = "DIAImported.sky";
 
         [TestMethod]
         public void TestDiaTutorial()

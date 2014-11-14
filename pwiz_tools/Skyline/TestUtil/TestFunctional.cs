@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -27,6 +28,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.SqlServer.Server;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -43,6 +45,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
 
 namespace pwiz.SkylineTestUtil
@@ -198,6 +201,36 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        protected static void SetCsvFileClipboardText(string filePath)
+        {
+            SetClipboardText(GetCsvFileText(filePath));
+        }
+
+        protected static string GetCsvFileText(string filePath)
+        {
+            if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
+            {
+                return File.ReadAllText(filePath);
+            }
+            else
+            {
+                var sb = new StringBuilder();
+                string decimalSep = CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator;
+                string decimalIntl = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+                foreach (var line in File.ReadLines(filePath))
+                {
+                    string[] fields = line.ParseDsvFields(TextUtil.SEPARATOR_CSV);
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        double result;
+                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out result))
+                            fields[i] = fields[i].Replace(decimalSep, decimalIntl);
+                    }
+                    sb.AppendLine(fields.ToCsvLine());
+                }
+                return sb.ToString();
+            }
+        }
 
         protected static void SetExcelFileClipboardText(string filePath, string page, int columns, bool hasHeader)
         {

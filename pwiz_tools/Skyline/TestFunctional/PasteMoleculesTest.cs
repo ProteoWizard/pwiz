@@ -62,15 +62,15 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t88.0730104200905\t31.0178414200905\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t\t1\t", // No mz or charge for product
+            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t\t1\t", // No mz or charge for product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t88.0730104200905\t31.0178414200905\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t99\t15", // Precursor Formula and m/z don't make sense together
+            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t99\t15", // Precursor Formula and m/z don't make sense together
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t88.0730104200905\t31.0178414200905\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t15\t1", // Product Formula and m/z don't make sense together
+            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t15\t1", // Product Formula and m/z don't make sense together
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t88.0730104200905\t31.0178414200905\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t", // No mz or charge for precursor or product
+            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t", // No mz or charge for precursor or product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t88.0730104200905\t31.0178414200905\t1\t1", // Legit
+            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1", // Legit
                 String.Empty);
 
             var docOrig = SkylineWindow.Document;
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg.IsMolecule = true;
             });
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv"))); 
+            SetCsvFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")); 
             RunUI(pasteDlg.PasteTransitions);
             OkDialog(pasteDlg,pasteDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);

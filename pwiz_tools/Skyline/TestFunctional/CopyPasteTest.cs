@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
                 new Tuple<string, int>("FVEGLPINDFSR", 2),
                 new Tuple<string, int>("FVEGLPINDFSR", 0),
                 new Tuple<string, int>("DLNELQALIEAHFENR", 0),
-                new Tuple<string, int>("C[+57.0]QPLELAGLGFAELQDLC[+57.0]R", 3),
+                new Tuple<string, int>(string.Format("C[+{0:F01}]QPLELAGLGFAELQDLC[+{1:F01}]R", 57.0, 57.0), 3),
                 new Tuple<string, int>("PEPTIDER", 5),
                 new Tuple<string, int>("PEPTIDER", 15)
             };
