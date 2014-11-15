@@ -162,9 +162,24 @@ namespace pwiz.Skyline.Model
             else if (!settings.PeptideSettings.Libraries.HasLibraries || libInfo == null)
                 pick = TransitionLibraryPick.none;
 
-            // If filtering without library picking, then don't include the losses
-            if (pick == TransitionLibraryPick.none)
-                potentialLosses = null;
+            // If filtering without library picking
+            if (potentialLosses != null)
+            {
+                if (pick == TransitionLibraryPick.none)
+                {
+                    // Only include loss combinations where all losses are included always
+                    potentialLosses = potentialLosses.Where(losses =>
+                        losses.All(loss => loss.TransitionLoss.Loss.Inclusion == LossInclusion.Always)).ToArray();
+                }
+                else if (useFilter)
+                {
+                    // Exclude all losses which should never be included by default
+                    potentialLosses = potentialLosses.Where(losses =>
+                        losses.All(loss => loss.TransitionLoss.Loss.Inclusion != LossInclusion.Never)).ToArray();
+                }
+                if (!potentialLosses.Any())
+                    potentialLosses = null;
+            }
 
             // Return precursor ions
             if (!useFilter || types.Contains(IonType.precursor))

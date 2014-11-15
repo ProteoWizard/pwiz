@@ -413,7 +413,9 @@ namespace pwiz.Skyline.SettingsUI
             if (uniMod == null)
             {
                 var matchingMod = UniMod.FindMatchingStaticMod(newMod, IsStructural);
-                if (matchingMod != null && ModNameAvailable(matchingMod.Name))
+                if (matchingMod != null &&
+                    (ModNameAvailable(matchingMod.Name) ||
+                    (_editing && Equals(matchingMod.Name, Modification.Name))))
                 {
                     var result = MultiButtonMsgDlg.Show(
                         this,
@@ -425,7 +427,7 @@ namespace pwiz.Skyline.SettingsUI
                         Resources.EditStaticModDlg_OkDialog_Custom,
                         true);
                     if (result == DialogResult.Yes)
-                        newMod = matchingMod;   // Unimod
+                        newMod = matchingMod.MatchVariableAndLossInclusion(newMod);   // Unimod
                     if (result == DialogResult.Cancel)
                         return;
                 }
@@ -435,7 +437,7 @@ namespace pwiz.Skyline.SettingsUI
                 // If the dialog modification matches the modification of the same name in Unimod, 
                 // use the UnimodId.
                 if (newMod.Equivalent(uniMod))
-                    newMod = uniMod.ChangeVariable(newMod.IsVariable);
+                    newMod = uniMod.MatchVariableAndLossInclusion(newMod);
                 else
                 {
                     // Finally, if the modification name is found in Unimod, but the modification in Unimod does not 

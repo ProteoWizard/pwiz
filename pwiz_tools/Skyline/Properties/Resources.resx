@@ -8105,4 +8105,13 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold" xml:space="preserve">
     <value>0.05 significance threshold</value>
   </data>
+    <data name="LossInclusionExtension_LOCALIZED_VALUES_Matching_Library" xml:space="preserve">
+    <value>Matching Library</value>
+  </data>
+    <data name="LossInclusionExtension_LOCALIZED_VALUES_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+    <data name="LossInclusionExtension_LOCALIZED_VALUES_Always" xml:space="preserve">
+    <value>Always</value>
+  </data>
 </root>

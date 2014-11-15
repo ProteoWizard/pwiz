@@ -286,6 +286,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.RelativeRT = prop);
         }
 
+        public StaticMod ChangeLosses(IList<FragmentLoss> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Losses = prop);
+        }
+
+        public StaticMod MatchVariableAndLossInclusion(StaticMod mod)
+        {
+            // Only allowed if the mods are equivalent
+            Assume.IsTrue(Equivalent(mod));
+
+            var result = this;
+            if (!Equals(result.IsVariable, mod.IsVariable))
+                result = result.ChangeVariable(mod.IsVariable);
+            if (result.Losses != null && !ArrayUtil.EqualsDeep(result.Losses, mod.Losses))
+            {
+                int len = result.Losses.Count;
+                var newLosses = new FragmentLoss[len];
+                for (int i = 0; i < len; i++)
+                {
+                    newLosses[i] = result.Losses[i].ChangeInclusion(mod.Losses[i].Inclusion);
+                }
+                result = result.ChangeLosses(newLosses);
+            }
+            return result;
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -488,7 +514,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 && base.Equals(obj) 
                 && obj.IsVariable.Equals(IsVariable) 
                 && Equals(obj.UnimodId, UnimodId)
-                && Equals(obj.ShortName, ShortName);
+                && Equals(obj.ShortName, ShortName)
+                && ArrayUtil.EqualsDeep(obj._losses, _losses);
         }
 
         /// <summary>

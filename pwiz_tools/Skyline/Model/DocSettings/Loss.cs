@@ -29,6 +29,42 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
+    public enum LossInclusion
+    {
+        // ReSharper disable InconsistentNaming
+        Library, Never, Always
+        // ReSharper restore InconsistentNaming
+    }
+    public static class LossInclusionExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    Resources.LossInclusionExtension_LOCALIZED_VALUES_Matching_Library,
+                    Resources.LossInclusionExtension_LOCALIZED_VALUES_Never,
+                    Resources.LossInclusionExtension_LOCALIZED_VALUES_Always,
+                };
+            }
+        }
+        public static string GetLocalizedString(this LossInclusion val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static LossInclusion GetEnum(string enumValue)
+        {
+            return Helpers.EnumFromLocalizedString<LossInclusion>(enumValue, LOCALIZED_VALUES);
+        }
+
+        public static LossInclusion GetEnum(string enumValue, LossInclusion defaultValue)
+        {
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
+        }
+    }
+
     [XmlRoot("potential_loss")]
     public sealed class FragmentLoss : Immutable, IXmlSerializable
     {
@@ -42,11 +78,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {            
         }
 
-        public FragmentLoss(string formula, double? monoisotopicMass, double? averageMass)
+        public FragmentLoss(string formula, double? monoisotopicMass, double? averageMass, LossInclusion inclusion = LossInclusion.Library)
         {
             MonoisotopicMass = monoisotopicMass ?? 0;
             AverageMass = averageMass ?? 0;
             Formula = formula;
+            Inclusion = inclusion;
 
             Validate();
         }
@@ -73,6 +110,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return massType == MassType.Monoisotopic ? MonoisotopicMass : AverageMass;
         }
 
+        public LossInclusion Inclusion { get; private set; }
+
         /// <summary>
         /// Losses are always sorted by m/z, to avoid the need for names and a
         /// full user interface around list editing.
@@ -87,6 +126,15 @@ namespace pwiz.Skyline.Model.DocSettings
             return arrayLosses;
         }
 
+        #region Property change methods
+
+        public FragmentLoss ChangeInclusion(LossInclusion inclusion)
+        {
+            return ChangeProp(ImClone(this), im => im.Inclusion = inclusion);
+        }
+
+        #endregion
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -100,7 +148,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             formula,
             massdiff_monoisotopic,
-            massdiff_average
+            massdiff_average,
+            inclusion
         }
 
         private void Validate()
@@ -129,6 +178,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic) ?? 0;
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average) ?? 0;
             Formula = reader.GetAttribute(ATTR.formula);
+            Inclusion = reader.GetEnumAttribute(ATTR.inclusion, LossInclusion.Library);
 
             // Consume tag
             reader.Read();
@@ -142,6 +192,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeIfString(ATTR.formula, Formula);
             writer.WriteAttribute(ATTR.massdiff_monoisotopic, MonoisotopicMass);
             writer.WriteAttribute(ATTR.massdiff_average, AverageMass);
+            writer.WriteAttribute(ATTR.inclusion, Inclusion, LossInclusion.Library);
         }
 
         #endregion
@@ -154,7 +205,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Formula, Formula) &&
                 other.MonoisotopicMass.Equals(MonoisotopicMass) &&
-                other.AverageMass.Equals(AverageMass);
+                other.AverageMass.Equals(AverageMass) &&
+                other.Inclusion.Equals(Inclusion);
         }
 
         public override bool Equals(object obj)
@@ -172,6 +224,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = (Formula != null ? Formula.GetHashCode() : 0);
                 result = (result * 397) ^ MonoisotopicMass.GetHashCode();
                 result = (result * 397) ^ AverageMass.GetHashCode();
+                result = (result * 397) ^ Inclusion.GetHashCode();
                 return result;
             }
         }

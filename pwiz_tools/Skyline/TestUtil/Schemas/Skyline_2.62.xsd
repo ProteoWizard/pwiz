@@ -1093,6 +1093,13 @@
       <xs:enumeration value="Unknown"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="loss_inclusion_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Library"/>
+      <xs:enumeration value="Never"/>
+      <xs:enumeration value="Always"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name="peptide_pick_type">
     <xs:annotation>
       <xs:documentation>
@@ -1290,6 +1297,7 @@
           <xs:attribute name="formula" type="xs:string"/>
           <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
           <xs:attribute name="massdiff_average" type="xs:double"/>
+          <xs:attribute name="inclusion" type="loss_inclusion_type"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>

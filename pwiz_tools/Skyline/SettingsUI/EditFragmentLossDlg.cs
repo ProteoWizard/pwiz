@@ -36,6 +36,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<FragmentLoss> _existing;
         private readonly FormulaBox _formulaBox;
 
+        private readonly int _libraryInclusionIndex;
+
         public EditFragmentLossDlg(IEnumerable<FragmentLoss> existing)
         {
             InitializeComponent();
@@ -46,6 +48,12 @@ namespace pwiz.Skyline.SettingsUI
                 Location = new Point(12,9)
             };
             Controls.Add(_formulaBox);
+
+            comboIncludeLoss.Items.Add(LossInclusion.Never.GetLocalizedString());
+            _libraryInclusionIndex = comboIncludeLoss.Items.Count;
+            comboIncludeLoss.Items.Add(LossInclusion.Library.GetLocalizedString());
+            comboIncludeLoss.Items.Add(LossInclusion.Always.GetLocalizedString());
+            comboIncludeLoss.SelectedIndex = _libraryInclusionIndex;
         }
 
         public FragmentLoss Loss
@@ -59,17 +67,22 @@ namespace pwiz.Skyline.SettingsUI
                     _formulaBox.Formula = string.Empty;
                     _formulaBox.MonoMass = null;
                     _formulaBox.AverageMass = null;
-                }
-                else if (!string.IsNullOrEmpty(_loss.Formula))
-                {
-                    _formulaBox.Formula = _loss.Formula;
+                    comboIncludeLoss.SelectedIndex = _libraryInclusionIndex;
                 }
                 else
                 {
-                    _formulaBox.MonoMass = (_loss.MonoisotopicMass != 0 ?
-                        _loss.MonoisotopicMass: (double?)null);
-                    _formulaBox.AverageMass = (_loss.AverageMass != 0 ?
-                        _loss.AverageMass : (double?)null);
+                    if (!string.IsNullOrEmpty(_loss.Formula))
+                    {
+                        _formulaBox.Formula = _loss.Formula;
+                    }
+                    else
+                    {
+                        _formulaBox.MonoMass = (_loss.MonoisotopicMass != 0 ?
+                            _loss.MonoisotopicMass : (double?)null);
+                        _formulaBox.AverageMass = (_loss.AverageMass != 0 ?
+                            _loss.AverageMass : (double?)null);
+                    }
+                    Inclusion = _loss.Inclusion;
                 }
             }
         }
@@ -125,7 +138,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Make sure the new loss does not already exist.
-            var loss = new FragmentLoss(formulaLoss, monoLoss, avgLoss);
+            var loss = new FragmentLoss(formulaLoss, monoLoss, avgLoss, Inclusion);
             if (_existing.Contains(loss))
             {
                 MessageDlg.Show(this, string.Format(Resources.EditFragmentLossDlg_OkDialog_The_loss__0__already_exists, loss));
@@ -140,6 +153,18 @@ namespace pwiz.Skyline.SettingsUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        public LossInclusion Inclusion
+        {
+            get
+            {
+                return LossInclusionExtension.GetEnum(comboIncludeLoss.SelectedItem.ToString(), LossInclusion.Library);
+            }
+            set
+            {
+                comboIncludeLoss.SelectedItem = value.GetLocalizedString();
+            }
         }
     }
 }

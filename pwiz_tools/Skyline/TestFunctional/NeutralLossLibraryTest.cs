@@ -22,11 +22,13 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -210,6 +212,27 @@ namespace pwiz.SkylineTestFunctional
                               }
                           }
                       });
+
+            // Make sure setting losses as included Never works
+            {
+                var docBeforeNever = SkylineWindow.Document;
+                var peptideSettingsUINever = ShowDialog<PeptideSettingsUI>(() =>
+                    SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Modifications));
+                var editModsDlgNever = ShowEditStaticModsDlg(peptideSettingsUINever);
+                RunUI(() => editModsDlgNever.SelectItem(phosphoLossMod.Name));
+                var editModDlgNever = ShowDialog<EditStaticModDlg>(editModsDlgNever.EditItem);
+                RunUI(() => editModDlgNever.LossSelectedIndex = 0);
+                RunDlg<EditFragmentLossDlg>(editModDlgNever.EditLoss, dlg =>
+                {
+                    dlg.Inclusion = LossInclusion.Never;
+                    dlg.OkDialog();
+                });
+                RunDlg<MultiButtonMsgDlg>(editModDlgNever.OkDialog, dlg => dlg.Btn1Click());
+                OkDialog(editModsDlgNever, editModsDlgNever.OkDialog);
+                OkDialog(peptideSettingsUINever, peptideSettingsUINever.OkDialog);
+                var docAfterNever = WaitForDocumentChange(docBeforeNever);
+                Assert.AreEqual(0, GetLossCount(docAfterNever, 1));
+            }
         }
 
         private static int GetLossCount(SrmDocument document, int minLosses)

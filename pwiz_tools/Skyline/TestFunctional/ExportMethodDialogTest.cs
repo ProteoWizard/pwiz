@@ -407,6 +407,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Failure trying to export to file with a peptide lacking results or library match
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-missing.sky")));
+            WaitForDocumentLoaded();
             {
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                 RunUI(() =>

@@ -151,6 +151,31 @@ namespace pwiz.SkylineTestFunctional
             // Losses not added by default without a library
             Assert.AreEqual(0, GetLossCount(SkylineWindow.Document, 1));
 
+            // Make sure setting losses as included Always works
+            {
+                var docBeforeAlways = SkylineWindow.Document;
+                var peptideSettingsUIAlways = ShowDialog<PeptideSettingsUI>(() =>
+                    SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Modifications));
+                var editModsDlgAlways = ShowEditStaticModsDlg(peptideSettingsUIAlways);
+                RunUI(() => editModsDlgAlways.SelectItem(phosphoLossMod.Name));
+                var editModDlgAlways = ShowDialog<EditStaticModDlg>(editModsDlgAlways.EditItem);
+                RunUI(() => editModDlgAlways.LossSelectedIndex = 0);
+                RunDlg<EditFragmentLossDlg>(editModDlgAlways.EditLoss, dlg =>
+                {
+                    dlg.Inclusion = LossInclusion.Always;
+                    dlg.OkDialog();
+                });
+                OkDialog(editModDlgAlways, editModDlgAlways.OkDialog);
+                OkDialog(editModsDlgAlways, editModsDlgAlways.OkDialog);
+                OkDialog(peptideSettingsUIAlways, peptideSettingsUIAlways.OkDialog);
+                var docAfterAlways = WaitForDocumentChange(docBeforeAlways);
+                Assert.AreEqual(5, GetLossCount(docAfterAlways, 1));
+                AssertEx.Serializable(docAfterAlways);
+                // Undo and revert to original phospo loss modification definition
+                RunUI(SkylineWindow.Undo);
+                Settings.Default.StaticModList.SetValue(phosphoLossMod);
+            }
+
             // Show losses in the pick list
             var docFasta = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
