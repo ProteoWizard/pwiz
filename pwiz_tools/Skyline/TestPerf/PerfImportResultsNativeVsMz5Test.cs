@@ -18,8 +18,10 @@
  */
 
 
+using System;
 using System.Diagnostics;
 using System.IO;
+using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -132,12 +134,18 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
 
-        [TestMethod] 
+        [TestMethod]
+        [Timeout(6000000)]  // These can take a long time
         public void AllVsMz5ChromatogramPerformanceTests()
         {
             if (!RunPerfTests)
                 return; // PerfTests only run when the global RunPerfTests flag is set
-            _loopcount = 3;
+            _loopcount = 0;  // Increase this to 3 for proper performance comparisons, but 0 is good for nightly (skips warmup, just runs once)
+            
+            // Caller may have disabled logging, but we depend on it for data gathering.
+            var saveLevel = LogManager.GetRepository().Threshold;
+            LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["Info"];
+
             Log.AddMemoryAppender();
             AbDiaVsMz5ChromatogramPerformanceTest();
             AbIdaVsMz5ChromatogramPerformanceTest();
@@ -149,15 +157,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             ThermoDdaVsMz5ChromatogramPerformanceTest();
             ThermoDiaVsMz5ChromatogramPerformanceTest();
             WatersVsMz5ChromatogramPerformanceTest();
+            DebugLog.Info("Done.");
             var logs = Log.GetMemoryAppendedLogEvents();
             var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
+            var report = stats.Replace(_testFilesDir.PersistentFilesDir.Replace(':', '_'), "");
+            Console.Write(report); // Want this to appear in nightly log
+
             var log = new Log("Summary");
-            log.Info(stats.Replace(_testFilesDir.PersistentFilesDir, ""));
+            log.Info(report);
+
+            // Restore logging level
+            LogManager.GetRepository().Threshold = saveLevel;
+
         }
 
         public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile)
         {
-            for (var loop=0;loop<_loopcount+1;loop++) // one extra initial loop for warmup
+            for (var loop = 0; loop < _loopcount + 1; loop++) // one extra initial loop for warmup
             {
                 // compare mz5 and raw import times
                 TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + zipFile;
@@ -166,17 +182,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
                 _skyFile = _testFilesDir.GetTestPath(skyFile);
                 string nativeResults = _testFilesDir.GetTestPath(rawFile);
-                string mz5Results = Path.ChangeExtension(nativeResults,"mz5");
+                string mz5Results = Path.ChangeExtension(nativeResults, "mz5");
 
-                MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop==0); // turn on performance measurement after warmup loop
+                MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop == 0) && (_loopcount>0); // turn on performance measurement after warmup loop
 
                 foreach (var resultspath in new[] { mz5Results, nativeResults })  //
                 {
                     _dataFile = resultspath;
                     RunFunctionalTest();
-                    File.Delete(Path.ChangeExtension(_skyFile,"skyd")); // make sure we're clean for next pass
+                    File.Delete(Path.ChangeExtension(_skyFile, "skyd")); // make sure we're clean for next pass
                 }
-                
+
             }
         }
 
@@ -190,6 +206,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Stop();
 
             DebugLog.Info("{0} load time = {1}", _dataFile, loadStopwatch.ElapsedMilliseconds);
-        }  
+        }
     }
 }
