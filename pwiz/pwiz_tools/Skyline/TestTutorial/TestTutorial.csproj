@@ -110,6 +110,7 @@
     <Compile Include="AbsoluteQuantTutorialTest.cs" />
     <Compile Include="CEOptimizationTutorialTest.cs" />
     <Compile Include="CustomReportsTutorialTest.cs" />
+    <Compile Include="DiaTutorialTest.cs" />
     <Compile Include="ExistingExperimentsTutorialTest.cs" />
     <Compile Include="GroupedStudiesTutorialTest.cs" />
     <Compile Include="IrtTutorialTest.cs" />

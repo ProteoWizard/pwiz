@@ -152,25 +152,28 @@ namespace pwiz.SkylineTestUtil
             if (parentPath != null)
                 guidName = Path.Combine(parentPath, guidName);
 
-            try
+            if (Directory.Exists(FullPath))  // Did test already clean up after itself?
             {
-                Helpers.TryTwice(() => Directory.Move(FullPath, guidName));
-            }
-            catch (IOException)
-            {
-                // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(FullPath, true));
-            }
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Move(FullPath, guidName));
+                }
+                catch (IOException)
+                {
+                    // Useful for debugging. Exception names file that is locked.
+                    Helpers.TryTwice(() => Directory.Delete(FullPath, true));
+                }
 
-            // Move the file back to where it was, and fail if this throws
-            try
-            {
-                Helpers.TryTwice(() => Directory.Move(guidName, FullPath));
-            }
-            catch (IOException)
-            {
-                // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                // Move the file back to where it was, and fail if this throws
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Move(guidName, FullPath));
+                }
+                catch (IOException)
+                {
+                    // Useful for debugging. Exception names file that is locked.
+                    Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                }
             }
         }
     }

@@ -255,6 +255,30 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.RetentionTimeFilterType = value; }
         }
 
+        public double? ProductRes
+        {
+            get { return FullScanSettingsControl.ProductRes; }
+            set { FullScanSettingsControl.ProductRes = value; }
+        }
+
+        public double? ProductResMz
+        {
+            get { return FullScanSettingsControl.ProductResMz; }
+            set { FullScanSettingsControl.ProductResMz = value; }
+        }
+
+        public double? PrecursorRes
+        {
+            get { return FullScanSettingsControl.PrecursorRes; }
+            set { FullScanSettingsControl.PrecursorRes = value; }
+        }
+
+        public double? PrecursorResMz
+        {
+            get { return FullScanSettingsControl.PrecursorResMz; }
+            set { FullScanSettingsControl.PrecursorResMz = value; }
+        }
+
         protected override void OnShown(EventArgs e)
         {
             if (TabControlSel != null)

@@ -135,6 +135,46 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorIsotopeFilter.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public double? PrecursorRes
+        {
+            get
+            {
+                double precursorRes;
+                return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
+            }
+            set { textPrecursorRes.Text = value.ToString(); }
+        }
+
+        public double? PrecursorResMz
+        {
+            get
+            {
+                double precursorResMz;
+                return double.TryParse(textPrecursorAt.Text, out precursorResMz) ? (double?)precursorResMz : null;
+            }
+            set { textPrecursorAt.Text = value.ToString(); }
+        }
+
+        public double? ProductRes
+        {
+            get
+            {
+                double productRes;
+                return double.TryParse(textProductRes.Text, out productRes) ? (double?)productRes : null;
+            }
+            set { textProductRes.Text = value.ToString(); }
+        }
+
+        public double? ProductResMz
+        {
+            get
+            {
+                double productResMz;
+                return double.TryParse(textProductAt.Text, out productResMz) ? (double?)productResMz : null;
+            }
+            set { textProductAt.Text = value.ToString(); }
+        }
+
         public RetentionTimeFilterType RetentionTimeFilterType
         {
             get
