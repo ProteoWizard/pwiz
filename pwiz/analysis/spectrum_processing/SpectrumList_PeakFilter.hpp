@@ -44,6 +44,7 @@ class PWIZ_API_DECL SpectrumList_PeakFilter : public msdata::SpectrumListWrapper
     static bool accept(const msdata::SpectrumListPtr& inner) {return true;}
 
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
+    virtual msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel = msdata::DetailLevel_FullMetadata) const;
 
     private:
 	SpectrumDataFilterPtr filterFunctor_;

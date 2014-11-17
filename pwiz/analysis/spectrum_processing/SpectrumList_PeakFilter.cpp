@@ -52,8 +52,20 @@ SpectrumList_PeakFilter::SpectrumList_PeakFilter(const SpectrumListPtr& inner,
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_PeakFilter::spectrum(size_t index, bool getBinaryData) const
 {
-    if (!getBinaryData)
-        return inner_->spectrum(index, false);
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_PeakFilter::spectrum(size_t index, DetailLevel detailLevel) const
+{
+    // the effects of running the peak filter on the defaultArrayLength is unknown; 0 denotes that to other filters;
+    // for full metadata detail, the defaultArrayLength must be known, so go ahead and get binary data anyway
+    if (detailLevel < DetailLevel_FullMetadata)
+    {
+        SpectrumPtr innerSpectrum = inner_->spectrum(index, detailLevel);
+        innerSpectrum->defaultArrayLength = 0;
+        return innerSpectrum;
+    }
 
     const SpectrumPtr currentSpectrum = inner_->spectrum(index, true);
     (*filterFunctor_)(currentSpectrum);

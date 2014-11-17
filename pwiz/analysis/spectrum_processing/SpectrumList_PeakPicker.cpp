@@ -128,15 +128,8 @@ PWIZ_API_DECL bool SpectrumList_PeakPicker::accept(const msdata::SpectrumListPtr
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, DetailLevel detailLevel) const
 {
-
-    // this is useful when a peak-picker is nested inside another filter, so that peak-picking
-    // is not performed twice inadventantly. E.g., the turbocharger constructor iterates over 
-    // all spectra in order to find and sort the ms1 spectra. If a peak-picker was listed as the 
-    // first filter, a spectrum(index,true) call would perform peak-picking when all we are looking
-    // for is the spectrum metadata (i.e., retention time).
-
-    return inner_->spectrum(index,detailLevel);
-
+    // for full metadata, defaultArrayLength must be accurate, so go ahead and do peak picking anyway
+    return (int) detailLevel >= (int) DetailLevel_FullMetadata ? spectrum(index, true) : inner_->spectrum(index, detailLevel);
 }
 
 
