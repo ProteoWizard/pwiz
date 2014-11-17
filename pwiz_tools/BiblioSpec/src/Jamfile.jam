@@ -38,7 +38,7 @@ rule mascot-define ( properties * )
 {
     local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path)
+    if $(msparser_path) && <toolset>msvc in $(properties)
     {
         result += <define>USE_MASCOT_PARSER ;
     }
@@ -49,7 +49,7 @@ rule mascot-api-requirements ( properties * )
 {
     local result = [ mascot-define $(properties) ] ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path)
+    if $(msparser_path) && <toolset>msvc in $(properties)
     {
         result += <source>MascotResultsReader.cpp ;
     }
@@ -64,7 +64,7 @@ rule mascot-api-usage-requirements ( properties * )
 {
     local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path)
+    if $(msparser_path) && <toolset>msvc in $(properties)
     {
         result += <library>$(PWIZ_ROOT_PATH)//msparser ;
         result += <dependency>unimod_2.xsd ;
