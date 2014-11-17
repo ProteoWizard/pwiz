@@ -201,7 +201,7 @@ namespace SkylineTester
         private void CommandsDone(bool success)
         {
             if (!success)
-                Log("# Stopped." + Environment.NewLine + Environment.NewLine);
+                Log("# Stopped " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
             UpdateLog();
             _commands.Clear();
             _doneAction(success);
