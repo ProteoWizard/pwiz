@@ -1011,12 +1011,12 @@ rule msparser-path ( properties * )
     }
     else if <toolset>gcc in $(properties) && [ path.exists $(lib-location)/lib/libmsparser.a ]
     {
-        if ! $(.warn-once)
-        {
-            .warn-once = true ;
-            echo "Using Mascot Parser in $(lib-location)" ;
-        }
-        return $(lib-location) ;
+        #if ! $(.warn-once)
+        #{
+        #    .warn-once = true ;
+        #    echo "Using Mascot Parser in $(lib-location)" ;
+        #}
+        #return $(lib-location) ;
     }
     else if ! $(.warn-once)
     {
