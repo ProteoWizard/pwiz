@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
+using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-using MathNet.Numerics.LinearAlgebra.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestA.Results
         /// </summary>
         private static void TestNonNegSolver()
         {
-            var matrixA = new DenseMatrix(new[,]
+            var matrixA = DenseMatrix.OfArray(new[,]
                                               {
                                                   {0.0372, 0.2869}, {0.6861, 0.7071}, {0.6233, 0.6245},
                                                   {0.6344, 0.6170}, {0, -200000}

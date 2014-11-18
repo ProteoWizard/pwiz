@@ -19,11 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-using MathNet.Numerics.LinearAlgebra.Double.Factorization;
-using MathNet.Numerics.LinearAlgebra.Generic;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using pwiz.Skyline.Properties;
-using LinProvider = MathNet.Numerics.Algorithms.LinearAlgebra.ManagedLinearAlgebraProvider;
+using LinProvider = MathNet.Numerics.Providers.LinearAlgebra.ManagedLinearAlgebraProvider;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -203,14 +203,14 @@ namespace pwiz.Skyline.Model.Results
 
     public class OverlapLsSolver : NonNegLsSolver
     {
-        private readonly Dictionary<Matrix<double>, DenseQR> _decompCache; 
+        private readonly Dictionary<Matrix<double>, QR<double>> _decompCache; 
 
         public OverlapLsSolver(int numIsos, int maxRow, int maxTransitions, bool useFirstGuess = false):
             base(numIsos,maxRow,maxTransitions, useFirstGuess)
         {
             double[] smoothCoefs = { 1.0, 1.0, 1.0, 1.0, 1.0 };
             _conditioner = new WeightedConditioner(smoothCoefs);
-            _decompCache = new Dictionary<Matrix<double>, DenseQR>();
+            _decompCache = new Dictionary<Matrix<double>, QR<double>>();
         }
 
         protected override void SetTolerance(DeconvBlock db)
@@ -231,12 +231,12 @@ namespace pwiz.Skyline.Model.Results
             return GetSolver(a).Solve(b);
         }
 
-        protected DenseQR GetSolver(Matrix<double> a)
+        protected QR<double> GetSolver(Matrix<double> a)
         {
-            DenseQR solver;
+            QR<double> solver;
             if (!_decompCache.TryGetValue(a, out solver))
             {
-                solver = new DenseQR((DenseMatrix)a);
+                solver = a.QR();
                 _decompCache.Add(a, solver);
             }
             return solver;
@@ -326,7 +326,6 @@ namespace pwiz.Skyline.Model.Results
 
         private static void SetMathNetParameters()
         {
-            MathNet.Numerics.Control.DisableParallelization = false;
             MathNet.Numerics.Control.LinearAlgebraProvider = new LinProvider();
         }
 
@@ -375,7 +374,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int colNum = 0; colNum < db.BinnedData.NumCols; ++colNum)
                 {
-                    _firstGuess.Column(colNum, _initializeCol);
+                    CopyColumnToVector(_firstGuess, colNum, _initializeCol);
                     matrixResult.Matrix.SetColumn(colNum, _initializeCol);
                 }
                 return;
@@ -383,12 +382,12 @@ namespace pwiz.Skyline.Model.Results
             for (int colNum = 0; colNum < db.BinnedData.NumCols; ++colNum)
             {
                 _initializeCol.Clear();
-                _firstGuess.Column(colNum, _initializeCol);
-                db.BinnedData.Matrix.Column(colNum, _binnedDataCol);
+                CopyColumnToVector(_firstGuess, colNum, _initializeCol);
+                CopyColumnToVector(db.BinnedData.Matrix, colNum, _binnedDataCol);
                 _matrixAxCol.Clear();
                 _matrixWsCol.Clear();
-                _matrixAx.Column(colNum, _matrixAxCol);
-                _matrixWs.Column(colNum, _matrixWsCol);
+                CopyColumnToVector(_matrixAx, colNum, _matrixAxCol);
+                CopyColumnToVector(_matrixWs, colNum, _matrixWsCol);
                 if (SolveColumn(db.Masks.Matrix, _binnedDataCol,
                     _initializeCol, matrixAt, _matrixAxCol, _matrixWsCol,
                     ref _solutionCol))
@@ -444,7 +443,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < wFullVector.Count; ++i)
                 w[i, 0] = wFullVector[i];
             int iter = 0;
-            x.Column(0, solution);
+            CopyColumnToVector(x, 0, solution);
             // The initialized variable keeps track of whether we're on the first iteration,
             // which needs to be treated specially
             bool initialized = false;
@@ -502,7 +501,7 @@ namespace pwiz.Skyline.Model.Results
                     ++iter;
                     if (iter > _maxIter)
                     {
-                        z.Column(0, solution);
+                        CopyColumnToVector(z, 0, solution);
                         return true;
                     }
                     // create a set of indices from the non active set where z[index]<= tolerance
@@ -544,21 +543,33 @@ namespace pwiz.Skyline.Model.Results
                 colMatrixB.Subtract(_matrixAxC, _matrixDiff);
                 matrixAt.Multiply(_matrixDiff, w);
             }
-            x.Column(0, solution);
+            CopyColumnToVector(x, 0, solution);
             return true;
+        }
+
+        /// <summary>
+        /// Copies a column from a matrix into a vector.  The supplied vector must be at least as long as
+        /// the number of rows in the matrix.
+        /// </summary>
+        private static void CopyColumnToVector(Matrix<double> matrix, int columnIndex, Vector<double> targetVector)
+        {
+            for (int rowIndex = 0; rowIndex < matrix.RowCount; rowIndex++)
+            {
+                targetVector[rowIndex] = matrix[rowIndex, columnIndex];
+            }
         }
        
 // ReSharper disable UnusedMember.Local
         protected virtual Vector<double> DecompSolve(Matrix<double> a, Vector<double> b)
 // ReSharper restore UnusedMember.Local
         {
-            var solver = new DenseQR((DenseMatrix) a);
+            var solver = a.QR();
             return solver.Solve(b);
         }
 
         protected virtual Matrix<double> DecompSolve(Matrix<double> a, Matrix<double> b)
         {
-            var solver = new DenseQR((DenseMatrix) a);
+            var solver = a.QR();
             return solver.Solve(b);
         }
 
@@ -566,11 +577,11 @@ namespace pwiz.Skyline.Model.Results
         {
             if (a.RowCount == a.ColumnCount)
             {
-                return new DenseLU((DenseMatrix)a);
+                return a.LU();
             }
             else if (a.RowCount > a.ColumnCount)
             {
-                return new DenseQR((DenseMatrix) a);
+                return a.QR();
             }
             else
             {
@@ -595,7 +606,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var column in columns)
                     matrixData[row, destColumn++] = input[row, column];
             }
-            return new DenseMatrix(matrixData);
+            return DenseMatrix.OfArray(matrixData);
         }
 
         private void FindFirstGuess(Matrix<double> matrixA, Matrix<double> matrixB, 

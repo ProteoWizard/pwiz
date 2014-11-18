@@ -22,6 +22,7 @@
 // http://www.opensource.org/licenses/mit-license.php
 using System;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace pwiz.Common.DataAnalysis
 {
@@ -48,7 +49,7 @@ namespace pwiz.Common.DataAnalysis
             // create the initial simplex
             int numDimensions = simplexConstants.Length;
             int numVertices = numDimensions + 1;
-            Vector[] vertices = InitializeVertices(simplexConstants);
+            Vector<double>[] vertices = InitializeVertices(simplexConstants);
 
             int evaluationCount = 0;
             TerminationReason terminationReason;
@@ -101,7 +102,7 @@ namespace pwiz.Common.DataAnalysis
                 }
             }
             RegressionResult regressionResult = new RegressionResult(terminationReason,
-                                vertices[errorProfile.LowestIndex].CopyToArray(), errorValues[errorProfile.LowestIndex], evaluationCount);
+                                vertices[errorProfile.LowestIndex].ToArray(), errorValues[errorProfile.LowestIndex], evaluationCount);
             return regressionResult;
         }
 
@@ -109,12 +110,12 @@ namespace pwiz.Common.DataAnalysis
         /// Evaluate the objective function at each vertex to create a corresponding
         /// list of error values for each vertex
         /// </summary>
-        private static double[] InitializeErrorValues(Vector[] vertices, ObjectiveFunctionDelegate objectiveFunction)
+        private static double[] InitializeErrorValues(Vector<double>[] vertices, ObjectiveFunctionDelegate objectiveFunction)
         {
             double[] errorValues = new double[vertices.Length];
             for (int i = 0; i < vertices.Length; i++)
             {
-                errorValues[i] = objectiveFunction(vertices[i].CopyToArray());
+                errorValues[i] = objectiveFunction(vertices[i].ToArray());
             }
             return errorValues;
         }
@@ -180,13 +181,13 @@ namespace pwiz.Common.DataAnalysis
         /// Construct an initial simplex, given starting guesses for the constants, and
         /// initial step sizes for each dimension
         /// </summary>
-        private static Vector[] InitializeVertices(SimplexConstant[] simplexConstants)
+        private static Vector<double>[] InitializeVertices(SimplexConstant[] simplexConstants)
         {
             int numDimensions = simplexConstants.Length;
-            Vector[] vertices = new Vector[numDimensions + 1];
+            Vector<double>[] vertices = new Vector<double>[numDimensions + 1];
 
             // define one point of the simplex as the given initial guesses
-            Vector p0 = new Vector(numDimensions);
+            Vector<double> p0 = new DenseVector(numDimensions);
             for (int i = 0; i < numDimensions; i++)
             {
                 p0[i] = simplexConstants[i].Value;
@@ -198,9 +199,9 @@ namespace pwiz.Common.DataAnalysis
             for (int i = 0; i < numDimensions; i++)
             {
                 double scale = simplexConstants[i].InitialPerturbation;
-                Vector unitVector = new Vector(numDimensions);
+                Vector unitVector = new DenseVector(numDimensions);
                 unitVector[i] = 1;
-                vertices[i + 1] = p0.Add(unitVector.Scale(scale)); 
+                vertices[i + 1] = p0.Add(unitVector.Multiply(scale)); 
             }
             return vertices;
         }
@@ -208,20 +209,20 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Test a scaling operation of the high point, and replace it if it is an improvement
         /// </summary>
-        private static double TryToScaleSimplex(double scaleFactor, ref ErrorProfile errorProfile, Vector[] vertices, 
+        private static double TryToScaleSimplex(double scaleFactor, ref ErrorProfile errorProfile, Vector<double>[] vertices, 
                                           double[] errorValues, ObjectiveFunctionDelegate objectiveFunction)
         {
             // find the centroid through which we will reflect
             Vector centroid = ComputeCentroid(vertices, errorProfile);
 
             // define the vector from the centroid to the high point
-            Vector centroidToHighPoint = vertices[errorProfile.HighestIndex].Subtract(centroid);
+            Vector centroidToHighPoint = (Vector) vertices[errorProfile.HighestIndex].Subtract(centroid);
 
             // scale and position the vector to determine the new trial point
-            Vector newPoint = centroidToHighPoint.Scale(scaleFactor).Add(centroid);
+            Vector newPoint = (Vector) centroidToHighPoint.Multiply(scaleFactor).Add(centroid);
 
             // evaluate the new point
-            double newErrorValue = objectiveFunction(newPoint.CopyToArray());
+            double newErrorValue = objectiveFunction(newPoint.ToArray());
 
             // if it's better, replace the old high point
             if (newErrorValue < errorValues[errorProfile.HighestIndex])
@@ -236,16 +237,16 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Contract the simplex uniformly around the lowest point
         /// </summary>
-        private static void ShrinkSimplex(ErrorProfile errorProfile, Vector[] vertices, double[] errorValues, 
+        private static void ShrinkSimplex(ErrorProfile errorProfile, Vector<double>[] vertices, double[] errorValues, 
                                       ObjectiveFunctionDelegate objectiveFunction)
         {
-            Vector lowestVertex = vertices[errorProfile.LowestIndex];
+            Vector<double> lowestVertex = vertices[errorProfile.LowestIndex];
             for (int i = 0; i < vertices.Length; i++)
             {
                 if (i != errorProfile.LowestIndex)
                 {
-                    vertices[i] = (vertices[i].Add(lowestVertex)).Scale(0.5);
-                    errorValues[i] = objectiveFunction(vertices[i].CopyToArray());
+                    vertices[i] = (vertices[i].Add(lowestVertex)).Multiply(0.5);
+                    errorValues[i] = objectiveFunction(vertices[i].ToArray());
                 }
             }
         }
@@ -256,19 +257,19 @@ namespace pwiz.Common.DataAnalysis
         /// <param name="vertices"></param>
         /// <param name="errorProfile"></param>
         /// <returns></returns>
-        private static Vector ComputeCentroid(Vector[] vertices, ErrorProfile errorProfile)
+        private static Vector ComputeCentroid(Vector<double>[] vertices, ErrorProfile errorProfile)
         {
             int numVertices = vertices.Length;
             // find the centroid of all points except the worst one
-            Vector centroid = new Vector(numVertices - 1);
+            Vector centroid = new DenseVector(numVertices - 1);
             for (int i = 0; i < numVertices; i++)
             {
                 if (i != errorProfile.HighestIndex)
                 {
-                    centroid = centroid.Add(vertices[i]);
+                    centroid = (Vector) centroid.Add(vertices[i]);
                 }
             }
-            return centroid.Scale(1.0d / (numVertices - 1));
+            return (Vector) centroid.Multiply(1.0d / (numVertices - 1));
         }
 
         private sealed class ErrorProfile

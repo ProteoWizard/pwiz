@@ -168,8 +168,7 @@ namespace pwiz.Skyline.Model.Results
                 for (int j = 0; j < NumTransitions; ++j)
                 {
                     var scanIntensities = scansOfWindow.Select(row => BinnedData.Matrix[row, j]).ToList();
-                    var interpolator = new MathNet.Numerics.Interpolation.Algorithms.CubicSplineInterpolation(scanTimes,
-                                                                                                          scanIntensities);
+                    var interpolator = MathNet.Numerics.Interpolate.CubicSpline(scanTimes, scanIntensities);
                     if (CurrentScan >= NumScans || CurrentScan < 0)
                     {
                         throw new InvalidDataException(string.Format("Current scan does not fall within bounds on scan {0}", ScanNumbers[currentScan]));  // Not L10N

@@ -222,7 +222,7 @@ namespace pwiz.Topograph.ui.Forms
         private static double GetRandomNoise(double magnitude)
         {
             var randomNumber = Random.NextDouble() * 2 - 1;
-            return magnitude*Fn.ErfInverse(randomNumber);
+            return magnitude * SpecialFunctions.ErfInv(randomNumber);
         }
 
         private bool GraphResultsOnMouseUpEvent(ZedGraphControl sender, MouseEventArgs e)

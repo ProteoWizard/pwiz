@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Topograph.Model;
@@ -163,12 +164,12 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        public static double Score(Vector observedVector, Vector prediction)
+        public static double Score(Vector<double> observedVector, Vector<double> prediction)
         {
-            return observedVector.Normalize() * prediction.Normalize();
+            return observedVector.Normalize(2.0) * prediction.Normalize(2.0);
         }
 
-        public static double Score(Vector observedVector, Vector prediction, Func<int,bool> excludeFunc)
+        public static double Score(Vector<double> observedVector, Vector<double> prediction, Func<int, bool> excludeFunc)
         {
             return Score(FilterVector(observedVector, excludeFunc), FilterVector(prediction, excludeFunc));
         }
@@ -184,35 +185,35 @@ namespace pwiz.Topograph.Enrichment
         /// </para>
         /// </summary>
         // ReSharper disable InconsistentNaming
-        internal static Vector FindBestCombination(Vector targetVector, params Vector[] candidateVectors)
+        internal static Vector<double> FindBestCombination(Vector<double> targetVector, params Vector<double>[] candidateVectors)
         {
-            Matrix matrixA = new Matrix(targetVector.Length, candidateVectors.Length);
+            Matrix matrixA = new DenseMatrix(targetVector.Count, candidateVectors.Length);
             for (int j = 0; j < candidateVectors.Length; j++)
             {
-                matrixA.SetColumnVector(candidateVectors[j], j);
+                matrixA.SetColumn(j, candidateVectors[j]);
             }
-            Matrix matrixP = targetVector.ToColumnMatrix();
-            Matrix matrixAT = Matrix.Transpose(matrixA);
+            var matrixP = targetVector.ToColumnMatrix();
+            var matrixAT = matrixA.Transpose();
             var matrixATA = matrixAT.Multiply(matrixA);
             if (matrixATA.Determinant() == 0)
             {
                 return null;
             }
             var matrixATAInv = matrixATA.Inverse();
-            Matrix matrixResult = matrixATAInv.Multiply(matrixAT).Multiply(matrixP);
-            return matrixResult.GetColumnVector(0);
+            var matrixResult = matrixATAInv.Multiply(matrixAT).Multiply(matrixP);
+            return matrixResult.Column(0);
         }
         // ReSharper restore InconsistentNaming
 
-        internal Vector FindBestCombination(Vector targetVector, Vector[] candidateVectors, bool errOnSideOfLowerAbundance)
+        internal Vector<double> FindBestCombination(Vector<double> targetVector, Vector<double>[] candidateVectors, bool errOnSideOfLowerAbundance)
         {
             var result = FindBestCombination(targetVector, candidateVectors);
             if (!errOnSideOfLowerAbundance)
             {
                 return result;
             }
-            var newTargetVector = new Vector(targetVector.Length);
-            for (int i = 0; i < newTargetVector.Length; i++)
+            var newTargetVector = new DenseVector(targetVector.Count);
+            for (int i = 0; i < newTargetVector.Count; i++)
             {
                 var totalCandidate = 0.0;
                 for (int iVector = 0; iVector < candidateVectors.Length; iVector++)
@@ -224,9 +225,9 @@ namespace pwiz.Topograph.Enrichment
             return FindBestCombination(newTargetVector, candidateVectors);
         }
 
-        Vector FindBestCombinationFilterNegatives(Vector observedIntensities, IList<Vector> candidates, Func<int,bool> excludeFunc)
+        Vector<double> FindBestCombinationFilterNegatives(Vector<double> observedIntensities, IList<Vector<double>> candidates, Func<int, bool> excludeFunc)
         {
-            Vector[] filteredCandidates = new Vector[candidates.Count];
+            Vector<double>[] filteredCandidates = new Vector<double>[candidates.Count];
             for (int i = 0; i < candidates.Count; i++)
             {
                 filteredCandidates[i] = FilterVector(candidates[i], excludeFunc);
@@ -234,17 +235,17 @@ namespace pwiz.Topograph.Enrichment
             return FindBestCombinationFilterNegatives(FilterVector(observedIntensities, excludeFunc), filteredCandidates);
         }
 
-        Vector FindBestCombinationFilterNegatives(Vector observedIntensities, IList<Vector> candidates)
+        Vector<double> FindBestCombinationFilterNegatives(Vector<double> observedIntensities, IList<Vector<double>> candidates)
         {
             List<int> remaining = new List<int>();
             for (int i = 0; i < candidates.Count(); i++)
             {
                 remaining.Add(i);
             }
-            Vector filteredResult;
+            Vector<double> filteredResult;
             while(true)
             {
-                Vector[] curCandidates = new Vector[remaining.Count];
+                Vector<double>[] curCandidates = new Vector<double>[remaining.Count];
                 for (int i = 0; i < remaining.Count; i++)
                 {
                     curCandidates[i] = candidates[remaining[i]];
@@ -272,7 +273,7 @@ namespace pwiz.Topograph.Enrichment
                     return null;
                 }
             }
-            Vector result = new Vector(candidates.Count);
+            Vector<double> result = new DenseVector(candidates.Count);
             for (int i = 0; i < remaining.Count; i++)
             {
                 result[remaining[i]] = filteredResult[i];
@@ -280,7 +281,7 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        private static Vector FilterVector(IList<double> list, Func<int,bool> isExcludedFunc)
+        private static Vector<double> FilterVector(IList<double> list, Func<int, bool> isExcludedFunc)
         {
             List<double> filtered = new List<double>();
             for (int i = 0; i < list.Count; i++)
@@ -291,7 +292,7 @@ namespace pwiz.Topograph.Enrichment
                 }
                 filtered.Add(list[i]);
             }
-            return new Vector(filtered.ToArray());
+            return new DenseVector(filtered.ToArray());
         }
 
         public double GetTracerPercent(TracerFormula tracerFormula)
@@ -342,21 +343,21 @@ namespace pwiz.Topograph.Enrichment
 
         public double CalcTracerScore(double[] observedIntensities, IList<double[]> massDistributions)
         {
-            Vector observedVector = new Vector(observedIntensities);
-            var vectors = new Vector[massDistributions.Count];
+            Vector<double> observedVector = new DenseVector(observedIntensities);
+            var vectors = new Vector<double>[massDistributions.Count];
             for (int i = 0; i < massDistributions.Count; i++)
             {
-                vectors[i] = new Vector(massDistributions[i]);
+                vectors[i] = new DenseVector(massDistributions[i]);
             }
-            Vector amounts = FindBestCombinationFilterNegatives(observedIntensities, vectors);
+            Vector<double> amounts = FindBestCombinationFilterNegatives(observedVector, vectors);
             if (amounts == null || amounts.Sum() <= 0)
             {
                 return 0;
             }
-            Vector totalPrediction = new Vector(observedIntensities.Length);
+            Vector<double> totalPrediction = new DenseVector(observedIntensities.Length);
             for (int i = 0; i < massDistributions.Count; i++)
             {
-                Vector scaledVector = vectors[i].Scale(amounts[i]);
+                Vector<double> scaledVector = vectors[i].Multiply(amounts[i]);
                 totalPrediction = totalPrediction.Add(scaledVector);
             }
             return Score(observedVector, totalPrediction);
@@ -384,19 +385,19 @@ namespace pwiz.Topograph.Enrichment
         public IDictionary<TracerFormula, double> GetTracerAmounts(IList<double> observedIntensities, out double score, out IDictionary<TracerFormula, IList<double>> predictedIntensities, IList<TracerFormula> tracerFormulas, IList<IList<double>> theoreticalIntensities)
         {
             var result = new Dictionary<TracerFormula, double>();
-            var vectors = new List<Vector>(theoreticalIntensities.Select(l => new Vector(l.ToArray())));
+            var vectors = new List<Vector<double>>(theoreticalIntensities.Select(l => new DenseVector(l.ToArray())));
             var excludeFunc = ExcludeNaNs(observedIntensities);
-            Vector observedVector = new Vector(observedIntensities.ToArray());
-            Vector amounts = FindBestCombinationFilterNegatives(observedVector, vectors, excludeFunc);
+            Vector<double> observedVector = new DenseVector(observedIntensities.ToArray());
+            Vector<double> amounts = FindBestCombinationFilterNegatives(observedVector, vectors, excludeFunc);
             if (amounts == null)
             {
-                amounts = new Vector(vectors.Count());
+                amounts = new DenseVector(vectors.Count());
             }
             predictedIntensities = new Dictionary<TracerFormula, IList<double>>();
-            Vector totalPrediction = new Vector(observedIntensities.Count);
+            Vector<double> totalPrediction = new DenseVector(observedIntensities.Count);
             for (int i = 0; i < tracerFormulas.Count; i++)
             {
-                Vector scaledVector = vectors[i].Scale(amounts[i]);
+                Vector<double> scaledVector = vectors[i].Multiply(amounts[i]);
                 predictedIntensities.Add(tracerFormulas[i], scaledVector);
                 totalPrediction = totalPrediction.Add(scaledVector);
                 result.Add(tracerFormulas[i], amounts[i]);
@@ -407,7 +408,7 @@ namespace pwiz.Topograph.Enrichment
 
         internal Vector IntensityDictionaryToVector(IDictionary<double, double> dict, IList<MzRange> mzs)
         {
-            var result = new Vector(mzs.Count);
+            var result = new DenseVector(mzs.Count);
             for (int iMz = 0; iMz < mzs.Count; iMz++)
             {
                 var mzRange = mzs[iMz];
@@ -457,7 +458,7 @@ namespace pwiz.Topograph.Enrichment
                 return null;
             }
             var tracerFormulaIndexes = new Dictionary<TracerFormula, int>();
-            var observedPercentages = new Vector(peptideDistribution.Count);
+            var observedPercentages = new DenseVector(peptideDistribution.Count);
             foreach (var entry in peptideDistribution)
             {
                 var tracerFormula = entry.Key;
@@ -488,7 +489,7 @@ namespace pwiz.Topograph.Enrichment
                 {
                     continue;
                 }
-                var resultVector = initialVector.Scale(combination[0]).Add(newlySynthesizedVector.Scale(combination[1]));
+                var resultVector = initialVector.Multiply(combination[0]).Add(newlySynthesizedVector.Multiply(combination[1]));
                 var score = Score(observedPercentages, resultVector);
                 if (bestFormula == null || score > bestScore)
                 {
@@ -513,9 +514,9 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        private static Vector DistributionToVector(IDictionary<TracerFormula, double> distribution, IDictionary<TracerFormula, int> indexes)
+        private static Vector<double> DistributionToVector(IDictionary<TracerFormula, double> distribution, IDictionary<TracerFormula, int> indexes)
         {
-            var result = new Vector(indexes.Count, double.NaN);
+            var result = DenseVector.Create(indexes.Count, double.NaN);
             foreach (var entry in distribution)
             {
                 int index;
@@ -572,7 +573,7 @@ namespace pwiz.Topograph.Enrichment
                 return;
             }
             var tracerFormulaIndexes = new Dictionary<TracerFormula, int>();
-            var observedPercentages = new Vector(peaks.Count);
+            var observedPercentages = new DenseVector(peaks.Count);
             foreach (var entry in peaks)
             {
                 var tracerFormula = entry.Key;
@@ -594,20 +595,20 @@ namespace pwiz.Topograph.Enrichment
             {
                 var combination2 = FindBestCombination(observedPercentages, newlySynthesizedVector);
                 turnover = 1;
-                turnoverScore = Score(observedPercentages, newlySynthesizedVector.Scale(combination2[0]));
+                turnoverScore = Score(observedPercentages, newlySynthesizedVector.Multiply(combination2[0]));
             }
             else if (combination[1] <= 0)
             {
                 var combination2 = FindBestCombination(observedPercentages, initialVector);
                 turnover = 0;
-                turnoverScore = Score(observedPercentages, initialVector.Scale(combination2[0]));
+                turnoverScore = Score(observedPercentages, initialVector.Multiply(combination2[0]));
             }
             else
             {
                 turnover = combination[1]/(combination[0] + combination[1]);
                 turnoverScore = Score(observedPercentages,
-                                      initialVector.Scale(combination[0]).Add(
-                                          newlySynthesizedVector.Scale(combination[1])));
+                                      initialVector.Multiply(combination[0]).Add(
+                                          newlySynthesizedVector.Multiply(combination[1])));
             }
         }
 
@@ -633,7 +634,7 @@ namespace pwiz.Topograph.Enrichment
 
         static double Choose(int n, int c)
         {
-            return Fn.Factorial(n)/Fn.Factorial(c)/Fn.Factorial(n - c);
+            return SpecialFunctions.Factorial(n) / SpecialFunctions.Factorial(c) / SpecialFunctions.Factorial(n - c);
         }
     }
 }
