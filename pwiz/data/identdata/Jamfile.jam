@@ -94,7 +94,6 @@ lib pwiz_data_identdata
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-        <library>/ext/boost//regex
         #<library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3pp
         <conditional>@mascot-api-requirements
     : # default-build
@@ -106,7 +105,6 @@ lib pwiz_data_identdata
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-        <library>/ext/boost//regex
         #<library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3pp
         <conditional>@mascot-api-usage-requirements
     ;

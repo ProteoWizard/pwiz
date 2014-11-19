@@ -25,8 +25,10 @@
 #include <string>
 #include <vector>
 #include "boost/shared_ptr.hpp"
-#include "boost/regex.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
 #include "pwiz/data/common/cv.hpp"
+
+namespace bxp = boost::xpressive;
 
 namespace pwiz{
 namespace identdata{
@@ -66,14 +68,14 @@ struct PWIZ_API_DECL RegexCVMap : public CVMap
     
     void setPattern(const std::string& pattern);
     
-    virtual boost::cmatch match(std::string& text);
+    virtual bxp::smatch match(std::string& text);
     
     virtual const char* getTag() const;
 
     virtual bool operator()(const std::string& text) const;
 
 protected:
-    boost::regex pattern;
+    bxp::sregex pattern;
 };
 
 typedef boost::shared_ptr<RegexCVMap> RegexCVMapPtr;

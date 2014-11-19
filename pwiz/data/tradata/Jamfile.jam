@@ -53,7 +53,6 @@ lib pwiz_data_tradata
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-        <library>/ext/boost//regex
     : # default-build
     : # usage-requirements
         <library>pwiz_data_tradata_version
@@ -61,7 +60,6 @@ lib pwiz_data_tradata
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-        <library>/ext/boost//regex
     ;
 
 

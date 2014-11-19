@@ -48,9 +48,8 @@ PWIZ_API_DECL std::string MascotReader::identify(const std::string& filename,  c
 #include "pwiz/data/common/cv.hpp"
 #include "pwiz/data/identdata/TextWriter.hpp"
 #include "pwiz/data/common/Unimod.hpp"
-#include <boost/xpressive/xpressive.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/regex.hpp>
+#include <boost/xpressive/xpressive_dynamic.hpp>
 
 // msparser assumes these are defined
 #ifndef INT64
@@ -174,6 +173,7 @@ namespace identdata {
 using pwiz::cv::CVTermInfo;
 using namespace matrix_science;
 using namespace pwiz::util;
+namespace bxp = boost::xpressive;
 
 //
 // MascotReader::Impl
@@ -182,9 +182,10 @@ class MascotReader::Impl
 {
 public:
     Impl()
-        :varmodPattern("(.*) \\((Protein)?\\s*([NC]-term)?\\s*(.*?)\\)"),
-         varmodListOfChars("([A-Z]+)")
-    {}
+    {
+        varmodPattern = bxp::sregex::compile("(.*) \\((Protein)?\\s*([NC]-term)?\\s*(.*?)\\)");
+        varmodListOfChars = bxp::sregex::compile("([A-Z]+)");
+    }
     
     void read(const string& filename, const string& head, IdentData& result, const Reader::Config& config)
     {
@@ -416,10 +417,10 @@ public:
     {
         const char* pattern = "[ \\.]*([\\w ]+)[ ]*\\((\\w+)\\).*";
 
-        boost::regex namesPattern(pattern);
+        bxp::sregex namesPattern = bxp::sregex::compile(pattern);
 
-        boost::cmatch what;
-        if (boost::regex_match(mascot_tax.c_str(), what, namesPattern))
+        bxp::smatch what;
+        if (bxp::regex_match(mascot_tax, what, namesPattern))
         {
             scientific.assign(what[1].first, what[1].second);
             common.assign(what[2].first, what[2].second);
@@ -496,8 +497,8 @@ public:
     {
         SpectrumIdentificationProtocolPtr sip = getSpectrumIdentificationProtocol(mzid);
 
-        boost::cmatch what, where;
-        if (boost::regex_match(mod.c_str(), what, varmodPattern))
+        bxp::smatch what, where;
+        if (bxp::regex_match(mod, what, varmodPattern))
         {
             bool proteinTerminal = what[2].matched;
             bool nTerminal = what[3].matched && what[3].str() == "N-term";
@@ -517,7 +518,7 @@ public:
                 sm->fixedMod = true;
             }
 
-            if (boost::regex_match(residues.c_str(), where, varmodListOfChars))
+            if (bxp::regex_match(residues, where, varmodListOfChars))
             {
                 sm->residues.assign(where[1].first, where[1].second);
 
@@ -662,21 +663,21 @@ public:
     void guessTitleFormatRegex(ms_mascotresfile& file, IdentData& mzid)
     {
         string firstSpectrumID = ms_inputquery(file, 1).getStringTitle(true);
-        boost::smatch what;
-        boost::regex testRegexes[] =
+        bxp::smatch what;
+        bxp::sregex testRegexes[] =
         {
-            boost::regex(".*?NativeID:\"(.+?)\".*"),
-            boost::regex(".*?\\.(\\d+)\\.\\d+(\\.\\d)?.*"),
-            boost::regex("(.+)")
+            bxp::sregex::compile(".*?NativeID:\"(.+?)\".*"),
+            bxp::sregex::compile(".*?\\.(\\d+)\\.\\d+(\\.\\d)?.*"),
+            bxp::sregex::compile("(.+)")
         };
-        BOOST_FOREACH(boost::regex& re, testRegexes)
-            if (boost::regex_match(firstSpectrumID, what, re))
+        BOOST_FOREACH(bxp::sregex& re, testRegexes)
+            if (bxp::regex_match(firstSpectrumID, what, re))
             {
                 titleRegex = re;
                 break;
             }
 
-        if (titleRegex.empty())
+        if (titleRegex.regex_id() == 0)
             throw runtime_error("[MascotReader::guessTitleFormatRegex] title parsed from Mascot DAT is empty or does not correspond to a supported id format");
 
         string firstNativeID(what[1].first, what[1].second);
@@ -735,7 +736,7 @@ public:
         ms_peptidesummary& results = *resultsPtr;
         ms_searchparams searchparam(file);
         ms_peptide* peptideHit;
-        boost::smatch titleWhat;
+        bxp::smatch titleWhat;
 
         int numQueries = file.getNumQueries();
         int maxRank = results.getMaxRankValue();
@@ -755,7 +756,7 @@ public:
 
             string title = query.getStringTitle(true);
             string spectrumID;
-            if (boost::regex_match(title, titleWhat, titleRegex))
+            if (bxp::regex_match(title, titleWhat, titleRegex))
                 spectrumID.assign(titleWhat[1].first, titleWhat[1].second);
             else
                 throw runtime_error("[MascotReader::fillSpectrumIdentificationList] unable to parse spectrum title: " + title);
@@ -1067,9 +1068,9 @@ private:
     Indices indices;
     vector<const CVTermInfo*> unimods;
     
-    boost::regex varmodPattern;
-    boost::regex varmodListOfChars;
-    boost::regex titleRegex;
+    bxp::sregex varmodPattern;
+    bxp::sregex varmodListOfChars;
+    bxp::sregex titleRegex;
     
     static const char* owner_person_id;
     static const char* provider_id;

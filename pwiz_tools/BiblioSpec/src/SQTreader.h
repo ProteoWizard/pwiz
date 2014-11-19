@@ -33,7 +33,7 @@
 
 #include "BuildParser.h"
 #include "SQTversion.h"
-#include <boost/regex.hpp>
+#include <boost/xpressive/xpressive_dynamic.hpp>
 
 #define MAX_MODS 128
 
@@ -74,7 +74,7 @@ class SQTreader : public BuildParser {
   int scanNumber;
   int charge;
 
-  const boost::regex cometModRegex;
+  boost::xpressive::sregex cometModRegex;
   void extractPSMs(); //populate the list of psms
 
 };

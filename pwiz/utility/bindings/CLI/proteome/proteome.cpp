@@ -22,7 +22,6 @@
 
 #include "proteome.hpp"
 #include <boost/foreach.hpp>
-#include <boost/regex.hpp>
 
 using System::String;
 using namespace System::Collections::Generic;
@@ -247,13 +246,13 @@ Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents, Config
 
 Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex)
 {
-    base_ = new b::Digestion(peptide->base(), boost::regex(ToStdString(cleavageAgentRegex)));
+    base_ = new b::Digestion(peptide->base(), ToStdString(cleavageAgentRegex));
     System::GC::KeepAlive(peptide);
 }
 
 Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Config^ config)
 {
-    base_ = new b::Digestion(peptide->base(), boost::regex(ToStdString(cleavageAgentRegex)),
+    base_ = new b::Digestion(peptide->base(), ToStdString(cleavageAgentRegex),
                                  b::Digestion::Config(config->maximumMissedCleavages,
                                                       config->minimumLength,
                                                       config->maximumLength,

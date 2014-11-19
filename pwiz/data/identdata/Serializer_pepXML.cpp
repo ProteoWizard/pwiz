@@ -34,7 +34,7 @@
 #include "pwiz/data/proteome/AminoAcid.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/utility/misc/Singleton.hpp"
-#include "boost/xpressive/xpressive.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
 #include "boost/range/adaptor/transformed.hpp"
 #include "boost/range/algorithm/min_element.hpp"
 #include "boost/range/algorithm/max_element.hpp"
@@ -53,6 +53,7 @@ using namespace pwiz::chemistry;
 using namespace pwiz::proteome;
 using namespace pwiz::util;
 using namespace pwiz::cv;
+namespace bxp = boost::xpressive;
 
 
 namespace {
@@ -1991,7 +1992,7 @@ string& invertResidueSet(string& residues)
 // match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
 // followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
 // 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
-const boost::regex cutNoCutRegex("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+const bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
 
 } // namespace
 
@@ -2001,8 +2002,8 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
     PepXMLSpecificity result;
     string &cut = result.cut, &nocut = result.no_cut, &sense = result.sense;
 
-    boost::smatch what;
-    if (ez.siteRegexp.empty() || !boost::regex_match(ez.siteRegexp, what, cutNoCutRegex))
+    bxp::smatch what;
+    if (ez.siteRegexp.empty() || !bxp::regex_match(ez.siteRegexp, what, cutNoCutRegex))
     {
         CVID cleavageAgent = identdata::cleavageAgent(ez);
 

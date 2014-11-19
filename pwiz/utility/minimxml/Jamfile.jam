@@ -27,11 +27,9 @@ lib pwiz_utility_minimxml
         SAXParser.cpp 
     : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <library>/ext/boost//regex
         <library>../misc//pwiz_utility_misc
     : # default-build
     : # usage-requirements
-        <library>/ext/boost//regex
         <library>../misc//pwiz_utility_misc
     ;
 

@@ -28,7 +28,10 @@
 #include "SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
-#include "boost/regex.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
+
+
+namespace bxp = boost::xpressive;
 
 
 const string CDATA_begin("![CDATA["), CDATA_end("]]");
@@ -548,7 +551,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
 string xml_root_element(const string& fileheader)
 {
-    const static boost::regex e("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
+    const static bxp::sregex e = bxp::sregex::compile("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
 
     // convert Unicode to ASCII
     string asciiheader;
@@ -559,8 +562,8 @@ string xml_root_element(const string& fileheader)
             asciiheader.push_back(c);
     }
 
-    boost::smatch m;
-    if (boost::regex_search(asciiheader, m, e))
+    bxp::smatch m;
+    if (bxp::regex_search(asciiheader, m, e))
         return m[1];
     throw runtime_error("[xml_root_element] Root element not found (header is not well-formed XML)");
 }

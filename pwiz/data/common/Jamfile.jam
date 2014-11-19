@@ -38,11 +38,9 @@ lib pwiz_data_obo
     : # sources
         obo.cpp
     : # requirements
-        <library>/ext/boost//regex
         <library>/ext/boost//nowide
     : # default-build
     : # usage-requirements 
-        <library>/ext/boost//regex
         <library>/ext/boost//nowide
     ;
 

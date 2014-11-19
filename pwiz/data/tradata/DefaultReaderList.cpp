@@ -28,19 +28,21 @@
 #include "Serializer_traML.hpp"
 #include "References.hpp"
 #include "pwiz/data/tradata/Version.hpp"
-#include "boost/regex.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
+
+
+namespace bxp = boost::xpressive;
+
 
 namespace pwiz {
 namespace tradata {
-
-
 
 
 namespace {
 
 string GetXMLRootElement(const string& fileheader)
 {
-    const static boost::regex e("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
+    const static bxp::sregex e = bxp::sregex::compile("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
 
     // convert Unicode to ASCII
     string asciiheader;
@@ -51,8 +53,8 @@ string GetXMLRootElement(const string& fileheader)
             asciiheader.push_back(c);
     }
 
-    boost::smatch m;
-    if (boost::regex_search(asciiheader, m, e))
+    bxp::smatch m;
+    if (bxp::regex_search(asciiheader, m, e))
         return m[1];
     throw runtime_error("[GetXMLRootElement] Root element not found (header is not well-formed XML)");
 }

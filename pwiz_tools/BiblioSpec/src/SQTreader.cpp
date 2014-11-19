@@ -28,20 +28,14 @@
 #include "AminoAcidMasses.h"
 
 using namespace std;
+namespace bxp = boost::xpressive;
 
 namespace BiblioSpec {
 
 SQTreader::SQTreader(BlibBuilder& maker, 
                      const char* sqtfile, 
                      const ProgressIndicator* parent_progress)
-: BuildParser(maker, sqtfile, parent_progress), percolated(false),
-  cometModRegex("^H[[:blank:]]+"    //H followed by at least some white space
-          "CometParams[[:blank:]]+" //CometParams followed by at least somewhite space 
-          "add_(?<aa>[A-Z])_"       //pull out the amino acid from add_<aa>_
-          "[^\\s]+"                  //some non-white space after add_<aa>_ (ex add_C_Cysteine)
-          "[[:blank:]]*=[[:blank:]]*"           //equal sign, potentially preceeded and followed by white space
-          "(?<modMass>(\\d*[.])?\\d+)"//modification mass as a floating point number
-          "[[:blank:]]*$")          //potential blank space, end of the line
+: BuildParser(maker, sqtfile, parent_progress), percolated(false)
 {
     // initialize mod arrays
     for(int i=0; i<MAX_MODS; i++) {
@@ -50,6 +44,13 @@ SQTreader::SQTreader(BlibBuilder& maker,
     }
     AminoAcidMasses::initializeMass(masses_, 0);
     sqtVersion = new SequestVersion("2.7");
+    cometModRegex = bxp::sregex::compile("^H[[:blank:]]+"    //H followed by at least some white space
+                                         "CometParams[[:blank:]]+" //CometParams followed by at least somewhite space 
+                                         "add_(?P<aa>[A-Z])_"       //pull out the amino acid from add_<aa>_
+                                         "[^\\s]+"                  //some non-white space after add_<aa>_ (ex add_C_Cysteine)
+                                         "[[:blank:]]*=[[:blank:]]*"           //equal sign, potentially preceeded and followed by white space
+                                         "(?P<modMass>(\\d*[.])?\\d+)"//modification mass as a floating point number
+                                         "[[:blank:]]*$");          //potential blank space, end of the line
 }
 
 SQTreader::~SQTreader()
@@ -81,7 +82,7 @@ void SQTreader::openRead(bool warnIfNotPercolated)
     char thisLine[1024];
     char mods[512];
 
-    boost::match_results<string::const_iterator> match;
+    bxp::smatch match;
     string::const_iterator start, end;
 
     while(file.peek() == 'H') {
@@ -148,20 +149,20 @@ void SQTreader::openRead(bool warnIfNotPercolated)
             staticMods[(int)modLetter]=modValue;
         }
 
-        if(regex_search(start, end, match, cometModRegex))
+        if(bxp::regex_search(start, end, match, cometModRegex))
         {
             // the comet params values report static modificiations to amino acids
             // and are redundant to values reported in the StaticMod entry in the header
             // The comet params entries are preferable to use because they report the mass of the modification.
             // Static mod reports amino acid mass + modification, and we don't necessarily know if 
             // the amino acid mass is average or monoisotopic
-            if (match.str("aa").length() != 1 || match.str("modMass").length() <=0)
+            if (match["aa"].length() != 1 || match["modMass"].length() <=0)
             {
                 throw new BlibException(false, "Could not extract the staticMod "
                         "from this line in the header: %s",buffer.c_str());
             }
-            char modLetter = match.str("aa")[0];
-            float modValue = atof(match.str("modMass").c_str());
+            char modLetter = match["aa"].str()[0];
+            float modValue = atof(match["modMass"].str().c_str());
             staticMods[(int)modLetter]=modValue;
         }
     

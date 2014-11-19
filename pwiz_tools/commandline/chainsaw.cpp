@@ -301,7 +301,7 @@ void writeDigestion(const Config& config, const ProteomeData& pd)
 
             shared_ptr<Digestion> digestion;
             if (!config.cleavageAgentRegex.empty())
-                digestion.reset(new Digestion(*proteinPtr, boost::regex(config.cleavageAgentRegex), config.digestionConfig));
+                digestion.reset(new Digestion(*proteinPtr, config.cleavageAgentRegex, config.digestionConfig));
             else
                 digestion.reset(new Digestion(*proteinPtr, config.cleavageAgent, config.digestionConfig));
 

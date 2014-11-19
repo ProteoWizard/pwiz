@@ -495,22 +495,22 @@ void testBSADigestion()
 
     // test fully-specific trypsin digest
     testTrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(3, 5, 40)));
-    testTrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(3, 5, 40)));
+    testTrypticBSA(Digestion(bsa, "(?<=[KR])", Digestion::Config(3, 5, 40)));
 
     // test semi-specific trypsin digest
     testSemitrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
-    testSemitrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticBSA(Digestion(bsa, "(?<=[KR])", Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
 
     // test non-specific trypsin digest
     testNontrypticBSA(Digestion(bsa, MS_Trypsin_P, Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
-    testNontrypticBSA(Digestion(bsa, boost::regex("(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
+    testNontrypticBSA(Digestion(bsa, "(?<=[KR])", Digestion::Config(1, 5, 20, Digestion::NonSpecific)));
 
     // test semi-specific trypsin digest with n-terminal methionine clipping (motif and regex only)
-    testSemitrypticMethionineClippingBSA(Digestion(bsa, boost::regex("(?<=^M)|(?<=[KR])"), Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
-    testSemitrypticMethionineClippingBSA(Digestion(bsa, boost::regex("(?<=(^M)|([KR]))"), Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticMethionineClippingBSA(Digestion(bsa, "(?<=^M)|(?<=[KR])", Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
+    testSemitrypticMethionineClippingBSA(Digestion(bsa, "(?<=(^M)|([KR]))", Digestion::Config(1, 5, 20, Digestion::SemiSpecific)));
 
     // test funky digestion
-    Digestion funkyDigestion(bsa, boost::regex("(?<=A[DE])(?=[FG])"), Digestion::Config(0, 5, 100000, Digestion::FullySpecific, false));
+    Digestion funkyDigestion(bsa, "(?<=A[DE])(?=[FG])", Digestion::Config(0, 5, 100000, Digestion::FullySpecific, false));
     vector<Peptide> funkyPeptides(funkyDigestion.begin(), funkyDigestion.end());
 
     unit_assert_operator_equal("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPFDEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEPERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYYANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVARLSQKFPKAE", funkyPeptides[0].sequence());

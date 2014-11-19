@@ -38,9 +38,8 @@ rule mascot-define ( properties * )
 {
     local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path) && <toolset>msvc in $(properties)
+    if $(msparser_path)
     {
-        echo "DEBUGGING: in mascot-define" ;
         result += <define>USE_MASCOT_PARSER ;
     }
     return $(result) ;
@@ -50,9 +49,8 @@ rule mascot-api-requirements ( properties * )
 {
     local result = [ mascot-define $(properties) ] ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path) && <toolset>msvc in $(properties)
+    if $(msparser_path)
     {
-        echo "DEBUGGING: in mascot-api-requirements" ;
         result += <source>MascotResultsReader.cpp ;
     }
     else
@@ -66,9 +64,8 @@ rule mascot-api-usage-requirements ( properties * )
 {
     local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path) && <toolset>msvc in $(properties)
+    if $(msparser_path)
     {
-        echo "DEBUGGING: in mascot-api-usage-requirements" ;
         result += <library>$(PWIZ_ROOT_PATH)//msparser ;
         result += <dependency>unimod_2.xsd ;
         result += <dependency>quantitation_1.xsd ;
@@ -197,7 +194,6 @@ lib blib
 alias pwiz-boost-libraries 
   : /ext/boost//program_options
     /ext/boost//filesystem
-    /ext/boost//regex
     /ext/boost//thread
     /ext/boost//iostreams
     /ext/boost//system

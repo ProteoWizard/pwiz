@@ -60,7 +60,6 @@ lib pwiz_data_proteome
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
-        <library>/ext/boost//regex
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
@@ -71,7 +70,6 @@ lib pwiz_data_proteome
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
-        <library>/ext/boost//regex
         <library>/ext/zlib//z
     ;
 

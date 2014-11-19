@@ -24,18 +24,21 @@
 #include <typeinfo>
 
 using namespace std;
+namespace bxp = boost::xpressive;
 
 namespace BiblioSpec {
 
 SequestVersion::SequestVersion()
-    : _versionParser("^(?<major>[0-9]+)([.](?<minor>[0-9]+))?[[:blank:]]*$"),
-    _majorVersion(0), _minorVersion(0)
-    {}
+    : _majorVersion(0), _minorVersion(0)
+{
+    _versionParser = bxp::sregex::compile("^(?P<major>[0-9]+)([.](?P<minor>[0-9]+))?[[:blank:]]*$");
+}
 
 SequestVersion::SequestVersion(string versionString)
-    : _versionParser("^(?<major>[0-9]+)([.](?<minor>[0-9]+))?[[:blank:]]*$"),
-    _majorVersion(0), _minorVersion(0)
+    : _majorVersion(0), _minorVersion(0)
 {
+    _versionParser = bxp::sregex::compile("^(?P<major>[0-9]+)([.](?P<minor>[0-9]+))?[[:blank:]]*$");
+
     if (!trySetVersion(versionString))
         throw BlibException(false, "Error initializing with an improperly formatted sequest version string: %s", versionString.c_str());
 }
@@ -50,19 +53,19 @@ bool SequestVersion::trySetVersion(string versionString)
     string::const_iterator start, end;
     start = versionString.begin();
     end = versionString.end();
-    boost::match_results<string::const_iterator> match;
-    if (!regex_search(start, end, match, _versionParser))
+    bxp::smatch match;
+    if (!bxp::regex_search(start, end, match, _versionParser))
     {
         return false;
     }
     _majorVersion = _minorVersion = 0;
-    if (match.str("major").length() > 0)
+    if (match["major"].length() > 0)
     {
-        _majorVersion = atoi(match.str("major").c_str());
+        _majorVersion = atoi(match["major"].str().c_str());
     }
-    if (match.str("minor").length() > 0)
+    if (match["minor"].length() > 0)
     {
-        _minorVersion = atoi(match.str("minor").c_str());
+        _minorVersion = atoi(match["minor"].str().c_str());
     }
     return true;
 }
@@ -92,14 +95,16 @@ bool SequestVersion::operator== (const SQTversion& rhs) const
 }
 
 CometVersion::CometVersion()
-    : _versionParser("^(?<major>[0-9]+)([.](?<minor>[0-9]+))?[[:blank:]]*(rev[.][[:blank:]]*(?<rev>[0-9]+)?)?[[:blank:]]*$"),
-    _majorVersion(0), _minorVersion(0), _revision(0)
-    {}
+: _majorVersion(0), _minorVersion(0), _revision(0)
+{
+    _versionParser = bxp::sregex::compile("^(?P<major>[0-9]+)([.](?P<minor>[0-9]+))?[[:blank:]]*(rev[.][[:blank:]]*(?P<rev>[0-9]+)?)?[[:blank:]]*$");
+}
 
 CometVersion::CometVersion(string versionString)
-    : _versionParser("^(?<major>[0-9]+)([.](?<minor>[0-9]+))?[[:blank:]]*(rev[.][[:blank:]]*(?<rev>[0-9]+)?)?[[:blank:]]*$"),
-    _majorVersion(0), _minorVersion(0), _revision(0)
+: _majorVersion(0), _minorVersion(0), _revision(0)
 {
+    _versionParser = bxp::sregex::compile("^(?P<major>[0-9]+)([.](?P<minor>[0-9]+))?[[:blank:]]*(rev[.][[:blank:]]*(?P<rev>[0-9]+)?)?[[:blank:]]*$");
+
     if (!trySetVersion(versionString))
         throw BlibException(false, "Error initializing with an improperly formatted comet version string: %s", versionString.c_str());
 }
@@ -114,23 +119,23 @@ bool CometVersion::trySetVersion(string versionString)
     string::const_iterator start, end;
     start = versionString.begin();
     end = versionString.end();
-    boost::match_results<string::const_iterator> match;
-    if (!regex_search(start, end, match, _versionParser))
+    bxp::smatch match;
+    if (!bxp::regex_search(start, end, match, _versionParser))
     {
         return false;
     }
     _majorVersion = _minorVersion = _revision = 0;
-    if (match.str("major").length() > 0)
+    if (match["major"].length() > 0)
     {
-        _majorVersion = atoi(match.str("major").c_str());
+        _majorVersion = atoi(match["major"].str().c_str());
     }
-    if (match.str("minor").length() > 0)
+    if (match["minor"].length() > 0)
     {
-        _minorVersion = atoi(match.str("minor").c_str());
+        _minorVersion = atoi(match["minor"].str().c_str());
     }
-    if (match.str("rev").length() > 0)
+    if (match["rev"].length() > 0)
     {
-        _revision = atoi(match.str("rev").c_str());
+        _revision = atoi(match["rev"].str().c_str());
     }
     return true;
 }

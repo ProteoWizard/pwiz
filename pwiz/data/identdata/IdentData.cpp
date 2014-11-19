@@ -29,7 +29,7 @@
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/data/common/Unimod.hpp"
 #include "IdentData.hpp"
-#include "boost/regex.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
 
 
 namespace pwiz {
@@ -41,6 +41,7 @@ using namespace boost::gregorian;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::chemistry;
+namespace bxp = boost::xpressive;
 
 
 PWIZ_API_DECL vector<CV> defaultCVList()
@@ -938,7 +939,7 @@ bool findPeptideEvidenceWithRegex(const PeptideEvidence& pe,
                                   const Peptide& peptide,
                                   const string& peptideSequenceInContext,
                                   CVID cleavageAgent,
-                                  const boost::regex* cleavageAgentRegex,
+                                  const string& cleavageAgentRegex,
                                   bool independent,
                                   int& nTerminusIsSpecific,
                                   int& cTerminusIsSpecific,
@@ -966,7 +967,7 @@ bool findPeptideEvidenceWithRegex(const PeptideEvidence& pe,
     if (cleavageAgent != CVID_Unknown)
         peptideInContextPtr.reset(new Digestion(peptideSequenceInContext, cleavageAgent, config));
     else
-        peptideInContextPtr.reset(new Digestion(peptideSequenceInContext, *cleavageAgentRegex, config));
+        peptideInContextPtr.reset(new Digestion(peptideSequenceInContext, cleavageAgentRegex, config));
     const Digestion& peptideInContext = *peptideInContextPtr;
 
     // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
@@ -1016,7 +1017,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
 
     vector<CVID> cleavageAgents = identdata::cleavageAgents(sip.enzymes);
 
-    vector<boost::regex> cleavageAgentRegexes;
+    vector<string> cleavageAgentRegexes;
     if (cleavageAgents.empty())
     {
         cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
@@ -1040,15 +1041,15 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
 
     BOOST_FOREACH(CVID cleavageAgent, cleavageAgents)
     {
-        if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, NULL,
+        if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, "",
                                           sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
                                           bestSpecificity, bestResult))
             break;
     }
 
-    BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
+    BOOST_FOREACH(const string& regex, cleavageAgentRegexes)
     {
-        if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, &regex,
+        if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, regex,
                                           sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
                                           bestSpecificity, bestResult))
             break;
@@ -1072,7 +1073,7 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
 
     vector<CVID> cleavageAgents = identdata::cleavageAgents(sip.enzymes);
 
-    vector<boost::regex> cleavageAgentRegexes;
+    vector<string> cleavageAgentRegexes;
     if (cleavageAgents.empty())
     {
         cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
@@ -1102,15 +1103,15 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
 
         BOOST_FOREACH(CVID cleavageAgent, cleavageAgents)
         {
-            if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, NULL,
+            if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, "",
                                               sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
                                               bestSpecificity, bestResult))
                 break;
         }
 
-        BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
+        BOOST_FOREACH(const string& regex, cleavageAgentRegexes)
         {
-            if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, &regex,
+            if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, regex,
                                               sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
                                               bestSpecificity, bestResult))
                 break;
@@ -1188,7 +1189,7 @@ PWIZ_API_DECL std::vector<CVID> cleavageAgents(const Enzymes& enzymes)
 }
 
 
-PWIZ_API_DECL boost::regex cleavageAgentRegex(const Enzyme& ez)
+PWIZ_API_DECL string cleavageAgentRegex(const Enzyme& ez)
 {
     using namespace proteome;
 
@@ -1199,17 +1200,17 @@ PWIZ_API_DECL boost::regex cleavageAgentRegex(const Enzyme& ez)
         if (enzymeTerm.empty())
             enzymeTerm = CVParam(Digestion::getCleavageAgentByName(ez.enzymeName.userParams[0].name));
 
-        try {return boost::regex(Digestion::getCleavageAgentRegex(enzymeTerm.cvid));} catch (exception&) {}
+        try {return Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (exception&) {}
     }
     else
-        return boost::regex(ez.siteRegexp);
+        return ez.siteRegexp;
 
     throw runtime_error("[identdata::cleavageAgentRegex] unable to determine a regular expression for enzyme");
 }
 
-PWIZ_API_DECL std::vector<boost::regex> cleavageAgentRegexes(const Enzymes& enzymes)
+PWIZ_API_DECL std::vector<string> cleavageAgentRegexes(const Enzymes& enzymes)
 {
-    vector<boost::regex> result;
+    vector<string> result;
     BOOST_FOREACH(const EnzymePtr& enzymePtr, enzymes.enzymes)
         try {result.push_back(cleavageAgentRegex(*enzymePtr));} catch (exception&) {}
     return result;

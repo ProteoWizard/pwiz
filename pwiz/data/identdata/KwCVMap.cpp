@@ -108,30 +108,33 @@ bool CVMap::operator==(const CVMap& right) const
 //
 
 RegexCVMap::RegexCVMap()
-    : CVMap(".*", CVID_Unknown, "/", ""), pattern(".*")
+    : CVMap(".*", CVID_Unknown, "/", "")
 {
+    pattern = bxp::sregex::compile(".*");
 }
 
 RegexCVMap::RegexCVMap(const string& pattern, CVID cvid, const string& path)
-    : CVMap(pattern, cvid, path), pattern(pattern)
+    : CVMap(pattern, cvid, path)
 {
+    this->pattern = bxp::sregex::compile(pattern);
 }
 
 RegexCVMap::RegexCVMap(const string& pattern, CVID cvid, const string& path,
                        const string& dep)
-    : CVMap(pattern, cvid, path, dep), pattern(pattern)
+    : CVMap(pattern, cvid, path, dep)
 {
+    this->pattern = bxp::sregex::compile(pattern);
 }
 
 RegexCVMap::~RegexCVMap()
 {
 }
 
-cmatch RegexCVMap::match(std::string& text)
+bxp::smatch RegexCVMap::match(std::string& text)
 {
-    cmatch what;
+    bxp::smatch what;
 
-    regex_match(text.c_str(), what, pattern);
+    bxp::regex_match(text, what, pattern);
 
     return what;
 }
@@ -144,13 +147,13 @@ const char* RegexCVMap::getTag() const
 void RegexCVMap::setPattern(const std::string& pattern)
 {
     keyword = pattern;
-    this->pattern = regex(pattern);
+    this->pattern = bxp::sregex::compile(pattern);
 }
 
 bool RegexCVMap::operator()(const string& text) const
 {
-    cmatch what;
-    if (regex_match(text.c_str(), what, pattern))
+    bxp::smatch what;
+    if (bxp::regex_match(text, what, pattern))
     {
         return true;
     }

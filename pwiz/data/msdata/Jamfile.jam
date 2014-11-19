@@ -83,7 +83,6 @@ lib pwiz_data_msdata
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
-        <library>/ext/boost//regex
         <library>/ext/zlib//z
         [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
     : # default-build
@@ -96,7 +95,6 @@ lib pwiz_data_msdata
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
-        <library>/ext/boost//regex
         <library>/ext/zlib//z
         [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
     ;

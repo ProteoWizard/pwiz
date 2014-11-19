@@ -23,7 +23,7 @@
 #define SQT_VERSION_H
 
 #include <string>
-#include <boost/regex.hpp>
+#include <boost/xpressive/xpressive_dynamic.hpp>
 
 using namespace std;
 
@@ -52,7 +52,7 @@ class SequestVersion : public SQTversion {
         bool operator== (const SQTversion& rhs) const;
         string generatorName(){return "Sequest";}
     private:
-        const boost::regex _versionParser;
+        boost::xpressive::sregex _versionParser;
         int _majorVersion;
         int _minorVersion;
 };
@@ -66,7 +66,7 @@ class CometVersion : public SQTversion {
         bool operator== (const SQTversion& rhs) const;
         string generatorName(){return "Comet";}
     private:
-        const boost::regex _versionParser;
+        boost::xpressive::sregex _versionParser;
         int _majorVersion;
         int _minorVersion;
         int _revision;
