@@ -96,7 +96,13 @@ namespace SkylineTester
 
         private void RunUI(Action action)
         {
-            Invoke(action);
+            try
+            {
+                Invoke(action);
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
 
         /// <summary>

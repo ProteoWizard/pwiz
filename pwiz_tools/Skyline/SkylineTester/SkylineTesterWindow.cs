@@ -280,6 +280,8 @@ namespace SkylineTester
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync();
 
+            LoadSettingsFromFile(_openFile);
+
             TabBase.MainWindow = this;
             _tabForms = new TabForms();
             _tabTutorials = new TabTutorials();
@@ -370,16 +372,9 @@ namespace SkylineTester
                 MessageBox.Show(ex.Message);
             }
 
-            if (_openFile != null)
+            if (_openFile != null && Path.GetExtension(_openFile) == ".skytr")
             {
-                RunUI(() =>
-                {
-                    LoadSettingsFromFile(_openFile);
-                    if (Path.GetExtension(_openFile) == ".skytr")
-                    {
-                        Run(null, null);
-                    }
-                });
+                RunUI(() => Run(null, null));
             }
         }
 
@@ -431,6 +426,9 @@ namespace SkylineTester
 
         private void TabChanged(object sender, EventArgs e)
         {
+            if (_tabs == null)
+                return;
+
             _tabs[_previousTab].Leave();
             LastTabIndex = _previousTab;
             _previousTab = tabs.SelectedIndex;

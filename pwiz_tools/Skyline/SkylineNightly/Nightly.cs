@@ -25,6 +25,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Ionic.Zip;
 using SkylineNightly.Properties;
 
@@ -43,6 +44,7 @@ namespace SkylineNightly
         private const int TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
+        private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/postreport/home/software/Skyline/begin.view?";
 
         private string _logFile;
         private string _line;
@@ -137,7 +139,6 @@ namespace SkylineNightly
                     var skylineTester = Xml.FromString(reader.ReadToEnd());
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
                     skylineTester.GetChild("nightlyRoot").Set(pwizDir);
-                    skylineTester.GetChild("nightlyLogs").Set(logDir);
                     skylineTester.Save(skylineNightlySkytr);
                 }
             }
@@ -191,9 +192,33 @@ namespace SkylineNightly
             _nightly["testsrun"] = _testCount;
             _nightly["failures"] = _failures.Count;
             _nightly["leaks"] = _leaks.Count;
-            _nightly.Save("xxx.xml");
 
-            // upload
+            // Post to server.
+            PostToLink(LABKEY_URL, _nightly.ToString());
+        }
+
+        public static void PostToLink(string link, string postData)
+        {
+            string javaScript = string.Format(
+@"<script type=""text/javascript"">
+function submitForm()
+{{
+    document.getElementById(""my_form"").submit();
+}}
+window.onload = submitForm;
+</script>
+<form id=""my_form"" action=""{0}"" method=""post"" style=""visibility: hidden;"">
+<textarea name=""SkylineReport"">{1}</textarea>
+</form>", // Not L10N
+                link, WebUtility.HtmlEncode(postData));
+
+            string filePath = Path.GetTempFileName() + ".html"; // Not L10N
+            File.WriteAllText(filePath, javaScript);
+            Process.Start(filePath);
+
+            // Allow time for browser to load file.
+            Thread.Sleep(3000);
+            File.Delete(filePath);
         }
 
         private void ParseLog(FileInfo logFile)

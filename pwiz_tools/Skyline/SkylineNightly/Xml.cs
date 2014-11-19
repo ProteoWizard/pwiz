@@ -91,5 +91,10 @@ namespace SkylineNightly
             if (_root.OwnerDocument != null)
                 _root.OwnerDocument.Save(file);
         }
+
+        public override string ToString()
+        {
+            return _root.OuterXml;
+        }
     }
 }
