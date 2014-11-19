@@ -94,7 +94,16 @@ namespace SkylineNightly
 
         public override string ToString()
         {
-            return _root.OuterXml;
+            using (var sw = new System.IO.StringWriter())
+            {
+                using (var xw = new XmlTextWriter(sw))
+                {
+                    xw.Formatting = Formatting.Indented;
+                    xw.Indentation = 4;
+                    _root.WriteTo(xw);
+                }
+                return sw.ToString();
+            }
         }
     }
 }

@@ -57,8 +57,6 @@ namespace SkylineNightly
         private string _failedTest;
         private StringBuilder _stackTrace;
         private int _testCount;
-        private DateTime _startTime;
-        private DateTime _endTime;
 
         public void Run()
         {
@@ -138,7 +136,7 @@ namespace SkylineNightly
                 {
                     var skylineTester = Xml.FromString(reader.ReadToEnd());
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
-                    skylineTester.GetChild("nightlyRoot").Set(pwizDir);
+                    skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.Save(skylineNightlySkytr);
                 }
             }
@@ -151,6 +149,7 @@ namespace SkylineNightly
                 WorkingDirectory = Path.GetDirectoryName(skylineTesterExe) ?? ""
             };
 
+            var startTime = DateTime.Now;
             var skylineTesterProcess = Process.Start(processInfo);
             if (skylineTesterProcess == null)
             {
@@ -162,7 +161,8 @@ namespace SkylineNightly
             Log("SkylineTester finished");
 
             // Upload log information.
-            UploadLog(logDir);
+            var duration = DateTime.Now - startTime;
+            UploadLog(logDir, duration);
         }
 
         private enum ReadState
@@ -172,7 +172,7 @@ namespace SkylineNightly
             failure,
         }
 
-        private void UploadLog(string logDir)
+        private void UploadLog(string logDir, TimeSpan duration)
         {
             _nightly = new Xml("nightly");
             _failures = _nightly.Append("failures");
@@ -181,20 +181,26 @@ namespace SkylineNightly
             var directory = new DirectoryInfo(logDir);
             var logFile = directory.GetFiles()
                 .OrderByDescending(f => f.LastWriteTime)
+                .SkipWhile(f => f.Name == "Summary.log")
                 .First();
             if (logFile != null)
                 ParseLog(logFile);
 
             _nightly["id"] = Environment.MachineName;
-            var duration = _endTime - _startTime;
-            _nightly["duration"] = duration < TimeSpan.Zero ? "0:00"
-                : duration.Hours + ":" + duration.Minutes.ToString("D2");
+            _nightly["duration"] = duration.Hours + ":" + duration.Minutes.ToString("D2");
             _nightly["testsrun"] = _testCount;
             _nightly["failures"] = _failures.Count;
             _nightly["leaks"] = _leaks.Count;
 
+            var xml = _nightly.ToString();
+            if (logFile != null)
+            {
+                var xmlFile = Path.ChangeExtension(logFile.FullName, ".xml");
+                File.WriteAllText(xmlFile, xml);
+            }
+
             // Post to server.
-            PostToLink(LABKEY_URL, _nightly.ToString());
+            PostToLink(LABKEY_URL, xml);
         }
 
         public static void PostToLink(string link, string postData)
@@ -284,20 +290,6 @@ window.onload = submitForm;
                     leak["bytes"] = leakedBytes;
                 }
 
-                return ReadState.startTest;
-            }
-
-            // Scan for start time.
-            if (_line.StartsWith("# Nightly started "))
-            {
-                _startTime = DateTime.Parse(_line.Replace("# Nightly started ", ""));
-                return ReadState.startTest;
-            }
-
-            // Scan for end time.
-            if (_line.StartsWith("# Stopped "))
-            {
-                _endTime = DateTime.Parse(_line.Replace("# Stopped ", ""));
                 return ReadState.startTest;
             }
 
