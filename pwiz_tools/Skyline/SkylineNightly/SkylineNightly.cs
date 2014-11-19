@@ -45,7 +45,11 @@ namespace SkylineNightly
 
                     // Add a trigger that will fire the task every other day
                     DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
-                    dt.StartBoundary = startTime.Value;
+                    var scheduledTime = startTime.Value;
+                    var now = DateTime.Now;
+                    if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
+                        scheduledTime = now + TimeSpan.FromMinutes(2);
+                    dt.StartBoundary = scheduledTime;
                     dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
@@ -70,7 +74,7 @@ namespace SkylineNightly
 
         private void Now_Click(object sender, EventArgs e)
         {
-            startTime.Value = DateTime.Now + TimeSpan.FromMinutes(1);
+            startTime.Value = DateTime.Now;
         }
     }
 }
