@@ -89,10 +89,10 @@ namespace pwiz.SkylineTestFunctional
             
             var paths = new []
             {
-                "13417_02_WAA283_3805_071514.raw",        
-                "13417_03_WAA283_3805_071514.raw",        
-                "13418_02_WAA283_3805_071514.raw",        
-                "13418_03_WAA283_3805_071514.raw",        
+                "13417_02_WAA283_3805_071514"+ExtensionTestContext.ExtWatersRaw,
+                "13417_03_WAA283_3805_071514"+ExtensionTestContext.ExtWatersRaw,
+                "13418_02_WAA283_3805_071514"+ExtensionTestContext.ExtWatersRaw,
+                "13418_03_WAA283_3805_071514"+ExtensionTestContext.ExtWatersRaw,
             };
             var doc = SkylineWindow.Document;
             RunUI(() => SkylineWindow.ChangeSettings(doc.Settings.
@@ -154,7 +154,7 @@ namespace pwiz.SkylineTestFunctional
                 var pathHolder = new KeyValuePair<string, MsDataFileUri[]>[4];
                 for (int i = 0; i < paths.Length; i++)
                 {
-                    pathHolder[i] = new KeyValuePair<string, MsDataFileUri[]>(paths[i].Remove(paths[i].Length - ".raw".Length),
+                    pathHolder[i] = new KeyValuePair<string, MsDataFileUri[]>(paths[i].Remove(paths[i].Length - ExtensionTestContext.ExtWatersRaw.Length),
                         new[] {new MsDataFilePath(TestFilesDir.GetTestPath(paths[i]))});
                 }
                 importResultsDlg.NamedPathSets = pathHolder;
