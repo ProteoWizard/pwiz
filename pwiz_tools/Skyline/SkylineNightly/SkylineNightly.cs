@@ -67,5 +67,10 @@ namespace SkylineNightly
             var end = startTime.Value + TimeSpan.FromHours(9);
             endTime.Text = end.ToShortTimeString();
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            startTime.Value = DateTime.Now;
+        }
     }
 }

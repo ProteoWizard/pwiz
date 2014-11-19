@@ -366,17 +366,22 @@ window.onload = submitForm;
 
         private void Delete(string fileOrDir)
         {
-            try
+            for (int i = 0; i < 5; i++)
             {
-                if (File.Exists(fileOrDir))
-                    File.Delete(fileOrDir);
-                else if (Directory.Exists(fileOrDir))
-                    Directory.Delete(fileOrDir, true);
-            }
-            catch (Exception)
-            {
-                Log("Problem deleting " + fileOrDir);
-                throw;
+                try
+                {
+                    if (File.Exists(fileOrDir))
+                        File.Delete(fileOrDir);
+                    else if (Directory.Exists(fileOrDir))
+                        Directory.Delete(fileOrDir, true);
+                }
+                catch (Exception ex)
+                {
+                    Log("Problem deleting " + fileOrDir + ": " + ex.Message);
+                    if (i == 4)
+                        throw;
+                    Thread.Sleep(1000);
+                }
             }
         }
 
