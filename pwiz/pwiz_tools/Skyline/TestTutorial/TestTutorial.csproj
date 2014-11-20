@@ -188,6 +188,7 @@
   <ItemGroup>
     <None Include="CEOptimizationViews.zip" />
     <None Include="CustomReportsViews.zip" />
+    <None Include="DiaViews.zip" />
     <None Include="ExistingExperimentsViews.zip" />
     <None Include="IrtViews.zip" />
     <None Include="MethodEditCSVs.zip" />

@@ -2888,7 +2888,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var graphPane = GraphPaneFromPoint(pt);
                     if (graphPane != null)
+                    {
+                        // Uncomment to get coordinates for tests
+//                        double xScaled, yScaled;
+//                        graphPane.ReverseTransform(pt, out xScaled, out yScaled);
+//                        Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled); // not L10N
+
                         FireClickedChromatogram(graphPane);
+                    }
                     return true;
                 }
 
@@ -3244,12 +3251,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var graphPane = _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
             var selectionDot = graphPane.CurveList[FULLSCAN_SELECTED_INDEX];
-            double dotX = selectionDot[0].X;
-            double dotY = selectionDot[0].Y;
-            return 
-                selectionDot.IsVisible &&
-                Math.Abs(dotX - x) <= 0.1 &&
-                Math.Abs(dotY - y) <= 0.1;
+            var mouse = TransformCoordinates(x, y, paneKey);
+            var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);
+            if (!selectionDot.IsVisible)
+                return false;
+            const int pixelTolerance = 10;
+            if (Math.Abs(mouse.X - dot.X) > pixelTolerance || Math.Abs(mouse.Y - dot.Y) > pixelTolerance)
+                return false;
+            return true;
         }
 
         #endregion Test support

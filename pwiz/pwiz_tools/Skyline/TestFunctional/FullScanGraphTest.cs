@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Results;
@@ -102,28 +101,9 @@ namespace pwiz.SkylineTestFunctional
             TestScale(452, 456, 0, 300);
         }
 
-        private static void ClickChromatogram(double x, double y, PaneKey? paneKey = null)
-        {
-            var graphChromatogram = SkylineWindow.GraphChromatograms.First();
-            RunUI(() =>
-            {
-                graphChromatogram.TestMouseMove(x, y, paneKey);
-                graphChromatogram.TestMouseDown(x, y, paneKey);
-            });
-            WaitForGraphs();
-            CheckFullScanSelection(x, y, paneKey);
-        }
-
         private static void ClickFullScan(double x, double y)
         {
             RunUI(() => SkylineWindow.GraphFullScan.TestMouseClick(x, y));
-        }
-
-        private static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null)
-        {
-            var graphChromatogram = SkylineWindow.GraphChromatograms.First();
-            WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
-            Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
 
         private static void TestScale(double xMin, double xMax, double yMin, double yMax)

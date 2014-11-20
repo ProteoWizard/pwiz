@@ -133,8 +133,9 @@
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
+            this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
             // 
             // tabGeneral
             // 
