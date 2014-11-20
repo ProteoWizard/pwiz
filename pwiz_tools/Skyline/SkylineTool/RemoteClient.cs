@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Threading;
 
 namespace SkylineTool
 {
@@ -26,6 +27,10 @@ namespace SkylineTool
         protected RemoteClient(string connectionName)
         {
             ConnectionName = connectionName;
+
+            var serverAliveName = "Global\\" + ConnectionName; // Not L10N
+            var serverAlive = new EventWaitHandle(false, EventResetMode.ManualReset, serverAliveName);
+            serverAlive.WaitOne();
         }
 
         public string ConnectionName { get; private set; }

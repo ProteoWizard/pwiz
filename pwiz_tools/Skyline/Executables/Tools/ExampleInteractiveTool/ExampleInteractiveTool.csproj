@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -32,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -60,6 +62,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -70,6 +73,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -126,11 +130,14 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>del "$(SolutionDir)"\ExampleInteractiveTool.zip 2&gt;nul</PreBuildEvent>
+    <PreBuildEvent>del "$(SolutionDir)$(TargetName).zip" 2&gt;nul</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>cd "$(SolutionDir)"
-"$(ProgramW6432)\7-zip\7z.exe" a ExampleInteractiveTool.zip tool-inf .\bin\$(Configuration)\ExampleInteractiveTool.exe .\bin\$(Configuration)\SkylineTool.dll  .\bin\$(Configuration)\zedgraph.dll</PostBuildEvent>
+"$(ProgramW6432)\7-zip\7z.exe" a $(TargetName).zip tool-inf  ".\$(OutDir)$(TargetFileName)" ".\$(OutDir)SkylineTool.dll" ".\$(OutDir)zedgraph.dll"
+rmdir /s /q "$(SolutionDir)\..\..\..\bin\$(PlatformName)\$(ConfigurationName)\Tools\$(TargetName)"
+"$(ProgramW6432)\7-zip\7z.exe" x -o"$(SolutionDir)\..\..\..\bin\$(PlatformName)\$(ConfigurationName)\Tools\$(TargetName)" -y $(TargetName).zip
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

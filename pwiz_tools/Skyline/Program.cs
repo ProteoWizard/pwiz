@@ -329,7 +329,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            public void SendDocumentChange()
+            private void SendChange(Action<DocumentChangeSender, string> action, string arg = null)
             {
                 // We have to send document changes off the UI thread, because the client
                 // may respond by requesting further information on the UI thread, which
@@ -338,31 +338,35 @@ namespace pwiz.Skyline
                 {
                     lock (_documentChangeSendersLock)
                     {
+                        var deadSenders = new List<string>();
                         foreach (var documentChangeSender in _documentChangeSenders)
                         {
-                            documentChangeSender.Value.DocumentChanged();
+                            try
+                            {
+                                action(documentChangeSender.Value, arg);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                deadSenders.Add(documentChangeSender.Key);
+                            }
+                        }
+                        foreach (var deadSender in deadSenders)
+                        {
+                            _documentChangeSenders.Remove(deadSender);
                         }
                     }
                 });
                 sendThread.Start();
             }
 
+            public void SendDocumentChange()
+            {
+                SendChange((sender, arg) => sender.DocumentChanged());
+            }
+
             public void SendSelectionChange(string link)
             {
-                // We have to send document changes off the UI thread, because the client
-                // may respond by requesting further information on the UI thread, which
-                // would cause a deadlock.
-                var sendThread = new Thread(() =>
-                {
-                    lock (_documentChangeSendersLock)
-                    {
-                        foreach (var documentChangeSender in _documentChangeSenders)
-                        {
-                            documentChangeSender.Value.SelectionChanged(link);
-                        }
-                    }
-                });
-                sendThread.Start();
+                SendChange((sender, arg) => sender.SelectionChanged(link));
             }
 
             private class DocumentChangeSender : RemoteClient, IDocumentChangeReceiver

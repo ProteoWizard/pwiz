@@ -86,12 +86,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>del "$(SolutionDir)"\TestInteractiveTool.zip 2&gt;nul</PreBuildEvent>
+    <PreBuildEvent>del "$(SolutionDir)$(TargetName).zip" 2&gt;nul</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>cd "$(SolutionDir)"
-"$(ProgramW6432)\7-zip\7z.exe" a TestInteractiveTool.zip tool-inf .\bin\$(Configuration)\TestInteractiveTool.exe .\bin\$(Configuration)\SkylineTool.dll TestToolAPI.*
-copy TestInteractiveTool.zip ..\..\..\TestFunctional\ToolServiceTest.zip</PostBuildEvent>
+"$(ProgramW6432)\7-zip\7z.exe" a $(TargetName).zip tool-inf ".\$(OutDir)$(TargetFileName)" ".\$(OutDir)SkylineTool.dll" TestToolAPI.*
+copy $(TargetName).zip ..\..\..\TestFunctional\ToolServiceTest.zip</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

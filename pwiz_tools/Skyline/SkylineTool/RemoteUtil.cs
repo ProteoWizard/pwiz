@@ -37,18 +37,18 @@ namespace SkylineTool
         private readonly SharedEvent _clientEvent;
 
         public Channel(string connectionName, object instance, MethodInfo method)
-            : this(connectionName, method.Name)
+            : this(connectionName, method.Name, true)
         {
             _instance = instance;
             _method = method;
         }
 
-        public Channel(string connectionName, string methodName)
+        public Channel(string connectionName, string methodName, bool isServer = false)
         {
             Name = methodName;
             _connectionPrefix = connectionName + Name;
-            _serverEvent = new SharedEvent(_connectionPrefix + "-server"); // Not L10N
-            _clientEvent = new SharedEvent(_connectionPrefix + "-client"); // Not L10N
+            _serverEvent = new SharedEvent(_connectionPrefix + "-server", isServer); // Not L10N
+            _clientEvent = new SharedEvent(_connectionPrefix + "-client", isServer); // Not L10N
         }
 
         public void Dispose()
@@ -101,10 +101,13 @@ namespace SkylineTool
     {
         private readonly EventWaitHandle _event;
 
-        public SharedEvent(string name)
+        public SharedEvent(string name, bool createExpected)
         {
             Name = "Global\\" + name; // Not L10N
-            _event = new EventWaitHandle(false, EventResetMode.AutoReset, Name);
+            bool createdNew;
+            _event = new EventWaitHandle(false, EventResetMode.AutoReset, Name, out createdNew);
+            if (createdNew != createExpected)
+                throw new InvalidOperationException("SharedEvent " + name + (createExpected ? " was already created" : " already exists")); // Not L10N
         }
 
         public string Name { get; private set; }

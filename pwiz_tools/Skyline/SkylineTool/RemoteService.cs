@@ -29,6 +29,7 @@ namespace SkylineTool
         private readonly List<Channel> _channels = new List<Channel>();
         private bool _exit;
         private readonly CountdownEvent _quitCountDown;
+        private readonly EventWaitHandle _serverAlive;
 
         /// <summary>
         /// Create remote service that communicates with a client.
@@ -51,6 +52,11 @@ namespace SkylineTool
 
             // Counter to wait for all threads to exit.
             _quitCountDown = new CountdownEvent(_channels.Count);
+
+            // Allow clients to continue after server is ready.
+            var serverAliveName = "Global\\" + ConnectionName; // Not L10N
+            _serverAlive = new EventWaitHandle(false, EventResetMode.ManualReset, serverAliveName);
+            _serverAlive.Set();
         }
 
         public void Dispose()
@@ -63,6 +69,7 @@ namespace SkylineTool
             foreach (var channel in _channels)
                 channel.Dispose();
             _quitCountDown.Dispose();
+            _serverAlive.Dispose();
         }
 
         public string ConnectionName { get; private set; }
