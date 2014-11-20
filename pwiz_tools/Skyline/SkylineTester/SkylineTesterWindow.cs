@@ -701,7 +701,8 @@ namespace SkylineTester
 
         private void LoadSettingsFromFile(string file)
         {
-            LoadSettings(XDocument.Load(file));
+            if (file != null)
+                LoadSettings(XDocument.Load(file));
         }
 
         private void LoadSettings(XDocument doc)
