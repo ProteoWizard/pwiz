@@ -19,8 +19,8 @@
 
 using System;
 using System.Drawing;
+using System.Globalization;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -30,10 +30,21 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class FormulaBox : UserControl
     {
-        public FormulaBox(string labelFormulaText, string labelAverageText, string labelMonoText)
+        private int? _charge;        // If non-null, mono and average values are displayed as m/z instead of mass
+        private double? _averageMass; // Our internal value for mass, regardless of whether displaying mass or mz
+        private double? _monoMass;    // Our internal value for mass, regardless of whether displaying mass or mz
+
+        /// <summary>
+        /// Reusable control for dealing with chemical formulas and their masses
+        /// </summary>
+        /// <param name="labelFormulaText">Label text for the formula textedit control</param>
+        /// <param name="labelAverageText">Label text for the average mass or m/z textedit control</param>
+        /// <param name="labelMonoText">Label text for the monoisotopic mass or m/z textedit control</param>
+        /// <param name="charge">If non-null, treat the average and monoisotopic textedits as describing m/z instead of mass</param>
+        public FormulaBox(string labelFormulaText, string labelAverageText, string labelMonoText, int? charge = null)
         {
             InitializeComponent();
-            
+            _charge = charge;
             labelFormula.Text = labelFormulaText;
             labelAverage.Text = labelAverageText;
             labelMono.Text = labelMonoText;
@@ -49,7 +60,34 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 textFormula.Text = value;
-                UpdateMasses();
+                UpdateAverageAndMonoTextsForFormula();
+            }
+        }
+
+        public int? Charge
+        {
+            get
+            {
+                return _charge;
+            }
+            set
+            {
+                _charge = value;
+                if (_charge.HasValue)
+                {
+                    if (string.IsNullOrEmpty(textFormula.Text))
+                    {
+                        // If we have no formula, then mass is defined by charge and declared mz
+                        _monoMass = GetMassFromText(textMono.Text);
+                        _averageMass = GetMassFromText(textAverage.Text);
+                    }
+                    else
+                    {
+                        // If we have a formula, display m/z values are defined by formula and charge
+                        UpdateMonoTextForMass();
+                        UpdateAverageTextForMass();
+                    }
+                }
             }
         }
 
@@ -57,46 +95,40 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                try
-                {
-                    return String.IsNullOrEmpty(textMono.Text) ? (double?) null : double.Parse(textMono.Text);
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                return _monoMass;
             }
             set
             {
-                if (!String.IsNullOrEmpty(Formula)) // Avoid side effects of repeated setting
-                    Formula = string.Empty;
-                textMono.Text = value != null
-                    ? value.Value.ToString(LocalizationHelper.CurrentCulture)
-                    : string.Empty;
+                if (textMono.Enabled && !String.IsNullOrEmpty(Formula)) // Avoid side effects of repeated setting
+                    Formula = string.Empty;  // Direct edit of mass means formula is obsolete
+                _monoMass = value;
+                UpdateMonoTextForMass();
             }
+        }
+
+        public string MonoText
+        {
+            get { return textMono.Text;  }
         }
 
         public double? AverageMass
         {
             get
             {
-                try
-                {
-                    return String.IsNullOrEmpty(textAverage.Text) ? (double?) null : double.Parse(textAverage.Text);
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                return _averageMass;
             }
             set
             {
-                if (!String.IsNullOrEmpty(Formula)) // Avoid side effects of repeated setting
-                    Formula = string.Empty;
-                textAverage.Text = value != null
-                    ? value.Value.ToString(LocalizationHelper.CurrentCulture)
-                    : string.Empty;
+                if (textAverage.Enabled && !String.IsNullOrEmpty(Formula)) // Avoid side effects of repeated setting
+                    Formula = string.Empty;   // Direct edit of mass means formula is obsolete
+                _averageMass = value;
+                UpdateAverageTextForMass();
             }
+        }
+
+        public string AverageText
+        {
+            get { return textAverage.Text; }
         }
 
         public bool FormulaVisible
@@ -122,14 +154,26 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public bool ValidateMonoMass(MessageBoxHelper helper, double min, double max, out double val)
+        public bool ValidateMonoText(MessageBoxHelper helper, double min, double max, out double val)
         {
             return helper.ValidateDecimalTextBox(textMono, min, max, out val);
         }
 
-        public bool ValidateAverageMass(MessageBoxHelper helper, double min, double max, out double val)
+        public bool ValidateAverageText(MessageBoxHelper helper, double min, double max, out double val)
         {
             return helper.ValidateDecimalTextBox(textAverage, min, max, out val);
+        }
+
+        public bool ValidateMonoText(MessageBoxHelper helper)
+        {
+            double val;
+            return helper.ValidateDecimalTextBox(textMono, out val);
+        }
+
+        public bool ValidateAverageText(MessageBoxHelper helper)
+        {
+            double val;
+            return helper.ValidateDecimalTextBox(textAverage, out val);
         }
 
         public void ShowTextBoxErrorAverageMass(MessageBoxHelper helper, string message)
@@ -143,6 +187,48 @@ namespace pwiz.Skyline.SettingsUI
         public void ShowTextBoxErrorFormula(MessageBoxHelper helper, string message)
         {
             helper.ShowTextBoxError(textFormula, message);
+        }
+
+        /// <summary>
+        /// Get a mass value from the text string, treating the string as m/z info if we have a charge state
+        /// </summary>
+        private double? GetMassFromText(string text)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(text))
+                {
+                    return null;
+                }
+                else
+                {
+                    double parsed = double.Parse(text);
+                    if (Charge.HasValue)
+                    {
+                        // Convert from m/z to mass
+                        return BioMassCalc.CalculateMassFromMz(parsed, Charge.Value);
+                    }
+                    return parsed;
+                }
+
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private string GetTextFromMass(double? mass)
+        {
+            if (!mass.HasValue)
+                return string.Empty;
+            double result = mass.Value;
+            if (Charge.HasValue)
+            {
+                // We want to show this as an m/z value, rounded to a reasonable length
+                result = SequenceMassCalc.PersistentMZ(BioMassCalc.CalculateMz(result, Charge.Value));
+            }
+            return result.ToString(CultureInfo.CurrentCulture);
         }
 
         private void btnFormula_Click(object sender, EventArgs e)
@@ -211,26 +297,67 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textFormula_TextChanged(object sender, EventArgs e)
         {
-            UpdateMasses();
+            UpdateAverageAndMonoTextsForFormula();
         }
 
-        private void UpdateMasses()
+        private void textMono_TextChanged(object sender, EventArgs e)
+        {
+            // Did text change because user edited, or because we set it on mass change?
+            var text = GetTextFromMass(MonoMass);
+            if (string.IsNullOrEmpty(Formula) && // Can't be a user edit if formula box is populated
+                !Equals(text, textMono.Text))
+            {
+                MonoMass = GetMassFromText(textMono.Text);
+            }
+        }
+
+        private void textAverage_TextChanged(object sender, EventArgs e)
+        {
+            // Did text change because user edited, or because we set it on mass change?
+            var text = GetTextFromMass(AverageMass);
+            if (string.IsNullOrEmpty(Formula) &&  // Can't be a user edit if formula box is populated
+                !Equals(text, textAverage.Text))
+            {
+                AverageMass = GetMassFromText(textAverage.Text);
+            }
+        }
+
+        private void UpdateMonoTextForMass()
+        {
+            // Avoid a casecade of text-changed events
+            var text = GetTextFromMass(_monoMass);
+            if (!Equals(text, textMono.Text))
+                textMono.Text = text;
+        }
+
+        private void UpdateAverageTextForMass()
+        {
+            // Avoid a casecade of text-changed events
+            var text = GetTextFromMass(_averageMass);
+            if (!Equals(text, textAverage.Text))
+                textAverage.Text = text;
+        }
+
+        private void UpdateAverageAndMonoTextsForFormula()
         {
             string formula = textFormula.Text;
             if (string.IsNullOrEmpty(formula))
             {
-                textMono.Text = textAverage.Text = string.Empty;
+                // Leave any precalculated masses in place for user convenience
                 textMono.Enabled = textAverage.Enabled = true;
             }
             else
             {
+                // Formula drives mass, no direct edit allowed
                 textMono.Enabled = textAverage.Enabled = false;
                 try
                 {
-                    textMono.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC,
-                        formula).ToString(LocalizationHelper.CurrentCulture);
-                    textAverage.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE,
-                        formula).ToString(LocalizationHelper.CurrentCulture);
+                    var monoMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
+                    var averageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
+                    GetTextFromMass(monoMass);     // Just to see if it throws or not
+                    GetTextFromMass(averageMass);  // Just to see if it throws or not
+                    MonoMass = monoMass;
+                    AverageMass = averageMass;
                     textFormula.ForeColor = Color.Black;
                 }
                 catch (ArgumentException)

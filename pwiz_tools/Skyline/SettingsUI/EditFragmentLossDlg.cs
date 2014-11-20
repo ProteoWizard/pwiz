@@ -124,10 +124,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 formulaLoss = null;
                 double mass;
-                if (!_formulaBox.ValidateMonoMass(helper, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
+                if (!_formulaBox.ValidateMonoText(helper, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 monoLoss = mass;
-                if (!_formulaBox.ValidateAverageMass(helper, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
+                if (!_formulaBox.ValidateAverageText(helper, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 avgLoss = mass;
             }

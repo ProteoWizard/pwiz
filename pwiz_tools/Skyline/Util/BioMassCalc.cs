@@ -396,9 +396,12 @@ namespace pwiz.Skyline.Util
                 while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
                     endCount++;
 
-                int count = 1;
+                long count = 1;
                 if (endCount > 0)
-                    count = int.Parse(desc.Substring(0, endCount), CultureInfo.InvariantCulture);
+                {
+                    if (!long.TryParse(desc.Substring(0, endCount), out count))
+                        count = long.MaxValue; // We know at this point that it should parse, so it's probably just too big
+                }
                 totalMass += massAtom * count;
 
                 desc = desc.Substring(endCount).TrimStart();

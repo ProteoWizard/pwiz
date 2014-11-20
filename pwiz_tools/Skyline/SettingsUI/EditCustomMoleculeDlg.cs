@@ -38,6 +38,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly int _minCharge;
         private readonly int _maxCharge;
         private readonly TransitionSettings _settings;
+
         public EditCustomMoleculeDlg(String title, IEnumerable<CustomIon> existing, int minCharge, int maxCharge, TransitionSettings settings, int defaultCharge)
         {
             Text = title;
@@ -50,8 +51,9 @@ namespace pwiz.Skyline.SettingsUI
 
             _formulaBox =
                 new FormulaBox(Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
-                    Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
-                    Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
+                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_,
+                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_, 
+                    defaultCharge)
                 {
                     Location = new Point(textName.Left, textName.Bottom + 12)
                 };
@@ -88,10 +90,12 @@ namespace pwiz.Skyline.SettingsUI
                 if (value <= 0)
                 {
                     textCharge.Text = string.Empty;
+                    _formulaBox.Charge = null;
                 }
                 else
                 {
                     textCharge.Text = value.ToString(LocalizationHelper.CurrentCulture);
+                    _formulaBox.Charge = value;
                 }
             }
         }
@@ -111,45 +115,48 @@ namespace pwiz.Skyline.SettingsUI
                     Resources.EditCustomMoleculeDlg_OkDialog_The_custom_molecule_already_exists_, textName.Text);
                 return;
             }
-            var formula = _formulaBox.Formula;
-            var monoMass = _formulaBox.MonoMass ?? 0;
-            var averageMass = _formulaBox.AverageMass ?? 0;
-            if (!string.IsNullOrEmpty(_formulaBox.Formula))
-            {
-                if (monoMass < CustomIon.MIN_MASS || averageMass < CustomIon.MIN_MASS)
-                {
-                    _formulaBox.ShowTextBoxErrorFormula(helper,
-                        string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__,
-                            CustomIon.MIN_MASS));
-                    return;
-                }
-                if (monoMass > CustomIon.MAX_MASS || averageMass > CustomIon.MAX_MASS)
-                {
-                    // TODO (bspratt): More helpful message
-                    _formulaBox.ShowTextBoxErrorFormula(helper,
-                        string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS));
-                    return;
-                }
-                ResultCustomIon = new DocNodeCustomIon(formula, textName.Text);
-            }
-            else
-            {
-                if (!_formulaBox.ValidateAverageMass(helper, CustomIon.MIN_MASS, CustomIon.MAX_MASS, out averageMass))
-                    return;
-                if (!_formulaBox.ValidateMonoMass(helper, CustomIon.MIN_MASS, CustomIon.MAX_MASS, out monoMass))
-                    return;
-                ResultCustomIon = new DocNodeCustomIon(monoMass, averageMass, textName.Text);
-            }
             int charge;
             if (!helper.ValidateNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
                 return;
-            Charge = charge;
+            Charge = charge; // Note: order matters here, this settor indirectly updates _formulaBox.MonoMass when formula is empty
+            if (string.IsNullOrEmpty(_formulaBox.Formula))
+            {
+                // Can the text fields be understood as mz?
+                if (!_formulaBox.ValidateAverageText(helper))
+                    return;
+                if (!_formulaBox.ValidateMonoText(helper))
+                    return;
+            }
+            var formula = _formulaBox.Formula;
+            var monoMass = _formulaBox.MonoMass ?? 0;
+            var averageMass = _formulaBox.AverageMass ?? 0;
+            if (monoMass < CustomIon.MIN_MASS || averageMass < CustomIon.MIN_MASS)
+            {
+                _formulaBox.ShowTextBoxErrorFormula(helper,
+                    string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__,
+                        CustomIon.MIN_MASS));
+                return;
+            }
+            if (monoMass > CustomIon.MAX_MASS || averageMass > CustomIon.MAX_MASS)
+            {
+                _formulaBox.ShowTextBoxErrorFormula(helper,
+                    string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS));
+                return;
+            }
 
             if (!_settings.IsMeasurablePrecursor(BioMassCalc.CalculateMz(monoMass, charge)) ||
                 !_settings.IsMeasurablePrecursor(BioMassCalc.CalculateMz(averageMass, charge)))
             {
                 _formulaBox.ShowTextBoxErrorFormula(helper, Resources.SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_);
                 return;
+            }
+            if (!string.IsNullOrEmpty(_formulaBox.Formula))
+            {
+                ResultCustomIon = new DocNodeCustomIon(formula, textName.Text);
+            }
+            else
+            {
+                ResultCustomIon = new DocNodeCustomIon(monoMass, averageMass, textName.Text);
             }
             DialogResult = DialogResult.OK;
         }
@@ -173,6 +180,15 @@ namespace pwiz.Skyline.SettingsUI
                     _formulaBox.MonoMass = ResultCustomIon.MonoisotopicMass;
                 }
             }
+        }
+
+        private void textCharge_TextChanged(object sender, EventArgs e)
+        {
+            var helper = new MessageBoxHelper(this, false);
+            int charge;
+            if (!helper.ValidateNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
+                return;
+            Charge = charge;
         }
 
         private void btnOK_Click(object sender, EventArgs e)

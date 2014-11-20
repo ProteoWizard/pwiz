@@ -95,6 +95,7 @@
             this.textAverage.Margin = new System.Windows.Forms.Padding(4);
             this.textAverage.Name = "textAverage";
             this.textAverage.Size = new System.Drawing.Size(132, 22);
+            this.textAverage.TextChanged += new System.EventHandler(this.textAverage_TextChanged);
             this.textAverage.TabIndex = 6;
             // 
             // textMono
@@ -103,6 +104,7 @@
             this.textMono.Margin = new System.Windows.Forms.Padding(4);
             this.textMono.Name = "textMono";
             this.textMono.Size = new System.Drawing.Size(132, 22);
+            this.textMono.TextChanged += new System.EventHandler(this.textMono_TextChanged);
             this.textMono.TabIndex = 4;
             // 
             // btnFormula

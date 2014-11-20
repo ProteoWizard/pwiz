@@ -346,10 +346,10 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // TODO: Maximum and minimum masses should be formalized and applied everywhere
                     double mass;
-                    if (!_formulaBox.ValidateMonoMass(helper, -1500, 5000, out mass))
+                    if (!_formulaBox.ValidateMonoText(helper, -1500, 5000, out mass))
                         return;
                     monoMass = mass;
-                    if (!_formulaBox.ValidateAverageMass(helper, -1500, 5000, out mass))
+                    if (!_formulaBox.ValidateAverageText(helper, -1500, 5000, out mass))
                         return;
                     avgMass = mass;
                 }

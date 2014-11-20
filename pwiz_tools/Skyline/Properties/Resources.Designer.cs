@@ -6419,6 +6419,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Monoisotopic m/z:.
+        /// </summary>
+        public static string EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_ {
+            get {
+                return ResourceManager.GetString("EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A&amp;verage m/z:.
+        /// </summary>
+        public static string EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_ {
+            get {
+                return ResourceManager.GetString("EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom molecules must have a mass greater than or equal to {0}..
         /// </summary>
         public static string EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_greater_than_or_equal_to__0__ {

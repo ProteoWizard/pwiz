@@ -201,10 +201,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 formula = null;
                 double mass;
-                if (!_formulaBox.ValidateMonoMass(helper,MeasuredIon.MIN_REPORTER_MASS,MeasuredIon.MAX_REPORTER_MASS,out mass))
+                if (!_formulaBox.ValidateMonoText(helper,MeasuredIon.MIN_REPORTER_MASS,MeasuredIon.MAX_REPORTER_MASS,out mass))
                     return null;
                 monoMass = mass;
-                if (!_formulaBox.ValidateAverageMass(helper,MeasuredIon.MIN_REPORTER_MASS,MeasuredIon.MAX_REPORTER_MASS,out mass))
+                if (!_formulaBox.ValidateAverageText(helper,MeasuredIon.MIN_REPORTER_MASS,MeasuredIon.MAX_REPORTER_MASS,out mass))
                     return null;
                 avgMass = mass;
             }
