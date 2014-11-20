@@ -187,7 +187,7 @@ namespace SkylineNightly
                 ParseLog(logFile);
 
             _nightly["id"] = Environment.MachineName;
-            _nightly["duration"] = duration.Hours + ":" + duration.Minutes.ToString("D2");
+            _nightly["duration"] = (int)duration.TotalMinutes;
             _nightly["testsrun"] = _testCount;
             _nightly["failures"] = _failures.Count;
             _nightly["leaks"] = _leaks.Count;
