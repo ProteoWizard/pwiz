@@ -446,7 +446,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
         {
             hasTMT = true;
             hasSpectrumQuantitation = true;
-            if (!itraqMethodIons.empty())
+            if (!tmtMethodIons.empty())
                 BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
                     outputStream << header << '\t';
         }
@@ -454,7 +454,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
         {
             hasTMT = true;
             hasSpectrumQuantitation = true;
-            if (!itraqMethodIons.empty())
+            if (!tmtMethodIons.empty())
                 BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
                     outputStream << header << '\t';
         }
@@ -462,7 +462,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
         {
             hasTMT = true;
             hasSpectrumQuantitation = true;
-            if (!itraqMethodIons.empty())
+            if (!tmtMethodIons.empty())
                 BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
                     outputStream << header << '\t';
         }
