@@ -28,6 +28,7 @@ namespace pwiz.Skyline.Model.Find
     {
         public FindOptions()
         {
+            Text = string.Empty;
             CustomFinders = new IFinder[0];
         }
 
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Model.Find
         public string Text { get; private set; }
         public FindOptions ChangeText(string value)
         {
-            return new FindOptions(this) { Text = value };
+            return new FindOptions(this) { Text = value ?? string.Empty };
         }
         public bool CaseSensitive { get; private set; }
         public FindOptions ChangeCaseSensitive(bool value)

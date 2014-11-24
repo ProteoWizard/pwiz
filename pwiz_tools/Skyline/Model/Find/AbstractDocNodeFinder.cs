@@ -37,7 +37,6 @@ namespace pwiz.Skyline.Model.Find
                 var nodeGroup = bookmarkEnumerator.CurrentDocNode as TransitionGroupDocNode;
                 if (nodeGroup != null)
                 {
-                    // Only report transitions when the precursor has lib info
                     var nodeParent = bookmarkEnumerator.Document.FindNode(bookmarkEnumerator.IdentityPath.Parent)
                                      as PeptideDocNode;
                     return !IsMatch(nodeParent) && IsMatch(nodeGroup) ? new FindMatch(DisplayName) : null;
@@ -45,10 +44,11 @@ namespace pwiz.Skyline.Model.Find
                 var nodeTran = bookmarkEnumerator.CurrentDocNode as TransitionDocNode;
                 if (nodeTran != null)
                 {
-                    // Only report transitions when the precursor has lib info
+                    var nodeGrandParent = bookmarkEnumerator.Document.FindNode(bookmarkEnumerator.IdentityPath.Parent.Parent)
+                                     as PeptideDocNode;
                     var nodeParent = bookmarkEnumerator.Document.FindNode(bookmarkEnumerator.IdentityPath.Parent)
                                      as TransitionGroupDocNode;
-                    return !IsMatch(nodeParent) && IsMatch(nodeTran) ? new FindMatch(DisplayName) : null;
+                    return !IsMatch(nodeGrandParent) && !IsMatch(nodeParent) && IsMatch(nodeTran) ? new FindMatch(DisplayName) : null;
                 }
             }
             return null;            

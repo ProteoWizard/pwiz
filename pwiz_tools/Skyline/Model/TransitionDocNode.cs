@@ -69,6 +69,11 @@ namespace pwiz.Skyline.Model
 
         public TransitionLossKey Key { get { return new TransitionLossKey(Transition, Losses); } }
 
+        public TransitionLossEquivalentKey EquivalentKey
+        {
+            get { return new TransitionLossEquivalentKey(Transition, Losses); }
+        }
+
         public double Mz { get; private set; }
 
         public double GetIonMass()

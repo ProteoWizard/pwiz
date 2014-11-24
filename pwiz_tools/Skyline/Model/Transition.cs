@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -415,15 +414,35 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool Equivalent(Transition obj)
         {
-            return Equals(obj.IonType, IonType) &&
-                obj.CleavageOffset == CleavageOffset &&
-                obj.Charge == Charge &&
-                Equals(obj.CustomIon, CustomIon) &&
-                (obj.DecoyMassShift.Equals(DecoyMassShift) || 
+            return Equivalent(this, obj);
+        }
+
+        public static bool Equivalent(Transition t, Transition obj)
+        {
+            return Equals(obj.IonType, t.IonType) &&
+                obj.CleavageOffset == t.CleavageOffset &&
+                obj.Charge == t.Charge &&
+                obj.MassIndex == t.MassIndex &&
+                Equals(obj.CustomIon, t.CustomIon) &&
+                (obj.DecoyMassShift.Equals(t.DecoyMassShift) || 
                 // Deal with strange case of mProphet golden standard data set
-                (obj.DecoyMassShift.HasValue && DecoyMassShift.HasValue &&
-                    (obj.Group.LabelType.IsLight && obj.DecoyMassShift == 0 && !Group.LabelType.IsLight && DecoyMassShift != 0) ||
-                    (!obj.Group.LabelType.IsLight && obj.DecoyMassShift != 0 && Group.LabelType.IsLight && DecoyMassShift == 0)));
+                (obj.DecoyMassShift.HasValue && t.DecoyMassShift.HasValue &&
+                    (obj.Group.LabelType.IsLight && obj.DecoyMassShift == 0 && !t.Group.LabelType.IsLight && t.DecoyMassShift != 0) ||
+                    (!obj.Group.LabelType.IsLight && obj.DecoyMassShift != 0 && t.Group.LabelType.IsLight && t.DecoyMassShift == 0)));
+        }
+
+        public static int GetEquivalentHashCode(Transition t)
+        {
+            unchecked
+            {
+                int result = t.IonType.GetHashCode();
+                result = (result * 397) ^ t.CleavageOffset;
+                result = (result * 397) ^ t.MassIndex;
+                result = (result * 397) ^ t.Charge;
+                result = (result * 397) ^ (t.DecoyMassShift.HasValue ? t.DecoyMassShift.Value : 0);
+                result = (result * 397) ^ (t.CustomIon != null ? t.CustomIon.GetHashCode() : 0);
+                return result;
+            }
         }
 
         #region object overrides
@@ -526,6 +545,76 @@ namespace pwiz.Skyline.Model
             {
                 return (Transition.GetHashCode()*397) ^ (Losses != null ? Losses.GetHashCode() : 0);
             }
+        }
+
+        #endregion
+    }
+
+    public sealed class TransitionLossEquivalentKey
+    {
+        public TransitionLossEquivalentKey(Transition transition, TransitionLosses losses)
+        {
+            Key = new TransitionEquivalentKey(transition);
+            Losses = losses;
+        }
+
+        public TransitionEquivalentKey Key { get; private set; }
+        public TransitionLosses Losses { get; private set; }
+
+        #region object overrides
+
+        public bool Equals(TransitionLossEquivalentKey other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Key, Key) && Equals(other.Losses, Losses);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TransitionLossEquivalentKey)) return false;
+            return Equals((TransitionLossEquivalentKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Key.GetHashCode() * 397) ^ (Losses != null ? Losses.GetHashCode() : 0);
+            }
+        }
+
+        #endregion
+    }
+
+    public sealed class TransitionEquivalentKey
+    {
+        private readonly Transition _nodeTran;
+
+        public TransitionEquivalentKey(Transition nodeTran)
+        {
+            _nodeTran = nodeTran;
+        }
+
+        #region object overrides
+
+        private bool Equals(TransitionEquivalentKey other)
+        {
+            return Transition.Equivalent(_nodeTran, other._nodeTran);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is TransitionEquivalentKey && Equals((TransitionEquivalentKey) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Transition.GetEquivalentHashCode(_nodeTran);
         }
 
         #endregion

@@ -8120,4 +8120,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_" xml:space="preserve">
     <value>&amp;Monoisotopic m/z:</value>
   </data>
+  <data name="MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions" xml:space="preserve">
+    <value>Mismatched transitions</value>
+  </data>
 </root>

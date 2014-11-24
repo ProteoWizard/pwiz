@@ -22,6 +22,8 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Find;
+using pwiz.SkylineTestA.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -89,6 +91,28 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(0, CountOccurrances(doc, heavyText.ToUpperInvariant(), displaySettings, false, true));
             Assert.AreEqual(countHeavyForward, CountOccurrances(doc, heavyText.ToUpperInvariant(), displaySettings, false, false));
             Assert.AreEqual(1, CountOccurrances(doc, "hgflpr", displaySettings, true, false));
+
+            // Test mismatched transitions finder
+            var missmatchFinder = new FindOptions().ChangeCustomFinders(new[] {new MismatchedIsotopeTransitionsFinder()});
+            Assert.AreEqual(4, CountOccurrances(doc, missmatchFinder, displaySettings));
+            var docRemoved = (SrmDocument) doc.RemoveChild(doc.Children[1]).RemoveChild(doc.Children[2]);
+            Assert.AreEqual(0, CountOccurrances(docRemoved, missmatchFinder, displaySettings));
+            var refineRemoveHeavy = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy};
+            var docLight = refineRemoveHeavy.Refine(doc);
+            Assert.AreEqual(0, CountOccurrances(docLight, missmatchFinder, displaySettings));
+            var refineRemoveLight = new RefinementSettings {RefineLabelType = IsotopeLabelType.light};
+            var docHeavy = refineRemoveLight.Refine(doc);
+            Assert.AreEqual(0, CountOccurrances(docHeavy, missmatchFinder, displaySettings));
+            var docMulti = ResultsUtil.DeserializeDocument("MultiLabel.sky", typeof(MultiLabelRatioTest));
+            Assert.AreEqual(0, CountOccurrances(docMulti, missmatchFinder, displaySettings));
+            var pathTranMultiRemove = docMulti.GetPathTo((int) SrmDocument.Level.Transitions, 7);
+            var tranMultiRemove = docMulti.FindNode(pathTranMultiRemove);
+            var docMultiRemoved = (SrmDocument) docMulti.RemoveChild(pathTranMultiRemove.Parent, tranMultiRemove);
+            Assert.AreEqual(2, CountOccurrances(docMultiRemoved, missmatchFinder, displaySettings));
+            var tranGroupMultiRemove = docMulti.FindNode(pathTranMultiRemove.Parent);
+            var docMultiGroupRemoved = (SrmDocument)
+                docMulti.RemoveChild(pathTranMultiRemove.Parent.Parent, tranGroupMultiRemove);
+            Assert.AreEqual(0, CountOccurrances(docMultiGroupRemoved, missmatchFinder, displaySettings));
         }
 
         private static int CountOccurrances(SrmDocument doc, string searchText,
@@ -109,6 +133,27 @@ namespace pwiz.SkylineTestA
                 i++;
             }
             while (!Equals(pathFound, pathFoundNext));
+            return i;
+        }
+
+        private static int CountOccurrances(SrmDocument doc, FindOptions findOptions,
+            DisplaySettings displaySettings)
+        {
+            var results = doc.SearchDocument(new Bookmark(IdentityPath.ROOT),
+                findOptions, displaySettings);
+            if (results == null)
+                return 0;
+
+            FindResult resultsNext = results;
+
+            int i = 0;
+            do
+            {
+                resultsNext = doc.SearchDocument(resultsNext.Bookmark, findOptions,
+                    displaySettings);
+                i++;
+            }
+            while (!Equals(resultsNext.Bookmark, results.Bookmark));
             return i;
         }
 

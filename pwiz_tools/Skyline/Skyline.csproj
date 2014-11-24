@@ -687,6 +687,7 @@
     <Compile Include="Model\DocSettings\IsolationWindow.cs" />
     <Compile Include="Model\ExportChromatograms.cs" />
     <Compile Include="Model\Find\AbstractDocNodeFinder.cs" />
+    <Compile Include="Model\Find\MismatchedIsotopeTransitionsFinder.cs" />
     <Compile Include="Model\Find\MissingScoresFinder.cs" />
     <Compile Include="Model\Find\MissingAnyResultsFinder.cs" />
     <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
