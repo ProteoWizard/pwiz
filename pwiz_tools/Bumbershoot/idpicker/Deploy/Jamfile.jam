@@ -116,20 +116,22 @@ actions test_msi
     pushd $(BUILD_PATH)
     msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
+    IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
     IF %EXIT% NEQ 0 exit %EXIT%
 
     set PATH_TMP=%PATH%
     set PATH=
     "$(INSTALL_PATH)\IDPicker.exe" --test --headless
     set TEST_EXIT=%ERRORLEVEL%
+    IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
     set PATH=%PATH_TMP%
 
     echo Uninstalling $(ARTIFACT_NAME)...
     msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
+    IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
     IF %EXIT% NEQ 0 exit %EXIT%
-    
-    IF %TEST_EXIT% NEQ 0 echo Test failed.
+
     IF %TEST_EXIT% NEQ 0 exit %TEST_EXIT%
     echo Deployment test passed.
     echo Deployment test passed. > $(LOCATION)\\Test.passed
