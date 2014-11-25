@@ -361,22 +361,51 @@ public:
         return cvid;
     }
 
-    EnzymePtr getEnzyme(ms_searchparams& msp)
+    EnzymePtr getEnzyme(ms_mascotresfile& file)
     {
-        EnzymePtr ez(new Enzyme(indices.makeIndex("EZ_", indices.enzyme)));
+        ms_searchparams& msp = file.params();
+        string enzymeName = msp.getCLE();
 
-        ez->missedCleavages = msp.getPFA();
-        
-        // TODO add other enzymes
-        if (msp.getCLE() == "Trypsin")
+        ms_enzymefile enzymeFile;
+        if (!file.getEnzyme(&enzymeFile))
+            throw runtime_error("[MascotReader::getEnzyme] Mascot file does not contain enzyme specification; requires Mascot Server 2.2 or later");
+
+        const ms_enzyme& msEnzyme = *enzymeFile.getEnzymeByNumber(0);
+        string cut = msEnzyme.getCleave(0);
+        string noCut = msEnzyme.getRestrict(0);
+        string sense;
+        switch (msEnzyme.getCutterType(0))
         {
-            ez->enzymeName.set(MS_Trypsin);
+            case ms_enzyme::NTERM_CUTTER: sense = "n"; break;
+            case ms_enzyme::CTERM_CUTTER: sense = "c"; break;
+            default: throw runtime_error("[MascotReader::getEnzyme] enzyme cutter type is not recognized");
         }
+
+        EnzymePtr enzyme(new Enzyme(indices.makeIndex("EZ_", indices.enzyme)));
+        enzyme->nTermGain = "H";
+        enzyme->cTermGain = "OH";
+        enzyme->terminalSpecificity = msEnzyme.isSemiSpecific() ? proteome::Digestion::SemiSpecific : proteome::Digestion::FullySpecific;
+        enzyme->missedCleavages = msp.getPFA();
+
+        if (cut.empty())
+            throw runtime_error("[MascotReader::getEnzyme] empty cut attribute");
+
+        if (sense == "n")
+            enzyme->siteRegexp = (noCut.empty() ? "" : string("(?<!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")")) +
+            (cut.empty() ? "" : string("(?=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")"));
+        else if (sense == "c")
+            enzyme->siteRegexp = (cut.empty() ? "" : string("(?<=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")")) +
+            (noCut.empty() ? "" : "(?!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")");
         else
-            cerr << "[MascotReader::Impl::getEnzyme()] Unhandled enzyme "
-                 << msp.getCLE() << endl;
-        
-        return ez;
+            throw runtime_error("[MascotReader::getEnzyme] invalid specificity sense: " + sense);
+
+        CVID cleavageAgent = proteome::Digestion::getCleavageAgentByRegex(enzyme->siteRegexp);
+        if (cleavageAgent == CVID_Unknown)
+            enzyme->enzymeName.userParams.push_back(UserParam(enzymeName));
+        else
+            enzyme->enzymeName.set(cleavageAgent);
+
+        return enzyme;
     }
     
     void addUser(ms_searchparams& msp, IdentData& mzid)
@@ -440,7 +469,7 @@ public:
         sip->fragmentTolerance.set(MS_search_tolerance_plus_value, p.getITOL(), getToleranceUnits(p.getITOLU()));
         sip->fragmentTolerance.set(MS_search_tolerance_minus_value, p.getITOL(), getToleranceUnits(p.getITOLU()));
 
-        EnzymePtr ez = getEnzyme(p);
+        EnzymePtr ez = getEnzyme(file);
         
         sip->enzymes.enzymes.push_back(ez);
 
