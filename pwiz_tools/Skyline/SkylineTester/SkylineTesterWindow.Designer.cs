@@ -1841,6 +1841,7 @@ namespace SkylineTester
             this.nightlyBrowseBuild.TabIndex = 26;
             this.nightlyBrowseBuild.Text = "Change...";
             this.nightlyBrowseBuild.UseVisualStyleBackColor = true;
+            this.nightlyBrowseBuild.Click += new System.EventHandler(this.nightlyBrowseBuild_Click);
             // 
             // groupBox22
             // 
