@@ -43,11 +43,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfPeakTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, Timeout(7200000)]
         public void TestPeakPerf()
         {
             TestFilesZipPaths = new[]
             {
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap10mz.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap20mz.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Ack.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Mito.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/ReiterSPRG.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/LudwigSPRG.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeHeavy.zip",
@@ -62,8 +67,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HeartFailure.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/mProphetGS.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/MikeBHigh.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/SchillingDDA.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HeldDIA.zip",
             };
             // IsPauseForScreenShots = true;
             RunFunctionalTest();
@@ -101,20 +108,30 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             using (var resultsWriter = new StreamWriter(fs.SafeName))
             {
                 WriteHeader(resultsWriter);
+                // Overlap 10 mz
+                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
+                // Overlap 20 mz
+                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
+                // Schilling Ack
+                AnalyzeDirectory(i++, peakView, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
+                // Schilling Mito
+                AnalyzeDirectory(i++, peakView, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
+                // Reiter sPRG
+                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 0 });
                 // Ludwig sPRG
-                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
                 // Hasmik Swath Heavy only
-                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, resultsWriter, new List<int> { 1, 1, 1 });
+                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 1, 1, 1 });
                 // Hasmik Qe Heavy only
-                AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
                 // Hasmik SWATH
-                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, resultsWriter, new List<int> { 1, 1, 1 });
+                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 1, 1, 1 });
                 // Hasmik QE
-                AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
                 // Hasmik Swath Light only
-                AnalyzeDirectory(i++, peakViewSpectronaut, outDir, secondOnly, resultsWriter, new List<int> { 0, 1 });
+                AnalyzeDirectory(i++, peakViewSpectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 0, 1 });
                 // Hasmik Qe Light only
-                AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
                 // OpenSwath_Water
                 AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 2, 1 });
                 // OpenSwath_Yeast
@@ -129,12 +146,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
                 // Ovarian cancer
                 AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                // mProphet Gold
+                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
                 // MikeB high (DDA dilution top 12 runs)
                 AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
                 // Schilling DDA (DDA dilution 15 runs)
                 AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
-                // Ludovic N14N15
-                //AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                // Held DIA
+                AnalyzeDirectory(i++, peakView, outDir, decoysAndSecond, resultsWriter, new List<int> { 4 });
                 resultsWriter.Close();
                 fs.Commit();
             }
@@ -250,6 +269,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var sbQq = new StringBuilder(trimmedDoc);
                 sbQq.Append("-qq.bmp");
                 comparePeakPickingDlg.ZedGraphQq.MasterPane.GetImage().Save(Path.Combine(outDir, sbQq.ToString()));
+                var sbFiles = new StringBuilder(trimmedDoc);
+                sbFiles.Append("-files.bmp");
+                comparePeakPickingDlg.ZedGraphFile.MasterPane.GetImage().Save(Path.Combine(outDir, sbFiles.ToString()));
                 // TODO: How can I copy the data using commands?
                 OkDialog(comparePeakPickingDlg, comparePeakPickingDlg.OkDialog);
             }
