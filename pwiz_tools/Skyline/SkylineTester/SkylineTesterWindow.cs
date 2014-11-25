@@ -27,6 +27,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
@@ -156,6 +157,20 @@ namespace SkylineTester
         public SkylineTesterWindow(string[] args)
             : this()
         {
+            // Grab some critical config values to avoid some timing issues in the initialization process
+            string settings = args.Length > 0 ? File.ReadAllText(args[0]) : Settings.Default.SavedSettings;
+            if (!string.IsNullOrEmpty(settings))
+            {
+                var xml = new XmlDocument();
+                xml.LoadXml(settings);
+                var elementNightlyRoot = xml.SelectSingleNode("/SkylineTester/nightlyRoot");
+                if (elementNightlyRoot != null)
+                    nightlyRoot.Text = elementNightlyRoot.InnerText;
+                var elementBuildRoot = xml.SelectSingleNode("/SkylineTester/buildRoot");
+                if (elementBuildRoot != null)
+                    buildRoot.Text = elementBuildRoot.InnerText;
+            }
+
             Exe = Assembly.GetExecutingAssembly().Location;
             ExeDir = Path.GetDirectoryName(Exe);
             RootDir = ExeDir;
@@ -276,6 +291,8 @@ namespace SkylineTester
                 return true;
             };
 
+            _tabForms = new TabForms(); // This needs to exist to accept list of testable forms in LoadSettings
+
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync();
@@ -283,7 +300,6 @@ namespace SkylineTester
             LoadSettingsFromFile(_openFile);
 
             TabBase.MainWindow = this;
-            _tabForms = new TabForms();
             _tabTutorials = new TabTutorials();
             _tabTests = new TabTests();
             _tabBuild = new TabBuild();
