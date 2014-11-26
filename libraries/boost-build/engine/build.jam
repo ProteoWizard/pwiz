@@ -899,8 +899,17 @@ if $(UNIX) = true
     actions [ZIP] {
     gzip -c9 "$(>)" > "$(<)"
     }
-    actions [COPY] {
-        cp -Rf --preserve=ownership,timestamp "$(>)" "$(<)"
+    if $(OS) = MACOSX
+    {
+        actions [COPY] {
+            cp -Rfp "$(>)" "$(<)"
+        }
+    }
+    else
+    {
+        actions [COPY] {
+            cp -Rf --preserve=ownership,timestamp "$(>)" "$(<)"
+        }
     }
 }
 
