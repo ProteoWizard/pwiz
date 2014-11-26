@@ -196,6 +196,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
     sdb->numDatabaseSequences = 5;
     sdb->numResidues = 52;
     sdb->set(MS_database_type_amino_acid);
+    sdb->set(MS_decoy_DB_accession_regexp, "^DECOY");
     sdb->databaseName.userParams.push_back(UserParam("SwissProt"));
     mzid.dataCollection.inputs.searchDatabase.push_back(sdb);
 

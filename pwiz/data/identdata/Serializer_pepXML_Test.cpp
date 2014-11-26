@@ -32,6 +32,7 @@
 #include "boost/range/adaptor/transformed.hpp"
 #include "boost/range/algorithm/max_element.hpp"
 #include "boost/range/algorithm/min_element.hpp"
+#include "boost/range/algorithm_ext/erase.hpp"
 #include <cstring>
 
 
@@ -52,6 +53,15 @@ struct EnzymePtr_missedCleavages
 {
     typedef int result_type;
     int operator()(const EnzymePtr& x) const {return x->missedCleavages;}
+};
+
+struct UserParamNameIs
+{
+    UserParamNameIs(const string& name) : name_(name) {}
+
+    bool operator() (const UserParam& up) const { return up.name == name_; }
+
+    string name_;
 };
 
 void stripUnmappedMetadata(IdentData& mzid)
@@ -179,6 +189,9 @@ void testSerializeReally(IdentData& mzid, const Serializer_pepXML::Config& confi
     serializer.read(iss, mzid2);
 
     References::resolve(mzid2);
+
+    // remove DecoyPrefix userParam that is redundant with the decoy DB prefix cvParam
+    boost::range::remove_erase_if(mzid2.analysisProtocolCollection.spectrumIdentificationProtocol[0]->additionalSearchParams.userParams, UserParamNameIs("DecoyPrefix"));
 
     Diff<IdentData, DiffConfig> diff(mzid, mzid2);
     if (os_ && diff) *os_ << diff << endl; 

@@ -602,7 +602,7 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         {
             attributes.clear();
             attributes.add("name", "DecoyPrefix");
-            attributes.add("value", decoyPrefix.value);
+            attributes.add("value", bal::trim_left_copy_if(decoyPrefix.value, bal::is_any_of("^")));
             xmlWriter.startElement("parameter", attributes, XMLWriter::EmptyElement);
         }
     }
@@ -1093,6 +1093,11 @@ struct HandlerSearchSummary : public SAXParser::Handler
         // Unless the CV starts to map the search engine specific parameters to the proper CV terms,
         // there's not really a way to avoid hand coding these mappings
 
+        // map "decoyprefix" from any search engine; this supports the mzid->pepXML->mzid path
+        const string& decoyPrefix = getValueOrDefault(kvPairs, "decoyprefix", "");
+        if (!decoyPrefix.empty())
+            _mzid->dataCollection.inputs.searchDatabase[0]->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
+
         CVID searchEngine = _sip->analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software).cvid;
 
         switch (searchEngine)
@@ -1257,6 +1262,10 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     if (getValueOrDefault(kvPairs, "use_x_ions", "") == "1")   translateIonSeriesConsidered("x");
                     if (getValueOrDefault(kvPairs, "use_y_ions", "") == "1")   translateIonSeriesConsidered(use_nl_ions ? "y,y-H2O,y-NH3" : "y");
                     if (getValueOrDefault(kvPairs, "use_z_ions", "") == "1")   translateIonSeriesConsidered("z+1");
+
+                    const string& decoyPrefix = getValueOrDefault(kvPairs, "decoy_prefix", "");
+                    if (!decoyPrefix.empty())
+                        _mzid->dataCollection.inputs.searchDatabase[0]->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
                 }
                 break;
 
@@ -1293,13 +1302,16 @@ struct HandlerSearchSummary : public SAXParser::Handler
                 _sip->additionalSearchParams.set(MS_fragment_mass_type_average);
             else
                 throw runtime_error("[HandlerSearchSummary] Invalid fragment_mass_type: " + fragmentMassType);
+
+            _mzid->dataCollection.inputs.searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase("DB_1")));
+            _mzid->dataCollection.inputs.searchDatabase.back()->fileFormat.cvid = MS_FASTA_format;
+            _mzid->analysisCollection.spectrumIdentification[0]->searchDatabase.push_back(_mzid->dataCollection.inputs.searchDatabase.back());
         }
         else if (name == "search_database")
         {
-            SearchDatabasePtr searchDatabase(new SearchDatabase);
-            searchDatabase->fileFormat.cvid = MS_FASTA_format;
+            SearchDatabasePtr searchDatabase = _mzid->dataCollection.inputs.searchDatabase.back();
 
-            string databaseReleaseIdentifier, type;
+            string type;
             getAttribute(attributes, "local_path", searchDatabase->location);
             getAttribute(attributes, "database_name", searchDatabase->id);
             getAttribute(attributes, "database_release_identifier", searchDatabase->version);
@@ -1319,9 +1331,6 @@ struct HandlerSearchSummary : public SAXParser::Handler
                 searchDatabase->set(MS_database_type_nucleotide);
             else
                 throw runtime_error("[HandlerSearchSummary] Invalid database type: " + type);
-
-            _mzid->dataCollection.inputs.searchDatabase.push_back(searchDatabase);
-            _mzid->analysisCollection.spectrumIdentification[0]->searchDatabase.push_back(searchDatabase);
         }
         else if (name == "enzymatic_search_constraint")
         {
