@@ -34,10 +34,8 @@ exe iddump
 
 exe ThermoRawMetaDump
     : ThermoRawMetaDump.cpp
-      ../common
-      ../../pwiz/data/misc
+      ../../pwiz/utility/misc//pwiz_utility_misc
       ../../pwiz_aux/msrc/utility/vendor_api/thermo//pwiz_vendor_api_thermo
-      ../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
     : <conditional>@msvc-requirement <vendor-api-support>off:<build>no
     ;
 

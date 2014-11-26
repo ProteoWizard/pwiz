@@ -60,7 +60,7 @@ struct modifyCachedSpectrumPtr
 
     void operator() (SpectrumListCache::CacheType::value_type& indexSpectrumPtrPair)
     {
-        indexSpectrumPtrPair.second = newSpectrumPtr_;
+        indexSpectrumPtrPair.spectrum = newSpectrumPtr_;
     }
 
     private:
@@ -99,14 +99,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
 
             case MemoryMRUCacheMode_MetaDataAndBinaryData:
                 // if insert returns true, spectrum was not in cache
-                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                if (spectrumCache_.insert(CacheEntry(index, SpectrumPtr())))
                     spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(inner_->spectrum(index, true)));
-                return spectrumCache_.mru().second;
+                return spectrumCache_.mru().spectrum;
 
             case MemoryMRUCacheMode_MetaDataOnly:
 
                 // if insert returns true, spectrum was not in cache
-                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                if (spectrumCache_.insert(CacheEntry(index, SpectrumPtr())))
                 {
                     original = inner_->spectrum(index, true);
                     copy.reset(new Spectrum(*original));
@@ -116,13 +116,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
                 else {
                     // we have cached metadata, hopefully this format knows how 
                     // to jump to binary data without rescanning metadata
-                    original = inner_->spectrum(spectrumCache_.mru().second,true); // copy and add binary data
+                    original = inner_->spectrum(spectrumCache_.mru().spectrum, true); // copy and add binary data
                 }
                 return original;
 
             case MemoryMRUCacheMode_BinaryDataOnly:
                 // if insert returns true, spectrum was not in cache
-                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                if (spectrumCache_.insert(CacheEntry(index, SpectrumPtr())))
                 {
                     original = inner_->spectrum(index, true);
                     copy.reset(new Spectrum(*original));
@@ -134,7 +134,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
                 {
                     // get spectrum metadata, add cached binary data to it
                     original = inner_->spectrum(index, false);
-                    original->binaryDataArrayPtrs = spectrumCache_.mru().second->binaryDataArrayPtrs;
+                    original->binaryDataArrayPtrs = spectrumCache_.mru().spectrum->binaryDataArrayPtrs;
                     return original;
                 }
         }
@@ -151,9 +151,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
 
             case MemoryMRUCacheMode_MetaDataOnly:
                 // if insert returns true, spectrum was not in cache
-                if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
+                if (spectrumCache_.insert(CacheEntry(index, SpectrumPtr())))
                     spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(inner_->spectrum(index, false)));
-                return spectrumCache_.mru().second;
+                return spectrumCache_.mru().spectrum;
         }
     }
 }

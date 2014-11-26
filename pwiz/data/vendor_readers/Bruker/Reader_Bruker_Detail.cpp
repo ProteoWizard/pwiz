@@ -80,6 +80,10 @@ Reader_Bruker_Format format(const string& path)
                      bfs::exists(itr->path() / "1SRef/fid") ||
                      bfs::exists(itr->path() / "1/1SLin/fid") ||
                      bfs::exists(itr->path() / "1SLin/fid") ||
+                     bfs::exists(itr->path() / "1/1Ref/fid") ||
+                     bfs::exists(itr->path() / "1Ref/fid") ||
+                     bfs::exists(itr->path() / "1/1Lin/fid") ||
+                     bfs::exists(itr->path() / "1Lin/fid") ||
                      (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
                      (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
                     return Reader_Bruker_Format_FID;

@@ -45,7 +45,6 @@ namespace msdata {
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace boost::iostreams;
-using namespace ms::numpress;
 
 //
 // BinaryDataEncoder::Impl

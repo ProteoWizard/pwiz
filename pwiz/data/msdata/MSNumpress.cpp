@@ -1,32 +1,36 @@
-/*
-    $Id: MSNumpress.cpp 5009 2013-10-03 22:33:08Z pcbrefugee $
+//
+// $Id$
+//
+//
+// Original author: Johan Teleman <johan.teleman@immun.lth.se>
+//
+// Copyright 2013 Johan Teleman
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
 
-    Author: johan.teleman@immun.lth.se
- 
-    Copyright 2013 Johan Teleman
+#define PWIZ_SOURCE
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
- */
-
-#include <stdio.h>
+#include <cstdio>
 #include <stdexcept>
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include "MSNumpress.hpp"
 
-namespace ms {
-namespace numpress {
+namespace pwiz {
+namespace msdata {
 namespace MSNumpress {
 
 using std::cout;
@@ -47,6 +51,7 @@ bool IS_BIG_ENDIAN = is_big_endian();
 
 /////////////////////////////////////////////////////////////
 
+PWIZ_API_DECL
 void encodeFixedPoint(
         double fixedPoint, 
         unsigned char *result
@@ -59,7 +64,7 @@ void encodeFixedPoint(
 }
 
 
-
+PWIZ_API_DECL
 double decodeFixedPoint(
         const unsigned char *data
 ) {
@@ -81,13 +86,14 @@ double decodeFixedPoint(
  * res_length is incremented by the number of halfbytes, 
  * which will be 1 <= n <= 9
  */
+PWIZ_API_DECL
 void encodeInt(
         const int x,
         unsigned char* res,
         size_t *res_length    
 ) {
     int i, l, m;
-    unsigned int mask = 0xf0000000;
+    int mask = 0xf0000000;
     unsigned int init = x & mask;
 
     if (init == 0) {
@@ -135,6 +141,7 @@ void encodeInt(
 /**
  * Decodes an int from the half bytes in bp. Lossless reverse of encodeInt 
  */
+PWIZ_API_DECL
 void decodeInt(
         const unsigned char *data,
         size_t *di,
@@ -143,7 +150,7 @@ void decodeInt(
 ) {
     size_t n;
     size_t i;
-    unsigned int mask, m;
+    int mask, m;
     unsigned char head;
     unsigned char hb;
 
@@ -189,7 +196,7 @@ void decodeInt(
 
 /////////////////////////////////////////////////////////////
 
-
+PWIZ_API_DECL
 double optimalLinearFixedPoint(
         const double *data, 
         size_t dataSize
@@ -224,6 +231,7 @@ double optimalLinearFixedPoint(
     return floor(0x7FFFFFFFl / maxDouble);
 }
 
+PWIZ_API_DECL
 size_t encodeLinear(
         const double *data, 
         size_t dataSize, 
@@ -299,6 +307,7 @@ size_t encodeLinear(
 }
 
 
+PWIZ_API_DECL
 size_t decodeLinear(
         const unsigned char *data,
         const size_t dataSize,
@@ -381,6 +390,7 @@ size_t decodeLinear(
     return ri;
 }
 
+PWIZ_API_DECL
 void encodeLinear(
         const std::vector<double> &data, 
         std::vector<unsigned char> &result,
@@ -392,6 +402,7 @@ void encodeLinear(
     result.resize(encodedLength);
 }
 
+PWIZ_API_DECL
 void decodeLinear(
         const std::vector<unsigned char> &data,
         std::vector<double> &result
@@ -404,7 +415,7 @@ void decodeLinear(
 
 /////////////////////////////////////////////////////////////
 
-
+PWIZ_API_DECL
 size_t encodePic(
         const double *data, 
         size_t dataSize, 
@@ -454,7 +465,7 @@ size_t encodePic(
 
 
 
-
+PWIZ_API_DECL
 size_t decodePic(
         const unsigned char *data,
         const size_t dataSize,
@@ -499,6 +510,7 @@ size_t decodePic(
 }
 
 
+PWIZ_API_DECL
 void encodePic(
         const std::vector<double> &data,  
         std::vector<unsigned char> &result
@@ -510,7 +522,7 @@ void encodePic(
 }
 
 
-
+PWIZ_API_DECL
 void decodePic(
         const std::vector<unsigned char> &data,  
         std::vector<double> &result
@@ -523,6 +535,7 @@ void decodePic(
 
 /////////////////////////////////////////////////////////////
 
+PWIZ_API_DECL
 double optimalSlofFixedPoint(
         const double *data, 
         size_t dataSize
@@ -546,6 +559,7 @@ double optimalSlofFixedPoint(
     return fp;
 }
 
+PWIZ_API_DECL
 size_t encodeSlof(
         const double *data, 
         size_t dataSize, 
@@ -568,7 +582,7 @@ size_t encodeSlof(
 }
 
 
-
+PWIZ_API_DECL
 size_t decodeSlof(
         const unsigned char *data, 
         const size_t dataSize, 
@@ -589,6 +603,8 @@ size_t decodeSlof(
     return ri;
 }
 
+
+PWIZ_API_DECL
 void encodeSlof(
         const std::vector<double> &data,  
         std::vector<unsigned char> &result,
@@ -601,7 +617,7 @@ void encodeSlof(
 }
 
 
-
+PWIZ_API_DECL
 void decodeSlof(
         const std::vector<unsigned char> &data,  
         std::vector<double> &result
@@ -612,6 +628,6 @@ void decodeSlof(
     result.resize(decodedLength);
 }
 
-}
-} // namespace numpress
-} // namespace ms
+} // namespace MSNumpress
+} // namespace msdata
+} // namespace pwiz

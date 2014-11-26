@@ -34,7 +34,7 @@ int main(int argc, const char* argv[])
     if (argc < 2)
     {
         cerr << "ThermoRawMetaDump extracts methods, tunes, and headers from RAW files.\n";
-        cerr << "Usage: ThermoRawMetaDump <RAW filemask> <another RAW filemask>" << endl;
+        cerr << "Usage: ThermoRawMetaDump --scanTrailers <RAW filemask> <another RAW filemask>" << endl;
         return 1;
     }
 
@@ -42,9 +42,16 @@ int main(int argc, const char* argv[])
     {
         vector<string> filemasks(argv+1, argv+argc);
 
+        bool scanTrailers = false;
         vector<bfs::path> filenames;
         BOOST_FOREACH(const string& filemask, filemasks)
         {
+            if (filemask == "--scanTrailers")
+            {
+                scanTrailers = true;
+                continue;
+            }
+
             expand_pathmask(bfs::path(filemask), filenames);
             if (!filenames.size())
                 throw runtime_error("no files found matching filemask \"" + filemask + "\"");
@@ -91,6 +98,19 @@ int main(int argc, const char* argv[])
                     if (!rawfile->value((thermo::ValueID_String) i).empty())
                         cout << rawfile->name((thermo::ValueID_String) i) << ": " << rawfile->value((thermo::ValueID_String) i) << "\n";
                 cout << " ==== " << endl << endl;
+
+                if (!scanTrailers)
+                    continue;
+
+
+                cout << " ==== Scan trailers for " << filename.filename() << " ====" << endl;
+                long numSpectra = rawfile->value(thermo::NumSpectra);
+                for (long i = 1; i <= numSpectra; ++i)
+                {
+                    thermo::ScanInfoPtr scanInfo = rawfile->getScanInfo(i);
+                    for (long j = 0; j < scanInfo->trailerExtraSize(); ++j)
+                        cout << i << " " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << endl;
+                }
             }
             catch (exception& e)
             {

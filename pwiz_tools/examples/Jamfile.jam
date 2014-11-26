@@ -87,7 +87,7 @@ explicit example_tools ;
 
 exe write_example_files
     : write_example_files.cpp
-      ../../pwiz/data/msdata
+      ../../pwiz/data/msdata//pwiz_data_msdata_examples
       ../common
     : <include>../../..
     ;
@@ -95,21 +95,21 @@ exe write_example_files
 
 exe write_traml_example_files
     : write_traml_example_files.cpp
-      ../../pwiz/data/tradata
+      ../../pwiz/data/tradata//pwiz_data_tradata_examples
     : <include>../../..
     ;
 
 
 exe write_mzid_example_files
     : write_mzid_example_files.cpp
-      ../../pwiz/data/identdata
+      ../../pwiz/data/identdata//pwiz_data_identdata_examples
     : <include>../../..
     ;
 
 
 exe write_proteome_example_files
     : write_proteome_example_files.cpp
-      ../../pwiz/data/proteome
+      ../../pwiz/data/proteome//pwiz_data_proteome_examples
     : <include>../../..
     ;
 

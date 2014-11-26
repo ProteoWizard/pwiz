@@ -21,8 +21,9 @@
 //
 
 
-#include "pwiz/data/misc/MinimumPepXML.hpp"
-#include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
 #include <iostream>
 #include <iomanip>
 #include <iterator>
@@ -30,33 +31,25 @@
 
 
 using namespace std;
-using namespace pwiz;
-using namespace pwiz::data::pepxml;
+using namespace pwiz::cv;
+using namespace pwiz::identdata;
 using namespace pwiz::proteome;
 
 
 int dofile(const string& filename)
 {
-    ifstream is(filename.c_str());
-    if (!is)
-        throw runtime_error(("Unable to open file" + filename).c_str());
+    IdentDataFile idf(filename, 0, 0, true);
 
-    MSMSPipelineAnalysis anal;
-    anal.read(is);
+    string spectraDataName = idf.dataCollection.inputs.spectraData[0]->name;
+    if (spectraDataName.empty())
+    {
+        const string& location = idf.dataCollection.inputs.spectraData[0]->location;
+        spectraDataName = bfs::change_extension(bfs::path(location), "").filename();
 
-    const size_t columnWidth = 12;
-
-    const vector<SpectrumQuery>& sq = anal.msmsRunSummary.spectrumQueries;
-    cout << "# spectrumQueries: " << sq.size();
-    cout << "#\n";
-    cout << "# precursorNeutralMass assumedCharge retentionTimeSec calculatedMZ\n";
-    for (vector<SpectrumQuery>::const_iterator it=sq.begin(); it!=sq.end(); ++it)
-        cout << setprecision(6) << fixed
-             << setw(columnWidth) << it->precursorNeutralMass
-             << setw(columnWidth) << it->assumedCharge
-             << setw(columnWidth) << it->retentionTimeSec
-             << setw(columnWidth) << Ion::mz(it->precursorNeutralMass, it->assumedCharge)
-             << endl;
+        if (spectraDataName.empty())
+            throw runtime_error("no spectrum source name or location");
+    }
+    cout << spectraDataName << endl;
 
     return 0;
 }

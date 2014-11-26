@@ -1,22 +1,25 @@
-/*
-	$Id: MSNumpress.hpp 5009 2013-10-03 22:33:08Z pcbrefugee $
+//
+// $Id$
+//
+//
+// Original author: Johan Teleman <johan.teleman@immun.lth.se>
+//
+// Copyright 2013 Johan Teleman
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
 
-	Author: johan.teleman@immun.lth.se
- 
-	Copyright 2013 Johan Teleman
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
- */
 /*
 	==================== encodeInt ====================
 	Some of the encodings described below use a integer compression refered to simply as 
@@ -42,15 +45,18 @@
 #ifndef _MSNUMPRESS_HPP_
 #define _MSNUMPRESS_HPP_
 
+
+#include "pwiz/utility/misc/Export.hpp"
 #include <cstddef>
 #include <vector>
 
-namespace ms {
-namespace numpress {
+
+namespace pwiz {
+namespace msdata {
 
 namespace MSNumpress {
 	
-	double optimalLinearFixedPoint(
+	double PWIZ_API_DECL optimalLinearFixedPoint(
 		const double *data, 
 		size_t dataSize);
 	
@@ -74,7 +80,7 @@ namespace MSNumpress {
 	 * 				on decoding.  Automatically (and maybe slowly) determined if 0.
 	 * @return		the number of encoded bytes
 	 */
-	size_t encodeLinear(
+	size_t PWIZ_API_DECL encodeLinear(
 		const double *data, 
 		const size_t dataSize, 
 		unsigned char *result,
@@ -86,7 +92,7 @@ namespace MSNumpress {
 	 * @data		vector of doubles to be encoded
 	 * @result		vector of resulting bytes (will be resized to the number of bytes)
 	 */
-	void encodeLinear(
+	void PWIZ_API_DECL encodeLinear(
 		const std::vector<double> &data, 
 		std::vector<unsigned char> &result,
 		double fixedPoint);  
@@ -107,7 +113,7 @@ namespace MSNumpress {
 	 * @result		pointer to were resulting doubles should be stored
 	 * @return		the number of decoded doubles, or -1 if dataSize < 4 or 4 < dataSize < 8
 	 */
-	size_t decodeLinear(
+	size_t PWIZ_API_DECL decodeLinear(
 		const unsigned char *data,
 		const size_t dataSize,
 		double *result);
@@ -118,7 +124,7 @@ namespace MSNumpress {
 	 * @data		vector of bytes to be decoded
 	 * @result		vector of resulting double (will be resized to the number of doubles)
 	 */
-	void decodeLinear(
+	void PWIZ_API_DECL decodeLinear(
 		const std::vector<unsigned char> &data,
 		std::vector<double> &result);
 
@@ -137,7 +143,7 @@ namespace MSNumpress {
 	 * @result		pointer to were resulting bytes should be stored
 	 * @return		the number of encoded bytes
 	 */
-	size_t encodePic(
+	size_t PWIZ_API_DECL encodePic(
 		const double *data, 
 		const size_t dataSize, 
 		unsigned char *result);
@@ -148,7 +154,7 @@ namespace MSNumpress {
 	 * @data		vector of doubles to be encoded
 	 * @result		vector of resulting bytes (will be resized to the number of bytes)
 	 */
-	void encodePic(
+	void PWIZ_API_DECL encodePic(
 		const std::vector<double> &data,
 		std::vector<unsigned char> &result);
 
@@ -162,7 +168,7 @@ namespace MSNumpress {
 	 * @result		pointer to were resulting doubles should be stored
 	 * @return		the number of decoded doubles
 	 */
-	void decodePic(
+	void PWIZ_API_DECL decodePic(
 		const std::vector<unsigned char> &data,
 		std::vector<double> &result);
 	
@@ -172,7 +178,7 @@ namespace MSNumpress {
 	 * @data		vector of bytes to be decoded
 	 * @result		vector of resulting double (will be resized to the number of doubles)
 	 */
-	size_t decodePic(
+	size_t PWIZ_API_DECL decodePic(
 		const unsigned char *data,
 		const size_t dataSize,
 		double *result);
@@ -180,7 +186,7 @@ namespace MSNumpress {
 /////////////////////////////////////////////////////////////
 
 
-	double optimalSlofFixedPoint(
+	double PWIZ_API_DECL optimalSlofFixedPoint(
 		const double *data, 
 		size_t dataSize);
 
@@ -201,7 +207,7 @@ namespace MSNumpress {
 	 * &fixedPoint  automatically (and maybe slowly) determined if 0.
 	 * @return		the number of encoded bytes
 	 */
-	size_t encodeSlof(
+	size_t PWIZ_API_DECL encodeSlof(
 		const double *data, 
 		const size_t dataSize, 
 		unsigned char *result,
@@ -213,7 +219,7 @@ namespace MSNumpress {
 	 * @data		vector of doubles to be encoded
 	 * @result		vector of resulting bytes (will be resized to the number of bytes)
 	 */
-	void encodeSlof(
+	void PWIZ_API_DECL encodeSlof(
 		const std::vector<double> &data,
 		std::vector<unsigned char> &result,
 		double fixedPoint);
@@ -226,7 +232,7 @@ namespace MSNumpress {
 	 * @result		pointer to were resulting doubles should be stored
 	 * @return		the number of decoded doubles
 	 */
-	size_t decodeSlof(
+	size_t PWIZ_API_DECL decodeSlof(
 		const unsigned char *data, 
 		const size_t dataSize, 
 		double *result);
@@ -237,7 +243,7 @@ namespace MSNumpress {
 	 * @data		vector of bytes to be decoded
 	 * @result		vector of resulting double (will be resized to the number of doubles)
 	 */
-	void decodeSlof(
+	void PWIZ_API_DECL decodeSlof(
 		const std::vector<unsigned char> &data,
 		std::vector<double> &result);
 
