@@ -938,11 +938,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid string for checksum..
+        ///   Looks up a localized string similar to Invalid string &quot;{0}&quot; for checksum..
         /// </summary>
-        public static string AdlerChecksum_MakeForString_Invalid_string_for_checksum {
+        public static string AdlerChecksum_MakeForString_Invalid_string___0___for_checksum_ {
             get {
-                return ResourceManager.GetString("AdlerChecksum_MakeForString_Invalid_string_for_checksum", resourceCulture);
+                return ResourceManager.GetString("AdlerChecksum_MakeForString_Invalid_string___0___for_checksum_", resourceCulture);
             }
         }
         
@@ -2145,7 +2145,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The lab authority name {0} is not valid.  This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server..
+        ///   Looks up a localized string similar to The lab authority name {0} is not valid. This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server {
             get {
@@ -2156,7 +2156,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The library identifier {0} is not valid.  Identifiers start with a letter, number or underscore, and contain only letters, numbers, underscores and dashes..
+        ///   Looks up a localized string similar to The library identifier {0} is not valid. Identifiers start with a letter, number or underscore, and contain only letters, numbers, underscores and dashes..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes {
             get {
@@ -2167,7 +2167,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The output path {0} is a directory.  You must specify a file path..
+        ///   Looks up a localized string similar to The output path {0} is a directory. You must specify a file path..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path {
             get {
@@ -2281,7 +2281,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The number of generated windows could not be adjusted to be a multiple of the windows per scan.  Try changing the windows per scan or the End value..
+        ///   Looks up a localized string similar to The number of generated windows could not be adjusted to be a multiple of the windows per scan. Try changing the windows per scan or the End value..
         /// </summary>
         public static string CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value {
             get {
@@ -2378,7 +2378,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The set of replicates in this document has changed.  Please choose again which replicates to use for the retention time filter..
+        ///   Looks up a localized string similar to The set of replicates in this document has changed. Please choose again which replicates to use for the retention time filter..
         /// </summary>
         public static string ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_ {
             get {
@@ -2562,7 +2562,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failure writing cache.  Specified {0} peaks exceed total peak count {1}.
+        ///   Looks up a localized string similar to Failure writing cache. Specified {0} peaks exceed total peak count {1}.
         /// </summary>
         public static string ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_ {
             get {
@@ -2913,7 +2913,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid chromatogram ID {0} found.  Failure parsing m/z values..
+        ///   Looks up a localized string similar to Invalid chromatogram ID {0} found. Failure parsing m/z values..
         /// </summary>
         public static string ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values {
             get {
@@ -2922,7 +2922,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid chromatogram ID {0} found.  The ID must include both precursor and product m/z values..
+        ///   Looks up a localized string similar to Invalid chromatogram ID {0} found. The ID must include both precursor and product m/z values..
         /// </summary>
         public static string ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values {
             get {
@@ -4829,7 +4829,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The command for {0} may not exist in that location. Would you like to edit it? .
+        ///   Looks up a localized string similar to The command for {0} may not exist in that location. Would you like to edit it?.
         /// </summary>
         public static string ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__ {
             get {
@@ -6159,7 +6159,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to the value {0} is not a valid charge.  Charges must be integer values between 1 and 5..
+        ///   Looks up a localized string similar to the value {0} is not a valid charge. Charges must be integer values between 1 and 5..
         /// </summary>
         public static string EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5 {
             get {
@@ -6749,7 +6749,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failure updating peptides in the iRT database.  The database may be out of synch..
+        ///   Looks up a localized string similar to Failure updating peptides in the iRT database. The database may be out of synch..
         /// </summary>
         public static string EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_ {
             get {
@@ -7039,7 +7039,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The label names &apos;{0}&apos; and &apos;{1}&apos; conflict.  Use more unique names..
+        ///   Looks up a localized string similar to The label names &apos;{0}&apos; and &apos;{1}&apos; conflict. Use more unique names..
         /// </summary>
         public static string EditLabelTypeListDlg_OkDialog_The_label_names__0__and__1__conflict_Use_more_unique_names {
             get {
@@ -7132,7 +7132,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This will reset the list to its default values.  Continue?.
+        ///   Looks up a localized string similar to This will reset the list to its default values. Continue?.
         /// </summary>
         public static string EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue {
             get {
@@ -7879,7 +7879,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The variable checkbox only applies to precursor modification.  Product ion losses are inherently variable..
+        ///   Looks up a localized string similar to The variable checkbox only applies to precursor modification. Product ion losses are inherently variable..
         /// </summary>
         public static string EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable {
             get {
@@ -8230,7 +8230,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml..
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain a Bruker TOF method template. The folder is expected to have a .m extension, and contain the file submethods.xml..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_ {
             get {
@@ -8241,7 +8241,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
             get {
@@ -8507,7 +8507,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The folder {0} does not appear to contain a Bruker TOF method template.  The folder is expected to have a .m extension, and contain the file submethods.xml..
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain a Bruker TOF method template. The folder is expected to have a .m extension, and contain the file submethods.xml..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_ {
             get {
@@ -8518,7 +8518,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
             get {
@@ -9188,7 +9188,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot save to {0}.  Check the path to make sure the directory exists..
+        ///   Looks up a localized string similar to Cannot save to {0}. Check the path to make sure the directory exists..
         /// </summary>
         public static string FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists {
             get {
@@ -9198,7 +9198,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot save to {0}.  The file is read-only..
+        ///   Looks up a localized string similar to Cannot save to {0}. The file is read-only..
         /// </summary>
         public static string FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only {
             get {
@@ -12105,7 +12105,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid transition list.  Transition lists must contain at least precursor m/z, product m/z, and peptide sequence..
+        ///   Looks up a localized string similar to Invalid transition list. Transition lists must contain at least precursor m/z, product m/z, and peptide sequence..
         /// </summary>
         public static string MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence {
             get {
@@ -12593,7 +12593,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You have not chosen any options to minimize your cache file.  Are you sure you want to continue?.
+        ///   Looks up a localized string similar to You have not chosen any options to minimize your cache file. Are you sure you want to continue?.
         /// </summary>
         public static string MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue {
             get {
@@ -13847,7 +13847,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}.  A non-degenerate overlapping window scheme is required..
+        ///   Looks up a localized string similar to Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}. A non-degenerate overlapping window scheme is required..
         /// </summary>
         public static string OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_ {
             get {
@@ -15503,7 +15503,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are attempting to run a 64-bit version of {0} on a 32-bit OS.  Please install the 32-bit version..
+        ///   Looks up a localized string similar to You are attempting to run a 64-bit version of {0} on a 32-bit OS. Please install the 32-bit version..
         /// </summary>
         public static string Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version {
             get {
@@ -16079,7 +16079,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Of the specified {0} peptides {1} are not in the document.  Do you want to continue?.
+        ///   Looks up a localized string similar to Of the specified {0} peptides {1} are not in the document. Do you want to continue?.
         /// </summary>
         public static string RefineListDlg_OkDialog_Of_the_specified__0__peptides__1__are_not_in_the_document_Do_you_want_to_continue {
             get {
@@ -16216,7 +16216,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The current peak scoring model is incompatible with one or more peptides in the document.  Please train a new model..
+        ///   Looks up a localized string similar to The current peak scoring model is incompatible with one or more peptides in the document. Please train a new model..
         /// </summary>
         public static string ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_ {
             get {
@@ -16347,7 +16347,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences..
+        ///   Looks up a localized string similar to The document contains a naming conflict. The name {0} is currently used by multiple protein sequences..
         /// </summary>
         public static string RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences {
             get {
@@ -16567,7 +16567,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data.  Chromatograms will not be re-imported from raw data files, but peak integration information may change..
+        ///   Looks up a localized string similar to In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data. Chromatograms will not be re-imported from raw data files, but peak integration information may change..
         /// </summary>
         public static string RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_ {
             get {
@@ -17581,7 +17581,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The modification {0} is not valid.  Expected a numeric delta mass..
+        ///   Looks up a localized string similar to The modification {0} is not valid. Expected a numeric delta mass..
         /// </summary>
         public static string SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_ {
             get {
@@ -18141,7 +18141,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but the prediction algorithm has not been calibrated.  Do you want to generate full gradient chromatograms?.
+        ///   Looks up a localized string similar to The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but the prediction algorithm has not been calibrated. Do you want to generate full gradient chromatograms?.
         /// </summary>
         public static string SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction {
             get {
@@ -22127,7 +22127,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid charge {1} found.  {0} must be between {2} and {3}..
+        ///   Looks up a localized string similar to Invalid charge {1} found. {0} must be between {2} and {3}..
         /// </summary>
         public static string TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__ {
             get {
@@ -23613,7 +23613,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}Would you like to use the Unimod definitions for {1} modifications?  The document will not change until peptides with these modifications are added..
+        ///   Looks up a localized string similar to {0}Would you like to use the Unimod definitions for {1} modifications? The document will not change until peptides with these modifications are added..
         /// </summary>
         public static string ViewLibraryDlg_MatchModifications__0__Would_you_like_to_use_the_Unimod_definitions_for__1__modifications_The_document_will_not_change_until_peptides_with_these_modifications_are_added {
             get {
@@ -23801,7 +23801,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MassLynx may not be installed correctly.  The library {0} could not be found..
+        ///   Looks up a localized string similar to MassLynx may not be installed correctly. The library {0} could not be found..
         /// </summary>
         public static string WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found {
             get {

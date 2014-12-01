@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Util
         {
             var inst = new AdlerChecksum();
             if (!inst.TryMakeForString(s))
-                throw new InvalidOperationException(Resources.AdlerChecksum_MakeForString_Invalid_string_for_checksum);
+                throw new InvalidOperationException(string.Format(Resources.AdlerChecksum_MakeForString_Invalid_string___0___for_checksum_, s ?? "(null)")); // Not L10N
             return inst.ChecksumValue;
         }
 

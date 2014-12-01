@@ -3514,9 +3514,6 @@ Are you sure you want to continue?</value>
   <data name="AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum" xml:space="preserve">
     <value>Invalid byte buffer for checksum.</value>
   </data>
-  <data name="AdlerChecksum_MakeForString_Invalid_string_for_checksum" xml:space="preserve">
-    <value>Invalid string for checksum.</value>
-  </data>
   <data name="AdlerChecksum_MakeForFile_Failure_attempting_to_calculate_a_checksum_for_the_file__0__" xml:space="preserve">
     <value>Failure attempting to calculate a checksum for the file {0}</value>
   </data>
@@ -7879,5 +7876,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
     <data name="ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs" xml:space="preserve">
     <value>Failure trying to read scan IDs</value>
+  </data>
+  <data name="AdlerChecksum_MakeForString_Invalid_string___0___for_checksum_" xml:space="preserve">
+    <value>Invalid string "{0}" for checksum.</value>
   </data>
 </root>

@@ -3514,9 +3514,6 @@
   <data name="AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum" xml:space="preserve">
     <value>针对检查和的无效字节缓冲。</value>
   </data>
-  <data name="AdlerChecksum_MakeForString_Invalid_string_for_checksum" xml:space="preserve">
-    <value>针对检查和的无效串。</value>
-  </data>
   <data name="AdlerChecksum_MakeForFile_Failure_attempting_to_calculate_a_checksum_for_the_file__0__" xml:space="preserve">
     <value>尝试针对文件{0}计算检查和失败</value>
   </data>
