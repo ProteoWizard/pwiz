@@ -501,7 +501,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     }
     addLabelModsToVector(curMaxQuantPSM_->mods, entry.rawFile, entry.sequence, entry.labelingState);
     curMaxQuantPSM_->retentionTime = entry.retentionTime;
-    curMaxQuantPSM_->score = entry.score;
+    curMaxQuantPSM_->score = entry.pep;
     addDoublesToVector(curMaxQuantPSM_->mzs, entry.masses);
     addDoublesToVector(curMaxQuantPSM_->intensities, entry.intensities);
 
