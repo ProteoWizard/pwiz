@@ -162,7 +162,7 @@ namespace SkylineNightly
 
             // Upload log information.
             var duration = DateTime.Now - startTime;
-            UploadLog(logDir, duration);
+            UploadLog(logDir, pwizDir, duration);
         }
 
         private enum ReadState
@@ -172,7 +172,7 @@ namespace SkylineNightly
             failure,
         }
 
-        private void UploadLog(string logDir, TimeSpan duration)
+        private void UploadLog(string logDir, string pwizDir, TimeSpan duration)
         {
             _nightly = new Xml("nightly");
             _failures = _nightly.Append("failures");
@@ -187,6 +187,8 @@ namespace SkylineNightly
                 ParseLog(logFile);
 
             _nightly["id"] = Environment.MachineName;
+            _nightly["os"] = Environment.OSVersion;
+            _nightly["revision"] = GetRevision(pwizDir);
             _nightly["duration"] = (int)duration.TotalMinutes;
             _nightly["testsrun"] = _testCount;
             _nightly["failures"] = _failures.Count;
@@ -225,6 +227,40 @@ window.onload = submitForm;
             // Allow time for browser to load file.
             Thread.Sleep(3000);
             File.Delete(filePath);
+        }
+
+        private int GetRevision(string pwizDir)
+        {
+            int revision = 0;
+            try
+            {
+                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                var subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
+
+                Process svn = new Process
+                {
+                    StartInfo =
+                    {
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        FileName = subversion,
+                        Arguments = @"info " + pwizDir,
+                        CreateNoWindow = true
+                    }
+                };
+                svn.Start();
+                string svnOutput = svn.StandardOutput.ReadToEnd();
+                svn.WaitForExit();
+                var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
+                revision = int.Parse(revisionString);
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+            }
+
+            return revision;
         }
 
         private void ParseLog(FileInfo logFile)
