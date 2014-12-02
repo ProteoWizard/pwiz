@@ -59,6 +59,9 @@ namespace SkylineNightly
         private StringBuilder _stackTrace;
         private int _testCount;
 
+        /// <summary>
+        /// Run nightly build/test and report results to server.
+        /// </summary>
         public void Run()
         {
             // Locate relevant directories.
@@ -164,13 +167,9 @@ namespace SkylineNightly
             UploadLog(logDir, pwizDir, duration);
         }
 
-        private enum ReadState
-        {
-            startTest,
-            endTest,
-            failure,
-        }
-
+        /// <summary>
+        /// Upload the latest results to the server.
+        /// </summary>
         private void UploadLog(string logDir, string pwizDir, TimeSpan duration)
         {
             _nightly = new Xml("nightly");
@@ -204,6 +203,9 @@ namespace SkylineNightly
             PostToLink(LABKEY_URL, xml);
         }
 
+        /// <summary>
+        /// Post the latest results to the server.
+        /// </summary>
         public static void Post()
         {
             var nightlyDir = GetNightlyDir();
@@ -219,15 +221,10 @@ namespace SkylineNightly
             PostToLink(LABKEY_URL, xml);
         }
 
-        private static string GetNightlyDir()
-        {
-            var nightlyDir = Settings.Default.NightlyFolder;
-            return Path.IsPathRooted(nightlyDir)
-                ? nightlyDir
-                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nightlyDir);
-        }
-
-        public static void PostToLink(string link, string postData)
+        /// <summary>
+        /// Post data to the given link URL.
+        /// </summary>
+        private static void PostToLink(string link, string postData)
         {
             string javaScript = string.Format(
 @"<script type=""text/javascript"">
@@ -249,6 +246,14 @@ window.onload = submitForm;
             // Allow time for browser to load file.
             Thread.Sleep(3000);
             File.Delete(filePath);
+        }
+
+        private static string GetNightlyDir()
+        {
+            var nightlyDir = Settings.Default.NightlyFolder;
+            return Path.IsPathRooted(nightlyDir)
+                ? nightlyDir
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nightlyDir);
         }
 
         private int GetRevision(string pwizDir)
@@ -283,6 +288,13 @@ window.onload = submitForm;
             }
 
             return revision;
+        }
+
+        private enum ReadState
+        {
+            startTest,
+            endTest,
+            failure,
         }
 
         private void ParseLog(FileInfo logFile)
