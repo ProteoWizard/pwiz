@@ -275,6 +275,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         // build SQL query with quantitation
         string sql = "SELECT " + groupByString + ", " + pivotColumn + ", " + countColumn + " "
                      "FROM PeptideSpectrumMatch psm "
+                     "JOIN DistinctMatch dm ON psm.Id=dm.PsmId "
                      "JOIN Spectrum s ON psm.Spectrum=s.Id "
                      "JOIN SpectrumSource ss ON s.Source=ss.Id "
                      "JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source "
@@ -282,7 +283,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                      "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
                      "JOIN Protein pro ON pi.Protein=pro.Id "
                      "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id "
-                     "LEFT JOIN XICMetrics xic ON psm.Id=xic.PsmId "
+                     "LEFT JOIN XICMetrics xic ON dm.DistinctMatchId=xic.DistinctMatch AND s.Source=xic.SpectrumSource "
                      "GROUP BY " + groupByString + ", " + pivotColumn;
         cout << sql << endl;
         sqlite::query q(idpDB, sql.c_str());
@@ -525,9 +526,10 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                  "JOIN PeptideInstance pi ON pro.Id=pi.Protein "
                  "JOIN Peptide pep ON pi.Peptide=pep.Id "
                  "JOIN PeptideSpectrumMatch psm ON psm.Peptide=pi.Peptide "
+                 "JOIN Spectrum s ON psm.Spectrum=s.Id "
                  "JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
                  string(hasSpectrumQuantitation ? "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id " : "") +
-                 string(hasPrecursorQuantitation ? "LEFT JOIN XICMetrics xic ON psm.Id=xic.PsmId " : "") +
+                 string(hasPrecursorQuantitation ? "LEFT JOIN XICMetrics xic ON dm.DistinctMatchId=xic.DistinctMatch AND s.Source=xic.SpectrumSource " : "") +
                  "GROUP BY " + groupByString;
     cout << sql << endl;
     sqlite::query q(idpDB, sql.c_str());
