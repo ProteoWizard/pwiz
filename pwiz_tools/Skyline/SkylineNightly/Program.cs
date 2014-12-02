@@ -30,16 +30,25 @@ namespace SkylineNightly
         [STAThread]
         static void Main(string[] args)
         {
-            if (args.Length > 0 && string.Compare(args[0], Nightly.SCHEDULED_ARG, StringComparison.OrdinalIgnoreCase) == 0)
+            if (args.Length == 0)
             {
-                var nightly = new Nightly();
-                nightly.Run();
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new SkylineNightly());
                 return;
             }
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new SkylineNightly());
+            switch (args[0].ToLower())
+            {
+                case Nightly.SCHEDULED_ARG:
+                    var nightly = new Nightly();
+                    nightly.Run();
+                    break;
+
+                case Nightly.POST_ARG:
+                    Nightly.Post();
+                    break;
+            }
         }
     }
 }

@@ -36,6 +36,7 @@ namespace SkylineNightly
     {
         public const string NIGHTLY_TASK_NAME = "Skyline nightly build";
         public const string SCHEDULED_ARG = "scheduled";
+        public const string POST_ARG = "post";
 
         private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId=bt{0}";
         private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/bt{0}/{1}:id/SkylineTester.zip";
@@ -44,7 +45,7 @@ namespace SkylineNightly
         private const int TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
-        private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/postreport/home/software/Skyline/begin.view?";
+        private const string LABKEY_URL = "http://128.208.10.2:8080/labkey/testresults/home/post.view?";
 
         private string _logFile;
         private string _line;
@@ -61,9 +62,7 @@ namespace SkylineNightly
         public void Run()
         {
             // Locate relevant directories.
-            var nightlyDir = Settings.Default.NightlyFolder;
-            if (!Path.IsPathRooted(nightlyDir))
-                nightlyDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nightlyDir);
+            var nightlyDir = GetNightlyDir();
             var logDir = Path.Combine(nightlyDir, "Logs");
             var pwizDir = Path.Combine(nightlyDir, "pwiz");
             var skylineTesterDir = Path.Combine(nightlyDir, "SkylineTester");
@@ -205,6 +204,29 @@ namespace SkylineNightly
             PostToLink(LABKEY_URL, xml);
         }
 
+        public static void Post()
+        {
+            var nightlyDir = GetNightlyDir();
+            var logDir = Path.Combine(nightlyDir, "Logs");
+            var directory = new DirectoryInfo(logDir);
+            var xmlFile = directory.GetFiles()
+                .OrderByDescending(f => f.LastWriteTime)
+                .SkipWhile(f => !f.Name.EndsWith(".xml"))
+                .First();
+            var xml = File.ReadAllText(xmlFile.FullName);
+
+            // Post to server.
+            PostToLink(LABKEY_URL, xml);
+        }
+
+        private static string GetNightlyDir()
+        {
+            var nightlyDir = Settings.Default.NightlyFolder;
+            return Path.IsPathRooted(nightlyDir)
+                ? nightlyDir
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nightlyDir);
+        }
+
         public static void PostToLink(string link, string postData)
         {
             string javaScript = string.Format(
@@ -215,8 +237,8 @@ function submitForm()
 }}
 window.onload = submitForm;
 </script>
-<form id=""my_form"" action=""{0}"" method=""post"" style=""visibility: hidden;"">
-<textarea name=""SkylineReport"">{1}</textarea>
+<form id=""my_form"" action=""{0}"" method=""post"" enctype=""multipart/form-data"" style=""visibility: hidden;"">
+<textarea name=""xml"">{1}</textarea>
 </form>", // Not L10N
                 link, WebUtility.HtmlEncode(postData));
 
