@@ -212,7 +212,8 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(matchingDlg, matchingDlg.OkDialog);
             OkDialog(peptidePasteDlg, peptidePasteDlg.OkDialog);
 
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 68, 313);
+            int expectedTrans = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 306 : 313;
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 68, expectedTrans);
             RunUI(() =>
             {
                 SkylineWindow.ExpandProteins();
@@ -263,8 +264,9 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(pepSettings2, pepSettings2.OkDialog);
             WaitForLibrary(20213);
-            WaitForCondition(() => SkylineWindow.Document.PeptideTransitionCount != 313);
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 96, 450);
+            WaitForCondition(() => SkylineWindow.Document.PeptideTransitionCount != expectedTrans);
+            int expectedTransAfter = TransitionGroup.IsAvoidMismatchedIsotopeTransitions ? 444 : 450;
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 96, expectedTransAfter);
 
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var messageWarning = WaitForOpenForm<MultiButtonMsgDlg>();

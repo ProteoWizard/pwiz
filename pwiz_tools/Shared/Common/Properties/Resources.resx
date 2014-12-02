@@ -331,4 +331,7 @@
   <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
     <value>Show rows where {0}...</value>
   </data>
+  <data name="NavBar_NavBar_Waiting_for_data___" xml:space="preserve">
+    <value>Waiting for data...</value>
+  </data>
 </root>

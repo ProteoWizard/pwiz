@@ -953,47 +953,7 @@ namespace pwiz.Skyline.Model
                     settings.PeptideSettings.Libraries.DisconnectedLibraries == null)
                 return null;
 
-            return GetMatchingTransitions(tranGroup, nodeGroupMatching, settings, explicitMods);
-        }
-
-        public static TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup,
-                                                                  TransitionGroupDocNode nodeGroupMatching,
-                                                                  SrmSettings settings,
-                                                                  ExplicitMods explicitMods)
-        {
-            // If no calculator for this type, then not possible to calculate transtions
-            var calc = settings.GetFragmentCalc(tranGroup.LabelType, explicitMods);
-            if (calc == null)
-                return null;
-
-            var listTrans = new List<TransitionDocNode>();
-            foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)
-            {
-                var transition = nodeTran.Transition;
-                var losses = nodeTran.Losses;
-                var libInfo = nodeTran.LibInfo;
-                int? decoyMassShift = transition.IsPrecursor() ? tranGroup.DecoyMassShift : transition.DecoyMassShift;
-                var tranNew = new Transition(tranGroup,
-                                             transition.IonType,
-                                             transition.CleavageOffset,
-                                             transition.MassIndex,
-                                             transition.Charge,
-                                             decoyMassShift,
-                                             tranGroup.Peptide.CustomIon);
-                var isotopeDist = nodeGroupMatching.IsotopeDist;
-                double massH;
-                if (tranNew.IsCustom())
-                {
-                    massH = tranNew.CustomIon.GetMass(settings.TransitionSettings.Prediction.FragmentMassType);
-                }
-                else
-                {
-                    massH = calc.GetFragmentMass(tranNew, isotopeDist);
-                }
-                var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
-                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, libInfo));
-            }
-            return listTrans.ToArray();
+            return tranGroup.GetMatchingTransitions(settings, nodeGroupMatching, explicitMods);
         }
 
         private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)

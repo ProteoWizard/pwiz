@@ -727,7 +727,7 @@ namespace pwiz.Skyline.Model
                                                         transGroup.LabelType, false, precursorMassShift);
 
                 var decoyNodeTranList = nodeGroupPrimary != null
-                    ? PeptideDocNode.GetMatchingTransitions(decoyGroup, nodeGroupPrimary, document.Settings, mods)
+                    ? decoyGroup.GetMatchingTransitions(document.Settings, nodeGroupPrimary, mods)
                     : GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass);
 
                 var nodeGroupDecoy = new TransitionGroupDocNode(decoyGroup,

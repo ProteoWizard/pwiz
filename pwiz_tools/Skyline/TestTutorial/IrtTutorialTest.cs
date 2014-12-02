@@ -268,6 +268,7 @@ namespace pwiz.SkylineTestTutorial
             // Create auto-calculate regression RT predictor, p. 10
             const string irtPredictorName = "iRT-C18"; // Not L10N
             {
+                var docPre = SkylineWindow.Document;
                 var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 var regressionDlg = ShowDialog<EditRTDlg>(peptideSettingsUI2.AddRTRegression);
                 RunUI(() =>
@@ -280,12 +281,10 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot("Edit Retention Time Predictor form", 10);   // Edit retention time predictor form
 
-                RunUI(regressionDlg.OkDialog);
-                WaitForClosedForm(regressionDlg);
-                RunUI(peptideSettingsUI2.OkDialog);
-                WaitForClosedForm(peptideSettingsUI2);
+                OkDialog(regressionDlg, regressionDlg.OkDialog);
+                OkDialog(peptideSettingsUI1, peptideSettingsUI2.OkDialog);
                 // Make sure iRT calculator is loaded
-                WaitForDocumentLoaded();
+                WaitForDocumentChangeLoaded(docPre);
             }
 
             // Export unscheduled transition list, p. 11

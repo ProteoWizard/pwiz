@@ -85,6 +85,7 @@ namespace pwiz.SkylineTestFunctional
             // Open the .sky file
             string documentPath = TestFilesDirs[1].GetTestPath(docName);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
 
             // Share the complete document.
             // The zip file should include the redundant library

@@ -32,12 +32,13 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public partial class NavBar : UserControl
     {
-        private const string DefaultWaitingMessage = "Waiting for data..."; // Not L10N?
         private BindingListSource _bindingListSource;
-        private string _waitingMsg = DefaultWaitingMessage;
+        private string _waitingMsg;
         public NavBar()
         {
             InitializeComponent();
+
+            _waitingMsg = Resources.NavBar_NavBar_Waiting_for_data___;
         }
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingListSource BindingListSource
@@ -74,7 +75,7 @@ namespace pwiz.Common.DataBinding.Controls
             get { return BindingListSource == null ? null : BindingListSource.ViewContext; } 
         }
 
-        [DefaultValue(DefaultWaitingMessage)]
+        [DefaultValue("Waiting for data...")]   // Not L10N
         public string WaitingMessage
         {
             get { return _waitingMsg; }

@@ -513,6 +513,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Waiting for data....
+        /// </summary>
+        internal static string NavBar_NavBar_Waiting_for_data___ {
+            get {
+                return ResourceManager.GetString("NavBar_NavBar_Waiting_for_data___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Customize View....
         /// </summary>
         internal static string NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View {

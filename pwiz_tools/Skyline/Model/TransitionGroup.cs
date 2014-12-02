@@ -103,6 +103,61 @@ namespace pwiz.Skyline.Model
             return Comparer<double>.Default.Compare(node1.LostMass, node2.LostMass);
         }
 
+        public TransitionDocNode[] GetMatchingTransitions(SrmSettings settings,
+                                                          TransitionGroupDocNode nodeGroupMatching,
+                                                          ExplicitMods mods)
+        {
+            // If no calculator for this type, then not possible to calculate transtions
+            var calc = settings.GetFragmentCalc(LabelType, mods);
+            if (calc == null)
+                return null;
+
+            var listTrans = new List<TransitionDocNode>();
+            foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)
+            {
+                var nodeTranMatching = GetMatchingTransition(settings, nodeGroupMatching, nodeTran, calc);
+                listTrans.Add(nodeTranMatching);
+            }
+            return listTrans.ToArray();
+        }
+
+        private TransitionDocNode GetMatchingTransition(SrmSettings settings,
+                                                        TransitionGroupDocNode nodeGroupMatching,
+                                                        TransitionDocNode nodeTran,
+                                                        IFragmentMassCalc calc)
+        {
+            var transition = nodeTran.Transition;
+            var losses = nodeTran.Losses;
+            var libInfo = nodeTran.LibInfo;
+            int? decoyMassShift = transition.IsPrecursor() ? DecoyMassShift : transition.DecoyMassShift;
+            var tranNew = new Transition(this,
+                transition.IonType,
+                transition.CleavageOffset,
+                transition.MassIndex,
+                transition.Charge,
+                decoyMassShift,
+                Peptide.CustomIon);
+            var isotopeDist = nodeGroupMatching.IsotopeDist;
+            double massH;
+            if (tranNew.IsCustom())
+            {
+                massH = tranNew.CustomIon.GetMass(settings.TransitionSettings.Prediction.FragmentMassType);
+            }
+            else
+            {
+                massH = calc.GetFragmentMass(tranNew, isotopeDist);
+            }
+            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
+            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, libInfo);
+            return nodeTranMatching;
+        }
+
+        /// <summary>
+        /// True to force checking of all isotope label types for exclusions affecting a transition
+        /// to avoid the case where a transition is accepted for one label type but not all types.
+        /// </summary>
+        public static bool IsAvoidMismatchedIsotopeTransitions { get { return true; } }
+
         public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings,
                                                              TransitionGroupDocNode groupDocNode,
                                                              ExplicitMods mods,
@@ -119,11 +174,17 @@ namespace pwiz.Skyline.Model
 
             string sequence = Peptide.Sequence;
 
+            // Save the true precursor m/z for TranstionSettings.Accept() now that all isotope types are
+            // checked.  This is more correct than just using the light precursor m/z for precursor window
+            // exclusion.
+            double precursorMzAccept = precursorMz;
             if (!ReferenceEquals(calcFilter, calcPredict))
             {
                 // Get the normal precursor m/z for filtering, so that light and heavy ion picks will match.
                 precursorMz = SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), PrecursorCharge);
             }
+            if (!IsAvoidMismatchedIsotopeTransitions)
+                precursorMzAccept = precursorMz;
 
             var tranSettings = settings.TransitionSettings;
             var filter = tranSettings.Filter;
@@ -238,6 +299,22 @@ namespace pwiz.Skyline.Model
                 massesFilter = calcFilter.GetFragmentIonMasses(sequence);
             }
 
+            // Get types other than this to make sure matches are possible for all types
+            var listOtherTypes = new List<Tuple<TransitionGroupDocNode, IFragmentMassCalc>>();
+            foreach (var labelType in settings.PeptideSettings.Modifications.GetModificationTypes())
+            {
+                if (Equals(labelType, LabelType))
+                    continue;
+                var calc = settings.GetFragmentCalc(labelType, mods);
+                if (calc == null)
+                    continue;
+                var tranGroupOther = new TransitionGroup(Peptide, PrecursorCharge, labelType, false, DecoyMassShift);
+                var nodeGroupOther = new TransitionGroupDocNode(tranGroupOther, Annotations.EMPTY, settings, mods,
+                    libInfo, null, new TransitionDocNode[0], false);
+
+                listOtherTypes.Add(new Tuple<TransitionGroupDocNode, IFragmentMassCalc>(nodeGroupOther, calc));
+            }
+
             // Loop over potential product ions picking transitions
             foreach (IonType type in types)
             {
@@ -276,38 +353,82 @@ namespace pwiz.Skyline.Model
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
 
+                            TransitionDocNode nodeTranReturn = null;
+                            bool accept = true;
                             if (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.all_plus)
                             {
                                 if (!useFilter)
                                 {
-                                    yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    nodeTranReturn = CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    accept = false;
                                 }
                                 else
                                 {
                                     if (IsMatched(transitionRanks, ionMz, type, charge, losses))
-                                        yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    {
+                                        nodeTranReturn = CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                        accept = false;
+                                    }
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
-                                            tranSettings.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
+                                            tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
                                     {
-                                        yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                        nodeTranReturn = CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                     }
                                 }
                             }
-                            else if (tranSettings.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
+                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
                             {
                                 if (pick == TransitionLibraryPick.none)
-                                    yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    nodeTranReturn = CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 else
                                 {
                                     if (IsMatched(transitionRanks, ionMz, type, charge, losses))
-                                        yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                        nodeTranReturn = CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 }
+                            }
+                            if (nodeTranReturn != null)
+                            {
+                                if (IsAvoidMismatchedIsotopeTransitions &&
+                                    !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept,
+                                                            groupDocNode, nodeTranReturn, listOtherTypes))
+                                {
+                                    continue;
+                                }
+                                yield return nodeTranReturn;
                             }
                         }
                     }
                 }
             }
+        }
+
+        private bool OtherLabelTypesAllowed(SrmSettings settings, double minMz, double maxMz, int start, int end, double startMz, bool accept,
+                                            TransitionGroupDocNode nodeGroupMatching,
+                                            TransitionDocNode nodeTran,
+                                            IEnumerable<Tuple<TransitionGroupDocNode, IFragmentMassCalc>> listOtherTypes)
+        {
+            foreach (var otherType in listOtherTypes)
+            {
+                var nodeGroupOther = otherType.Item1;
+                var tranGroupOther = nodeGroupOther.TransitionGroup;
+                var nodeTranMatching = tranGroupOther.GetMatchingTransition(settings,
+                    nodeGroupMatching, nodeTran, otherType.Item2);
+                if (minMz > nodeTranMatching.Mz || nodeTranMatching.Mz > maxMz)
+                    return false;
+                if (accept && !settings.TransitionSettings.Accept(Peptide.Sequence,
+                    nodeGroupOther.PrecursorMz,
+                    nodeTranMatching.Transition.IonType,
+                    nodeTranMatching.Transition.CleavageOffset,
+                    nodeTranMatching.Mz,
+                    start,
+                    end,
+                    startMz))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public IEnumerable<TransitionDocNode> GetPrecursorTransitions(SrmSettings settings,

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
@@ -311,7 +312,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 importResultsDlg.RadioAddNewChecked = true;
                 var path = new KeyValuePair<string, MsDataFileUri[]>[1];
-                path[0] = new KeyValuePair<string, MsDataFileUri[]>(fileName,
+                path[0] = new KeyValuePair<string, MsDataFileUri[]>(Path.GetFileNameWithoutExtension(fileName),
                                             new[] { MsDataFileUri.Parse(fileName) });
                 importResultsDlg.NamedPathSets = path;
             });
