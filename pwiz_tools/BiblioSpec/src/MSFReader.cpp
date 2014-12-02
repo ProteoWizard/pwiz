@@ -296,22 +296,35 @@ namespace BiblioSpec
                 statement = getStmt(
                     "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
                     "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
-                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
+                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
                     "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
                 resultCount = getRowCount(
                     "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
-                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
+                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
                     "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
             }
             else
             {
-                statement = getStmt(
-                    "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue "
-                    "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
-                    "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                resultCount = getRowCount(
-                    "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
-                    "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                try
+                {
+                    statement = getStmt(
+                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue "
+                        "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
+                        "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                    resultCount = getRowCount(
+                        "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
+                        "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                }
+                catch (BlibException& e)
+                {
+                    statement = getStmt(
+                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue "
+                        "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
+                        "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                    resultCount = getRowCount(
+                        "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
+                        "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                }
             }
         }
         Verbosity::status("Parsing %d PSMs.", resultCount);
@@ -516,7 +529,7 @@ namespace BiblioSpec
         sqlite3_stmt* statement = getStmt(
             "SELECT FieldID "
             "FROM CustomDataFields "
-            "WHERE DisplayName = 'q-Value' "
+            "WHERE DisplayName IN ('q-Value', 'Percolator q-Value') "
             "LIMIT 1");
         if (!hasNext(statement))
         {
@@ -550,8 +563,11 @@ namespace BiblioSpec
         while (hasNext(statement))
         {
             int peptideId = sqlite3_column_int(statement, 0);
-            // mod indices are 0 based
-            SeqMod mod(sqlite3_column_int(statement, 1) + 1, sqlite3_column_double(statement, 2));
+            // mod indices are 0 based in unfiltered, 1 based in filtered
+            int pos = sqlite3_column_int(statement, 1);
+            if (!filtered_)
+                ++pos;
+            SeqMod mod(pos, sqlite3_column_double(statement, 2));
             found = modMap.find(peptideId);
             if (found == modMap.end())
             {
@@ -758,8 +774,8 @@ namespace BiblioSpec
         sqlite3_stmt* statement;
         if (sqlite3_prepare(msfFile_, query.c_str(), -1, &statement, NULL) != SQLITE_OK)
         {
-            Verbosity::error("Cannot prepare SQL statement for %s: %s ",
-                             msfName_, sqlite3_errmsg(msfFile_));
+            throw BlibException("Cannot prepare SQL statement for %s: %s ",
+                                msfName_, sqlite3_errmsg(msfFile_));
         }
         return statement;
     }
