@@ -221,8 +221,7 @@ public:
         ss << "No matching mod for " << mod << " in sequence " << seq << " (line " << line << ")";
         message_ = ss.str();
     }
-    virtual ~MaxQuantWrongSequenceException() throw () {
-    }
+    virtual ~MaxQuantWrongSequenceException() throw () {}
     virtual const char* what() const throw () {
         return message_.c_str();
     }

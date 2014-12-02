@@ -428,7 +428,7 @@ void BuildParser::insertSpectrum(PSM* psm,
             curSpectrum.retentionTime,
             fileId,
             specIdStr.c_str(),
-            psm->score,
+            precisionRound(psm->score),
             scoreType);
     
     // submit
@@ -905,6 +905,15 @@ bool BuildParser::validInts(vector<string>::const_iterator begin, vector<string>
         }
     }
     return true;
+}
+
+double BuildParser::precisionRound(double f) {
+    // have to use this to eliminate rounding differences between platforms
+    // e.g. sprintf(buf, "%f", 0.0010485) gives 0.001048 on gcc, 0.001049 on msvc
+    const int factor = 1000000;
+    return f > 0
+        ? floor(f * factor + 0.5) / factor
+        : ceil(f * factor - 0.5) / factor;
 }
 
 } // namespace
