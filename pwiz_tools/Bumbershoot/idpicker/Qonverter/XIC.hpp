@@ -93,7 +93,7 @@ using pwiz::util::IntegerSet;
 
 struct XICConfiguration
 {
-    XICConfiguration(bool AlignRetentionTime = false, double MaxQValue = 0.05,
+    XICConfiguration(bool AlignRetentionTime = false, string RTFolder = "", double MaxQValue = 0.05,
                      const IntegerSet& MonoisotopicAdjustmentSet = IntegerSet(0, 2),
                      int RetentionTimeLowerTolerance = 30, int RetentionTimeUpperTolerance = 30,
                      MZTolerance ChromatogramMzLowerOffset = MZTolerance(10, MZTolerance::PPM),
@@ -101,6 +101,7 @@ struct XICConfiguration
 
 
     bool AlignRetentionTime;
+    string RTFolder;
     double MaxQValue;
     IntegerSet MonoisotopicAdjustmentSet;
     int RetentionTimeLowerTolerance;
@@ -238,10 +239,10 @@ struct LocalChromatogram
 
 struct RegDefinedPrecursorInfo
 {
-    string peptide;
+    string matchId;
+    string peptideId;
     double exactMZ;
     int charge;
-    string mods;
     double RegTime;
     LocalChromatogram chromatogram;
     interval_set<double> scanTimeWindow;
@@ -267,8 +268,9 @@ struct XICWindow
     double meanMS2RT;
     double bestScore;
     double bestScoreScanStartTime;
-    string peptide;
     vector<XICPeptideSpectrumMatch> PSMs; // sorted by ascending scan time
+    string distinctMatchId;
+    string peptideId;
     string distinctMatch;
     string source;
 

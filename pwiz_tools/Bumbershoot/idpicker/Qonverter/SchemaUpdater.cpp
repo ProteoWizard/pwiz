@@ -37,7 +37,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 11;
+const int CURRENT_SCHEMA_REVISION = 12;
 
 namespace SchemaUpdater {
 
@@ -109,6 +109,24 @@ struct DistinctDoubleArraySum
     }
 };
 
+void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    ITERATION_UPDATE(ilr, 11, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    db.execute("CREATE TABLE TempXIC (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC)");
+    db.execute("INSERT INTO TempXIC (DistinctMatch, SpectrumSource, Peptide, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds)"
+               "   SELECT dm.distinctMatchID, s.source, psm.peptide, xic.PeakIntensity, xic.PeakArea, xic.PeakSNR, xic.PeakTimeInSeconds"
+               "   FROM XICMetrics xic"
+               "   JOIN PeptideSpectrumMatch psm on psm.Id=xic.PsmId"
+               "   JOIN Spectrum s ON s.id = psm.Spectrum"
+               "   JOIN DistinctMatch dm ON dm.PsmId = psm.Id"
+               "   GROUP BY dm.DistinctMatchId, s.Source");
+    db.execute("DROP TABLE XICMetrics");
+    db.execute("ALTER TABLE TempXIC RENAME TO XICMetrics");
+    db.execute("CREATE INDEX XICMetrics_MatchSourcePeptide ON XICMetrics (DistinctMatch,SpectrumSource,Peptide);");
+
+    //update_12_to_13(db, ilr);
+}
 
 void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -132,7 +150,7 @@ void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr)
     // drop old table and rename new table
     db.execute("DROP TABLE FilterHistory; ALTER TABLE FilterHistoryNew RENAME TO FilterHistory");
 
-    //update_11_to_12(db, ilr);
+    update_11_to_12(db, ilr);
 }
 
 
@@ -561,6 +579,8 @@ bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
         update_9_to_10(db, ilr);
     else if (schemaRevision == 10)
         update_10_to_11(db, ilr);
+    else if (schemaRevision == 11)
+        update_11_to_12(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

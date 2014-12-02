@@ -289,7 +289,7 @@ struct SpectrumList_Quantifier
         tmtReporterIonIntensities.resize(10);
         tmtTotalReporterIonIntensities.resize(10, 0);
 
-        if (quantitationMethod == QuantitationMethod::None)
+        if (quantitationMethod == QuantitationMethod::None || quantitationMethod == QuantitationMethod::LabelFree)
             return;
 
         for (size_t i=0, end=sl->size(); i < end; ++i)
@@ -311,7 +311,7 @@ struct SpectrumList_Quantifier
 
             if (msLevel > 1 && filteredIndexes.contains(i))
             {
-                if (quantitationMethod != QuantitationMethod::None)
+                if (quantitationMethod != QuantitationMethod::None && quantitationMethod != QuantitationMethod::LabelFree)
                 {
                     switch (quantitationMethod.value())
                     {
@@ -367,7 +367,7 @@ struct SpectrumList_Quantifier
         };
 
         // normalize reporter ion intensities to the total for each channel
-        if (quantitationMethod != QuantitationMethod::None)
+        if (quantitationMethod != QuantitationMethod::None && quantitationMethod != QuantitationMethod::LabelFree)
         {
             switch (quantitationMethod.value())
             {
@@ -670,7 +670,8 @@ void embed(const string& idpDbFilepath,
             continue;
         }*/
 
-        if (newQuantitationConfig.quantitationMethod != QuantitationMethod::None)
+        if (newQuantitationConfig.quantitationMethod != QuantitationMethod::None &&
+            newQuantitationConfig.quantitationMethod != QuantitationMethod::LabelFree)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "adding spectrum quantitation data for \"" + source.name + "\"");
 
@@ -802,7 +803,8 @@ void embedScanTime(const string& idpDbFilepath,
         //if (newQuantitationConfig.quantitationMethod == source.quantitationMethod)
         //    continue;
 
-        if (newQuantitationConfig.quantitationMethod != QuantitationMethod::None)
+        if (newQuantitationConfig.quantitationMethod != QuantitationMethod::None &&
+            newQuantitationConfig.quantitationMethod != QuantitationMethod::LabelFree)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "adding spectrum quantitation data for \"" + source.name + "\"");
 
@@ -989,13 +991,11 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
     {
         throw runtime_error(string("[embed] ") + e.what());
     }
-    //TODO: process all files
-//    idpDb.execute("DROP TABLE IF EXISTS XICMetrics; "
-//                  "CREATE TABLE IF NOT EXISTS XICMetrics (DistinctMatchId INT, Source INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC, PRIMARY KEY(DistinctMatchId, Source));");
     idpDb.execute("DROP TABLE IF EXISTS XICMetrics; "
                   "DROP TABLE IF EXISTS XICMetricsSettings; "
-                  "CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC); "
-                  "CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
+                  "CREATE TABLE IF NOT EXISTS XICMetrics (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC); "
+                  "CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING); "
+                  "CREATE INDEX IF NOT EXISTS XICMetrics_MatchSourcePeptide ON XICMetrics(DistinctMatch,SpectrumSource,Peptide);");
     for(size_t i=0; i < sources.size(); ++i)
     {
         SpectrumSource& source = sources[i];
@@ -1015,7 +1015,7 @@ void EmbedMS1Metrics(const string& idpDbFilepath,
         if (config.AlignRetentionTime)
             align = "1";
         ostringstream oss; oss << config.MonoisotopicAdjustmentSet;
-        string configString = oss.str() + " ; " +
+        string configString = oss.str() + "; " +
         "[-" + lexical_cast<string>(config.RetentionTimeLowerTolerance) + "," + lexical_cast<string>(config.RetentionTimeUpperTolerance) + "] ; "+
         "[-" + lexical_cast<string>(config.ChromatogramMzLowerOffset) + "," + lexical_cast<string>(config.ChromatogramMzUpperOffset) + "] ; " +
         lexical_cast<string>(config.MaxQValue) + " ; " + align;

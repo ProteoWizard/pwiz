@@ -43,24 +43,13 @@ namespace IDPicker.Forms
 {
     public partial class XICForm : Form
     {
-        private NHibernate.ISession session;
         private string _rFilepath;
         private Embedder.XICConfiguration _config;
-        private bool _editMode = false;
         private double _maxQValue = 0.05;
 
         public XICForm(Embedder.XICConfiguration oldConfig, double maxQValue)
         {
-            this.session = null;
             _config = oldConfig;
-            _editMode = true;
-            _maxQValue = maxQValue;
-            InitializeComponent();
-        }
-
-        public XICForm(NHibernate.ISession session, double maxQValue)
-        {
-            this.session = session.SessionFactory.OpenSession();
             _maxQValue = maxQValue;
             InitializeComponent();
         }
@@ -81,29 +70,19 @@ namespace IDPicker.Forms
                 RTAlignBox.Enabled = false;
 
             if (!string.IsNullOrEmpty(rPath))
-            {
                 _rFilepath = Directory.GetFiles(rPath, "Rscript.exe", SearchOption.AllDirectories).LastOrDefault();
-                if (_rFilepath == null)
-                    RTAlignBox.Enabled = false;
-            }
+            else
+                RTAlignBox.Enabled = false;
 
             //load config into form
-            if (_editMode)
-            {
-                StartButton.Text = "OK";
-                SourceLocationLabel.Visible = false;
-                SourceLocationBox.Visible = false;
-                SourceLocationBrowse.Visible = false;
-
-                MonoisotopicAdjustmentMinBox.Value = _config.MonoisotopicAdjustmentMin;
-                MonoisotopicAdjustmentMaxBox.Value = _config.MonoisotopicAdjustmentMax;
-                RTTolLowerBox.Value = _config.RetentionTimeLowerTolerance;
-                RTTolUpperBox.Value = _config.RetentionTimeUpperTolerance;
-                ChromatogramMzLowerOffsetValueBox.Value = (decimal)_config.ChromatogramMzLowerOffset.value;
-                ChromatogramMzUpperOffsetValueBox.Value = (decimal)_config.ChromatogramMzUpperOffset.value;
-                ChromatogramMzLowerOffsetUnitsBox.SelectedIndex = (int)_config.ChromatogramMzLowerOffset.units;
-                ChromatogramMzUpperOffsetUnitsBox.SelectedIndex = (int)_config.ChromatogramMzUpperOffset.units;
-            }
+            MonoisotopicAdjustmentMinBox.Value = _config.MonoisotopicAdjustmentMin;
+            MonoisotopicAdjustmentMaxBox.Value = _config.MonoisotopicAdjustmentMax;
+            RTTolLowerBox.Value = _config.RetentionTimeLowerTolerance;
+            RTTolUpperBox.Value = _config.RetentionTimeUpperTolerance;
+            ChromatogramMzLowerOffsetValueBox.Value = (decimal)_config.ChromatogramMzLowerOffset.value;
+            ChromatogramMzUpperOffsetValueBox.Value = (decimal)_config.ChromatogramMzUpperOffset.value;
+            ChromatogramMzLowerOffsetUnitsBox.SelectedIndex = (int)_config.ChromatogramMzLowerOffset.units;
+            ChromatogramMzUpperOffsetUnitsBox.SelectedIndex = (int)_config.ChromatogramMzUpperOffset.units;
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -116,8 +95,7 @@ namespace IDPicker.Forms
             var rtMin = (int)Math.Round(RTTolLowerBox.Value);
             var maMax = (int)Math.Round(MonoisotopicAdjustmentMaxBox.Value);
             var maMin = (int)Math.Round(MonoisotopicAdjustmentMinBox.Value);
-            _config = new Embedder.XICConfiguration
-            {
+            _config = new Embedder.XICConfiguration{
                 ChromatogramMzLowerOffset = new MZTolerance(cloValue, cloUnits),
                 ChromatogramMzUpperOffset = new MZTolerance(cuoValue, cuoUnits),
                 RetentionTimeLowerTolerance = rtMin,
@@ -125,72 +103,8 @@ namespace IDPicker.Forms
                 MonoisotopicAdjustmentMax = maMax,
                 MonoisotopicAdjustmentMin = maMin,
                 MaxQValue = _maxQValue,
-                AlignRetentionTime = false
-            };
-            if (_editMode || session == null)
-            {
-                this.DialogResult = DialogResult.OK;
-                return;
-            }
-            new Thread(() =>
-                {
-                    string idpDbFilepath = session.Connection.GetDataSource();
-                    var searchPath =
-                        new StringBuilder(String.Join(";",
-                                                      Util.StringCollectionToStringArray(
-                                                          Properties.Settings.Default.SourcePaths)));
-                    if (Directory.Exists(SourceLocationBox.Text))
-                        searchPath.AppendFormat(";{0}", SourceLocationBox.Text);
-                    try
-                    {
-                        // add location of original idpDBs to the search path
-                        var mergedFilepaths =
-                            session.CreateSQLQuery("SELECT DISTINCT Filepath FROM MergedFiles").List<string>();
-                        foreach (var filepath in mergedFilepaths)
-                            searchPath.AppendFormat(";{0}", System.IO.Path.GetDirectoryName(filepath));
-                    }
-                    catch
-                    {
-                        // ignore if MergedFiles does not exist
-                    }
-
-                    //get quanititation method
-                    var quantitationMethodBySource = new Dictionary<int, Embedder.QuantitationConfiguration>();
-                    var xicConfigMethodBySource = new Dictionary<int, Embedder.XICConfiguration>();
-                    var rows = session.CreateSQLQuery(
-                        "SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod " +
-                        "FROM SpectrumSource ss " +
-                        "JOIN UnfilteredSpectrum s ON ss.Id=Source " +
-                        "GROUP BY ss.Id")
-                                      .List<object[]>()
-                                      .Select(o => new
-                                          {
-                                              Id = Convert.ToInt32(o[0]),
-                                              Name = (string) o[1],
-                                              Spectra = Convert.ToInt32(o[2]),
-                                              EmbeddedSize = Convert.ToInt32(o[3]),
-                                              MaxScanTime = Convert.ToDouble(o[4]),
-                                              QuantitationMethodIndex = Convert.ToInt32(o[5])
-                                          });
-                    foreach (var row in rows)
-                    {
-                        quantitationMethodBySource[row.Id] = new Embedder.QuantitationConfiguration
-                            {
-                                QuantitationMethod = (QuantitationMethod) row.QuantitationMethodIndex,
-                                ReporterIonMzTolerance = new MZTolerance(0.015, MZTolerance.Units.MZ)
-                            };
-                        xicConfigMethodBySource[row.Id] = _config;
-                    }
-                    var ilr = new IterationListenerRegistry();
-                    ilr.addListener(new XICIterationListener(this), 1);
-
-                    Embedder.EmbedMS1Metrics(idpDbFilepath, searchPath.ToString(),
-                                             Properties.Settings.Default.SourceExtensions,
-                                             quantitationMethodBySource, xicConfigMethodBySource, ilr);
-                    MessageBox.Show("Finished embedding MS1 information");
-                    this.DialogResult = DialogResult.OK;
-                }).Start();
-            ContentPanel.Enabled = false;
+                AlignRetentionTime = RTAlignBox.Checked};
+            DialogResult = DialogResult.OK;
         }
 
         public Embedder.XICConfiguration GetConfig()
@@ -227,28 +141,6 @@ namespace IDPicker.Forms
 
                 return IterationListener.Status.Ok;
             }
-        }
-
-        private void SourceLocationBrowse_Click(object sender, EventArgs e)
-        {
-            var origin = string.Empty;
-            if (SourceLocationBox.Text == "<Default>")
-                origin = Path.GetDirectoryName(session.Connection.GetDataSource());
-            else if (Directory.Exists(SourceLocationBox.Text))
-                origin = SourceLocationBox.Text;
-            var fbd = new FolderBrowserDialog();
-            if (!string.IsNullOrEmpty(origin) && Directory.Exists(origin))
-                fbd.SelectedPath = origin;
-            if (fbd.ShowDialog() == DialogResult.OK)
-            {
-                ValidateSourceLocation();
-                SourceLocationBox.Text = fbd.SelectedPath;
-            }
-        }
-
-        private void ValidateSourceLocation()
-        {
-            //TODO: implement method to validate source location
         }
 
         private void RTAlignInfo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

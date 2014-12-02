@@ -26,7 +26,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -248,15 +250,39 @@ namespace IDPicker.Forms
                     var ilr = new IterationListenerRegistry();
                     ilr.addListener(new EmbedderIterationListener(this), 1);
 
+                    var tempFolder = string.Empty;
+                    var splitSourceList = new List<List<string>>();
+                    if (quantitationMethodBySource.Any(x => x.Value.QuantitationMethod == QuantitationMethod.LabelFree)
+                        && xicConfigBySource.Any(x => x.Value.AlignRetentionTime))
+                        splitSourceList = GetRTAlignGroups();
+
                     string idpDbFilepath = session.Connection.GetDataSource();
                     if (embedScanTimeOnlyBox.Checked)
                         Embedder.EmbedScanTime(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
                     else
                         Embedder.Embed(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
-                    if (quantitationMethodBySource.Any(x=>x.Value.QuantitationMethod==QuantitationMethod.LabelFree))
+                    if (quantitationMethodBySource.Any(x => x.Value.QuantitationMethod == QuantitationMethod.LabelFree))
                     {
                         BeginInvoke(new MethodInvoker(() => ModeandDefaultPanel.Visible = false));
+                        if (xicConfigBySource.Any(x => x.Value.AlignRetentionTime))
+                        {
+                            try
+                            {
+                                tempFolder = RTAlignPreparations(splitSourceList);
+                                foreach (var kvp in xicConfigBySource)
+                                    kvp.Value.RTFolder = tempFolder;
+                            }
+                            catch (Exception rtError)
+                            {
+                                MessageBox.Show("Error: Cannot prepare RT alignment. Skipping to next stage." +
+                                                Environment.NewLine + rtError.Message);
+                                foreach (var kvp in xicConfigBySource)
+                                    kvp.Value.AlignRetentionTime = false;
+                            }
+                        }
                         Embedder.EmbedMS1Metrics(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, xicConfigBySource, ilr);
+                        if (!string.IsNullOrEmpty(tempFolder) && Directory.Exists(tempFolder))
+                            Directory.Delete(tempFolder,true);
                         BeginInvoke(new MethodInvoker(() => ModeandDefaultPanel.Visible = true));
                     }
                 }
@@ -283,6 +309,141 @@ namespace IDPicker.Forms
                 }
                 BeginInvoke(new MethodInvoker(() => Refresh()));
             }).Start();
+        }
+
+        private class RTAlignEntry
+        {
+            public int DistinctMatchId { get; set; }
+            public int Peptide { get; set; }
+            public int Charge { get; set; }
+            public double PrecursorMz { get; set; }
+            public Dictionary<string, double> RTValues { get; set; }
+
+            public RTAlignEntry(int distinctMatchId, int charge, double precursorMz, int peptide, IEnumerable<string> sources)
+            {
+                DistinctMatchId = distinctMatchId;
+                Peptide = peptide;
+                Charge = charge;
+                PrecursorMz = precursorMz;
+                RTValues=new Dictionary<string, double>();
+                foreach (var source in sources)
+                    RTValues.Add(source, 0.0);
+            }
+
+        };
+
+        private List<List<string>> GetRTAlignGroups()
+        {
+            var sourceQuery = session.CreateSQLQuery("SELECT DISTINCT Name FROM SpectrumSource").List();
+            var fullSourceList = sourceQuery.Cast<string>().ToList();
+            List<List<string>> splitSourceList;
+
+            BeginInvoke(new MethodInvoker(() => Application.UseWaitCursor = false));
+            var groupingForm = new RTGroupingForm(fullSourceList); //TODO: Only use rtaligned entries
+
+            if (groupingForm.ShowDialog() == DialogResult.OK)
+                splitSourceList = groupingForm.GetRTGroups();
+            else
+                throw new Exception("RT groups not set properly");
+            BeginInvoke(new MethodInvoker(() => Application.UseWaitCursor = true));
+            return splitSourceList;
+        }
+
+        private string RTAlignPreparations(List<List<string>> splitSourceList)
+        {
+            var sourceQuery = session.CreateSQLQuery("SELECT DISTINCT Name FROM SpectrumSource").List();
+            var fullSourceList = sourceQuery.Cast<string>().ToList();
+
+            //Get rt/scantime information
+            var entryDict = new Dictionary<int, RTAlignEntry>();
+            var rows = session.CreateSQLQuery(
+                "SELECT dm.DistinctMatchId, s.PrecursorMZ, ss.name, psm.Charge, s.scantimeinseconds, psm.peptide " +
+                "FROM Spectrum s " +
+                "JOIN SpectrumSource ss on ss.id=s.source " +
+                "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum  " +
+                "JOIN DistinctMatch dm ON dm.psmId=psm.id " +
+                "left join (select dm2.distinctmatchid, s2.source, min(Qvalue) as qvalue " +
+                "from peptidespectrummatch psm2 " +
+                "join spectrum s2 on psm2.spectrum=s2.id " +
+                "join distinctmatch dm2 on dm2.psmid=psm2.id " +
+                "group by dm2.distinctmatchid,s2.source) as bestQ on bestq.distinctmatchid=dm.distinctmatchid and bestq.source=s.source " +
+                "WHERE Rank=1 and bestq.qvalue=psm.qvalue")
+                              .List<object[]>()
+                              .Select(o => new
+                              {
+                                  Id = Convert.ToInt32(o[0]),
+                                  PrecursorMz = Convert.ToDouble(o[1]),
+                                  SourceName = (string)o[2],
+                                  Charge = Convert.ToInt32(o[3]),
+                                  ScanTime = Convert.ToDouble(o[4]),
+                                  Peptide = Convert.ToInt32(o[5])
+                              });
+            foreach (var row in rows)
+            {
+                if (!entryDict.ContainsKey(row.Id))
+                    entryDict[row.Id] = new RTAlignEntry(row.Id, row.Charge, row.PrecursorMz, row.Peptide, fullSourceList);
+                entryDict[row.Id].RTValues[row.SourceName] = row.ScanTime;
+            }
+
+            var tempFolder = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+            Directory.CreateDirectory(tempFolder);
+            for (var x=0; x < splitSourceList.Count; x++)
+            {
+                var currentSourceList = splitSourceList[x];
+                BeginInvoke(
+                    new MethodInvoker(
+                        () => this.Text = "Gathering scan times for RT group " + (x + 1) + " of " + splitSourceList.Count));
+                var tsvOut = new StreamWriter(Path.Combine(tempFolder, "peptideScanTime.tsv"));
+                tsvOut.WriteLine("DistinctMatchId\t" + string.Join("\t", currentSourceList) + "\tCharge\tPrecursorMZ\tPeptide");
+                foreach (var kvp in entryDict)
+                {
+                    var ss = new StringBuilder(kvp.Value.DistinctMatchId + "\t");
+                    foreach (var source in currentSourceList)
+                        ss.Append(kvp.Value.RTValues[source] + "\t");
+                    ss.Append(kvp.Value.Charge + "\t" + kvp.Value.PrecursorMz + "\t" + kvp.Value.Peptide);
+                    tsvOut.WriteLine(ss.ToString());
+                }
+                tsvOut.Flush();
+                tsvOut.Close();
+
+                RunRScript(tempFolder, currentSourceList);
+                File.Delete(Path.Combine(tempFolder, "peptideScanTime.tsv"));
+            }
+
+            return tempFolder;
+
+        }
+
+        private void RunRScript(string tempFolder, List<string> fullSourceList)
+        {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string programFilesRoot = Path.GetPathRoot(programFiles);
+            string rPath = string.Empty;
+            if (Directory.Exists(Path.Combine(programFiles, "R")))
+                rPath = Path.Combine(programFiles, "R");
+            else if (Directory.Exists(Path.Combine(programFilesRoot, "Program Files/R")))
+                rPath = Path.Combine(programFilesRoot, "Program Files/R");
+            else if (Directory.Exists(Path.Combine(programFilesRoot, "Program Files (x86)/R")))
+                rPath = Path.Combine(programFilesRoot, "Program Files (x86)/R");
+            else
+                throw new Exception("Could not find installation of R");
+            string rFilepath = Directory.GetFiles(rPath, "Rscript.exe", SearchOption.AllDirectories).LastOrDefault();
+            if (rFilepath == null)
+                throw new FileNotFoundException("unable to find an installation of R in Program Files"); 
+
+            //TODO: § make alignment MZTolerance adjustable (should this inherit settings?)
+            var psi = new ProcessStartInfo(rFilepath)
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    Arguments = string.Format(@"{0}\scantime.r {1} {2} 10ppm 10ppm", AppDomain.CurrentDomain.BaseDirectory,
+                                              tempFolder, string.Join(" ", fullSourceList)),
+                    WorkingDirectory = tempFolder
+                };
+            var proc = new Process {StartInfo = psi};
+            proc.Start();
+            proc.WaitForExit();
+            proc.Dispose();
         }
 
         private void deleteAllButton_Click (object sender, EventArgs e)
@@ -396,7 +557,14 @@ namespace IDPicker.Forms
             var mostRecentFilter = session.Query<PersistentDataFilter>().OrderByDescending(o => o.Id).FirstOrDefault();
             if (mostRecentFilter != null)
                 maxQValue = mostRecentFilter.MaximumQValue;
-            var xicForm = new XICForm(new Embedder.XICConfiguration(), maxQValue);
+
+            var defaultConfiguration = new Embedder.XICConfiguration();
+            if (dataGridView.RowCount > 0)
+                defaultConfiguration =
+                    (dataGridView.Rows[0].Cells[quantitationSettingsColumn.Index].Value as Embedder.XICConfiguration) ??
+                    new Embedder.XICConfiguration();
+            
+            var xicForm = new XICForm(defaultConfiguration, maxQValue);
             if (xicForm.ShowDialog() == DialogResult.OK)
                 foreach (DataGridViewRow row in dataGridView.Rows)
                 {

@@ -63,9 +63,6 @@ namespace IDPicker.Forms
             this.ChromatogramMzUpperOffsetUnitsBox = new System.Windows.Forms.ComboBox();
             this.ChromatogramMzUpperOffsetValueBox = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
-            this.SourceLocationLabel = new System.Windows.Forms.Label();
-            this.SourceLocationBox = new System.Windows.Forms.TextBox();
-            this.SourceLocationBrowse = new System.Windows.Forms.Button();
             this.ContentPanel = new System.Windows.Forms.Panel();
             this.RTAlignInfo = new System.Windows.Forms.LinkLabel();
             this.RTAlignBox = new System.Windows.Forms.CheckBox();
@@ -75,7 +72,6 @@ namespace IDPicker.Forms
             this.RTTolLowerBox = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
             this.RTTolUpperBox = new System.Windows.Forms.NumericUpDown();
-            this.RTGroupingPanel = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.MonoisotopicAdjustmentMinBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MonoisotopicAdjustmentMaxBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ChromatogramMzLowerOffsetValueBox)).BeginInit();
@@ -88,19 +84,19 @@ namespace IDPicker.Forms
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(374, 205);
+            this.StartButton.Location = new System.Drawing.Point(303, 189);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 23);
             this.StartButton.TabIndex = 12;
-            this.StartButton.Text = "Start";
+            this.StartButton.Text = "OK";
             this.StartButton.UseVisualStyleBackColor = true;
             this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
             // 
             // label1
             // 
-            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(111, 17);
+            this.label1.Location = new System.Drawing.Point(76, 17);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(127, 13);
             this.label1.TabIndex = 1;
@@ -108,8 +104,8 @@ namespace IDPicker.Forms
             // 
             // MonoisotopicAdjustmentMinBox
             // 
-            this.MonoisotopicAdjustmentMinBox.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.MonoisotopicAdjustmentMinBox.Location = new System.Drawing.Point(244, 15);
+            this.MonoisotopicAdjustmentMinBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.MonoisotopicAdjustmentMinBox.Location = new System.Drawing.Point(209, 15);
             this.MonoisotopicAdjustmentMinBox.Minimum = new decimal(new int[] {
             100,
             0,
@@ -122,9 +118,9 @@ namespace IDPicker.Forms
             // 
             // label2
             // 
-            this.label2.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(297, 17);
+            this.label2.Location = new System.Drawing.Point(262, 17);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(10, 13);
             this.label2.TabIndex = 3;
@@ -132,8 +128,8 @@ namespace IDPicker.Forms
             // 
             // MonoisotopicAdjustmentMaxBox
             // 
-            this.MonoisotopicAdjustmentMaxBox.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.MonoisotopicAdjustmentMaxBox.Location = new System.Drawing.Point(313, 15);
+            this.MonoisotopicAdjustmentMaxBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.MonoisotopicAdjustmentMaxBox.Location = new System.Drawing.Point(278, 15);
             this.MonoisotopicAdjustmentMaxBox.Minimum = new decimal(new int[] {
             100,
             0,
@@ -151,9 +147,9 @@ namespace IDPicker.Forms
             // 
             // label3
             // 
-            this.label3.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label3.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(82, 95);
+            this.label3.Location = new System.Drawing.Point(47, 95);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(156, 13);
             this.label3.TabIndex = 5;
@@ -161,14 +157,14 @@ namespace IDPicker.Forms
             // 
             // ChromatogramMzLowerOffsetValueBox
             // 
-            this.ChromatogramMzLowerOffsetValueBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.ChromatogramMzLowerOffsetValueBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.ChromatogramMzLowerOffsetValueBox.DecimalPlaces = 2;
             this.ChromatogramMzLowerOffsetValueBox.Increment = new decimal(new int[] {
             1,
             0,
             0,
             65536});
-            this.ChromatogramMzLowerOffsetValueBox.Location = new System.Drawing.Point(244, 93);
+            this.ChromatogramMzLowerOffsetValueBox.Location = new System.Drawing.Point(209, 93);
             this.ChromatogramMzLowerOffsetValueBox.Name = "ChromatogramMzLowerOffsetValueBox";
             this.ChromatogramMzLowerOffsetValueBox.Size = new System.Drawing.Size(59, 20);
             this.ChromatogramMzLowerOffsetValueBox.TabIndex = 5;
@@ -181,40 +177,40 @@ namespace IDPicker.Forms
             // 
             // ChromatogramMzLowerOffsetUnitsBox
             // 
-            this.ChromatogramMzLowerOffsetUnitsBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.ChromatogramMzLowerOffsetUnitsBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.ChromatogramMzLowerOffsetUnitsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ChromatogramMzLowerOffsetUnitsBox.FormattingEnabled = true;
             this.ChromatogramMzLowerOffsetUnitsBox.Items.AddRange(new object[] {
             "MZ",
             "PPM"});
-            this.ChromatogramMzLowerOffsetUnitsBox.Location = new System.Drawing.Point(311, 92);
+            this.ChromatogramMzLowerOffsetUnitsBox.Location = new System.Drawing.Point(276, 92);
             this.ChromatogramMzLowerOffsetUnitsBox.Name = "ChromatogramMzLowerOffsetUnitsBox";
             this.ChromatogramMzLowerOffsetUnitsBox.Size = new System.Drawing.Size(69, 21);
             this.ChromatogramMzLowerOffsetUnitsBox.TabIndex = 6;
             // 
             // ChromatogramMzUpperOffsetUnitsBox
             // 
-            this.ChromatogramMzUpperOffsetUnitsBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.ChromatogramMzUpperOffsetUnitsBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.ChromatogramMzUpperOffsetUnitsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ChromatogramMzUpperOffsetUnitsBox.FormattingEnabled = true;
             this.ChromatogramMzUpperOffsetUnitsBox.Items.AddRange(new object[] {
             "MZ",
             "PPM"});
-            this.ChromatogramMzUpperOffsetUnitsBox.Location = new System.Drawing.Point(311, 118);
+            this.ChromatogramMzUpperOffsetUnitsBox.Location = new System.Drawing.Point(276, 118);
             this.ChromatogramMzUpperOffsetUnitsBox.Name = "ChromatogramMzUpperOffsetUnitsBox";
             this.ChromatogramMzUpperOffsetUnitsBox.Size = new System.Drawing.Size(69, 21);
             this.ChromatogramMzUpperOffsetUnitsBox.TabIndex = 8;
             // 
             // ChromatogramMzUpperOffsetValueBox
             // 
-            this.ChromatogramMzUpperOffsetValueBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.ChromatogramMzUpperOffsetValueBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.ChromatogramMzUpperOffsetValueBox.DecimalPlaces = 2;
             this.ChromatogramMzUpperOffsetValueBox.Increment = new decimal(new int[] {
             1,
             0,
             0,
             65536});
-            this.ChromatogramMzUpperOffsetValueBox.Location = new System.Drawing.Point(244, 119);
+            this.ChromatogramMzUpperOffsetValueBox.Location = new System.Drawing.Point(209, 119);
             this.ChromatogramMzUpperOffsetValueBox.Name = "ChromatogramMzUpperOffsetValueBox";
             this.ChromatogramMzUpperOffsetValueBox.Size = new System.Drawing.Size(59, 20);
             this.ChromatogramMzUpperOffsetValueBox.TabIndex = 7;
@@ -227,46 +223,13 @@ namespace IDPicker.Forms
             // 
             // label4
             // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(82, 121);
+            this.label4.Location = new System.Drawing.Point(47, 121);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(156, 13);
             this.label4.TabIndex = 8;
             this.label4.Text = "Upper chromatogram tolerance:";
-            // 
-            // SourceLocationLabel
-            // 
-            this.SourceLocationLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.SourceLocationLabel.AutoSize = true;
-            this.SourceLocationLabel.Location = new System.Drawing.Point(11, 182);
-            this.SourceLocationLabel.Name = "SourceLocationLabel";
-            this.SourceLocationLabel.Size = new System.Drawing.Size(130, 13);
-            this.SourceLocationLabel.TabIndex = 12;
-            this.SourceLocationLabel.Text = "Spectrum source location:";
-            // 
-            // SourceLocationBox
-            // 
-            this.SourceLocationBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.SourceLocationBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
-            this.SourceLocationBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
-            this.SourceLocationBox.Location = new System.Drawing.Point(147, 179);
-            this.SourceLocationBox.Name = "SourceLocationBox";
-            this.SourceLocationBox.Size = new System.Drawing.Size(246, 20);
-            this.SourceLocationBox.TabIndex = 10;
-            this.SourceLocationBox.Text = "<Default>";
-            // 
-            // SourceLocationBrowse
-            // 
-            this.SourceLocationBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.SourceLocationBrowse.Location = new System.Drawing.Point(399, 177);
-            this.SourceLocationBrowse.Name = "SourceLocationBrowse";
-            this.SourceLocationBrowse.Size = new System.Drawing.Size(50, 23);
-            this.SourceLocationBrowse.TabIndex = 11;
-            this.SourceLocationBrowse.Text = "Browse";
-            this.SourceLocationBrowse.UseVisualStyleBackColor = true;
-            this.SourceLocationBrowse.Click += new System.EventHandler(this.SourceLocationBrowse_Click);
             // 
             // ContentPanel
             // 
@@ -278,11 +241,8 @@ namespace IDPicker.Forms
             this.ContentPanel.Controls.Add(this.RTTolLowerBox);
             this.ContentPanel.Controls.Add(this.label7);
             this.ContentPanel.Controls.Add(this.RTTolUpperBox);
-            this.ContentPanel.Controls.Add(this.SourceLocationBrowse);
             this.ContentPanel.Controls.Add(this.label1);
-            this.ContentPanel.Controls.Add(this.SourceLocationBox);
             this.ContentPanel.Controls.Add(this.StartButton);
-            this.ContentPanel.Controls.Add(this.SourceLocationLabel);
             this.ContentPanel.Controls.Add(this.MonoisotopicAdjustmentMinBox);
             this.ContentPanel.Controls.Add(this.label2);
             this.ContentPanel.Controls.Add(this.ChromatogramMzUpperOffsetUnitsBox);
@@ -295,39 +255,37 @@ namespace IDPicker.Forms
             this.ContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ContentPanel.Location = new System.Drawing.Point(0, 0);
             this.ContentPanel.Name = "ContentPanel";
-            this.ContentPanel.Size = new System.Drawing.Size(461, 240);
+            this.ContentPanel.Size = new System.Drawing.Size(390, 224);
             this.ContentPanel.TabIndex = 15;
             // 
             // RTAlignInfo
             // 
-            this.RTAlignInfo.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.RTAlignInfo.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.RTAlignInfo.AutoSize = true;
-            this.RTAlignInfo.Location = new System.Drawing.Point(219, 149);
+            this.RTAlignInfo.Location = new System.Drawing.Point(184, 151);
             this.RTAlignInfo.Name = "RTAlignInfo";
             this.RTAlignInfo.Size = new System.Drawing.Size(142, 13);
             this.RTAlignInfo.TabIndex = 22;
             this.RTAlignInfo.TabStop = true;
             this.RTAlignInfo.Text = "(Disabled if R is not installed)";
-            this.RTAlignInfo.Visible = false;
             this.RTAlignInfo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.RTAlignInfo_LinkClicked);
             // 
             // RTAlignBox
             // 
-            this.RTAlignBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.RTAlignBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.RTAlignBox.AutoSize = true;
-            this.RTAlignBox.Location = new System.Drawing.Point(100, 148);
+            this.RTAlignBox.Location = new System.Drawing.Point(65, 150);
             this.RTAlignBox.Name = "RTAlignBox";
             this.RTAlignBox.Size = new System.Drawing.Size(115, 17);
             this.RTAlignBox.TabIndex = 9;
             this.RTAlignBox.Text = "Align retention time";
             this.RTAlignBox.UseVisualStyleBackColor = true;
-            this.RTAlignBox.Visible = false;
             // 
             // label9
             // 
-            this.label9.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label9.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(309, 69);
+            this.label9.Location = new System.Drawing.Point(274, 69);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(47, 13);
             this.label9.TabIndex = 20;
@@ -335,9 +293,9 @@ namespace IDPicker.Forms
             // 
             // label8
             // 
-            this.label8.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label8.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(86, 69);
+            this.label8.Location = new System.Drawing.Point(51, 69);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(152, 13);
             this.label8.TabIndex = 19;
@@ -345,9 +303,9 @@ namespace IDPicker.Forms
             // 
             // label6
             // 
-            this.label6.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label6.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(86, 43);
+            this.label6.Location = new System.Drawing.Point(51, 43);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(152, 13);
             this.label6.TabIndex = 15;
@@ -355,13 +313,13 @@ namespace IDPicker.Forms
             // 
             // RTTolLowerBox
             // 
-            this.RTTolLowerBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.RTTolLowerBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.RTTolLowerBox.Increment = new decimal(new int[] {
             10,
             0,
             0,
             0});
-            this.RTTolLowerBox.Location = new System.Drawing.Point(244, 41);
+            this.RTTolLowerBox.Location = new System.Drawing.Point(209, 41);
             this.RTTolLowerBox.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -379,9 +337,9 @@ namespace IDPicker.Forms
             // 
             // label7
             // 
-            this.label7.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label7.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(309, 43);
+            this.label7.Location = new System.Drawing.Point(274, 43);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(47, 13);
             this.label7.TabIndex = 17;
@@ -389,13 +347,13 @@ namespace IDPicker.Forms
             // 
             // RTTolUpperBox
             // 
-            this.RTTolUpperBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.RTTolUpperBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.RTTolUpperBox.Increment = new decimal(new int[] {
             10,
             0,
             0,
             0});
-            this.RTTolUpperBox.Location = new System.Drawing.Point(244, 67);
+            this.RTTolUpperBox.Location = new System.Drawing.Point(209, 67);
             this.RTTolUpperBox.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -411,22 +369,14 @@ namespace IDPicker.Forms
             0});
             this.RTTolUpperBox.Enter += new System.EventHandler(this.NumericUpDownEnter);
             // 
-            // RTGroupingPanel
-            // 
-            this.RTGroupingPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.RTGroupingPanel.Location = new System.Drawing.Point(0, 0);
-            this.RTGroupingPanel.Name = "RTGroupingPanel";
-            this.RTGroupingPanel.Size = new System.Drawing.Size(461, 240);
-            this.RTGroupingPanel.TabIndex = 16;
-            // 
             // XICForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(461, 240);
+            this.ClientSize = new System.Drawing.Size(390, 224);
             this.Controls.Add(this.ContentPanel);
-            this.Controls.Add(this.RTGroupingPanel);
-            this.MinimumSize = new System.Drawing.Size(343, 235);
+            this.Location = new System.Drawing.Point(406, 262);
+            this.MaximumSize = new System.Drawing.Size(406, 262);
             this.Name = "XICForm";
             this.Text = "Embed XIC Metrics";
             this.Load += new System.EventHandler(this.XICForm_Load);
@@ -455,9 +405,6 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ComboBox ChromatogramMzUpperOffsetUnitsBox;
         private System.Windows.Forms.NumericUpDown ChromatogramMzUpperOffsetValueBox;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label SourceLocationLabel;
-        private System.Windows.Forms.TextBox SourceLocationBox;
-        private System.Windows.Forms.Button SourceLocationBrowse;
         private System.Windows.Forms.Panel ContentPanel;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown RTTolLowerBox;
@@ -467,6 +414,5 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.LinkLabel RTAlignInfo;
         private System.Windows.Forms.CheckBox RTAlignBox;
-        private System.Windows.Forms.Panel RTGroupingPanel;
     }
 }

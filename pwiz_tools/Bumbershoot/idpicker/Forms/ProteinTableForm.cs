@@ -498,7 +498,7 @@ namespace IDPicker.Forms
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
             else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
             else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
-            else if (pivot.Text.Contains("MS1")) valueColumn = "DISTINCT_SUM(psm.PeakIntensity)";
+            else if (pivot.Text.Contains("MS1")) valueColumn = "DISTINCT_SUM(xic.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 
             var pivotHql = String.Format(pivotHqlFormat,
@@ -506,6 +506,15 @@ namespace IDPicker.Forms
                                          parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                              DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
                                                                              DataFilter.PeptideSpectrumMatchToProtein));
+            if (pivot.Text.Contains("MS1"))
+            {
+                pivotColumn = pivot.Text.Contains("Group") ? "ssgl.Group.id" : "xic.Source.id";
+                pivotHql = String.Format(pivotHqlFormat,
+                                         groupColumn, pivotColumn, valueColumn,
+                                         parentFilter.GetFilteredQueryString(DataFilter.FromXic,
+                                                                             DataFilter.XicToSpectrumSourceGroupLink,
+                                                                             DataFilter.XicToProtein));
+            }
             var query = session.CreateQuery(pivotHql);
             var pivotData = new Map<long, Map<long, PivotData>>();
 
@@ -1523,6 +1532,7 @@ namespace IDPicker.Forms
                 createPivotColumns();
                 applyFindFilter();
                 applySort();
+                
 
                 OnFinishedSetData();
             }
@@ -1708,7 +1718,7 @@ namespace IDPicker.Forms
 
             var sourceNames = sourceById.Select(o => o.Value.Name);
             int visibleColumns = treeDataGridView.GetVisibleColumns().Count();
-            bool keepDescriptionLastColumn = descriptionColumn.DisplayIndex == visibleColumns - 1;
+            bool keepDescriptionLastColumn = descriptionColumn.DisplayIndex >= visibleColumns - 1;
 
             treeDataGridView.Columns.AddRange(pivotColumns.ToArray());
 

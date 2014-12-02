@@ -48,6 +48,10 @@
             <key column="Source"/>
             <one-to-many class="Spectrum"/>
         </bag>
+        <bag name="XICMetrics" inverse="true" batch-size="500">
+          <key column="SpectrumSource"/>
+          <one-to-many class="XICMetrics"/>
+        </bag>
         <property name="TotalSpectraMS1"/>
         <property name="TotalSpectraMS2"/>
         <property name="TotalIonCurrentMS1"/>
@@ -245,15 +249,21 @@
             <property name="DistinctMatchId"/>
         </join>
 
-      <join optional="true" table="XICMetrics">
-        <key column="PsmId"/>
-        <property name="PeakIntensity"/>
-        <property name="PeakArea"/>
-        <property name="PeakSNR"/>
-        <property name="PeakTimeInSeconds"/>
-      </join>
       
     </class>
+
+  <class name="XICMetrics">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="DistinctMatch" />
+    <many-to-one name="Source" column="SpectrumSource" fetch="join"/>
+    <many-to-one name="Peptide" fetch="join"/>
+    <property name="PeakIntensity"/>
+    <property name="PeakArea"/>
+    <property name="PeakSNR"/>
+    <property name="PeakTimeInSeconds"/>
+  </class>
 
     <class name="PeptideModification">
         <id name="Id"><generator class="native"/></id>

@@ -57,11 +57,11 @@ const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;RAW;WIFF;d;t2d;m
 const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
 #endif
 
-XICConfiguration::XICConfiguration(bool AlignRetentionTime, double MaxQValue,
+XICConfiguration::XICConfiguration(bool AlignRetentionTime, string RTFolder, double MaxQValue,
                      const IntegerSet& MonoisotopicAdjustmentSet,
                      int RetentionTimeLowerTolerance, int RetentionTimeUpperTolerance,
                      MZTolerance ChromatogramMzLowerOffset, MZTolerance ChromatogramMzUpperOffset)
-                     : AlignRetentionTime(AlignRetentionTime), MaxQValue(MaxQValue), MonoisotopicAdjustmentSet(MonoisotopicAdjustmentSet), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
+                     : AlignRetentionTime(AlignRetentionTime), RTFolder(RTFolder), MaxQValue(MaxQValue), MonoisotopicAdjustmentSet(MonoisotopicAdjustmentSet), RetentionTimeLowerTolerance(RetentionTimeLowerTolerance), RetentionTimeUpperTolerance(RetentionTimeUpperTolerance), ChromatogramMzLowerOffset(ChromatogramMzLowerOffset), ChromatogramMzUpperOffset(ChromatogramMzUpperOffset)
 {}
 
 XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const string& sourceId, XICConfiguration config)
@@ -72,10 +72,11 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
     string deltaMassColumn = useAvgMass ? "AvgMassDelta" : "MonoMassDelta";
     string massColumn = useAvgMass ? "MolecularWeight" : "MonoisotopicMass";
     string sql = "SELECT psm.Id, psm.Peptide, Source, NativeID, PrecursorMZ, Charge, IFNULL(Mods, '') AS Mods, Qvalue,  "
-                "(IFNULL(TotalModMass,0)+pep."+massColumn+"+Charge*1.0076)/Charge AS ExactMZ,   "
-                "IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) || ' ' || Charge || ' ' ||  IFNULL(Mods, '') as Distinct_Match   "
+                "(IFNULL(TotalModMass,0)+pep."+massColumn+"+Charge*1.0076)/Charge AS ExactMZ, dm.DistinctMatchkey, dm.DistinctMatchId   "
+                //"IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) || ' ' || Charge || ' ' ||  IFNULL(Mods, '') as Distinct_Match   "
                 "FROM Spectrum s  "
                 "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum  "
+                "JOIN DistinctMatch dm ON psm.id=dm.psmid  "
                 "JOIN Peptide pep ON psm.Peptide=pep.Id  "
                 "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide  "
                 "LEFT JOIN ProteinData pro ON pi.Protein=pro.Id  "
@@ -88,7 +89,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
                 "WHERE QValue <= ? AND Source=? AND Rank=1  "
                 //"WHERE Source=? AND Rank=1 AND psmScore.ScoreNameId = "+selectedScore+"  "
                 "GROUP BY psm.Id  "
-                "ORDER BY Distinct_Match, Charge, Mods ";
+                "ORDER BY DistinctMatchkey, Charge, Mods ";
 
 
 
@@ -100,7 +101,6 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
     XICWindow tmpWindow;
     XICPeptideSpectrumMatch tmpPSM;
     map<double, int> psmMap;
-    sqlite_int64 lastPeptide = 0;
     int lastCharge = 0;
     string lastModif = "initial value";
     SortByScanTime sortByScanTime;
@@ -109,7 +109,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
     BOOST_FOREACH(sqlite::query::rows row, q)
     {
         sqlite_int64 psmId;
-        sqlite_int64 peptide;
+        sqlite_int64 peptideId;
         char const* id;
         double precursorMZ;
         int charge;
@@ -117,8 +117,9 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         double score, exactMZ;
         string sourceId;
         string distinctMatch;
+        string distinctMatchId;
 
-        row.getter() >> psmId >> peptide >> sourceId >> id >> precursorMZ >> charge >> modif >> score >> exactMZ >> distinctMatch;
+        row.getter() >> psmId >> peptideId >> sourceId >> id >> precursorMZ >> charge >> modif >> score >> exactMZ >> distinctMatch >> distinctMatchId;
 
         MS2ScanMap::index<nativeID>::type::const_iterator itr = ms2ScanMap.get<nativeID>().find(id);
         if (itr == ms2ScanMap.get<nativeID>().end())
@@ -141,12 +142,13 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
             }
                 
             currentMatch = distinctMatch;//distinctMatchId;
-            lastPeptide = peptide;
             lastCharge = tmpPSM.charge = charge;
             lastModif = modif;
             tmpPSM.exactMZ = exactMZ;
             tmpWindow.source = sourceId;
             tmpWindow.distinctMatch=distinctMatch;
+            tmpWindow.distinctMatchId=distinctMatchId;
+            tmpWindow.peptideId=lexical_cast<string>(peptideId);
             tmpWindow.firstMS2RT = tmpWindow.lastMS2RT = tmpWindow.meanMS2RT = scanInfo.scanStartTime;
             tmpWindow.bestScore = score;
             tmpWindow.bestScoreScanStartTime = scanInfo.scanStartTime;
@@ -187,14 +189,14 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         }
 
         tmpPSM.id = psmId;
-        tmpPSM.peptide = peptide;
+        tmpPSM.peptide = peptideId;
         tmpPSM.spectrum = &scanInfo;
         tmpPSM.score = score;
         
         //merge PSMs with identical scan times
         if (psmMap.find(scanInfo.scanStartTime) != psmMap.end())
 		{
-			if (tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]].score < score)
+			if (tmpPSM.score < tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]].score)
 				tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]] = tmpPSM;
 		}
         else
@@ -263,12 +265,100 @@ int writeChromatograms(const string& idpDBFilename,
 
         sqlite::transaction transaction(idpDB);
         //initialize the table
-        idpDB.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
-        string sql = "INSERT INTO XICMetrics (PsmId, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds) values (?,?,?,?,?)";
+        idpDB.execute("CREATE TABLE IF NOT EXISTS XICMetrics (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
+        string sql = "INSERT INTO XICMetrics (DistinctMatch, SpectrumSource, Peptide, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds) values (?,?,?,?,?,?,?)";
         sqlite::command insertPeptideIntensity(idpDB, sql.c_str());
+        map<string,vector<double>> searchResults; 
+        map<string,string> matchIdToPeptide; 
+        string source = "";
+        
+        BOOST_FOREACH(const RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+        {
+            if (info.chromatogram.MS1RT.empty())
+                continue;
 
-        // Put unique identified peptide chromatograms first in the file
-        double totalBestPeaks = 0;
+            //cout<<"write reg defined precursors into chromatograms "<<endl;
+            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+            Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+            c.index = chromatogramListSimple->size()-1;
+
+
+            c.id = info.chromatogram.id;
+            c.setTimeIntensityArrays(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity, UO_second, MS_number_of_detector_counts);
+            //for setting spline for regression rt
+            double highestPeakIntensity=0;
+            double medianIntensity=0;
+            //output all crawdad peaks
+            {
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                c2.index = chromatogramListSimple->size()-1;
+                c2.id = "Regression: Crawdad peaks for "+ info.chromatogram.id;
+                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+
+                BOOST_FOREACH(const Peak& peak, info.chromatogram.peaks)
+                {
+                    simulateGaussianPeak(peak.startTime, peak.endTime,
+                                         peak.intensity, info.baselineIntensity,
+                                         peak.peakTime, peak.fwhm / 2.35482,
+                                         50,
+                                         c2.getTimeArray()->data, c2.getIntensityArray()->data);
+                 }
+            }
+
+            //output only the best peak
+            if(info.chromatogram.bestPeak)
+            {
+                 chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                c2.index = chromatogramListSimple->size()-1;
+                c2.id = "Regression:Best Crawdad peaks for "+ info.chromatogram.id;
+                 c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+                 const Peak& peak = *info.chromatogram.bestPeak;
+
+                 //criteria for peak picking. the regression time should be within the peak area : startTime1, endTime1!
+                 //4 standard deviation
+                 double wideStartTime1 = peak.peakTime - peak.fwhm * 4 / 2.35482; //'4' is arbitrary, based on defaults. May add to options later
+                 double wideEndTime1 = peak.peakTime + peak.fwhm  * 4  / 2.35482;
+                 if(wideStartTime1<info.RegTime &&  info.RegTime<wideEndTime1)
+                 {
+                     simulateGaussianPeak(peak.startTime, peak.endTime,
+                     peak.intensity, info.baselineIntensity,
+                     peak.peakTime, peak.fwhm / 2.35482,
+                     50,
+                     c2.getTimeArray()->data, c2.getIntensityArray()->data);
+
+                     const vector<double>& myIntensityVec=info.chromatogram.MS1Intensity;
+
+                     const vector<double>& times=info.chromatogram.MS1RT; 
+                     accs::accumulator_set<double, accs::stats<accs::tag::variance, accs::tag::mean> > PeakIntensities; 
+                     accs::accumulator_set<double, accs::stats<accs::tag::variance, accs::tag::mean> > BackgroundIntensities; 
+                     for (size_t  i = 0; i < myIntensityVec.size(); i++){
+                         if(times[i]>=peak.startTime&&times[i]<=peak.endTime){
+                             PeakIntensities(myIntensityVec[i]); 
+                         }
+                         else{
+                             BackgroundIntensities(myIntensityVec[i]); 
+                         }
+                     }
+                     double peak_mean=accs::mean(PeakIntensities);
+                     double bcd_mean=accs::mean(BackgroundIntensities);
+                     double peak_var=accs::variance(PeakIntensities); 
+                     double bcd_var=accs::variance(BackgroundIntensities); 
+                     double SNRatio=(peak_mean-bcd_mean)/ sqrt(peak_var+bcd_var);
+                     double peakArea=peak.intensity*peak.fwhm;
+                     
+                    vector<double> newValue;
+                    newValue.push_back(peak.intensity);
+                    newValue.push_back(peakArea);
+                    newValue.push_back(SNRatio);
+                    newValue.push_back(peak.peakTime);
+                    searchResults[lexical_cast<string>(info.matchId)] = newValue;
+                    matchIdToPeptide[lexical_cast<string>(info.matchId)] = lexical_cast<string>(info.peptideId);
+                }
+            }
+        }
+        
         BOOST_FOREACH(const XICWindow& window, pepWindow)
         {
             if (window.MS1RT.empty())
@@ -327,7 +417,6 @@ int writeChromatograms(const string& idpDBFilename,
             // output only the best peak
             if (window.bestPeak)
             {
-            totalBestPeaks +=1;
                 chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
                 Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
                 c2.index = chromatogramListSimple->size()-1;
@@ -370,21 +459,57 @@ int writeChromatograms(const string& idpDBFilename,
 
                 double peakArea=peak.intensity*peak.fwhm;
 
-                //HACK: only report once for each PSM to avoid duplicate distinct matches
-                // this is for the sake of reporting in IDP3
-                //BOOST_FOREACH(XICPeptideSpectrumMatch psm, window.PSMs)
                 if (window.PSMs.size() > 0)
                 {
-                    //insertPeptideIntensity.binder()<<psm.id<<window.distinctMatch<<window.source<<peak.intensity<<peakArea<<SNRatio<<peak.peakTime;
-                    insertPeptideIntensity.binder() << lexical_cast<string>(window.PSMs[0].id) << lexical_cast<string>(peak.intensity)
-                                                    << lexical_cast<string>(peakArea) << lexical_cast<string>(SNRatio) << lexical_cast<string>(peak.peakTime);
-                    insertPeptideIntensity.execute();
-                    insertPeptideIntensity.reset();
+                    // insertPeptideIntensity.binder() <<  lexical_cast<string>(window.distinctMatchId) << lexical_cast<string>(window.source)
+                    // << lexical_cast<string>(peak.intensity) << lexical_cast<string>(peakArea) << lexical_cast<string>(SNRatio) << lexical_cast<string>(peak.peakTime);
+                    // insertPeptideIntensity.execute();
+                    // insertPeptideIntensity.reset();
                     totalAdded++;
+                    
+                    //insert binder edit starts here
+                    source = lexical_cast<string>(window.source);
+                    if (searchResults.count(lexical_cast<string>(window.distinctMatchId)) > 0)
+                    {
+                        vector<double> newValue;
+                        newValue.push_back(searchResults[lexical_cast<string>(window.distinctMatchId)][0] + peak.intensity);
+                        newValue.push_back(searchResults[lexical_cast<string>(window.distinctMatchId)][1] + peakArea);
+                        newValue.push_back((SNRatio + searchResults[lexical_cast<string>(window.distinctMatchId)][2]) / 2);
+                        newValue.push_back((peak.peakTime + searchResults[lexical_cast<string>(window.distinctMatchId)][3]) / 2);
+                        searchResults[lexical_cast<string>(window.distinctMatchId)] = newValue;
+                        matchIdToPeptide[lexical_cast<string>(window.distinctMatchId)] = lexical_cast<string>(window.peptideId);
+                        // searchResults[lexical_cast<string>(window.distinctMatchId)][0] = //peak.intensity;
+                        // searchResults[lexical_cast<string>(window.distinctMatchId)][1] += peakArea;
+                        // searchResults[lexical_cast<string>(window.distinctMatchId)][2] = (SNRatio + searchResults[lexical_cast<string>(window.distinctMatchId)][2]) / 2;
+                        // searchResults[lexical_cast<string>(window.distinctMatchId)][3] = (peak.peakTime + searchResults[lexical_cast<string>(window.distinctMatchId)][3]) / 2;
+                    }
+                    else
+                    {
+                        vector<double> newValue;
+                        newValue.push_back(peak.intensity);
+                        newValue.push_back(peakArea);
+                        newValue.push_back(SNRatio);
+                        newValue.push_back(peak.peakTime);
+                        searchResults[lexical_cast<string>(window.distinctMatchId)] = newValue;
+                        matchIdToPeptide[lexical_cast<string>(window.distinctMatchId)] = lexical_cast<string>(window.peptideId);
+                    }
                 }
                 //cout<<c2.getTimeArray()->data<<endl;
             }
         }
+        
+        for(map<string,vector<double>>::iterator matchItr = searchResults.begin(); matchItr != searchResults.end(); matchItr++)
+        {
+            string match = matchItr->first;
+            vector<double> matchResults = matchItr->second;
+            
+            insertPeptideIntensity.binder() <<  match << source << matchIdToPeptide[match] 
+                    << lexical_cast<string>(matchResults[0]) << lexical_cast<string>(matchResults[1]) 
+                    << lexical_cast<string>(matchResults[2]) << lexical_cast<string>(matchResults[3]) ;
+                    insertPeptideIntensity.execute();
+                    insertPeptideIntensity.reset();
+        }
+        
         transaction.commit();
     }
     catch (exception& e)
@@ -423,8 +548,9 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 
         map<string, string> tempMap;
         {
-            string sql = "SELECT s.NativeID, IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) || ' ' || Charge || ' ' ||  IFNULL(Mods, '') as Distinct_Match   "
+            string sql = "SELECT s.NativeID, dm.DistinctMatchkey   "//IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) || ' ' || Charge || ' ' ||  IFNULL(Mods, '') as Distinct_Match   "
                              "FROM PeptideSpectrumMatch psm "
+                             "JOIN DistinctMatch dm ON psm.id=dm.psmid  "
                              "JOIN Spectrum s ON psm.Spectrum=s.Id "
                              "JOIN Peptide pep ON psm.Peptide=pep.Id  "
                              "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide  "
@@ -588,10 +714,14 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 
 
 //TODO: Give option for # if align the chromatogram peaks based on peptide retention time
-        /*if(g_rtConfig->peakAlignment)
+        if(config.AlignRetentionTime)
         {
-            string outputFilepath = g_rtConfig->OutputFilepath;
-            string regressionFilename=bfs::change_extension(bfs::path(outputFilepath) / bfs::path(sourceFilename).filename(), "-peptideScantimeRegression.tsv").string();
+            string outputFilepath = config.RTFolder;
+            string rawFileName =  bfs::path(sourceFilename).filename().string();
+            string editedFileName= rawFileName.substr(0,rawFileName.find(".")) + "-peptideScantimeRegression.tsv";
+            string regressionFilename = (bfs::path(outputFilepath) / bfs::path(editedFileName)).string();
+            //string regressionFilename= rawFileName.substr(0,rawFileName.find(".")) + "-peptideScantimeRegression.tsv";
+            //string regressionFilename=bfs::change_extension(bfs::path(outputFilepath) / bfs::path(sourceFilename).filename(), "-peptideScantimeRegression.tsv").string();
             ifstream file;
 
             try
@@ -602,8 +732,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             }
             catch(string regressionFilename)//This catches the infile and aborts process
             {
-                cout << "Fatal error: File not found."<<endl<<"Abort process."<<endl;
-                exit(1);
+                throw runtime_error("[EmbedMS1ForFile]: Alignment file not found. " + regressionFilename);
             }
 
             if (file.is_open())
@@ -612,30 +741,52 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 
                 std::string   line;
                 getline(file, line);
+                bool useAvgMass = config.ChromatogramMzUpperOffset.units != MZTolerance::PPM && config.ChromatogramMzLowerOffset.units != MZTolerance::PPM &&
+                      config.ChromatogramMzUpperOffset.value + config.ChromatogramMzLowerOffset.value > 1;
                 while(getline(file, line))
                 {
                     istringstream   ss(line);
-                    string         sequence, mods;
                     double     scantime1,precursorMZ;
-                    int  charge;
-                    ss >> sequence>>scantime1>>charge>>precursorMZ>>mods;
-                    info.peptide=sequence;
+                    int  matchId,charge,peptideId;
+                    ss >> matchId>>scantime1>>charge>>precursorMZ>>peptideId;
+                    info.matchId=lexical_cast<string>(matchId);
+                    info.peptideId=lexical_cast<string>(peptideId);
                     info.exactMZ=precursorMZ;
-                    info.mods=mods;
                     info.charge=charge;
                     info.RegTime=scantime1;
-                    info.scanTimeWindow=g_rtConfig->chromatogramRegressionTimeWindow(info.RegTime);
-                    info.mzWindow=g_rtConfig->chromatogramMzWindow(info.exactMZ,charge);
-                    info.chromatogram.id = "regression defined precursor " +info.peptide+" "+lexical_cast<string>(info.charge)+" "+info.mods+ "(id: m/z: "+lexical_cast<string>(round(info.exactMZ,3))+"; time: "+lexical_cast<string>(info.RegTime)+") ";
+        
+                    // if (useAvgMass || config.MonoisotopicAdjustmentSet.empty())
+                    // {
+                        double centerMz = precursorMZ / charge;
+                        double mzLower = centerMz - MZTolerance(config.ChromatogramMzLowerOffset.value * charge, config.ChromatogramMzLowerOffset.units);
+                        double mzUpper = centerMz + MZTolerance(config.ChromatogramMzUpperOffset.value * charge, config.ChromatogramMzUpperOffset.units);
+                        info.mzWindow = boost::icl::interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
+                    // }
+                    // else
+                    // {
+                        // IntegerSet::const_iterator itr = config.MonoisotopicAdjustmentSet.begin();
+                        // for (; itr != config.MonoisotopicAdjustmentSet.end(); ++itr)
+                        // {
+                            // if (charge == 0) throw runtime_error("[RegDefinedMzWindow] charge cannot be 0");
+                            // double centerMz = precursorMZ + *itr * Neutron / charge;
+                            // double mzLower = centerMz - MZTolerance(config.ChromatogramMzLowerOffset.value * charge, config.ChromatogramMzLowerOffset.units);
+                            // double mzUpper = centerMz + MZTolerance(config.ChromatogramMzUpperOffset.value * charge, config.ChromatogramMzUpperOffset.units);
+                            // info.mzWindow += boost::icl::interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
+                        // }
+                    // }
+                    
+                    info.scanTimeWindow= boost::icl::interval_set<double>(continuous_interval<double>::closed(scantime1-config.RetentionTimeLowerTolerance, scantime1+config.RetentionTimeUpperTolerance));
+                    info.chromatogram.id = "regression defined precursor " +info.matchId+" "+lexical_cast<string>(info.charge)+" (id: m/z: "+lexical_cast<string>(round(info.exactMZ))+"; time: "+lexical_cast<string>(info.RegTime)+") ";
                     RegDefinedPrecursors.push_back(info);
                 }
                 file.close();
             }
             cout<<"number of regdefined precursors are "<<RegDefinedPrecursors.size()<<endl;
-        }*/
+        }
         // Going through all spectra once more to get intensities/retention times to build chromatograms
-        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks...");
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks... ");
         map<double, double > peakMap;
+        
         for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
         {
 
@@ -729,6 +880,8 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         // Find peaks with Crawdad
         // cycle through all distinct matches, passing each one to crawdad
         size_t i = 0;
+        size_t windowBestPeaks = 0;
+        size_t regBestPeaks = 0;
         ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding distinct match peaks...");
         BOOST_FOREACH(const XICWindow& window, pepWindow)
         {
@@ -841,6 +994,9 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             }
             if (!peakByIntensityBySumOfProducts.empty())
                 window.bestPeak = peakByIntensityBySumOfProducts.rbegin()->second.rbegin()->second;
+                
+            if(window.bestPeak)
+                windowBestPeaks++;
 
             /*if (!window.bestPeak)
             {
@@ -874,9 +1030,6 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             //cerr<<"Warning: the MS1 RT size is less than 4: "<<info.exactMZ<<endl;
             continue;
             }
-
-             //try{
-
             // make chromatogram data points evenly spaced
             Interpolator(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity).resample(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
 
@@ -892,7 +1045,6 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
              if (crawPeaks.size() == 0)
                 continue;
-
 
 
             BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
@@ -921,16 +1073,11 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 //if bestPeak is still null  (i.e. if statement is executing for the first time) or the current peak is closer to the regression time than the best peak, set the current peak as the best peak
                 if (!lc.bestPeak || fabs(peakTime - info.RegTime) < fabs(lc.bestPeak->peakTime - info.RegTime))
                     lc.bestPeak = peak;
+                    
+                if (info.chromatogram.bestPeak)
+                    regBestPeaks++;
 
             }
-             /*}
-
-
-                catch(exception& e)
-                {
-                continue;
-                }*/
-
         }
             
         // populate the source statistics

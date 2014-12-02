@@ -68,6 +68,7 @@ ref struct XICConfiguration
     virtual String^ ToString() override;
 
     property bool AlignRetentionTime;
+    property String^ RTFolder;
     property double MaxQValue;
     property int MonoisotopicAdjustmentMin;
     property int MonoisotopicAdjustmentMax;

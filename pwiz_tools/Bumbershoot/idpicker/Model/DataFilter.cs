@@ -586,6 +586,7 @@ namespace IDPicker.DataModel
         #region Definitions for common HQL strings
         public static readonly string FromProtein = "Protein pro";
         public static readonly string FromPeptide = "Peptide pep";
+        public static readonly string FromXic = "XICMetrics xic";
         public static readonly string FromPeptideSpectrumMatch = "PeptideSpectrumMatch psm";
         public static readonly string FromPeptideInstance = "PeptideInstance pi";
         public static readonly string FromPeptideModification = "PeptideModification pm";
@@ -629,6 +630,12 @@ namespace IDPicker.DataModel
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroupLink = PeptideSpectrumMatchToSpectrumSource + ";JOIN ss.Groups ssgl";
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";JOIN ssgl.Group ssg";
 
+        public static readonly string XicToSpectrumSource = "JOIN xic.Source ss";
+        public static readonly string XicToSpectrumSourceGroupLink = XicToSpectrumSource + ";LEFT JOIN ss.Groups ssgl";
+        public static readonly string XicToPeptide = ";LEFT JOIN xic.Peptide pep";
+        public static readonly string XicToPeptideInstance = XicToPeptide + ";LEFT JOIN pep.Instances pi";
+        public static readonly string XicToProtein = XicToPeptideInstance + ";LEFT JOIN pi.Protein pro";
+
         public static readonly string SpectrumToSpectrumSource = "JOIN s.Source ss";
         public static readonly string SpectrumToSpectrumSourceGroupLink = SpectrumToSpectrumSource + ";JOIN ss.Groups ssgl";
         public static readonly string SpectrumToSpectrumSourceGroup = SpectrumToSpectrumSourceGroupLink + ";JOIN ssgl.Group ssg";
@@ -666,6 +673,10 @@ namespace IDPicker.DataModel
                 if (joinTables.Contains(ProteinToSpectrumSourceGroupLink)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSourceGroupLink);
                 if (joinTables.Contains(ProteinToSpectrumSourceGroup)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSourceGroup);
                 joinTables = newJoinTables.ToArray();
+            }
+            else if (fromTable == FromXic)
+            {
+                //TODO
             }
         }
 

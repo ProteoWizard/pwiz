@@ -291,6 +291,12 @@
     <Compile Include="Forms\QonverterSettingsManagerForm.Designer.cs">
       <DependentUpon>QonverterSettingsManagerForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\RTGroupingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RTGroupingForm.Designer.cs">
+      <DependentUpon>RTGroupingForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ReportErrorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -376,6 +382,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\EmbedGeneMetadataWarningForm.resx">
       <DependentUpon>EmbedGeneMetadataWarningForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\RTGroupingForm.resx">
+      <DependentUpon>RTGroupingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SpectrumTableForm.resx">
       <DependentUpon>SpectrumTableForm.cs</DependentUpon>
@@ -566,6 +575,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\idpicker-style.css" />
+    <None Include="scantime.r">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

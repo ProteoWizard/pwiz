@@ -54,7 +54,7 @@ NativeEmbedder::QuantitationConfiguration makeNativeQuantitationConfiguration(Em
 
 NativeXIC::XICConfiguration makeNativeXICConfiguration(Embedder::XICConfiguration^ managedXICConfig)
 {
-    return NativeXIC::XICConfiguration(managedXICConfig->AlignRetentionTime, managedXICConfig->MaxQValue,
+    return NativeXIC::XICConfiguration(managedXICConfig->AlignRetentionTime, ToStdString(managedXICConfig->RTFolder), managedXICConfig->MaxQValue,
                      IntegerSet(managedXICConfig->MonoisotopicAdjustmentMin, managedXICConfig->MonoisotopicAdjustmentMax),
                      (size_t)managedXICConfig->RetentionTimeLowerTolerance, (size_t)managedXICConfig->RetentionTimeUpperTolerance,
                      pwiz::chemistry::MZTolerance(managedXICConfig->ChromatogramMzLowerOffset->value,
@@ -89,6 +89,7 @@ Embedder::XICConfiguration::XICConfiguration()
     ChromatogramMzLowerOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzLowerOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzLowerOffset.units);
     ChromatogramMzUpperOffset = gcnew MZTolerance(nativeConfig.ChromatogramMzUpperOffset.value, (MZTolerance::Units) nativeConfig.ChromatogramMzUpperOffset.units);
     AlignRetentionTime = false;
+    RTFolder = "";
 }
 
 Embedder::XICConfiguration::XICConfiguration(String^ representitiveString)

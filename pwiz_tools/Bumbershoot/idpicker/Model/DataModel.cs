@@ -67,6 +67,8 @@ namespace IDPicker.DataModel
 
         public virtual IList<Spectrum> Spectra { get; set; }
 
+        public virtual IList<XICMetrics> XICMetrics { get; set; }
+
         public virtual msdata.MSData Metadata { get; set; }
 
         #region Transient instance members
@@ -260,11 +262,6 @@ namespace IDPicker.DataModel
         public virtual string DistinctMatchKey { get; protected set; }
         public virtual long DistinctMatchId { get; protected set; }
 
-        public virtual double PeakIntensity { get; set; }
-        public virtual double PeakArea { get; set; }
-        public virtual double PeakSNR { get; set; }
-        public virtual double PeakTimeInSeconds { get; set; }
-
         /// <summary>
         /// Automatically choose monoisotopic or average mass error based on the following logic:
         /// if the absolute value of monoisotopic error is less than absolute value of average error
@@ -309,6 +306,17 @@ namespace IDPicker.DataModel
         }
 
         #endregion
+    }
+
+    public class XICMetrics : Entity<XICMetrics>
+    {
+        public virtual long DistinctMatch { get; set; }
+        public virtual SpectrumSource Source { get; set; }
+        public virtual Peptide Peptide { get; set; }
+        public virtual double PeakIntensity { get; set; }
+        public virtual double PeakArea { get; set; }
+        public virtual double PeakSNR { get; set; }
+        public virtual double PeakTimeInSeconds { get; set; }
     }
 
     public class PeptideModification : Entity<PeptideModification>

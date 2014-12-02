@@ -573,7 +573,7 @@ int main( int argc, char* argv[] )
             allSourcesQuantitationMethodMap[0] = Embedder::QuantitationConfiguration(g_rtConfig->QuantitationMethod, g_rtConfig->ReporterIonMzTolerance);
 
             map<int, XIC::XICConfiguration> allSourcesXICConfigurationMap;
-            allSourcesXICConfigurationMap[0] = XIC::XICConfiguration(false, g_rtConfig->MaxFDR,
+            allSourcesXICConfigurationMap[0] = XIC::XICConfiguration(false, "", g_rtConfig->MaxFDR,
                                                                      g_rtConfig->LabelFreeMonoisotopeAdjustmentSet,
                                                                      g_rtConfig->LabelFreeLowerScanTimeLimit, g_rtConfig->LabelFreeUpperScanTimeLimit,
                                                                      g_rtConfig->LabelFreeLowerMzLimit, g_rtConfig->LabelFreeUpperMzLimit);
