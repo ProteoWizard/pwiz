@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_SETUP_CHECKPOINT)));
                 var peptideSettingsLib = ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI());
 
-                PauseForScreenShot("Peptide Settings - Library tab", 6);
+                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 6);
                 OkDialog(peptideSettingsLib, peptideSettingsLib.OkDialog);
             }
             WaitForDocumentLoaded();
@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Size = new Size(750, 788);
             });
             RestoreViewOnScreen(21);
-            PauseForScreenShot("Targets pane with large transition lists", 21);
+            PauseForScreenShot<SequenceTreeForm>("Targets pane with large transition lists", 21);
 
             // Adjust library transition ranking
             var libraryTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -258,7 +258,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 22);
             OkDialog(libraryTransitionSettings, libraryTransitionSettings.OkDialog);
-            PauseForScreenShot("Targets pane with precursors and best 5 transitions only", 23);
+            PauseForScreenShot<SequenceTreeForm>("Targets pane with precursors and best 5 transitions only", 23);
 
             // Generate decoys
             var decoysDlg = ShowDialog<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg);
@@ -270,7 +270,7 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(decoysDlg, decoysDlg.OkDialog);
             RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.PrevNode.Nodes[6]);
-            PauseForScreenShot("Targets pane with decoys added", 25);
+            PauseForScreenShot<SequenceTreeForm>("Targets pane with decoys added", 25);
 
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT)));
 
@@ -340,7 +340,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(27);
-            PauseForScreenShot("Chromatogram graph metafile", 27);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 27);
 
             RunUI(() =>
             {
@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual((int) SequenceTree.StateImageId.no_peak, nodeTree.StateImageIndex);
             });
 
-            PauseForScreenShot("Targets view - ", 28);
+            PauseForScreenShot<SequenceTreeForm>("Targets view - ", 28);
 
             RunUI(() =>
             {
@@ -365,7 +365,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowOtherRunPeptideIDTimes(true);
             });
 
-            PauseForScreenShot("Chromatogram graph metafile - with ID lines", 29);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - with ID lines", 29);
 
             RunUI(() =>
             {
@@ -373,25 +373,25 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Peptides, 1);
             });
 
-            PauseForScreenShot("Chromatogram graph metafile - zoomed out and small peak", 30);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed out and small peak", 30);
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
 
-            PauseForScreenShot("Chromatogram graph metafile - zoomed to peak", 32);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed to peak", 32);
             if (IsFullImportMode)
             {
                 ClickChromatogram(74.9, 1.775E+7, PaneKey.PRECURSORS);
                 RestoreViewOnScreen(33);
-                PauseForScreenShot("Full Scan graph with precursors - zoom manually");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph with precursors - zoom manually");
 
                 ClickChromatogram(74.8, 1.753E+6, PaneKey.PRODUCTS);
-                PauseForScreenShot("Full Scan graph showing y7");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y7");
 
                 ClickChromatogram(74.9, 9.64E+5, PaneKey.PRODUCTS);
-                PauseForScreenShot("Full Scan graph showing b3 - zoom manually");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing b3 - zoom manually");
 
                 ClickChromatogram(74.9, 1.25E+5, PaneKey.PRODUCTS);
-                PauseForScreenShot("Full Scan graph showing y3 - zoom manually");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y3 - zoom manually");
             }
 
             RunUI(() =>
@@ -400,7 +400,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("CNTDYSDCIHEAIK", ((PeptideTreeNode)SkylineWindow.SelectedNode).DocNode.Peptide.Sequence);
             });
 
-            PauseForScreenShot("Chromatogram graph metafile - split between two precursors", 36);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - split between two precursors", 36);
 
             RunUI(() =>
             {
@@ -408,7 +408,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode) SkylineWindow.SelectedNode.Nodes[0]).Path;
             });
 
-            PauseForScreenShot("Chromatogram graph metafile - double charged precursor", 37);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - double charged precursor", 37);
 
             RunUI(() =>
             {
@@ -426,20 +426,20 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(38);
-            PauseForScreenShot("Library Match view - zoom manually", 38);
+            PauseForScreenShot<GraphSpectrum>("Library Match view - zoom manually", 38);
 
             RestoreViewOnScreen(39);
-            PauseForScreenShot("Chromatogram graph metafile", 39);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 39);
 
             if (IsFullImportMode)
             {
                 RestoreViewOnScreen(40);
                 ClickChromatogram(41.9, 1.166E+8, PaneKey.PRECURSORS);
-                PauseForScreenShot("Full Scan graph showing precursor interference - zoom manually", 40);
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing precursor interference - zoom manually", 40);
 
                 RunUI(() => SkylineWindow.GraphFullScan.ChangeScan(-12));
                 CheckFullScanSelection(41.7, 1.532E+8, PaneKey.PRECURSORS);
-                PauseForScreenShot("Full Scan graph showing transition between interference and real peak - zoom manually", 40);
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing transition between interference and real peak - zoom manually", 40);
             }
 
             // Clear all the settings lists that were defined in this tutorial
