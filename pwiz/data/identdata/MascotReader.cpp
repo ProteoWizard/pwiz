@@ -175,6 +175,11 @@ using namespace matrix_science;
 using namespace pwiz::util;
 namespace bxp = boost::xpressive;
 
+namespace
+{
+    const string decoyPrefix = "DECOY_";
+}
+
 //
 // MascotReader::Impl
 //
@@ -332,10 +337,12 @@ public:
 
         return sip;
     }
-    
+
+
     // Add the FASTA file search database
     void addSearchDatabases(ms_mascotresfile & file, IdentData& mzid)
     {
+        bool isDecoy = file.params().getDECOY() != 0;
         for (int i=1; i<=file.params().getNumberOfDatabases();i++)
         {
             SearchDatabasePtr sd(new SearchDatabase(file.params().getDB(i)));
@@ -344,6 +351,7 @@ public:
             sd->numDatabaseSequences = file.getNumSeqs(i);
             sd->numResidues = file.getNumResidues(i);
             sd->databaseName.userParams.push_back(UserParam("custom database"));
+            if (isDecoy) sd->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
             mzid.dataCollection.inputs.searchDatabase.push_back(sd);
         }
     }
@@ -745,7 +753,6 @@ public:
         if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(0, 0, decoyMode ? "creating decoy peptide summary" : "creating peptide summary")) == IterationListener::Status_Cancel)
             return;
 
-        const string decoyPrefix = "DECOY_";
         int flags = ms_peptidesummary::MSRES_GROUP_PROTEINS | ms_peptidesummary::MSRES_SHOW_SUBSETS;
 
         scoped_ptr<ms_peptidesummary> decoySummary;
@@ -754,7 +761,6 @@ public:
         {
             decoySummary.reset(new ms_peptidesummary(file, flags | ms_peptidesummary::MSRES_DECOY, 0, INT_MAX, 0, 0, 0, 0, 0));
             resultsPtr = decoySummary.get();
-            mzid.dataCollection.inputs.searchDatabase[0]->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
         }
         else
         {
