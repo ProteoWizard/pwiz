@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -461,6 +462,7 @@ namespace pwiz.Skyline.FileUI
 
         public void MinimizeResults()
         {
+            bool dispose = true;
             var dlg = new MinimizeResultsDlg(DocumentUIContainer);
             try
             {
@@ -470,12 +472,35 @@ namespace pwiz.Skyline.FileUI
                     DialogResult = DialogResult.Cancel;
                 }
             }
+            catch
+            {
+                dispose = false;
+                throw;
+            }
             finally
             {
                 // NOTE: We do a manual Dispose rather than "using", because something in the constructor
                 // is occasionally throwing an exception.  Unfortunately, that exception gets masked when
                 // "using" calls Dispose during exception processing, and Dispose throws an exception.
-                dlg.Dispose();
+                if (dispose)
+                {
+                    int count = 0;
+                    while (!dlg.IsDisposed)
+                    {
+                        try
+                        {
+                            dlg.Dispose();
+                            break;
+                        }
+                        catch
+                        {
+                            // After 10 tries, just throw the exception (usually only once is required)
+                            if (count++ > 10)
+                                throw;
+                            Thread.Sleep(50);   // Give the dialog time to finish whatever caused this exception
+                        }
+                    }
+                }
             }
         }
 

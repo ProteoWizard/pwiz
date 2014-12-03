@@ -1634,9 +1634,9 @@ namespace pwiz.Skyline.Model
                 FormatVersion = FORMAT_VERSION_0_1;
             else if (FormatVersion > FORMAT_VERSION)
             {
-                throw new InvalidDataException(
-                    string.Format(Resources.SrmDocumentReadXmlThe_document_format_version__0__is_not_supported,
-                                  FormatVersion));
+                throw new VersionNewerException(
+                    string.Format(Resources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
+                                  FormatVersion,  FORMAT_VERSION, Install.ProgramNameAndVersion));
             }
 
             reader.ReadStartElement();  // Start document element

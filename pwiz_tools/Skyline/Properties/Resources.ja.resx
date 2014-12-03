@@ -3302,10 +3302,7 @@
   <data name="PeptideDocNodeToString__0__rank__1__" xml:space="preserve">
     <value>{0}（ランク{1}）</value>
   </data>
-  <data name="SrmDocumentReadXmlThe_document_format_version__0__is_not_supported" xml:space="preserve">
-    <value>ドキュメント形式バージョン{0}はサポートされていません。</value>
-  </data>
-  <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
+    <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
     <value>ドキュメントに繰り返し測定のない結果が見つかりました。</value>
   </data>
   <data name="AddIrtCalculatorDlgOkDialogThe_file__0__does_not_exist" xml:space="preserve">

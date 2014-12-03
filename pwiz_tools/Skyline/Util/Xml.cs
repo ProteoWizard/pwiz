@@ -892,6 +892,11 @@ namespace pwiz.Skyline.Util
                     sb.AppendLine().Append(x.Message);
                     break;
                 }
+                else if (x is VersionNewerException)
+                {
+                    sb = new StringBuilder(x.Message);
+                    break;
+                }
                 x = x.InnerException;
             }
             return sb.ToString();
@@ -1088,5 +1093,14 @@ namespace pwiz.Skyline.Util
     public sealed class XmlStringWriter : StringWriter
     {
         public override Encoding Encoding { get { return Encoding.UTF8; } }
+    }
+
+
+    public class VersionNewerException : Exception
+    {
+        public VersionNewerException(string message)
+            : base(message)
+        {
+        }
     }
 }

@@ -3296,10 +3296,7 @@ Are you sure you want to continue?</value>
   <data name="PeptideDocNodeToString__0__rank__1__" xml:space="preserve">
     <value>{0} (rank {1})</value>
   </data>
-  <data name="SrmDocumentReadXmlThe_document_format_version__0__is_not_supported" xml:space="preserve">
-    <value>The document format version {0} is not supported.</value>
-  </data>
-  <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
+    <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
     <value>Results found in document with no replicates.</value>
   </data>
   <data name="AddIrtCalculatorDlgOkDialogThe_file__0__does_not_exist" xml:space="preserve">
@@ -8122,5 +8119,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions" xml:space="preserve">
     <value>Mismatched transitions</value>
+  </data>
+    <data name="SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__" xml:space="preserve">
+    <value>The document format version {0} is newer than the version {1} supported by {2}.</value>
   </data>
 </root>
