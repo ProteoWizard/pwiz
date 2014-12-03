@@ -47,6 +47,7 @@ namespace SkylineNightly
         private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string LABKEY_URL = "http://128.208.10.2:8080/labkey/testresults/home/post.view?";
 
+        private DateTime _startTime;
         private string _logFile;
         private string _line;
         private int _index;
@@ -64,6 +65,8 @@ namespace SkylineNightly
         /// </summary>
         public void Run()
         {
+            _startTime = DateTime.Now;
+
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
             var logDir = Path.Combine(nightlyDir, "Logs");
@@ -127,6 +130,7 @@ namespace SkylineNightly
             // Create ".skytr" file to execute nightly build in SkylineTester.
             var assembly = Assembly.GetExecutingAssembly();
             const string resourceName = "SkylineNightly.SkylineNightly.skytr";
+            int durationSeconds;
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             {
                 if (stream == null)
@@ -140,6 +144,8 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.Save(skylineNightlySkytr);
+                    var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
+                    durationSeconds = (int) (durationHours*60*60) + 15*60;  // 15 minutes grace before we kill SkylineTester
                 }
             }
 
@@ -159,8 +165,13 @@ namespace SkylineNightly
                 return;
             }
             Log("SkylineTester started");
-            skylineTesterProcess.WaitForExit();
-            Log("SkylineTester finished");
+            if (!skylineTesterProcess.WaitForExit(durationSeconds*1000))
+            {
+                skylineTesterProcess.Kill();
+                Log("SkylineTester killed");
+            }
+            else
+                Log("SkylineTester finished");
 
             // Upload log information.
             var duration = DateTime.Now - startTime;
@@ -187,6 +198,7 @@ namespace SkylineNightly
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;
             _nightly["revision"] = GetRevision(pwizDir);
+            _nightly["start"] = _startTime;
             _nightly["duration"] = (int)duration.TotalMinutes;
             _nightly["testsrun"] = _testCount;
             _nightly["failures"] = _failures.Count;

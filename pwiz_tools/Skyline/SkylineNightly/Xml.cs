@@ -56,6 +56,11 @@ namespace SkylineNightly
             _root.InnerText = value;
         }
 
+        public string Value
+        {
+            get { return _root.InnerText; }
+        }
+
         // Get a child node.
         public Xml GetChild(string child)
         {
