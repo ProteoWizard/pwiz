@@ -139,7 +139,7 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if ! [ mhdac-dll-location $(API_PATH) : $(properties) ]
+    else if ! [ uimf-dll-location $(API_PATH) : $(properties) ]
     {
         warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
