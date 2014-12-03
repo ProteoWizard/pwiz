@@ -296,7 +296,7 @@ namespace Test
         [TestMethod]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(11, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(12, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
             TestModel.ClassInitialize(TestContext);

@@ -268,7 +268,7 @@ int writeChromatograms(const string& idpDBFilename,
         idpDB.execute("CREATE TABLE IF NOT EXISTS XICMetrics (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
         string sql = "INSERT INTO XICMetrics (DistinctMatch, SpectrumSource, Peptide, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds) values (?,?,?,?,?,?,?)";
         sqlite::command insertPeptideIntensity(idpDB, sql.c_str());
-        map<string,vector<double>> searchResults; 
+        map<string,vector<double> > searchResults; 
         map<string,string> matchIdToPeptide; 
         string source = "";
         
@@ -498,7 +498,7 @@ int writeChromatograms(const string& idpDBFilename,
             }
         }
         
-        for(map<string,vector<double>>::iterator matchItr = searchResults.begin(); matchItr != searchResults.end(); matchItr++)
+        for(map<string,vector<double> >::iterator matchItr = searchResults.begin(); matchItr != searchResults.end(); matchItr++)
         {
             string match = matchItr->first;
             vector<double> matchResults = matchItr->second;
