@@ -232,12 +232,8 @@ namespace pwiz.Skyline
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
 
-                using (MainToolService = new ToolService())
-                {
-                    MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
-                    Application.Run(MainWindow);
-                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
-                }
+                Application.Run(MainWindow);
+                StopToolService();
             }
             catch (Exception x)
             {
@@ -250,6 +246,25 @@ namespace pwiz.Skyline
             // builds for some unknown reason.
             //MainWindow.Dispose(); // DON'T DO THIS!
             MainWindow = null;
+        }
+
+        public static void StartToolService()
+        {
+            if (MainToolService == null)
+            {
+                MainToolService = new ToolService();
+                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+            }
+        }
+
+        public static void StopToolService()
+        {
+            if (MainToolService != null)
+            {
+                MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                MainToolService.Dispose();
+                MainToolService = null;
+            }
         }
 
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
