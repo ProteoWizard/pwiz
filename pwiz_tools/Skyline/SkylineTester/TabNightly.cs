@@ -600,6 +600,7 @@ namespace SkylineTester
             graph.PointValueEvent += GraphOnPointValueEvent;
             graph.MouseDownEvent += GraphOnMouseDownEvent;
             graph.MouseUpEvent += GraphOnMouseUpEvent;
+            graph.MouseMoveEvent += GraphMouseMoveEvent;
             var pane = graph.GraphPane;
             pane.CurveList.Clear();
             var bars = pane.AddBar(name, null, data, color);
@@ -613,6 +614,15 @@ namespace SkylineTester
             pane.XAxis.Scale.Align = AlignP.Inside;
             pane.AxisChange();
             graph.Refresh();
+        }
+
+        private bool GraphMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            CurveItem nearestCurve;
+            int index;
+            if (sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+                sender.Cursor = Cursors.Hand;
+            return false;
         }
 
         private int _cursorIndex;

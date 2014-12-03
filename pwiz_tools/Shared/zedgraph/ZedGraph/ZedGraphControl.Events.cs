@@ -673,13 +673,14 @@ namespace ZedGraph
 			{
 				Point mousePt = new Point( e.X, e.Y );
 
+				SetCursor( mousePt );
+
 				// Provide Callback for MouseMove events
 				if ( this.MouseMoveEvent != null && this.MouseMoveEvent( this, e ) )
 					return;
 
 				//Point tempPt = this.PointToClient( Control.MousePosition );
 
-				SetCursor( mousePt );
 
 				// If the mouse is being dragged,
 				// undraw and redraw the rectangle as the mouse moves.
