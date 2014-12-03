@@ -271,9 +271,11 @@ void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* i
     // send initial progress update to indicate how many qonversion steps there are
     ITERATION_UPDATE(ilr, 0, analysisSourcePairs.size(), "validating qonversion settings")
 
-    // validate global settings
-    if (settingsByAnalysis.count(0) > 0)
-        validateSettings(settingsByAnalysis[0]);
+    // get existing DecoyPrefix from Analysis
+    map<int, string> decoyPrefixByAnalysis;
+    sqlite::query decoyPrefixQuery(db, "SELECT ap.Analysis, ap.Value FROM AnalysisParameter ap WHERE ap.Name='DecoyPrefix'");
+    BOOST_FOREACH(sqlite::query::rows row, decoyPrefixQuery)
+        decoyPrefixByAnalysis[row.get<int>(0)] = row.get<string>(1);
 
     // validate settings for each analysis/source pair
     BOOST_FOREACH(const AnalysisSourcePair& analysisSourcePair, analysisSourcePairs)
@@ -289,8 +291,12 @@ void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* i
                 throw runtime_error("[Qonverter::Qonvert] no global or analysis-specific qonverter settings for analysis " + analysisId);
             settingsByAnalysis[analysis] = settingsByAnalysis[0];
         }
-        else
-            validateSettings(settingsByAnalysis[analysis]);
+
+        // if decoy prefix was not specified by qonverter settings, use the previous value from the database
+        if (settingsByAnalysis[analysis].decoyPrefix.empty())
+            settingsByAnalysis[analysis].decoyPrefix = decoyPrefixByAnalysis[analysis];
+
+        validateSettings(settingsByAnalysis[analysis]);
     }
 
     ITERATION_UPDATE(ilr, 0, analysisSourcePairs.size(), "qonverting")

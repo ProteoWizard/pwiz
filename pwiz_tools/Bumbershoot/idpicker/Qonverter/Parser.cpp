@@ -1195,7 +1195,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         int maxProteinLength = 0;
 
         const string& decoyPrefix = parserTask.analysis->importSettings.qonverterSettings.decoyPrefix;
-        vector<boost::regex> cleavageAgentRegexes = pwiz::identdata::cleavageAgentRegexes(parser.analysis.enzymes);
+        vector<string> cleavageAgentRegexes = pwiz::identdata::cleavageAgentRegexes(parser.analysis.enzymes);
 
         if (cleavageAgentRegexes.empty())
             throw runtime_error("unknown cleavage agent");
@@ -1301,7 +1301,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                     // if digestions were done independently, create a Digestion for each enzyme;
                     // else create a single Digestion using all enzymes together
                     if (parser.analysis.enzymes.independent)
-                        BOOST_FOREACH(const boost::regex& cleavageAgentRegex, cleavageAgentRegexes)
+                        BOOST_FOREACH(const string& cleavageAgentRegex, cleavageAgentRegexes)
                             digestions.push_back(DigestionPtr(new proteome::Digestion(*protein, cleavageAgentRegex, digestionConfig)));
                     else
                         digestions.push_back(DigestionPtr(new proteome::Digestion(*protein, cleavageAgentRegexes, digestionConfig)));

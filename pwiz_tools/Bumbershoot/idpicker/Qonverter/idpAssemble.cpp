@@ -32,6 +32,7 @@
 #include "boost/range/adaptor/map.hpp"
 #include "boost/crc.hpp"
 #include "boost/variant.hpp"
+#include "boost/xpressive/xpressive_dynamic.hpp"
 
 #include "SchemaUpdater.hpp"
 #include "TotalCounts.hpp"
@@ -50,6 +51,7 @@ namespace sqlite = sqlite3pp;
 using std::setw;
 using std::setfill;
 using boost::format;
+namespace bxp = boost::xpressive;
 
 
 void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assemblyFilepath)
@@ -71,8 +73,8 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
     // open the assembly.txt file
     ifstream assembleTxtFile(assemblyFilepath.c_str());
 
-    boost::regex groupFilemaskRegex("((\"(.+)\")|(\\S+))\\s+((\"(.+)\")|(\\S+))");
-    boost::smatch match;
+    bxp::sregex groupFilemaskRegex = bxp::sregex::compile("((\"(.+)\")|(\\S+))\\s+((\"(.+)\")|(\\S+))");
+    bxp::smatch match;
 
     string line;
     while (getline(assembleTxtFile, line))
@@ -82,7 +84,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
 
         try
         {
-            boost::regex_match(line, match, groupFilemaskRegex);
+            bxp::regex_match(line, match, groupFilemaskRegex);
             string group = match[3].str() + match[4].str();
             string filemask = match[7].str() + match[8].str();
 

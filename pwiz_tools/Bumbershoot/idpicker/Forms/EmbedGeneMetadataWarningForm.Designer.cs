@@ -54,9 +54,9 @@ namespace IDPicker.Forms
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EmbedGeneMetadataWarningForm));
             this.label1 = new System.Windows.Forms.Label();
-            this.ignoreButton = new System.Windows.Forms.Button();
+            this.skipButton = new System.Windows.Forms.Button();
             this.doNotShowCheckBox = new System.Windows.Forms.CheckBox();
-            this.copyButton = new System.Windows.Forms.Button();
+            this.embedButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -69,15 +69,15 @@ namespace IDPicker.Forms
             this.label1.TabIndex = 0;
             this.label1.Text = resources.GetString("label1.Text");
             // 
-            // ignoreButton
+            // skipButton
             // 
-            this.ignoreButton.DialogResult = System.Windows.Forms.DialogResult.Ignore;
-            this.ignoreButton.Location = new System.Drawing.Point(337, 154);
-            this.ignoreButton.Name = "ignoreButton";
-            this.ignoreButton.Size = new System.Drawing.Size(75, 23);
-            this.ignoreButton.TabIndex = 1;
-            this.ignoreButton.Text = "Skip";
-            this.ignoreButton.UseVisualStyleBackColor = true;
+            this.skipButton.DialogResult = System.Windows.Forms.DialogResult.Ignore;
+            this.skipButton.Location = new System.Drawing.Point(337, 154);
+            this.skipButton.Name = "skipButton";
+            this.skipButton.Size = new System.Drawing.Size(75, 23);
+            this.skipButton.TabIndex = 1;
+            this.skipButton.Text = "Skip";
+            this.skipButton.UseVisualStyleBackColor = true;
             // 
             // doNotShowCheckBox
             // 
@@ -89,27 +89,27 @@ namespace IDPicker.Forms
             this.doNotShowCheckBox.Text = "Don\'t ask me this again";
             this.doNotShowCheckBox.UseVisualStyleBackColor = true;
             // 
-            // copyButton
+            // embedButton
             // 
-            this.copyButton.DialogResult = System.Windows.Forms.DialogResult.Yes;
-            this.copyButton.Location = new System.Drawing.Point(256, 154);
-            this.copyButton.Name = "copyButton";
-            this.copyButton.Size = new System.Drawing.Size(75, 23);
-            this.copyButton.TabIndex = 0;
-            this.copyButton.Text = "Embed";
-            this.copyButton.UseVisualStyleBackColor = true;
+            this.embedButton.DialogResult = System.Windows.Forms.DialogResult.Yes;
+            this.embedButton.Location = new System.Drawing.Point(256, 154);
+            this.embedButton.Name = "embedButton";
+            this.embedButton.Size = new System.Drawing.Size(75, 23);
+            this.embedButton.TabIndex = 0;
+            this.embedButton.Text = "Embed";
+            this.embedButton.UseVisualStyleBackColor = true;
             // 
-            // EmbedGeneMetadataForm
+            // EmbedGeneMetadataWarningForm
             // 
-            this.AcceptButton = this.copyButton;
+            this.AcceptButton = this.embedButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.ignoreButton;
+            this.CancelButton = this.skipButton;
             this.ClientSize = new System.Drawing.Size(424, 189);
             this.ControlBox = false;
-            this.Controls.Add(this.copyButton);
+            this.Controls.Add(this.embedButton);
             this.Controls.Add(this.doNotShowCheckBox);
-            this.Controls.Add(this.ignoreButton);
+            this.Controls.Add(this.skipButton);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "EmbedGeneMetadataWarningForm";
@@ -124,8 +124,8 @@ namespace IDPicker.Forms
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button ignoreButton;
+        private System.Windows.Forms.Button skipButton;
         private System.Windows.Forms.CheckBox doNotShowCheckBox;
-        private System.Windows.Forms.Button copyButton;
+        private System.Windows.Forms.Button embedButton;
     }
 }

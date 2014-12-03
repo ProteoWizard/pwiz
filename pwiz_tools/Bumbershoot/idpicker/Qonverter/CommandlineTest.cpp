@@ -117,12 +117,13 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     pwiz::util::expand_pathmask(testDataPath / "*.pep.xml", idFiles);
     pwiz::util::expand_pathmask(testDataPath / "*.pepXML", idFiles);
     pwiz::util::expand_pathmask(testDataPath / "*.mzid", idFiles);
+    pwiz::util::expand_pathmask(testDataPath / "*.dat", idFiles);
     if (idFiles.empty())
         throw runtime_error("[testIdpQonvert] No identification files found in test path \"" + testDataPath.string() + "\"");
 
 
     // <idpQonvertPath> <matchPaths>
-    string command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+    string command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\"%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
     unit_assert_operator_equal(0, testCommand(command));
 
     vector<bfs::path> idpDbFiles;
@@ -163,7 +164,14 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
             else
                 unit_assert_operator_equal("Comet 2014.02 (fragment tolerance minus value=0.020000 u, fragment tolerance plus value=0.020000 u, fragment_bin_offset=0.020000, fragment_bin_tol=0.020000, theoretical_fragment_ions=0)", analysisName);
         }
-        else
+        else if (softwareName == "Mascot")
+        {
+            unit_assert(bal::contains(analysisName, "fragment tolerance minus value"));
+            if (bal::contains(analysisName, "fragment tolerance minus value=0.6 u"))
+                unit_assert_operator_equal("Mascot 2.2.06 (fragment tolerance minus value=0.6 u, fragment tolerance plus value=0.6 u, parent tolerance minus value=20.0 ppm, parent tolerance plus value=20.0 ppm)", analysisName);
+            else
+                unit_assert_operator_equal("Mascot 2.2.06 (fragment tolerance minus value=0.1 u, fragment tolerance plus value=0.1 u, parent tolerance minus value=50.0 ppm, parent tolerance plus value=50.0 ppm)", analysisName);
+        } else
             throw runtime_error("[testIdpQonvert] Software name is not one of the expected values.");
     }
 
@@ -176,7 +184,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     {
         // test embedding gene metadata in existing idpDB
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -EmbedGeneMetadata 1%1%") % commandQuote % idpQonvertPath % idpDbFiles[0].string()).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -EmbedGeneMetadata 1%1%") % commandQuote % idpQonvertPath % idpDbFiles[0].string()).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -185,7 +193,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     {
         // test embedding gene metadata while overwriting existing idpDBs (should succeed with OverwriteExistingFiles=1)
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -EmbedGeneMetadata 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -EmbedGeneMetadata 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -194,7 +202,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     {
         // test overwrite of existing idpDBs (should succeed with OverwriteExistingFiles=1, idpDB file hashes should not match due to timestamp difference, gene metadata should be gone)
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -217,10 +225,10 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
         brokenPepXML << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<msms_pipeline_analysis></msms_pipeline_analysis>" << endl;
         brokenPepXML.close();
 
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX%1%") % commandQuote % idpQonvertPath % brokenPepXmlFilename).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\"%1%") % commandQuote % idpQonvertPath % brokenPepXmlFilename).str();
         unit_assert(0 < testCommand(command));
 
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -SkipSourceOnError 1%1%") % commandQuote % idpQonvertPath % brokenPepXmlFilename).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -SkipSourceOnError 1%1%") % commandQuote % idpQonvertPath % brokenPepXmlFilename).str();
         unit_assert_operator_equal(0, testCommand(command));
     }
 
@@ -232,7 +240,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     {
         // test it when importing pepXML
         {
-            command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -EmbedSpectrumScanTimes 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+            command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -EmbedSpectrumScanTimes 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
             unit_assert_operator_equal(0, testCommand(command));
 
             sqlite3pp::database db(idpDbFiles[0].string());
@@ -254,7 +262,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     {
         // test it when importing pepXML
         {
-            command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -EmbedSpectrumSources 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+            command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -EmbedSpectrumSources 1%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
             unit_assert_operator_equal(0, testCommand(command));
 
             sqlite3pp::database db(idpDbFiles[0].string());
@@ -277,7 +285,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     // test embedding quantitation
     // TMT2plex
     {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod TMT2plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod TMT2plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -287,7 +295,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     // TMT6plex
     {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod TMT6plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod TMT6plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -297,7 +305,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     // TMT10plex
     {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod TMT10plex -ReporterIonMzTolerance 0.003mz%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod TMT10plex -ReporterIonMzTolerance 0.003mz%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -307,7 +315,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     // ITRAQ4plex
     {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ4plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ4plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());
@@ -317,7 +325,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
 
     // ITRAQ8plex
     {
-        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix XXX -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ8plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
+        command = (format("%1%\"%2%\" \"%3%\" -DecoyPrefix \"\" -OverwriteExistingFiles 1 -QuantitationMethod ITRAQ8plex%1%") % commandQuote % idpQonvertPath % bal::join(idFiles | boost::adaptors::transformed(path_stringer()), "\" \"")).str();
         unit_assert_operator_equal(0, testCommand(command));
 
         sqlite3pp::database db(idpDbFiles[0].string());

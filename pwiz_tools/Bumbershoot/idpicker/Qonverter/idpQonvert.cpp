@@ -224,15 +224,15 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             {
                 const Parser::Analysis& analysis = *distinctAnalyses[i];
                 error << "Analysis " << analysis.name << endl;
-                error << "\tstartTime: " << analysis.startTime << endl;
+                error << "\tStartTime: " << analysis.startTime << endl;
                 if (analysis.filepaths.size() > 1)
                 {
-                    error << "\tinputFilepaths:" << endl;
+                    error << "\tInputFilepaths:" << endl;
                     BOOST_FOREACH(const string& filepath, analysis.filepaths)
                         error << "\t\t" << filepath << endl;
                 }
                 else
-                    error << "\tinputFilepath: " << analysis.filepaths[0] << endl;
+                    error << "\tInputFilepath: " << analysis.filepaths[0] << endl;
             }
             cerr << error.str() << endl;
         }
@@ -264,9 +264,18 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             analysis.importSettings.analysisName = analysis.name;
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
             analysis.importSettings.maxResultRank = g_rtConfig->MaxResultRank;
-            analysis.importSettings.qonverterSettings = g_rtConfig->getQonverterSettings();
             analysis.importSettings.ignoreUnmappedPeptides = g_rtConfig->IgnoreUnmappedPeptides;
             analysis.importSettings.logQonversionDetails = g_rtConfig->WriteQonversionDetails;
+            analysis.importSettings.qonverterSettings = g_rtConfig->getQonverterSettings();
+
+            if (analysis.importSettings.qonverterSettings.decoyPrefix.empty())
+            {
+                map<string, string>::const_iterator findItr = analysis.parameters.find("DecoyPrefix");
+                if (findItr != analysis.parameters.end())
+                    analysis.importSettings.qonverterSettings.decoyPrefix = findItr->second;
+                else
+                    throw runtime_error("[ImportSettingsHandler] unable to automatically determine decoy prefix in analysis: " + analysis.name);
+            }
         }
     }
 };
