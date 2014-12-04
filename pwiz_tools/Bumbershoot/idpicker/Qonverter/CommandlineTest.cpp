@@ -686,6 +686,12 @@ int main(int argc, char* argv[])
         string idpQueryPath = args[idpQueryArg];
         args.erase(args.begin() + idpQueryArg);
 
+#if defined(WIN32) && defined(DEBUG)
+        try { args.erase(args.begin() + findOneFilename("idpQonvert.pdb", args)); } catch (runtime_error&) {}
+        try { args.erase(args.begin() + findOneFilename("idpAssemble.pdb", args)); } catch (runtime_error&) {}
+        try { args.erase(args.begin() + findOneFilename("idpQuery.pdb", args)); } catch (runtime_error&) {}
+#endif
+
         // the rest of the arguments should be directories
         BOOST_FOREACH(const string& arg, args)
         {
