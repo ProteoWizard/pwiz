@@ -236,9 +236,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
             else // Not a website. Needs its own thread.
-            {
-                Program.StartToolService();
-
+            {                
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
                 RunExecutable(document, newToolMacroProvider, textWriter, progressMonitor, parent);                
