@@ -686,7 +686,7 @@ int main(int argc, char* argv[])
         string idpQueryPath = args[idpQueryArg];
         args.erase(args.begin() + idpQueryArg);
 
-#if defined(WIN32) && defined(DEBUG)
+#if defined(WIN32) && defined(_DEBUG)
         try { args.erase(args.begin() + findOneFilename("idpQonvert.pdb", args)); } catch (runtime_error&) {}
         try { args.erase(args.begin() + findOneFilename("idpAssemble.pdb", args)); } catch (runtime_error&) {}
         try { args.erase(args.begin() + findOneFilename("idpQuery.pdb", args)); } catch (runtime_error&) {}
