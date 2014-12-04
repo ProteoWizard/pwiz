@@ -193,6 +193,12 @@ namespace Test
             Assert.AreEqual("3-444", uniqueSubstring);
         }
 
+        void downgrade_12_to_11(SQLiteConnection connection)
+        {
+            connection.ExecuteNonQuery(@"DROP TABLE XICMetrics;
+                                         CREATE XICMetrics (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);
+                                         INSERT INTO XICMetrics VALUES (1,0,0,0,0)");
+        }
 
         void downgrade_7_to_4(SQLiteConnection connection)
         {
@@ -285,6 +291,7 @@ namespace Test
             using (var connection = new SQLiteConnection(String.Format("Data Source={0};Version=3", filename)))
             {
                 connection.Open();
+                if (revision < 12) downgrade_12_to_11(connection);
                 if (revision < 7) downgrade_7_to_4(connection);
                 if (revision < 4) downgrade_4_to_3(connection);
                 if (revision < 3) downgrade_3_to_2(connection);
@@ -306,6 +313,7 @@ namespace Test
 
 
             // test all revisions without a data filter applied
+            // we don't need to test upgrade from 11 to 12; the changed table (XICMetrics) is ignored
             // we don't need to test upgrade from 10 to 11; the extra columns (GeneGroups, Genes) are ignored
             // we don't need to test upgrade from 9 to 10; the extra tables (XICMetrics, XICMetricsSettings) are ignored
             // we don't need to test upgrade from 8 to 9; the extra columns (GeneLevelFiltering, DistinctMatchFormat) are ignored
