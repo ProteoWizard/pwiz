@@ -196,7 +196,7 @@ namespace Test
         void downgrade_12_to_11(SQLiteConnection connection)
         {
             connection.ExecuteNonQuery(@"DROP TABLE XICMetrics;
-                                         CREATE XICMetrics (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);
+                                         CREATE TABLE XICMetrics XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);
                                          INSERT INTO XICMetrics VALUES (1,0,0,0,0)");
         }
 
