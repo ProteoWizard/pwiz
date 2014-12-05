@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (progress.IsCanceled)
                         return false;
                 }
-                catch (IOException x)
+                catch (Exception x)
                 {
                     progress.UpdateProgress(status.ChangeErrorException(x));
                     return false;

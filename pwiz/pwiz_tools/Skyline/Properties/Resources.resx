@@ -7880,4 +7880,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="AdlerChecksum_MakeForString_Invalid_string___0___for_checksum_" xml:space="preserve">
     <value>Invalid string "{0}" for checksum.</value>
   </data>
+  <data name="VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_" xml:space="preserve">
+    <value>Unable to find {0} or {1} in directory {2}.  Please reinstall ProteinPilot software to be able to handle .group files.</value>
+  </data>
 </root>
