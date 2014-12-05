@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string GetSkylineConnection()
         {
-            return Program.MainToolService.ConnectionName;
+            return Program.MainToolServiceName;
         }
 
         /// <summary>

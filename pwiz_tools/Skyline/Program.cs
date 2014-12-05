@@ -57,6 +57,8 @@ namespace pwiz.Skyline
     public static class Program
     {
         public const int LICENSE_VERSION_CURRENT = 5;   // Added Shimadzu license
+
+        public static string MainToolServiceName { get; private set; }
         
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing.
@@ -232,12 +234,9 @@ namespace pwiz.Skyline
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
 
-                using (MainToolService = new ToolService())
-                {
-                    MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
-                    Application.Run(MainWindow);
-                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
-                }
+                MainToolServiceName = Guid.NewGuid().ToString();
+                Application.Run(MainWindow);
+                StopToolService();
             }
             catch (Exception x)
             {
@@ -252,6 +251,25 @@ namespace pwiz.Skyline
             MainWindow = null;
         }
 
+        public static void StartToolService()
+        {
+            if (MainToolService == null)
+            {
+                MainToolService = new ToolService(MainToolServiceName);
+                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+            }
+        }
+
+        public static void StopToolService()
+        {
+            if (MainToolService != null)
+            {
+                MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                MainToolService.Dispose();
+                MainToolService = null;
+            }
+        }
+
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
             MainToolService.SendDocumentChange();
@@ -262,7 +280,7 @@ namespace pwiz.Skyline
             private  readonly Dictionary<string, DocumentChangeSender> _documentChangeSenders = 
                 new Dictionary<string,DocumentChangeSender>();
  
-            public ToolService() : base(Guid.NewGuid().ToString())
+            public ToolService(string serviceName) : base(serviceName)
             {
             }
 
