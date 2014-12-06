@@ -291,15 +291,11 @@ namespace SkylineTester
                 return true;
             };
 
-            _tabForms = new TabForms(); // This needs to exist to accept list of testable forms in LoadSettings
-
-            var loader = new BackgroundWorker();
-            loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
-
-            LoadSettingsFromFile(_openFile);
+            if (_openFile != null)
+                LoadSettingsFromFile(_openFile);
 
             TabBase.MainWindow = this;
+            _tabForms = new TabForms();
             _tabTutorials = new TabTutorials();
             _tabTests = new TabTests();
             _tabBuild = new TabBuild();
@@ -323,6 +319,10 @@ namespace SkylineTester
             _previousTab = tabs.SelectedIndex;
             _tabs[_previousTab].Enter();
             statusLabel.Text = "";
+
+            var loader = new BackgroundWorker();
+            loader.DoWork += BackgroundLoad;
+            loader.RunWorkerAsync();
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -717,8 +717,7 @@ namespace SkylineTester
 
         private void LoadSettingsFromFile(string file)
         {
-            if (file != null)
-                LoadSettings(XDocument.Load(file));
+            LoadSettings(XDocument.Load(file));
         }
 
         private void LoadSettings(XDocument doc)
