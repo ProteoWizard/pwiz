@@ -92,11 +92,61 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_START_CHECKPOINT))); 
             WaitForDocumentLoaded();
 
+            // Specify DIA acquisition scheme and machine settings
+            var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettings.SelectedTab = TransitionSettingsUI.TABS.FullScan;
+                transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
+                transitionSettings.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
+                transitionSettings.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
+                transitionSettings.PrecursorRes = 35000;
+                transitionSettings.PrecursorResMz = 200;
+                transitionSettings.ProductMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
+                transitionSettings.ProductRes = 17500;
+                transitionSettings.ProductResMz = 200;
+            });
+            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan", 4);
+
+            // Set up isolation scheme
+            var isolationSchemeDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+
+            PauseForScreenShot<EditIsolationSchemeDlg>("Edit Isolation Scheme form", 5);
+            
+            RunUI(() =>
+            {
+                isolationSchemeDlg.UseResults = false;
+            });
+            
+            var calculateIsolationDlg = ShowDialog<CalculateIsolationSchemeDlg>(isolationSchemeDlg.Calculate);
+            RunUI(() =>
+            {
+                calculateIsolationDlg.WindowWidth = 20;
+                calculateIsolationDlg.Start = 500;
+                calculateIsolationDlg.End = 900;
+                calculateIsolationDlg.OptimizeWindowPlacement = true;
+            });
+            PauseForScreenShot<CalculateIsolationSchemeDlg>("Calculate Isolation Scheme form", 6);
+            OkDialog(calculateIsolationDlg, calculateIsolationDlg.OkDialog);
+            PauseForScreenShot<EditIsolationSchemeDlg>("Edit Isolation Scheme Dialog Filled", 7);
+
+            var isolationSchemeGraphDlg = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeDlg.OpenGraph);
+            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Graph of Isolation Scheme", 8);
+            OkDialog(isolationSchemeGraphDlg, isolationSchemeGraphDlg.CloseButton);
+            RunUI(() => isolationSchemeDlg.IsolationSchemeName = "DIA tutorial isolation"); // Not L10N
+            OkDialog(isolationSchemeDlg, isolationSchemeDlg.OkDialog);
+            OkDialog(transitionSettings, transitionSettings.OkDialog);
+            
+            // Export isolation scheme
+            var exportIsolationDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            PauseForScreenShot<ExportMethodDlg>("Export Isolation List form", 9);
+            OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(GetTestPath("DIA_tutorial_isolation_list.csv")));
+
             // Build spectral library
             var peptideSettings = ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI());
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form", 3);
+            PauseForScreenShot<BuildLibraryDlg>("Build Library form", 11);
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = "Dia_Tutorial_Library"; // Not L10N
@@ -104,7 +154,7 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.LibraryPath = GetTestPath("Dia_Tutorial_Library.blib");
                 buildLibraryDlg.OkWizardPage();
             });
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 4);
+            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 13);
             RunUI(() =>
             {
                 var ddaFiles = new[]
@@ -125,7 +175,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(peptideSettings.PickedLibraries.Length, 1);
                     Assert.AreEqual(peptideSettings.PickedLibraries[0], "Dia_Tutorial_Library"); // Not L10N
                 });
-                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings form", 6);
+                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings form", 14);
                 OkDialog(peptideSettings, peptideSettings.OkDialog);
                 WaitForConditionUI(() => SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded);
                 RunUI(() =>
@@ -141,65 +191,15 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_SETUP_CHECKPOINT)));
                 var peptideSettingsLib = ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI());
 
-                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 6);
+                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 14);
                 OkDialog(peptideSettingsLib, peptideSettingsLib.OkDialog);
             }
             WaitForDocumentLoaded();
 
-            // Specify DIA acquisition scheme and machine settings
-            var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() =>
-            {
-                transitionSettings.SelectedTab = TransitionSettingsUI.TABS.FullScan;
-                transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
-                transitionSettings.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
-                transitionSettings.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
-                transitionSettings.PrecursorRes = 35000;
-                transitionSettings.PrecursorResMz = 200;
-                transitionSettings.ProductMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
-                transitionSettings.ProductRes = 17500;
-                transitionSettings.ProductResMz = 200;
-            });
-            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan", 8);
-
-            // Set up isolation scheme
-            var isolationSchemeDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
-
-            PauseForScreenShot<EditIsolationSchemeDlg>("Edit Isolation Scheme form", 9);
-            
-            RunUI(() =>
-            {
-                isolationSchemeDlg.UseResults = false;
-            });
-            
-            var calculateIsolationDlg = ShowDialog<CalculateIsolationSchemeDlg>(isolationSchemeDlg.Calculate);
-            RunUI(() =>
-            {
-                calculateIsolationDlg.WindowWidth = 20;
-                calculateIsolationDlg.Start = 500;
-                calculateIsolationDlg.End = 900;
-                calculateIsolationDlg.OptimizeWindowPlacement = true;
-            });
-            PauseForScreenShot<CalculateIsolationSchemeDlg>("Calculate Isolation Scheme form", 10);
-            OkDialog(calculateIsolationDlg, calculateIsolationDlg.OkDialog);
-            PauseForScreenShot<EditIsolationSchemeDlg>("Edit Isolation Scheme Dialog Filled", 11);
-
-            var isolationSchemeGraphDlg = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeDlg.OpenGraph);
-            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Graph of Isolation Scheme", 12);
-            OkDialog(isolationSchemeGraphDlg, isolationSchemeGraphDlg.CloseButton);
-            RunUI(() => isolationSchemeDlg.IsolationSchemeName = "DIA tutorial isolation"); // Not L10N
-            OkDialog(isolationSchemeDlg, isolationSchemeDlg.OkDialog);
-            OkDialog(transitionSettings, transitionSettings.OkDialog);
-            
-            // Export isolation scheme
-            var exportIsolationDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
-            PauseForScreenShot<ExportMethodDlg>("Export Isolation List form", 13);
-            OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(GetTestPath("DIA_tutorial_isolation_list.csv")));
-            
             // Set up chromatogram retention time restriction
             var newTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => newTransitionSettings.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 5.0));
-            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Retention time filtering options", 15);
+            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Retention time filtering options", 16);
             OkDialog(newTransitionSettings, newTransitionSettings.OkDialog);
 
             // Adjust modifications and filter
@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 newPeptideSettings.PickedStaticMods = new[] {carbamidoMod};
             });
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Edit Structural Modification form", 18);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", 18);
             OkDialog(newPeptideSettings, newPeptideSettings.OkDialog);
 
             var filterTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -261,16 +261,16 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<SequenceTreeForm>("Targets pane with precursors and best 5 transitions only", 23);
 
             // Generate decoys
-            var decoysDlg = ShowDialog<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg);
-            PauseForScreenShot<GenerateDecoysDlg>("Add Decoy Peptides form", 24);
-            RunUI(() =>
-            {
-                decoysDlg.NumDecoys = 26;
-                Assert.AreEqual(decoysDlg.DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE);
-            });
-            OkDialog(decoysDlg, decoysDlg.OkDialog);
-            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.PrevNode.Nodes[6]);
-            PauseForScreenShot<SequenceTreeForm>("Targets pane with decoys added", 25);
+//            var decoysDlg = ShowDialog<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg);
+//            PauseForScreenShot<GenerateDecoysDlg>("Add Decoy Peptides form", 24);
+//            RunUI(() =>
+//            {
+//                decoysDlg.NumDecoys = 26;
+//                Assert.AreEqual(decoysDlg.DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE);
+//            });
+//            OkDialog(decoysDlg, decoysDlg.OkDialog);
+//            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.PrevNode.Nodes[6]);
+//            PauseForScreenShot<SequenceTreeForm>("Targets pane with decoys added", 25);
 
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT)));
 
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTestTutorial
                     importResultsDlg.NamedPathSets = path;
                 });
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-                PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix", 26);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix", 24);
                 RunUI(() =>
                 {
                     string prefix = importResultsNameDlg.Prefix;
@@ -340,7 +340,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(27);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 27);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 26);
 
             RunUI(() =>
             {
@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual((int) SequenceTree.StateImageId.no_peak, nodeTree.StateImageIndex);
             });
 
-            PauseForScreenShot<SequenceTreeForm>("Targets view - ", 28);
+            PauseForScreenShot<SequenceTreeForm>("Targets view - ", 27);
 
             RunUI(() =>
             {
@@ -365,7 +365,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowOtherRunPeptideIDTimes(true);
             });
 
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - with ID lines", 29);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - with ID lines", 28);
 
             RunUI(() =>
             {
@@ -377,21 +377,21 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
 
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed to peak", 32);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed to peak", 31);
             if (IsFullImportMode)
             {
                 ClickChromatogram(74.9, 1.775E+7, PaneKey.PRECURSORS);
                 RestoreViewOnScreen(33);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph with precursors - zoom manually");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph with precursors - zoom manually", 32);
 
                 ClickChromatogram(74.8, 1.753E+6, PaneKey.PRODUCTS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y7");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y7", 33);
 
                 ClickChromatogram(74.9, 9.64E+5, PaneKey.PRODUCTS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing b3 - zoom manually");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing b3 - zoom manually", 34);
 
                 ClickChromatogram(74.9, 1.25E+5, PaneKey.PRODUCTS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y3 - zoom manually");
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y3 - zoom manually", 34);
             }
 
             RunUI(() =>
@@ -400,7 +400,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("CNTDYSDCIHEAIK", ((PeptideTreeNode)SkylineWindow.SelectedNode).DocNode.Peptide.Sequence);
             });
 
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - split between two precursors", 36);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - split between two precursors", 35);
 
             RunUI(() =>
             {
@@ -408,7 +408,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode) SkylineWindow.SelectedNode.Nodes[0]).Path;
             });
 
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - double charged precursor", 37);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - double charged precursor", 36);
 
             RunUI(() =>
             {
@@ -426,20 +426,20 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(38);
-            PauseForScreenShot<GraphSpectrum>("Library Match view - zoom manually", 38);
+            PauseForScreenShot<GraphSpectrum>("Library Match view - zoom manually", 37);
 
             RestoreViewOnScreen(39);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 39);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 38);
 
             if (IsFullImportMode)
             {
                 RestoreViewOnScreen(40);
                 ClickChromatogram(41.9, 1.166E+8, PaneKey.PRECURSORS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing precursor interference - zoom manually", 40);
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing precursor interference - zoom manually", 39);
 
                 RunUI(() => SkylineWindow.GraphFullScan.ChangeScan(-12));
                 CheckFullScanSelection(41.7, 1.532E+8, PaneKey.PRECURSORS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing transition between interference and real peak - zoom manually", 40);
+                PauseForScreenShot<GraphFullScan>("Full Scan graph showing transition between interference and real peak - zoom manually", 39);
             }
 
             // Clear all the settings lists that were defined in this tutorial

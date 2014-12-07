@@ -360,7 +360,7 @@ namespace pwiz.Skyline.SettingsUI
            
             var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
-            bool exclusionUseDIAWindow = cbExclusionUseDIAWindow.Checked;
+            bool exclusionUseDIAWindow = FullScanSettingsControl.IsDIA() && cbExclusionUseDIAWindow.Checked;
             var filter = new TransitionFilter(precursorCharges, productCharges, types,
                                               fragmentRangeFirst, fragmentRangeLast, measuredIons,
                                               exclusionWindow, exclusionUseDIAWindow, autoSelect);
@@ -847,7 +847,12 @@ namespace pwiz.Skyline.SettingsUI
         public bool SetDIAExclusionWindow
         {
             get { return cbExclusionUseDIAWindow.Checked; }
-            set { cbExclusionUseDIAWindow.Checked = value; }
+            set
+            {
+                if (!FullScanSettingsControl.IsDIA())
+                    throw new InvalidOperationException();
+                cbExclusionUseDIAWindow.Checked = value;
+            }
         }
 
         public double IonMatchTolerance

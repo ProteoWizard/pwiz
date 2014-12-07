@@ -420,26 +420,27 @@ namespace pwiz.SkylineTestFunctional
         private string[] CheckPreview(PivotReportDlg pivotReportDlg, Action<PreviewReportDlg, SrmDocument> checkPreview)
         {
             string[] columnNames = null;
-
-            RunDlg<PreviewReportDlg>(pivotReportDlg.ShowPreview, dlg =>
+            var dlg = ShowDialog<PreviewReportDlg>(pivotReportDlg.ShowPreview);
+            RunUI(() =>
             {
                 checkPreview(dlg, SkylineWindow.DocumentUI);
                 columnNames = dlg.ColumnHeaderNames.ToArray();
-                dlg.OkDialog();
             });
-
+            OkDialog(dlg, dlg.Close);
             return columnNames;
         }
 
         private string[] CheckPreview(ViewEditor viewEditor, Action<DocumentGridForm, SrmDocument> checkPreview)
         {
             string[] columnNames = null;
-            RunDlg<DocumentGridForm>(viewEditor.ShowPreview, dlg =>
+            var dlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+            WaitForConditionUI(() => dlg.IsComplete);
+            RunUI(() =>
             {
                 checkPreview(dlg, SkylineWindow.DocumentUI);
                 columnNames = dlg.ColumnHeaderNames;
-                dlg.Close();
             });
+            OkDialog(dlg, dlg.Close);
             return columnNames;
         }
     }
