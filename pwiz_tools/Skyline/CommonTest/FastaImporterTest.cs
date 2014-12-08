@@ -367,7 +367,7 @@ namespace CommonTest
                             description:
                                 "pep:known chromosome:ASM9102v1:IV:2278:3450:1 gene:AGOS_ADL400W transcript:AAS51520 description:\"ADL400WpAFR758Cp\"",
                             species: "Ashbya gossypii (strain ATCC 10895 / CBS 109.51 / FGSC 9923 / NRRL Y-1056) (Yeast) (Eremothecium gossypii)",
-                            gene: "ADL400W AGOS_ADL400W AGOS_AFR758C")
+                            gene: "AGOS_ADL400W AGOS_AFR758C")
                     }),
 
                 new FastaHeaderParserTest( // some kind of homegrown numbering scheme - don't even go to the web for that
