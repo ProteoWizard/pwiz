@@ -85,6 +85,13 @@ namespace SkylineTester
             if (!MainWindow.HasBuildPrerequisites)
                 return false;
 
+            // When run from SkylineNightly, don't overwrite the nightly scheduled task.  Just start the nightly run immediately.
+            if (MainWindow.NightlyExit.Checked)
+            {
+                RunUI(StartNightly, 500);
+                return true;
+            }
+
             var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
             if (MainWindow.ShiftKeyPressed)
