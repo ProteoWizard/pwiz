@@ -377,6 +377,12 @@ toolset vc11 cl : /Fe /Fe /Fd /Fo : -D
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
     -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
+toolset vc12 cl : /Fe /Fe /Fd /Fo : -D
+    : /nologo
+    [ opt --release : /GL /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
+    [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
+    -I$(--python-include) -I$(--extra-include)
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 
 # First set the build commands and options according to the
 # preset toolset.
@@ -483,8 +489,8 @@ jam.source =
     make.c make1.c mem.c object.c option.c output.c parse.c pathsys.c regexp.c
     rules.c scan.c search.c subst.c w32_getreg.c timestamp.c variable.c
     modules.c strings.c filesys.c builtins.c class.c cwd.c native.c md5.c
-    modules/set.c modules/path.c modules/regex.c modules/property-set.c
-    modules/sequence.c modules/order.c modules/svnrev.c ;
+    [ .path modules set.c ] [ .path modules path.c ] [ .path modules regex.c ]
+    [ .path modules property-set.c ] [ .path modules sequence.c ] [ .path modules order.c ] [ .path modules svnrev.c ] ;
 if $(OS) = NT
 {
     jam.source += execnt.c filent.c pathnt.c ;

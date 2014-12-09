@@ -92,7 +92,8 @@ void initializeInstrumentConfigurationPtrs(MSData& msd, CompassDataPtr rawfile, 
     commonInstrumentParams->id = "CommonInstrumentParams";
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
-    commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile->getInstrumentDescription()));
+    if (!rawfile->getInstrumentDescription().empty())
+        commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile->getInstrumentDescription()));
     commonInstrumentParams->set(cvidSeries);
 
     // create instrument configuration templates based on the instrument model
@@ -128,7 +129,7 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
     CVID acquisitionSoftwareCvid = translateAsAcquisitionSoftware(compassDataPtr);
     acquisitionSoftware->id = cvTermInfo(acquisitionSoftwareCvid).shortName();
     acquisitionSoftware->set(acquisitionSoftwareCvid);
-    acquisitionSoftware->version = "unknown";
+    acquisitionSoftware->version = compassDataPtr->getAcquisitionSoftwareVersion();
     msd.softwarePtrs.push_back(acquisitionSoftware);
 
     SoftwarePtr softwarePwiz(new Software);

@@ -132,34 +132,94 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
     BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
         parameterMap[p.name] = p.value;
 
-    switch (rawfile->getInstrumentFamily())
+    switch (rawfile->getInstrumentSource())
     {
-        case InstrumentFamily_Trap:
-        case InstrumentFamily_OTOF:
-        case InstrumentFamily_OTOFQ:
-        case InstrumentFamily_maXis:
+        case InstrumentSource_AP_MALDI:
             configurations.push_back(InstrumentConfiguration());
-            configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            configurations.back().componentList.push_back(Component(MS_AP_MALDI, 1));
             break;
 
-        case InstrumentFamily_MaldiTOF:
-        case InstrumentFamily_BioTOF:
-        case InstrumentFamily_BioTOFQ:
+        case InstrumentSource_MALDI:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(Component(MS_MALDI, 1));
             break;
 
-        case InstrumentFamily_FTMS:
+        case InstrumentSource_ESI:
+        case InstrumentSource_MULTI_MODE:
+        case InstrumentSource_Ultraspray:
             configurations.push_back(InstrumentConfiguration());
-            if (parameterMap["Mobile Hexapole Position"] == "MALDI") // HACK: I haven't seen enough data to know whether this is robust.
-                configurations.back().componentList.push_back(Component(MS_MALDI, 1));
-            else
-                configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            configurations.back().componentList.back().set(MS_electrospray_inlet);
             break;
 
+        case InstrumentSource_NANO_ESI_OFFLINE:
+        case InstrumentSource_NANO_ESI_ONLINE:
+        case InstrumentSource_NANO_FLOW_ESI:
+        case InstrumentSource_CaptiveSpray:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_nanoelectrospray, 1));
+            configurations.back().componentList.back().set(MS_nanospray_inlet);
+            break;
+
+        case InstrumentSource_APCI:
+        case InstrumentSource_GC_APCI:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_atmospheric_pressure_chemical_ionization, 1));
+            break;
+
+        case InstrumentSource_APPI:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_atmospheric_pressure_photoionization, 1));
+            break;
+
+        case InstrumentSource_EI:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_electron_ionization, 1));
+            break;
+            
+        case InstrumentSource_AlsoUnknown:
+        case InstrumentSource_Unknown:
+        {
+            switch (rawfile->getInstrumentFamily())
+            {
+                case InstrumentFamily_Trap:
+                case InstrumentFamily_OTOF:
+                case InstrumentFamily_OTOFQ:
+                case InstrumentFamily_maXis:
+                    configurations.push_back(InstrumentConfiguration());
+                    configurations.back().componentList.push_back(Component(MS_ESI, 1));
+                    configurations.back().componentList.back().set(MS_electrospray_inlet);
+                    break;
+
+                case InstrumentFamily_MaldiTOF:
+                case InstrumentFamily_BioTOF:
+                case InstrumentFamily_BioTOFQ:
+                    configurations.push_back(InstrumentConfiguration());
+                    configurations.back().componentList.push_back(Component(MS_MALDI, 1));
+                    break;
+
+                case InstrumentFamily_FTMS:
+                    configurations.push_back(InstrumentConfiguration());
+                    if (parameterMap["Mobile Hexapole Position"] == "MALDI") // HACK: I haven't seen enough data to know whether this is robust.
+                        configurations.back().componentList.push_back(Component(MS_MALDI, 1));
+                    else
+                    {
+                        configurations.back().componentList.push_back(Component(MS_ESI, 1));
+                        configurations.back().componentList.back().set(MS_electrospray_inlet);
+                    }
+                    break;
+
+                case InstrumentFamily_Unknown:
+                    break; // unknown configuration
+
+                default:
+                    throw runtime_error("[Reader_Bruker::createInstrumentConfigurations] no case for InstrumentFamily " + lexical_cast<string>(rawfile->getInstrumentFamily()));
+            }
+            break;
+        } // InstrumentSource_Unknown
+
         default:
-        case InstrumentFamily_Unknown:
-            break; // unknown configuration
+            throw runtime_error("[Reader_Bruker::createInstrumentConfigurations] no case for InstrumentSource " + lexical_cast<string>(rawfile->getInstrumentSource()));
     }
 
     switch (rawfile->getInstrumentFamily())
@@ -220,21 +280,32 @@ PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile)
 
 PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile)
 {
-    switch (rawfile->getInstrumentFamily())
-    {
-        case InstrumentFamily_Trap: return MS_HCTcontrol;
-        case InstrumentFamily_OTOF: return MS_micrOTOFcontrol;
-        case InstrumentFamily_OTOFQ: return MS_micrOTOFcontrol;
-        case InstrumentFamily_BioTOF: return MS_Compass;
-        case InstrumentFamily_BioTOFQ: return MS_Compass;
-        case InstrumentFamily_MaldiTOF: return MS_FlexControl;
-        case InstrumentFamily_FTMS: return MS_apexControl;
-        case InstrumentFamily_maXis: return MS_Compass;
+    string name = rawfile->getAcquisitionSoftware();
 
-        default:
-        case InstrumentFamily_Unknown:
-            return MS_Compass;
-    }
+    if (name.empty()) // fall back on instrument family
+        switch (rawfile->getInstrumentFamily())
+        {
+            case InstrumentFamily_Trap: return MS_HCTcontrol;
+            case InstrumentFamily_OTOF: return MS_micrOTOFcontrol;
+            case InstrumentFamily_OTOFQ: return MS_micrOTOFcontrol;
+            case InstrumentFamily_BioTOF: return MS_Compass;
+            case InstrumentFamily_BioTOFQ: return MS_Compass;
+            case InstrumentFamily_MaldiTOF: return MS_FlexControl;
+            case InstrumentFamily_FTMS: return MS_apexControl;
+            case InstrumentFamily_maXis: return MS_Compass;
+
+            default:
+            case InstrumentFamily_Unknown:
+                return MS_Compass;
+        }
+
+    if (bal::icontains(name, "HCT")) return MS_HCTcontrol;
+    if (bal::icontains(name, "oTOFcontrol")) return MS_micrOTOFcontrol;
+    if (bal::icontains(name, "Compass")) return MS_Compass;
+    if (bal::icontains(name, "Apex")) return MS_apexControl;
+    if (bal::icontains(name, "Flex")) return MS_FlexControl;
+
+    return MS_Compass; // default to Compass
 }
 
 #else

@@ -25,6 +25,7 @@
 # - we can redistribute DLLs
 
 import path ;
+import feature ;
 
 project
     : requirements 
@@ -52,7 +53,7 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) ) &&
+       ( [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" ) &&
        [ project-exists $(API_PATH) ] &&
        [ shimadzu-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -110,7 +111,6 @@ rule warn-once ( message )
 }
 
 
-import feature ;
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
@@ -132,7 +132,7 @@ rule test-requirements ( properties * )
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
-    else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express"
+    else if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express"
     {
         warn-once "[$(READER_PATH)] MSVC version is not .NET 4 compatible: $(READER_NAME) is using the .NET 3.5 DLLs which get slightly different test results, so the test will be skipped." ;
         result += <build>no ;

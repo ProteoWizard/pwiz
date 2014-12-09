@@ -114,9 +114,9 @@ typedef fpos_t f_off;
 
 
 
-#ifndef __GNUC__
-double round(double n);
-#endif
+//#ifndef __GNUC__
+//double round(double n);
+//#endif
 
 
 ///Struct for comparing two floats using < operator

@@ -77,6 +77,9 @@ PWIZ_API_DECL enum InstrumentFamily
     InstrumentFamily_MaldiTOF = 5,
     InstrumentFamily_FTMS = 6,
     InstrumentFamily_maXis = 7,
+    InstrumentFamily_impact = 90, // not from CXT
+    InstrumentFamily_compact = 91, // not from CXT
+    InstrumentFamily_solariX = 92, // not from CXT
     InstrumentFamily_Unknown = 255
 };
 
@@ -85,6 +88,25 @@ PWIZ_API_DECL enum IsolationMode
     IsolationMode_Off = 0,
     IsolationMode_On = 1,
     IsolationMode_Unknown = 255
+};
+
+PWIZ_API_DECL enum InstrumentSource // not from CXT
+{
+    InstrumentSource_AlsoUnknown = 0,
+    InstrumentSource_ESI = 1,
+    InstrumentSource_APCI = 2,
+    InstrumentSource_NANO_ESI_OFFLINE = 3,
+    InstrumentSource_NANO_ESI_ONLINE = 4,
+    InstrumentSource_APPI = 5,
+    InstrumentSource_AP_MALDI = 6,
+    InstrumentSource_MALDI = 7,
+    InstrumentSource_MULTI_MODE = 8,
+    InstrumentSource_NANO_FLOW_ESI = 9,
+    InstrumentSource_Ultraspray = 10,
+    InstrumentSource_CaptiveSpray = 11,
+    InstrumentSource_EI = 16,
+    InstrumentSource_GC_APCI = 17,
+    InstrumentSource_Unknown = 255
 };
 
 PWIZ_API_DECL enum LCUnit
@@ -173,6 +195,10 @@ struct PWIZ_API_DECL MSSpectrum
                                       std::vector<FragmentationMode>& fragmentationModes) const = 0;
     virtual IonPolarity getPolarity() const = 0;
 
+    virtual std::pair<double, double> getScanRange() const = 0;
+    virtual int getChargeState() const = 0;
+    virtual double getIsolationWidth() const = 0;
+
     virtual MSSpectrumParameterListPtr parameters() const = 0;
 };
 
@@ -244,6 +270,9 @@ struct PWIZ_API_DECL CompassData
     virtual std::string getMethodName() const = 0;
     virtual InstrumentFamily getInstrumentFamily() const = 0;
     virtual std::string getInstrumentDescription() const = 0;
+    virtual InstrumentSource getInstrumentSource() const = 0;
+    virtual std::string getAcquisitionSoftware() const = 0;
+    virtual std::string getAcquisitionSoftwareVersion() const = 0;
 };
 
 typedef CompassData::Ptr CompassDataPtr;

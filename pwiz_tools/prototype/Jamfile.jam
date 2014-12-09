@@ -56,4 +56,5 @@ install bin
 
 explicit bin ;
 
-
+install ThermoRawMetaDumpInstall : ThermoRawMetaDump ;
+explicit ThermoRawMetaDumpInstall ;

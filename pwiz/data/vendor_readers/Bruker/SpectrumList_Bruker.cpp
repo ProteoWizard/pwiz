@@ -48,73 +48,6 @@ namespace detail {
 
 using namespace Bruker;
 
-const char* parameterAlternativeNames[] =
-{
-    "IsolationWidth:MS(n) Isol Width;Isolation Resolution FWHM",
-    "ChargeState:Trigger Charge MS(2);Trigger Charge MS(3);Trigger Charge MS(4);Trigger Charge MS(5);Precursor Charge State"
-};
-
-size_t parameterAlternativeNamesSize = sizeof(parameterAlternativeNames) / sizeof(const char*);
-
-
-PWIZ_API_DECL
-string SpectrumList_Bruker::ParameterCache::get(const string& parameterName, MSSpectrumParameterList& parameters)
-{
-    map<string, size_t>::const_iterator findItr = parameterIndexByName_.find(parameterName);
-
-    if (findItr == parameterIndexByName_.end())
-    {
-        update(parameters);
-
-        // if still not found, return empty string
-        findItr = parameterIndexByName_.find(parameterName);
-        if (findItr == parameterIndexByName_.end())
-            return string();
-    }
-
-    const MSSpectrumParameter& parameter = parameters[findItr->second];
-    map<string, string>::const_iterator alternativeNameItr = parameterAlternativeNameMap_.find(parameter.name);
-
-    if (parameter.name != parameterName && alternativeNameItr == parameterAlternativeNameMap_.end())
-    {
-        // if parameter name doesn't match, invalidate the cache and try again
-        update(parameters);
-        return get(parameterName, parameters);
-    }
-
-    return parameter.value;
-}
-
-PWIZ_API_DECL
-void SpectrumList_Bruker::ParameterCache::update(MSSpectrumParameterList& parameters)
-{
-    parameterIndexByName_.clear();
-    parameterAlternativeNameMap_.clear();
-
-    vector<string> tokens;
-    for (size_t i=0; i < parameterAlternativeNamesSize; ++i)
-    {
-        bal::split(tokens, parameterAlternativeNames[i], bal::is_any_of(":;"));
-        for (size_t j=1; j < tokens.size(); ++j)
-            parameterAlternativeNameMap_[tokens[j]] = tokens[0];
-    }
-
-    size_t i = 0;
-    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
-    {
-        map<string, string>::const_iterator findItr = parameterAlternativeNameMap_.find(p.name);
-        if (findItr != parameterAlternativeNameMap_.end())
-        {   
-            //cout << p.name << ": " << p.value << "\n";
-            parameterIndexByName_[findItr->second] = i;
-        }
-        else
-            parameterIndexByName_[p.name] = i;
-
-        ++i;
-    }
-}
-
 
 PWIZ_API_DECL
 SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
@@ -147,7 +80,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Bruker::spectrumIdentity(size
 
 PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 {
-    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
         return size_;
     return scanItr->second;
@@ -303,23 +236,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
-        MSSpectrumParameterListPtr parametersPtr = spectrum->parameters();
-        MSSpectrumParameterList& parameters = *parametersPtr;
-
-        // cache parameter indexes for this msLevel if they aren't already cached
-        ParameterCache& parameterCache = parameterCacheByMsLevel_[msLevel];
-
-        string scanBegin = parameterCache.get("Scan Begin", parameters);
-        string scanEnd = parameterCache.get("Scan End", parameters);
-
-        if (!scanBegin.empty() && !scanEnd.empty())
-            scan.scanWindows.push_back(ScanWindow(lexical_cast<double>(scanBegin), lexical_cast<double>(scanEnd), MS_m_z));
+        pair<double, double> scanRange = spectrum->getScanRange();
+        if (scanRange.first > 0 && scanRange.second > 0)
+            scan.scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
 
         if (msLevel > 1)
         {
-            string isolationWidth = parameterCache.get("IsolationWidth", parameters);
-            string triggerCharge = parameterCache.get("ChargeState", parameters);
-
             Precursor precursor;
 
             vector<double> fragMZs, isolMZs;
@@ -338,23 +260,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                     {
                         SelectedIon selectedIon(fragMZs[i]);
 
-                        if (!triggerCharge.empty())
-                        {
-                            if (triggerCharge == "single") selectedIon.set(MS_charge_state, 1);
-                            else if (triggerCharge == "double") selectedIon.set(MS_charge_state, 2);
-                            else if (triggerCharge == "triple") selectedIon.set(MS_charge_state, 3);
-                            else if (triggerCharge == "quad") selectedIon.set(MS_charge_state, 4);
-                            else
-                            {
-                                try
-                                {
-                                    int charge = lexical_cast<int>(triggerCharge);
-                                    if (charge > 0)
-                                        selectedIon.set(MS_charge_state, charge);
-                                }
-                                catch (bad_lexical_cast&) {}
-                            }
-                        }
+                        int charge = spectrum->getChargeState();
+                        if (charge > 0)
+                            selectedIon.set(MS_charge_state, charge);
 
                         switch (fragModes[i])
                         {
@@ -373,7 +281,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                                 precursor.activation.set(MS_ETD);
                                 break;
                             case FragmentationMode_ISCID:
-                                precursor.activation.set(MS_CID);
+                                precursor.activation.set(MS_in_source_collision_induced_dissociation);
                                 break;
                             case FragmentationMode_ECD:
                                 precursor.activation.set(MS_ECD);
@@ -393,14 +301,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                     {
                         precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i], MS_m_z);
 
-                        if (!isolationWidth.empty())
+                        double isolationWidth = spectrum->getIsolationWidth();
+                        if (isolationWidth > 0)
                         {
-                            double value = lexical_cast<double>(isolationWidth);
-                            if (value > 0)
-                            {
-                                precursor.isolationWindow.set(MS_isolation_window_lower_offset, value/2, MS_m_z);
-                                precursor.isolationWindow.set(MS_isolation_window_upper_offset, value/2, MS_m_z);
-                            }
+                            precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth / 2, MS_m_z);
+                            precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth / 2, MS_m_z);
                         }
                     }
                 }
@@ -585,6 +490,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
 PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 {
+    map<std::string, size_t> idToIndexTempMap;
+
     if (format_ == Reader_Bruker_Format_U2 ||
         format_ == Reader_Bruker_Format_BAF_and_U2)
     {
@@ -604,7 +511,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
                 si.index = index_.size()-1;
                 si.id = "collection=" + lexical_cast<string>(si.collection) +
                         " scan=" + lexical_cast<string>(si.scan);
-                idToIndexMap_[si.id] = si.index;
+                idToIndexTempMap[si.id] = si.index;
             }
         }
     }
@@ -620,7 +527,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             si.index = index_.size()-1;
             si.scan = ++scan;
             si.id = "file=" + encode_xml_id_copy(sf->id);
-            idToIndexMap_[si.id] = si.index;
+            idToIndexTempMap[si.id] = si.index;
         }
     }
     else if (format_ != Reader_Bruker_Format_U2)
@@ -633,10 +540,12 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             si.index = index_.size()-1;
             si.scan = scan;
             si.id = "scan=" + lexical_cast<string>(si.scan);
-            idToIndexMap_[si.id] = si.index;
+            idToIndexTempMap[si.id] = si.index;
         }
     }
 
+    idToIndexMap_.reserve(idToIndexTempMap.size());
+    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
     size_ = index_.size();
 }
 

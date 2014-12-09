@@ -1234,7 +1234,7 @@ rule capture-output ( target : sources * : properties * )
     # Oddly, host-os is not in properties, so grab the default value.
     local host-os = [ feature.defaults host-os ] ;
     host-os = $(host-os:G=) ;
-    if $(target-os) != $(host-os)
+    if $(target-os) != $(host-os) && $(target-os) in windows cygwin && $(host-os) in windows cygwin
     {
         PYTHONPATH = [ sequence.transform $(host-os)-to-$(target-os)-path :
             $(PYTHONPATH) ] ;

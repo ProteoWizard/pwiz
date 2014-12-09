@@ -50,10 +50,8 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>9.0 in $(properties) ||
-         <toolset-msvc:version>9.0express in $(properties) ||
-         <toolset-msvc:version>10.0 in $(properties) ||
-         <toolset-msvc:version>10.0express in $(properties) ) &&
+       ( <toolset-msvc:version>12.0 in $(properties) ||
+         <toolset-msvc:version>12.0express in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
@@ -69,10 +67,8 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( <toolset-msvc:version>9.0 in $(properties) ||
-         <toolset-msvc:version>9.0express in $(properties) ||
-         <toolset-msvc:version>10.0 in $(properties) ||
-         <toolset-msvc:version>10.0express in $(properties) ) &&
+       ( <toolset-msvc:version>12.0 in $(properties) ||
+         <toolset-msvc:version>12.0express in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
@@ -92,10 +88,6 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
-        }
-        else if [ MATCH (x64) : $(PLATFORM) ]
-        {
-            echo "[$(READER_PATH)] 64-bit build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if <runtime-debugging>on in $(properties)
         {

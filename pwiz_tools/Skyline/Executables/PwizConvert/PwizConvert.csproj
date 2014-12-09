@@ -103,7 +103,7 @@
       <Link>msvcr100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0\MassLynxRaw.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64\MassLynxRaw.dll">
       <Link>MassLynxRaw.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

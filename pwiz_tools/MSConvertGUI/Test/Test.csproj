@@ -86,20 +86,12 @@
     <Shadow Include="Test References\MSConvertGUI.accessor" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MSConvertGUI.csproj">
       <Project>{AF8F8305-6C76-4C94-879F-7746B6176203}</Project>
       <Name>MSConvertGUI</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
-      <Name>Interop.EDAL.SxS.manifest</Name>
-      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\Interop.EDAL.SxS.manifest</HintPath>
-    </NativeReference>
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=AnyCPU">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\Thermo\$(PLATFORM)\MSFileReader.XRawfile2.SxS.manifest</HintPath>

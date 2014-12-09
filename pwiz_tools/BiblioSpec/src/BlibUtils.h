@@ -34,15 +34,17 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/fstream.hpp"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #include <direct.h>
 #define getcwd _getcwd
 
+#if _MSC_VER < 1700
 template<typename T>
 inline bool isinf(T value)
 {
     return value == std::numeric_limits<T>::infinity();
-} 
+}
+#endif
 #endif
 
 

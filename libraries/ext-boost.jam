@@ -293,46 +293,45 @@ rule init ( version : location : options * )
         modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
         local serialization_sources =
-          basic_archive
-          basic_iarchive
-          basic_iserializer
-          basic_oarchive
-          basic_oserializer
-          basic_pointer_iserializer
-          basic_pointer_oserializer
-          basic_serializer_map
-          basic_text_iprimitive
-          basic_text_oprimitive
-          basic_xml_archive
-          binary_iarchive
-          binary_oarchive
-          extended_type_info
-          extended_type_info_typeid
-          extended_type_info_no_rtti
-          polymorphic_iarchive
-          polymorphic_oarchive
-          stl_port
-          text_iarchive
-          text_oarchive
-          void_cast
-          archive_exception
-          xml_grammar
-          xml_iarchive
-          xml_oarchive
-          xml_archive_exception
-          shared_ptr_helper
+            basic_archive
+            basic_iarchive
+            basic_iserializer
+            basic_oarchive
+            basic_oserializer
+            basic_pointer_iserializer
+            basic_pointer_oserializer
+            basic_serializer_map
+            basic_text_iprimitive
+            basic_text_oprimitive
+            basic_xml_archive
+            binary_iarchive
+            binary_oarchive
+            extended_type_info
+            extended_type_info_typeid
+            extended_type_info_no_rtti
+            polymorphic_iarchive
+            polymorphic_oarchive
+            stl_port
+            text_iarchive
+            text_oarchive
+            void_cast
+            archive_exception
+            xml_grammar
+            xml_iarchive
+            xml_oarchive
+            xml_archive_exception
         ;
 
         local wserialization_sources = 
-          basic_text_wiprimitive
-          basic_text_woprimitive
-          text_wiarchive
-          text_woarchive
-          utf8_codecvt_facet
-          xml_wgrammar
-          xml_wiarchive
-          xml_woarchive
-          codecvt_null
+            basic_text_wiprimitive
+            basic_text_woprimitive
+            text_wiarchive
+            text_woarchive
+            utf8_codecvt_facet
+            xml_wgrammar
+            xml_wiarchive
+            xml_woarchive
+            codecvt_null
         ;
 
         lib serialization
@@ -343,11 +342,9 @@ rule init ( version : location : options * )
                 #<threading>multi
                 <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
-                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             :
             :   <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
-                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             ;
 
         lib wserialization
@@ -358,11 +355,9 @@ rule init ( version : location : options * )
                 #<threading>multi
                 <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
-                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             :
             :   <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
-                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             ;
 
         local thread_sources ;

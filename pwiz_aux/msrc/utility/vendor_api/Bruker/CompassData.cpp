@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "CompassData.hpp"
+#include "Baf2Sql.hpp"
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -50,6 +51,86 @@ typedef BDal::CxT::Lc::ITraceDeclaration LC_TraceDeclaration;
 namespace pwiz {
 namespace vendor_api {
 namespace Bruker {
+
+    
+const char* parameterAlternativeNames[] =
+{
+    "IsolationWidth:MS(n) Isol Width;Isolation Resolution FWHM",
+    "ChargeState:Trigger Charge MS(2);Trigger Charge MS(3);Trigger Charge MS(4);Trigger Charge MS(5);Precursor Charge State"
+};
+
+size_t parameterAlternativeNamesSize = sizeof(parameterAlternativeNames) / sizeof(const char*);
+
+
+struct ParameterCache
+{
+    string get(const string& parameterName, MSSpectrumParameterList& parameters);
+    size_t size() { return parameterIndexByName_.size(); }
+
+    private:
+    void update(MSSpectrumParameterList& parameters);
+    map<string, size_t> parameterIndexByName_;
+    map<string, string> parameterAlternativeNameMap_;
+};
+
+
+PWIZ_API_DECL
+string ParameterCache::get(const string& parameterName, MSSpectrumParameterList& parameters)
+{
+    map<string, size_t>::const_iterator findItr = parameterIndexByName_.find(parameterName);
+
+    if (findItr == parameterIndexByName_.end())
+    {
+        update(parameters);
+
+        // if still not found, return empty string
+        findItr = parameterIndexByName_.find(parameterName);
+        if (findItr == parameterIndexByName_.end())
+            return string();
+    }
+
+    const MSSpectrumParameter& parameter = parameters[findItr->second];
+    map<string, string>::const_iterator alternativeNameItr = parameterAlternativeNameMap_.find(parameter.name);
+
+    if (parameter.name != parameterName && alternativeNameItr == parameterAlternativeNameMap_.end())
+    {
+        // if parameter name doesn't match, invalidate the cache and try again
+        update(parameters);
+        return get(parameterName, parameters);
+    }
+
+    return parameter.value;
+}
+
+PWIZ_API_DECL
+void ParameterCache::update(MSSpectrumParameterList& parameters)
+{
+    parameterIndexByName_.clear();
+    parameterAlternativeNameMap_.clear();
+
+    vector<string> tokens;
+    for (size_t i=0; i < parameterAlternativeNamesSize; ++i)
+    {
+        bal::split(tokens, parameterAlternativeNames[i], bal::is_any_of(":;"));
+        for (size_t j=1; j < tokens.size(); ++j)
+            parameterAlternativeNameMap_[tokens[j]] = tokens[0];
+    }
+
+    size_t i = 0;
+    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
+    {
+        map<string, string>::const_iterator findItr = parameterAlternativeNameMap_.find(p.name);
+        if (findItr != parameterAlternativeNameMap_.end())
+        {   
+            //cout << p.name << ": " << p.value << "\n";
+            parameterIndexByName_[findItr->second] = i;
+        }
+        else
+            parameterIndexByName_[p.name] = i;
+
+        ++i;
+    }
+}
 
 
 struct MSSpectrumParameterListImpl : public MSSpectrumParameterList
@@ -161,8 +242,8 @@ PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereferenc
 
 struct MSSpectrumImpl : public MSSpectrum
 {
-    MSSpectrumImpl(EDAL::IMSSpectrum^ spectrum, DetailLevel detailLevel)
-        : spectrum_(spectrum), lineDataSize_(0), profileDataSize_(0)
+    MSSpectrumImpl(EDAL::IMSSpectrum^ spectrum, const shared_ptr<map<int, ParameterCache> >& parameterCacheByMsLevel, DetailLevel detailLevel)
+        : spectrum_(spectrum), lineDataSize_(0), profileDataSize_(0), parameterCacheByMsLevel_(parameterCacheByMsLevel)
     {
         if (detailLevel == DetailLevel_InstantMetadata)
             return;
@@ -303,6 +384,68 @@ struct MSSpectrumImpl : public MSSpectrum
 
     virtual IonPolarity getPolarity() const {try {return (IonPolarity) spectrum_->Polarity;} CATCH_AND_FORWARD}
 
+    virtual pair<double, double> getScanRange() const
+    {
+        // cache parameter indexes for this msLevel if they aren't already cached
+        ParameterCache& parameterCache = (*parameterCacheByMsLevel_)[(int)spectrum_->MSMSStage];
+        MSSpectrumParameterListImpl parameters(spectrum_->MSSpectrumParameterCollection);
+
+        string scanBegin = parameterCache.get("Scan Begin", parameters);
+        string scanEnd = parameterCache.get("Scan End", parameters);
+
+        if (!scanBegin.empty() && !scanEnd.empty())
+            return make_pair(lexical_cast<double>(scanBegin), lexical_cast<double>(scanEnd));
+        return make_pair(0.0, 0.0);
+    }
+
+    virtual int getChargeState() const
+    {
+        // cache parameter indexes for this msLevel if they aren't already cached
+        ParameterCache& parameterCache = (*parameterCacheByMsLevel_)[(int)spectrum_->MSMSStage];
+        MSSpectrumParameterListImpl parameters(spectrum_->MSSpectrumParameterCollection);
+
+        string chargeState = parameterCache.get("ChargeState", parameters);
+
+        if (!chargeState.empty())
+        {
+            if (chargeState == "single") 1;
+            else if (chargeState == "double") 2;
+            else if (chargeState == "triple") 3;
+            else if (chargeState == "quad") 4;
+            else
+            {
+                try
+                {
+                    int charge = lexical_cast<int>(chargeState);
+                    if (charge > 0)
+                        return charge;
+                }
+                catch (bad_lexical_cast&) {}
+            }
+        }
+        return 0;
+    }
+
+    virtual double getIsolationWidth() const
+    {
+        // cache parameter indexes for this msLevel if they aren't already cached
+        ParameterCache& parameterCache = (*parameterCacheByMsLevel_)[(int)spectrum_->MSMSStage];
+        MSSpectrumParameterListImpl parameters(spectrum_->MSSpectrumParameterCollection);
+
+        string isolationWidthString = parameterCache.get("IsolationWidth", parameters);
+
+        if (!isolationWidthString.empty())
+            try
+            {
+                int isolationWidth = lexical_cast<double>(isolationWidthString);
+                if (isolationWidth > 0.0)
+                    return isolationWidth;
+            }
+            catch (bad_lexical_cast&) {}
+
+        return 0.0;
+    }
+
     virtual MSSpectrumParameterListPtr parameters() const
     {
         try
@@ -318,6 +461,7 @@ struct MSSpectrumImpl : public MSSpectrum
     mutable size_t lineDataSize_, profileDataSize_;
     mutable gcroot<cli::array<double>^> lineMzArray_, lineIntensityArray_;
     mutable gcroot<cli::array<double>^> profileMzArray_, profileIntensityArray_;
+    mutable shared_ptr<map<int, ParameterCache> > parameterCacheByMsLevel_;
 };
 
 
@@ -350,7 +494,7 @@ struct LCSpectrumImpl : public LCSpectrum
 
 struct CompassDataImpl : public CompassData
 {
-    CompassDataImpl(const string& rawpath, Reader_Bruker_Format format_)
+    CompassDataImpl(const string& rawpath, Reader_Bruker_Format format_) : parameterCacheByMsLevel_(new map<int, ParameterCache>())
     {
         try
         {
@@ -404,7 +548,7 @@ struct CompassDataImpl : public CompassData
         if (scan < 1 || scan > (int) getMSSpectrumCount())
             throw out_of_range("[CompassData::getMSSpectrum] Scan number " + lexical_cast<string>(scan) + " is out of range.");
 
-        try {return MSSpectrumPtr(new MSSpectrumImpl(msSpectrumCollection_->default[scan], detailLevel));} CATCH_AND_FORWARD
+        try {return MSSpectrumPtr(new MSSpectrumImpl(msSpectrumCollection_->default[scan], parameterCacheByMsLevel_, detailLevel));} CATCH_AND_FORWARD
     }
 
     virtual size_t getLCSourceCount() const
@@ -494,7 +638,13 @@ struct CompassDataImpl : public CompassData
         try {return ToStdString(msAnalysis_->InstrumentDescription);} CATCH_AND_FORWARD
     }
 
+    virtual InstrumentSource getInstrumentSource() const { return InstrumentSource_Unknown; }
+    virtual std::string getAcquisitionSoftware() const { return ""; }
+    virtual std::string getAcquisitionSoftwareVersion() const { return "unknown"; }
+
     private:
+    mutable shared_ptr<map<int, ParameterCache> > parameterCacheByMsLevel_;
+
     bool hasMSData_;
     gcroot<MS_Analysis^> msAnalysis_;
     gcroot<MS_SpectrumCollection^> msSpectrumCollection_;
@@ -508,6 +658,9 @@ struct CompassDataImpl : public CompassData
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
                                                  Reader_Bruker_Format format)
 {
+    if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
+        return CompassDataPtr(new Baf2SqlImpl(rawpath));
+
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
 

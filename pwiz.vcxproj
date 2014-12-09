@@ -17,11 +17,11 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <OutDir>$(SolutionDir)build-nt-x86\msvc-release</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -48,7 +48,7 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR</NMakePreprocessorDefinitions>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_54_0;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_54_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_54_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -61,8 +61,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
+    <ClCompile>
+      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="libraries\boost_aux\libs\nowide\src\iostream.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListWrapperTest.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_SavitzkyGolaySmoother.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\SavitzkyGolaySmootherTest.cpp" />
@@ -157,6 +161,8 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\PrecursorRecalculatorDefaultTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumListFactory.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumListFactoryTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_3D_Test.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculator.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculatorTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Filter.cpp" />
@@ -332,6 +338,15 @@
     <ClCompile Include="pwiz\data\tradata\TraDataFileTest.cpp" />
     <ClCompile Include="pwiz\data\tradata\TraDataTest.cpp" />
     <ClCompile Include="pwiz\data\tradata\examples.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\ChromatogramList_ABI.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\Reader_ABI.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\Reader_ABI_Detail.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\Reader_ABI_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\SpectrumList_ABI.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Detail.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\ABI\T2D\SpectrumList_ABI_T2D.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\ChromatogramList_Agilent.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\Reader_Agilent.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\Reader_Agilent_Detail.cpp" />
@@ -348,6 +363,9 @@
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo_Detail.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\SpectrumList_Thermo.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Waters\ChromatogramList_Waters.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Waters\Reader_Waters.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Waters\Reader_Waters_Detail.cpp" />
@@ -360,16 +378,209 @@
     <ClCompile Include="pwiz\tools\msaccess.cpp" />
     <ClCompile Include="pwiz\tools\msconvert.cpp" />
     <ClCompile Include="pwiz\tools\msdiff.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\analysis\SpectrumList_3D_Test.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\analysis\SpectrumList_PeakFilter.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\analysis\spectrum_processing.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\analysis\spectrum_processing_test.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\chemistry\chemistry.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\chemistry\chemistry_test.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\cvgen_cli.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\IterationListener.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\IterationListenerTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\ParamTypes.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\ParamTypesTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\SharedCLITest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\Unimod.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\UnimodTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="pwiz\utility\bindings\CLI\Diff.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\DiffTest.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\MSData.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\MSDataFile.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\MSDataFileTest.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\MSDataTest.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\Diff.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\DiffTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\examples.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\MSData.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\MSDataFile.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\MSDataFileTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\MSDataTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\msdata\Reader.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\chemistry\chemistry.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\common\cvgen_cli.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\common\IterationListener.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\common\ParamTypes.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\common\Unimod.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\Diff.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\DiffTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\examples.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\msdata\Diff.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\msdata\examples.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\msdata\MSData.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\msdata\MSDataFile.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\msdata\Reader.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\proteome.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\ProteomeData.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\ProteomeDataFile.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\ProteomeDataFileTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\ProteomeDataTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\proteome_test.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\proteome\Reader.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="pwiz\utility\bindings\CLI\Reader.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\cvgen_cli.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\examples.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\proteome.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\Diff.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\DiffTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\examples.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\Reader.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\TraData.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\TraDataFile.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\TraDataFileTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\tradata\TraDataTest.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="pwiz\utility\chemistry\Chemistry.cpp" />
     <ClCompile Include="pwiz\utility\chemistry\ChemistryData.cpp" />
     <ClCompile Include="pwiz\utility\chemistry\ChemistryTest.cpp" />
@@ -449,10 +660,35 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\ABI\T2D\T2D_Data_Test.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\ABI\WiffFile.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\ABI\WiffFileTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MassHunterData.cpp">
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86</AdditionalUsingDirectories>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll</ForcedUsingFiles>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86</AdditionalUsingDirectories>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll;MIDAC.dll</ForcedUsingFiles>
+    </ClCompile>
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MassHunterDataTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.cpp">
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86</AdditionalUsingDirectories>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MassSpecDataReader.dll;BaseCommon.dll;BaseDataAcess.dll;MIDAC.dll</ForcedUsingFiles>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86</AdditionalUsingDirectories>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+    </ClCompile>
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassDataTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileValues.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilter.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilterTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawDataTest.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\tests\CompareLibraryContents.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\tests\CompareTextFiles.cpp" />
+    <ClCompile Include="pwiz_tools\BiblioSpec\tests\ExecuteBlib.cpp" />
     <ClCompile Include="pwiz_tools\commandline\chainsaw.cpp" />
     <ClCompile Include="pwiz_tools\commandline\idconvert.cpp" />
     <ClCompile Include="pwiz_tools\commandline\msaccess.cpp" />
@@ -477,18 +713,83 @@
     <ClCompile Include="pwiz_tools\examples\write_mzid_example_files.cpp" />
     <ClCompile Include="pwiz_tools\examples\write_proteome_example_files.cpp" />
     <ClCompile Include="pwiz_tools\examples\write_traml_example_files.cpp" />
+    <ClCompile Include="pwiz_tools\prototype\peptide2formula.cpp" />
     <ClCompile Include="pwiz_tools\prototype\ThermoRawMetaDump.cpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\cenv.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\config.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\convert.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\cstdio.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\cstdlib.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\filebuf.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\fstream.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\iostream.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\stackstring.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\system.hpp" />
+    <ClInclude Include="libraries\boost_aux\boost\nowide\windows.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
     <ClInclude Include="pwiz\data\identdata\Serializer_protXML.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\ChromatogramList_ABI.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\Reader_ABI.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\Reader_ABI_Detail.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\SpectrumList_ABI.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Detail.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\ABI\T2D\SpectrumList_ABI_T2D.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Bruker\ChromatogramList_Bruker.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\reader_bruker.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\reader_bruker_detail.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\spectrumlist_bruker.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Waters\ChromatogramList_Waters.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\waters\reader_waters.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Waters\Reader_Waters_Detail.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Waters\SpectrumList_Waters.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\analysis\spectrum_processing.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\chemistry\chemistry.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\cv.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\IterationListener.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\map.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\ParamTypes.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\SharedCLI.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\Unimod.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\unit.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\vector.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\virtual_map.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\msdata\Diff.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\msdata\examples.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\msdata\MSData.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\msdata\MSDataFile.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\msdata\Reader.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\chemistry\chemistry.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\cv.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\IterationListener.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\map.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\ParamTypes.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\SharedCLI.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\Unimod.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\unit.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\vector.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\common\virtual_map.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\Diff.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\examples.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\msdata\Diff.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\msdata\examples.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\msdata\MSData.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\msdata\MSDataFile.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\msdata\Reader.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\proteome.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\ProteomeData.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\ProteomeDataFile.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\proteome\Reader.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\tradata\Diff.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\tradata\examples.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\tradata\Reader.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\tradata\TraData.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\tradata\TraDataFile.hpp" />
     <ClInclude Include="pwiz\utility\misc\std.hpp" />
     <ClInclude Include="pwiz\Version.hpp" />
     <ClInclude Include="pwiz\analysis\Version.hpp" />
@@ -778,7 +1079,15 @@
     <ClInclude Include="pwiz_aux\isb\readers\waters\SpectrumList_Waters.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\ABI\T2D\T2D_Data.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\ABI\WiffFile.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MassHunterData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileCOM.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileTypes.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileValues.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilter.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRaw.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawChromatogramReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawDataFile.h" />
@@ -786,7 +1095,9 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawInfo.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanReader.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanStatsReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawData.hpp" />
+    <ClInclude Include="pwiz_tools\BiblioSpec\tests\Compare.h" />
     <ClInclude Include="pwiz_tools\common\FullReaderList.hpp" />
     <ClInclude Include="pwiz_tools\common\MSDataAnalyzerApplication.hpp" />
   </ItemGroup>

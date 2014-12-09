@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Lib
 
             // The one expensive sort is used to determine rank order
             // by intensity.
-            Array.Sort(arrayRMI, OrderIntensityTryDesc);
+            Array.Sort(arrayRMI, OrderIntensityDesc);
 
             RankedMI[] arrayResult = new RankedMI[ionMatchCount != -1 ? ionMatchCount : arrayRMI.Length];
 
@@ -360,6 +360,11 @@ namespace pwiz.Skyline.Model.Lib
 
         public sealed class RankedMI
         {
+            public override string ToString()
+            {
+                return string.Format("i={0}, mz={1}", _mi.Intensity, _mi.Mz);
+            }
+
             private SpectrumPeaksInfo.MI _mi;
 
             public static readonly RankedMI EMPTY = new RankedMI(new SpectrumPeaksInfo.MI(), 0);
@@ -556,16 +561,15 @@ namespace pwiz.Skyline.Model.Lib
         {
             return (mi1.ObservedMz.CompareTo(mi2.ObservedMz));
         }
-/*
+
         private static int OrderIntensityDesc(RankedMI mi1, RankedMI mi2)
         {
-            return -(mi1.Intensity.CompareTo(mi2.Intensity));
-        }
-*/
-        private static int OrderIntensityTryDesc(RankedMI mi1, RankedMI mi2)
-        {
             float i1 = mi1.Intensity, i2 = mi2.Intensity;
-            return (i1 > i2 ? -1 : (i1 < i2 ? 1 : 0));
+            if (i1 > i2)
+                return -1;
+            if (i1 < i2)
+                return 1;
+            return -OrderMz(mi1, mi2);
         }
     }
 }

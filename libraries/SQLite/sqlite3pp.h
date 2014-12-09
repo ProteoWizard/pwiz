@@ -33,6 +33,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/function.hpp>
+#include <boost/optional.hpp>
 
 namespace sqlite3pp
 {
@@ -265,6 +266,11 @@ namespace sqlite3pp
                 return boost::make_tuple(get(idx1, T1()), get(idx2, T2()), get(idx3, T3()), get(idx4, T4()), get(idx5, T5()));
             }
 
+            template <class T>
+            boost::optional<T> get_optional_column(int idx) const {
+                return column_type(idx) == SQLITE_NULL ? boost::optional<T>() : get(idx, T());
+            }
+
             getstream getter(int idx = 0);
 
         private:
@@ -275,6 +281,11 @@ namespace sqlite3pp
             std::string get(int idx, std::string) const;
             void const* get(int idx, void const*) const;
             null_type get(int idx, null_type) const;
+
+            template <class T>
+            boost::optional<T> get(int idx, boost::optional<T>) const {
+                return get_optional_column<T>(idx);
+            }
 
         private:
             sqlite3_stmt* stmt_;

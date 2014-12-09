@@ -314,7 +314,7 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
    
       # Prepend COMPILER as the executable name, to match the format of 
       # other compilation commands.
-      compile_flags = "COMPILER $(compile_flags)" ;
+      compile_flags = "COMPILER $(compile_flags) -DOMPI_SKIP_MPICXX " ;
       link_flags = "COMPILER $(link_flags)" ;
     }
     # Look for LAM-MPI's -showme

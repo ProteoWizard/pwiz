@@ -22,6 +22,7 @@
 
 import modules ;
 import path ;
+import feature ;
 
 
 path-constant API_PATH : . ;
@@ -67,7 +68,10 @@ rule msvc-shimadzu-requirement ( properties * )
 {
     # Must be msvc
     if ! <toolset>msvc in $(properties) { return <build>no ; }
-    if ! ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) ) { return <build>no ; }
+    if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express"
+    {
+        return <build>no ;
+    }
 }
 
 lib pwiz_vendor_api_shimadzu

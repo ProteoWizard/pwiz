@@ -247,18 +247,18 @@ MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
  command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c\
  hash.c hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c\
- object.c option.c output.c parse.c pathsys.c pathunix.c regexp.c rules.c\
+ object.c option.c output.c parse.c pathsys.c regexp.c rules.c\
  scan.c search.c subst.c timestamp.c variable.c modules.c strings.c filesys.c\
  builtins.c class.c cwd.c native.c md5.c w32_getreg.c modules/set.c\
  modules/path.c modules/regex.c modules/property-set.c modules/sequence.c\
  modules/order.c modules/svnrev.c"
 case $BOOST_JAM_TOOLSET in
     mingw)
-    BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c"
+    BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c pathnt.c"
     ;;
 
     *)
-    BJAM_SOURCES="${BJAM_SOURCES} execunix.c fileunix.c"
+    BJAM_SOURCES="${BJAM_SOURCES} execunix.c fileunix.c pathunix.c"
     ;;
 esac
 

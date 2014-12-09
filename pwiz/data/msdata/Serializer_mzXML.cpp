@@ -1045,7 +1045,8 @@ void fillInMetadata(MSData& msd)
         if (!ir.second)
         {
             // found duplicate URI: remove all the .raw sourceFiles (leave only the mzXML)
-            msd.fileDescription.sourceFilePtrs.assign(1, msd.fileDescription.sourceFilePtrs[0]);
+            SourceFilePtr firstSourceFile = msd.fileDescription.sourceFilePtrs[0];
+            msd.fileDescription.sourceFilePtrs.assign(1, firstSourceFile);
             break;
         }
     }

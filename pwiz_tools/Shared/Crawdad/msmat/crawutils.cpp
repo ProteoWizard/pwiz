@@ -38,6 +38,7 @@ extern "C" {
 
 #endif
 
+/*
 #ifndef __GNUC__
 double round(double n) {
   
@@ -56,7 +57,7 @@ double round(double n) {
 }
       
 #endif
-
+*/
 
 
 

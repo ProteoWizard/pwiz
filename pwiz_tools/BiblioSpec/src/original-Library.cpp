@@ -72,7 +72,7 @@ void Library::readFromFile(const char* filename)
         throw exception();
     }
     //should these files have some sort of tag as the first line to confirm that they are of the expected type?
-    (verbosity > 1) ? cout << "Reading in library from file" << endl : true; 
+    if (verbosity > 1) cout << "Reading in library from file" << endl; 
     infile.read( (char*)&header, sizeof(LIBHEAD_T) );
 
     for(int i=0; i<header.numSpec; i++ ) {
@@ -93,7 +93,7 @@ void Library::writeToFile(const char* filename) {
         throw exception();
     }
 
-    (verbosity > 1) ? cout << "Saving library" << endl : true;
+    if (verbosity > 1) cout << "Saving library" << endl;
     outfile.write( (char*)&header, sizeof(LIBHEAD_T) );
 
     assert( header.numSpec == (int)refSpecv.size());
@@ -212,7 +212,7 @@ void Library::sortByIon()
 
 void Library::sortByID()
 {
-    (verbosity > 1) ? cout << "sorting by id" << endl : true;
+    if (verbosity > 1) cout << "sorting by id" << endl;
     sort(refSpecv.begin(), refSpecv.end(), compRefSpecPtrId()); 
 }
 
@@ -248,7 +248,7 @@ vector<RefSpectrum*>::iterator Library::getLastSpec() {
 */
 void Library::annotate(const char* file) {
     const char* header_str = "id\tannotation";
-    (verbosity > 1) ? cout << "Annotating spectra in library" << endl : true;
+    if (verbosity > 1) cout << "Annotating spectra in library" << endl;
 
     ifstream annot_file ( file );
     if( !annot_file.is_open() ) {
@@ -284,7 +284,7 @@ void Library::annotate(const char* file) {
 
 void Library::makeAnnotations(vector<annot_pair>& annots_v) {
     //sort spec by id
-    (verbosity>1) ? cout << "Sorting library spectra" << endl : true;
+    if (verbosity>1) cout << "Sorting library spectra" << endl;
     sort(refSpecv.begin(), refSpecv.end(), compRefSpecPtrId());
 
     //look at all spec in lib
@@ -306,7 +306,7 @@ void Library::makeAnnotations(vector<annot_pair>& annots_v) {
         } else if(update.id > curSpecId) {
             i_lib++; 
         } else { //update.id < curSpecId
-            (verbosity > 1) ? cerr << "WARNING: Spectrum " << update.id << " was not found in the library" << endl : true;
+            if (verbosity > 1) cerr << "WARNING: Spectrum " << update.id << " was not found in the library" << endl;
             i_update++; 
         }
     }
@@ -314,19 +314,19 @@ void Library::makeAnnotations(vector<annot_pair>& annots_v) {
     //warn about missed annotations
     while( i_update < (int)annots_v.size() ) {
         update = annots_v.at(i_update);
-        (verbosity > 0) ?cerr << "WARNING: Spectrum " << update.id << " was not found in the library" << endl : true;
+        if (verbosity > 0) cerr << "WARNING: Spectrum " << update.id << " was not found in the library" << endl;
         i_update++; 
     }
 
     //sort spec by id
-    (verbosity>1) ? cout << "Sorting library spectra" << endl : true;
+    if (verbosity>1) cout << "Sorting library spectra" << endl;
     sort(refSpecv.begin(), refSpecv.end(), compSpecPtrMz());
 
 }
 
 void Library::deleteSpec(const char* filename) {
     const char* header_str = "delete";
-    (verbosity > 1) ? cout << "Deleting spectra" << endl : true;
+    if (verbosity > 1) cout << "Deleting spectra" << endl;
 
     //open list of ids
     ifstream delFile( filename );
@@ -391,7 +391,7 @@ void Library::markDeletedSpec(vector<int>& ids_v) {
         } else if( delId > curSpecId ) {
             i_lib++;
         } else { //delID < curSpecId
-            (verbosity > 0) ? cerr << "WARNING: Spectrum " << delId << " was not found in the library" << endl : true;
+            if (verbosity > 0) cerr << "WARNING: Spectrum " << delId << " was not found in the library" << endl;
             i_delete++;
         }
     }

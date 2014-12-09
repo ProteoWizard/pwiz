@@ -90,7 +90,9 @@ rule vendor-api-requirements ( properties * )
         result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Objects.xml ;
         result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Objects.xml ;
         result += <assembly-dependency>$(PLATFORM_API_PATH)/HSReadWrite.dll ;
-        result += <linkflags>/CLRTHREADATTRIBUTE:STA ; # required by HSReadWrite.dll
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/baf2sql_c.dll ;
+        result += <assembly-dependency>simplelogger.properties ;
+        #result += <linkflags>/CLRTHREADATTRIBUTE:STA ; # required by HSReadWrite.dll
 
         if <address-model>64 in $(properties)
         {
@@ -115,11 +117,30 @@ rule vendor-api-requirements ( properties * )
     return $(result) ;
 }
 
+rule dll-arch-specific-path ( properties * )
+{
+    if <address-model>64 in $(properties) { return <search>x64 ; }
+    else { return <search>x86 ; }
+}
+
+searched-lib baf2sql
+    : # sources
+    : # requirements
+        <link>shared:<define>PWIZ_DYN_LINK
+        <name>baf2sql_c
+        <conditional>@dll-arch-specific-path
+        <toolset-msvc:version>9.0:<build>no
+        <toolset-msvc:version>9.0express:<build>no
+        <toolset-msvc:version>10.0,<secure-scl>on:<build>no
+        <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
+    ;
+
 if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     lib pwiz_vendor_api_bruker
         : # sources
             CompassData.cpp
+            Baf2Sql.cpp
             $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
         : # requirements
 
@@ -137,9 +158,13 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             <conditional>@msvc-requirement
             <toolset>msvc:<using-clr>true # requires hacked msvc.jam
             <link>static # <using-clr>true and <link>shared don't mix
+            <library>baf2sql
+            <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         : # default-build
         : # usage-requirements
             <conditional>@vendor-api-requirements
+            <library>baf2sql
+            <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         ;
 
     # a test utility, not a unit test
@@ -157,6 +182,7 @@ rule install-requirements ( properties * )
     local dll_location = [ bruker-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
+        result += <source>simplelogger.properties ;
         for file in [ path.glob $(dll_location) : *.dll *.xml *.manifest ]
         {
             result += <source>$(file) ;

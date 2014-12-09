@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "Reader_Bruker_Detail.hpp"
+#include <boost/container/flat_map.hpp>
 
 
 namespace pwiz {
@@ -64,22 +65,10 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
 
     private:
 
-    struct ParameterCache
-    {
-        string get(const string& parameterName, MSSpectrumParameterList& parameters);
-        size_t size() { return parameterIndexByName_.size(); }
-
-        private:
-        void update(MSSpectrumParameterList& parameters);
-        map<string, size_t> parameterIndexByName_;
-        map<string, string> parameterAlternativeNameMap_;
-    };
-
     MSData& msd_;
     bfs::path rootpath_;
     Bruker::Reader_Bruker_Format format_;
     mutable CompassDataPtr compassDataPtr_;
-    mutable map<int, ParameterCache> parameterCacheByMsLevel_;
     size_t size_;
     vector<bfs::path> sourcePaths_;
 
@@ -93,7 +82,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     vector<IndexEntry> index_;
 
     // idToIndexMap_["scan=<#>" or "file=<sourceFile::id>"] == index
-    map<string, size_t> idToIndexMap_;
+    boost::container::flat_map<string, size_t> idToIndexMap_;
 
     void fillSourceList();
     void createIndex();
