@@ -210,9 +210,9 @@ rule merge_xdc_files ( targets + : sources * : properties * )
 
 actions merge_xdc_files
 {
-    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
 }
 
@@ -234,9 +234,9 @@ rule merge_xdc_data_files ( targets + : sources * : properties * )
 
 actions merge_xdc_data_files
 {
-    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
 }
 

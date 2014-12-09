@@ -1038,7 +1038,16 @@ local rule configure-really ( version ? : options * )
 
             if [ MATCH ^(AMD64) : $(PROCESSOR_ARCHITECTURE) ]
             {
-                default-global-setup-options-amd64 = amd64 ;
+                # Express editions do not have native 64-bit tools, use x86 cross-compile instead
+                local result = [ SHELL "\"$(global-setup)\" amd64" ] ;
+                if [ MATCH (missing) : $(result) ]
+                {
+                    default-global-setup-options-amd64 = x86_amd64 ;
+                }
+                else
+                {
+                    default-global-setup-options-amd64 = amd64 ;
+                }
             }
             
             # TODO: The same 'native compiler usage' should be implemented for
