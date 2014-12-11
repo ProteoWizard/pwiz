@@ -66,7 +66,7 @@
     <ManifestKeyFile>TopographApp_TemporaryKey.pfx</ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
     <ApplicationIcon>Topograph.ico</ApplicationIcon>
     <StartupObject>pwiz.Topograph.ui.Program</StartupObject>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
