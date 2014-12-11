@@ -705,7 +705,7 @@ std::pair<const license_info*, int> get_licenses()
        )
       ,
    };
-   return std::pair<const license_info*, int>(licenses, sizeof(licenses)/sizeof(licenses[0]));
+   return std::pair<const license_info*, int>(licenses, static_cast<int>(sizeof(licenses)/sizeof(licenses[0])));
 }
 
 std::string format_authors_name(const std::string& name)

@@ -28,6 +28,8 @@ struct split_path
    const fs::path& file;
    split_path(const fs::path& r, const fs::path& f)
       : root(r), file(f){}
+private:
+   split_path& operator=(const split_path&);
 };
 
 std::ostream& operator << (std::ostream& os, const split_path& p)

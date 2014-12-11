@@ -1,8 +1,8 @@
 /*
  *
  * Copyright (c) 2003 Dr John Maddock
- * Use, modification and distribution is subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution is subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  * This file implements the following:
@@ -21,7 +21,7 @@
 #include <iostream>
 
 struct get_new_library_name
-{ 
+{
    get_new_library_name(const std::string& n) : m_new_name(n) {}
    template <class I>
    std::string operator()(const boost::match_results<I>& what)
@@ -151,7 +151,7 @@ void bcp_implementation::copy_path(const fs::path& p)
          "|"
             "()boost(_asio_detail_posix_thread_function|_regex_free_static_mutex)"
          "|"
-            "()(lw_thread_routine|at_thread_exit|on_process_enter|on_process_exit|on_thread_enter|on_thread_exit|tss_cleanup_implemented)"
+         "()\\<(lw_thread_routine|at_thread_exit|on_process_enter|on_process_exit|on_thread_enter|on_thread_exit|tss_cleanup_implemented)\\>"
          "|"
             "(BOOST_CLASS_REQUIRE4?[^;]*)boost((?:_\\w+)?\\s*,)"
          "|"
