@@ -896,6 +896,14 @@
       <Link>cdt.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x86\baf2sql_c.dll">
+      <Link>baf2sql_c.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\baf2sql_c.dll">
+      <Link>baf2sql_c.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\MassLynxRaw.dll">
       <Link>MassLynxRaw.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
