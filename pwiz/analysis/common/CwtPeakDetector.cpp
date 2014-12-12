@@ -102,7 +102,7 @@ void CwtPeakDetector::getScales( const vector <double> & mzData, const vector <d
     int mzLength = mzData.size();
     vector <double> Xspacing(mzLength,0.0);
 
-    double lastXspacing;
+    double lastXspacing = 0;
         
     // get the sampling rate as a function of m/z
     // this assumes that zero-intensity points flank the "islands" of data
@@ -512,8 +512,10 @@ void CwtPeakDetector::refinePeaks( const vector <double> & noisyX, const vector 
 void ricker2d(const vector <double> & Pad_mz, const int col, const int rickerPointsLeft, const int rickerPointsRight, 
                 const double A, const double wsq, const double centralMZ, vector <double> & total)
 {
+	if (rickerPointsRight - rickerPointsLeft >= (int) total.size())
+		throw runtime_error("[CwtPeakDetector::ricker2d] invalid input parameters");
 
-    for (int i = col-rickerPointsLeft, cnt=0; i <= col+rickerPointsRight; i++,cnt++) 
+    for (int i = col-rickerPointsLeft, cnt=0, end = col+rickerPointsRight; i <= end; i++, cnt++) 
     {
             double vec = Pad_mz[i] - centralMZ;
             double tsq = vec * vec;

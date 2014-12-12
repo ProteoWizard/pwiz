@@ -439,11 +439,14 @@ namespace seems
                 case "z*": color = Color.Crimson; offset = 0.4; break;
             }
 
+            double lowestMatchMz = mz - tolerance;
+            double highestMatchMz = mz + tolerance;
+
             int index = -1;
             if (points != null)
-                index = points.ScaledLowerBound(mz - tolerance);
+                index = points.ScaledLowerBound(mz);
 
-            if (index == -1 || points.ScaledList[index].X > (mz + tolerance))
+            if (index == -1 || points.ScaledList[index].X > highestMatchMz || points.ScaledList[index].X < lowestMatchMz)
             // no matching point: present a "missed" fragment annotation
             {
                 if (!showMisses)

@@ -46,6 +46,7 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
+    <BaseIntermediateOutputPath>..\..\build-nt-x86\obj\</BaseIntermediateOutputPath>
     <PwizBuildPath>$(BaseIntermediateOutputPath)\..</PwizBuildPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
