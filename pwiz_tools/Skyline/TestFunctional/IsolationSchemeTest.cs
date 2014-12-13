@@ -1311,8 +1311,8 @@ namespace pwiz.SkylineTestFunctional
                 editDlg.UseResults = true;
                 editDlg.PrecursorFilter = 1;
                 editDlg.PrecursorRightFilter = 2;
-                editDlg.OkDialog();
             });
+            OkDialog(editDlg, editDlg.OkDialog);
         }
 
         /// <summary>
