@@ -52,6 +52,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             zedGraphControl.GraphPane.CurveList.Clear();
             zedGraphControl.GraphPane.GraphObjList.Clear();
+            PeptideAnalysis.EnsurePeaksCalculated();
             IDictionary<TracerFormula, double> bestMatch;
             var peaks = PeptideFileAnalysis.CalculatedPeaks;
             var peaksDict = peaks.ToDictionary();

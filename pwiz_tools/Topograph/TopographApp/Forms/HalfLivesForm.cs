@@ -40,7 +40,7 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.Reload();
             HalfLifeSettings = Workspace.GetHalfLifeSettings(Settings.Default.HalfLifeSettings);
             UpdateTimePoints();
-            bindingSource1.SetViewContext(new TopographViewContext(workspace, typeof (ResultRow), new ResultRow[0], new[] {GetDefaultViewSpec(false)}));
+            bindingSource1.SetViewContext(GetViewContext(new ResultRow[0]));
         }
 
         private ViewSpec GetDefaultViewSpec(bool byProtein)
@@ -98,7 +98,7 @@ namespace pwiz.Topograph.ui.Forms
                 viewInfo = new ViewInfo(ColumnDescriptor.RootColumn(bindingSource1.ViewInfo.DataSchema, typeof(ResultRow)), 
                     GetDefaultViewSpec(calculator.ByProtein));
             }
-            bindingSource1.SetView(viewInfo, rows);
+            bindingSource1.SetViewContext(GetViewContext(rows), viewInfo);
         }
 
         /// <summary>
@@ -260,6 +260,11 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 halfLifeForm.Show(_form.DockPanel, _form.DockState);
             }
+        }
+
+        private TopographViewContext GetViewContext(IEnumerable<ResultRow> rows)
+        {
+            return new TopographViewContext(Workspace, typeof (ResultRow), rows, new[] {GetDefaultViewSpec(false)});
         }
     }
 }

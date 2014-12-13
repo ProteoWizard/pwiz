@@ -281,15 +281,12 @@ namespace pwiz.Topograph.Model
 
         public override void Update(WorkspaceChangeArgs workspaceChange, PeptideAnalysisData data)
         {
+            bool invalidatePeaks = workspaceChange.HasPeakPickingChange || data.CheckRecalculatePeaks(Data);
             base.Update(workspaceChange, data);
             FileAnalyses.Update(workspaceChange);
-            PeptideAnalysisData newData;
-            if (Workspace.Data.PeptideAnalyses.TryGetValue(Id, out newData))
+            if (invalidatePeaks)
             {
-                if (workspaceChange.HasPeakPickingChange || newData.CheckRecalculatePeaks(Data))
-                {
-                    InvalidatePeaks();
-                }
+                InvalidatePeaks();
             }
         }
 
