@@ -459,7 +459,7 @@ namespace SkylineTester
                 Subversion = null;
 
             // Find Visual Studio, if available.
-            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
+            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe");
             if (!File.Exists(Devenv))
                 Devenv = null;
         }

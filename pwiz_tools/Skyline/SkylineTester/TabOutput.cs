@@ -253,7 +253,7 @@ namespace SkylineTester
                 if (File.Exists(skylineSln))
                 {
                     System.Diagnostics.Process.Start(
-                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe"),
                         @"{0} {1} /command ""Edit.Goto {2}""".With(skylineSln, file, lineNumberText));
                     return null;
                 }
