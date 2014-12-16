@@ -65,10 +65,19 @@ namespace IDPicker.Forms
             maxImportRankTextBox.Text = settings.DefaultMaxRank.ToString();
             ignoreUnmappedPeptidesCheckBox.Checked = settings.DefaultIgnoreUnmappedPeptides;
 
+            filterByGeneCheckBox.Checked = settings.DefaultGeneLevelFiltering;
+            chargeIsDistinctCheckBox.Checked = settings.DefaultChargeIsDistinct;
+            analysisIsDistinctCheckBox.Checked = settings.DefaultAnalysisIsDistinct;
+            modificationsAreDistinctCheckbox.Checked = settings.DefaultModificationsAreDistinct;
+            modificationRoundToMassTextBox.Text = settings.DefaultModificationRoundToNearest.ToString();
+
             lbFastaPaths.Items.AddRange(settings.FastaPaths.Cast<object>().ToArray());
             lbSourcePaths.Items.AddRange(settings.SourcePaths.Cast<object>().ToArray());
 
             sourceExtensionsTextBox.Text = settings.SourceExtensions;
+
+            nonFixedDriveWarningCheckBox.Checked = Properties.GUI.Settings.Default.WarnAboutNonFixedDrive;
+            embedGeneMetadataWarningCheckBox.Checked = Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata;
 
             base.OnLoad(e);
         }
@@ -89,10 +98,20 @@ namespace IDPicker.Forms
             settings.DefaultMaxRank = Convert.ToInt32(maxImportRankTextBox.Text);
             settings.DefaultIgnoreUnmappedPeptides = ignoreUnmappedPeptidesCheckBox.Checked;
 
+            settings.DefaultGeneLevelFiltering = filterByGeneCheckBox.Checked;
+            settings.DefaultChargeIsDistinct = chargeIsDistinctCheckBox.Checked;
+            settings.DefaultAnalysisIsDistinct = analysisIsDistinctCheckBox.Checked;
+            settings.DefaultModificationsAreDistinct = modificationsAreDistinctCheckbox.Checked;
+            settings.DefaultModificationRoundToNearest = Convert.ToDecimal(modificationRoundToMassTextBox.Text);
+
             settings.FastaPaths.Clear(); settings.FastaPaths.AddRange(lbFastaPaths.Items.OfType<string>().ToArray());
             settings.SourcePaths.Clear(); settings.SourcePaths.AddRange(lbSourcePaths.Items.OfType<string>().ToArray());
 
             settings.SourceExtensions = sourceExtensionsTextBox.Text;
+
+            Properties.GUI.Settings.Default.WarnAboutNonFixedDrive = nonFixedDriveWarningCheckBox.Checked;
+            Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata = embedGeneMetadataWarningCheckBox.Checked;
+            Properties.GUI.Settings.Default.Save();
 
             settings.Save();
         }

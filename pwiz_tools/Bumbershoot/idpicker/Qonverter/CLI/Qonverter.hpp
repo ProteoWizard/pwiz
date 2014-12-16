@@ -26,7 +26,11 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
+
+#pragma unmanaged
 #include "../SchemaUpdater.hpp"
+#pragma managed
+
 #using <system.dll>
 #pragma warning( pop )
 

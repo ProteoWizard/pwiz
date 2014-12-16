@@ -111,6 +111,8 @@ namespace IDPicker.Forms
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
+            this.nonFixedDriveWarningCheckBox = new System.Windows.Forms.CheckBox();
+            this.embedGeneMetadataWarningCheckBox = new System.Windows.Forms.CheckBox();
             label5 = new System.Windows.Forms.Label();
             lblMinDistinctPeptides = new System.Windows.Forms.Label();
             label8 = new System.Windows.Forms.Label();
@@ -184,7 +186,7 @@ namespace IDPicker.Forms
             this.gbSearchPaths.Controls.Add(this.searchPathsTabControl);
             this.gbSearchPaths.Location = new System.Drawing.Point(265, 12);
             this.gbSearchPaths.Name = "gbSearchPaths";
-            this.gbSearchPaths.Size = new System.Drawing.Size(507, 532);
+            this.gbSearchPaths.Size = new System.Drawing.Size(507, 509);
             this.gbSearchPaths.TabIndex = 112;
             this.gbSearchPaths.TabStop = false;
             this.gbSearchPaths.Text = "Search Paths";
@@ -248,7 +250,7 @@ namespace IDPicker.Forms
             this.searchPathsTabControl.Location = new System.Drawing.Point(17, 20);
             this.searchPathsTabControl.Name = "searchPathsTabControl";
             this.searchPathsTabControl.SelectedIndex = 0;
-            this.searchPathsTabControl.Size = new System.Drawing.Size(394, 500);
+            this.searchPathsTabControl.Size = new System.Drawing.Size(394, 477);
             this.searchPathsTabControl.TabIndex = 107;
             this.searchPathsTabControl.SelectedIndexChanged += new System.EventHandler(this.lbSearchPaths_SelectedIndexChanged);
             // 
@@ -261,7 +263,7 @@ namespace IDPicker.Forms
             this.tabFastaFilepaths.Location = new System.Drawing.Point(4, 22);
             this.tabFastaFilepaths.Name = "tabFastaFilepaths";
             this.tabFastaFilepaths.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFastaFilepaths.Size = new System.Drawing.Size(386, 474);
+            this.tabFastaFilepaths.Size = new System.Drawing.Size(386, 451);
             this.tabFastaFilepaths.TabIndex = 2;
             this.tabFastaFilepaths.Text = "FASTA";
             this.tabFastaFilepaths.UseVisualStyleBackColor = true;
@@ -288,7 +290,7 @@ namespace IDPicker.Forms
             this.lbFastaPaths.Location = new System.Drawing.Point(10, 22);
             this.lbFastaPaths.Name = "lbFastaPaths";
             this.lbFastaPaths.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lbFastaPaths.Size = new System.Drawing.Size(380, 446);
+            this.lbFastaPaths.Size = new System.Drawing.Size(380, 423);
             this.lbFastaPaths.TabIndex = 49;
             // 
             // tabSourceSearchPaths
@@ -877,11 +879,33 @@ namespace IDPicker.Forms
             this.label14.TabIndex = 147;
             this.label14.Text = "Modifications are distinct:";
             // 
+            // nonFixedDriveWarningCheckBox
+            // 
+            this.nonFixedDriveWarningCheckBox.AutoSize = true;
+            this.nonFixedDriveWarningCheckBox.Location = new System.Drawing.Point(292, 527);
+            this.nonFixedDriveWarningCheckBox.Name = "nonFixedDriveWarningCheckBox";
+            this.nonFixedDriveWarningCheckBox.Size = new System.Drawing.Size(216, 17);
+            this.nonFixedDriveWarningCheckBox.TabIndex = 140;
+            this.nonFixedDriveWarningCheckBox.Text = "Warn about non-fixed-drive performance";
+            this.nonFixedDriveWarningCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // embedGeneMetadataWarningCheckBox
+            // 
+            this.embedGeneMetadataWarningCheckBox.AutoSize = true;
+            this.embedGeneMetadataWarningCheckBox.Location = new System.Drawing.Point(525, 527);
+            this.embedGeneMetadataWarningCheckBox.Name = "embedGeneMetadataWarningCheckBox";
+            this.embedGeneMetadataWarningCheckBox.Size = new System.Drawing.Size(211, 17);
+            this.embedGeneMetadataWarningCheckBox.TabIndex = 141;
+            this.embedGeneMetadataWarningCheckBox.Text = "Warn about embedding gene metadata";
+            this.embedGeneMetadataWarningCheckBox.UseVisualStyleBackColor = true;
+            // 
             // DefaultSettingsManagerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 577);
+            this.Controls.Add(this.embedGeneMetadataWarningCheckBox);
+            this.Controls.Add(this.nonFixedDriveWarningCheckBox);
             this.Controls.Add(this.distinctMatchFormatGroupBox);
             this.Controls.Add(this.sourceExtensionsTextBox);
             this.Controls.Add(this.label10);
@@ -977,5 +1001,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.CheckBox nonFixedDriveWarningCheckBox;
+        private System.Windows.Forms.CheckBox embedGeneMetadataWarningCheckBox;
     }
 }

@@ -23,9 +23,12 @@
 //
 
 #include "Merger.hpp"
+
+#pragma unmanaged
 #include "../Merger.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#pragma managed
 
 
 namespace IDPicker {

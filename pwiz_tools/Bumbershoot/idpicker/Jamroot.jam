@@ -54,7 +54,7 @@ else
     exit ;
 }
 
-constant BOOST_VERSION : 1 54 0 ;
+constant BOOST_VERSION : 1 56 0 ;
 
 local default_libraries_path = "./freicore/libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
@@ -77,6 +77,7 @@ path-constant ROOT_PATH : . ;
 path-constant BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
 path-constant LIBRARIES_PATH : $(libraries_path) ;
 path-constant PWIZ_SOURCE : ./freicore/pwiz_src ;
+path-constant PWIZ_BUILD_PATH : $(PWIZ_SOURCE)/build-$(.os:L)-$(.platform:L) ;
 
 
 # this makes pwiz use freicore's libraries directory
@@ -113,7 +114,7 @@ project idpicker
       <toolset>msvc:<define>WIN32                     # windows
       <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
       <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
-      <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
+      <toolset>msvc,<toolset-msvc:version>10.0:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
       <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
       <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
       <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
@@ -127,7 +128,7 @@ project idpicker
       <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
-      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+      <toolset>msvc,<toolset-msvc:version>10.0:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
         
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
@@ -479,7 +480,7 @@ rule pwiz-bindings-dependency ( properties * )
     if <toolset>msvc in $(properties)
     {
         local variants = [ feature.get-values <variant> : $(properties) ] ;
-        local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
+        local location = <location>$(PWIZ_BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
         return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
                <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
                <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
@@ -511,7 +512,7 @@ rule msbuild_IDPicker ( targets + : sources * : properties * )
 
     local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/$(PLATFORM)/" ;
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
 }
 
@@ -606,9 +607,9 @@ rule msvc-requirement ( properties * )
 # predicate for use as a <conditional> requirement of targets that must only build with MSVC and current .NET Framework
 rule msvc-dotnet-requirement ( properties * )
 {
-    # require VS 2010 because of .NET Framework version
-    if ! ( <toolset-msvc:version>10.0 in $(properties) ||
-           10.0express in $(properties:G=) )
+    # require VS 2013 because of .NET Framework version
+    if ! ( <toolset-msvc:version>12.0 in $(properties) ||
+           12.0express in $(properties:G=) )
     { return <build>no ; }
 }
 
@@ -616,8 +617,8 @@ rule msvc-dotnet-requirement ( properties * )
 rule no-express-requirement ( properties * )
 {
     # only the latest, non-express version of MSVC
-    if ! <toolset-msvc:version>10.0 in $(properties) { return <build>no ; }
-    if 10.0express in $(properties:G=) { return <build>no ; }
+    if ! <toolset-msvc:version>12.0 in $(properties) { return <build>no ; }
+    if 12.0express in $(properties:G=) { return <build>no ; }
 }
 
 
@@ -659,7 +660,8 @@ rule do_IDPicker_test ( targets + : sources * : properties * )
 
 actions do_IDPicker_test
 {
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
     set name="IDPicker unit test"
     $(TEST_PRECOMMAND)

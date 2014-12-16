@@ -52,10 +52,6 @@
 
 BEGIN_IDPICKER_NAMESPACE
 
-using namespace boost::icl;
-namespace accs = boost::accumulators;
-namespace bmi = boost::multi_index;
-
 BOOST_ENUM(QuantitationMethod,
     (None)
     (LabelFree)

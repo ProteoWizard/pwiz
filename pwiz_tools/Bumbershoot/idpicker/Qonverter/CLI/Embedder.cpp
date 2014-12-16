@@ -22,12 +22,15 @@
 // Contributor(s):
 //
 
+
 #include "Embedder.hpp"
+
+#pragma unmanaged
 #include "../Embedder.hpp"
 #include "../XIC.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-
+#pragma managed
 
 namespace IDPicker {
 

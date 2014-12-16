@@ -21,6 +21,8 @@
 //
 // Contributor(s):
 
+#include <string>
+
 double basis_function_b_val ( double tdata[], double tval );
 double basis_function_beta_val ( double beta1, double beta2, double tdata[], double tval );
 double *basis_matrix_b_uni ( );
@@ -43,7 +45,7 @@ int chfev ( double x1, double x2, double f1, double f2, double d1, double d2, in
 int d3_fs ( double a1[], double a2[], double a3[], int n, double b[], double x[] );
 double *d3_mxv ( int n, double a[], double x[] );
 double *d3_np_fs ( int n, double a[], double b[] );
-void d3_print ( int n, double a[], string title );
+void d3_print ( int n, double a[], std::string title );
 void d3_print_some ( int n, double a[], int ilo, int jlo, int ihi, int jhi );
 double *d3_uniform ( int n, int *seed );
 void data_to_dif ( int ntab, double xtab[], double ytab[], double diftab[] );
@@ -65,12 +67,12 @@ void r8vec_bracket3 ( int n, double t[], double tval, int *left );
 double *r8vec_even ( int n, double alo, double ahi );
 double *r8vec_indicator ( int n );
 void r8vec_order_type ( int n, double x[], int *order );
-void r8vec_print ( int n, double a[], string title );
+void r8vec_print(int n, double a[], std::string title );
 void r8vec_sort_bubble_a ( int n, double a[] );
 double *r8vec_uniform ( int n, double b, double c, int *seed );
 int r8vec_unique_count ( int n, double a[], double tol );
 void r8vec_zero ( int n, double a[] );
-int s_len_trim ( string s );
+int s_len_trim ( std::string s );
 double spline_b_val ( int ndata, double tdata[], double ydata[], double tval );
 double spline_beta_val ( double beta1, double beta2, int ndata, double tdata[], double ydata[], double tval );
 double spline_constant_val ( int ndata, double tdata[], double ydata[], double tval );

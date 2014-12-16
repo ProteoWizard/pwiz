@@ -24,8 +24,11 @@
 
 
 #include "Qonverter.hpp"
+
+#pragma unmanaged
 #include "../Qonverter.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#pragma managed
 
 
 namespace IDPicker {

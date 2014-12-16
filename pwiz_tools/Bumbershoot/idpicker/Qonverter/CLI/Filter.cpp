@@ -23,10 +23,13 @@
 //
 
 #include "Filter.hpp"
-#include "../Filter.hpp"
 #include "Qonverter.hpp"
+
+#pragma unmanaged
+#include "../Filter.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#pragma managed
 
 
 namespace IDPicker {

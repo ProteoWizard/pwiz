@@ -114,13 +114,21 @@ void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr)
     ITERATION_UPDATE(ilr, 11, CURRENT_SCHEMA_REVISION, "updating schema version")
 
     db.execute("CREATE TABLE TempXIC (Id INTEGER PRIMARY KEY, DistinctMatch INTEGER, SpectrumSource INTEGER, Peptide INTEGER, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC)");
-    db.execute("INSERT INTO TempXIC (DistinctMatch, SpectrumSource, Peptide, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds)"
-               "   SELECT dm.distinctMatchID, s.source, psm.peptide, xic.PeakIntensity, xic.PeakArea, xic.PeakSNR, xic.PeakTimeInSeconds"
-               "   FROM XICMetrics xic"
-               "   JOIN PeptideSpectrumMatch psm on psm.Id=xic.PsmId"
-               "   JOIN Spectrum s ON s.id = psm.Spectrum"
-               "   JOIN DistinctMatch dm ON dm.PsmId = psm.Id"
-               "   GROUP BY dm.DistinctMatchId, s.Source");
+    try
+    {
+        db.execute("INSERT INTO TempXIC (DistinctMatch, SpectrumSource, Peptide, PeakIntensity, PeakArea, PeakSNR, PeakTimeInSeconds)"
+                   "   SELECT dm.distinctMatchID, s.source, psm.peptide, xic.PeakIntensity, xic.PeakArea, xic.PeakSNR, xic.PeakTimeInSeconds"
+                   "   FROM XICMetrics xic"
+                   "   JOIN PeptideSpectrumMatch psm on psm.Id=xic.PsmId"
+                   "   JOIN Spectrum s ON s.id = psm.Spectrum"
+                   "   JOIN DistinctMatch dm ON dm.PsmId = psm.Id"
+                   "   GROUP BY dm.DistinctMatchId, s.Source");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such")) // no DistinctMatch table
+            throw runtime_error(e.what());
+    }
     db.execute("DROP TABLE XICMetrics");
     db.execute("ALTER TABLE TempXIC RENAME TO XICMetrics");
     db.execute("CREATE INDEX XICMetrics_MatchSourcePeptide ON XICMetrics (DistinctMatch,SpectrumSource,Peptide);");

@@ -19,6 +19,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 #ifdef WINDOWS
 // Throw out the min and max macros supplied by Microsoft that collide with std::min and std::max

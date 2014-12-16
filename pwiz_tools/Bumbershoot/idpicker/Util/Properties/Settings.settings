@@ -101,10 +101,10 @@
     <Setting Name="DefaultMaxFDR" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.02</Value>
     </Setting>
-    <Setting Name="DefaultMinDistinctPeptidesPerProtein" Type="System.Int32" Scope="User">
+    <Setting Name="DefaultMinDistinctPeptides" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2</Value>
     </Setting>
-    <Setting Name="DefaultMinSpectraPerProtein" Type="System.Int32" Scope="User">
+    <Setting Name="DefaultMinSpectra" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="DefaultMinAdditionalPeptides" Type="System.Int32" Scope="User">
@@ -121,6 +121,21 @@
     </Setting>
     <Setting Name="DefaultDecoyPrefix" Type="System.String" Scope="User">
       <Value Profile="(Default)">r-</Value>
+    </Setting>
+    <Setting Name="DefaultGeneLevelFiltering" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DefaultChargeIsDistinct" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultAnalysisIsDistinct" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DefaultModificationRoundToNearest" Type="System.Decimal" Scope="User">
+      <Value Profile="(Default)">1.0</Value>
+    </Setting>
+    <Setting Name="DefaultModificationsAreDistinct" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

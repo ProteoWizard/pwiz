@@ -23,9 +23,12 @@
 //
 
 #include "SchemaUpdater.hpp"
+
+#pragma unmanaged
 #include "../SchemaUpdater.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#pragma managed
 
 
 namespace IDPicker {
