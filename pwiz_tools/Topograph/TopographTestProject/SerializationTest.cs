@@ -44,7 +44,7 @@ namespace pwiz.Topograph.Test
             var stream = new MemoryStream();
             serializer.WriteObject(stream, dbMsDataFile);
             var streamAsString = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int) stream.Length);
-            Trace.TraceInformation(string.Format("Serialed as {0}", streamAsString));
+            Trace.TraceInformation("Serialed as {0}", streamAsString);
             stream.Seek(0, SeekOrigin.Begin);
             var dbMsDataFile2 = (DbMsDataFile) serializer.ReadObject(stream);
             Assert.AreEqual(dbMsDataFile.Name, dbMsDataFile2.Name);
