@@ -151,9 +151,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             AbIdaVsMz5ChromatogramPerformanceTest();
             AgilentDiaVsMz5ChromatogramPerformanceTest();
             AgilentDdaVsMz5ChromatogramPerformanceTest();
-            //BrukerFullScanMS1filteringPerformanceTest();  Bruker and MSTest don't get along
-            //BrukerFullScanMSeDataPerformanceTest();
-            //BrukerFullScanSWATHDataPerformanceTest();
+            BrukerFullScanMS1filteringPerformanceTest();
+            BrukerFullScanMSeDataPerformanceTest();
+            BrukerFullScanSWATHDataPerformanceTest();
             ThermoDdaVsMz5ChromatogramPerformanceTest();
             ThermoDiaVsMz5ChromatogramPerformanceTest();
             WatersVsMz5ChromatogramPerformanceTest();
