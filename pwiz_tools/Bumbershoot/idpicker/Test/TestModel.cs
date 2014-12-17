@@ -479,7 +479,7 @@ namespace Test
         [ClassInitialize()]
         public static void ClassInitialize (TestContext testContext)
         {
-            testContext.SetTestOutputSubdirectory(testContext.FullyQualifiedTestClassName + "\\" + testContext.TestName);
+            testContext.SetTestOutputSubdirectory(testContext.FullyQualifiedTestClassName + "/" + testContext.TestName);
             Directory.CreateDirectory(testContext.TestOutputPath());
             string testModelFilepath = testContext.TestOutputPath("../testModel.idpDB");
             var sessionFactory = SessionFactoryFactory.CreateSessionFactory(testModelFilepath, new SessionFactoryConfig { CreateSchema = true });
