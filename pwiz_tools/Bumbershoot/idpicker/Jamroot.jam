@@ -518,7 +518,8 @@ rule msbuild_IDPicker ( targets + : sources * : properties * )
 
 actions msbuild_IDPicker
 {
-	IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+	IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+	IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     echo Building IDPicker in $(CONFIGURATION:L) configuration...
     msbuild $(ROOT_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
 }
