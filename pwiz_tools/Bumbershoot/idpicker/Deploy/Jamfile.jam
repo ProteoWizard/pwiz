@@ -136,7 +136,7 @@ actions test_msi
 
     IF %TEST_EXIT% NEQ 0 exit %TEST_EXIT%
     echo Deployment test passed.
-    echo Deployment test passed. > $(LOCATION)\\Test.passed
+    echo Deployment test passed. > $(LOCATION)\Test.passed
 
     popd
 }
