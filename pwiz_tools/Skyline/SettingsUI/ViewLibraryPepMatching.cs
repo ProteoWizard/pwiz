@@ -583,7 +583,7 @@ namespace pwiz.Skyline.SettingsUI
                                                  Settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence));
                     // Make sure we keep the same children. 
                     PeptideMatch match = pepMatch;
-                    var newNodePep = ((PeptideDocNode) new PeptideDocNode(newPeptide, pepMatch.NodePep.ExplicitMods)
+                    var newNodePep = ((PeptideDocNode) new PeptideDocNode(newPeptide, pepMatch.NodePep.ExplicitMods, pepMatch.NodePep.ExplicitRetentionTime)
                             .ChangeChildren(pepMatch.NodePep.Children.ToList().ConvertAll(nodeGroup =>
                                 {
                                     // Create copies of the children in order to prevent transition groups with the same 

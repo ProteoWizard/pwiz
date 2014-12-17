@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditCustomMoleculeDlg));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -35,6 +36,17 @@
             this.labelCharge = new System.Windows.Forms.Label();
             this.textName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.labelCollisionEnergy = new System.Windows.Forms.Label();
+            this.textCollisionEnergy = new System.Windows.Forms.TextBox();
+            this.groupBoxOptionalValues = new System.Windows.Forms.GroupBox();
+            this.textDriftTimeMsec = new System.Windows.Forms.TextBox();
+            this.labelDriftTimeMsec = new System.Windows.Forms.Label();
+            this.textDriftTimeHighEnergyOffsetMsec = new System.Windows.Forms.TextBox();
+            this.labelDriftTimeHighEnergyOffsetMsec = new System.Windows.Forms.Label();
+            this.textRetentionTime = new System.Windows.Forms.TextBox();
+            this.labelRetentionTime = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.groupBoxOptionalValues.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOK
@@ -72,11 +84,70 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // labelCollisionEnergy
+            // 
+            resources.ApplyResources(this.labelCollisionEnergy, "labelCollisionEnergy");
+            this.labelCollisionEnergy.Name = "labelCollisionEnergy";
+            // 
+            // textCollisionEnergy
+            // 
+            resources.ApplyResources(this.textCollisionEnergy, "textCollisionEnergy");
+            this.textCollisionEnergy.Name = "textCollisionEnergy";
+            this.toolTip1.SetToolTip(this.textCollisionEnergy, resources.GetString("textCollisionEnergy.ToolTip"));
+            // 
+            // groupBoxOptionalValues
+            // 
+            this.groupBoxOptionalValues.Controls.Add(this.textDriftTimeMsec);
+            this.groupBoxOptionalValues.Controls.Add(this.labelDriftTimeMsec);
+            this.groupBoxOptionalValues.Controls.Add(this.textDriftTimeHighEnergyOffsetMsec);
+            this.groupBoxOptionalValues.Controls.Add(this.labelDriftTimeHighEnergyOffsetMsec);
+            this.groupBoxOptionalValues.Controls.Add(this.textRetentionTime);
+            this.groupBoxOptionalValues.Controls.Add(this.labelRetentionTime);
+            this.groupBoxOptionalValues.Controls.Add(this.labelCollisionEnergy);
+            this.groupBoxOptionalValues.Controls.Add(this.textCollisionEnergy);
+            resources.ApplyResources(this.groupBoxOptionalValues, "groupBoxOptionalValues");
+            this.groupBoxOptionalValues.Name = "groupBoxOptionalValues";
+            this.groupBoxOptionalValues.TabStop = false;
+            // 
+            // textDriftTimeMsec
+            // 
+            resources.ApplyResources(this.textDriftTimeMsec, "textDriftTimeMsec");
+            this.textDriftTimeMsec.Name = "textDriftTimeMsec";
+            this.toolTip1.SetToolTip(this.textDriftTimeMsec, resources.GetString("textDriftTimeMsec.ToolTip"));
+            // 
+            // labelDriftTimeMsec
+            // 
+            resources.ApplyResources(this.labelDriftTimeMsec, "labelDriftTimeMsec");
+            this.labelDriftTimeMsec.Name = "labelDriftTimeMsec";
+            // 
+            // textDriftTimeHighEnergyOffsetMsec
+            // 
+            resources.ApplyResources(this.textDriftTimeHighEnergyOffsetMsec, "textDriftTimeHighEnergyOffsetMsec");
+            this.textDriftTimeHighEnergyOffsetMsec.Name = "textDriftTimeHighEnergyOffsetMsec";
+            this.toolTip1.SetToolTip(this.textDriftTimeHighEnergyOffsetMsec, resources.GetString("textDriftTimeHighEnergyOffsetMsec.ToolTip"));
+            // 
+            // labelDriftTimeHighEnergyOffsetMsec
+            // 
+            resources.ApplyResources(this.labelDriftTimeHighEnergyOffsetMsec, "labelDriftTimeHighEnergyOffsetMsec");
+            this.labelDriftTimeHighEnergyOffsetMsec.Name = "labelDriftTimeHighEnergyOffsetMsec";
+            // 
+            // textRetentionTime
+            // 
+            resources.ApplyResources(this.textRetentionTime, "textRetentionTime");
+            this.textRetentionTime.Name = "textRetentionTime";
+            this.toolTip1.SetToolTip(this.textRetentionTime, resources.GetString("textRetentionTime.ToolTip"));
+            // 
+            // labelRetentionTime
+            // 
+            resources.ApplyResources(this.labelRetentionTime, "labelRetentionTime");
+            this.labelRetentionTime.Name = "labelRetentionTime";
+            // 
             // EditCustomMoleculeDlg
             // 
             this.AcceptButton = this.btnOK;
             this.CancelButton = this.btnCancel;
             resources.ApplyResources(this, "$this");
+            this.Controls.Add(this.groupBoxOptionalValues);
             this.Controls.Add(this.textCharge);
             this.Controls.Add(this.labelCharge);
             this.Controls.Add(this.btnCancel);
@@ -88,6 +159,8 @@
             this.MinimizeBox = false;
             this.Name = "EditCustomMoleculeDlg";
             this.ShowInTaskbar = false;
+            this.groupBoxOptionalValues.ResumeLayout(false);
+            this.groupBoxOptionalValues.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -101,5 +174,15 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label labelCharge;
         private System.Windows.Forms.TextBox textCharge;
+        private System.Windows.Forms.Label labelCollisionEnergy;
+        private System.Windows.Forms.TextBox textCollisionEnergy;
+        private System.Windows.Forms.GroupBox groupBoxOptionalValues;
+        private System.Windows.Forms.TextBox textRetentionTime;
+        private System.Windows.Forms.Label labelRetentionTime;
+        private System.Windows.Forms.TextBox textDriftTimeMsec;
+        private System.Windows.Forms.Label labelDriftTimeMsec;
+        private System.Windows.Forms.TextBox textDriftTimeHighEnergyOffsetMsec;
+        private System.Windows.Forms.Label labelDriftTimeHighEnergyOffsetMsec;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

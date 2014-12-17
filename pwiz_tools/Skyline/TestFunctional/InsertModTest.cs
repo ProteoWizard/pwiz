@@ -69,6 +69,7 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardTextUI(insertListText);
             RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, insertTransDlg =>
                 {
+                    insertTransDlg.IsMolecule = false; // Make sure it's ready to accept peptides rather than small molecules
                     insertTransDlg.PasteTransitions();
                     insertTransDlg.OkDialog();
                 });

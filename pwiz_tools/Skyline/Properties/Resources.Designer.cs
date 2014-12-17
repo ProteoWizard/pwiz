@@ -958,11 +958,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid string for checksum..
+        ///   Looks up a localized string similar to Invalid string &quot;{0}&quot; for checksum.
         /// </summary>
-        public static string AdlerChecksum_MakeForString_Invalid_string_for_checksum {
+        public static string AdlerChecksum_MakeForString_Invalid_string___0___for_checksum {
             get {
-                return ResourceManager.GetString("AdlerChecksum_MakeForString_Invalid_string_for_checksum", resourceCulture);
+                return ResourceManager.GetString("AdlerChecksum_MakeForString_Invalid_string___0___for_checksum", resourceCulture);
             }
         }
         
@@ -5678,11 +5678,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion {0}.
+        ///   Looks up a localized string similar to Ion.
         /// </summary>
-        public static string CustomIon_DisplayName_Ion__0_ {
+        public static string CustomIon_DisplayName_Ion {
             get {
-                return ResourceManager.GetString("CustomIon_DisplayName_Ion__0_", resourceCulture);
+                return ResourceManager.GetString("CustomIon_DisplayName_Ion", resourceCulture);
             }
         }
         
@@ -14556,11 +14556,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule Class.
+        ///   Looks up a localized string similar to Molecule List Name.
         /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Molecule_Class {
+        public static string PasteDlg_UpdateMoleculeType_Molecule_List_Name {
             get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecule_Class", resourceCulture);
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecule_List_Name", resourceCulture);
             }
         }
         
@@ -14584,11 +14584,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor CE.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Precursor_CE {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_CE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor Charge.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Precursor_Charge {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Drift Time (msec).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_", resourceCulture);
             }
         }
         
@@ -14611,11 +14629,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor Name.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Precursor_Name {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor RT.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Precursor_RT {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_RT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product Charge.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Product_Charge {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product Drift Time (msec).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_", resourceCulture);
             }
         }
         
@@ -14638,6 +14683,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product Name.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Product_Name {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein description.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Protein_description {
@@ -14652,15 +14706,6 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Protein_name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Protein_name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Short Name.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Short_Name {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Short_Name", resourceCulture);
             }
         }
         

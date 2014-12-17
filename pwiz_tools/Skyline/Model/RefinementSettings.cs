@@ -424,6 +424,7 @@ namespace pwiz.Skyline.Model
                                                                     settings,
                                                                     explicitMods,
                                                                     nodeGroup.LibInfo,
+                                                                    nodeGroup.ExplicitValues,
                                                                     null,   // results
                                                                     transitions,
                                                                     transitions == null);
@@ -667,7 +668,7 @@ namespace pwiz.Skyline.Model
                             continue;
 
                         var nodePepNew = new PeptideDocNode(decoyPeptide, settings, seqMods.Mods,
-                            null, decoyNodeTranGroupList.ToArray(), false);
+                            null, nodePep.ExplicitRetentionTime, decoyNodeTranGroupList.ToArray(), false);
 
                         if (!Equals(nodePep.ModifiedSequence, nodePepNew.ModifiedSequence))
                         {
@@ -735,6 +736,7 @@ namespace pwiz.Skyline.Model
                                                                 document.Settings,
                                                                 mods,
                                                                 nodeGroup.LibInfo,
+                                                                nodeGroup.ExplicitValues,
                                                                 nodeGroup.Results,
                                                                 decoyNodeTranList,
                                                                 false);

@@ -571,6 +571,10 @@
   <xs:complexType name="general_molecule_type">
     <xs:complexContent>
       <xs:extension base="doc_parent_node_type">
+        <xs:attribute name="rt_calculator_score" type="xs:double"/>
+        <xs:attribute name="predicted_retention_time" type="xs:double"/>
+        <xs:attribute name="avg_measured_retention_time" type="xs:double"/>
+        <xs:attribute name="explicit_retention_time" type="xs:double"/>  <!-- optional RT override value from transition list import -->
       </xs:extension>
     </xs:complexContent>      
   </xs:complexType>
@@ -752,9 +756,6 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="rt_calculator_score" type="xs:double"/>
-        <xs:attribute name="predicted_retention_time" type="xs:double"/>
-        <xs:attribute name="avg_measured_retention_time" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -766,6 +767,11 @@
       <xs:extension base = "doc_parent_node_type">
         <xs:attribute name="charge" type="xs:positiveInteger" use="required"/>
         <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
+        <xs:attribute name="collision_energy" type="xs:double"/>
+        <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
+        <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
+        <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -847,7 +853,6 @@
         <xs:attribute name="isotope_label" type="xs:string"/>
         <xs:attribute name="calc_neutral_mass" type="xs:double" use="required"/>
         <xs:attribute name="decoy_mass_shift" type="xs:double"/>
-        <xs:attribute name="collision_energy" type="xs:double"/>
         <xs:attribute name="declustering_potential" type="xs:double"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
       </xs:extension>
@@ -865,7 +870,7 @@
           <xs:element name="collision_energy" type="xs:double" minOccurs="0" maxOccurs="1">
             <xs:annotation>
               <xs:documentation>
-                This can be the best value based on measured results, or the value calculated from a linear regression.
+                This can be an explicit value, or the best value based on measured results, or the value calculated from a linear regression.
               </xs:documentation>
             </xs:annotation>
           </xs:element>
@@ -880,7 +885,7 @@
         <xs:attribute name="fragment_type" type="fragment_type">
           <xs:annotation>
             <xs:documentation>
-              One of "custom_precursor","custom", "precursor", "a", "b", "c", "x", "y", "z"
+              One of "custom", "precursor", "a", "b", "c", "x", "y", "z"
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>

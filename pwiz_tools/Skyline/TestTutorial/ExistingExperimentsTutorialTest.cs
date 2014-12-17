@@ -139,6 +139,7 @@ namespace pwiz.SkylineTestTutorial
             using (new CheckDocumentState(24, 44, 88, 296))
             {
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => pasteDlg.IsMolecule = false); // Make sure it's ready to accept peptides rather than small molecules
                 RunUI(pasteDlg.PasteTransitions);
                 PauseForScreenShot<PasteDlg.TransitionListTab>("Insert Transition List form", 8);
                 OkDialog(pasteDlg, pasteDlg.OkDialog);

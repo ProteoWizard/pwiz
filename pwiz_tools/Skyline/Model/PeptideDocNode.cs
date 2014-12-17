@@ -50,14 +50,14 @@ namespace pwiz.Skyline.Model
             return string.Empty;
         }
 
-        public PeptideDocNode(Peptide id, ExplicitMods mods = null)
-            : this(id, null, mods, null, null, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
+        public PeptideDocNode(Peptide id, ExplicitMods mods = null, double? explicitRetentionTime = null)
+            : this(id, null, mods, null, null, null, explicitRetentionTime, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
 
-        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey,
+        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey, double? explicitRetentionTime,
             TransitionGroupDocNode[] children, bool autoManageChildren)
-            : this(id, settings, mods, sourceKey, null, null, Annotations.EMPTY, null, children, autoManageChildren)
+            : this(id, settings, mods, sourceKey, null, null, explicitRetentionTime, Annotations.EMPTY, null, children, autoManageChildren)
         {
         }
 
@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Model
                               ModifiedSequenceMods sourceKey,
                               string standardType,
                               int? rank,
+                              double? explicitRetentionTime,
                               Annotations annotations,
                               Results<PeptideChromInfo> results,
                               TransitionGroupDocNode[] children,
@@ -77,6 +78,7 @@ namespace pwiz.Skyline.Model
             SourceKey = sourceKey;
             GlobalStandardType = standardType;
             Rank = rank;
+            ExplicitRetentionTime = explicitRetentionTime;
             Results = results;
             BestResult = CalcBestResult();
 
@@ -99,6 +101,8 @@ namespace pwiz.Skyline.Model
         public ExplicitMods ExplicitMods { get; private set; }
 
         public ModifiedSequenceMods SourceKey { get; private set; }
+
+        public double? ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
         public string GlobalStandardType { get; private set; }
 
@@ -464,33 +468,46 @@ namespace pwiz.Skyline.Model
                                                  });
         }
 
-        // Note: this returns a node with a different ID, which has to be Inserted rather than Replaced
-        public PeptideDocNode ChangeCustomIon(SrmSettings settings, DocNodeCustomIon customIon, int charge)
+        public PeptideDocNode ChangeExplicitRetentionTime(double? prop)
         {
-            var peptide = new Peptide(customIon);
-            var children = new List<TransitionGroupDocNode>();
-            foreach (var child in TransitionGroups)
-            {
-                children.Add(ChangeTransitionGroup(settings, child, new TransitionGroup(peptide, charge,
-                    child.TransitionGroup.LabelType, true, child.TransitionGroup.DecoyMassShift)));
-            }
-            return new PeptideDocNode(peptide, settings, ExplicitMods, SourceKey, children.ToArray(), AutoManageChildren);
+            return ChangeProp(ImClone(this), im => im.ExplicitRetentionTime = prop);
         }
 
-        private TransitionGroupDocNode ChangeTransitionGroup(SrmSettings settings, TransitionGroupDocNode nodeGroup, TransitionGroup group)
+        // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
+        public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, DocNodeCustomIon customIon, int charge, double? explicitRetentionTime, ExplicitTransitionGroupValues explicitTransitionGroupValues)
         {
-            var children = new List<TransitionDocNode>();
-            foreach (var nodeTran in nodeGroup.Transitions)
+            Assume.IsTrue(TransitionGroupCount == 1);  // We support just one transition group per custom molecule
+            TransitionGroupDocNode nodeGroup = TransitionGroups.First();
+            if (explicitTransitionGroupValues == null)
+                explicitTransitionGroupValues = ExplicitTransitionGroupValues.EMPTY;
+            var newPeptide = new Peptide(customIon);
+            Helpers.AssignIfEquals(ref newPeptide, Peptide);
+            var group = new TransitionGroup(newPeptide, charge,
+                nodeGroup.TransitionGroup.LabelType, true, nodeGroup.TransitionGroup.DecoyMassShift);
+            if (Equals(group, nodeGroup.TransitionGroup))
             {
-                var transition = nodeTran.Transition;
-                var tranNew = new Transition(group, transition.IonType, transition.CleavageOffset,
-                    transition.MassIndex, transition.Charge, transition.DecoyMassShift, transition.CustomIon);
-                var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
-                    nodeTran.GetIonMass(), nodeTran.IsotopeDistInfo, nodeTran.LibInfo, nodeTran.Results);
-                children.Add(nodeTranNew);
+                if (!Equals(explicitTransitionGroupValues, nodeGroup.ExplicitValues))
+                    nodeGroup = nodeGroup.ChangeExplicitValues(explicitTransitionGroupValues);
+                return (PeptideDocNode) ChangeExplicitRetentionTime(explicitRetentionTime).ChangeChildrenChecked(new[] {nodeGroup});
             }
-            return new TransitionGroupDocNode(group, nodeGroup.Annotations, settings, ExplicitMods, nodeGroup.LibInfo, nodeGroup.Results,
-                children.ToArray(), AutoManageChildren);
+            else
+            {
+                // ID Changes impact all children, because IDs have back pointers to their parents
+                var children = new List<TransitionDocNode>();
+                foreach (var nodeTran in nodeGroup.Transitions)
+                {
+                    var transition = nodeTran.Transition;
+                    var tranNew = new Transition(group, transition.IonType, transition.CleavageOffset,
+                        transition.MassIndex, transition.Charge, transition.DecoyMassShift, transition.CustomIon);
+                    var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
+                        nodeTran.GetIonMass(), nodeTran.IsotopeDistInfo, nodeTran.LibInfo, nodeTran.Results);
+                    children.Add(nodeTranNew);
+                }
+                var newNodeGroup = new TransitionGroupDocNode(group, nodeGroup.Annotations, settings, ExplicitMods, nodeGroup.LibInfo,
+                    explicitTransitionGroupValues, nodeGroup.Results,
+                    children.ToArray(), AutoManageChildren);
+                return new PeptideDocNode(newPeptide, settings, ExplicitMods, SourceKey, explicitRetentionTime, new[] { newNodeGroup }, AutoManageChildren);
+            }
         }
 
         #endregion
@@ -831,7 +848,7 @@ namespace pwiz.Skyline.Model
             if (peptideList && Peptide.FastaSequence != null)
             {
                 result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages), settings,
-                                            result.ExplicitMods, result.SourceKey, new TransitionGroupDocNode[0], result.AutoManageChildren); 
+                                            result.ExplicitMods, result.SourceKey, result.ExplicitRetentionTime, new TransitionGroupDocNode[0], result.AutoManageChildren); 
             }
             // Create a new child list, using existing children where GlobalIndexes match.
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
@@ -1534,6 +1551,7 @@ namespace pwiz.Skyline.Model
                 Equals(other.SourceKey, SourceKey) &&
                 other.Rank.Equals(Rank) &&
                 Equals(other.Results, Results) &&
+                Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
                 other.BestResult == BestResult;
         }
 
@@ -1552,6 +1570,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
                 result = (result*397) ^ (SourceKey != null ? SourceKey.GetHashCode() : 0);
                 result = (result*397) ^ (Rank.HasValue ? Rank.Value : 0);
+                result = (result*397) ^ (ExplicitRetentionTime.HasValue ? ExplicitRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 result = (result*397) ^ BestResult;
                 return result;

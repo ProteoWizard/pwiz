@@ -337,6 +337,30 @@ namespace pwiz.Skyline.Properties
             }
             set { this["ResultsGridActiveViews"] = value; } // Not L10N
         }
+
+        [UserScopedSettingAttribute]
+        public bool TransitionListInsertPeptides
+        {
+            get { return ((bool?)this["TransitionListInsertPeptides"]) ?? false; } // Not L10N
+            set { this["TransitionListInsertPeptides"] = value; }   // Not L10N
+        }
+        [UserScopedSettingAttribute]
+        public List<string> CustomMoleculeTransitionInsertColumnsList
+        {
+            get
+            {
+                if (this["CustomMoleculeTransitionInsertColumnsList"] == null) // Not L10N
+                {
+                    var list = new List<string>();
+                    CustomMoleculeTransitionInsertColumnsList = list;
+                }
+                return (List<string>)this["CustomMoleculeTransitionInsertColumnsList"]; // Not L10N
+            }
+            set
+            {
+                this["CustomMoleculeTransitionInsertColumnsList"] = value; // Not L10N
+            }
+        }
         [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {

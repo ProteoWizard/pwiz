@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate.Util;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -238,25 +239,43 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
+        private void SetCurrentCellForPasteError(DataGridView gridView, PasteError pasteError, int? columnIndex = null)
+        {
+            ShowError(pasteError);
+            if (gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column].Visible)
+            {
+                gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[columnIndex ?? pasteError.Column];
+            }
+            else
+            {
+                // Set the row even if desired column isn't visible - just pick the first available column
+                for (var firstVisibleColumn = 0; firstVisibleColumn < gridView.Rows[pasteError.Line].Cells.Count; firstVisibleColumn++)
+                {
+                    if (gridView.Rows[pasteError.Line].Cells[firstVisibleColumn].Visible)
+                    {
+                        gridView.CurrentCell = gridView.Rows[pasteError.Line].Cells[firstVisibleColumn];
+                        break;
+                    }
+                }
+            }
+        }
+
         private void ShowProteinError(PasteError pasteError)
         {
             tabControl1.SelectedTab = tabPageProteinList;
-            ShowError(pasteError);
-            gridViewProteins.CurrentCell = gridViewProteins.Rows[pasteError.Line].Cells[colProteinName.Index];
+            SetCurrentCellForPasteError(gridViewProteins, pasteError, colProteinName.Index);
         }
 
         private void ShowPeptideError(PasteError pasteError)
         {
             tabControl1.SelectedTab = tabPagePeptideList;
-            ShowError(pasteError);
-            gridViewPeptides.CurrentCell = gridViewPeptides.Rows[pasteError.Line].Cells[pasteError.Column];
+            SetCurrentCellForPasteError(gridViewPeptides, pasteError);
         }
 
         private void ShowTransitionError(PasteError pasteError)
         {
             tabControl1.SelectedTab = tabPageTransitionList;
-            ShowError(pasteError);
-            gridViewTransitionList.CurrentCell = gridViewTransitionList.Rows[pasteError.Line].Cells[pasteError.Column];
+            SetCurrentCellForPasteError(gridViewTransitionList, pasteError);
         }
 
         private SrmDocument AddPeptides(SrmDocument document, bool validating, ref IdentityPath selectedPath)
@@ -535,15 +554,20 @@ namespace pwiz.Skyline.EditUI
             0, 1, 2, 3);
 
         private const int INDEX_MOLECULE_GROUP = 0;
-        private const int INDEX_MOLECULE = 1;
-        private const int INDEX_MOLECULE_FORMULA = 2;
-        private const int INDEX_PRODUCT_FORMULA = 3;
-        private const int INDEX_MOLECULE_MZ = 4;
-        private const int INDEX_PRODUCT_MZ = 5;
-        private const int INDEX_MOLECULE_CHARGE = 6;
-        private const int INDEX_PRODUCT_CHARGE = 7;
+        private const int INDEX_MOLECULE_NAME = 1;
+        private const int INDEX_PRODUCT_NAME = 2;
+        private const int INDEX_MOLECULE_FORMULA = 3;
+        private const int INDEX_PRODUCT_FORMULA = 4;
+        private const int INDEX_MOLECULE_MZ = 5;
+        private const int INDEX_PRODUCT_MZ = 6;
+        private const int INDEX_MOLECULE_CHARGE = 7;
+        private const int INDEX_PRODUCT_CHARGE = 8;
+        private const int INDEX_RETENTION_TIME = 9;
+        private const int INDEX_COLLISION_ENERGY = 10;
+        private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 11;
+        private const int INDEX_PRODUCT_DRIFT_TIME_MSEC = 12;
 
-        private int ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, out double monoMass, out double averageMass)
+        private int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, out double monoMass, out double averageMass)
         {
             // Is the ion's formula the old style where user expected us to add a hydrogen?
             var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -593,19 +617,25 @@ namespace pwiz.Skyline.EditUI
 
         private class MoleculeInfo
         {
+            public string Name { get; private set; }
             public string Formula { get; private set; }
             public double Mz { get; private set; }
             public int Charge { get; private set; }
             public double MonoMass { get; private set; }
             public double AverageMass { get; private set; }
-
-            public MoleculeInfo(string formula, int charge, double mz, double monoMass, double averageMass)
+            public double? ExplicitRetentionTime { get; private set; }
+            public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
+            public MoleculeInfo(string name, string formula, int charge, double mz, double monoMass, double averageMass, double? explicitRetentionTime,
+                ExplicitTransitionGroupValues explicitTransitionGroupValues)
             {
+                Name = name;
                 Formula = formula;
                 Charge = charge;
                 Mz = mz;
                 MonoMass = monoMass;
                 AverageMass = averageMass;
+                ExplicitRetentionTime = explicitRetentionTime;
+                ExplicitTransitionGroupValues = explicitTransitionGroupValues;
             }
         }
 
@@ -617,53 +647,110 @@ namespace pwiz.Skyline.EditUI
             DataGridViewRow row, 
             bool getPrecursorColumns)
         {
+            int indexName = getPrecursorColumns ? INDEX_MOLECULE_NAME : INDEX_PRODUCT_NAME;
             int indexFormula = getPrecursorColumns ? INDEX_MOLECULE_FORMULA : INDEX_PRODUCT_FORMULA;
             int indexMz = getPrecursorColumns ? INDEX_MOLECULE_MZ : INDEX_PRODUCT_MZ;
             int indexCharge = getPrecursorColumns ? INDEX_MOLECULE_CHARGE : INDEX_PRODUCT_CHARGE;
-            var formula = Convert.ToString(row.Cells[indexFormula].Value);
+            var name = NullForEmpty(Convert.ToString(row.Cells[indexName].Value));
+            var formula = NullForEmpty(Convert.ToString(row.Cells[indexFormula].Value));
             double mz;
             if (!double.TryParse(Convert.ToString(row.Cells[indexMz].Value), out mz))
                 mz = 0;
             int charge;
             if (!int.TryParse(Convert.ToString(row.Cells[indexCharge].Value), out charge))
                 charge =  0;
+            double dtmp;
+            double? collisionEnergy = null;
+            if (getPrecursorColumns && double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
+                collisionEnergy = dtmp;
+            double? retentionTime = null;
+            if (getPrecursorColumns && double.TryParse(Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value), out dtmp))
+                retentionTime = dtmp;
+            double? driftTimePrecursorMsec = null;
+            if (double.TryParse(Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value), out dtmp))
+                driftTimePrecursorMsec = dtmp;
+            double? driftTimeProductMsec = null;
+            if (double.TryParse(Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value), out dtmp))
+                driftTimeProductMsec = dtmp;
             double monoMass;
             double averageMmass;
             string errMessage = String.Format(getPrecursorColumns
                 ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
                 : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index+1);
             int errColumn = indexFormula;
+            double? driftTimeHighEnergyOffsetMsec = null;
+            if (driftTimePrecursorMsec.HasValue)
+            {
+                if (driftTimeProductMsec.HasValue)
+                {
+                    driftTimeHighEnergyOffsetMsec = driftTimeProductMsec - driftTimePrecursorMsec; // Generally expect a negative offset, that is product flies faster than precursor
+                }
+                else
+                {
+                    driftTimeHighEnergyOffsetMsec = 0;
+                }
+            } else if (driftTimeProductMsec.HasValue)
+            {
+                // Product drift provided but not precursor - assume same
+                driftTimePrecursorMsec = driftTimeProductMsec;
+                driftTimeHighEnergyOffsetMsec = 0;
+            }
+            var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
+            var massOk = true;
             if (NullForEmpty(formula) != null)
             {
                 // We have a formula
-                if (mz > 0)
+                try
                 {
-                    // Is the ion's formula the old style where user expected us to add a hydrogen? 
-                    charge = ValidateFormulaWithMz(document, ref formula, mz, out monoMass, out averageMmass);
-                    row.Cells[indexFormula].Value = formula;
-                    if (charge > 0)
+                    errColumn = indexMz;
+                    if (mz > 0)
                     {
-                        row.Cells[indexCharge].Value = charge;
-                        return new MoleculeInfo(formula, charge, mz, monoMass, averageMmass);
+                        // Is the ion's formula the old style where user expected us to add a hydrogen? 
+                        charge = ValidateFormulaWithMz(document, ref formula, mz, out monoMass, out averageMmass)??0;
+                        row.Cells[indexFormula].Value = formula;
+                        massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                        if (massOk)
+                        {
+                            if (charge > 0)
+                            {
+                                row.Cells[indexCharge].Value = charge;
+                                return new MoleculeInfo(name, formula, charge, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                            }
+                            errMessage = String.Format(getPrecursorColumns
+                                ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
+                                : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
+                        }
                     }
-                    errMessage = String.Format(getPrecursorColumns
-                        ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
-                        : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
+                    else if (charge > 0)
+                    {
+                        // Get the mass from the formula, and mz from that and charge
+                        mz = ValidateFormulaWithCharge(document, formula, charge, out monoMass, out averageMmass);
+                        massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                        row.Cells[indexMz].Value = mz;
+                        if (massOk)
+                            return new MoleculeInfo(name, formula, charge, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                    }
                 }
-                else if (charge != 0)
+                catch (InvalidDataException)
                 {
-                    // Get the mass from the formula, and mz from that and charge
-                    mz = ValidateFormulaWithCharge(document, formula, charge, out monoMass, out averageMmass);
-                    row.Cells[indexMz].Value = mz;
-                    return new MoleculeInfo(formula, charge, mz, monoMass, averageMmass);
+                    massOk = false;
                 }
-                errColumn = indexMz;
             } 
-            else if (mz != 0 && charge != 0)
+            else if (mz != 0 && charge > 0)
             {
                 // No formula, just use charge and m/z
-                monoMass = averageMmass = BioMassCalc.CalculateMassWithElectronLoss(mz, charge);
-                return new MoleculeInfo(formula, charge, mz, monoMass, averageMmass);
+                monoMass = averageMmass = BioMassCalc.CalculateMassFromMz(mz, charge);
+                massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                if (massOk)
+                    return new MoleculeInfo(name, formula, charge, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+            }
+            if (!massOk)
+            {
+                errColumn = indexMz;
+                errMessage = string.Format(
+                    Resources
+                        .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__,
+                    CustomIon.MAX_MASS);
             }
             ShowTransitionError(new PasteError
             {
@@ -680,10 +767,28 @@ namespace pwiz.Skyline.EditUI
                 return document;
             if (IsMolecule)
             {
+                // Save the current column order to settings
+                var active = new List<string>();
+                for (int order = 0; order < gridViewTransitionList.Columns.Count; order++)
+                {
+                    for (int gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
+                    {
+                        var dataGridViewColumn = gridViewTransitionList.Columns[gridcol];
+                        if (dataGridViewColumn.DisplayIndex == order)
+                        {
+                            if (dataGridViewColumn.Visible)
+                                active.Add(dataGridViewColumn.Name);
+                            break;
+                        }
+                    }
+                }
+                Settings.Default.CustomMoleculeTransitionInsertColumnsList = active;
+
+                // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
                 for(int i = 0; i < gridViewTransitionList.RowCount - 1; i ++)
                 {
                     DataGridViewRow row = gridViewTransitionList.Rows[i];
-                    var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get moecule values
+                    var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get molecule values
                     if (precursor == null)
                         return null;
                     var product = ReadPrecursorOrProductColumns(document, row, false); // get product values
@@ -691,19 +796,31 @@ namespace pwiz.Skyline.EditUI
                     {
                         return null;
                     }
+                    var charge = precursor.Charge;
+                    var precursorMonoMz = BioMassCalc.CalculateMz(precursor.MonoMass, charge);
+                    var precursorAverageMz = BioMassCalc.CalculateMz(precursor.AverageMass, charge);
 
+                    // Preexisting molecule group?
                     bool pepGroupFound = false;
                     foreach (var pepGroup in document.MoleculeGroups)
                     {
                         var pathPepGroup = new IdentityPath(pepGroup.Id);
-                        if (pepGroup.Name == Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value))
+                        if (Equals(pepGroup.Name, Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value)))
                         {
+                            // Found a molecule group with the same name - can we find an existing molecule to which we can add a transition?
                             pepGroupFound = true;
                             bool pepFound = false;
                             foreach (var pep in pepGroup.SmallMolecules)
                             {
                                 var pepPath = new IdentityPath(pathPepGroup, pep.Id);
-                                if (!string.IsNullOrEmpty(pep.Peptide.CustomIon.Formula) && Equals(pep.Peptide.CustomIon.Formula, Convert.ToString(row.Cells[INDEX_MOLECULE].Value)))
+                                var ionMonoMz = BioMassCalc.CalculateMz(pep.Peptide.CustomIon.MonoisotopicMass, charge);
+                                var ionAverageMz = BioMassCalc.CalculateMz(pep.Peptide.CustomIon.AverageMass, charge);
+                                // Match existing molecule if same name (if any) and same formula (if any) and similar m/z at the precursor charge
+                                // (we don't just check mass since we don't have a tolerance value for that)
+                                if (Equals(pep.Peptide.CustomIon.Name, precursor.Name) &&
+                                    Equals(pep.Peptide.CustomIon.Formula, precursor.Formula) &&
+                                    Math.Abs(ionMonoMz - precursorMonoMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance &&
+                                    Math.Abs(ionAverageMz - precursorAverageMz) <= document.Settings.TransitionSettings.Instrument.MzMatchTolerance)
                                 {
                                     pepFound = true;
                                     bool tranGroupFound = false;
@@ -963,11 +1080,12 @@ namespace pwiz.Skyline.EditUI
         {
 
             DocNodeCustomIon ion;
+            MoleculeInfo moleculeInfo;
             try
             {
-                var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+                moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
                 ion = new DocNodeCustomIon(moleculeInfo.Formula, moleculeInfo.MonoMass, moleculeInfo.AverageMass,
-                    Convert.ToString(row.Cells[INDEX_MOLECULE].Value)); // Short name
+                    Convert.ToString(row.Cells[INDEX_MOLECULE_NAME].Value)); // Short name
             }
             catch (ArgumentException e)
             {
@@ -979,13 +1097,24 @@ namespace pwiz.Skyline.EditUI
                 });
                 return null;
             }
-            
-
-            var pep = new Peptide(ion);
-            var tranGroup = GetMoleculeTransitionGroup(document, row, pep);
-            if (tranGroup == null)
+            try
+            {
+                var pep = new Peptide(ion);
+                var tranGroup = GetMoleculeTransitionGroup(document, row, pep);
+                if (tranGroup == null)
+                    return null;
+                return new PeptideDocNode(pep, document.Settings, null, null, moleculeInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
+            }
+            catch (InvalidOperationException e)
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_MOLECULE_FORMULA,
+                    Line = row.Index,
+                    Message = e.Message
+                });
                 return null;
-            return new PeptideDocNode(pep,document.Settings,null,null,new[]{tranGroup},true);
+            }
         }
 
         private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, DataGridViewRow row, Peptide pep)
@@ -1006,7 +1135,7 @@ namespace pwiz.Skyline.EditUI
             if (tran == null)
                 return null;
             return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
-                null, null, new[] {tran}, true);
+                null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, true);
         }
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, DataGridViewRow row, Peptide pep, TransitionGroup group)
@@ -1019,7 +1148,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            DocNodeCustomIon ion = new DocNodeCustomIon(molecule.Formula, molecule.MonoMass, molecule.AverageMass);
+            DocNodeCustomIon ion = new DocNodeCustomIon(molecule.Formula, molecule.MonoMass, molecule.AverageMass, molecule.Name);
             var ionType = ion.Equals(pep.CustomIon)
                 ? IonType.precursor
                 : IonType.custom;
@@ -1057,6 +1186,38 @@ namespace pwiz.Skyline.EditUI
             return lastPeptideGroupDocuNode;
         }
 
+        // Select transition list column visibility
+        // Inspired by http://www.codeproject.com/Articles/31987/A-DataGridView-Column-Show-Hide-Popup
+        private void CheckedListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            gridViewTransitionList.Columns[e.Index].Visible = (e.NewValue == CheckState.Checked);
+        }
+
+        private void btnCustomMoleculeColumns_Click(object sender, EventArgs e)
+        {
+            var checkedListBox = new CheckedListBox {CheckOnClick = true};
+            checkedListBox.ItemCheck += CheckedListBox_ItemCheck;
+            checkedListBox.Items.Clear();
+            foreach (DataGridViewColumn c in gridViewTransitionList.Columns)
+            {
+                checkedListBox.Items.Add(c.HeaderText, c.Visible);
+            }
+            checkedListBox.Height = checkedListBox.Items.Count * radioMolecule.Height * 12 / 10;
+            checkedListBox.Width = radioMolecule.Width * 2;
+            var controlHost = new ToolStripControlHost(checkedListBox)
+            {
+                Padding = Padding.Empty,
+                Margin = Padding.Empty,
+                AutoSize = false
+            };
+
+            var popup = new ToolStripDropDown {Padding = Padding.Empty};
+            popup.Items.Add(controlHost);
+
+            popup.Show(btnCustomMoleculeColumns.PointToScreen(new Point(0, -checkedListBox.Height)));
+        }
+
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
@@ -1077,7 +1238,13 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 var tab = GetTabPage(value);
-                radioMolecule.Visible = radioPeptide.Visible = radioPeptide.Checked = (value  == PasteFormat.transition_list);
+                btnCustomMoleculeColumns.Visible = radioMolecule.Visible = radioPeptide.Visible = (value == PasteFormat.transition_list);
+                if (value == PasteFormat.transition_list)
+                {
+                    radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
+                    IsMolecule = btnCustomMoleculeColumns.Enabled = !radioPeptide.Checked;
+                    UpdateMoleculeType();
+                }
                 for (int i = tabControl1.Controls.Count - 1; i >= 0; i--)
                 {
                     if (tabControl1.Controls[i] != tab)
@@ -1456,7 +1623,8 @@ namespace pwiz.Skyline.EditUI
         {
             var document = DocumentUiContainer.Document;
             var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
-            Paste(gridViewTransitionList, !backgroundProteome.IsNone);
+            bool enumerateProteins = !IsMolecule && !backgroundProteome.IsNone;
+            Paste(gridViewTransitionList, enumerateProteins);
         }
 
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
@@ -1769,9 +1937,28 @@ namespace pwiz.Skyline.EditUI
             UpdateMoleculeType();
         }
 
+        // Custom molecule transition list internal column names, for saving to settings
+        public static class SmallMoleculeTransitionListColumnHeaders
+        {
+            public const string moleculeGroup = "MoleculeGroup"; // Not L10N
+            public const string namePrecursor = "PrecursorName"; // Not L10N
+            public const string nameProduct = "ProductName"; // Not L10N
+            public const string formulaPrecursor = "PrecursorFormula"; // Not L10N
+            public const string formulaProduct = "ProductFormula"; // Not L10N
+            public const string mzPrecursor = "PrecursorMz"; // Not L10N
+            public const string mzProduct = "ProductMz"; // Not L10N
+            public const string chargePrecursor = "PrecursorCharge"; // Not L10N
+            public const string chargeProduct = "ProductCharge"; // Not L10N
+            public const string rtPrecursor = "PrecursorRT"; // Not L10N
+            public const string cePrecursor = "PrecursorCE"; // Not L10N
+            public const string dtPrecursor = "PrecursorDT"; // Not L10N
+            public const string dtProduct = "ProductDT"; // Not L10N
+        }
         private void UpdateMoleculeType()
         {
             bool isPeptide = radioPeptide.Checked;
+            btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
+            Settings.Default.TransitionListInsertPeptides = isPeptide; // Remember for next time
 
             //Skip updating if nothing needs to be changed
             if ((isPeptide && gridViewTransitionList.ColumnCount == 5) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
@@ -1789,12 +1976,15 @@ namespace pwiz.Skyline.EditUI
                     DialogResult.Cancel)
                 {
                     radioPeptide.Checked = !isPeptide;
+                    btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
                     return;
                 }
             }
 
+            // Items that peptide and small molecules have in common, for swapping back and forth
             var peptideGroupNames = new string[rowCount];
             var peptideNames = new string[rowCount];
+            var productNames = new string[rowCount];
             var precursorMzs = new string[rowCount];
             var productMzs = new string[rowCount];
 
@@ -1818,14 +2008,22 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                gridViewTransitionList.Columns.Add("MoleculeGroup", Resources.PasteDlg_UpdateMoleculeType_Molecule_Class); // Not L10N
-                gridViewTransitionList.Columns.Add("Name", Resources.PasteDlg_UpdateMoleculeType_Short_Name); // Not L10N
-                gridViewTransitionList.Columns.Add("PreFormula", Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula); // Not L10N
-                gridViewTransitionList.Columns.Add("ProdFormula", Resources.PasteDlg_UpdateMoleculeType_Product_Formula); // Not L10N
-                gridViewTransitionList.Columns.Add("MzPre", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z); // Not L10N
-                gridViewTransitionList.Columns.Add("MzProd", Resources.PasteDlg_UpdateMoleculeType_Product_m_z); // Not L10N
-                gridViewTransitionList.Columns.Add("ChargePre", Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge); // Not L10N
-                gridViewTransitionList.Columns.Add("ChargeProd", Resources.PasteDlg_UpdateMoleculeType_Product_Charge); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_RT); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_CE); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_); // Not L10N
+
+                // Now set order and visibility based on settings
+                SetSmallMoleculeColumns(Settings.Default.CustomMoleculeTransitionInsertColumnsList);
             }
 
             for (int i = 0; i < rowCount; i ++)
@@ -1837,7 +2035,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    gridViewTransitionList.Rows.Add(peptideGroupNames[i], peptideNames[i], string.Empty,
+                    gridViewTransitionList.Rows.Add(peptideGroupNames[i], peptideNames[i], productNames[i], string.Empty,
                         string.Empty, precursorMzs[i], productMzs[i]);
                 }
             }
@@ -1845,8 +2043,39 @@ namespace pwiz.Skyline.EditUI
 
         public bool IsMolecule
         {
-            get { return radioMolecule.Checked; } 
-            set { radioMolecule.Checked = value; }
+            get { return radioMolecule.Checked; }
+            set
+            {
+                radioMolecule.Checked = value;
+                radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides = !value;  // Preserve for user convenience next time
+            }
+        }
+
+        public void SetSmallMoleculeColumns(List<string> columns)
+        {
+            Settings.Default.CustomMoleculeTransitionInsertColumnsList = columns;
+            if (Settings.Default.CustomMoleculeTransitionInsertColumnsList.Any())
+            {
+                for (int gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
+                {
+                    gridViewTransitionList.Columns[gridcol].Visible = false;
+                }
+                var order = 0;
+                foreach (var colName in Settings.Default.CustomMoleculeTransitionInsertColumnsList)
+                {
+                    // Make corresponding column visible, and next in column order               
+                    for (var gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
+                    {
+                        var dataGridViewColumn = gridViewTransitionList.Columns[gridcol];
+                        if (dataGridViewColumn.Name.Equals(colName))
+                        {
+                            dataGridViewColumn.Visible = true;
+                            dataGridViewColumn.DisplayIndex = order++;
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 

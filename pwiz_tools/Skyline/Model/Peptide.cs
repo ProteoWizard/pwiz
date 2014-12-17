@@ -26,7 +26,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-    public class Peptide : Identity
+    public class Peptide : Identity  // "Peptide" is a misnomer at this point - this could be a small molecule or a peptide.
     {
         private readonly FastaSequence _fastaSequence;
 
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model
                 var explicitMods = new ExplicitMods(_nodePepUnmod.Peptide, mods,
                                                     new TypedExplicitModifications[0], true);
                 // Make a new copy of the peptid ID to give it a new GlobalIndex.
-                return new PeptideDocNode((Peptide)_nodePepUnmod.Peptide.Copy(), explicitMods);
+                return new PeptideDocNode((Peptide)_nodePepUnmod.Peptide.Copy(), explicitMods, _nodePepUnmod.ExplicitRetentionTime);
             }
         }
 

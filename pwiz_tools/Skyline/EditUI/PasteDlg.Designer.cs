@@ -30,6 +30,7 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PasteDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -63,11 +64,13 @@ namespace pwiz.Skyline.EditUI
             this.colTransitionProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.radioMolecule = new System.Windows.Forms.RadioButton();
             this.radioPeptide = new System.Windows.Forms.RadioButton();
             this.panelError = new System.Windows.Forms.Panel();
             this.tbxError = new System.Windows.Forms.TextBox();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.btnCustomMoleculeColumns = new System.Windows.Forms.Button();
+            this.radioMolecule = new System.Windows.Forms.RadioButton();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.tabPageFasta.SuspendLayout();
             this.tabPageProteinList.SuspendLayout();
@@ -317,13 +320,6 @@ namespace pwiz.Skyline.EditUI
             this.colTransitionProteinDescription.Name = "colTransitionProteinDescription";
             this.colTransitionProteinDescription.ReadOnly = true;
             // 
-            // radioMolecule
-            // 
-            resources.ApplyResources(this.radioMolecule, "radioMolecule");
-            this.radioMolecule.Name = "radioMolecule";
-            this.radioMolecule.TabStop = true;
-            this.radioMolecule.UseVisualStyleBackColor = true;
-            // 
             // radioPeptide
             // 
             resources.ApplyResources(this.radioPeptide, "radioPeptide");
@@ -346,6 +342,7 @@ namespace pwiz.Skyline.EditUI
             // 
             // panelButtons
             // 
+            this.panelButtons.Controls.Add(this.btnCustomMoleculeColumns);
             this.panelButtons.Controls.Add(this.radioMolecule);
             this.panelButtons.Controls.Add(this.btnValidate);
             this.panelButtons.Controls.Add(this.radioPeptide);
@@ -353,6 +350,21 @@ namespace pwiz.Skyline.EditUI
             this.panelButtons.Controls.Add(this.btnCancel);
             resources.ApplyResources(this.panelButtons, "panelButtons");
             this.panelButtons.Name = "panelButtons";
+            // 
+            // btnCustomMoleculeColumns
+            // 
+            resources.ApplyResources(this.btnCustomMoleculeColumns, "btnCustomMoleculeColumns");
+            this.btnCustomMoleculeColumns.Name = "btnCustomMoleculeColumns";
+            this.toolTip1.SetToolTip(this.btnCustomMoleculeColumns, resources.GetString("btnCustomMoleculeColumns.ToolTip"));
+            this.btnCustomMoleculeColumns.UseVisualStyleBackColor = true;
+            this.btnCustomMoleculeColumns.Click += new System.EventHandler(this.btnCustomMoleculeColumns_Click);
+            // 
+            // radioMolecule
+            // 
+            resources.ApplyResources(this.radioMolecule, "radioMolecule");
+            this.radioMolecule.Name = "radioMolecule";
+            this.radioMolecule.TabStop = true;
+            this.radioMolecule.UseVisualStyleBackColor = true;
             // 
             // PasteDlg
             // 
@@ -420,6 +432,8 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSpecies;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
         private System.Windows.Forms.RadioButton radioPeptide;
+        private System.Windows.Forms.Button btnCustomMoleculeColumns;
         private System.Windows.Forms.RadioButton radioMolecule;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

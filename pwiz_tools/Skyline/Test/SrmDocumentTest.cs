@@ -89,10 +89,14 @@ namespace pwiz.SkylineTest
             var transition = new DocNodeCustomIon(60, 60, "molecule");
             var transition2 = new DocNodeCustomIon(55, 55, "molecule fragment");
             var precursor = new DocNodeCustomIon(60, 60, "molecule");
-            Assert.AreEqual(BioMassCalc.CalculateMz(precursor.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, BioMassCalc.MassElectron / 100);
-            Assert.AreEqual(BioMassCalc.CalculateMz(transition.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(0).Mz, BioMassCalc.MassElectron / 100);
-            Assert.AreEqual(BioMassCalc.CalculateMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz, BioMassCalc.MassElectron / 100);
+            Assert.AreEqual(BioMassCalc.CalculateMz(precursor.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz);
+            Assert.AreEqual(BioMassCalc.CalculateMz(transition.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(0).Mz);
+            Assert.AreEqual(BioMassCalc.CalculateMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomIon);
+            Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime);
+            Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeMsec);
+            Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
             Assert.AreEqual(transition, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             Assert.AreEqual(transition2, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon);
@@ -100,6 +104,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1,doc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);
             Assert.AreEqual(1,doc.MoleculeTransitions.ElementAt(0).Transition.Charge);
             AssertEx.ValidatesAgainstSchema(doc);
+            AssertEx.Serializable(doc); // Round trip
         }
 
         /// <summary>
@@ -719,14 +724,19 @@ namespace pwiz.SkylineTest
                 "    <data_settings />\n" +
                 "  </settings_summary>\n" +
                 "  <peptide_list label_name=\"Molecule Group\" websearch_status=\"X\" auto_manage_children=\"false\">\n" +
-                "    <molecule mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
-                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\">\n" +
-                "        <transition  mass_average=\"60\" mass_monoisotopic=\"60\" fragment_type=\"precursor\">\n" +
+                "    <note>we call this a peptide_list but it is really a generalized molecule list</note>\n" +
+                "    <molecule explicit_retention_time=\"3.45\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
+                "      <note>this molecule was specified by mass only</note>\n" +
+                "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\" explicit_collision_energy=\"4.704984\" explicit_drift_time_msec=\"2.34\" explicit_drift_time_high_energy_offset_msec=\"-0.12\">\n" +
+                "        <note>this precursor has explicit values set</note>\n" +
+                "        <transition fragment_type=\"precursor\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
+                "          <note>this transition is for the precursor</note>\n" +
                 "          <precursor_mz>59.999451</precursor_mz>\n" +
                 "          <product_mz>59.999451</product_mz>\n" +
                 "          <collision_energy>4.704984</collision_energy>\n" +
                 "        </transition>\n" +
                 "        <transition fragment_type=\"custom\" mass_average=\"55\" mass_monoisotopic=\"55\" custom_ion_name=\"molecule fragment\" product_charge=\"1\">\n" +
+                "          <note>this transition is for a custom fragment ion</note>\n" +
                 "          <precursor_mz>59.999451</precursor_mz>\n" +
                 "          <product_mz>54.999451</product_mz>\n" +
                 "          <collision_energy>4.704984</collision_energy>\n" +

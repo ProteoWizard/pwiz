@@ -158,22 +158,28 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             Transition tran = nodeTran.Transition;
             string labelPrefix;
+            const string labelPrefixSpacer = " - "; // NOt L10N
             if (tran.IsPrecursor())
             {
-                labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex);
+                labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
             }
             else if (tran.IsCustom())
             {
-                labelPrefix = tran.CustomIon.DisplayName;
+                if (!string.IsNullOrEmpty(tran.CustomIon.Name))
+                    labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
+                else if (!string.IsNullOrEmpty(tran.CustomIon.Formula))
+                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer;
+                else
+                    labelPrefix = string.Empty;
             }
             else
             {
-                labelPrefix = string.Format(Resources.TransitionTreeNode_GetLabel__0__1__, tran.AA, nodeTran.FragmentIonName);
+                labelPrefix = string.Format(Resources.TransitionTreeNode_GetLabel__0__1__, tran.AA, nodeTran.FragmentIonName) + labelPrefixSpacer;
             }
 
             if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
             {
-                return string.Format("{0} - {1}{2}{3}", // Not L10N
+                return string.Format("{0}{1}{2}{3}", // Not L10N
                                      labelPrefix,
                                      GetMzLabel(nodeTran),
                                      Transition.GetChargeIndicator(tran.Charge),
@@ -184,7 +190,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                               ? string.Format(Resources.TransitionTreeNode_GetLabel_irank__0__, nodeTran.IsotopeDistInfo.Rank)
                               : string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, nodeTran.LibInfo.Rank);
 
-            return string.Format("{0} - {1}{2} ({3}){4}", // Not L10N
+            return string.Format("{0}{1}{2} ({3}){4}", // Not L10N
                                  labelPrefix,
                                  GetMzLabel(nodeTran),
                                  Transition.GetChargeIndicator(tran.Charge),

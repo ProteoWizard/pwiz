@@ -28,8 +28,9 @@ namespace pwiz.Skyline.Model
 {
     public class CustomIon : Immutable, IValidating
     {
-        public const double MAX_MASS = 1000;
+        public const double MAX_MASS = 100000;
         public const double MIN_MASS = MeasuredIon.MIN_REPORTER_MASS;
+        private string _formula;
         
         /// <summary>
         /// A simple object used to represent any molecule
@@ -55,7 +56,11 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public string Formula { get; private set; }
+        public string Formula
+        { 
+            get {return _formula;} 
+            private set { _formula = string.IsNullOrEmpty(value) ? null : value; } 
+        }
 
         public string Name { get; protected set; }
         public double MonoisotopicMass { get; private set; }
@@ -71,10 +76,7 @@ namespace pwiz.Skyline.Model
                     return Formula;
                 else
                 {
-                    string massString = MonoisotopicMass.ToString(LocalizationHelper.CurrentCulture);
-                    if (MonoisotopicMass != AverageMass)
-                        massString = massString + "/" + AverageMass.ToString(LocalizationHelper.CurrentCulture); // Not L10N
-                    return string.Format(Resources.CustomIon_DisplayName_Ion__0_, massString);
+                    return Resources.CustomIon_DisplayName_Ion;  // Not much we can say about it
                 }
             }
         }

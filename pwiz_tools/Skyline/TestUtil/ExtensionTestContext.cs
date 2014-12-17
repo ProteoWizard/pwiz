@@ -28,6 +28,16 @@ namespace pwiz.SkylineTestUtil
 {
     public static class ExtensionTestContext
     {
+        // Vendor readers creep under code coverage analysis, and they're opaque to us anyway, so avoid in that context
+        // Also honor the Program.NoVendorReaders flag for test purposes
+        private static bool AllowVendorReaders
+        {
+            get
+            {
+                return !(Program.NoVendorReaders || ("1").Equals(Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING"))); // Not L10N
+            }
+        }
+
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
             return Path.Combine(testContext.TestDir, relativePath);
@@ -88,7 +98,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return !Program.NoVendorReaders;
+                return AllowVendorReaders;
             }
         }
 
@@ -112,7 +122,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return !Program.NoVendorReaders;
+                return AllowVendorReaders;
             }
         }
 
@@ -126,7 +136,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return !Program.NoVendorReaders;
+                return AllowVendorReaders;
             }
         }
 
@@ -140,7 +150,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return !Program.NoVendorReaders && !IsDebugMode;  // no waters library for debug
+                return AllowVendorReaders && !IsDebugMode;  // no waters library for debug
             }
         }
 

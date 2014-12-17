@@ -308,11 +308,13 @@ namespace pwiz.SkylineTestTutorial
         /// </summary>
         private static void ClearSettingsLists()
         {
-            Settings.Default.PeakScoringModelList.Clear();
-            Settings.Default.IsolationSchemeList.Clear();
-            Settings.Default.HeavyModList.Clear();
-            Settings.Default.StaticModList.Clear();
-            Settings.Default.SpectralLibraryList.Clear();
+            RunUI(() => {
+                Settings.Default.PeakScoringModelList.Clear();
+                Settings.Default.IsolationSchemeList.Clear();
+                Settings.Default.HeavyModList.Clear();
+                Settings.Default.StaticModList.Clear();
+                Settings.Default.SpectralLibraryList.Clear();
+            });
         }
     }
 }

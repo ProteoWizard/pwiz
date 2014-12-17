@@ -142,6 +142,7 @@ namespace pwiz.SkylineTestFunctional
         private static void PasteTransitions(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter,
             bool addUnmatched, bool addFiltered)
         {
+            RunUI(() => pasteDlg.IsMolecule = false); // Make sure it's ready for peptides, not small molecules
             RunDlg<FilterMatchedPeptidesDlg>(pasteDlg.PasteTransitions, filterMatchedPeptidesDlg =>
             {
                 // Make sure we only count each peptide once for the FilterMatchedPeptidesDlg.

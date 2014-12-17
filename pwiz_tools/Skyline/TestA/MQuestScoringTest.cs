@@ -336,7 +336,7 @@ namespace pwiz.SkylineTestA
                 var libInfo = new ChromLibSpectrumHeaderInfo("", 0);
                 var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
                 NodeGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, charge, labelType), null, null,
-                   null, libInfo, null, new TransitionDocNode[0], true);
+                   null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], true);
             }
 
             public TransitionGroupDocNode NodeGroup { get; private set; }

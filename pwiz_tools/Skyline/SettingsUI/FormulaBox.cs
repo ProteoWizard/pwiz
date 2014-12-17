@@ -307,7 +307,9 @@ namespace pwiz.Skyline.SettingsUI
             if (string.IsNullOrEmpty(Formula) && // Can't be a user edit if formula box is populated
                 !Equals(text, textMono.Text))
             {
-                MonoMass = GetMassFromText(textMono.Text);
+                var value = GetMassFromText(textMono.Text);
+                if (!value.Equals(MonoMass)) // This check lets the user type the "." on the way to "123.4"
+                    MonoMass = value;
             }
         }
 
@@ -318,7 +320,9 @@ namespace pwiz.Skyline.SettingsUI
             if (string.IsNullOrEmpty(Formula) &&  // Can't be a user edit if formula box is populated
                 !Equals(text, textAverage.Text))
             {
-                AverageMass = GetMassFromText(textAverage.Text);
+               var value = GetMassFromText(textAverage.Text);
+                if (!value.Equals(AverageMass)) // This check lets the user type the "." on the way to "123.4"
+                    AverageMass = value;
             }
         }
 
@@ -326,7 +330,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Avoid a casecade of text-changed events
             var text = GetTextFromMass(_monoMass);
-            if (!Equals(text, textMono.Text))
+            if (!Equals(GetMassFromText(text), GetMassFromText(textMono.Text)))
                 textMono.Text = text;
         }
 
@@ -334,7 +338,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Avoid a casecade of text-changed events
             var text = GetTextFromMass(_averageMass);
-            if (!Equals(text, textAverage.Text))
+            if (!Equals(GetMassFromText(text), GetMassFromText(textAverage.Text)))
                 textAverage.Text = text;
         }
 

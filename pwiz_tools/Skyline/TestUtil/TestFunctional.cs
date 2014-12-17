@@ -60,12 +60,13 @@ namespace pwiz.SkylineTestUtil
     /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
-    /// as IPerfTest as well.
+    /// in the TestPerf namespace, where they receive special handling so as
+    /// to not disturb the normal, frequent use of the main body of tests.
     /// </summary>
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
-        private const int WAIT_TIME = 60 * 1000;    // 1 minute
+        private const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
 
         static AbstractFunctionalTest()
         {

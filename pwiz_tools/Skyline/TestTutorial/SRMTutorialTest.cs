@@ -317,6 +317,7 @@ namespace pwiz.SkylineTestTutorial
             SetExcelFileClipboardText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
             var insertTransitionDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            RunUI(() => insertTransitionDlg.IsMolecule = false); // Make sure it's ready to accept peptides, not small molecules
             RunUI(insertTransitionDlg.PasteTransitions);
             OkDialog(insertTransitionDlg, insertTransitionDlg.OkDialog);
 

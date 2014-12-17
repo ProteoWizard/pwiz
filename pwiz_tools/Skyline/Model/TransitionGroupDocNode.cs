@@ -54,6 +54,7 @@ namespace pwiz.Skyline.Model
                    null,
                    null,
                    null,
+                   ExplicitTransitionGroupValues.EMPTY,
                    null,
                    children,
                    children == null)
@@ -65,6 +66,7 @@ namespace pwiz.Skyline.Model
                                       SrmSettings settings,
                                       ExplicitMods mods,
                                       SpectrumHeaderInfo libInfo,
+                                      ExplicitTransitionGroupValues explicitValues,
                                       Results<TransitionGroupChromInfo> results,
                                       TransitionDocNode[] children,
                                       bool autoManageChildren)
@@ -78,6 +80,7 @@ namespace pwiz.Skyline.Model
                 RelativeRT = CalcRelativeRT(settings, mods);
             }
             LibInfo = libInfo;
+            ExplicitValues = explicitValues ?? ExplicitTransitionGroupValues.EMPTY;
             Results = results;
         }
 
@@ -93,6 +96,7 @@ namespace pwiz.Skyline.Model
             RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
             Results = group.Results;
+            ExplicitValues = group.ExplicitValues;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
@@ -112,6 +116,11 @@ namespace pwiz.Skyline.Model
         {
             return fullScanMs ? Transitions.Where(nodeTran => !nodeTran.IsMs1) : Transitions;
         }
+
+        /// <summary>
+        /// For transition lists with explicit values for CE, drift time etc
+        /// </summary>
+        public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
 
         public bool IsLight { get { return TransitionGroup.LabelType.IsLight; } }
 
@@ -1989,6 +1998,11 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode ChangeLibInfo(SpectrumHeaderInfo prop)
         {
             return ChangeProp(ImClone(this), im => im.LibInfo = prop);
+        }
+
+        public TransitionGroupDocNode ChangeExplicitValues(ExplicitTransitionGroupValues prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ExplicitValues = prop);
         }
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)

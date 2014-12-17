@@ -39,7 +39,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly int _maxCharge;
         private readonly TransitionSettings _settings;
 
-        public EditCustomMoleculeDlg(String title, IEnumerable<CustomIon> existing, int minCharge, int maxCharge, TransitionSettings settings, int defaultCharge)
+        public EditCustomMoleculeDlg(String title, IEnumerable<CustomIon> existing, int minCharge, int maxCharge, 
+            TransitionSettings settings, int defaultCharge, bool isPrecursor, ExplicitTransitionGroupValues explicitAttributes, double? explicitRetentionTime)
         {
             Text = title;
             _existing = existing;
@@ -48,6 +49,7 @@ namespace pwiz.Skyline.SettingsUI
             _settings = settings;
 
             InitializeComponent();
+            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
 
             _formulaBox =
                 new FormulaBox(Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
@@ -61,6 +63,12 @@ namespace pwiz.Skyline.SettingsUI
             _formulaBox.TabIndex = 2;
             textCharge.Visible = labelCharge.Visible = true;
             Charge = defaultCharge;
+            RetentionTime = explicitRetentionTime;
+            if (!isPrecursor)
+            {
+                groupBoxOptionalValues.Visible = false;
+                Height -= groupBoxOptionalValues.Height;
+            }
         }
 
         public DocNodeCustomIon ResultCustomIon
@@ -72,7 +80,23 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 _resultCustomIon = value;
-                SetText();
+                SetNameAndFormulaBoxText();
+            }
+        }
+
+        public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues
+        {
+            get
+            {
+                return new ExplicitTransitionGroupValues(CollisionEnergy, DriftTimeMsec, DriftTimeHighEnergyOffsetMsec);
+            }
+            set
+            {
+                // Use constructor to handle value == null
+                var resultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(value);
+                CollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
+                DriftTimeMsec = resultExplicitTransitionGroupValues.DriftTimeMsec;
+                DriftTimeHighEnergyOffsetMsec = resultExplicitTransitionGroupValues.DriftTimeHighEnergyOffsetMsec;
             }
         }
 
@@ -98,6 +122,44 @@ namespace pwiz.Skyline.SettingsUI
                     _formulaBox.Charge = value;
                 }
             }
+        }
+
+        private static double? NullForEmpty(string text)
+        {
+            double val;
+            if (double.TryParse(text, out val))
+                return val;
+            return null;
+        }
+
+        private static string EmptyForNullOrNonPositive(double? value)
+        {
+            double dval = (value ?? 0);
+            return (dval <= 0) ? string.Empty : dval.ToString(LocalizationHelper.CurrentCulture);
+        }
+
+        public double? CollisionEnergy
+        {
+            get { return NullForEmpty(textCollisionEnergy.Text); }
+            set { textCollisionEnergy.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public double? RetentionTime
+        {
+            get { return NullForEmpty(textRetentionTime.Text); }
+            set { textRetentionTime.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public double? DriftTimeMsec
+        {
+            get { return NullForEmpty(textDriftTimeMsec.Text); }
+            set { textDriftTimeMsec.Text = EmptyForNullOrNonPositive(value); }
+        }
+
+        public double? DriftTimeHighEnergyOffsetMsec
+        {
+            get { return NullForEmpty(textDriftTimeHighEnergyOffsetMsec.Text); }
+            set { textDriftTimeHighEnergyOffsetMsec.Text = value == null ? string.Empty : value.Value.ToString(LocalizationHelper.CurrentCulture); } // Negative values are normal here
         }
 
         public void OkDialog()
@@ -161,7 +223,7 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        private void SetText()
+        private void SetNameAndFormulaBoxText()
         {
             if (ResultCustomIon == null)
             {

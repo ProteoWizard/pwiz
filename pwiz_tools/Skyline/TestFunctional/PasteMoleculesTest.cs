@@ -25,10 +25,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -56,28 +55,74 @@ namespace pwiz.SkylineTestFunctional
             RunUI(pasteDlg.ValidateCells);
             WaitForConditionUI(() => pasteDlg.ErrorText != null);
             RunUI(() => Assert.IsTrue(pasteDlg.ErrorText.Contains(errText), string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"", errText, pasteDlg.ErrorText)));
-            RunUI(pasteDlg.CancelDialog);
+            if (string.IsNullOrEmpty(errText))
+                RunUI(pasteDlg.OkDialog);  // We expect this to work, go ahead and load it
+            else
+                RunUI(pasteDlg.CancelDialog);
             WaitForClosedForm(pasteDlg);
         }
 
         protected override void DoTest()
         {
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t\t1\t", // No mz or charge for product
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t99\t15", // Precursor Formula and m/z don't make sense together
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t15\t1", // Product Formula and m/z don't make sense together
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1\r\nMyMolecule2\tMyMol2\tCH12O4\tCH3O\t\t", // No mz or charge for precursor or product
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
-            TestError("MyMolecule\tMyMol\tCH12O4\tCH3O\t" + 88.0730104200905 + "\t" + 31.0178414200905 + "\t1\t1", // Legit
-                String.Empty);
+            const double precursorMz = 88.0730104200905;
+            const double productMz = 31.0178414200905;
+            const double precursorCE = 1.23;
+            const double precursorDT = 2.34;
+            const double highEnergyDtOffset = -.012;
+            const double precursorRT = 3.45;
+            const double productDT = precursorDT + highEnergyDtOffset;
 
-            var docOrig = SkylineWindow.Document;
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var docEmpty = SkylineWindow.Document;
+
+            string line1 = "MyMolecule\tMyMol\tMyFrag\tCH12O4\tCH3O\t" + precursorMz + "\t" + productMz + "\t1\t1\t" + precursorRT + "\t" + precursorCE + "\t" + precursorDT + "\t" + productDT; // Legit
+            const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
+            const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
+
+            // Provoke some errors
+            TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
+                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
+            TestError(line1 + line2start + "99\t15", // Precursor Formula and m/z don't make sense together
+                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
+            TestError(line1 + line2start + "\t15\t1", // Product Formula and m/z don't make sense together
+                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
+            TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
+                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
+            TestError(line1 + line3, // Insanely large molecule
+                string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS));
+
+            // Now load the document with a legit paste
+            TestError(line1, String.Empty); 
+            var docOrig = WaitForDocumentChange(docEmpty);
+            var testTransitionGroups = docOrig.MoleculeTransitionGroups.ToArray();
+            Assert.AreEqual(1, testTransitionGroups.Count());
+            var transitionGroup = testTransitionGroups[0];
+            var precursor = docOrig.Molecules.First();
+            var product = transitionGroup.Transitions.First();
+            Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(precursorDT, transitionGroup.ExplicitValues.DriftTimeMsec);
+            Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
+            Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime);
+            Assert.AreEqual(precursorMz, BioMassCalc.CalculateMz(precursor.Peptide.CustomIon.MonoisotopicMass, product.Transition.Group.PrecursorCharge), 1E-12);
+            Assert.AreEqual(productMz, BioMassCalc.CalculateMz(product.GetIonMass(), product.Transition.Charge), 1E-12);
+            // Does that produce the expected transition list file?
+            TestTransitionListOutput(docOrig, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
+            // Does serialization of imported values work properly?
+            AssertEx.Serializable(docOrig);
+
+            // Reset
             RunUI(() =>
             {
-                pasteDlg.IsMolecule = true;
+                SkylineWindow.NewDocument(true);
+                docOrig = SkylineWindow.Document;
+            });
+
+            // Now a proper user data set
+            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            PasteDlg dlg = pasteDlg;
+            RunUI(() =>
+            {
+                dlg.IsMolecule = true;
+                dlg.SetSmallMoleculeColumns(null); // Reset column headers to default selection and order
             });
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")); 
@@ -117,33 +162,96 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(98,tranWithResults);
             Assert.AreEqual(90,tranWithPeaks);
 
-            // Write out a transition list
-             RunUI(() => SkylineWindow.ModifyDocument("Set Orbitrap full-scan settings", idoc => idoc.ChangeSettings(importDoc.Settings.ChangeTransitionFullScan(fs => fs
-                    .ChangePrecursorResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
-                    .ChangeProductResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
-                    .ChangeAcquisitionMethod(FullScanAcquisitionMethod.None, null)))));
+            // Does that produce the expected transition list file?
+            TestTransitionListOutput(importDoc, "PasteMoleculeTest.csv", "PasteMoleculeTestExpected.csv", ExportFileType.List);
 
-            // Open Export Method dialog, and set method to scheduled or standard.
-            string csvPath = TestContext.GetTestPath("PasteMoleculeTest.csv");
-            string csvExpectedPath = TestFilesDir.GetTestPath("PasteMoleculeTestExpected.csv");
-            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            // Now test that we arrange the Targets tree as expected. 
+            // (tests fix for Issue 373: Small molecules: Insert Transition list doesn't construct the tree properly)
+            RunUI(() => SkylineWindow.NewDocument(true));
+            docOrig = SkylineWindow.Document;
+            pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            // small_molecule_paste_test.csv has non-standard column order (mz and formula swapped)
+            var columnOrder = new[]
+            {
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
+            };
             RunUI(() =>
             {
-                exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE;
-                exportMethodDlg.MethodType = ExportMethodType.Standard;
-                Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
-                Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
-                Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
-                Assert.IsFalse(exportMethodDlg.IsMaxTransitionsEnabled);
+                pasteDlg.IsMolecule = true;
+                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList()); 
             });
+            SetCsvFileClipboardText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
+            RunUI(pasteDlg.PasteTransitions);
+            OkDialog(pasteDlg, pasteDlg.OkDialog);
+            pastedDoc = WaitForDocumentChange(docOrig);
+            // We expect four molecule groups
+            var moleculeGroupNames = new [] {"Vitamin R", "Weinhards", "Oly", "Schmidt"};
+            Assert.AreEqual(4, pastedDoc.MoleculeGroupCount);
+            PeptideGroupDocNode[] moleculeGroups = pastedDoc.MoleculeGroups.ToArray();
+            for (int n = 0; n < pastedDoc.MoleculeGroupCount; n++)
+            {
+                Assert.AreEqual(moleculeGroupNames[n], moleculeGroups[n].Name);
+                // We expect two molecules in each group
+                var precursors = moleculeGroups[n].Molecules.ToArray();
+                Assert.AreEqual(2, precursors.Count());
+                Assert.AreEqual("lager", precursors[0].RawTextId);
+                Assert.AreEqual("dark", precursors[1].RawTextId);
+                for (int m = 0; m < 2; m++)
+                {
+                    // We expect two transition groups per molecule
+                    var transitionGroups = precursors[m].TransitionGroups.ToArray();
+                    Assert.AreEqual(2, transitionGroups.Count());
+                    for (int t = 0; t < 2; t++)
+                    {
+                        // We expect two transitions per group
+                        Assert.AreEqual(2, transitionGroups[t].TransitionCount);
+                        var transitions = transitionGroups[t].Transitions.ToArray();
+                        Assert.AreEqual("bubbles", transitions[0].FragmentIonName);
+                        Assert.AreEqual("foam", transitions[1].FragmentIonName);
+                    }
+            }
+            }
+        }
 
-            OkDialog(exportMethodDlg, ()=> exportMethodDlg.OkDialog(csvPath));
+        private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
+        {
+            // Write out a transition list
+            string csvPath = TestContext.GetTestPath(outputName);
+            string csvExpectedPath = TestFilesDir.GetTestPath(expectedName);
+            // Open Export Method dialog, and set method to scheduled or standard.
+            var exportMethodDlg =
+                ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(fileType));
+            if (fileType == ExportFileType.IsolationList)
+            {
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_TOF;
+                    exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                    exportMethodDlg.OptimizeType = ExportOptimize.CE;
+                    exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                });
+            }
+            else
+            {
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO; // Choose one that exercises CE regression
+                });
+            }
+            OkDialog(exportMethodDlg, () => exportMethodDlg.OkDialog(csvPath));
 
             // Check for expected output.
             string csvOut = File.ReadAllText(csvPath);
             string csvExpected = File.ReadAllText(csvExpectedPath);
             AssertEx.Contains(csvExpected, csvOut);
-
         }
 
         private void ImportResults(string[] paths)

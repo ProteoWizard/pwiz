@@ -3499,9 +3499,6 @@ Are you sure you want to continue?</value>
   <data name="AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum" xml:space="preserve">
     <value>Invalid byte buffer for checksum.</value>
   </data>
-  <data name="AdlerChecksum_MakeForString_Invalid_string_for_checksum" xml:space="preserve">
-    <value>Invalid string for checksum.</value>
-  </data>
   <data name="AdlerChecksum_MakeForFile_Failure_attempting_to_calculate_a_checksum_for_the_file__0__" xml:space="preserve">
     <value>Failure attempting to calculate a checksum for the file {0}</value>
   </data>
@@ -7952,9 +7949,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_" xml:space="preserve">
     <value>Molecule Group {0}</value>
   </data>
-  <data name="CustomIon_DisplayName_Ion__0_" xml:space="preserve">
-    <value>Ion {0}</value>
-  </data>
   <data name="SkylineWindow_AddMolecule_Add_custom_molecule__0_" xml:space="preserve">
     <value>Add custom molecule {0}</value>
   </data>
@@ -8014,12 +8008,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Protein_description" xml:space="preserve">
     <value>Protein description</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Molecule_Class" xml:space="preserve">
-    <value>Molecule Class</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Short_Name" xml:space="preserve">
-    <value>Short Name</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
     <value>Precursor Formula</value>
@@ -8122,5 +8110,32 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
     <data name="SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__" xml:space="preserve">
     <value>The document format version {0} is newer than the version {1} supported by {2}.</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Name" xml:space="preserve">
+    <value>Product Name</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Name" xml:space="preserve">
+    <value>Precursor Name</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecule_List_Name" xml:space="preserve">
+    <value>Molecule List Name</value>
+  </data>
+  <data name="AdlerChecksum_MakeForString_Invalid_string___0___for_checksum" xml:space="preserve">
+    <value>Invalid string "{0}" for checksum</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_RT" xml:space="preserve">
+    <value>Precursor RT</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_CE" xml:space="preserve">
+    <value>Precursor CE</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_" xml:space="preserve">
+    <value>Precursor Drift Time (msec)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_" xml:space="preserve">
+    <value>Product Drift Time (msec)</value>
+  </data>
+  <data name="CustomIon_DisplayName_Ion" xml:space="preserve">
+    <value>Ion</value>
   </data>
 </root>

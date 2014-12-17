@@ -23,7 +23,6 @@ using System.Linq;
 using System.Xml.Serialization;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 
@@ -133,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
                         double windowDT;
                         double highEnergyDriftTimeOffsetMsec = 0;
                         DriftTimeInfo centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, out windowDT);
+                            nodePep, nodeGroup, libraryIonMobilityInfo, out windowDT);
                         if (centerDriftTime.DriftTimeMsec(false).HasValue)
                         {
                             startDriftTimeMsec = centerDriftTime.DriftTimeMsec(false) - windowDT / 2; // Get the low energy drift time

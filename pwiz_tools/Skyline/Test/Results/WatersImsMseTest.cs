@@ -172,7 +172,7 @@ namespace pwiz.SkylineTest.Results
                         {
                             double windowDT;
                             var centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                                                       new LibKey(pep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), im, out windowDT);
+                                                       pep, nodeGroup, im, out windowDT);
                             Assert.AreEqual(3.86124, centerDriftTime.DriftTimeMsec(false) ?? 0, .0001, testModeStr);
                             Assert.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);
                         }

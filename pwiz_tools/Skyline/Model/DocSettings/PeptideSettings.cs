@@ -320,6 +320,12 @@ namespace pwiz.Skyline.Model.DocSettings
                                             Predicate<ChromatogramSet> replicateFilter, 
                                             out double windowRT)
         {
+            // If peptide has an explicitly set RT, use that
+            if (nodePep.ExplicitRetentionTime.HasValue && MeasuredRTWindow.HasValue)
+            {
+                windowRT = MeasuredRTWindow.Value;
+                return nodePep.ExplicitRetentionTime;
+            }
             // Safe defaults
             double? predictedRT = null;
             windowRT = 0;
@@ -401,11 +407,47 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Get drift time for the charged peptide from our drift time predictor, or,
+        /// Get drift time for the charged peptide from explicitly set values, or our drift time predictor, or,
         /// failing that, from the provided spectral library if it has bare drift times.
         /// If no drift info is available, returns a new zero'd out drift time info object.
         /// </summary>
-        public DriftTimeInfo GetDriftTime(LibKey chargedPeptide,
+        public DriftTimeInfo GetDriftTime(PeptideDocNode  nodePep,
+            TransitionGroupDocNode nodeGroup,
+            LibraryIonMobilityInfo libraryIonMobilityInfo, out double windowDtMsec)
+        {
+            if (nodeGroup.ExplicitValues.DriftTimeMsec.HasValue)
+            {
+                // Use the explicitly specified value
+                var result = new DriftTimeInfo(nodeGroup.ExplicitValues.DriftTimeMsec,
+                    nodeGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec ?? 0);
+                // Now get the resolving power
+                if (DriftTimePredictor != null)
+                {
+                    windowDtMsec = DriftTimePredictor.InverseResolvingPowerTimesTwo*result.DriftTimeMsec(false).Value;
+                }
+                else if (LibraryDriftTimesResolvingPower.HasValue)
+                {
+                    windowDtMsec = 2.0 * result.DriftTimeMsec(false).Value / LibraryDriftTimesResolvingPower.Value;
+                }
+                else
+                {
+                    windowDtMsec = 0;
+                }
+                return result;
+            }
+            else
+            {
+                return GetDriftTimeHelper(
+                    new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo,
+                    out windowDtMsec);
+            }
+        }
+
+        /// <summary>
+        /// Made public for testing purposes only: exercises library and predictor but doesn't handle explicitly set drift times.
+        /// Use GetDriftTime() instead.
+        /// </summary>
+        public DriftTimeInfo GetDriftTimeHelper(LibKey chargedPeptide,
             LibraryIonMobilityInfo libraryIonMobilityInfo, out  double windowDtMsec)
         {
             if (DriftTimePredictor != null)
@@ -425,7 +467,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             windowDtMsec = 0;
-            return new DriftTimeInfo(null,0);
+            return new DriftTimeInfo(null, 0);
         }
 
         /// <summary>
@@ -475,8 +517,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             // If no results available (and no predictor), then no scheduling
             if (!resultsAvailable)
-                return false;
-
+            {
+                // Actually we *can* still schedule if everything has an explicit RT
+                if (!document.Molecules.All(p => p.ExplicitRetentionTime.HasValue))
+                    return false;
+            }
             // Otherwise, if every precursor has enough result information
             // to predict a retention time, then this document can be scheduled.
             bool anyTimes = false;

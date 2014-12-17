@@ -1774,24 +1774,35 @@ namespace pwiz.Skyline
                         .Select(p => p.Peptide.CustomIon);
 
                     // End up here when modifying the Molecule equivalent of a peptide - but charge actually resides on the precursor transition
+                    Assume.IsTrue(nodePep.TransitionGroups.Count() == 1); // We support only one transition group per custom molecule
+                    var transitionGroupDocNode = nodePep.TransitionGroups.First();
+                    var transitionGroup = nodePep.GetNonProteomicChildren().First();
                     using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_ModifyPeptide_Modify_Custom_Ion, existing,
                         TransitionGroup.MIN_PRECURSOR_CHARGE,
                         TransitionGroup.MAX_PRECURSOR_CHARGE, 
                         Document.Settings.TransitionSettings,
-                        nodePep.TransitionGroups.First().PrecursorCharge))
+                        transitionGroup.PrecursorCharge, true, transitionGroupDocNode.ExplicitValues, nodePep.ExplicitRetentionTime))
                     {
                         dlg.ResultCustomIon = nodePep.Peptide.CustomIon;
-                        dlg.Charge = nodePep.GetNonProteomicChildren().First().PrecursorCharge;
                         if (dlg.ShowDialog(this) == DialogResult.OK)
                         {
                             ModifyDocument(
                                 string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePepTree.Text),
                                 doc =>
                                 {
-                                    var newNode = nodePep.ChangeCustomIon(doc.Settings, dlg.ResultCustomIon, dlg.Charge);
-                                    // We can't "Replace", since newNode has a different identity and isn't in the document.  We have to insert and delete instead.
-                                    var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode);
-                                    return (SrmDocument)newdoc.RemoveChild(nodePepTree.Path.Parent, nodePep);
+                                    // If we didn't change the custom ion's formula and/or mass, the ID should be unchanged and we can just change any needed transition info.
+                                    // But if custom ion has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
+                                    // insert and delete instead.
+                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomIon, dlg.Charge, dlg.RetentionTime, dlg.ResultExplicitTransitionGroupValues);
+                                    if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
+                                    {
+                                        var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode);
+                                        return (SrmDocument)newdoc.RemoveChild(nodePepTree.Path.Parent, nodePep);
+                                    }
+                                    else
+                                    {
+                                        return (SrmDocument)doc.ReplaceChild(nodePepTree.Path.Parent, newNode);
+                                    }
                                 });
                         }
                     }
@@ -1833,7 +1844,7 @@ namespace pwiz.Skyline
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
                     Document.Settings.TransitionSettings,
-                    nodeTran.Transition.Charge))
+                    nodeTran.Transition.Charge, false, null, null))
                 {
                     dlg.ResultCustomIon = nodeTran.Transition.CustomIon as DocNodeCustomIon;
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -4201,7 +4212,7 @@ namespace pwiz.Skyline
                 using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_AddMolecule_Add_Transition, existingIons,
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings.TransitionSettings, 1))
+                    Document.Settings.TransitionSettings, 1, false, nodeGroup.ExplicitValues, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -4236,7 +4247,7 @@ namespace pwiz.Skyline
                 var pepGroupPath = nodePepGroupTree.Path;
                 var existingIons = nodePepGroup.SmallMolecules.Select(child => child.Peptide.CustomIon);
                 using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_AddMolecule_Add_Custom_Molecule, existingIons,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings.TransitionSettings, 1))
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings.TransitionSettings, 1, true, null, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -4245,9 +4256,9 @@ namespace pwiz.Skyline
                             var peptide = new Peptide(dlg.ResultCustomIon);
                             var tranGroup = new TransitionGroup(peptide, dlg.Charge, IsotopeLabelType.light);
                             var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
-                                doc.Settings, null, null, null, new TransitionDocNode[0], true);
+                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, new TransitionDocNode[0], true);
                             var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
-                                new[] { tranGroupDocNode }, true);
+                                dlg.RetentionTime, new[] { tranGroupDocNode }, true);
                             return (SrmDocument) doc.Add(pepGroupPath, nodePepNew);
                         });
                     }
