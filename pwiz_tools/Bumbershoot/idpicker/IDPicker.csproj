@@ -39,6 +39,8 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <BaseIntermediateOutputPath>build-nt-x86\obj\</BaseIntermediateOutputPath>
     <BuildPath>$(BaseIntermediateOutputPath)\..</BuildPath>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">.\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -662,11 +664,18 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>call "$(VS100COMNTOOLS)vsvars32.bat" &gt;nul
+    <PostBuildEvent>call "$(VS120COMNTOOLS)vsvars32.bat" &gt;nul
 editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"
 IF EXIST $(OutDir)setup.exe del $(OutDir)setup.exe
 IF EXIST $(OutDir)Test.passed del $(OutDir)Test.passed</PostBuildEvent>
-    <PreBuildEvent>call "$(VS100COMNTOOLS)vsvars32.bat" &gt;nul
+    <PreBuildEvent>call "$(VS120COMNTOOLS)vsvars32.bat" &gt;nul
 rc.exe $(ProjectDir)/Resources/Resources.rc &gt;nul</PreBuildEvent>
   </PropertyGroup>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
 </Project>

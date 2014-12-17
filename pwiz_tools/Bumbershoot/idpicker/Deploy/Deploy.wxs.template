@@ -8,7 +8,7 @@
             Manufacturer="Bumbershoot"
             UpgradeCode="644795C6-012A-49B7-A47F-E46E164D3689">
 
-      <Package Description="IDPicker {version} $(var.AddressModel)-bit Installer" Manufacturer="Bumbershoot" InstallerVersion="300" Compressed="yes" />
+      <Package Description="IDPicker {version} $(var.AddressModel)-bit Installer" Manufacturer="Bumbershoot" InstallerVersion="405" Compressed="yes" />
       <Media Id="1" Cabinet="IDPicker.cab" EmbedCab="yes" />
       <Icon Id="idpDB_Icon.exe" SourceFile="msvc-release\IDPicker.exe" />
       <Property Id="ARPPRODUCTICON" Value="idpDB_Icon.exe" />
