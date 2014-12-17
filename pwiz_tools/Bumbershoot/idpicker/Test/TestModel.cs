@@ -479,11 +479,10 @@ namespace Test
         [ClassInitialize()]
         public static void ClassInitialize (TestContext testContext)
         {
-            Directory.SetCurrentDirectory(testContext.TestDeploymentDir);
-
-            File.Delete("testModel.idpDB");
-
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", new SessionFactoryConfig { CreateSchema = true });
+            testContext.SetTestOutputSubdirectory(testContext.FullyQualifiedTestClassName + "\\" + testContext.TestName);
+            Directory.CreateDirectory(testContext.TestOutputPath());
+            string testModelFilepath = testContext.TestOutputPath("../testModel.idpDB");
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(testModelFilepath, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             CreateTestProteins(session, testProteinSequences);
@@ -548,9 +547,12 @@ namespace Test
         [TestInitialize()]
         public void TestInitialize ()
         {
-            Directory.SetCurrentDirectory(TestContext.TestDeploymentDir);
+            TestContext.SetTestOutputSubdirectory(TestContext.FullyQualifiedTestClassName + "/" + TestContext.TestName);
+            Directory.CreateDirectory(TestContext.TestOutputPath());
+            File.Copy(TestContext.TestOutputPath("../testModel.idpDB"), TestContext.TestOutputPath("testModel.idpDB"));
+            Directory.SetCurrentDirectory(TestContext.TestOutputPath());
 
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB");
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(TestContext.TestOutputPath("testModel.idpDB"));
             session = sessionFactory.OpenSession();
         }
 

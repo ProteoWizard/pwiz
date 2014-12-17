@@ -305,8 +305,9 @@ namespace Test
         {
             Assert.AreEqual(12, SchemaUpdater.CurrentSchemaRevision);
 
-            var testModel = new TestModel();
+            var testModel = new TestModel() { TestContext = TestContext };
             TestModel.ClassInitialize(TestContext);
+            testModel.TestInitialize();
             testModelFile(testModel, "testModel.idpDB");
 
             string filename = null;

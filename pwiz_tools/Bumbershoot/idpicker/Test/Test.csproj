@@ -148,6 +148,7 @@
     <Compile Include="TestModel.cs" />
     <Compile Include="TestQonverter.cs" />
     <Compile Include="TestUtil.cs" />
+    <Compile Include="UnitTestExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IDPicker.csproj">
@@ -168,6 +169,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Test.config" />
   </ItemGroup>
   <ItemGroup>
