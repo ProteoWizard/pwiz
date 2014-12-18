@@ -69,12 +69,12 @@ namespace Test
 
         public static string TestOutputPath(this TestContext context)
         {
-            return Path.Combine(context.TestResultsDirectory, context.TestOutputSubdirectory());
+            return Path.Combine(context.ResultsDirectory, context.TestOutputSubdirectory());
         }
 
         public static string TestOutputPath(this TestContext context, string filemask)
         {
-            return Path.Combine(context.TestResultsDirectory, context.TestOutputSubdirectory(), filemask);
+            return Path.Combine(context.ResultsDirectory, context.TestOutputSubdirectory(), filemask);
         }
 
         public static string QuotePathWithSpaces(this string path)
