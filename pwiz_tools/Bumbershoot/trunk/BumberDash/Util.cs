@@ -297,6 +297,8 @@ namespace BumberDash
                     new UnimodEntry("IMID",68.037448,68.0773,"C3H4N2"),
                     new UnimodEntry("Iminobiotin",225.093583,225.3106,"C10H15N3O1S1"),
                     new UnimodEntry("IodoU-AMP",322.020217,322.1654,"C9H11N2O9P1"),
+                    new UnimodEntry("ITRAQ114",144.105918,144.1680,"144.105918"),
+					new UnimodEntry("ITRAQ115",144.099599,144.1688,"144.099599"),
                     new UnimodEntry("Isopropylphospho",122.013281,122.0596,"C3H7O3P1"),
                     new UnimodEntry("LeuArgGlyGly",383.228103,383.446,"C16H29N7O4"),
                     new UnimodEntry("Lipoyl",188.032956,188.3103,"C8H12O1S2"),
