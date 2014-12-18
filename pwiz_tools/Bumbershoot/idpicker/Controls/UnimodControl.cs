@@ -15,11 +15,11 @@
 //
 // The Original Code is the IDPicker project.
 //
-// The Initial Developer of the Original Code is Matt Chambers.
+// The Initial Developer of the Original Code is Jay Holman.
 //
 // Copyright 2010 Vanderbilt University
 //
-// Contributor(s): Surendra Dasari
+// Contributor(s):
 //
 
 using System;
