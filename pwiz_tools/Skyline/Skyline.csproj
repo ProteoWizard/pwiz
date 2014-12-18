@@ -3484,8 +3484,9 @@
     <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; /p Skyline! /v &quot;$(ProjectDir)obj\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>CALL "%25VS120COMNTOOLS%25vsvars32.bat"
+editbin.exe "$(TargetPath)" /HIGHENTROPYVA:NO
+</PostBuildEvent>
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
