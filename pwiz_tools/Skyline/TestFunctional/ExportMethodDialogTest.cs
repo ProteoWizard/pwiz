@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -578,29 +579,51 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mods_shortNameTest.sky")));
             string modsShortNameExpected = TestFilesDir.GetTestPath("ModShortName.csv");
             string modsShortNameActual = TestFilesDir.GetTestPath("ModShortName-Actual.csv");
+
+            ExportAbTransitionList(modsShortNameActual);
+
+            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), ReadAllNonSmallMoleculeText(modsShortNameActual));
+
+            // Test fix for explicit and variable modifications
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("shortnames_4peptide.sky")));
+            string modsShortNameExplicit = TestFilesDir.GetTestPath("ModShortName-Explicit.csv");
+            ExportAbTransitionList(modsShortNameExplicit);
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("shortnames_4peptide-var.sky")));
+            string modsShortNameVariable = TestFilesDir.GetTestPath("ModShortName-Variable.csv");
+            ExportAbTransitionList(modsShortNameVariable);
+            AssertEx.NoDiff(File.ReadAllText(modsShortNameExplicit), ReadAllNonSmallMoleculeText(modsShortNameVariable));
+
+            string[] expectedPeptides = {"L[1Ac]VNELTEFAK", "S[1Ac]LNC[CAM]TLR", "L[1Ac]TWASHEK", "PSCVPLMR"};
+            foreach (var line in File.ReadAllLines(modsShortNameExplicit))
+            {
+                Assert.IsTrue(expectedPeptides.Any(line.Contains));
+            }
+        }
+
+        private static void ExportAbTransitionList(string pathList)
+        {
             WaitForDocumentLoaded();
 
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+            RunUI(() =>
             {
-                var exportMethodDlg =
-                    ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-                RunUI(() =>
-                          {
-                              exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_QTRAP;
-                              exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                              exportMethodDlg.OkDialog(modsShortNameActual);
-                          });
+                exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_QTRAP;
+                exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                exportMethodDlg.OkDialog(pathList);
+            });
 
-                WaitForClosedForm(exportMethodDlg);
-            }
+            WaitForClosedForm(exportMethodDlg);
+        }
 
-            var actual = File.ReadAllText(modsShortNameActual);
+        private string ReadAllNonSmallMoleculeText(string pathList)
+        {
+            var actual = File.ReadAllText(pathList);
             if (TestSmallMolecules)
             {
-                for (int i=0; i++ < 4;)
+                for (int i = 0; i++ < 4; )
                     actual = actual.Substring(0, actual.LastIndexOf('\n') - 1); // Trim test molecule related lines
             }
-            AssertEx.NoDiff(File.ReadAllText(modsShortNameExpected), actual);
-
+            return actual;
         }
 
         private static void CreateDummyRTRegression()

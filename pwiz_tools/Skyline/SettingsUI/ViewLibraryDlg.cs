@@ -786,8 +786,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_currentRange.Count > 0)
             {
-                string selPeptide = ((ViewLibraryPepInfo)listPeptide.SelectedItem).DisplayString;
-                string selPeptideAASequence = Regex.Replace(selPeptide, REGEX_MODIFICATION_PATTERN, string.Empty);
+                var selPepInfo = (ViewLibraryPepInfo) listPeptide.SelectedItem;
+                string selPeptide = selPepInfo.DisplayString;
+                string selPeptideAASequence = GetPepInfoComparisonString(selPepInfo);
 
                 Range selPeptideRange = BinaryRangeSearch(selPeptideAASequence, new Range(_currentRange));
                 if (selPeptideRange.Count > 0)
@@ -1692,11 +1693,25 @@ namespace pwiz.Skyline.SettingsUI
 
         # region ViewLibraryPepInfo Helpers
 
-        // Gets the display string for the given ViewLibraryPepInfo object, minus the
-        // modification characters.
-        private string GetUnmodifiedDisplayString(ViewLibraryPepInfo pep)
+        /// <summary>
+        /// Gets the ViewLibraryPepInfo sequence without the modification characters, with a long-form
+        /// charge state inditcator that sorts like pepInfo sort order.
+        /// </summary>
+        private string GetPepInfoComparisonString(ViewLibraryPepInfo pep)
         {
-            return pep.GetAASequence(_lookupPool) + Transition.GetChargeIndicator(pep.Charge);
+            return pep.GetAASequence(_lookupPool) + _pluses.Substring(0, pep.Charge);
+        }
+
+        private static readonly string _pluses;
+
+        static ViewLibraryDlg()
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < TransitionGroup.MAX_PRECURSOR_CHARGE; i++)
+            {
+                sb.Append('+');
+            }
+            _pluses = sb.ToString();
         }
 
         // Computes each ModificationInfo for the given peptide and returns a 
@@ -1745,14 +1760,14 @@ namespace pwiz.Skyline.SettingsUI
         // the given peptide with the string passed in.
         private int Compare(ViewLibraryPepInfo pep, string s)
         {
-            return string.Compare(GetUnmodifiedDisplayString(pep), 0, s, 0, s.Length, true);
+            return string.Compare(GetPepInfoComparisonString(pep), 0, s, 0, s.Length, true);
         }
 
         // Checks to see if the display string minus the modification
         // characters starts with the string passed in. 
         private bool IsMatch(ViewLibraryPepInfo pep, string s)
         {
-            return GetUnmodifiedDisplayString(pep).StartsWith(s, StringComparison.InvariantCultureIgnoreCase);
+            return GetPepInfoComparisonString(pep).StartsWith(s, StringComparison.InvariantCultureIgnoreCase);
         }
 
         #endregion

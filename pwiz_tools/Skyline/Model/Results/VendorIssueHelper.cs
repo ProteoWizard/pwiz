@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms.VisualStyles;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -40,7 +41,8 @@ namespace pwiz.Skyline.Model.Results
         private const string EXT_WIFF_SCAN = ".scan";
         private const string KEY_COMPASSXPORT = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CompassXport.exe";
 
-        private const string EXE_GROUP2_XML = "group2xml";
+        private const string EXE_GROUP2_XML = "group2xml.exe";
+        private const string EXE_GROUP_FILE_EXTRACTOR = "GroupFileExtractor.exe";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
         // ReSharper restore NonLocalizedString
 
@@ -100,7 +102,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, ProgressStatus status)
         {
-            string group2XmlPath = null;
+            string groupConverterExePath = null;
             var inputFilesPilotConverted = new List<string>();
 
             for (int index = 0; index < inputFiles.Count; index++)
@@ -126,7 +128,7 @@ namespace pwiz.Skyline.Model.Results
                 int percent = index * 100 / inputFiles.Count;
                 progress.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(percent));
 
-                if (group2XmlPath == null)
+                if (groupConverterExePath == null)
                 {
                     var key = Registry.LocalMachine.OpenSubKey(KEY_PROTEIN_PILOT, false);
                     if (key != null)
@@ -137,10 +139,30 @@ namespace pwiz.Skyline.Model.Results
                             proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1" // Not L10N
                         string path = Path.GetDirectoryName(proteinPilotCommandWithArgsSplit[0].Trim(new[] { '\\', '\"' })); // Remove preceding "
                         if (path != null)
-                            group2XmlPath = Path.Combine(path, EXE_GROUP2_XML);
+                        {
+                            var groupFileExtractorPath = Path.Combine(path, EXE_GROUP_FILE_EXTRACTOR);
+                            if (File.Exists(groupFileExtractorPath))
+                            {
+                                groupConverterExePath = groupFileExtractorPath;
+                            }
+                            else
+                            {
+                                var group2XmlPath = Path.Combine(path, EXE_GROUP2_XML);
+                                if (File.Exists(group2XmlPath))
+                                {
+                                    groupConverterExePath = group2XmlPath;
+                                }
+                                else
+                                {
+                                    string errorMessage = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Unable_to_find__0__or__1__in_directory__2____Please_reinstall_ProteinPilot_software_to_be_able_to_handle__group_files_,
+                                        EXE_GROUP_FILE_EXTRACTOR, EXE_GROUP2_XML, path);
+                                    throw new IOException(errorMessage);
+                                }
+                            }
+                        }
                     }
 
-                    if (group2XmlPath == null)
+                    if (groupConverterExePath == null)
                     {
                         throw new IOException(Resources.VendorIssueHelper_ConvertPilotFiles_ProteinPilot_software__trial_or_full_version__must_be_installed_to_convert___group__files_to_compatible___group_xml__files_);
                     }                    
@@ -156,12 +178,12 @@ namespace pwiz.Skyline.Model.Results
                                };
                 // ReSharper restore NonLocalizedString
 
-                var psi = new ProcessStartInfo(group2XmlPath)
+                var psi = new ProcessStartInfo(groupConverterExePath)
                               {
                                   CreateNoWindow = true,
                                   UseShellExecute = false,
                                   // Common directory includes the directory separator
-                                  WorkingDirectory = Path.GetDirectoryName(group2XmlPath) ?? string.Empty,
+                                  WorkingDirectory = Path.GetDirectoryName(groupConverterExePath) ?? string.Empty,
                                   Arguments = string.Join(" ", argv.ToArray()), // Not L10N
                                   RedirectStandardError = true,
                                   RedirectStandardOutput = true,

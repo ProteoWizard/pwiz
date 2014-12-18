@@ -20,8 +20,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
+using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
@@ -159,6 +160,25 @@ namespace pwiz.SkylineTestUtil
                     SkylineWindow.RunTool(0);
                 });
             }
+        }
+
+        public static void ClickChromatogram(double x, double y, PaneKey? paneKey = null)
+        {
+            var graphChromatogram = SkylineWindow.GraphChromatograms.First();
+            RunUI(() =>
+            {
+                graphChromatogram.TestMouseMove(x, y, paneKey);
+                graphChromatogram.TestMouseDown(x, y, paneKey);
+            });
+            WaitForGraphs();
+            CheckFullScanSelection(x, y, paneKey);
+        }
+
+        public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null)
+        {
+            var graphChromatogram = SkylineWindow.GraphChromatograms.First();
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
+            Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
     }
 }

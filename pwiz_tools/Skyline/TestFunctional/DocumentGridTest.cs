@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestFunctional
                 databoundGridForm.IsComplete,
                 databoundGridForm.DataGridView.ColumnCount);
             Console.Out.WriteLine(message);
-            Assert.AreEqual(expectedRowCount, databoundGridForm.RowCount, message);
+            Assert.AreEqual(expectedRowCount, databoundGridForm.BindingListSource.Count, message);
         }
     }
 }
