@@ -173,7 +173,7 @@ run-if-exists Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_util
         <library>pwiz_reader_abi
         <conditional>@test-requirements
         # configuration file sets the "useLegacyV2RuntimeActivationPolicy" attribute
-        <configuration-file>Reader_ABI_Test.exe.config
+        <toolset>msvc:<configuration-file>Reader_ABI_Test.exe.config
     : # target name
         Reader_ABI_Test 
     : # default-build
