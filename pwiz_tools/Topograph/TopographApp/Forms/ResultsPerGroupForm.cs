@@ -325,11 +325,15 @@ namespace pwiz.Topograph.ui.Forms
                 displayRows.Add(displayRow);
             }
             var viewInfo = bindingSource1.ViewInfo;
+            var dataSchema = new TopographDataSchema(Workspace);
             if (viewInfo == null || "default" == viewInfo.Name)
             {
-                bindingSource1.SetViewSpec(GetDefaultViewSpec(halfLifeCalculator.ByProtein));
+                viewInfo= new ViewInfo(ColumnDescriptor.RootColumn(dataSchema, typeof(DisplayRow)), 
+                    GetDefaultViewSpec(halfLifeCalculator.ByProtein));
             }
-            bindingSource1.RowSource = displayRows;
+            var viewContext = new TopographViewContext(Workspace, typeof (DisplayRow), displayRows,
+                GetDefaultViewSpec(halfLifeCalculator.ByProtein));
+            bindingSource1.SetViewContext(viewContext, viewInfo);
             dataGridViewSummary.Rows.Clear();
             SetSummary("Tracer %", displayRows.Select(dr=>dr.Results).SelectMany(r=>r.Values
                 .Select(cohortResult=>cohortResult.GetResultData().TracerPercentByArea)));
@@ -353,7 +357,7 @@ namespace pwiz.Topograph.ui.Forms
             columnSpecs.Add(new ColumnSpec().SetName("Results!*.Value.TracerPercent"));
             columnSpecs.Add(new ColumnSpec().SetName("Results!*.Value.AvgTurnover"));
             columnSpecs.Add(new ColumnSpec().SetName("Results!*.Value.AreaUnderCurve"));
-            return new ViewSpec().SetName("default").SetColumns(columnSpecs);
+            return new ViewSpec().SetName("default").SetRowType(typeof(DisplayRow)).SetColumns(columnSpecs);
         }
 
         private DataGridViewRow SetSummary(String quantity, IEnumerable<Statistics> lstStats)
