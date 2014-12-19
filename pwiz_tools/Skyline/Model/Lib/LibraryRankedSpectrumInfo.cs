@@ -62,12 +62,16 @@ namespace pwiz.Skyline.Model.Lib
         {
             LabelType = labelType;
 
+            // Avoid ReSharper multiple enumeration warning
+            var rankChargesArray = rankCharges.ToArray();
+            var rankTypesArray = rankTypes.ToArray();
+
             if (!useFilter)
             {
                 if (charges == null)
-                    charges = Transition.ALL_CHARGES;
+                    charges = GetRanked(rankChargesArray, Transition.ALL_CHARGES);
                 if (types == null)
-                    types = Transition.ALL_TYPES;
+                    types = GetRanked(rankTypesArray, Transition.ALL_TYPES);
                 matchAll = true;
             }
 
@@ -78,8 +82,8 @@ namespace pwiz.Skyline.Model.Lib
                                     charges = charges ?? rankCharges,
                                     types = types ?? rankTypes,
                                     matchAll = matchAll,
-                                    rankCharges = rankCharges,
-                                    rankTypes = rankTypes,
+                                    rankCharges = rankChargesArray,
+                                    rankTypes = rankTypesArray,
                                     // Precursor isotopes will not be included in MS/MS, if they will be filtered
                                     // from MS1
                                     excludePrecursorIsotopes = settings.TransitionSettings.FullScan.IsEnabledMs,
@@ -223,6 +227,25 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             _spectrum = MakeReadOnly(arrayResult);
+        }
+
+        /// <summary>
+        /// Make sure array ordering starts with ranked items to avoid changing ranked items between
+        /// filtered and unfiltered queries
+        /// </summary>
+        private IEnumerable<TItem> GetRanked<TItem>(IEnumerable<TItem> rankItems, IEnumerable<TItem> allItems)
+        {
+            var setSeen = new HashSet<TItem>();
+            foreach (var item in rankItems)
+            {
+                setSeen.Add(item);
+                yield return item;
+            }
+            foreach (var item in allItems)
+            {
+                if (!setSeen.Contains(item))
+                    yield return item;
+            }
         }
 
         public IsotopeLabelType LabelType { get; private set; }

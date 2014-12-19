@@ -36,8 +36,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestAccessServer()
         {
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
-                : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip";
             RunFunctionalTest();
         }
 

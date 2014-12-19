@@ -912,14 +912,16 @@ namespace pwiz.Skyline.Model
 
             int len = seq.Length - 1;
 
-            double mass = GetTermMass(type, mods) + BioMassCalc.MassProton;
             bool nterm = Transition.IsNTerminal(type);
+            double mass = GetTermMass(nterm ? IonType.b : IonType.y, mods) + BioMassCalc.MassProton;
+
             int iA = (nterm ? 0 : len);
             int inc = (nterm ? 1 : -1);
 
             var modMasses = GetModMasses(mods);
 
             mass += (nterm ? modMasses._aminoNTermModMasses[seq[iA]] : modMasses._aminoCTermModMasses[seq[iA]]);
+
             for (int i = 0; i < ordinal; i++)
             {
                 char aa = seq[iA];
@@ -928,6 +930,8 @@ namespace pwiz.Skyline.Model
                     mass += mods.ModMasses[iA];
                 iA += inc;
             }
+
+            mass += GetTermDeltaMass(type);    // Exactly match GetFragmentIonMasses()
 
             return mass;
         }
@@ -944,6 +948,21 @@ namespace pwiz.Skyline.Model
                 case IonType.x: return _massDiffX + modMasses._massModCleaveC;
                 case IonType.y: return _massDiffY + modMasses._massModCleaveC;
                 case IonType.z: return _massDiffZ + modMasses._massModCleaveC;
+                default:
+                    throw new ArgumentException("Invalid ion type"); // Not L10N
+            }
+        }
+
+        private double GetTermDeltaMass(IonType type)
+        {
+            switch (type)
+            {
+                case IonType.a: return _massDiffA - _massDiffB;
+                case IonType.b: return 0;
+                case IonType.c: return _massDiffC - _massDiffB;
+                case IonType.x: return _massDiffX - _massDiffY;
+                case IonType.y: return 0;
+                case IonType.z: return _massDiffZ - _massDiffY;
                 default:
                     throw new ArgumentException("Invalid ion type"); // Not L10N
             }
