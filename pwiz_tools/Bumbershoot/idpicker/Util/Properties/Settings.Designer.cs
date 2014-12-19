@@ -163,43 +163,43 @@ namespace IDPicker.Properties {
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
             "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
             "tring>Comet optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;" +
-            "0.02;1 Ascending Linear expect;1 Ascending Linear deltacn;1 Ascending Linear sps" +
-            "core</string>\r\n  <string>Mascot ionscore;StaticWeighted;False;Linear;Ignore;Igno" +
-            "re;Partition;Partition;0.02;1 Ascending Off mascot:score</string>\r\n  <string>Mas" +
-            "cot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;P" +
-            "artition;0.02;1 Ascending Off mascot:score;1 Descending Off mascot:identity thre" +
-            "shold</string>\r\n  <string>MyriMatch optimized;MonteCarlo;False;Linear;Ignore;Ign" +
-            "ore;Partition;Partition;0.02;1 Ascending Linear myrimatch:mvh;1 Ascending Linear" +
-            " xcorr</string>\r\n  <string>MyriMatch MVH;StaticWeighted;False;Linear;Ignore;Igno" +
-            "re;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>\r\n  <string>My" +
-            "riMatch XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02" +
-            ";1 Ascending Off xcorr</string>\r\n  <string>MS-GFDB;StaticWeighted;False;Linear;I" +
-            "gnore;Ignore;Ignore;Ignore;0.02;1 Descending Off msgfspecprob</string>\r\n  <strin" +
-            "g>MS-GF+;StaticWeighted;False;Linear;Ignore;Ignore;Ignore;Ignore;0.02;1 Descendi" +
-            "ng Off ms-gf:specevalue</string>\r\n  <string>OMSSA expect;StaticWeighted;False;Li" +
-            "near;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off expect</string>\r\n  " +
-            "<string>Pepitome optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Parti" +
-            "tion;0.02;1 Ascending Linear hgt;1 Ascending Linear kendallpval</string>\r\n  <str" +
-            "ing>Pepitome MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0" +
-            ".02;1 Ascending Off myrimatch:mvh</string>\r\n  <string>pFind evalue;StaticWeighte" +
-            "d;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off evalue</s" +
-            "tring>\r\n  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partit" +
-            "ion;Partition;0.02;1 Ascending Off zscore</string>\r\n  <string>Sequest optimized;" +
-            "MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linea" +
-            "r sequest:xcorr;1 Ascending Linear sequest:deltacn</string>\r\n  <string>Sequest X" +
-            "Corr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascend" +
-            "ing Off sequest:xcorr</string>\r\n  <string>TagRecon optimized;MonteCarlo;False;Li" +
-            "near;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear myrimatch:mvh;1 A" +
-            "scending Linear xcorr</string>\r\n  <string>TagRecon MVH;StaticWeighted;False;Line" +
-            "ar;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>" +
-            "\r\n  <string>TagRecon XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;P" +
-            "artition;0.02;1 Ascending Off xcorr</string>\r\n  <string>X!Tandem optimized;Monte" +
-            "Carlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Linear x!" +
-            "tandem:expect;1 Ascending Linear x!tandem:hyperscore</string>\r\n  <string>X!Tande" +
-            "m expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 De" +
-            "scending Off x!tandem:expect</string>\r\n  <string>X!Tandem hyperscore;StaticWeigh" +
-            "ted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off x!tandem" +
-            ":hyperscore</string>\r\n</ArrayOfString>")]
+            "0.02;1 Ascending Linear comet:expect;1 Ascending Linear comet:deltacn;1 Ascendin" +
+            "g Linear comet:spscore</string>\r\n  <string>Mascot ionscore;StaticWeighted;False;" +
+            "Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off mascot:score</stri" +
+            "ng>\r\n  <string>Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;" +
+            "Ignore;Partition;Partition;0.02;1 Ascending Off mascot:score;1 Descending Off ma" +
+            "scot:identity threshold</string>\r\n  <string>MyriMatch optimized;MonteCarlo;False" +
+            ";Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear myrimatch:mvh;" +
+            "1 Ascending Linear xcorr</string>\r\n  <string>MyriMatch MVH;StaticWeighted;False;" +
+            "Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh</str" +
+            "ing>\r\n  <string>MyriMatch XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partit" +
+            "ion;Partition;0.02;1 Ascending Off xcorr</string>\r\n  <string>MS-GFDB;StaticWeigh" +
+            "ted;False;Linear;Ignore;Ignore;Ignore;Ignore;0.02;1 Descending Off msgfspecprob<" +
+            "/string>\r\n  <string>MS-GF+;StaticWeighted;False;Linear;Ignore;Ignore;Ignore;Igno" +
+            "re;0.02;1 Descending Off ms-gf:specevalue</string>\r\n  <string>OMSSA expect;Stati" +
+            "cWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off e" +
+            "xpect</string>\r\n  <string>Pepitome optimized;MonteCarlo;False;Linear;Ignore;Igno" +
+            "re;Partition;Partition;0.02;1 Ascending Linear hgt;1 Ascending Linear kendallpva" +
+            "l</string>\r\n  <string>Pepitome MVH;StaticWeighted;False;Linear;Ignore;Ignore;Par" +
+            "tition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>\r\n  <string>pFind ev" +
+            "alue;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descen" +
+            "ding Off evalue</string>\r\n  <string>Phenyx zscore;StaticWeighted;False;Linear;Ig" +
+            "nore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore</string>\r\n  <string>" +
+            "Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02" +
+            ";1 Ascending Linear sequest:xcorr;1 Ascending Linear sequest:deltacn</string>\r\n " +
+            " <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Parti" +
+            "tion;0.02;1 Ascending Off sequest:xcorr</string>\r\n  <string>TagRecon optimized;M" +
+            "onteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear" +
+            " myrimatch:mvh;1 Ascending Linear xcorr</string>\r\n  <string>TagRecon MVH;StaticW" +
+            "eighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myri" +
+            "match:mvh</string>\r\n  <string>TagRecon XCorr;StaticWeighted;False;Linear;Ignore;" +
+            "Ignore;Partition;Partition;0.02;1 Ascending Off xcorr</string>\r\n  <string>X!Tand" +
+            "em optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 De" +
+            "scending Linear x!tandem:expect;1 Ascending Linear x!tandem:hyperscore</string>\r" +
+            "\n  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;P" +
+            "artition;0.02;1 Descending Off x!tandem:expect</string>\r\n  <string>X!Tandem hype" +
+            "rscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Asce" +
+            "nding Off x!tandem:hyperscore</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));

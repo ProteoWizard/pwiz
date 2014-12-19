@@ -66,7 +66,7 @@
     <Setting Name="DefaultQonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="Application">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;Comet optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear expect;1 Ascending Linear deltacn;1 Ascending Linear spscore&lt;/string&gt;
+  &lt;string&gt;Comet optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear comet:expect;1 Ascending Linear comet:deltacn;1 Ascending Linear comet:spscore&lt;/string&gt;
   &lt;string&gt;Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off mascot:score&lt;/string&gt;
   &lt;string&gt;Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off mascot:score;1 Descending Off mascot:identity threshold&lt;/string&gt;
   &lt;string&gt;MyriMatch optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Linear myrimatch:mvh;1 Ascending Linear xcorr&lt;/string&gt;
