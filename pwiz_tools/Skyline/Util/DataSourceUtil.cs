@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Util
         public const string EXT_MZML = ".mzml";
         public const string EXT_MZ5 = ".mz5";
         public const string EXT_XML = ".xml";
+        public const string EXT_UIMF = ".uimf";
         public const string EXT_CHORUSRESPONSE = ".chorusresponse";
 
         public const string TYPE_WIFF = "ABSciex WIFF";
@@ -51,6 +52,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_MZXML = "mzXML";
         public const string TYPE_MZ5 = "mz5";
         public const string TYPE_MZDATA = "mzData";
+        public const string TYPE_UIMF = "Unified Ion Mobility Frame";
         public const string TYPE_CHORUSRESPONSE = "Chorus Response";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
@@ -119,6 +121,7 @@ namespace pwiz.Skyline.Util
                     }
                     return UNKNOWN_TYPE;
                 }
+                case EXT_UIMF: return TYPE_UIMF;
                 default: return UNKNOWN_TYPE;
             }
         }
