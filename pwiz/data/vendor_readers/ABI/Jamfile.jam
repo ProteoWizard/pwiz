@@ -65,6 +65,7 @@ rule vendor-api-usage-requirements ( properties * )
     {
         result += <define>PWIZ_READER_ABI ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
+        result += <linkflags>"/HIGHENTROPYVA:NO" ;
     }
     else if ! $(.warn-once)
     {
@@ -169,7 +170,7 @@ run-if-exists Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_util
         <library>pwiz_reader_abi
         <conditional>@test-requirements
         # configuration file sets the "useLegacyV2RuntimeActivationPolicy" attribute
-        <toolset>msvc-10.0:<configuration-file>Reader_ABI_Test.exe.config
+        <configuration-file>Reader_ABI_Test.exe.config
     : # target name
         Reader_ABI_Test 
     : # default-build
