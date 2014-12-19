@@ -65,7 +65,10 @@ rule vendor-api-usage-requirements ( properties * )
     {
         result += <define>PWIZ_READER_ABI ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
-        result += <linkflags>"/HIGHENTROPYVA:NO" ;
+        if <address-model>64 in $(properties)
+        {
+            result += <linkflags>"/HIGHENTROPYVA:NO" ;
+        }
     }
     else if ! $(.warn-once)
     {
