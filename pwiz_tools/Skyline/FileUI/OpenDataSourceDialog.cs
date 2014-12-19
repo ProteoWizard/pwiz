@@ -64,7 +64,8 @@ namespace pwiz.Skyline.FileUI
                 DataSourceUtil.TYPE_WATERS_RAW,
                 DataSourceUtil.TYPE_MZML,
                 DataSourceUtil.TYPE_MZXML,
-                DataSourceUtil.TYPE_MZ5
+                DataSourceUtil.TYPE_MZ5,
+                DataSourceUtil.TYPE_UIMF
             };
 
             sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
