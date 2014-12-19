@@ -767,7 +767,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (_conversion != null)
                 {
-                    double? score = _calculator.ScoreSequence(nodePep.SourceUnmodifiedTextId);
+                    double? score = _calculator.ScoreSequence(nodePep.SourceTextId);
                     if (!score.HasValue)
                         return null;
                     return _conversion.GetY(score.Value);
