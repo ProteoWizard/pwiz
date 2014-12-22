@@ -106,9 +106,13 @@ namespace IDPicker
 
         private string defaultApplySourceGroupHierarchy = null;
 
+        public bool TestUILayout { get; private set; }
+
         public IDPickerForm (IList<string> args)
         {
             InitializeComponent();
+
+            toolStripStatusLabel.Text = "Initializing...";
 
             Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
 
@@ -362,10 +366,11 @@ namespace IDPicker
             {
                 var fileTypeList = new List<string>
                 {
-                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml;*.xml",
-                    "Importable files|*.mzid;*.pepXML;*.pep.xml;*.xml",
+                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml;*.xml;*.dat",
+                    "Importable files|*.mzid;*.pepXML;*.pep.xml;*.xml;*.dat",
                     "MzIdentML files|*.mzid;*.xml",
                     "PepXML files|*.pepXML;*.pep.xml;*.xml",
+                    "Mascot files|*.dat",
                     //"IDPicker XML|*.idpXML",
                     "IDPicker DB|*.idpDB",
                     "All files|*.*"
@@ -850,9 +855,6 @@ namespace IDPicker
             //Get user layout profiles
             _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
-            if (!Program.IsHeadless && args.IsNullOrEmpty())
-                return;
-
             var filemasks = new List<string>();
 
             for (int i = 0; i < args.Count; ++i)
@@ -883,6 +885,11 @@ namespace IDPicker
                         Console.Error.WriteLine("Unable to load ProteoWizard. Are some DLLs missing?");
                     }
                     Close();
+                }
+                else if (arg == "--test-ui-layout")
+                {
+                    TestUILayout = true;
+                    continue;
                 }
 
                 try
@@ -925,6 +932,13 @@ namespace IDPicker
                 ++i; // skip the next argument
             }
 
+            // if program is headless continue into OpenFiles even without any files; error will be issued there
+            if (!Program.IsHeadless && filemasks.IsNullOrEmpty())
+            {
+                toolStripStatusLabel.Text = "Ready";
+                return;
+            }
+
             var expandedFilepaths = new List<string>();
             foreach (string filemask in filemasks)
             {
@@ -941,7 +955,10 @@ namespace IDPicker
                 return;
             }
 
-            new Thread(() => { OpenFiles(expandedFilepaths); }).Start();
+            new Thread(() =>
+            {
+                OpenFiles(expandedFilepaths, null);
+            }).Start();
         }
 
         /// <summary>
@@ -970,7 +987,7 @@ namespace IDPicker
                     if (!title.IsNullOrEmpty())
                         sfd.Title = title;
 
-                    if (sfd.ShowDialog() != DialogResult.OK)
+                    if (sfd.ShowDialog(this) != DialogResult.OK)
                         cancel = true;
                     else
                     {
@@ -1033,10 +1050,10 @@ namespace IDPicker
                     {
                         Console.Error.WriteLine("Headless mode must be passed some idpDB files to merge.");
                         Close();
+                        return;
                     }
                     else
-                        MessageBox.Show("Select one or more idpDB, mzIdentML, pepXML, or idpXML files to create an IDPicker report.", "No IDPicker files selected");
-                    return;
+                        throw new Exception("no filepaths to open");
                 }
 
                 if (Program.IsHeadless && xml_filepaths.Any())
@@ -1074,7 +1091,10 @@ namespace IDPicker
 
                                                                    string.Empty) + ".idpDB").ToList();
 
-                string commonFilepath = Util.GetCommonFilename(filepaths);
+                // for Mascot files (*.dat), use parseSource() to get the real filename, else save time by just using filename without extension
+                var sourceNames = filepaths.Select(o => Path.Combine(Path.GetDirectoryName(o), o.ToLower().EndsWith(".dat") ? Parser.ParseSource(o) : Path.GetFileNameWithoutExtension(o.Replace(".pep.xml", ".pepXML"))));
+
+                string commonFilepath = Util.GetCommonFilename(sourceNames);
                 if (!openSingleFile && potentialPaths.Contains(commonFilepath))
                     commonFilepath = commonFilepath.Replace(".idpDB", " (merged).idpDB");
                 string mergeTargetFilepath = defaultMergedOutputFilepath ?? commonFilepath;
@@ -1261,6 +1281,21 @@ namespace IDPicker
                     session = sessionFactory.OpenSession();
                     session.DefaultReadOnly = true;
 
+                    session.CreateSQLQuery("PRAGMA temp_store=MEMORY; PRAGMA mmap_size=70368744177664; -- 2^46").ExecuteUpdate();
+
+                    toolStripStatusLabel.Text = "Refreshing group structure...";
+                    statusStrip.Refresh();
+                    var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session, defaultApplySourceGroupHierarchy);
+                    if (usedGroups != null && usedGroups.Any())
+                    {
+                        var allGroupsByName = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Name);
+                        var usedGroupsByName = usedGroups.ToDictionary(o => o.Name);
+
+                        // if usedGroupsByName does not contain a key from allGroupsByName, delete the group
+                        foreach (var unusedGroup in allGroupsByName.Where(o => !usedGroupsByName.ContainsKey(o.Key)))
+                            session.Delete(unusedGroup);
+                    }
+                    session.Flush();
 
                     // check for embedded gene metadata;
                     // if it isn't there, ask the user if they want to embed it;
@@ -1289,27 +1324,11 @@ namespace IDPicker
 
                     qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
-                    session.CreateSQLQuery("PRAGMA temp_store=MEMORY; PRAGMA mmap_size=70368744177664; -- 2^46").ExecuteUpdate();
-
                     _layoutManager.SetSession(session);
 
                     //set or save default layout
                     dockPanel.Visible = true;
                     _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
-
-                    toolStripStatusLabel.Text = "Refreshing group structure...";
-                    statusStrip.Refresh();
-                    var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session, defaultApplySourceGroupHierarchy);
-                    if (usedGroups != null && usedGroups.Any())
-                    {
-                        var allGroupsByName = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Name);
-                        var usedGroupsByName = usedGroups.ToDictionary(o => o.Name);
-
-                        // if usedGroupsByName does not contain a key from allGroupsByName, delete the group
-                        foreach (var unusedGroup in allGroupsByName.Where(o => !usedGroupsByName.ContainsKey(o.Key)))
-                            session.Delete(unusedGroup);
-                    }
-                    session.Flush();
 
                     //breadCrumbControl.BreadCrumbs.Clear();
 
@@ -1359,6 +1378,20 @@ namespace IDPicker
                         catch
                         {
                             ApplyBasicFilter();
+                        }
+                    }
+
+                    if (TestUILayout)
+                    {
+                        int i = 0;
+                        foreach(var form in dockPanel.Contents)
+                        {
+                            ++i;
+                            form.DockingHandler.DockAreas = (form.DockingHandler.DockAreas | DockAreas.Float);
+                            var rect = dockPanel.ClientRectangle;
+                            rect.Offset(i * 50, i * 50);
+                            rect.Size = new System.Drawing.Size(800, 600);
+                            form.DockingHandler.Show(dockPanel, rect);
                         }
                     }
 
@@ -1437,7 +1470,9 @@ namespace IDPicker
                 dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
                 dockPanel.ResumeLayout(true, true);
             }
-            catch(IndexOutOfRangeException e)
+            //catch(InvalidOperationException e)
+            //catch(IndexOutOfRangeException e)
+            catch(Exception e)
             {
                 if (userLayout.Name == "System Default")
                     throw new IndexOutOfRangeException("error setting system default layout", e);

@@ -700,9 +700,19 @@ int main(int argc, char* argv[])
             if (!bfs::is_directory(arg))
                 throw runtime_error("expected a path to test files, got \"" + arg + "\"");
 
-            testIdpQonvert(idpQonvertPath, arg);
-            testIdpAssemble(idpQonvertPath, idpAssemblePath, arg);
-            testIdpQuery(idpQueryPath, arg);
+            // copy the TestData files to a temporary directory so that the test data directory isn't littered with test-related files
+            bfs::path inputTestDataPath(arg);
+            bfs::path outputTestDataPath = bfs::path(argv[0]).parent_path() / "CommandlineTest.data";
+
+            vector<bfs::path> testDataFiles;
+            expand_pathmask(inputTestDataPath / "*.*", testDataFiles);
+            bfs::create_directory(outputTestDataPath);
+            BOOST_FOREACH(const bfs::path& filepath, testDataFiles)
+                bfs::copy_file(filepath, outputTestDataPath / filepath.filename(), bfs::copy_option::overwrite_if_exists);
+
+            testIdpQonvert(idpQonvertPath, outputTestDataPath.string());
+            testIdpAssemble(idpQonvertPath, idpAssemblePath, outputTestDataPath.string());
+            testIdpQuery(idpQueryPath, outputTestDataPath.string());
         }
     }
     catch (exception& e)

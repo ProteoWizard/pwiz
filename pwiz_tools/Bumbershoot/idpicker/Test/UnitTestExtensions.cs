@@ -27,10 +27,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading;
+using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestStack.White.UIItems;
+using TestStack.White.UIItems.Custom;
+using TestStack.White.UIItems.WindowItems;
+using TestStack.White.UIItems.Actions;
 
 namespace Test
 {
+    using AppRunner = Action<TestStack.White.Application, Stack<Window>>;
+    using System.Diagnostics;
+    using TestStack.White;
+
     public static class UnitTestExtensions
     {
         public static void AssertSequenceEquals<T>(this IEnumerable<T> expected, IEnumerable<T> actual)
@@ -42,7 +52,7 @@ namespace Test
                 Assert.AreEqual(expectedList[i], actualList[i], "Sequence elements at index " + i.ToString() + " are not equal.");
         }
 
-        /*public static IEnumerable<CustomUIItem> GetDockableForms(this Window window)
+        public static IEnumerable<CustomUIItem> GetDockableForms(this Window window)
         {
             var dockPanes = window.AutomationElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.AutomationIdProperty, "dockPanel"))
                                                     .FindFirst(TreeScope.Children, Condition.TrueCondition)
@@ -54,22 +64,6 @@ namespace Test
                             .Where(o => !Char.IsDigit(o.Current.AutomationId[0]))
                             .Select(o => new CustomUIItem(o, new NullActionListener()));
         }
-
-        public static void WaitForReady(TextBox statusTextBox, int maxMillisecondsToWait = 5000)
-        {
-            const int msToWait = 200;
-
-            // FIXME: depends on English text
-            for (int i = 0; i < maxMillisecondsToWait; i += msToWait)
-            {
-                if (statusTextBox.Text == "Ready")
-                    return;
-
-                Thread.Sleep(msToWait);
-            }
-
-            throw new TimeoutException("timeout waiting for status to return to 'Ready'");
-        }*/
 
         public static string TestDataPath(this TestContext context)
         {
@@ -116,23 +110,26 @@ namespace Test
                     File.Copy(file, context.TestOutputPath(Path.GetFileName(file)));
         }
 
-        /*public static void LaunchIDPickerTest(string args, AppRunner testAction)
+        public static void LaunchAppTest(this TestContext context, string exePath, string args, AppRunner testAction, bool closeAppOnError = true)
         {
-            var startInfo = new ProcessStartInfo("IDPicker.exe", args);
+            if (testAction == null)
+                return;
+
+            var startInfo = new ProcessStartInfo(exePath, args);
             var app = Application.Launch(startInfo);
-            Application = app;
+            context.Properties["Application"] = app;
             var windowStack = new Stack<Window>();
 
             try
             {
                 testAction(app, windowStack);
 
-                if (!CloseAppOnError)
+                if (!closeAppOnError)
                     app.Close();
             }
             catch (Exception e)
             {
-                if (CloseAppOnError)
+                if (closeAppOnError)
                     while (windowStack.Count > 0)
                     {
                         var window = windowStack.Pop();
@@ -144,9 +141,9 @@ namespace Test
             }
             finally
             {
-                if (CloseAppOnError)
+                if (closeAppOnError)
                     app.Close();
             }
-        }*/
+        }
     }
 }
