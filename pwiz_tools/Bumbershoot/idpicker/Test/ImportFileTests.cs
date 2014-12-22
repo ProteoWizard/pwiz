@@ -28,8 +28,11 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestStack.White;
+using TestStack.White.Factory;
+using TestStack.White.Configuration;
 using TestStack.White.UIItems;
 using TestStack.White.UIItems.WindowItems;
 using TestStack.White.UIItems.WindowStripControls;
@@ -39,9 +42,6 @@ using TestStack.White.UIItems.TableItems;
 using TestStack.White.UIItems.ListBoxItems;
 using TestStack.White.UIItems.Finders;
 using TestStack.White.UIItems.Container;
-using TestStack.White.Factory;
-using TestStack.White.Configuration;
-using System.Windows.Automation;
 using TestStack.White.UIItems.Actions;
 using TestStack.White.UIItems.Custom;
 
@@ -412,13 +412,12 @@ namespace Test
 
                     if (String.IsNullOrEmpty(mergedOutputFilepath))
                     {
-                        Thread.Sleep(250);
-
                         // check:
                         // - trying to save to a read only location prompts for a new location
                         // - choosing an existing filepath asks user to confirm overwriting
                         // - that the automatically generated merged filepath is correct
-                        var saveDialog = window.ModalWindows()[0];
+                        Window saveDialog = null;
+                        IDPicker.Util.TryRepeatedly(() => saveDialog = window.ModalWindows()[0]);
                         windowStack.Push(saveDialog);
 
                         // HACK: saveDialog.Get<TextBox>() won't work because of some unsupported control types in the Save Dialog (at least on Windows 7); I'm not sure if the 1001 id is stable
@@ -442,8 +441,8 @@ namespace Test
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
                     UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
                     UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", TestContext.TestDataFilePath("cow.protein.PRG2012-subset.fasta"), "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "/hactar/fasta/cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", "cow.protein.PRG2012-subset.fasta", "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
                     // with this workaround, be careful while debugging around this code because the keyboard input might be sent to the debugger!
@@ -576,13 +575,13 @@ namespace Test
                     importFilesForm.Get<Button>("AddNode").Click(); // TODO: fix variable names in Jay's code to be consistent with my code
                     Thread.Sleep(500);
                     importFilesForm.Get<Button>("openButton").RaiseClickEvent();
-                    Thread.Sleep(500);
 
                     // check:
                     // - trying to save to a read only location prompts for a new location
                     // - choosing an existing filepath asks user to confirm overwriting
                     // - that the automatically generated merged filepath is correct
-                    var saveDialog = window.ModalWindows()[0];
+                    Window saveDialog = null;
+                    IDPicker.Util.TryRepeatedly(() => saveDialog = window.ModalWindows()[0]);
                     windowStack.Push(saveDialog);
 
                     // HACK: saveDialog.Get<TextBox>() won't work because of some unsupported control types in the Save Dialog (at least on Windows 7); I'm not sure if the 1001 id is stable
@@ -605,8 +604,8 @@ namespace Test
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
                     UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
                     UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", TestContext.TestDataFilePath("cow.protein.PRG2012-subset.fasta"), "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "/hactar/fasta/cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", "cow.protein.PRG2012-subset.fasta", "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
                     // with this workaround, be careful while debugging around this code because the keyboard input might be sent to the debugger!

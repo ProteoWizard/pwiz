@@ -112,7 +112,9 @@ namespace IDPicker.Controls
                             }
                             catch (ArgumentException)
                             {
-                                // ignore
+                                // ignore exception, but if protein database still isn't found, reduce it to the filename
+                                if (Path.IsPathRooted(a.importSettings.proteinDatabaseFilepath))
+                                    a.importSettings.proteinDatabaseFilepath = databaseName;
                             }
                         }
                     }
