@@ -708,7 +708,8 @@ int main(int argc, char* argv[])
             expand_pathmask(inputTestDataPath / "*.*", testDataFiles);
             bfs::create_directory(outputTestDataPath);
             BOOST_FOREACH(const bfs::path& filepath, testDataFiles)
-                bfs::copy_file(filepath, outputTestDataPath / filepath.filename(), bfs::copy_option::overwrite_if_exists);
+                if (!bal::starts_with(filepath, ".")) // don't try to copy .svn directory
+                    bfs::copy_file(filepath, outputTestDataPath / filepath.filename(), bfs::copy_option::overwrite_if_exists);
 
             testIdpQonvert(idpQonvertPath, outputTestDataPath.string());
             testIdpAssemble(idpQonvertPath, idpAssemblePath, outputTestDataPath.string());
