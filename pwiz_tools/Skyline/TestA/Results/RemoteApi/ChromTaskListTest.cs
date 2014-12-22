@@ -37,16 +37,16 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
     [TestClass]
     public class ChromTaskListTest : AbstractUnitTest
     {
-        //[TestMethod]
+        [TestMethod]
         public void TestDdaSmall()
         {
-            ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://dev.chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
+            ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
             var stream = typeof (ChromTaskListTest).Assembly.GetManifestResourceStream(typeof (ChromTaskListTest),
                 "DdaSmall.ChorusRequest.xml");
             Assert.IsNotNull(stream);
             var chromatogramRequest = (ChromatogramRequestDocument) new XmlSerializer(typeof (ChromatogramRequestDocument)).Deserialize(stream);
-            var chromTaskList = new ChromTaskList(() => { }, new SrmDocument(SrmSettingsList.GetDefault()), TEST_ACCOUNT, 
-                TEST_ACCOUNT.GetChorusUrl().SetFileId(7), ChromTaskList.ChunkChromatogramRequest(chromatogramRequest, 1));
+            var chromTaskList = new ChromTaskList(() => { }, new SrmDocument(SrmSettingsList.GetDefault()), TEST_ACCOUNT,
+                TEST_ACCOUNT.GetChorusUrl().SetFileId(28836), ChromTaskList.ChunkChromatogramRequest(chromatogramRequest, 100));
             chromTaskList.SetMinimumSimultaneousTasks(10);
             var failedTasks = new HashSet<ChromatogramGeneratorTask>();
             foreach (var chromKey in chromTaskList.ChromKeys)
