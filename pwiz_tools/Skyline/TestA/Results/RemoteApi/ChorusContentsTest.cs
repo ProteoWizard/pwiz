@@ -25,17 +25,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf
+namespace pwiz.SkylineTestA.Results.RemoteApi
 {
     [TestClass]
-    public class PerfChorusContentsTest : AbstractUnitTest
+    public class ChorusContentsTest : AbstractUnitTest
     {
-        private static readonly ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://dev.chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
+        private static readonly ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
         [TestMethod]
         public void TestAuthenticate()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
             CookieContainer cookieContainer = new CookieContainer();
             ChorusSession chorusSession = new ChorusSession();
             Assert.AreEqual(0, cookieContainer.Count);
@@ -46,8 +44,6 @@ namespace TestPerf
         [TestMethod]
         public void TestContents()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
             ChorusSession chorusSession = new ChorusSession();
             ChorusContents chorusContents = chorusSession.FetchContents(TEST_ACCOUNT, new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents"));
             Assert.IsNotNull(chorusContents);
@@ -59,24 +55,22 @@ namespace TestPerf
         [TestMethod]
         public void TestInstrumentModels()
         {
-            if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
             var accounts = new[]
             {
-                new ChorusAccount("https://dev.chorusproject.org", "pavel.kaplin@gmail.com", "pwd"),
                 new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd"),
             };
             ChorusSession chorusSession = new ChorusSession();
             var instrumentModels = new HashSet<string>();
             foreach (var account in accounts)
             {
-                ChorusContents chorusContents = chorusSession.FetchContents(account, new Uri(account.ServerUrl + "/skyline/api/contents"));
+                ChorusContents chorusContents = chorusSession.FetchContents(account, new Uri(account.ServerUrl + "/skyline/api/contents/my/files"));
                 Assert.IsNotNull(chorusContents);
                 foreach (var file in ListAllFiles(chorusContents))
                 {
                     instrumentModels.Add(file.instrumentModel);
                 }
             }
+            Assert.AreNotEqual(0, instrumentModels.Count);
             var unknownInstrumentModels = new List<string>();
             foreach (var instrumentModel in instrumentModels)
             {
@@ -90,15 +84,16 @@ namespace TestPerf
 
         IEnumerable<ChorusContents.File> ListAllFiles(ChorusContents chorusContents)
         {
-            return chorusContents.myFiles
-                .Concat(chorusContents.myExperiments.SelectMany(ListAllFiles))
-                .Concat(chorusContents.myProjects.SelectMany(ListAllFiles))
-                .Concat(chorusContents.sharedFiles)
-                .Concat(chorusContents.sharedExperiments.SelectMany(ListAllFiles))
-                .Concat(chorusContents.sharedProjects.SelectMany(ListAllFiles))
-                .Concat(chorusContents.publicFiles)
-                .Concat(chorusContents.publicExperiments.SelectMany(ListAllFiles))
-                .Concat(chorusContents.publicProjects.SelectMany(ListAllFiles));
+            return SafeList(chorusContents.myFiles)
+                .Concat(SafeList(chorusContents.myExperiments).SelectMany(ListAllFiles))
+                .Concat(SafeList(chorusContents.myProjects).SelectMany(ListAllFiles))
+                .Concat(SafeList(chorusContents.sharedFiles))
+                .Concat(SafeList(chorusContents.sharedExperiments).SelectMany(ListAllFiles))
+                .Concat(SafeList(chorusContents.sharedProjects).SelectMany(ListAllFiles))
+                .Concat(SafeList(chorusContents.publicFiles)
+                .Concat(SafeList(chorusContents.publicExperiments).SelectMany(ListAllFiles))
+                .Concat(SafeList(chorusContents.publicProjects).SelectMany(ListAllFiles)))
+                .Concat(SafeList(chorusContents.files));
         }
 
         IEnumerable<ChorusContents.File> ListAllFiles(ChorusContents.Project project)
@@ -110,6 +105,9 @@ namespace TestPerf
         {
             return experiment.files;
         }
+        private static IEnumerable<T> SafeList<T>(IEnumerable<T> list)
+        {
+            return list ?? new T[0];
+        }
     }
-
 }

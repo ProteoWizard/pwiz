@@ -169,6 +169,7 @@
     <Compile Include="Results\MultiLabelRatioTest.cs" />
     <Compile Include="Results\NumericsLsSolverTest.cs" />
     <Compile Include="Results\RemoteApi\ChromTaskListTest.cs" />
+    <Compile Include="Results\RemoteApi\ChorusContentsTest.cs" />
     <Compile Include="Results\RestultNameMapTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />

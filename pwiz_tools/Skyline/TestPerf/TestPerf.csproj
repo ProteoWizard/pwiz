@@ -134,7 +134,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PerfChorusContentsTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
     <Compile Include="PerfDecoysMatchTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
