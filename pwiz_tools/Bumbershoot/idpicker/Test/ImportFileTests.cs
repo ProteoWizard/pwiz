@@ -87,7 +87,7 @@ namespace Test
         }
         #endregion
 
-        public static void WaitForReady(TextBox statusTextBox, int maxMillisecondsToWait = 5000)
+        public static void WaitForReady(TextBox statusTextBox, int maxMillisecondsToWait = 15000)
         {
             const int msToWait = 200;
 
