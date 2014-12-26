@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -51,12 +52,18 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        protected override void DoTest()
+        {
+            CEOptimizationTest();
+            OptLibNeutralLossTest();
+        }
+
         /// <summary>
         /// Test CE optimization.  Creates optimization transition lists,
         /// imports optimization data, shows graphs, recalculates linear equations,
         /// and exports optimized method.
         /// </summary>
-        protected override void DoTest()
+        private void CEOptimizationTest()
         {
             TestSmallMolecules = false; // No collision energy optimization for small molecules yet
 
@@ -133,10 +140,10 @@ namespace pwiz.SkylineTestFunctional
 
             string optLibPath = TestFilesDir.GetTestPath("Optimized.optdb");
             string pasteText = TextUtil.LineSeparate(
-                GetPasteLine("TPEVDDEALEK", 2, 1047.48406105, 122.50606),
-                GetPasteLine("DGGIDPLVR", 2, 712.43520066499991, 116.33671),
-                GetPasteLine("AAA", 5, 100.0, 5.0),
-                GetPasteLine("AAB", 5, 100.0, 5.0));
+                GetPasteLine("TPEVDDEALEK", 2, "y9", 1, 122.50606),
+                GetPasteLine("DGGIDPLVR", 2, "y6", 1, 116.33671),
+                GetPasteLine("AAA", 5, "y1", 2, 5.0),
+                GetPasteLine("AAB", 5, "y2", 2, 5.0));
 
             RunUI(() =>
             {
@@ -148,8 +155,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(addOptDlg, addOptDlg.OkDialog);
 
             // Add duplicates and skip existing
-            // "AAA", "5", "100.0", "5.0"
-            // "AAB", "5", "100.0", "10.0"
+            // "AAA, +5", "y1++", "5.0"
+            // "AAB, +5", "y2++", "10.0"
             var addOptDbDlgSkip = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
             RunUI(() =>
             {
@@ -161,7 +168,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskSkip.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskSkip.Action = AddOptimizationsAction.skip);
             OkDialog(addOptDlgAskSkip, addOptDlgAskSkip.OkDialog);
-            Assert.AreEqual(5.0, editOptLib.GetCEOptimization("AAB", 5, 100.0).Value);
+            Assert.AreEqual(5.0, editOptLib.GetCEOptimization("AAB", 5, "y2", 2).Value);
             // Add duplicates and average existing
             var addOptDbDlgAvg = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
             RunUI(() =>
@@ -174,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskAvg.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskAvg.Action = AddOptimizationsAction.average);
             OkDialog(addOptDlgAskAvg, addOptDlgAskAvg.OkDialog);
-            Assert.AreEqual(7.5, editOptLib.GetCEOptimization("AAB", 5, 100.0).Value);
+             Assert.AreEqual(7.5, editOptLib.GetCEOptimization("AAB", 5, "y2", 2).Value);
             // Add duplicates and replace existing
             var addOptDbDlgReplace = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
             RunUI(() =>
@@ -187,7 +194,31 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskReplace.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskReplace.Action = AddOptimizationsAction.replace);
             OkDialog(addOptDlgAskReplace, addOptDlgAskReplace.OkDialog);
-            Assert.AreEqual(10.0, editOptLib.GetCEOptimization("AAB", 5, 100.0).Value);
+            Assert.AreEqual(10.0, editOptLib.GetCEOptimization("AAB", 5, "y2", 2).Value);
+
+            // Try to add unconvertible old format optimization library
+            var addOptDbUnconvertible = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
+            RunUI(() =>
+            {
+                addOptDbUnconvertible.Source = OptimizationLibrarySource.file;
+                addOptDbUnconvertible.FilePath = TestFilesDir.GetTestPath("OldUnconvertible.optdb");
+            });
+            OkDialog(addOptDbUnconvertible, addOptDbUnconvertible.OkDialog);
+            var errorDlg = WaitForOpenForm<MessageDlg>();
+            Assert.IsTrue(errorDlg.Message.StartsWith("Failed to convert"));
+            OkDialog(errorDlg, errorDlg.OkDialog);
+
+            // Try to add convertible old format optimization library
+            var addOptDbConvertible = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
+            RunUI(() =>
+            {
+                addOptDbConvertible.Source = OptimizationLibrarySource.file;
+                addOptDbConvertible.FilePath = TestFilesDir.GetTestPath("OldConvertible.optdb");
+            });
+            var addOptDlgAskConverted = ShowDialog<AddOptimizationsDlg>(addOptDbConvertible.OkDialog);
+            Assert.AreEqual(109, addOptDlgAskConverted.OptimizationsCount);
+            Assert.AreEqual(2, addOptDlgAskConverted.ExistingOptimizationsCount);
+            RunUI(addOptDlgAskConverted.CancelDialog);
 
             // Done editing optimization library
             OkDialog(editOptLib, editOptLib.OkDialog);
@@ -344,13 +375,43 @@ namespace pwiz.SkylineTestFunctional
             VerifyGraphs();
         }
 
-        private string GetPasteLine(string seq, int charge, double mz, double ce)
+        private void OptLibNeutralLossTest()
+        {
+            // Open the .sky file
+            string documentPath = TestFilesDir.GetTestPath("test_opt_nl.sky");
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+
+            var docCurrent = SkylineWindow.Document;
+
+            var transitionSettingsUIOpt = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            var editOptLib = ShowDialog<EditOptimizationLibraryDlg>(transitionSettingsUIOpt.AddToOptimizationLibraryList);
+
+            string optLibPath = TestFilesDir.GetTestPath("NeutralLoss.optdb");
+
+            RunUI(() =>
+            {
+                editOptLib.CreateDatabase(optLibPath);
+                editOptLib.LibName = "Test neutral loss optimization";
+                SetClipboardText(GetPasteLine("PES[+80.0]T[+80.0]ICIDER", 2, "precursor -98", 2, 5.0));
+            });
+            var addOptDlg = ShowDialog<AddOptimizationsDlg>(editOptLib.DoPasteLibrary);
+            OkDialog(addOptDlg, addOptDlg.OkDialog);
+            
+            OkDialog(editOptLib, editOptLib.OkDialog);
+            OkDialog(transitionSettingsUIOpt, transitionSettingsUIOpt.OkDialog);
+
+            WaitForDocumentChange(docCurrent);
+
+            string optLibExportPath = TestFilesDir.GetTestPath("OptNeutralLoss.csv");
+            ExportCETransitionList(optLibExportPath, null);
+        }
+
+        private string GetPasteLine(string seq, int charge, string product, int productCharge, double ce)
         {
             var fields = new[]
             {
-                seq,
-                charge.ToString(CultureInfo.CurrentCulture),
-                mz.ToString(CultureInfo.CurrentCulture),
+                string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(charge)),
+                string.Format(CultureInfo.CurrentCulture, "{0}{1}", product, Transition.GetChargeIndicator(productCharge)),
                 ce.ToString(CultureInfo.CurrentCulture)
             };
             return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
@@ -492,46 +553,58 @@ namespace pwiz.SkylineTestFunctional
 
             int iLine = 0;
             var dictLightCEs = new Dictionary<string, double>();
-            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            foreach (PeptideGroupDocNode nodePepGroup in document.MoleculeGroups)
             {
-                if (nodeGroup.IsLight)
-                    dictLightCEs.Clear();
-                double firstCE = double.Parse(lines1[iLine].Split(',')[COL_CE], CultureInfo.InvariantCulture);
-                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                if (nodePepGroup.TransitionCount == 0)
+                    continue;
+
+                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                 {
-                    string[] row1 = lines1[iLine].Split(',');
-                    double tranCE = double.Parse(row1[COL_CE], CultureInfo.InvariantCulture);
-                    if (lines2 != null)
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
-                        // Check to see if the two files differ
-                        string[] row2 = lines2[iLine].Split(',');
-                        if (row1[COL_CE] != row2[COL_CE])
-                            diffCEFound = true;
-                    }
-                    iLine++;
+                        if (nodeGroup.IsLight)
+                            dictLightCEs.Clear();
+                        double firstCE = double.Parse(lines1[iLine].Split(',')[COL_CE], CultureInfo.InvariantCulture);
+                        foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                        {
+                            string[] row1 = lines1[iLine].Split(',');
+                            double tranCE = double.Parse(row1[COL_CE], CultureInfo.InvariantCulture);
+                            if (lines2 != null)
+                            {
+                                // Check to see if the two files differ
+                                string[] row2 = lines2[iLine].Split(',');
+                                if (row1[COL_CE] != row2[COL_CE])
+                                    diffCEFound = true;
+                            }
+                            iLine++;
 
-                    // Store light CE values, and compare the heavy CE values to make
-                    // sure they are equal
-                    if (nodeGroup.IsLight)
-                        dictLightCEs.Add(nodeTran.Transition.ToString(), tranCE);
-                    else
-                        Assert.AreEqual(dictLightCEs[nodeTran.Transition.ToString()], tranCE);
+                            // Store light CE values, and compare the heavy CE values to make
+                            // sure they are equal
+                            if (nodeGroup.IsLight)
+                                dictLightCEs[nodeTran.Transition.ToString()] = tranCE;
+                            else
+                                Assert.AreEqual(dictLightCEs[nodeTran.Transition.ToString()], tranCE);
 
-                    if (optLib != null && !optLib.IsNone)
-                    {
-                        // If there is an optimized value, CE should be equal to it
-                        DbOptimization optimization = optLib.GetOptimization(OptimizationType.collision_energy,
-                            nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.PrecursorCharge, nodeTran.Mz);
-                        if (optimization != null)
-                            Assert.AreEqual(optimization.Value, tranCE, 0.05);
-                    }
-                    else
-                    {
-                        // If precursor CE type, then all CEs should be equal
-                        if (precursorCE && (optLib == null || optLib.IsNone))
-                            Assert.AreEqual(firstCE, tranCE);
-                        else if (firstCE != tranCE)
-                            diffTranFound = true;
+                            if (optLib != null && !optLib.IsNone)
+                            {
+                                // If there is an optimized value, CE should be equal to it
+                                DbOptimization optimization =
+                                    optLib.GetOptimization(OptimizationType.collision_energy,
+                                        document.Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge,
+                                        //nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.PrecursorCharge,
+                                        nodeTran.FragmentIonName, nodeTran.Transition.Charge);
+                                if (optimization != null)
+                                    Assert.AreEqual(optimization.Value, tranCE, 0.05);
+                            }
+                            else
+                            {
+                                // If precursor CE type, then all CEs should be equal
+                                if (precursorCE && (optLib == null || optLib.IsNone))
+                                    Assert.AreEqual(firstCE, tranCE);
+                                else if (firstCE != tranCE)
+                                    diffTranFound = true;
+                            }
+                        }
                     }
                 }
             }

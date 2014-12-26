@@ -54,12 +54,12 @@ namespace pwiz.Skyline.Model.Optimization
             get { return _database != null; }
         }
 
-        public OptimizationLibrary Initialize(IProgressMonitor loadMonitor)
+        public OptimizationLibrary Initialize(SrmDocument document, IProgressMonitor loadMonitor)
         {
             if (_database != null || IsNone)
                 return this;
 
-            var database = OptimizationDb.GetOptimizationDb(DatabasePath, loadMonitor);
+            var database = OptimizationDb.GetOptimizationDb(DatabasePath, loadMonitor, document);
             // Check for the case where an exception was handled by the progress monitor
             if (database == null)
                 return null;
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Optimization
                             {
                                 foreach (var optType in Enum.GetValues(typeof(OptimizationType)).Cast<OptimizationType>())
                                 {
-                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.Mz);
+                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.FragmentIonName, transition.Transition.Charge);
                                     DbOptimization dbOptimization;
                                     if (dictOptimizations.TryGetValue(optimizationKey, out dbOptimization))
                                     {
@@ -132,12 +132,12 @@ namespace pwiz.Skyline.Model.Optimization
             return _database.GetOptimizations();
         }
 
-        public DbOptimization GetOptimization(OptimizationType type, string seq, int charge, double mz)
+        public DbOptimization GetOptimization(OptimizationType type, string seq, int charge, string fragment, int productCharge)
         {
             RequireUsable();
-            var key = new OptimizationKey(type, seq, charge, mz);
+            var key = new OptimizationKey(type, seq, charge, fragment, productCharge);
             double value;
-            return (_database.DictLibrary.TryGetValue(new OptimizationKey(type, seq, charge, mz), out value))
+            return (_database.DictLibrary.TryGetValue(new OptimizationKey(type, seq, charge, fragment, productCharge), out value))
                 ? new DbOptimization(key, value)
                 : null;
         }

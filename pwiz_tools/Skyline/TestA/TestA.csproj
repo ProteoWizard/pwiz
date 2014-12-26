@@ -153,6 +153,7 @@
     <Compile Include="MoreStatisticsTest.cs" />
     <Compile Include="MProphetScoringModelTest.cs" />
     <Compile Include="MQuestScoringTest.cs" />
+    <Compile Include="NormalizeProductIonTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

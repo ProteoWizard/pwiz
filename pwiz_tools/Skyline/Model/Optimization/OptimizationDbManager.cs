@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Optimization
                 OptimizationLibrary libResult;
                 if (!_loadedLibraries.TryGetValue(lib.Name, out libResult))
                 {
-                    libResult = lib.Initialize(new LoadMonitor(this, container, lib));
+                    libResult = lib.Initialize(container.Document, new LoadMonitor(this, container, lib));
                     if (libResult != null)
                         _loadedLibraries.Add(libResult.Name, libResult);
                 }

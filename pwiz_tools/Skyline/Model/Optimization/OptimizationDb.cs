@@ -23,10 +23,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NHibernate;
+using NHibernate.Exceptions;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Optimization
@@ -48,7 +52,7 @@ namespace pwiz.Skyline.Model.Optimization
             get { return TextUtil.FileDialogFilter(Resources.OptimizationDb_FILTER_OPTDB_Optimization_Libraries, EXT); }
         }
 
-        public const int SCHEMA_VERSION_CURRENT = 1;
+        public const int SCHEMA_VERSION_CURRENT = 2;
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
@@ -204,7 +208,7 @@ namespace pwiz.Skyline.Model.Optimization
                 }
             }
 
-            return GetOptimizationDb(path, null);
+            return GetOptimizationDb(path, null, null);
         }
 
         /// <summary>
@@ -217,7 +221,7 @@ namespace pwiz.Skyline.Model.Optimization
         }
 
         //Throws DatabaseOpeningException
-        public static OptimizationDb GetOptimizationDb(string path, IProgressMonitor loadMonitor)
+        public static OptimizationDb GetOptimizationDb(string path, IProgressMonitor loadMonitor, SrmDocument document)
         {
             var status = new ProgressStatus(string.Format(Resources.OptimizationDb_GetOptimizationDb_Loading_optimization_library__0_, path));
             if (loadMonitor != null)
@@ -260,6 +264,10 @@ namespace pwiz.Skyline.Model.Optimization
                 {
                     message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__is_not_a_valid_optimization_library_file_, path);
                 }
+                catch (GenericADOException)
+                {
+                    return ConvertFromOldFormat(path, loadMonitor, status, document);
+                }
                 catch (Exception e)
                 {
                     message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_, path, e.Message);
@@ -273,6 +281,104 @@ namespace pwiz.Skyline.Model.Optimization
                     throw;
                 loadMonitor.UpdateProgress(status.ChangeErrorException(x));
                 return null;
+            }
+        }
+
+        public static OptimizationDb ConvertFromOldFormat(string path, IProgressMonitor loadMonitor, ProgressStatus status, SrmDocument document)
+        {
+            // Try to open assuming old format (Id, PeptideModSeq, Charge, Mz, Value, Type)
+            var precursors = new Dictionary<string, HashSet<int>>(); // PeptideModSeq -> charges
+            var optimizations = new List<Tuple<DbOptimization, double>>(); // DbOptimization, product m/z
+            int maxCharge = 0;
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source = " + path)) // Not L10N
+            using (SQLiteCommand command = new SQLiteCommand(connection))
+            {
+                connection.Open();
+                command.CommandText = "SELECT PeptideModSeq, Charge, Mz, Value, Type FROM OptimizationLibrary"; // Not L10N
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var type = (OptimizationType)reader["Type"]; // Not L10N
+                        var modifiedSequence = reader["PeptideModSeq"].ToString(); // Not L10N
+                        var charge = (int)reader["Charge"]; // Not L10N
+                        var productMz = (double)reader["Mz"]; // Not L10N
+                        var value = (double)reader["Value"]; // Not L10N
+                        optimizations.Add(new Tuple<DbOptimization, double>(new DbOptimization(type, modifiedSequence, charge, string.Empty, -1, value), productMz));
+
+                        if (!precursors.ContainsKey(modifiedSequence))
+                        {
+                            precursors[modifiedSequence] = new HashSet<int>();
+                        }
+                        precursors[modifiedSequence].Add(charge);
+                        if (charge > maxCharge)
+                        {
+                            maxCharge = charge;
+                        }
+                    }
+                }
+            }
+
+            var peptideList = (from precursor in precursors
+                               from charge in precursor.Value
+                               select string.Format("{0}{1}", precursor.Key, Transition.GetChargeIndicator(charge)) // Not L10N
+                               ).ToList();
+
+            var newDoc = new SrmDocument(document != null ? document.Settings : SrmSettingsList.GetDefault());
+            newDoc = newDoc.ChangeSettings(newDoc.Settings
+                .ChangePeptideLibraries(libs => libs.ChangePick(PeptidePick.filter))
+                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeFirstName(Resources.TransitionFilter_FragmentStartFinders_ion_1))
+                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeLastName(Resources.TransitionFilter_FragmentEndFinders_last_ion))
+                .ChangeTransitionFilter(filter => filter.ChangeProductCharges(Enumerable.Range(1, maxCharge).ToList()))
+                .ChangeTransitionFilter(filter => filter.ChangeIonTypes(new []{ IonType.y, IonType.b }.ToList()))
+                .ChangeTransitionLibraries(libs => libs.ChangePick(TransitionLibraryPick.none))
+                );
+            var matcher = new ModificationMatcher();
+            matcher.CreateMatches(newDoc.Settings, peptideList, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            FastaImporter importer = new FastaImporter(newDoc, matcher);
+            string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList)); // Not L10N
+            PeptideGroupDocNode imported = importer.Import(new StringReader(text), null, Helpers.CountLinesInString(text)).First();
+
+            int optimizationsUpdated = 0;
+            foreach (PeptideDocNode nodePep in imported.Children)
+            {
+                string sequence = newDoc.Settings.GetSourceTextId(nodePep);
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    int charge = nodeGroup.PrecursorCharge;
+                    foreach (var nodeTran in nodeGroup.Transitions)
+                    {
+                        double productMz = nodeTran.Mz;
+                        foreach (var optimization in optimizations.Where(opt =>
+                            string.IsNullOrEmpty(opt.Item1.FragmentIon) &&
+                            opt.Item1.ProductCharge == -1 &&
+                            opt.Item1.PeptideModSeq == sequence &&
+                            opt.Item1.Charge == charge &&
+                            Math.Abs(opt.Item2 - productMz) < 0.00001))
+                        {
+                            optimization.Item1.FragmentIon = nodeTran.FragmentIonName;
+                            optimization.Item1.ProductCharge = nodeTran.Transition.Charge;
+                            ++optimizationsUpdated;
+                        }
+                    }
+                }
+            }
+
+            if (optimizations.Count > optimizationsUpdated)
+            {
+                throw new OptimizationsOpeningException(string.Format(Resources.OptimizationDb_ConvertFromOldFormat_Failed_to_convert__0__optimizations_to_new_format_,
+                                                                      optimizations.Count - optimizationsUpdated));
+            }
+
+            using (var fs = new FileSaver(path))
+            {
+                OptimizationDb db = CreateOptimizationDb(fs.SafeName);
+                db.UpdateOptimizations(optimizations.Select(opt => opt.Item1).ToArray(), new DbOptimization[0]);
+                fs.Commit();
+
+                if (loadMonitor != null)
+                    loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
+                return GetOptimizationDb(fs.RealName, null, null);
             }
         }
     }

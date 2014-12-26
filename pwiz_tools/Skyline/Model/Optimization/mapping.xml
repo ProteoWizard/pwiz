@@ -13,7 +13,8 @@
     </id>
     <property name="PeptideModSeq" index="idxPeptide" not-null="true"/>
     <property name="Charge"/>
-    <property name="Mz"/>
+    <property name="FragmentIon"/>
+    <property name="ProductCharge"/>
     <property name="Value"/>
     <property name="Type"/>
   </class>

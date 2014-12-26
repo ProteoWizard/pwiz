@@ -30,29 +30,31 @@ namespace pwiz.Skyline.Model.Optimization
         public OptimizationType OptType { get; set; }
         public string PeptideModSeq { get; set; }
         public int Charge { get; set; }
-        public double Mz { get; set; }
+        public string FragmentIon { get; set; }
+        public int ProductCharge { get; set; }
 
         public OptimizationKey()
         {
             OptType = OptimizationType.unknown;
         }
 
-        public OptimizationKey(OptimizationType optType, string peptideModSeq, int charge, double mz)
+        public OptimizationKey(OptimizationType optType, string peptideModSeq, int charge, string fragmentIon, int productCharge)
         {
             OptType = optType;
             PeptideModSeq = peptideModSeq;
             Charge = charge;
-            Mz = mz;
+            FragmentIon = fragmentIon;
+            ProductCharge = productCharge;
         }
 
         public OptimizationKey(OptimizationKey other)
-            : this(other.OptType, other.PeptideModSeq, other.Charge, other.Mz)
+            : this(other.OptType, other.PeptideModSeq, other.Charge, other.FragmentIon, other.ProductCharge)
         {
         }
 
         public override string ToString()
         {
-            return string.Format("{0} (charge {1}, m/z {2:f2})", PeptideModSeq, Charge, Mz);    // Not L10N: for debugging
+            return string.Format("{0} (charge {1}); {2} (charge {3})", PeptideModSeq, Charge, FragmentIon, ProductCharge);    // Not L10N: for debugging
         }
 
         public int CompareTo(object obj)
@@ -74,9 +76,13 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 return Charge.CompareTo(other.Charge);
             }
+            else if (FragmentIon != other.FragmentIon)
+            {
+                return String.Compare(FragmentIon, other.FragmentIon, StringComparison.InvariantCulture);
+            }
             else
             {
-                return Mz.CompareTo(other.Mz);
+                return ProductCharge.CompareTo(other.ProductCharge);
             }
         }
 
@@ -93,7 +99,8 @@ namespace pwiz.Skyline.Model.Optimization
             }
             return Equals(PeptideModSeq, other.PeptideModSeq) &&
                 Charge == other.Charge &&
-                Mz == other.Mz;
+                FragmentIon == other.FragmentIon &&
+                ProductCharge == other.ProductCharge;
         }
 
         public override int GetHashCode()
@@ -102,7 +109,8 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 int result = (PeptideModSeq != null ? PeptideModSeq.GetHashCode() : 0);
                 result = (result*397) ^ Charge.GetHashCode();
-                result = (result*397) ^ Mz.GetHashCode();
+                result = (result*397) ^ FragmentIon.GetHashCode();
+                result = (result*397) ^ ProductCharge.GetHashCode();
                 return result;
             }
         }
@@ -124,7 +132,8 @@ namespace pwiz.Skyline.Model.Optimization
 
         public virtual string PeptideModSeq { get { return Key.PeptideModSeq; } set { Key.PeptideModSeq = value; } }
         public virtual int Charge { get { return Key.Charge; } set { Key.Charge = value; } }
-        public virtual double Mz { get { return Key.Mz; } set { Key.Mz = value; } }
+        public virtual string FragmentIon { get { return Key.FragmentIon; } set { Key.FragmentIon = value; } }
+        public virtual int ProductCharge { get { return Key.ProductCharge; } set { Key.ProductCharge = value; } }
         public virtual int Type
         {
             get
@@ -141,7 +150,7 @@ namespace pwiz.Skyline.Model.Optimization
         public virtual string Sequence { get { return PeptideModSeq; } }
 
         public DbOptimization(OptimizationKey key, double value)
-            : this(key.OptType, key.PeptideModSeq, key.Charge, key.Mz, value)
+            : this(key.OptType, key.PeptideModSeq, key.Charge, key.FragmentIon, key.ProductCharge, value)
         {
         }
 
@@ -151,9 +160,9 @@ namespace pwiz.Skyline.Model.Optimization
             Id = other.Id;
         }
 
-        public DbOptimization(OptimizationType type, string seq, int charge, double mz, double value)
+        public DbOptimization(OptimizationType type, string seq, int charge, string fragmentIon, int productCharge, double value)
         {
-            Key = new OptimizationKey(type, seq, charge, mz);
+            Key = new OptimizationKey(type, seq, charge, fragmentIon, productCharge);
             Value = value;
         }
 

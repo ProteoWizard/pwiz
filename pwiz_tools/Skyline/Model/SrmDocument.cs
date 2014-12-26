@@ -3184,7 +3184,8 @@ namespace pwiz.Skyline.Model
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
-                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge, nodeTransition.Mz);
+                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge,
+                    nodeTransition.FragmentIonName, nodeTransition.Transition.Charge);
                 if (optimization != null)
                 {
                     ce = optimization.Value;
@@ -3273,7 +3274,8 @@ namespace pwiz.Skyline.Model
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
-                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge, nodeTransition.Mz);
+                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge,
+                    nodeTransition.FragmentIonName, nodeTransition.Transition.Charge);
                 if (optimization != null)
                 {
                     return optimization.Value;

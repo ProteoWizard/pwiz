@@ -31,11 +31,10 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditOptimizationLibraryDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             this.btnCreate = new System.Windows.Forms.Button();
             this.labelNumOptimizations = new System.Windows.Forms.Label();
             this.btnAdd = new System.Windows.Forms.Button();
@@ -48,14 +47,15 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.columnSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bindingSourceLibrary = new System.Windows.Forms.BindingSource(this.components);
             this.contextMenuAdd = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addFromResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addFromFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.columnSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProductIon = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProductCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -141,59 +141,22 @@
             this.gridViewLibrary.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridViewLibrary.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnSequence,
+            this.columnProductIon,
+            this.columnValue,
             this.columnCharge,
-            this.columnProductMz,
-            this.columnValue});
+            this.columnProductCharge});
             this.gridViewLibrary.DataSource = this.bindingSourceLibrary;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridViewLibrary.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridViewLibrary.DefaultCellStyle = dataGridViewCellStyle5;
             this.gridViewLibrary.Name = "gridViewLibrary";
             this.gridViewLibrary.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewLibrary_RowsAdded);
             this.gridViewLibrary.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewLibrary_RowsRemoved);
-            // 
-            // columnSequence
-            // 
-            this.columnSequence.DataPropertyName = "PeptideModSeq";
-            dataGridViewCellStyle2.NullValue = null;
-            this.columnSequence.DefaultCellStyle = dataGridViewCellStyle2;
-            resources.ApplyResources(this.columnSequence, "columnSequence");
-            this.columnSequence.Name = "columnSequence";
-            // 
-            // columnCharge
-            // 
-            this.columnCharge.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnCharge.DataPropertyName = "Charge";
-            dataGridViewCellStyle3.Format = "N0";
-            dataGridViewCellStyle3.NullValue = null;
-            this.columnCharge.DefaultCellStyle = dataGridViewCellStyle3;
-            resources.ApplyResources(this.columnCharge, "columnCharge");
-            this.columnCharge.Name = "columnCharge";
-            // 
-            // columnProductMz
-            // 
-            this.columnProductMz.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnProductMz.DataPropertyName = "Mz";
-            dataGridViewCellStyle4.Format = "N2";
-            dataGridViewCellStyle4.NullValue = null;
-            this.columnProductMz.DefaultCellStyle = dataGridViewCellStyle4;
-            resources.ApplyResources(this.columnProductMz, "columnProductMz");
-            this.columnProductMz.Name = "columnProductMz";
-            // 
-            // columnValue
-            // 
-            this.columnValue.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.columnValue.DataPropertyName = "Value";
-            dataGridViewCellStyle5.Format = "N2";
-            dataGridViewCellStyle5.NullValue = null;
-            this.columnValue.DefaultCellStyle = dataGridViewCellStyle5;
-            resources.ApplyResources(this.columnValue, "columnValue");
-            this.columnValue.Name = "columnValue";
             // 
             // contextMenuAdd
             // 
@@ -214,6 +177,45 @@
             this.addFromFileMenuItem.Name = "addFromFileMenuItem";
             resources.ApplyResources(this.addFromFileMenuItem, "addFromFileMenuItem");
             this.addFromFileMenuItem.Click += new System.EventHandler(this.addFromFileMenuItem_Click);
+            // 
+            // columnSequence
+            // 
+            this.columnSequence.DataPropertyName = "PeptideModSeq";
+            dataGridViewCellStyle2.NullValue = null;
+            this.columnSequence.DefaultCellStyle = dataGridViewCellStyle2;
+            resources.ApplyResources(this.columnSequence, "columnSequence");
+            this.columnSequence.Name = "columnSequence";
+            // 
+            // columnProductIon
+            // 
+            this.columnProductIon.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnProductIon.DataPropertyName = "FragmentIon";
+            dataGridViewCellStyle3.NullValue = null;
+            this.columnProductIon.DefaultCellStyle = dataGridViewCellStyle3;
+            resources.ApplyResources(this.columnProductIon, "columnProductIon");
+            this.columnProductIon.Name = "columnProductIon";
+            // 
+            // columnValue
+            // 
+            this.columnValue.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.columnValue.DataPropertyName = "Value";
+            dataGridViewCellStyle4.Format = "N2";
+            dataGridViewCellStyle4.NullValue = null;
+            this.columnValue.DefaultCellStyle = dataGridViewCellStyle4;
+            resources.ApplyResources(this.columnValue, "columnValue");
+            this.columnValue.Name = "columnValue";
+            // 
+            // columnCharge
+            // 
+            this.columnCharge.DataPropertyName = "Charge";
+            resources.ApplyResources(this.columnCharge, "columnCharge");
+            this.columnCharge.Name = "columnCharge";
+            // 
+            // columnProductCharge
+            // 
+            this.columnProductCharge.DataPropertyName = "ProductCharge";
+            resources.ApplyResources(this.columnProductCharge, "columnProductCharge");
+            this.columnProductCharge.Name = "columnProductCharge";
             // 
             // EditOptimizationLibraryDlg
             // 
@@ -265,9 +267,10 @@
         private System.Windows.Forms.ToolStripMenuItem addFromResultsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addFromFileMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnSequence;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnCharge;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnProductMz;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnProductIon;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnValue;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnCharge;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnProductCharge;
 
     }
 }

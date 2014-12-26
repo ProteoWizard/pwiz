@@ -7366,9 +7366,6 @@
   <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
     <value>值 {0} 不是有效的经修饰的肽序列。</value>
   </data>
-  <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___and_m_z__2__appears_in_the__3__table_more_than_once_" xml:space="preserve">
-    <value>带有序列'{0}'、电荷{1}和质荷比{2}的最优化在{3}表中出现多次。</value>
-  </data>
   <data name="CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__" xml:space="preserve">
     <value>错误： 无法找到离子迁移库{0}。</value>
   </data>

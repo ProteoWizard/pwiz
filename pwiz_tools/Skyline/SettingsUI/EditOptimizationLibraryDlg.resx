@@ -441,23 +441,35 @@
   <data name="columnSequence.HeaderText" xml:space="preserve">
     <value>Modified Sequence</value>
   </data>
-  <metadata name="columnCharge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="columnProductIon.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnCharge.HeaderText" xml:space="preserve">
-    <value>Charge State</value>
-  </data>
-  <metadata name="columnProductMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="columnProductMz.HeaderText" xml:space="preserve">
-    <value>Product m/z</value>
+  <data name="columnProductIon.HeaderText" xml:space="preserve">
+    <value>Product Ion</value>
   </data>
   <metadata name="columnValue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="columnValue.HeaderText" xml:space="preserve">
     <value>Value</value>
+  </data>
+  <metadata name="columnCharge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnCharge.HeaderText" xml:space="preserve">
+    <value>Charge</value>
+  </data>
+  <data name="columnCharge.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <metadata name="columnProductCharge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnProductCharge.HeaderText" xml:space="preserve">
+    <value>Product Charge</value>
+  </data>
+  <data name="columnProductCharge.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <metadata name="bindingSourceLibrary.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -475,7 +487,7 @@
     <value>gridViewLibrary</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
     <value>$this</value>
@@ -516,9 +528,6 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>467, 359</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>322, 322</value>
   </data>
@@ -527,30 +536,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Optimization Library</value>
-  </data>
-  <data name="&gt;&gt;columnSequence.Name" xml:space="preserve">
-    <value>columnSequence</value>
-  </data>
-  <data name="&gt;&gt;columnSequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnCharge.Name" xml:space="preserve">
-    <value>columnCharge</value>
-  </data>
-  <data name="&gt;&gt;columnCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnProductMz.Name" xml:space="preserve">
-    <value>columnProductMz</value>
-  </data>
-  <data name="&gt;&gt;columnProductMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnValue.Name" xml:space="preserve">
-    <value>columnValue</value>
-  </data>
-  <data name="&gt;&gt;columnValue.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>
@@ -570,10 +555,40 @@
   <data name="&gt;&gt;addFromFileMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;columnSequence.Name" xml:space="preserve">
+    <value>columnSequence</value>
+  </data>
+  <data name="&gt;&gt;columnSequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnProductIon.Name" xml:space="preserve">
+    <value>columnProductIon</value>
+  </data>
+  <data name="&gt;&gt;columnProductIon.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnValue.Name" xml:space="preserve">
+    <value>columnValue</value>
+  </data>
+  <data name="&gt;&gt;columnValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnCharge.Name" xml:space="preserve">
+    <value>columnCharge</value>
+  </data>
+  <data name="&gt;&gt;columnCharge.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnProductCharge.Name" xml:space="preserve">
+    <value>columnProductCharge</value>
+  </data>
+  <data name="&gt;&gt;columnProductCharge.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditOptimizationLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -7366,9 +7366,6 @@
   <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
     <value>値{0}は有効な修飾ペプチドシークエンスではありません。</value>
   </data>
-  <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___and_m_z__2__appears_in_the__3__table_more_than_once_" xml:space="preserve">
-    <value>シークエンス{0}、電荷{1}、m/z{2}を持つ最適化は{3}表内に1回以上表示されます。</value>
-  </data>
   <data name="CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__" xml:space="preserve">
     <value>エラー： イオン移動度ライブラリ{0}を見つけることができませんでした。</value>
   </data>
