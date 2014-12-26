@@ -13,6 +13,7 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
+    <HighEntropyVA>False</HighEntropyVA>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>4477CD154A6B9F2CC1C91BF6EEABF81BA6572149</ManifestCertificateThumbprint>
     <ManifestKeyFile>
@@ -2718,6 +2719,11 @@
       <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
@@ -2780,6 +2786,42 @@
       <Link>msvcr100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\mfc90u.dll">
+      <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\Microsoft.VC90.MFC.manifest">
+      <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.MFC\x64\mfc100u.dll">
+      <Link>mfc100u.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\msvcp110.dll">
+      <Link>msvcp110.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x86\msvcr110.dll">
+      <Link>msvcr110.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x86\vcomp110.dll">
+      <Link>vcomp110.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x64\msvcp110.dll">
+      <Link>msvcp110.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.CRT\x64\msvcr110.dll">
+      <Link>msvcr110.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC110.OPENMP\x64\vcomp110.dll">
+      <Link>vcomp110.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC120.CRT\x86\msvcp120.dll">
       <Link>msvcp120.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2794,22 +2836,6 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC120.CRT\x64\msvcr120.dll">
       <Link>msvcr120.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\mfc90u.dll">
-      <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\Microsoft.VC90.MFC.manifest">
-      <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC100.MFC\x64\mfc100u.dll">
-      <Link>mfc100u.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC120.MFC\x64\mfc120u.dll">
-      <Link>mfc120u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\cdt.dll">
@@ -3480,13 +3506,12 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforePublish">
-    <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; /p Skyline! /v &quot;$(ProjectDir)obj\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
+  <Target Name="AfterBuild">
+    <Exec Command="signExe &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; Skyline! &quot;$(ProjectDir)obj\$(Platform)\$(ConfigurationName)\$(TargetFileName)&quot;" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>CALL "%25VS120COMNTOOLS%25vsvars32.bat"
-editbin.exe "$(TargetPath)" /HIGHENTROPYVA:NO
-</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
