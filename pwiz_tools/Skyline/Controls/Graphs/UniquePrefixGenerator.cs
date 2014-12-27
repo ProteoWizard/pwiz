@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -130,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 int matchCount = matches.Count;
                 for (int j = matchCount - 1; j >= 0; j--)
                 {
-                    if (matches[j][i] != identifier[i])
+                    if (matches[j].Length <= i || matches[j][i] != identifier[i])
                         matches.RemoveAt(j);
                 }
 
@@ -149,9 +148,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            // Never expect to get here.
-            Assume.Fail();
-            return null;
+            // If we got here, then it means that there is something else which matches this identifier's suffix
+            // and is longer.  Return either the prefix with the length specifier, or the entire identifier.
+            return ShorterOf(string.Format("{0}({1})", prefix, identifier.Length), identifier); // Not L10N
         }
 
         /// <summary>

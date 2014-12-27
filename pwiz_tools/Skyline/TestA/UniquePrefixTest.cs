@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.SkylineTestUtil;
@@ -118,6 +119,36 @@ namespace pwiz.SkylineTestA
                     Assert.AreEqual(expected, uniquePrefix);
                 }
             }
+        }
+
+        /// <summary>
+        /// Tests fix for an exception that used to occur where, if there were multiple peptides
+        /// of different length that shared 3 letter prefixes and suffixes with each other, an
+        /// exception would be thrown by GetUniquePrefix.
+        /// </summary>
+        [TestMethod]
+        public void TestPrefixAndSuffixMatches()
+        {
+            string[] peptides = 
+            {
+                "LATQSNEITIPVTFESRAqLGGPEAAK",
+                "LATqSNEITIPVTFESRAQLGGPEAAK",
+                "LATQSnEITIPVTFESRAQLGGPEAAK",
+                "LATQSnEITIPVTFESRAQLGGPEAAKSDETAAK",
+                "LATQSNEITIPVTFESRAQLGGPEAAK",
+                "LATQSNEITIPVTFESRAQLGGPEAAKSDETAAK",
+                "LATQSNEITIPVTFESRAqLGGPEAAKSDETAAK",
+            };
+            var uniquePrefixGenerator = new UniquePrefixGenerator(peptides.Select(
+                sequence => new Tuple<string, bool>(sequence, true)), 3);
+            Dictionary<string, string> peptideAbbreviations = new Dictionary<string, string>();
+            foreach (string peptide in peptides)
+            {
+                string abbreviation = uniquePrefixGenerator.GetUniquePrefix(peptide, true);
+                Assert.IsTrue(abbreviation.Length <= peptide.Length);
+                peptideAbbreviations.Add(peptide, abbreviation);
+            }
+            CollectionAssert.AllItemsAreUnique(peptideAbbreviations.Values);
         }
     }
 }
