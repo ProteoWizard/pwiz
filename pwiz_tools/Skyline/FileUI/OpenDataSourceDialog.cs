@@ -1095,5 +1095,7 @@ namespace pwiz.Skyline.FileUI
         {
             CurrentDirectory = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Recent));
         }
+
+        public bool WaitingForData { get { return _waitingForData; } }
     }
 }
