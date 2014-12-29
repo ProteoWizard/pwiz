@@ -365,6 +365,7 @@ class Digestion::Impl
             return;
         }
 
+        cleavageAgent_ = CVID_Unknown; // Avoid testing uninitialized value in digest()
         string mergedRegex = "((" + disambiguateCleavageAgentRegex(getCleavageAgentRegex(cleavageAgents[0]));
         for (size_t i=1; i < cleavageAgents.size(); ++i)
             mergedRegex += ")|(" + disambiguateCleavageAgentRegex(getCleavageAgentRegex(cleavageAgents[i]));
@@ -376,6 +377,7 @@ class Digestion::Impl
     Impl(const Peptide& peptide, const vector<string>& cleavageAgentRegexes, const Config& config)
         :   peptide_(peptide), config_(config)
     {
+        cleavageAgent_ = CVID_Unknown; // Avoid testing uninitialized value in digest()
         if (cleavageAgentRegexes.size() == 1)
         {
             cleavageAgentRegex_ = bxp::sregex::compile(cleavageAgentRegexes[0]); //disambiguateCleavageAgentRegex(cleavageAgentRegexes[0].str());
@@ -675,6 +677,7 @@ class Digestion::const_iterator::Impl
     inline void initFullySpecific()
     {
         begin_ = end_ = sites_.end();
+        beginNonSpecific_ = endNonSpecific_ = -1; // So debuggers don't complain about uninit values
 
         // iteration requires at least 2 digestion sites
         if (sites_.size() < 2)
