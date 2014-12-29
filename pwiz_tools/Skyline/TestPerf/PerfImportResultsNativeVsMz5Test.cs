@@ -129,7 +129,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             NativeVsMz5ChromatogramPerformanceTest(
                 "PerfImportResultsBrukerFullScanSWATHData.zip",
-                "SWATH data\\SWATH Ecoli-test.sky",
+                "SWATH data\\Bruker SWATH Ecoli.sky",
                 "SWATH data\\SWATH_Ecoli+UPS0.5pmol_120min_BC2_01_1919.d");
         }
 
@@ -154,8 +154,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             BrukerFullScanMS1filteringPerformanceTest();
             BrukerFullScanMSeDataPerformanceTest();
             BrukerFullScanSWATHDataPerformanceTest();
-            ThermoDdaVsMz5ChromatogramPerformanceTest();
             ThermoDiaVsMz5ChromatogramPerformanceTest();
+            ThermoDdaVsMz5ChromatogramPerformanceTest();
             WatersVsMz5ChromatogramPerformanceTest();
             DebugLog.Info("Done.");
             var logs = Log.GetMemoryAppendedLogEvents();
