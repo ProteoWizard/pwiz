@@ -768,6 +768,7 @@
         <xs:attribute name="charge" type="xs:positiveInteger" use="required"/>
         <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
         <xs:attribute name="collision_energy" type="xs:double"/>
+        <xs:attribute name="declustering_potential" type="xs:double"/>
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <xs:attribute name="explicit_collision_energy" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
@@ -853,7 +854,6 @@
         <xs:attribute name="isotope_label" type="xs:string"/>
         <xs:attribute name="calc_neutral_mass" type="xs:double" use="required"/>
         <xs:attribute name="decoy_mass_shift" type="xs:double"/>
-        <xs:attribute name="declustering_potential" type="xs:double"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
       </xs:extension>
     </xs:complexContent>
