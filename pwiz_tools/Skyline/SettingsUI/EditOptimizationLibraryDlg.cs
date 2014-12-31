@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -362,7 +363,7 @@ namespace pwiz.Skyline.SettingsUI
             private const int COLUMN_PRODUCT_ION = 1;
             private const int COLUMN_VALUE = 2;
 
-            private static readonly Regex RGX_PRODUCT_ION = new Regex(@"^[\s]*(?<ion>precursor|[abcxyz][\d]+)[\s]*(?:-[\s]*(?<loss>[\d]+(?:\.[\d]+)?)[\s]*)?$", RegexOptions.IgnoreCase); // Not L10N
+            private static readonly Regex RGX_PRODUCT_ION = new Regex(@"^[\s]*(?<ion>precursor|[abcxyz][\d]+)[\s]*(?:-[\s]*(?<loss>[\d]+(?:[\.,][\d]+)?)[\s]*)?$", RegexOptions.IgnoreCase); // Not L10N
 
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
                                          SortableBindingList<DbOptimization> items)
@@ -460,9 +461,10 @@ namespace pwiz.Skyline.SettingsUI
                     return ion;
 
                 string normalizedIon = matches[0].Groups["ion"].Value.ToLower(); // Not L10N
+                IFormatProvider culture = LocalizationHelper.CurrentCulture;
                 return (string.IsNullOrEmpty(matches[0].Groups["loss"].Value)) // Not L10N
                     ? normalizedIon
-                    : string.Format("{0} -{1}", normalizedIon, Math.Round(decimal.Parse(matches[0].Groups["loss"].Value), 1).ToString("G29", CultureInfo.InvariantCulture)); // Not L10N
+                    : string.Format(culture, "{0} -{1}", normalizedIon, Math.Round(double.Parse(matches[0].Groups["loss"].Value, culture), 1)); // Not L10N
             }
 
             private static bool ValidateOptimizationRow(object[] columns, IWin32Window parent, int lineNumber)

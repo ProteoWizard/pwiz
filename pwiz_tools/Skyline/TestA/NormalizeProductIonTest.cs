@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -30,24 +31,25 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void NormalizationTest()
         {
+            string dot = LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator;
             var ions = new Dictionary<string, string>
             {
                 {"this is not an ion", "this is not an ion"},
                 {"a2", "a2"},
                 {"  B24  ", "b24"},
                 {"c2 -98", "c2 -98"},
-                {"x2 -98.0", "x2 -98"},
-                {"y2 -98.44", "y2 -98.4"},
-                {"z2 -98.5", "z2 -98.5"},
-                {"y2 -98.64", "y2 -98.6"},
-                {"y2-98.44", "y2 -98.4"},
-                {"y2- 98.44", "y2 -98.4"},
-                {"  y2  -  98.44  ", "y2 -98.4"},
+                {"x2 -98"+dot+"0", "x2 -98"},
+                {"y2 -98"+dot+"44", "y2 -98"+dot+"4"},
+                {"z2 -98"+dot+"5", "z2 -98"+dot+"5"},
+                {"y2 -98"+dot+"64", "y2 -98"+dot+"6"},
+                {"y2-98"+dot+"44", "y2 -98"+dot+"4"},
+                {"y2- 98"+dot+"44", "y2 -98"+dot+"4"},
+                {"  y2  -  98"+dot+"44  ", "y2 -98"+dot+"4"},
                 {"precursor", "precursor"},
                 {"PRECURSOR", "precursor"},
                 {"precursor -98", "precursor -98"},
-                {"precursor-98.44", "precursor -98.4"},
-                {"precursor  -  98.44", "precursor -98.4"},
+                {"precursor-98"+dot+"44", "precursor -98"+dot+"4"},
+                {"precursor  -  98"+dot+"44", "precursor -98"+dot+"4"},
             };
 
             foreach (var ion in ions)
