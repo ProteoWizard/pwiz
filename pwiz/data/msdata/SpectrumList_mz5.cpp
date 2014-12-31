@@ -168,7 +168,7 @@ void SpectrumList_mz5Impl::initSpectra() const
         {
             std::vector<unsigned long> index;
             index.resize(numberOfSpectra_);
-            hsize_t dsend;
+            size_t dsend;
             conn_->readDataSet(Configuration_mz5::SpectrumIndex, dsend, &index[0]);
             hsize_t last = 0, current = 0;
             hsize_t overflow_correction = 0; // mz5 writes these as 32 bit values, so deal with overflow

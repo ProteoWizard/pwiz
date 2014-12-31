@@ -297,7 +297,7 @@ const std::map<Configuration_mz5::MZ5DataSets, size_t>& Connection_mz5::getField
 }
 
 void *Connection_mz5::readDataSet(const Configuration_mz5::MZ5DataSets v,
-        hsize_t& dsend, void* ptr)
+        size_t& dsend, void* ptr)
 {
     boost::mutex::scoped_lock lock(connectionReadMutex_);
 
@@ -305,7 +305,7 @@ void *Connection_mz5::readDataSet(const Configuration_mz5::MZ5DataSets v,
     DataSpace dsp = ds.getSpace();
     hsize_t start[1], end[1];
     dsp.getSelectBounds(start, end);
-    dsend = end[0] + 1;
+    dsend = (static_cast<size_t> (end[0])) + 1;
     DataType dt = config_.getDataTypeFor(v);
     if (ptr == 0)
     {
@@ -318,12 +318,12 @@ void *Connection_mz5::readDataSet(const Configuration_mz5::MZ5DataSets v,
 }
 
 void Connection_mz5::clean(const Configuration_mz5::MZ5DataSets v, void* data,
-        const hsize_t dsend)
+        const size_t dsend)
 {
     boost::mutex::scoped_lock lock(connectionReadMutex_);
 
     hsize_t dim[1] =
-    { dsend };
+    { static_cast<hsize_t> (dsend) };
     DataSpace dsp(1, dim);
     DataSet::vlenReclaim(data, config_.getDataTypeFor(v), dsp);
     free(data);
@@ -338,7 +338,7 @@ void Connection_mz5::getData(std::vector<double>& data,
     boost::mutex::scoped_lock lock(connectionReadMutex_);
 
     hsize_t scount = end - start;
-    data.resize(static_cast<size_t>(scount));
+    data.resize(scount);
     if (scount > 0)
     {
         std::map<Configuration_mz5::MZ5DataSets, DataSet>::iterator it =

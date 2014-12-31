@@ -112,7 +112,7 @@ public:
      * @param ptr start pointer where the data should be written to.
      * @return pointer to the data
      */
-    void* readDataSet(Configuration_mz5::MZ5DataSets v, hsize_t& dsend,
+    void* readDataSet(Configuration_mz5::MZ5DataSets v, size_t& dsend,
             void* ptr = 0);
 
     /**
@@ -123,7 +123,7 @@ public:
      * @param dsend length of the data.
      */
     void clean(const Configuration_mz5::MZ5DataSets v, void* data,
-            const hsize_t dsend);
+            const size_t dsend);
 
     /**
      * Gets data from a numerical dataset and writes it to the vector. This method is used to get mz,intensity and time.
