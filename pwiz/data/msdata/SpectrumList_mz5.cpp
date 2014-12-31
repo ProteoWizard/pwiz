@@ -112,7 +112,7 @@ private:
      */
     mutable BinaryDataMZ5* binaryParamsData_;
     mutable std::vector<SpectrumIdentity> spectrumIdentityList_;
-    mutable std::map<size_t, std::pair<size_t, size_t> > spectrumRanges_;
+    mutable std::map<size_t, std::pair<hsize_t, hsize_t> > spectrumRanges_;
     mutable std::map<std::string, size_t> idMap_;
     mutable std::map<std::string, IndexList> spotMap_;
     size_t numberOfSpectra_;
@@ -168,12 +168,18 @@ void SpectrumList_mz5Impl::initSpectra() const
         {
             std::vector<unsigned long> index;
             index.resize(numberOfSpectra_);
-            size_t dsend;
+            hsize_t dsend;
             conn_->readDataSet(Configuration_mz5::SpectrumIndex, dsend, &index[0]);
-            size_t last = 0, current = 0;
+            hsize_t last = 0, current = 0;
+            hsize_t overflow_correction = 0; // mz5 writes these as 32 bit values, so deal with overflow
             for (size_t i = 0; i < index.size(); ++i)
             {
-                current = static_cast<size_t> (index[i]);
+                current = static_cast<hsize_t> (index[i]) + overflow_correction;
+                if (last > current)
+                {
+                    overflow_correction += 0x0100000000; // This assumes no scan has more than 4GB of peak data
+                    current = static_cast<hsize_t> (index[i]) + overflow_correction;
+                }
                 spectrumRanges_.insert(make_pair(i, make_pair(last, current)));
                 last = current;
             }
@@ -185,7 +191,7 @@ void SpectrumList_mz5Impl::initSpectra() const
             conn_->readDataSet(Configuration_mz5::SpectrumBinaryMetaData, dsend, binaryParamsData_);
 
             spectrumIdentityList_.resize(dsend);
-            for (size_t i = 0; i < dsend; ++i)
+            for (hsize_t i = 0; i < dsend; ++i)
             {
                 spectrumIdentityList_[i] = spectrumData_[i].getSpectrumIdentity();
                 idMap_.insert(make_pair(spectrumIdentityList_[i].id, i));
@@ -233,9 +239,9 @@ SpectrumPtr SpectrumList_mz5Impl::spectrum(size_t index, bool getBinaryData) con
     if (index >= 0 && index < numberOfSpectra_)
     {
         SpectrumPtr ptr(spectrumData_[index].getSpectrum(*rref_));
-        std::pair<size_t, size_t> bounds = spectrumRanges_.find(index)->second;
-        hsize_t start = static_cast<hsize_t> (bounds.first);
-        hsize_t end = static_cast<hsize_t> (bounds.second);
+        std::pair<hsize_t, hsize_t> bounds = spectrumRanges_.find(index)->second;
+        hsize_t start = bounds.first;
+        hsize_t end = bounds.second;
         ptr->defaultArrayLength = end - start;
         if (getBinaryData)
         {
