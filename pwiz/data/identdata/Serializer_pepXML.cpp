@@ -572,7 +572,9 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
                         switch (sm->specificityRules.cvid)
                         {
                             case MS_modification_specificity_peptide_N_term: attributes.add("peptide_terminus", "n"); break;
+                            case MS_modification_specificity_protein_N_term: attributes.add("peptide_terminus", "n"); break;
                             case MS_modification_specificity_peptide_C_term: attributes.add("peptide_terminus", "c"); break;
+                            case MS_modification_specificity_protein_C_term: attributes.add("peptide_terminus", "c"); break;
                             default: throw runtime_error("[write_search_summary] Cannot handle CV term in specificityRules: " + sm->specificityRules.name());
                         }
                 }
