@@ -911,10 +911,7 @@ namespace pwiz.Skyline
 
             // Notify interested tools.
             if (Program.MainToolService != null)
-            {
-                var bookmark = new Bookmark(SequenceTree.SelectedPath);
-                Program.MainToolService.SendSelectionChange(bookmark.IdentityPath.ToString());
-            }
+                Program.MainToolService.SendSelectionChange();
         }
 
         private bool StatementCompletionAction(Action<TextBox> act)
@@ -3646,6 +3643,9 @@ namespace pwiz.Skyline
                         // Keep focus on the combo box
                         ComboResults.Focus();
                 }
+
+                if (Program.MainToolService != null)
+                    Program.MainToolService.SendSelectionChange();
 
 //                UpdateReplicateMenuItems(DocumentUI.Settings.HasResults);
             }

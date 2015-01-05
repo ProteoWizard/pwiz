@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using SkylineTool;
 using ZedGraph;
 
 namespace ExampleInteractiveTool
@@ -37,7 +39,7 @@ namespace ExampleInteractiveTool
         /// <summary>
         /// Create an empty graph with the appearance we want.
         /// </summary>
-        public Graph(ZedGraphControl graphControl)
+        public Graph(ZedGraphControl graphControl, string xLabel, string yLabel)
         {
             _graphControl = graphControl;
 
@@ -46,14 +48,14 @@ namespace ExampleInteractiveTool
             pane.Border.IsVisible = false;
             pane.Chart.Border.IsVisible = false;
 
-            pane.XAxis.Title.Text = "Peptide"; // Not L10N
+            pane.XAxis.Title.Text = xLabel;
             pane.XAxis.MinorTic.IsOpposite = false;
             pane.XAxis.MajorTic.IsOpposite = false;
             pane.XAxis.MajorTic.IsAllTics = false;
             pane.XAxis.Scale.FontSpec.Angle = 90;
             pane.XAxis.Scale.Align = AlignP.Inside;
 
-            pane.YAxis.Title.Text = "Peak Area"; // Not L10N
+            pane.YAxis.Title.Text = yLabel;
             pane.YAxis.MinorTic.IsOpposite = false;
             pane.YAxis.MajorTic.IsOpposite = false;
 
@@ -130,6 +132,32 @@ namespace ExampleInteractiveTool
             _graphControl.AxisChange();
             GraphUtilities.ScaleAxisLabels(_graphControl.Width, pane);
             _graphControl.Refresh();
+        }
+
+        public void CreateChromatograms(IEnumerable<Chromatogram> chromatograms, string name)
+        {
+            var pane = _graphControl.GraphPane;
+            pane.CurveList.Clear();
+            pane.Title.IsVisible = true;
+            pane.Title.Text = name;
+            _graphControl.IsAntiAlias = true;
+
+            foreach (var chromatogram in chromatograms)
+            {
+                pane.AddCurve("", ToDoubles(chromatogram.Times), ToDoubles(chromatogram.Intensities), chromatogram.Color, SymbolType.None);
+            }
+
+            _graphControl.AxisChange();
+            GraphUtilities.ScaleAxisLabels(_graphControl.Width, pane);
+            _graphControl.Refresh();
+        }
+
+        private static double[] ToDoubles(IList<float> fa)
+        {
+            var da = new double[fa.Count];
+            for (int i = 0; i < fa.Count; i++)
+                da[i] = fa[i];
+            return da;
         }
     }
 

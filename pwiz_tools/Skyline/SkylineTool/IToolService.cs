@@ -17,7 +17,8 @@
  * limitations under the License.
  */
 
-using System.IO;
+using System;
+using System.Drawing;
 using System.Linq;
 
 namespace SkylineTool
@@ -28,42 +29,35 @@ namespace SkylineTool
     /// </summary>
     public interface IToolService
     {
-        string GetReport(string toolReportName);
-        void Select(string link);
+        string GetReport(string toolName, string reportName);
+
+        DocumentLocation GetDocumentLocation();
+        void SetDocumentLocation(DocumentLocation documentLocation);
+
+        string GetDocumentLocationName();
+        string GetReplicateName();
+
+        Chromatogram[] GetChromatograms(DocumentLocation documentLocation);
         string GetDocumentPath();
         Version GetVersion();
-        void AddDocumentChangeReceiver(string receiverName);
+
+        void AddDocumentChangeReceiver(string receiverName, string toolName);
         void RemoveDocumentChangeReceiver(string receiverName);
     }
 
     public interface IDocumentChangeReceiver
     {
         void DocumentChanged();
-        void SelectionChanged(string link);
+        void SelectionChanged();
     }
 
-    public class Version : IStreamable
+    [Serializable]
+    public class Version
     {
         public int Major { get; set; }
         public int Minor { get; set; }
         public int Build { get; set; }
         public int Revision { get; set; }
-
-        public void Read(BinaryReader reader)
-        {
-            Major = reader.ReadInt32();
-            Minor = reader.ReadInt32();
-            Build = reader.ReadInt32();
-            Revision = reader.ReadInt32();
-        }
-
-        public void Write(BinaryWriter writer)
-        {
-            writer.Write(Major);
-            writer.Write(Minor);
-            writer.Write(Build);
-            writer.Write(Revision);
-        }
 
         public override string ToString()
         {
@@ -79,7 +73,7 @@ namespace SkylineTool
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((Version)obj);
         }
 
@@ -96,37 +90,23 @@ namespace SkylineTool
         }
     }
 
-    public class Chromatogram : IStreamable
+    [Serializable]
+    public class Chromatogram
     {
-        public double Mz { get; set; }
+        public double PrecursorMz { get; set; }
+        public double ProductMz { get; set; }
         public float[] Times { get; set; }
         public float[] Intensities { get; set; }
-
-        public void Read(BinaryReader reader)
-        {
-            Mz = reader.ReadDouble();
-            int length = reader.ReadInt32();
-            Times = new float[length];
-            for (int i = 0; i < length; i++)
-                Times[i] = reader.ReadSingle();
-            Intensities = new float[length];
-            for (int i = 0; i < length; i++)
-                Intensities[i] = reader.ReadSingle();
-        }
-
-        public void Write(BinaryWriter writer)
-        {
-            writer.Write(Mz);
-            writer.Write(Times.Length);
-            foreach (var time in Times)
-                writer.Write(time);
-            foreach (var intensity in Intensities)
-                writer.Write(intensity);
-        }
+        public Color Color { get; set; }
 
         private bool Equals(Chromatogram other)
         {
-            return Mz.Equals(other.Mz) && Times.SequenceEqual(other.Times) && Intensities.SequenceEqual(other.Intensities);
+            return 
+                PrecursorMz.Equals(other.PrecursorMz) &&
+                ProductMz.Equals(other.ProductMz) &&
+                Times.SequenceEqual(other.Times) &&
+                Intensities.SequenceEqual(other.Intensities) &&
+                Color.Equals(other.Color);
         }
 
         public override bool Equals(object obj)
@@ -141,9 +121,11 @@ namespace SkylineTool
         {
             unchecked
             {
-                int hashCode = Mz.GetHashCode();
+                int hashCode = PrecursorMz.GetHashCode();
+                hashCode = (hashCode * 397) ^ ProductMz.GetHashCode();
                 hashCode = (hashCode * 397) ^ Times.GetHashCode();
                 hashCode = (hashCode * 397) ^ Intensities.GetHashCode();
+                hashCode = (hashCode * 397) ^ Color.GetHashCode();
                 return hashCode;
             }
         }

@@ -649,7 +649,6 @@
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
     <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
-    <Compile Include="Model\Databinding\Entities\DocumentLocation.cs" />
     <Compile Include="Model\Databinding\Entities\MultiResult.cs" />
     <Compile Include="Model\Databinding\Entities\Peptide.cs" />
     <Compile Include="Model\Databinding\Entities\PeptideResult.cs" />
@@ -2607,6 +2606,7 @@
     <Compile Include="SkylineGraphs.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\ToolService.cs" />
     <Compile Include="ToolsUI\ConfigureToolsDlg.cs">
       <SubType>Form</SubType>
     </Compile>

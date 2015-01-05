@@ -2030,7 +2030,7 @@ namespace pwiz.Skyline
 //            return iGraph != -1 && !_listGraphChrom[iGraph].IsHidden;
 //        }
 
-        private string SelectedGraphChromName
+        public string SelectedGraphChromName
         {
             get
             {

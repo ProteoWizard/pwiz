@@ -29,8 +29,9 @@ namespace ExampleInteractiveTool
     /// </summary>
     public partial class MainForm : Form
     {
-        private readonly SkylineToolClient _toolClient;
+        private SkylineToolClient _toolClient;
         private readonly Graph _graph;
+        private readonly Graph _chromatogramGraph;
         private List<string> _peptides;
         private List<string> _peptideLinks;
         private List<string> _replicateLinks;
@@ -52,15 +53,81 @@ namespace ExampleInteractiveTool
             replicatesToolStripMenuItem.DropDownItemClicked += ItemClicked;
 
             // Create a graph and fill it with data.
-            _graph = new Graph(graph);
+            _graph = new Graph(graph, "Peptide", "Peak Area"); // Not L10N
             _graph.Click += GraphClick;
             CreateGraph();
+
+            // Create chromatogram graph.
+            _chromatogramGraph = new Graph(chromatogramGraph, "Retention Time", "Intensity"); // Not L10N
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+
+            try
+            {
+                _toolClient.DocumentChanged -= OnDocumentChanged;
+                _toolClient.SelectionChanged -= OnSelectionChanged;
+                _toolClient.Dispose();
+            }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+            }
+
+            _toolClient = null;
         }
 
         private void GraphClick(object sender, ClickEventArgs e)
         {
             // Select the peptide in Skyline when the user clicks on it.
-            _toolClient.Select(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]); // Not L10N
+            var documentLocation =
+                DocumentLocation.Parse(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]);
+            _toolClient.SetDocumentLocation(documentLocation);
+        }
+
+        private void SelectReplicate(string replicateName)
+        {
+            _selectedReplicate = replicateName;
+            foreach (var item in replicatesToolStripMenuItem.DropDownItems)
+            {
+                var toolStripItem = item as ToolStripMenuItem;
+                if (toolStripItem != null)
+                    toolStripItem.Checked = (toolStripItem.Text == _selectedReplicate);
+            }
+        }
+
+        void ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            SelectReplicate(e.ClickedItem.Text);
+            CreateGraph();
+        }
+
+        private void OnDocumentChanged(object sender, EventArgs eventArgs)
+        {
+            // Create graph on UI thread.
+            Invoke(new Action(CreateGraph));
+        }
+
+        private void OnSelectionChanged(object sender, EventArgs eventArgs)
+        {
+            // Create graph on UI thread.
+            var documentLocation = _toolClient.GetDocumentLocation();
+            var chromatograms = _toolClient.GetChromatograms(documentLocation);
+            var documentLocationName = _toolClient.GetDocumentLocationName();
+            Invoke(new Action(() =>
+                _chromatogramGraph.CreateChromatograms(chromatograms, documentLocationName)));
+        }
+
+        private void InfoClick(object sender, EventArgs e)
+        {
+            if (_toolClient == null)
+                return;
+            var version = _toolClient.SkylineVersion;
+            MessageBox.Show(string.Format("Skyline version: {0}.{1}.{2}.{3}\nDocument: {4}", // Not L10N
+                version.Major, version.Minor, version.Build, version.Revision,
+                _toolClient.DocumentPath));
         }
 
         private void CreateGraph()
@@ -135,45 +202,6 @@ namespace ExampleInteractiveTool
 
             // Create bar graph showing summed peak area for each peptide.
             _graph.CreateBars(_peptides.Select(prefixGenerator.GetUniquePrefix).ToArray(), areas);
-        }
-
-        private void SelectReplicate(string replicateName)
-        {
-            _selectedReplicate = replicateName;
-            foreach (var item in replicatesToolStripMenuItem.DropDownItems)
-            {
-                var toolStripItem = item as ToolStripMenuItem;
-                if (toolStripItem != null)
-                    toolStripItem.Checked = (toolStripItem.Text == _selectedReplicate);
-            }
-        }
-
-        void ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-            SelectReplicate(e.ClickedItem.Text);
-            CreateGraph();
-        }
-
-        private void OnDocumentChanged(object sender, EventArgs eventArgs)
-        {
-            // Create graph on UI thread.
-            Invoke(new Action(CreateGraph));
-        }
-
-        private void OnSelectionChanged(object sender, SelectionChangedEventArgs eventArgs)
-        {
-            // Create graph on UI thread.
-            Invoke(new Action(() => MessageBox.Show(eventArgs.SelectedLink)));
-        }
-
-        private void InfoClick(object sender, EventArgs e)
-        {
-            if (_toolClient == null)
-                return;
-            var version = _toolClient.SkylineVersion;
-            MessageBox.Show(string.Format("Skyline version: {0}.{1}.{2}.{3}\nDocument: {4}", // Not L10N
-                version.Major, version.Minor, version.Build, version.Revision,
-                _toolClient.DocumentPath));
         }
     }
 }

@@ -42,7 +42,6 @@ namespace SkylineTester
     {
         #region Fields
 
-        public const string DefaultNightlyLogsDir = "Documents\\SkylineTester nightly logs";
         public const string SummaryLog = "Summary.log";
         public const string SkylineTesterZip = "SkylineTester.zip";
         public const string SkylineTesterFiles = "SkylineTester Files";

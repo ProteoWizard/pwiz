@@ -18,19 +18,14 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
+using System.IO.Pipes;
 using System.Threading;
 
 namespace SkylineTool
 {
-    public class RemoteService : RemoteBase, IDisposable
+    public class RemoteService : RemoteBase
     {
-        private readonly List<Channel> _channels = new List<Channel>();
-        private bool _exit;
-        private readonly CountdownEvent _quitCountDown;
-        private readonly EventWaitHandle _serverAlive;
-
         /// <summary>
         /// Create remote service that communicates with a client.
         /// </summary>
@@ -38,99 +33,79 @@ namespace SkylineTool
         protected RemoteService(string connectionName)
         {
             ConnectionName = connectionName;
-
-            // Create a service thread for each interface method.
-            foreach (var pair in MethodInfos)
-            {
-                // Start service thread.
-                var worker = new BackgroundWorker();
-                worker.DoWork += ServiceThread;
-                var channel = new Channel(ConnectionName, this, pair.Value);
-                worker.RunWorkerAsync(channel);
-                _channels.Add(channel);
-            }
-
-            // Counter to wait for all threads to exit.
-            _quitCountDown = new CountdownEvent(_channels.Count);
-
-            // Allow clients to continue after server is ready.
-            var serverAliveName = "Global\\" + ConnectionName; // Not L10N
-            _serverAlive = new EventWaitHandle(false, EventResetMode.ManualReset, serverAliveName);
-            _serverAlive.Set();
         }
 
-        public void Dispose()
+        public void RunAsync()
         {
-            if (!_exit)
+            var asyncThread = new Thread(Run)
             {
-                Exit();
-                WaitForExit();
+                Name = "RemoteServiceThread-" + ConnectionName, // Not L10N
+                IsBackground = true
+            };
+            asyncThread.Start();
+        }
+
+        public void Run()
+        {
+            while (true)
+            {
+                try
+                {
+                    var pipeStream = new NamedPipeServerStream(ConnectionName, PipeDirection.InOut, -1, PipeTransmissionMode.Message);
+                    pipeStream.WaitForConnection();
+
+                    //Spawn a new thread for each request and continue waiting
+                    var t = new Thread(ProcessClientThread);
+                    t.Start(pipeStream);
+                }
+                catch (Exception e)
+                {  
+                    Debug.WriteLine(e);
+                }
             }
-            foreach (var channel in _channels)
-                channel.Dispose();
-            _quitCountDown.Dispose();
-            _serverAlive.Dispose();
+// ReSharper disable once FunctionNeverReturns
+        }
+
+        private void ProcessClientThread(object streamArg)
+        {
+            try
+            {
+                using (var stream = (NamedPipeServerStream) streamArg)
+                {
+                    byte[] bytesResponse;
+                    try
+                    {
+                        var remoteInvoke = (RemoteInvoke) DeserializeObject(ReadAllBytes(stream));
+                        var method = GetType().GetMethod(remoteInvoke.MethodName);
+                        var returnValue = method.Invoke(this, remoteInvoke.Arguments);
+                        bytesResponse = SerializeObject(new RemoteResponse {ReturnValue = returnValue});
+                    }
+                    catch (Exception e)
+                    {
+                        try
+                        {
+                            bytesResponse = SerializeObject(new RemoteResponse
+                            {
+                                Exception = e
+                            });
+                        }
+                        catch (Exception e2)
+                        {
+                            bytesResponse = SerializeObject(new RemoteResponse
+                            {
+                                Exception = new Exception(e2.ToString())
+                            });
+                        }
+                    }
+                    stream.Write(bytesResponse, 0, bytesResponse.Length);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+            }
         }
 
         public string ConnectionName { get; private set; }
-
-        protected void Exit()
-        {
-            _exit = true;
-            foreach (var channel in _channels)
-                channel.ReleaseServer();
-        }
-
-        /// <summary>
-        /// Wait for all service threads to exit.
-        /// </summary>
-        public void WaitForExit()
-        {
-            _quitCountDown.Wait();
-        }
-
-        private void ServiceThread(object sender, DoWorkEventArgs e)
-        {
-            var channel = (Channel) e.Argument;
-
-            // Name the thread for easier identification in the debugger.
-            Thread.CurrentThread.Name = "*" + channel.Name; // Not L10N
-
-            try
-            {
-                while (!_exit)
-                {
-                    // Wait for a message from the client.
-                    channel.WaitServer();
-
-                    if (_exit)
-                        break;
-
-                    // Create a shared file for communication.
-                    using (var sharedFile = channel.Open())
-                    {
-                        // Read data from shared file.
-                        object data = channel.HasArg ? sharedFile.Read() : null;
-
-                        // Call service method.
-                        object result = channel.RunMethod(data);
-
-                        // Write result to shared file.
-                        if (channel.HasReturn)
-                            sharedFile.Write(result);
-
-                        // Signal client that the result is ready.
-                        channel.ReleaseClient();
-                    }
-                }
-
-                _quitCountDown.Signal();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("EXCEPTION ({0}): {1}", channel.Name, ex); // Not L10N
-                throw;
-            }
-        }
     }
 }

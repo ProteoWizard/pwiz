@@ -16,7 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Linq;
 using pwiz.Skyline.Model.Results;
+using SkylineTool;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -92,6 +96,47 @@ namespace pwiz.Skyline.Model.Find
         public Bookmark ChangeOptStep(int value)
         {
             return new Bookmark(this){OptStep = value};
+        }
+
+        public static Bookmark ToBookmark(DocumentLocation documentLocation, SrmDocument document)
+        {
+            Bookmark bookmark = new Bookmark();
+            if (documentLocation.IdPath.Any())
+            {
+                IdentityPath identityPath = IdentityPath.ToIdentityPath(documentLocation.IdPath, document);
+                if (null == identityPath)
+                {
+                    throw new ArgumentException("Unable to find target node " + documentLocation.IdPathToString()); // Not L10N
+                }
+                bookmark = bookmark.ChangeIdentityPath(identityPath);
+            }
+            if (documentLocation.ChromFileId.HasValue)
+            {
+                ChromFileInfoId chromFileInfoId = null;
+                if (document.Settings.HasResults)
+                {
+                    foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+                    {
+                        var chromFileInfo =
+                            chromatogramSet.MSDataFileInfos.FirstOrDefault(
+                                fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
+                        if (null != chromFileInfo)
+                        {
+                            chromFileInfoId = chromFileInfo.FileId;
+                        }
+                    }
+                }
+                if (null == chromFileInfoId)
+                {
+                    throw new ArgumentException("Unable to find file id " + documentLocation.ChromFileId); // Not L10N
+                }
+                bookmark = bookmark.ChangeChromFileInfoId(chromFileInfoId);
+            }
+            if (documentLocation.OptStep.HasValue)
+            {
+                bookmark = bookmark.ChangeOptStep(documentLocation.OptStep.Value);
+            }
+            return bookmark;
         }
     }
 }

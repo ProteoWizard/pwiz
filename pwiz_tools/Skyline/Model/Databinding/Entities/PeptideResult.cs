@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -92,7 +93,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return new DocumentLocation(Peptide.IdentityPath).SetChromFileId(ResultFile.ChromFileInfoId.GlobalIndex);
+                return new DocumentLocation(Peptide.IdentityPath.ToGlobalIndexList()).SetChromFileId(ResultFile.ChromFileInfoId.GlobalIndex);
             }
         }
     }

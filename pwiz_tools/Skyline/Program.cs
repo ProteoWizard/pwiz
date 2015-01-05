@@ -31,15 +31,11 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 // Once-per-assembly initialization to perform logging with log4net.
-using SkylineTool;
-
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 
 namespace pwiz.Skyline
@@ -255,8 +251,9 @@ namespace pwiz.Skyline
         {
             if (MainToolService == null)
             {
-                MainToolService = new ToolService(MainToolServiceName);
+                MainToolService = new ToolService(MainToolServiceName, MainWindow);
                 MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+                MainToolService.RunAsync();
             }
         }
 
@@ -265,7 +262,6 @@ namespace pwiz.Skyline
             if (MainToolService != null)
             {
                 MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
-                MainToolService.Dispose();
                 MainToolService = null;
             }
         }
@@ -273,136 +269,6 @@ namespace pwiz.Skyline
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
             MainToolService.SendDocumentChange();
-        }
-
-        public class ToolService : RemoteService, IToolService
-        {
-            private  readonly Dictionary<string, DocumentChangeSender> _documentChangeSenders = 
-                new Dictionary<string,DocumentChangeSender>();
- 
-            public ToolService(string serviceName) : base(serviceName)
-            {
-            }
-
-            public string GetReport(string toolReportName)
-            {
-                var args = toolReportName.Split(',');
-                var toolName = args[0];
-                var reportName = args[1];
-                string report = null;
-                MainWindow.Invoke(new Action(() =>
-                {
-                    report = ToolDescriptionHelpers.GetReport(MainWindow.DocumentUI, reportName, toolName, MainWindow);
-                }));
-                return report;
-            }
-
-            public void Select(string link)
-            {
-                MainWindow.Invoke(new Action(() =>
-                {
-                    DocumentLocation documentLocation = DocumentLocation.Parse(link);
-                    Bookmark bookmark = documentLocation.ToBookmark(MainWindow.DocumentUI);
-                    MainWindow.NavigateToBookmark(bookmark);
-                }));
-            }
-
-            public string GetDocumentPath()
-            {
-                return MainWindow.DocumentFilePath;
-            }
-
-            public SkylineTool.Version GetVersion()
-            {
-                var version = new SkylineTool.Version();
-                try
-                {
-                    version.Major = Install.MajorVersion;
-                    version.Minor = Install.MinorVersion;
-                    version.Build = Install.Build;
-                    version.Revision = Install.Revision;
-                }
-                // ReSharper disable once EmptyGeneralCatchClause
-                catch
-                {
-                }
-                return version;
-            }
-
-            private readonly object _documentChangeSendersLock = new object();
-
-            public void AddDocumentChangeReceiver(string receiverName)
-            {
-                lock (_documentChangeSendersLock)
-                {
-                    _documentChangeSenders.Add(receiverName, new DocumentChangeSender(receiverName));
-                }
-            }
-
-            public void RemoveDocumentChangeReceiver(string receiverName)
-            {
-                lock (_documentChangeSendersLock)
-                {
-                    _documentChangeSenders.Remove(receiverName);
-                }
-            }
-
-            private void SendChange(Action<DocumentChangeSender, string> action, string arg = null)
-            {
-                // We have to send document changes off the UI thread, because the client
-                // may respond by requesting further information on the UI thread, which
-                // would cause a deadlock.
-                var sendThread = new Thread(() =>
-                {
-                    lock (_documentChangeSendersLock)
-                    {
-                        var deadSenders = new List<string>();
-                        foreach (var documentChangeSender in _documentChangeSenders)
-                        {
-                            try
-                            {
-                                action(documentChangeSender.Value, arg);
-                            }
-                            catch (InvalidOperationException)
-                            {
-                                deadSenders.Add(documentChangeSender.Key);
-                            }
-                        }
-                        foreach (var deadSender in deadSenders)
-                        {
-                            _documentChangeSenders.Remove(deadSender);
-                        }
-                    }
-                });
-                sendThread.Start();
-            }
-
-            public void SendDocumentChange()
-            {
-                SendChange((sender, arg) => sender.DocumentChanged());
-            }
-
-            public void SendSelectionChange(string link)
-            {
-                SendChange((sender, arg) => sender.SelectionChanged(link));
-            }
-
-            private class DocumentChangeSender : RemoteClient, IDocumentChangeReceiver
-            {
-                public DocumentChangeSender(string connectionName) : base(connectionName)
-                {
-                }
-
-                public void DocumentChanged()
-                {
-                    RemoteCall(DocumentChanged);
-                }
-
-                public void SelectionChanged(string link)
-                {
-                    RemoteCall(SelectionChanged, link);
-                }
-            }
         }
 
         private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)

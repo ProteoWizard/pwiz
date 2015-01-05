@@ -456,7 +456,7 @@ namespace TestRunner
                     break;
 
                 // Run each test in this test pass.
-                var testPass = randomOrder || qualityMode ? testList.RandomOrder().ToList() : testList;
+                var testPass = randomOrder ? testList.RandomOrder().ToList() : testList;
                 for (int testNumber = 0; testNumber < testPass.Count; testNumber++)
                 {
                     var test = testPass[testNumber];

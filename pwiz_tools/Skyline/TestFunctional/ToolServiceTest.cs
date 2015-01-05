@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void CheckCommunication()
         {
+            _testToolClient.Timeout = -1;
             Assert.AreEqual(4.0f, _testToolClient.TestFloat(2.0f));
             var floatArray = _testToolClient.TestFloatArray();
             Assert.IsTrue(ArrayUtil.EqualsDeep(floatArray, new[] { 1.0f, 2.0f }));
@@ -104,13 +105,15 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new Chromatogram
                     {
-                        Mz = 1.0,
+                        PrecursorMz = 1.0,
+                        ProductMz = 2.0,
                         Times = new[] {1.0f, 2.0f},
                         Intensities = new[] {10.0f, 20.0f}
                     },
                     new Chromatogram
                     {
-                        Mz = 2.0,
+                        PrecursorMz = 2.0,
+                        ProductMz = 4.0,
                         Times = new[] {3.0f, 4.0f, 5.0f},
                         Intensities = new[] {30.0f, 40.0f, 50.0f}
                     }

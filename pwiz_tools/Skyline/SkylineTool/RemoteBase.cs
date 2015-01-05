@@ -17,9 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SkylineTool
 {
@@ -43,9 +47,44 @@ namespace SkylineTool
             }
         }
 
-        protected bool HasReturnValue(string methodName)
+        protected static byte[] ReadAllBytes(PipeStream stream)
         {
-            return (MethodInfos[methodName].ReturnType != typeof (void));
+            var memoryStream = new MemoryStream();
+            do
+            {
+                var buffer = new byte[65536];
+                int count = stream.Read(buffer, 0, buffer.Length);
+                memoryStream.Write(buffer, 0, count);
+            } while (!stream.IsMessageComplete);
+            return memoryStream.ToArray();
+        }
+
+        protected object DeserializeObject(byte[] bytes)
+        {
+            var formatter = new BinaryFormatter();
+            return formatter.Deserialize(new MemoryStream(bytes));
+        }
+
+        protected byte[] SerializeObject(object o)
+        {
+            var stream = new MemoryStream();
+            var formatter = new BinaryFormatter();
+            formatter.Serialize(stream, o);
+            return stream.ToArray();
+        }
+
+        [Serializable]
+        protected class RemoteInvoke
+        {
+            public string MethodName { get; set; }
+            public object[] Arguments { get; set; }
+        }
+
+        [Serializable]
+        protected class RemoteResponse
+        {
+            public object ReturnValue { get; set; }
+            public Exception Exception { get; set; }
         }
     }
 }

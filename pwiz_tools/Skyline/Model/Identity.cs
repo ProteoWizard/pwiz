@@ -262,6 +262,44 @@ namespace pwiz.Skyline.Model
             return new IdentityPath(_identities.Take(depth + 1));
         }
 
+        public static IdentityPath ToIdentityPath(IList<int> idPath, SrmDocument document)
+        {
+            IdentityPath identityPath = ROOT;
+            DocNode next = document;
+            foreach (int globalIndex in idPath)
+            {
+                DocNodeParent parent = next as DocNodeParent;
+                if (null == parent)
+                {
+                    return null;
+                }
+                next = null;
+                foreach (var child in parent.Children)
+                {
+                    if (child.Id.GlobalIndex == globalIndex)
+                    {
+                        next = child;
+                        break;
+                    }
+                }
+                if (null == next)
+                {
+                    return null;
+                }
+                identityPath = new IdentityPath(identityPath, next.Id);
+            }
+            return identityPath;
+        }
+
+        public IEnumerable<int> ToGlobalIndexList()
+        {
+            if (Depth < 0)
+            {
+                return new int[0];
+            }
+            return Parent.ToGlobalIndexList().Concat(new[] { Child.GlobalIndex });
+        }
+
         #region object overrides
 
         /// <summary>

@@ -23,6 +23,7 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -185,7 +186,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return new DocumentLocation(IdentityPath);
+                return new DocumentLocation(IdentityPath.ToGlobalIndexList());
             }
         }
     }

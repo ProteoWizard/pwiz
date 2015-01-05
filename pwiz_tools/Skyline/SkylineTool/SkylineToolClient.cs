@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace SkylineTool
 {
@@ -35,24 +36,44 @@ namespace SkylineTool
             _client = new Client(connectionName);
             _toolName = toolName;
             _documentChangeReceiver = new DocumentChangeReceiver(Guid.NewGuid().ToString(), this);
-            _client.AddDocumentChangeReceiver(_documentChangeReceiver.ConnectionName);
+            _documentChangeReceiver.RunAsync();
+            _client.AddDocumentChangeReceiver(_documentChangeReceiver.ConnectionName, toolName);
         }
 
         public void Dispose()
         {
             _client.RemoveDocumentChangeReceiver(_documentChangeReceiver.ConnectionName);
-            _documentChangeReceiver.Dispose();
         }
 
         public IReport GetReport(string reportName)
         {
-            var reportCsv = _client.GetReport(_toolName + "," + reportName); // Not L10N
+            var reportCsv = _client.GetReport(_toolName, reportName); // Not L10N
             return new Report(reportCsv);
         }
 
-        public void Select(string link)
+        public DocumentLocation GetDocumentLocation()
         {
-            _client.Select(link);
+            return _client.GetDocumentLocation();
+        }
+
+        public void SetDocumentLocation(DocumentLocation documentLocation)
+        {
+            _client.SetDocumentLocation(documentLocation);
+        }
+
+        public string GetDocumentLocationName()
+        {
+            return _client.GetDocumentLocationName();
+        }
+
+        public string GetReplicateName()
+        {
+            return _client.GetReplicateName();
+        }
+
+        public IEnumerable<Chromatogram> GetChromatograms(DocumentLocation documentLocation)
+        {
+            return _client.GetChromatograms(documentLocation);
         }
 
         public string DocumentPath
@@ -84,10 +105,10 @@ namespace SkylineTool
                     _toolClient.DocumentChanged(_toolClient, null);
             }
 
-            public void SelectionChanged(string link)
+            public void SelectionChanged()
             {
                 if (_toolClient.SelectionChanged != null)
-                    _toolClient.SelectionChanged(_toolClient, new SelectionChangedEventArgs(link));
+                    _toolClient.SelectionChanged(_toolClient, null);
             }
         }
 
@@ -98,14 +119,34 @@ namespace SkylineTool
             {
             }
 
-            public string GetReport(string toolReportName)
+            public string GetReport(string toolName, string reportName)
             {
-                return RemoteCallFunction(GetReport, toolReportName);
+                return RemoteCallFunction(GetReport, toolName, reportName);
             }
 
-            public void Select(string link)
+            public DocumentLocation GetDocumentLocation()
             {
-                RemoteCall(Select, link);
+                return RemoteCallFunction(GetDocumentLocation);
+            }
+
+            public void SetDocumentLocation(DocumentLocation documentLocation)
+            {
+                RemoteCall(SetDocumentLocation, documentLocation);
+            }
+
+            public string GetDocumentLocationName()
+            {
+                return RemoteCallFunction(GetDocumentLocationName);
+            }
+
+            public string GetReplicateName()
+            {
+                return RemoteCallFunction(GetReplicateName);
+            }
+
+            public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
+            {
+                return RemoteCallFunction(GetChromatograms, documentLocation);
             }
 
             public string GetDocumentPath()
@@ -118,9 +159,9 @@ namespace SkylineTool
                 return (Version) RemoteCallFunction((Func<object>) GetVersion);
             }
 
-            public void AddDocumentChangeReceiver(string receiverName)
+            public void AddDocumentChangeReceiver(string receiverName, string name)
             {
-                RemoteCall(AddDocumentChangeReceiver, receiverName);
+                RemoteCall(AddDocumentChangeReceiver, receiverName, name);
             }
 
             public void RemoveDocumentChangeReceiver(string receiverName)
@@ -189,15 +230,6 @@ namespace SkylineTool
         double? CellValue(int row, string column);
     }
 
-    public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs args);
+    public delegate void SelectionChangedEventHandler(object sender, EventArgs args);
 
-    public class SelectionChangedEventArgs : EventArgs
-    {
-        public string SelectedLink { get; private set; }
-
-        public SelectionChangedEventArgs(string selectedLink)
-        {
-            SelectedLink = selectedLink;
-        }
-    }
 }

@@ -145,7 +145,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.Save(skylineNightlySkytr);
                     var durationHours = double.Parse(skylineTester.GetChild("nightlyDuration").Value);
-                    durationSeconds = (int) (durationHours*60*60) + 15*60;  // 15 minutes grace before we kill SkylineTester
+                    durationSeconds = (int) (durationHours*60*60) + 30*60;  // 30 minutes grace before we kill SkylineTester
                 }
             }
 

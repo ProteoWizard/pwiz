@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 
 namespace SkylineTool
@@ -50,14 +49,14 @@ namespace SkylineTool
         public void Exit()
         {
             var processId = Quit();
+            var process = Process.GetProcessById(processId);
+            process.Kill();
             try
             {
-                // Wait for tool to exit.  If it has already quit, this
-                // will cause a harmless exception.
-                Process.GetProcessById(processId).WaitForExit();
+                process.WaitForExit();
             }
 // ReSharper disable once EmptyGeneralCatchClause
-            catch (ArgumentException)
+            catch
             {
             }
         }

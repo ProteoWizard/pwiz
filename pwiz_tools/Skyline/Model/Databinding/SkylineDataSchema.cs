@@ -25,6 +25,7 @@ using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding
 {

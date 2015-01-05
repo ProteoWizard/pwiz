@@ -46,9 +46,7 @@ namespace TestInteractiveTool
                 _toolClient.DocumentChanged += OnDocumentChanged;
                 _testService = new TestToolService(toolConnection + "-test");
                 Console.WriteLine("Test service running");
-                    
-                _testService.WaitForExit();
-                Console.WriteLine("Tool finished");
+                _testService.Run();
             }
         }
 
@@ -94,13 +92,15 @@ namespace TestInteractiveTool
                 {
                     new Chromatogram
                     {
-                        Mz = 1.0,
+                        PrecursorMz = 1.0,
+                        ProductMz = 2.0,
                         Times = new[] {1.0f, 2.0f},
                         Intensities = new[] {10.0f, 20.0f}
                     },
                     new Chromatogram
                     {
-                        Mz = 2.0,
+                        PrecursorMz = 2.0,
+                        ProductMz = 4.0,
                         Times = new[] {3.0f, 4.0f, 5.0f},
                         Intensities = new[] {30.0f, 40.0f, 50.0f}
                     }
@@ -146,7 +146,6 @@ namespace TestInteractiveTool
 
             public int Quit()
             {
-                Exit();
                 return Process.GetCurrentProcess().Id;
             }
         }
@@ -163,7 +162,7 @@ namespace TestInteractiveTool
         {
             var report = _toolClient.GetReport("Peak Area");
             var link = report.Cells[int.Parse(row)][linkColumn];
-            _toolClient.Select(link);
+            _toolClient.SetDocumentLocation(DocumentLocation.Parse(link));
         }
     }
 }
