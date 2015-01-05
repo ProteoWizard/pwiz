@@ -311,6 +311,7 @@ namespace IDPicker.DataModel
     public class XICMetrics : Entity<XICMetrics>
     {
         public virtual long DistinctMatch { get; set; }
+        public virtual string DistinctMatchKey { get; protected set; }
         public virtual SpectrumSource Source { get; set; }
         public virtual Peptide Peptide { get; set; }
         public virtual double PeakIntensity { get; set; }

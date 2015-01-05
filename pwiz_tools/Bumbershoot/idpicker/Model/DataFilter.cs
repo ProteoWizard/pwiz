@@ -265,6 +265,14 @@ namespace IDPicker.DataModel
             }
         }
 
+        public bool HasPsmDependantFilter
+        {
+            get
+            {
+                return  !Spectrum.IsNullOrEmpty() || !Charge.IsNullOrEmpty() || !Analysis.IsNullOrEmpty();
+            }
+        }
+
         public bool HasModificationFilter
         {
             get { return !Modifications.IsNullOrEmpty() || !ModifiedSite.IsNullOrEmpty(); }
@@ -635,6 +643,8 @@ namespace IDPicker.DataModel
         public static readonly string XicToPeptide = ";LEFT JOIN xic.Peptide pep";
         public static readonly string XicToPeptideInstance = XicToPeptide + ";LEFT JOIN pep.Instances pi";
         public static readonly string XicToProtein = XicToPeptideInstance + ";LEFT JOIN pi.Protein pro";
+        public static readonly string XicToPeptideSpectrumMatch = ";LEFT JOIN pep.Matches psm"; //use with caution! Has to be filtered as well
+        public static readonly string XicToSpectrum = XicToPeptideSpectrumMatch + ";LEFT JOIN psm.Spectrum s";
 
         public static readonly string SpectrumToSpectrumSource = "JOIN s.Source ss";
         public static readonly string SpectrumToSpectrumSourceGroupLink = SpectrumToSpectrumSource + ";JOIN ss.Groups ssgl";
@@ -674,9 +684,16 @@ namespace IDPicker.DataModel
                 if (joinTables.Contains(ProteinToSpectrumSourceGroup)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSourceGroup);
                 joinTables = newJoinTables.ToArray();
             }
-            else if (fromTable == FromXic)
+            else if (fromTable == FromXic && (HasProteinFilter || HasPsmDependantFilter))
             {
-                //TODO
+                var newJoinTables = new List<string> {  };
+                if (joinTables.Contains(XicToPeptide)) newJoinTables.Add(HasProteinFilter ? XicToProtein : XicToPeptide);
+                if (joinTables.Contains(XicToPeptideInstance)) newJoinTables.Add(XicToPeptideInstance);
+                if (joinTables.Contains(XicToProtein)) newJoinTables.Add(XicToProtein);
+                if (joinTables.Contains(XicToSpectrumSource)) newJoinTables.Add(XicToSpectrumSource);
+                if (joinTables.Contains(XicToSpectrumSourceGroupLink)) newJoinTables.Add(XicToSpectrumSourceGroupLink);
+                if (HasPsmDependantFilter) newJoinTables.Add(XicToSpectrum);
+                joinTables = newJoinTables.ToArray();
             }
         }
 
@@ -826,7 +843,10 @@ namespace IDPicker.DataModel
             }
 
             if (!DistinctMatchKey.IsNullOrEmpty())
-                peptideConditions.Add(String.Format("psm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o=> o.Key))));
+                if (fromTable == FromXic)
+                    peptideConditions.Add(String.Format("xic.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o => o.Key))));
+                else
+                    peptideConditions.Add(String.Format("psm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o=> o.Key))));
 
             if (!ModifiedSite.IsNullOrEmpty())
                 modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()))));
@@ -844,7 +864,10 @@ namespace IDPicker.DataModel
                 spectrumConditions.Add(String.Format("psm.Spectrum.id IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()))));
 
             if (!SpectrumSource.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("psm.Spectrum.Source.id IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()))));
+                if (fromTable == FromXic)
+                    spectrumConditions.Add(String.Format("xic.Source.id IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()))));
+                else
+                    spectrumConditions.Add(String.Format("psm.Spectrum.Source.id IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()))));
 
             if (!SpectrumSourceGroup.IsNullOrEmpty())
                 spectrumConditions.Add(String.Format("ssgl.Group.id IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()))));
@@ -864,6 +887,9 @@ namespace IDPicker.DataModel
 
                 otherConditions.Add("(" + String.Join(" OR ", offsetConditions) + ")");
             }
+
+            if (fromTable == FromXic && HasPsmDependantFilter)
+                otherConditions.Add("psm.DistinctMatchId = xic.DistinctMatch");
 
             var query = new StringBuilder();
 

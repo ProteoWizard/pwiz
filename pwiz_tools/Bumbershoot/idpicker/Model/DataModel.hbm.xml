@@ -263,6 +263,12 @@
     <property name="PeakArea"/>
     <property name="PeakSNR"/>
     <property name="PeakTimeInSeconds"/>
+
+    <join optional="true" table="DistinctMatch">
+      <key column="DistinctMatchId" property-ref="DistinctMatch"/>
+      <property name="DistinctMatchKey"/>
+    </join>
+    
   </class>
 
     <class name="PeptideModification">

@@ -200,6 +200,21 @@ namespace IDPicker.Forms
             }
         }
 
+        private string getTempFolder()
+        {
+            try
+            {
+                var tempFolder = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+                Directory.CreateDirectory(tempFolder);
+                System.Security.AccessControl.DirectorySecurity ds = Directory.GetAccessControl(tempFolder);
+                return tempFolder;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw new Exception("[EmbedderForm] Could not create writable temp folder");
+            }
+        }
+
         private void embedAllButton_Click (object sender, EventArgs e)
         {
             var searchPath = new StringBuilder(searchPathTextBox.Text);
@@ -254,7 +269,10 @@ namespace IDPicker.Forms
                     var splitSourceList = new List<List<string>>();
                     if (quantitationMethodBySource.Any(x => x.Value.QuantitationMethod == QuantitationMethod.LabelFree)
                         && xicConfigBySource.Any(x => x.Value.AlignRetentionTime))
+                    {
+                        tempFolder = getTempFolder();
                         splitSourceList = GetRTAlignGroups();
+                    }
 
                     string idpDbFilepath = session.Connection.GetDataSource();
                     if (embedScanTimeOnlyBox.Checked)
@@ -268,7 +286,7 @@ namespace IDPicker.Forms
                         {
                             try
                             {
-                                tempFolder = RTAlignPreparations(splitSourceList);
+                                RTAlignPreparations(splitSourceList, tempFolder);
                                 foreach (var kvp in xicConfigBySource)
                                     kvp.Value.RTFolder = tempFolder;
                             }
@@ -349,7 +367,7 @@ namespace IDPicker.Forms
             return splitSourceList;
         }
 
-        private string RTAlignPreparations(List<List<string>> splitSourceList)
+        private void RTAlignPreparations(List<List<string>> splitSourceList, string tempFolder)
         {
             var sourceQuery = session.CreateSQLQuery("SELECT DISTINCT Name FROM SpectrumSource").List();
             var fullSourceList = sourceQuery.Cast<string>().ToList();
@@ -378,6 +396,8 @@ namespace IDPicker.Forms
                                   ScanTime = Convert.ToDouble(o[4]),
                                   Peptide = Convert.ToInt32(o[5])
                               });
+            if (!rows.Any())
+                throw new Exception("[EmbedderForm] Could not get scan time information");
             foreach (var row in rows)
             {
                 if (!entryDict.ContainsKey(row.Id))
@@ -385,32 +405,41 @@ namespace IDPicker.Forms
                 entryDict[row.Id].RTValues[row.SourceName] = row.ScanTime;
             }
 
-            var tempFolder = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
-            Directory.CreateDirectory(tempFolder);
+            if (!splitSourceList.Any())
+                throw new Exception("[EmbedderForm] Could not get source grouping information");
             for (var x=0; x < splitSourceList.Count; x++)
             {
                 var currentSourceList = splitSourceList[x];
                 BeginInvoke(
                     new MethodInvoker(
                         () => this.Text = "Gathering scan times for RT group " + (x + 1) + " of " + splitSourceList.Count));
-                var tsvOut = new StreamWriter(Path.Combine(tempFolder, "peptideScanTime.tsv"));
-                tsvOut.WriteLine("DistinctMatchId\t" + string.Join("\t", currentSourceList) + "\tCharge\tPrecursorMZ\tPeptide");
-                foreach (var kvp in entryDict)
+                using (var tsvOut = new StreamWriter(Path.Combine(tempFolder, "peptideScanTime.tsv")))
                 {
-                    var ss = new StringBuilder(kvp.Value.DistinctMatchId + "\t");
-                    foreach (var source in currentSourceList)
-                        ss.Append(kvp.Value.RTValues[source] + "\t");
-                    ss.Append(kvp.Value.Charge + "\t" + kvp.Value.PrecursorMz + "\t" + kvp.Value.Peptide);
-                    tsvOut.WriteLine(ss.ToString());
+                    tsvOut.WriteLine("DistinctMatchId\t" + string.Join("\t", currentSourceList) + "\tCharge\tPrecursorMZ\tPeptide");
+                    foreach (var kvp in entryDict)
+                    {
+                        var ss = new StringBuilder(kvp.Value.DistinctMatchId + "\t");
+                        foreach (var source in currentSourceList)
+                            ss.Append(kvp.Value.RTValues[source] + "\t");
+                        ss.Append(kvp.Value.Charge + "\t" + kvp.Value.PrecursorMz + "\t" + kvp.Value.Peptide);
+                        tsvOut.WriteLine(ss.ToString());
+                    }
                 }
-                tsvOut.Flush();
-                tsvOut.Close();
-
+                if (!File.Exists(Path.Combine(tempFolder, "peptideScanTime.tsv")))
+                    throw new Exception("RT alignment file not written");
+                
+                var beforeNumber = ((new DirectoryInfo(tempFolder)).GetFiles().Length);
                 RunRScript(tempFolder, currentSourceList);
+                
+                var afterNumber = ((new DirectoryInfo(tempFolder)).GetFiles().Length);
+                if (beforeNumber == afterNumber)
+                    throw new Exception(
+                        string.Format(
+                            "[EmbedderForm] Alignment R script did not produce files. Started with {0} files and ended with {1} files for {2} sources",
+                            beforeNumber, afterNumber, currentSourceList.Count));
+                
                 File.Delete(Path.Combine(tempFolder, "peptideScanTime.tsv"));
             }
-
-            return tempFolder;
 
         }
 
