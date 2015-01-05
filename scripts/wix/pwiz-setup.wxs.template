@@ -139,6 +139,7 @@
             <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x64.msm" DiskId="1" />
 
             <Merge Id="CRT11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_CRT_x64.msm" DiskId="1" />
+            <Merge Id="OMP11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_OpenMP_x64.msm" DiskId="1" />
             
             <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x64.msm" DiskId="1" />
             <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x64.msm" DiskId="1" />
@@ -152,6 +153,7 @@
             <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
 
             <Merge Id="CRT11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" />
+            <Merge Id="OMP11" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC110_OpenMP_x86.msm" DiskId="1" />
             
             <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x86.msm" DiskId="1" />
             <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x86.msm" DiskId="1" />
@@ -248,6 +250,7 @@
 <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.SxS.manifest" Name="Interop.HSREADWRITELib.SxS.manifest" Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_ICRVariableTable.xml" Name="ICRVariableTable.xml" Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_mkl_sequential.dll" Name="mkl_sequential.dll" Source="msvc-release\mkl_sequential.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_baf2sql_c.dll" Name="baf2sql_c.dll" Source="msvc-release\baf2sql_c.dll" KeyPath="yes"/></Component>
 
 
 <!-- AB Sciex DLLs -->
@@ -318,6 +321,7 @@
          <MergeRef Id="CRT10" />
          <MergeRef Id="MFC10" />
          <MergeRef Id="CRT11" />
+         <MergeRef Id="OMP11" />
          <MergeRef Id="CRT12" />
          <MergeRef Id="MFC12" />
       </Feature>
