@@ -257,6 +257,7 @@ namespace pwiz.Skyline
             if (MainToolService != null)
             {
                 MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                MainToolService.Stop();
                 MainToolService = null;
             }
         }

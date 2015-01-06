@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Reflection;
 
@@ -46,7 +45,7 @@ namespace TestRunner
                 var profiler = profilerAssembly.GetType(PROFILER_TYPE);
                 if (profiler != null && (bool) profiler.GetMethod("get_IsProfiling").Invoke(null, null))
                 {
-                    FULL_SNAP_SHOT = profiler.GetMethod("FullSnapShot", Type.EmptyTypes);
+                    FULL_SNAP_SHOT = profiler.GetMethod("FullSnapShot", new []{typeof(string)});
                 }
             }
         }
@@ -54,11 +53,11 @@ namespace TestRunner
         /// <summary>
         /// Take a memory shapshot.
         /// </summary>
-        public static void Snapshot()
+        public static void Snapshot(string name)
         {
             if (FULL_SNAP_SHOT != null)
             {
-                FULL_SNAP_SHOT.Invoke(null, null);
+                FULL_SNAP_SHOT.Invoke(null, new object[]{name});
             }
         }
     }

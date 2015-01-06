@@ -169,7 +169,7 @@ namespace TestRunner
                             allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1,
                                 true);
                             Console.WriteLine("\nTaking memory snapshot...\n");
-                            MemoryProfiler.Snapshot();
+                            MemoryProfiler.Snapshot("start");
                             if (passes == 0)
                                 passes = 1;
                         }
@@ -182,7 +182,7 @@ namespace TestRunner
                         if (profiling)
                         {
                             Console.WriteLine("\nTaking second memory snapshot...\n");
-                            MemoryProfiler.Snapshot();
+                            MemoryProfiler.Snapshot("end");
                         }
                     }
                 }

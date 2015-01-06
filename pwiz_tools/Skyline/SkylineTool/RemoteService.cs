@@ -26,6 +26,8 @@ namespace SkylineTool
 {
     public class RemoteService : RemoteBase
     {
+        private bool _stop;
+
         /// <summary>
         /// Create remote service that communicates with a client.
         /// </summary>
@@ -37,30 +39,44 @@ namespace SkylineTool
 
         public void RunAsync()
         {
-            var asyncThread = new Thread(Run)
+            var serverThread = new Thread(Run)
             {
                 Name = "RemoteServiceThread-" + ConnectionName, // Not L10N
                 IsBackground = true
             };
-            asyncThread.Start();
+            serverThread.Start();
+        }
+
+        public void Stop()
+        {
+            _stop = true;
+            using (var closingStream = new NamedPipeClientStream(ConnectionName))
+            {
+                closingStream.Connect(100);
+            }
         }
 
         public void Run()
         {
             while (true)
             {
+                NamedPipeServerStream pipeStream = null;
                 try
                 {
-                    var pipeStream = new NamedPipeServerStream(ConnectionName, PipeDirection.InOut, -1, PipeTransmissionMode.Message);
+                    pipeStream = new NamedPipeServerStream(ConnectionName, PipeDirection.InOut, -1, PipeTransmissionMode.Message);
                     pipeStream.WaitForConnection();
+                    if (_stop)
+                        return;
 
-                    //Spawn a new thread for each request and continue waiting
+                    // Spawn a new thread for each request and continue waiting
                     var t = new Thread(ProcessClientThread);
                     t.Start(pipeStream);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {  
-                    Debug.WriteLine(e);
+                    if (pipeStream != null)
+                        pipeStream.Dispose();
+                    throw;
                 }
             }
 // ReSharper disable once FunctionNeverReturns
