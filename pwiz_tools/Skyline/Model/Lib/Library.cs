@@ -126,8 +126,16 @@ namespace pwiz.Skyline.Model.Lib
                     libraries = libraries.ChangeLibraries(list.ToArray());
                     ProgressStatus status = new ProgressStatus(Resources.LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries);
                     UpdateProgress(status);
-                    docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
-                        docCurrent.Settings.PeptideSettings.ChangeLibraries(libraries)));
+                    try
+                    {
+                        docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
+                            docCurrent.Settings.PeptideSettings.ChangeLibraries(libraries)));
+                    }
+                    catch (InvalidDataException x)
+                    {
+                        UpdateProgress(status.ChangeErrorException(x));
+                        break;
+                    }
                     UpdateProgress(status.Complete());
                 }
                 while (!CompleteProcessing(container, docNew, docCurrent));

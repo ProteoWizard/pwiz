@@ -167,9 +167,14 @@ namespace pwiz.Skyline.Model
                         // Make sure a single peptide group does not exceed document limits.
                         countPeptides++;
                         countIons += nodePepResult.TransitionCount;
-                        if (countIons > SrmDocument.MAX_TRANSITION_COUNT ||
-                            countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
-                            throw new InvalidDataException(Resources.PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded);
+                        if (countIons > SrmDocument.MAX_TRANSITION_COUNT)
+                            throw new InvalidDataException(String.Format(
+                                Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
+                                SrmDocument.MAX_TRANSITION_COUNT));
+                        if (countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
+                            throw new InvalidDataException(String.Format(
+                                Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
+                                SrmDocument.MAX_PEPTIDE_COUNT));
                     }
                 }
 

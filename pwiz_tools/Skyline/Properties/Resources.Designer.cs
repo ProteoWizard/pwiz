@@ -15539,11 +15539,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document size limit exceeded..
+        ///   Looks up a localized string similar to The current document settings would cause the number of peptides to exceed {0:n0}. The document settings must be more restrictive or add fewer proteins..
         /// </summary>
-        public static string PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded {
+        public static string PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_ {
             get {
-                return ResourceManager.GetString("PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded", resourceCulture);
+                return ResourceManager.GetString("PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_" +
+                        "number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrict" +
+                        "ive_or_add_fewer_proteins_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The current document settings would cause the number of targeted transitions to exceed {0:n0}. The document settings must be more restrictive or add fewer proteins..
+        /// </summary>
+        public static string PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_ {
+            get {
+                return ResourceManager.GetString("PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_" +
+                        "number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_m" +
+                        "ore_restrictive_or_add_fewer_proteins_", resourceCulture);
             }
         }
         

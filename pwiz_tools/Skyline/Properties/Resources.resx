@@ -2229,9 +2229,6 @@ Are you sure you want to continue?</value>
   <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
     <value>Peptides in different FASTA sequences may not be compared.</value>
   </data>
-  <data name="PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded" xml:space="preserve">
-    <value>Document size limit exceeded.</value>
-  </data>
   <data name="DecoyGeneration_ADD_RANDOM_Random_Mass_Shift" xml:space="preserve">
     <value>Random Mass Shift</value>
   </data>
@@ -8152,5 +8149,11 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="LibraryGridViewDriver_ValidateProductIon_Product_ion__0__is_invalid_" xml:space="preserve">
     <value>Product ion {0} is invalid.</value>
+  </data>
+  <data name="PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_" xml:space="preserve">
+    <value>The current document settings would cause the number of targeted transitions to exceed {0:n0}. The document settings must be more restrictive or add fewer proteins.</value>
+  </data>
+  <data name="PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_" xml:space="preserve">
+    <value>The current document settings would cause the number of peptides to exceed {0:n0}. The document settings must be more restrictive or add fewer proteins.</value>
   </data>
 </root>

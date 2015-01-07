@@ -2229,9 +2229,6 @@
   <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
     <value>異なるFASTAシークエンス内のペプチドは比較できません。</value>
   </data>
-  <data name="PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded" xml:space="preserve">
-    <value>ドキュメントサイズ制限を超えました。</value>
-  </data>
   <data name="DecoyGeneration_ADD_RANDOM_Random_Mass_Shift" xml:space="preserve">
     <value>質量のランダムシフト</value>
   </data>

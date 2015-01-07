@@ -146,6 +146,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
+    <Compile Include="DocumentSizeErrorTest.cs" />
     <Compile Include="EditCustomMoleculeDlgTest.cs" />
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="ArrangeGraphsTest.cs" />
@@ -277,6 +278,7 @@
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="DocumentGridTest.zip" />
+    <None Include="DocumentSizeErrorTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />

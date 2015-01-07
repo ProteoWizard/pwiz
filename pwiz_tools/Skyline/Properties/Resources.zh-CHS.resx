@@ -2229,9 +2229,6 @@
   <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
     <value>FASTA 序列不同的肽段不可比较。</value>
   </data>
-  <data name="PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded" xml:space="preserve">
-    <value>超出文档大小限制。</value>
-  </data>
   <data name="DecoyGeneration_ADD_RANDOM_Random_Mass_Shift" xml:space="preserve">
     <value>随机质量偏移</value>
   </data>
