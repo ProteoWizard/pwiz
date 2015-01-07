@@ -31,6 +31,8 @@ namespace pwiz.Skyline.Model
 {
     public class ModificationMatcher : AbstractModificationMatcher
     {
+        public IFormatProvider FormatProvider { get; set; }
+
         private IEnumerator<string> _sequences;
 
         private const int DEFAULT_ROUNDING_DIGITS = 6;
@@ -91,7 +93,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static IEnumerable<AAModInfo> EnumerateSequenceInfos(string seq, bool includeUnmod)
+        private IEnumerable<AAModInfo> EnumerateSequenceInfos(string seq, bool includeUnmod)
         {
             string aas = FastaSequence.StripModifications(seq);
             bool isSpecificHeavy = OPEN_PAREN.All(paren => aas.Length > seq.Count(c => c == paren));
@@ -134,7 +136,7 @@ namespace pwiz.Skyline.Model
                         name = staticMod.Name;
                         isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);
                     }
-                    else if (double.TryParse(mod, out result))
+                    else if (double.TryParse(mod, NumberStyles.Float, FormatProvider ?? NumberFormatInfo.CurrentInfo, out result))
                         mass = Math.Round(result, roundedTo);
                     else
                         name = mod;

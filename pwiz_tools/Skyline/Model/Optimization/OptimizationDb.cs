@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -327,13 +328,13 @@ namespace pwiz.Skyline.Model.Optimization
             var newDoc = new SrmDocument(document != null ? document.Settings : SrmSettingsList.GetDefault());
             newDoc = newDoc.ChangeSettings(newDoc.Settings
                 .ChangePeptideLibraries(libs => libs.ChangePick(PeptidePick.filter))
-                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeFirstName(Resources.TransitionFilter_FragmentStartFinders_ion_1))
-                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeLastName(Resources.TransitionFilter_FragmentEndFinders_last_ion))
+                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeFirstName("ion 1")) // Not L10N
+                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeLastName("last ion")) // Not L10N
                 .ChangeTransitionFilter(filter => filter.ChangeProductCharges(Enumerable.Range(1, maxCharge).ToList()))
                 .ChangeTransitionFilter(filter => filter.ChangeIonTypes(new []{ IonType.y, IonType.b }.ToList()))
                 .ChangeTransitionLibraries(libs => libs.ChangePick(TransitionLibraryPick.none))
                 );
-            var matcher = new ModificationMatcher();
+            var matcher = new ModificationMatcher { FormatProvider = NumberFormatInfo.InvariantInfo };
             matcher.CreateMatches(newDoc.Settings, peptideList, Settings.Default.StaticModList, Settings.Default.HeavyModList);
             FastaImporter importer = new FastaImporter(newDoc, matcher);
             string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList)); // Not L10N

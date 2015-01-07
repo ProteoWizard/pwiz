@@ -205,7 +205,8 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(addOptDbUnconvertible, addOptDbUnconvertible.OkDialog);
             var errorDlg = WaitForOpenForm<MessageDlg>();
-            Assert.IsTrue(errorDlg.Message.StartsWith("Failed to convert"));
+            AssertEx.AreComparableStrings(Resources.OptimizationDb_ConvertFromOldFormat_Failed_to_convert__0__optimizations_to_new_format_,
+                errorDlg.Message, 1);
             OkDialog(errorDlg, errorDlg.OkDialog);
 
             // Try to add convertible old format optimization library
