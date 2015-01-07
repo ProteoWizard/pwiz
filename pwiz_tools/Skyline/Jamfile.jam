@@ -92,6 +92,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestRunner /nologo /verbosity:minimal        
         echo Building SkylineTester in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineTester /nologo /verbosity:minimal        
+        echo Building SkylineNightly in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineNightly /nologo /verbosity:minimal        
     }
 
     actions do_Inspect_Code
