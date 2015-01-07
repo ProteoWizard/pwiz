@@ -240,6 +240,8 @@ namespace pwiz.Skyline
                 Console.WriteLine(x.Message);
                 Console.Write(x.StackTrace);
             }
+
+            MainWindow = null;
         }
 
         public static void StartToolService()
