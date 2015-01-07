@@ -140,6 +140,7 @@
             this.buttonFolder.TabIndex = 9;
             this.buttonFolder.Text = "...";
             this.buttonFolder.UseVisualStyleBackColor = true;
+            this.buttonFolder.Click += new System.EventHandler(this.buttonFolder_Click);
             // 
             // button3
             // 

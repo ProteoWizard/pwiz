@@ -72,7 +72,7 @@ namespace SkylineTester
         public static void CreateZipFile(string zipPath)
         {
             Console.WriteLine();
-            Console.WriteLine("# Creating " + SkylineTesterWindow.SkylineTesterZip + "...");
+            Console.WriteLine("# Creating " + Path.GetFileName(zipPath) + "...");
             Console.WriteLine();
 
             if (File.Exists(zipPath))
@@ -95,57 +95,77 @@ namespace SkylineTester
                 // (see http://stackoverflow.com/questions/15337186/dotnetzip-badreadexception-on-extract)
                 zipFile.ParallelDeflateThreshold = -1;
 
-                // Add SkylineTester at top level of zip file.
-                Console.WriteLine("SkylineTester.exe");
-                zipFile.AddFile("SkylineTester.exe");
-
-                // Add .skytr files at top level of zip file.
-                var skytrDirectory = Path.Combine(solutionDirectory, @"SkylineTester\Run files");
-                foreach (var skytrFile in Directory.EnumerateFiles(skytrDirectory, "*.skytr"))
-                    AddFile(skytrFile, zipFile, ".");
-
-                // Add each subdirectory in the bin directory.
-                foreach (var directory in Directory.EnumerateDirectories("."))
+                if (zipPath.Contains("Nightly"))
                 {
-                    if (Include(directory))
+                    // Add files to top level of zip file.
+                    var files = new[]
                     {
-                        var name = Path.GetFileName(directory) ?? "";
-                        Console.WriteLine(Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
-                        zipFile.AddDirectory(directory, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
+                        "SkylineNightly.exe",
+                        "Microsoft.Win32.TaskScheduler.dll",
+                        "Ionic.Zip.dll"
+                    };
+                    foreach (var file in files)
+                    {
+                        Console.WriteLine(file);
+                        zipFile.AddFile(file);
                     }
                 }
 
-                // Add each file in the bin directory.
-                foreach (var file in Directory.EnumerateFiles("."))
+                else
                 {
-                    if (Include(file))
-                        AddFile(file, zipFile);
-                }
+                    // Add SkylineTester at top level of zip file.
+                    Console.WriteLine("SkylineTester.exe");
+                    zipFile.AddFile("SkylineTester.exe");
 
-                // Add test zip files.
-                var zipFilesList = new List<string>();
-                FindZipFiles(solutionDirectory, zipFilesList);
-                var zipFilesDirectory = Path.Combine(SkylineTesterWindow.SkylineTesterFiles, "TestZipFiles");
-                foreach (var testZipFile in zipFilesList)
-                {
-                    var testZipDirectory = Path.GetDirectoryName(testZipFile);
-                    if (testZipDirectory == null)
-                        continue;
-                    testZipDirectory = Path.Combine(zipFilesDirectory, testZipDirectory.Substring(solutionDirectory.Length + 1));
-                    AddFile(testZipFile, zipFile, testZipDirectory);
-                }
+                    // Add .skytr files at top level of zip file.
+                    var skytrDirectory = Path.Combine(solutionDirectory, @"SkylineTester\Run files");
+                    foreach (var skytrFile in Directory.EnumerateFiles(skytrDirectory, "*.skytr"))
+                        AddFile(skytrFile, zipFile, ".");
 
-                // Add unit testing DLL.
-                var unitTestingDll = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                    @"Microsoft Visual Studio 12.0\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-                AddFile(unitTestingDll, zipFile);
+                    // Add each subdirectory in the bin directory.
+                    foreach (var directory in Directory.EnumerateDirectories("."))
+                    {
+                        if (Include(directory))
+                        {
+                            var name = Path.GetFileName(directory) ?? "";
+                            Console.WriteLine(Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
+                            zipFile.AddDirectory(directory, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
+                        }
+                    }
+
+                    // Add each file in the bin directory.
+                    foreach (var file in Directory.EnumerateFiles("."))
+                    {
+                        if (Include(file))
+                            AddFile(file, zipFile);
+                    }
+
+                    // Add test zip files.
+                    var zipFilesList = new List<string>();
+                    FindZipFiles(solutionDirectory, zipFilesList);
+                    var zipFilesDirectory = Path.Combine(SkylineTesterWindow.SkylineTesterFiles, "TestZipFiles");
+                    foreach (var testZipFile in zipFilesList)
+                    {
+                        var testZipDirectory = Path.GetDirectoryName(testZipFile);
+                        if (testZipDirectory == null)
+                            continue;
+                        testZipDirectory = Path.Combine(zipFilesDirectory,
+                            testZipDirectory.Substring(solutionDirectory.Length + 1));
+                        AddFile(testZipFile, zipFile, testZipDirectory);
+                    }
+
+                    // Add unit testing DLL.
+                    var unitTestingDll = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                        @"Microsoft Visual Studio 12.0\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+                    AddFile(unitTestingDll, zipFile);
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("# Saving...");
                 zipFile.Save();
                 Console.WriteLine();
-                Console.WriteLine("# SkylineTester.zip size: {0} MB", (int) (new FileInfo(zipPath).Length) / (1024*1024));
+                Console.WriteLine("# {0} size: {1:F1} MB", Path.GetFileName(zipPath), new FileInfo(zipPath).Length / (1024.0*1024));
                 Console.WriteLine("# Done.");
                 Console.WriteLine();
             }

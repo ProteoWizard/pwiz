@@ -43,7 +43,6 @@ namespace SkylineTester
         #region Fields
 
         public const string SummaryLog = "Summary.log";
-        public const string SkylineTesterZip = "SkylineTester.zip";
         public const string SkylineTesterFiles = "SkylineTester Files";
 
         public const string DocumentationLink =
@@ -99,7 +98,6 @@ namespace SkylineTester
         private static readonly string[] FORMS_DLLS = {"TestFunctional.dll", "TestTutorial.dll"};
         private static readonly string[] TUTORIAL_DLLS = {"TestTutorial.dll"};
 
-        private List<string> _formsTestList;
         private readonly string _resultsDir;
         private readonly string _openFile;
 
@@ -329,8 +327,6 @@ namespace SkylineTester
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
         {
-            _formsTestList = new List<string>();
-
             try
             {
                 var skylineNode = new TreeNode("Skyline tests");
@@ -339,8 +335,6 @@ namespace SkylineTester
                 foreach (var testDll in TEST_DLLS)
                 {
                     var tests = GetTestInfos(testDll).OrderBy(test => test).ToArray();
-                    if (FORMS_DLLS.Contains(testDll))
-                        _formsTestList.AddRange(tests);
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");

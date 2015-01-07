@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2014 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
@@ -14,7 +33,7 @@ namespace SkylineNightly
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
 
-            using (TaskService ts = new TaskService())
+            using (var ts = new TaskService())
             {
                 var task = ts.FindTask(Nightly.NIGHTLY_TASK_NAME);
                 enabled.Checked = (task != null);
@@ -33,18 +52,18 @@ namespace SkylineNightly
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.
-            using (TaskService ts = new TaskService())
+            using (var ts = new TaskService())
             {
                 ts.RootFolder.DeleteTask(Nightly.NIGHTLY_TASK_NAME, false);
                 if (enabled.Checked)
                 {
                     // Create a new task definition and assign properties
-                    TaskDefinition td = ts.NewTask();
+                    var td = ts.NewTask();
                     td.RegistrationInfo.Description = "Skyline nightly build/test"; // Not L10N
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                     // Add a trigger that will fire the task every other day
-                    DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
+                    var dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
                     var scheduledTime = startTime.Value;
                     var now = DateTime.Now;
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
@@ -75,6 +94,27 @@ namespace SkylineNightly
         private void Now_Click(object sender, EventArgs e)
         {
             startTime.Value = DateTime.Now;
+        }
+
+        private void buttonFolder_Click(object sender, EventArgs e)
+        {
+            var documentsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            using (var dlg = new FolderBrowserDialog
+            {
+                Description = "Select or create a nightly build folder.",
+                ShowNewFolderButton = true,
+                SelectedPath = documentsFolder
+            })
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var nightlyRoot = dlg.SelectedPath;
+                    if (nightlyRoot.StartsWith(documentsFolder))
+                        nightlyRoot = nightlyRoot.Remove(0, documentsFolder.Length + 1);
+                    textBoxFolder.Text = nightlyRoot;
+                }
+            }
         }
     }
 }

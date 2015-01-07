@@ -156,6 +156,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_test_passed
     {
         $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineTester.zip
+        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineNightly.zip
     }
     
     rule build-location ( properties * )
