@@ -237,7 +237,10 @@ namespace pwiz.Skyline.Model.Tools
             }
             else // Not a website. Needs its own thread.
             {
-                Program.StartToolService();
+                if (Arguments.Contains("$(SkylineConnection)")) // Not L10N
+                {
+                    Program.StartToolService();
+                }
 
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
