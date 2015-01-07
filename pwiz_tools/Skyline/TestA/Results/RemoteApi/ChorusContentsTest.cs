@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
         public void TestContents()
         {
             ChorusSession chorusSession = new ChorusSession();
-            ChorusContents chorusContents = chorusSession.FetchContents(TEST_ACCOUNT, new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents"));
+            ChorusContents chorusContents = chorusSession.FetchContents(TEST_ACCOUNT, new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents/my/projects"));
             Assert.IsNotNull(chorusContents);
         }
 
