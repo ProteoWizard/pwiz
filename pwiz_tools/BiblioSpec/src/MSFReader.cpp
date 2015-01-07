@@ -673,9 +673,9 @@ namespace BiblioSpec
         memFunctions.opaque = NULL;
 
         // fopenMem function expects filename parameter to be:
-        // "<hex base of archive>+<hex size of archive>"
+        // "<hex base of archive> <hex size of archive>"
         stringstream zipInfo;
-        zipInfo << hex << src << "+" << srcLen;
+        zipInfo << hex << reinterpret_cast<const void*&>(src) << " " << srcLen;
 
         // try to open zip archive 
         return unzOpen2(zipInfo.str().c_str(), &memFunctions);
@@ -689,7 +689,10 @@ namespace BiblioSpec
     {
         zlib_mem* mem = new zlib_mem();
 
-        if (sscanf(filename, "%x+%x", &mem->base, &mem->size) != 2)
+        istringstream zipInfo(filename);
+        zipInfo >> hex >> reinterpret_cast<void*&>(mem->base) >> mem->size;
+
+        if (!zipInfo)
         {
             // couldn't read base and size into struct from filename parameter
             return NULL;
