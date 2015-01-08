@@ -75,7 +75,7 @@ namespace SkylineNightly
 
                     // Add an action that will launch SkylineTester whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location, Nightly.SCHEDULED_ARG)); // Not L10N
+                    td.Actions.Add(new ExecAction(assembly.Location, Program.SCHEDULED_ARG)); // Not L10N
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NIGHTLY_TASK_NAME, td);

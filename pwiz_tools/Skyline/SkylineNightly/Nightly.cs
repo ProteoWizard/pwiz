@@ -34,8 +34,6 @@ namespace SkylineNightly
     public class Nightly
     {
         public const string NIGHTLY_TASK_NAME = "Skyline nightly build";
-        public const string SCHEDULED_ARG = "scheduled";
-        public const string POST_ARG = "post";
 
         private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId=bt{0}";
         private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/bt{0}/{1}:id/SkylineTester.zip";
@@ -52,13 +50,23 @@ namespace SkylineNightly
         private readonly Xml _failures;
         private readonly Xml _leaks;
         private Xml _pass;
-        private int _testCount;
+        private readonly string _logDir;
+        private readonly string _pwizDir;
+        private TimeSpan _duration;
 
         public Nightly()
         {
             _nightly = new Xml("nightly");
             _failures = _nightly.Append("failures");
             _leaks = _nightly.Append("leaks");
+            
+            // Locate relevant directories.
+            var nightlyDir = GetNightlyDir();
+            _logDir = Path.Combine(nightlyDir, "Logs");
+            _pwizDir = Path.Combine(nightlyDir, "pwiz");
+
+            // Default duration.
+            _duration = TimeSpan.FromHours(9);
         }
 
         /// <summary>
@@ -70,14 +78,12 @@ namespace SkylineNightly
 
             // Locate relevant directories.
             var nightlyDir = GetNightlyDir();
-            var logDir = Path.Combine(nightlyDir, "Logs");
-            var pwizDir = Path.Combine(nightlyDir, "pwiz");
             var skylineTesterDir = Path.Combine(nightlyDir, "SkylineTester");
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
 
             // Create log file.
-            if (!Directory.Exists(logDir))
-                Directory.CreateDirectory(logDir);
+            if (!Directory.Exists(_logDir))
+                Directory.CreateDirectory(_logDir);
             _logFile = Path.Combine(nightlyDir, "SkylineNightly.log");
             Delete(_logFile);
             Log(DateTime.Now.ToShortDateString());
@@ -85,44 +91,17 @@ namespace SkylineNightly
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
             Log("Delete pwiz folder");
-            Delete(pwizDir);
+            Delete(_pwizDir);
             Log("Delete SkylineTester");
             Delete(skylineTesterDir);
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = skylineTesterDir + ".zip";
-            using (var client = new WebClient())
-            {
-                client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-
-                var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, TEAM_CITY_BUILD_TYPE);
-                Log("Download Team City build page");
-                var buildStatusPage = client.DownloadString(buildPageUrl);
-
-                var match = Regex.Match(buildStatusPage, @"<span\sid=""build:([^""]*):text"">Tests\spassed:");
-                if (match.Success)
-                {
-                    string id = match.Groups[1].Value;
-                    string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE, id);
-                    Log("Download SkylineTester zip file");
-                    client.DownloadFile(zipFileLink, skylineTesterZip);
-                }
-            }
+            DownloadSkylineTester(skylineTesterZip);
 
             // Install SkylineTester.
-            using (var zipFile = new ZipFile(skylineTesterZip))
-            {
-                try
-                {
-                    Log("Unzip SkylineTester");
-                    zipFile.ExtractAll(skylineTesterDir, ExtractExistingFileAction.OverwriteSilently);
-                }
-                catch (Exception)
-                {
-                    Log("Error attempting to unzip SkylineTester");
-                    return;
-                }
-            }
+            if (!InstallSkylineTester(skylineTesterZip, skylineTesterDir))
+                return;
 
             // Delete zip file.
             Log("Delete zip file");
@@ -132,14 +111,14 @@ namespace SkylineNightly
             var assembly = Assembly.GetExecutingAssembly();
             const string resourceName = "SkylineNightly.SkylineNightly.skytr";
             int durationSeconds;
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
                 if (stream == null)
                 {
                     Log("Embedded resource is broken");
                     return;
                 }
-                using (StreamReader reader = new StreamReader(stream))
+                using (var reader = new StreamReader(stream))
                 {
                     var skylineTester = Xml.FromString(reader.ReadToEnd());
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
@@ -174,60 +153,183 @@ namespace SkylineNightly
             else
                 Log("SkylineTester finished");
 
-            // Upload log information.
-            var duration = DateTime.Now - startTime;
-            UploadLog(logDir, pwizDir, duration);
+            _duration = DateTime.Now - startTime;
         }
 
-        /// <summary>
-        /// Upload the latest results to the server.
-        /// </summary>
-        private void UploadLog(string logDir, string pwizDir, TimeSpan duration)
+        private void DownloadSkylineTester(string skylineTesterZip)
         {
-            var directory = new DirectoryInfo(logDir);
-            var logFile = directory.GetFiles()
-                .OrderByDescending(f => f.LastWriteTime)
-                .SkipWhile(f => f.Name == "Summary.log")
-                .First();
-            if (logFile != null)
-                ParseLog(logFile);
+            using (var client = new WebClient())
+            {
+                client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
+
+                var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, TEAM_CITY_BUILD_TYPE);
+                Log("Download Team City build page");
+                var buildStatusPage = client.DownloadString(buildPageUrl);
+
+                var match = Regex.Match(buildStatusPage, @"<span\sid=""build:([^""]*):text"">Tests\spassed:");
+                if (match.Success)
+                {
+                    string id = match.Groups[1].Value;
+                    string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE, id);
+                    Log("Download SkylineTester zip file");
+                    client.DownloadFile(zipFileLink, skylineTesterZip);
+                }
+            }
+        }
+
+        private bool InstallSkylineTester(string skylineTesterZip, string skylineTesterDir)
+        {
+            using (var zipFile = new ZipFile(skylineTesterZip))
+            {
+                try
+                {
+                    Log("Unzip SkylineTester");
+                    zipFile.ExtractAll(skylineTesterDir, ExtractExistingFileAction.OverwriteSilently);
+                }
+                catch (Exception)
+                {
+                    Log("Error attempting to unzip SkylineTester");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public void Parse(string logFile = null)
+        {
+            logFile = logFile ?? GetLatestLog();
+            if (logFile == null)
+                return;
+            var log = File.ReadAllText(logFile);
+
+            // Extract all test lines.
+            var testCount = ParseTests(log);
+
+            // Extract failures.
+            ParseFailures(log);
+
+            // Extract leaks.
+            ParseLeaks(log);
 
             _nightly["id"] = Environment.MachineName;
             _nightly["os"] = Environment.OSVersion;
-            _nightly["revision"] = GetRevision(pwizDir);
+            _nightly["revision"] = GetRevision(_pwizDir);
             _nightly["start"] = _startTime;
-            _nightly["duration"] = (int) duration.TotalMinutes;
-            _nightly["testsrun"] = _testCount;
+            _nightly["duration"] = (int)_duration.TotalMinutes;
+            _nightly["testsrun"] = testCount;
             _nightly["failures"] = _failures.Count;
             _nightly["leaks"] = _leaks.Count;
 
-            var xml = _nightly.ToString();
-            if (logFile != null)
-            {
-                var xmlFile = Path.ChangeExtension(logFile.FullName, ".xml");
-                File.WriteAllText(xmlFile, xml);
-            }
+            // Save XML file.
+            var xmlFile = Path.ChangeExtension(logFile, ".xml");
+            File.WriteAllText(xmlFile, _nightly.ToString());
+        }
 
-            // Post to server.
-            PostToLink(LABKEY_URL, xml);
+        private int ParseTests(string log)
+        {
+            var startTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
+            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
+
+            string lastPass = null;
+            int testCount = 0;
+            for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
+            {
+                var passId = startMatch.Groups[1].Value;
+                var testId = startMatch.Groups[2].Value;
+                var name = startMatch.Groups[3].Value;
+                var language = startMatch.Groups[4].Value;
+
+                var endMatch = endTest.Match(log, startMatch.Index);
+                var managed = endMatch.Groups[1].Value;
+                var total = endMatch.Groups[2].Value;
+                var duration = endMatch.Groups[3].Value;
+
+                if (lastPass != passId)
+                {
+                    lastPass = passId;
+                    _pass = _nightly.Append("pass");
+                    _pass["id"] = passId;
+                }
+
+                var test = _pass.Append("test");
+                test["id"] = testId;
+                test["name"] = name;
+                test["language"] = language;
+                test["duration"] = duration;
+                test["managed"] = managed;
+                test["total"] = total;
+
+                testCount++;
+            }
+            return testCount;
+        }
+
+        private void ParseFailures(string log)
+        {
+            var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
+            var endFailure = new Regex(@"\r\n!!!\r\n", RegexOptions.Compiled);
+            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) ",
+                RegexOptions.Compiled | RegexOptions.RightToLeft);
+
+            for (var startMatch = startFailure.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
+            {
+                var name = startMatch.Groups[1].Value;
+                var endMatch = endFailure.Match(log, startMatch.Index);
+                var failureDescription = log.Substring(startMatch.Index + startMatch.Length,
+                    endMatch.Index - startMatch.Index - startMatch.Length);
+                var failureTestMatch = failureTest.Match(log, startMatch.Index);
+                var failure = _failures.Append("failure");
+                failure["name"] = name;
+                failure["pass"] = failureTestMatch.Groups[1].Value;
+                failure["test"] = failureTestMatch.Groups[2].Value;
+                failure.Set(Environment.NewLine + failureDescription + Environment.NewLine);
+            }
+        }
+
+        private void ParseLeaks(string log)
+        {
+            var leakPattern = new Regex(@"!!! (\S+) LEAKED (\d+) bytes", RegexOptions.Compiled);
+            for (var match = leakPattern.Match(log); match.Success; match = match.NextMatch())
+            {
+                var leak = _leaks.Append("leak");
+                leak["name"] = match.Groups[1].Value;
+                leak["bytes"] = match.Groups[2].Value;
+            }
         }
 
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public static void Post()
+        public void Post(string xmlFile = null)
         {
-            var nightlyDir = GetNightlyDir();
-            var logDir = Path.Combine(nightlyDir, "Logs");
-            var directory = new DirectoryInfo(logDir);
+            xmlFile = xmlFile ?? GetLatestXml();
+            if (xmlFile == null)
+                return;
+            
+            var xml = File.ReadAllText(xmlFile);
+
+            // Post to server.
+            PostToLink(LABKEY_URL, xml);
+        }
+
+        public string GetLatestLog()
+        {
+            var directory = new DirectoryInfo(_logDir);
+            var logFile = directory.GetFiles()
+                .OrderByDescending(f => f.LastWriteTime)
+                .SkipWhile(f => f.Name == "Summary.log")
+                .First();
+            return logFile == null ? null : logFile.FullName;
+        }
+
+        public string GetLatestXml()
+        {
+            var directory = new DirectoryInfo(_logDir);
             var xmlFile = directory.GetFiles()
                 .OrderByDescending(f => f.LastWriteTime)
                 .SkipWhile(f => !f.Name.EndsWith(".xml"))
                 .First();
-            var xml = File.ReadAllText(xmlFile.FullName);
-
-            // Post to server.
-            PostToLink(LABKEY_URL, xml);
+            return xmlFile == null ? null : xmlFile.FullName;
         }
 
         /// <summary>
@@ -297,84 +399,6 @@ window.onload = submitForm;
             }
 
             return revision;
-        }
-
-        public void Parse(string logFile)
-        {
-            ParseLog(new FileInfo(logFile));
-
-            var xmlFile = Path.Combine(Path.GetDirectoryName(logFile) ?? "",
-                Path.GetFileNameWithoutExtension(logFile) + "-test.xml");
-            File.WriteAllText(xmlFile, _nightly.ToString());
-        }
-
-        private void ParseLog(FileInfo logFile)
-        {
-            var log = File.ReadAllText(logFile.FullName);
-
-            // Extract all test lines.
-            var startTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
-            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
-
-            string lastPass = null;
-            for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
-            {
-                var passId = startMatch.Groups[1].Value;
-                var testId = startMatch.Groups[2].Value;
-                var name = startMatch.Groups[3].Value;
-                var language = startMatch.Groups[4].Value;
-
-                var endMatch = endTest.Match(log, startMatch.Index);
-                var managed = endMatch.Groups[1].Value;
-                var total = endMatch.Groups[2].Value;
-                var duration = endMatch.Groups[3].Value;
-
-                if (lastPass != passId)
-                {
-                    lastPass = passId;
-                    _pass = _nightly.Append("pass");
-                    _pass["id"] = passId;
-                }
-
-                var test = _pass.Append("test");
-                test["id"] = testId;
-                test["name"] = name;
-                test["language"] = language;
-                test["duration"] = duration;
-                test["managed"] = managed;
-                test["total"] = total;
-
-                _testCount++;
-            }
-
-            // Extract failures.
-            var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
-            var endFailure = new Regex(@"\r\n!!!\r\n", RegexOptions.Compiled);
-            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) ",
-                RegexOptions.Compiled | RegexOptions.RightToLeft);
-
-            for (var startMatch = startFailure.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
-            {
-                var name = startMatch.Groups[1].Value;
-                var endMatch = endFailure.Match(log, startMatch.Index);
-                var failureDescription = log.Substring(startMatch.Index + startMatch.Length,
-                    endMatch.Index - startMatch.Index - startMatch.Length);
-                var failureTestMatch = failureTest.Match(log, startMatch.Index);
-                var failure = _failures.Append("failure");
-                failure["name"] = name;
-                failure["pass"] = failureTestMatch.Groups[1].Value;
-                failure["test"] = failureTestMatch.Groups[2].Value;
-                failure.Set(Environment.NewLine + failureDescription + Environment.NewLine);
-            }
-
-            // Extract leaks.
-            var leakPattern = new Regex(@"!!! (\S+) LEAKED (\d+) bytes", RegexOptions.Compiled);
-            for (var match = leakPattern.Match(log); match.Success; match = match.NextMatch())
-            {
-                var leak = _leaks.Append("leak");
-                leak["name"] = match.Groups[1].Value;
-                leak["bytes"] = match.Groups[2].Value;
-            }
         }
 
         private void Delete(string fileOrDir)

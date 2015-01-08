@@ -18,12 +18,17 @@
  */
 
 using System;
+using System.IO;
 using System.Windows.Forms;
 
 namespace SkylineNightly
 {
     static class Program
     {
+        public const string SCHEDULED_ARG = "scheduled";
+        public const string PARSE_ARG = "parse";
+        public const string POST_ARG = "post";
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -42,16 +47,24 @@ namespace SkylineNightly
 
             switch (args[0].ToLower())
             {
-                case Nightly.SCHEDULED_ARG:
+                case SCHEDULED_ARG:
                     nightly.Run();
+                    nightly.Parse();
+                    nightly.Post();
                     break;
 
-                case Nightly.POST_ARG:
-                    Nightly.Post();
+                case PARSE_ARG:
+                    nightly.Parse();
+                    nightly.Post();
+                    break;
+
+                case POST_ARG:
+                    nightly.Post();
                     break;
 
                 default:
                     nightly.Parse(args[0]);
+                    nightly.Post(Path.ChangeExtension(args[0], ".xml"));
                     break;
             }
         }
