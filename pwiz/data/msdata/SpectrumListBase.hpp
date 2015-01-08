@@ -26,6 +26,7 @@
 
 
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/functional/hash.hpp>
 #include <stdexcept>
 #include <iostream>
@@ -39,6 +40,7 @@ namespace msdata {
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
+    SpectrumListBase() : MSLevelsNone() {};
 
     /// implementation of SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
@@ -59,6 +61,9 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     protected:
 
     DataProcessingPtr dp_;
+
+    // Useful for avoiding repeated ctor when you just want an empty set
+    const pwiz::util::IntegerSet MSLevelsNone;
 
     private:
 

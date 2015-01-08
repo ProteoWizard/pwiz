@@ -101,12 +101,12 @@ MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t scan, vendor_api::Bru
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) const
 {
-    return spectrum(index, getBinaryData, pwiz::util::IntegerSet());
+    return spectrum(index, getBinaryData, MSLevelsNone);
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel) const 
 {
-    return spectrum(index, detailLevel, pwiz::util::IntegerSet());
+    return spectrum(index, detailLevel, MSLevelsNone);
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const
@@ -315,37 +315,47 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 result->precursors.push_back(precursor);
         }
 
-        bool getLineData = msLevelsToCentroid.contains(msLevel);
-
-        if ((getLineData && spectrum->hasLineData()) || !spectrum->hasProfileData())
-        {
-            getLineData = true;
-            result->set(MS_centroid_spectrum);
-            result->defaultArrayLength = spectrum->getLineDataSize();
-        }
-        else
-        {
-            getLineData = false;
-            result->set(MS_profile_spectrum);
-            result->defaultArrayLength = spectrum->getProfileDataSize();
-        }
-
-
         if (detailLevel == DetailLevel_FullData)
         {
+        bool getLineData = msLevelsToCentroid.contains(msLevel);
+
             result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-	        automation_vector<double> mzArray, intensityArray;
+            automation_vector<double> mzArray, intensityArray;
+
+            if (!getLineData)
+        {
+                spectrum->getProfileData(mzArray, intensityArray);
+                if (mzArray.size() == 0)
+                    getLineData = true;  // We preferred profile, but there isn't any - try centroided
+        else
+            result->set(MS_profile_spectrum);
+        }
+
             if (getLineData)
             {
                 spectrum->getLineData(mzArray, intensityArray);
-                if (spectrum->hasProfileData())
-                    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
+                if (mzArray.size() > 0)
+                {
+                    result->set(MS_centroid_spectrum);
+                    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was probably also a profile spectrum, but doesn't need conversion (actually checking for profile data is crazy slow)
+                }
             }
-            else
-                spectrum->getProfileData(mzArray, intensityArray);
             result->getMZArray()->data.assign(mzArray.begin(), mzArray.end());
             result->getIntensityArray()->data.assign(intensityArray.begin(), intensityArray.end());
             result->defaultArrayLength = mzArray.size();
+        }
+        else if (detailLevel == DetailLevel_FullMetadata)
+        {
+            // N.B.: just getting the data size from the Bruker API is quite expensive.
+            if (msLevelsToCentroid.contains(msLevel) || ((result->defaultArrayLength = spectrum->getProfileDataSize())==0))
+            {
+                result->defaultArrayLength = spectrum->getLineDataSize();
+                result->set(MS_centroid_spectrum);
+            }
+            else
+            {
+                result->set(MS_profile_spectrum);
+            }
         }
     /*}
     catch (_com_error& e) // not caught by either std::exception or '...'

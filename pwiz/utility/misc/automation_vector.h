@@ -219,6 +219,7 @@ protected:
         return array().rgsabound[0];
     }
     void resize(size_type NewSize, VARENUM Type);
+    void resize_no_initialize(size_type NewSize); // For use only with primitive types!  (Not sure about BSTR, CURRENCY etc)
     void clear()
     {
         _ASSERT(!V_ISBYREF(&m_Value));
@@ -620,6 +621,7 @@ public:
     {
         resize(NewDim, T());
     }
+    void resize_no_initialize(size_t NewDim); // Don't use with anything but primitives!!!  (Not sure about BSTR, CURRENCY etc)
     // Append an element to the vector.
     void push_back(const T &ToAdd) /*throw(std::runtime_error)*/
     {
@@ -696,6 +698,18 @@ void automation_vector<T>::resize(size_t NewSize, const T &t)
     _ASSERT(valid());
     if (OldSize < size())
         std::uninitialized_fill(begin() + OldSize, end(), t);
+}
+
+// Special version for primitives like double and float, where initialization isn't strictly needed and may not be useful.
+// (Not sure about use with BSTR, CURRENCY etc - best not to use there)
+template <class T>
+void automation_vector<T>::resize_no_initialize(size_t NewSize)
+{
+    _ASSERT(valid());
+    unlock();
+    base::resize(NewSize, myVARENUM());
+    lock();
+    _ASSERT(valid());
 }
 
 template <class T>

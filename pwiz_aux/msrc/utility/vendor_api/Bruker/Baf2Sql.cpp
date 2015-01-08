@@ -229,57 +229,57 @@ Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
 
 bool Baf2SqlSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool Baf2SqlSpectrum::hasProfileData() const { return getProfileDataSize() > 0; }
-size_t Baf2SqlSpectrum::getLineDataSize() const { return lineMzArrayId_.is_initialized() ? storage_->getArrayNumElements(lineMzArrayId_.get()) : 0; }
-size_t Baf2SqlSpectrum::getProfileDataSize() const { return profileMzArrayId_.is_initialized() ? storage_->getArrayNumElements(profileMzArrayId_.get()) : 0; }
+size_t Baf2SqlSpectrum::getLineDataSize() const { return lineIntensityArrayId_.is_initialized() ? storage_->getArrayNumElements(lineIntensityArrayId_.get()) : 0; }
+size_t Baf2SqlSpectrum::getProfileDataSize() const { return profileIntensityArrayId_.is_initialized() ? storage_->getArrayNumElements(profileIntensityArrayId_.get()) : 0; }
+
+void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result) const
+{
+    size_t n = static_cast<size_t>(storage_->getArrayNumElements(id));
+    readArray(id, result, n);
+}
+
+void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result, size_t n) const
+{
+
+    if (n > std::numeric_limits<size_t>::max())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Array too large."));
+    }
+
+    result.resize_no_initialize(n);
+    if ((n>0) && (baf2sql_array_read_double(storage_->getHandle(), id, &result[0]) == 0))
+    {
+        baf2sql::throwLastBaf2SqlError();
+    }
+}
+
 
 void Baf2SqlSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
-    if (!lineMzArrayId_.is_initialized())
+    if (!lineIntensityArrayId_.is_initialized())
         throw runtime_error("[Baf2SqlSpectrum::getLineData] no line data available for spectrum " + lexical_cast<string>(index_));
-
-    uint64_t arrayNumElements = storage_->getArrayNumElements(lineMzArrayId_.get());
-    if (arrayNumElements == 0)
+    readArray(lineIntensityArrayId_.get(), intensities); // These are quicker to inspect than mz - probably because they're stored as float instead of double
+    size_t n = intensities.size();
+    if (n == 0)
     {
         mz.clear();
-        intensities.clear();
         return;
     }
-
-    vector<double> stdMz(arrayNumElements);
-    vector<float> stdIntensity(stdMz.size());
-    storage_->readArray<double>(lineMzArrayId_.get(), stdMz);
-    storage_->readArray<float>(lineIntensityArrayId_.get(), stdIntensity);
-    mz.clear();
-    mz.resize(stdMz.size());
-    copy(stdMz.begin(), stdMz.end(), mz.begin());
-    intensities.clear();
-    intensities.resize(stdIntensity.size());
-    copy(stdIntensity.begin(), stdIntensity.end(), intensities.begin());
+    readArray(lineMzArrayId_.get(), mz, n);  // Assume mz and intensity arrays are same length, for best read speed
 }
 
 void Baf2SqlSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
-    if (!profileMzArrayId_.is_initialized())
+    if (!profileIntensityArrayId_.is_initialized())
         throw runtime_error("[Baf2SqlSpectrum::getProfileData] no profile data available for spectrum " + lexical_cast<string>(index_));
-
-    uint64_t arrayNumElements = storage_->getArrayNumElements(profileMzArrayId_.get());
-    if (arrayNumElements == 0)
+    readArray(profileIntensityArrayId_.get(), intensities); // These are quicker to inspect than mz - probably because they're stored as float instead of double
+    size_t n = intensities.size();
+    if (n == 0)
     {
         mz.clear();
-        intensities.clear();
         return;
     }
-
-    vector<double> stdMz(arrayNumElements);
-    vector<float> stdIntensity(stdMz.size());
-    storage_->readArray<double>(profileMzArrayId_.get(), stdMz);
-    storage_->readArray<float>(profileIntensityArrayId_.get(), stdIntensity);
-    mz.clear();
-    mz.resize(stdMz.size());
-    copy(stdMz.begin(), stdMz.end(), mz.begin());
-    intensities.clear();
-    intensities.resize(stdIntensity.size());
-    copy(stdIntensity.begin(), stdIntensity.end(), intensities.begin());
+    readArray(profileMzArrayId_.get(), mz, n); // Assume mz and intensity arrays are same length, for best read speed
 }
 
 int Baf2SqlSpectrum::getMSMSStage() const { return msLevel_; }
