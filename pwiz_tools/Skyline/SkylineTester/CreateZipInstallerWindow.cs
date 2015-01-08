@@ -95,7 +95,7 @@ namespace SkylineTester
                 // (see http://stackoverflow.com/questions/15337186/dotnetzip-badreadexception-on-extract)
                 zipFile.ParallelDeflateThreshold = -1;
 
-                if (zipPath.Contains("Nightly"))
+                if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "skylinenightly.zip")
                 {
                     // Add files to top level of zip file.
                     var files = new[]
