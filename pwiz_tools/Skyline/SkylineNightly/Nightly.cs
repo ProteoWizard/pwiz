@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Ionic.Zip;
@@ -49,16 +48,18 @@ namespace SkylineNightly
 
         private DateTime _startTime;
         private string _logFile;
-        private string _line;
-        private int _index;
-        private Xml _nightly;
-        private Xml _failures;
-        private Xml _leaks;
+        private readonly Xml _nightly;
+        private readonly Xml _failures;
+        private readonly Xml _leaks;
         private Xml _pass;
-        private int _currentPassId;
-        private string _failedTest;
-        private StringBuilder _stackTrace;
         private int _testCount;
+
+        public Nightly()
+        {
+            _nightly = new Xml("nightly");
+            _failures = _nightly.Append("failures");
+            _leaks = _nightly.Append("leaks");
+        }
 
         /// <summary>
         /// Run nightly build/test and report results to server.
@@ -183,10 +184,6 @@ namespace SkylineNightly
         /// </summary>
         private void UploadLog(string logDir, string pwizDir, TimeSpan duration)
         {
-            _nightly = new Xml("nightly");
-            _failures = _nightly.Append("failures");
-            _leaks = _nightly.Append("leaks");
-
             var directory = new DirectoryInfo(logDir);
             var logFile = directory.GetFiles()
                 .OrderByDescending(f => f.LastWriteTime)
@@ -199,7 +196,7 @@ namespace SkylineNightly
             _nightly["os"] = Environment.OSVersion;
             _nightly["revision"] = GetRevision(pwizDir);
             _nightly["start"] = _startTime;
-            _nightly["duration"] = (int)duration.TotalMinutes;
+            _nightly["duration"] = (int) duration.TotalMinutes;
             _nightly["testsrun"] = _testCount;
             _nightly["failures"] = _failures.Count;
             _nightly["leaks"] = _leaks.Count;
@@ -302,148 +299,82 @@ window.onload = submitForm;
             return revision;
         }
 
-        private enum ReadState
+        public void Parse(string logFile)
         {
-            startTest,
-            endTest,
-            failure,
+            ParseLog(new FileInfo(logFile));
+
+            var xmlFile = Path.Combine(Path.GetDirectoryName(logFile) ?? "",
+                Path.GetFileNameWithoutExtension(logFile) + "-test.xml");
+            File.WriteAllText(xmlFile, _nightly.ToString());
         }
 
         private void ParseLog(FileInfo logFile)
         {
-            using (var stream = logFile.OpenText())
+            var log = File.ReadAllText(logFile.FullName);
+
+            // Extract all test lines.
+            var startTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
+            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
+
+            string lastPass = null;
+            for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
             {
-                var state = ReadState.startTest;
-                _currentPassId = -1;
-                int passId = 0;
-                int testId = 0;
-                string name = "";
-                string language = "";
+                var passId = startMatch.Groups[1].Value;
+                var testId = startMatch.Groups[2].Value;
+                var name = startMatch.Groups[3].Value;
+                var language = startMatch.Groups[4].Value;
 
-                while (true)
+                var endMatch = endTest.Match(log, startMatch.Index);
+                var managed = endMatch.Groups[1].Value;
+                var total = endMatch.Groups[2].Value;
+                var duration = endMatch.Groups[3].Value;
+
+                if (lastPass != passId)
                 {
-                    _line = stream.ReadLine();
-                    _index = 0;
-                    if (_line == null)
-                        break;
-
-                    switch (state)
-                    {
-                        case ReadState.startTest:
-                            state = ProcessStartTest(ref passId, ref testId, ref name, ref language);
-                            break;
-
-                        case ReadState.endTest:
-                            state = ProcessEndTest(passId, testId, name, language);
-                            break;
-
-                        case ReadState.failure:
-                            state = ProcessFailure(passId, testId);
-                            break;
-                    }
-                }
-            }
-        }
-
-        private ReadState ProcessStartTest(ref int passId, ref int testId, ref string name, ref string language)
-        {
-            if (_line.Length < 9)
-                return ReadState.startTest;
-
-            // Scan for beginning of failure stack trace.
-            if (_line.StartsWith("!!! "))
-            {
-                if (_line.EndsWith(" FAILED"))
-                {
-                    _failedTest = _line.Split(' ')[1];
-                    _stackTrace = new StringBuilder();
-                    _stackTrace.AppendLine();
-                    return ReadState.failure;
+                    lastPass = passId;
+                    _pass = _nightly.Append("pass");
+                    _pass["id"] = passId;
                 }
 
-                // Scan for leak.
-                if (_line.EndsWith(" bytes"))
-                {
-                    var parts = _line.Split(' ');
-                    var leakingTest = parts[1];
-                    var leakedBytes = parts[3];
-                    var leak = _leaks.Append("leak");
-                    leak["name"] = leakingTest;
-                    leak["bytes"] = leakedBytes;
-                }
+                var test = _pass.Append("test");
+                test["id"] = testId;
+                test["name"] = name;
+                test["language"] = language;
+                test["duration"] = duration;
+                test["managed"] = managed;
+                test["total"] = total;
 
-                return ReadState.startTest;
+                _testCount++;
             }
 
-            // Scan for beginning of test information line.
-            if (!(_line[0] == '[' &&
-                  Char.IsDigit(_line[1]) && Char.IsDigit(_line[2]) &&
-                  _line[3] == ':' &&
-                  Char.IsDigit(_line[4]) && Char.IsDigit(_line[5]) &&
-                  _line[6] == ']' && _line[7] == ' '))
-                return ReadState.startTest;
-            _index = 8;
-            passId = ParseInt();
-            if (_line[_index++] != '.')
-                return ReadState.startTest;
-            testId = ParseInt();
-            if (!IsSpace())
-                return ReadState.startTest;
-            name = ParseString();
-            language = ParseString();
-            language = language.Substring(1, language.Length - 2);
-            _testCount++;
+            // Extract failures.
+            var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
+            var endFailure = new Regex(@"\r\n!!!\r\n", RegexOptions.Compiled);
+            var failureTest = new Regex(@"\r\n\[\d\d:\d\d\] +(\d+).(\d+) +(\S+) ",
+                RegexOptions.Compiled | RegexOptions.RightToLeft);
 
-            // Scan for end of test information line.
-            return ProcessEndTest(passId, testId, name, language);
-        }
-
-        private ReadState ProcessEndTest(int passId, int testId, string name, string language)
-        {
-            if (!Skip(" failures, "))
-                return ReadState.startTest;
-            var managed = ParseDouble();
-            if (_index == _line.Length || _line[_index++] != '/')
-                return ReadState.startTest;
-            var total = ParseDouble();
-            if (!Skip(" MB, "))
-                return ReadState.startTest;
-            var duration = ParseInt();
-
-            if (_currentPassId != passId)
+            for (var startMatch = startFailure.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
             {
-                _currentPassId = passId;
-                _pass = _nightly.Append("pass");
-                _pass["id"] = passId;
-            }
-
-            var test = _pass.Append("test");
-            test["id"] = testId;
-            test["name"] = name;
-            test["language"] = language;
-            test["duration"] = duration;
-            test["managed"] = managed;
-            test["total"] = total;
-
-            return ReadState.startTest;
-        }
-
-        private ReadState ProcessFailure(int passId, int testId)
-        {
-            // Look for end of stack trace.
-            if (_line == "!!!")
-            {
+                var name = startMatch.Groups[1].Value;
+                var endMatch = endFailure.Match(log, startMatch.Index);
+                var failureDescription = log.Substring(startMatch.Index + startMatch.Length,
+                    endMatch.Index - startMatch.Index - startMatch.Length);
+                var failureTestMatch = failureTest.Match(log, startMatch.Index);
                 var failure = _failures.Append("failure");
-                failure["name"] = _failedTest;
-                failure["pass"] = passId;
-                failure["test"] = testId;
-                failure.Set(_stackTrace.ToString());
-                return ReadState.startTest;
+                failure["name"] = name;
+                failure["pass"] = failureTestMatch.Groups[1].Value;
+                failure["test"] = failureTestMatch.Groups[2].Value;
+                failure.Set(Environment.NewLine + failureDescription + Environment.NewLine);
             }
 
-            // Append to stack trace.
-            _stackTrace.AppendLine(_line);
-            return ReadState.failure;
+            // Extract leaks.
+            var leakPattern = new Regex(@"!!! (\S+) LEAKED (\d+) bytes", RegexOptions.Compiled);
+            for (var match = leakPattern.Match(log); match.Success; match = match.NextMatch())
+            {
+                var leak = _leaks.Append("leak");
+                leak["name"] = match.Groups[1].Value;
+                leak["bytes"] = match.Groups[2].Value;
+            }
         }
 
         private void Delete(string fileOrDir)
@@ -478,70 +409,7 @@ window.onload = submitForm;
                 message)
                 + Environment.NewLine);
         }
-
-        private void SkipSpaces()
-        {
-            while (IsSpace())
-                _index++;
-        }
-
-        private bool IsSpace()
-        {
-            return _index < _line.Length && Char.IsWhiteSpace(_line[_index]);
-        }
-
-        private bool IsDigit()
-        {
-            return _index < _line.Length && Char.IsDigit(_line[_index]);
-        }
-
-        private int ParseInt()
-        {
-            SkipSpaces();
-            if (!IsDigit())
-                return 0;
-            int start = _index++;
-            while (IsDigit())
-                _index++;
-            return int.Parse(_line.Substring(start, _index - start));
-        }
-
-        private double ParseDouble()
-        {
-            SkipSpaces();
-            if (!IsDigit())
-                return 0.0;
-            int start = _index++;
-            while (IsDigit() || _line[_index] == '.')
-                _index++;
-            return double.Parse(_line.Substring(start, _index - start));
-        }
-
-        private string ParseString()
-        {
-            SkipSpaces();
-            if (_index == _line.Length)
-                return string.Empty;
-            int start = _index++;
-            while (!IsSpace())
-                _index++;
-            return _line.Substring(start, _index - start);
-        }
-
-        private bool Skip(string substring)
-        {
-            if (_index < _line.Length)
-            {
-                int j = _line.IndexOf(substring, _index, StringComparison.Ordinal);
-                if (j >= 0)
-                {
-                    _index = j + substring.Length;
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
+
     // ReSharper restore NonLocalizedString
 }

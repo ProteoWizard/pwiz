@@ -38,15 +38,20 @@ namespace SkylineNightly
                 return;
             }
 
+            var nightly = new Nightly();
+
             switch (args[0].ToLower())
             {
                 case Nightly.SCHEDULED_ARG:
-                    var nightly = new Nightly();
                     nightly.Run();
                     break;
 
                 case Nightly.POST_ARG:
                     Nightly.Post();
+                    break;
+
+                default:
+                    nightly.Parse(args[0]);
                     break;
             }
         }
