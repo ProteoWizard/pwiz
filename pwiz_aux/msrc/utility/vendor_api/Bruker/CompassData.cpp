@@ -35,19 +35,6 @@ using namespace pwiz::util;
 using namespace pwiz::msdata::detail::Bruker;
 
 
-using System::String;
-using System::Object;
-using System::IntPtr;
-using System::Runtime::InteropServices::Marshal;
-
-typedef EDAL::MSAnalysis MS_Analysis;
-typedef EDAL::MSSpectrumCollection MS_SpectrumCollection;
-
-typedef BDal::CxT::Lc::IAnalysis LC_Analysis;
-typedef BDal::CxT::Lc::ISpectrumSourceDeclaration LC_SpectrumSourceDeclaration;
-typedef BDal::CxT::Lc::ITraceDeclaration LC_TraceDeclaration;
-
-
 namespace pwiz {
 namespace vendor_api {
 namespace Bruker {
@@ -132,6 +119,20 @@ void ParameterCache::update(MSSpectrumParameterList& parameters)
     }
 }
 
+
+#ifdef PWIZ_READER_BRUKER_WITH_COMPASSXTRACT
+
+using System::String;
+using System::Object;
+using System::IntPtr;
+using System::Runtime::InteropServices::Marshal;
+
+typedef EDAL::MSAnalysis MS_Analysis;
+typedef EDAL::MSSpectrumCollection MS_SpectrumCollection;
+
+typedef BDal::CxT::Lc::IAnalysis LC_Analysis;
+typedef BDal::CxT::Lc::ISpectrumSourceDeclaration LC_SpectrumSourceDeclaration;
+typedef BDal::CxT::Lc::ITraceDeclaration LC_TraceDeclaration;
 
 struct MSSpectrumParameterListImpl : public MSSpectrumParameterList
 {
@@ -663,6 +664,80 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
+
+
+#else
+
+
+struct MSSpectrumParameterListImpl : public MSSpectrumParameterList
+{
+    MSSpectrumParameterListImpl()
+    {
+    }
+
+    virtual size_t size() const {return 0;}
+    virtual value_type operator[] (size_t index) const {return *const_iterator(*this, index);}
+    virtual const_iterator begin() const {return const_iterator(*this);}
+    virtual const_iterator end() const {return const_iterator();}
+};
+
+
+struct MSSpectrumParameterIterator::Impl
+{
+    MSSpectrumParameter dummy;
+};
+
+PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator()
+    : impl_(new Impl)
+{
+}
+
+PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator(const MSSpectrumParameterList& pl, size_t index)
+    : impl_(new Impl)
+{
+}
+
+PWIZ_API_DECL MSSpectrumParameterIterator::MSSpectrumParameterIterator(const MSSpectrumParameterIterator& other)
+    : impl_(new Impl)
+{
+}
+
+PWIZ_API_DECL MSSpectrumParameterIterator::~MSSpectrumParameterIterator() {}
+
+PWIZ_API_DECL void MSSpectrumParameterIterator::increment()
+{
+}
+
+PWIZ_API_DECL void MSSpectrumParameterIterator::decrement()
+{
+}
+PWIZ_API_DECL void MSSpectrumParameterIterator::advance(difference_type n)
+{
+}
+
+PWIZ_API_DECL bool MSSpectrumParameterIterator::equal(const MSSpectrumParameterIterator& that) const
+{
+    return true;
+}
+
+PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereference() const
+{
+    return impl_->dummy;
+}
+
+
+PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
+                                                 Reader_Bruker_Format format)
+{
+    if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
+        return CompassDataPtr(new Baf2SqlImpl(rawpath));
+    else
+        throw runtime_error("[CompassData::create] Bruker API was built with only BAF support; YEP and FID files not supported in this build");
+}
+
+
+#endif // PWIZ_READER_BRUKER_WITH_COMPASSXTRACT
+
 
 } // namespace Bruker
 } // namespace vendor_api
