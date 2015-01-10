@@ -171,6 +171,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return false;
 
                 writer.Flush();
+                progressMonitor.UpdateProgress(status.Complete());
             }
             return true;
         }

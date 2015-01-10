@@ -306,7 +306,17 @@ namespace pwiz.Skyline.Model.Tools
 
         private Thread PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
         {
-            var thread = new Thread(() => PostToLinkBackground(url, doc, progressMonitor, webHelpers));
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    PostToLinkBackground(url, doc, progressMonitor, webHelpers);
+                }
+                catch (Exception exception)
+                {
+                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(exception));
+                }
+            });
             thread.Start();
             return thread;
         }
@@ -785,7 +795,7 @@ namespace pwiz.Skyline.Model.Tools
                 container.SetDocument(doc, container.Document);
                 var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
                 var viewContext = new DocumentGridViewContext(dataSchema);
-                var viewSpec = viewContext.CustomViews.First(view2 => view2.Name == reportTitle);
+                var viewSpec = viewContext.CustomViews.FirstOrDefault(view2 => view2.Name == reportTitle);
                 if (null == viewSpec)
                 {
                     throw new ToolExecutionException(
