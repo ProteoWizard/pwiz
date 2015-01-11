@@ -80,7 +80,7 @@ set QUICKBUILDLOG=%CD%\build%TARGETPLATFORM%.log
 echo Build output: %QUICKBUILDLOG%
 
 REM # build!
-call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS% >%QUICKBUILDLOG% 2>&1
+call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash --without-compassxtract optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS% >%QUICKBUILDLOG% 2>&1
 
 REM # look for problems
 findstr /c:"...updated" %QUICKBUILDLOG%
