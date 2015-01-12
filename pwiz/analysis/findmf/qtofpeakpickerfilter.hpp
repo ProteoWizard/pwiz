@@ -121,7 +121,7 @@ typedef boost::uint32_t uint32_t;
       }
       catch(std::exception& e)
       {
-        throw std::runtime_error(std::string("[SpectrumList_ZeroSamplesFilter] Error filtering intensity data: ") + e.what());
+        throw std::runtime_error(std::string("[QTOFPeakPickerFilter] Error filtering intensity data: ") + e.what());
       }
       specptr->dataProcessingPtr = dp_;
       return specptr;
