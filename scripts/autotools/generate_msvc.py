@@ -15,7 +15,9 @@
 # thanks to http://weblog.latte.ca/static/blake/refreshvcproj.py
 #
 # We assume the presence of an already-in-use Boost library, such as that
-# available for download at http://www.boostpro.com/download/
+# available for download at https://sourceforge.net/projects/boost/files/boost-binaries/
+#
+# Note that you also have to arrange to build the boost-nowide library, which is not yet part of the official boost release.
 
 import os
 import sys
@@ -47,15 +49,15 @@ if "-d" in args :
 	args = args[:len(args)-1]
 
 if (len(args) == 1) :
-	print "usage: %s <pwizroot> [-d] [<msvc_build_log> <msvc_ver(8,9 or 10)]"%sys.argv[0]
+	print "usage: %s <pwizroot> [-d] [<msvc_build_log> <msvc_ver(8,9,10 or 12)]"%sys.argv[0]
 	print " if build log isn't provided we'll make one by doing a clean bjam build."
-	print " if msvc version isn't provided we'll produce msvc8, msvc9 and msvc10 projects."
+	print " if msvc version isn't provided we'll produce msvc8, msvc9, msvc10 and msvc12 projects."
 	print " pwizroot is usually \ProteoWizard\pwiz (not \ProteoWizard or \ProteoWizard\pwiz\pwiz)."
 	quit(1)
 	
 ac.set_pwizroot(args[1])
 
-msvc_versions = range(10,7,-1) # build 10,9,8
+msvc_versions = [12, 10, 9, 8] # build files for MSVC12,10,9,8
 
 buildlog_lines = []
 
@@ -183,7 +185,7 @@ def saveDoc(doc, projectName, msvcVer, secondExt=""):
 
 def updateSettings(vcprojDoc,msvcVer) :
 	# update the include path
-	if (10 == msvcVer) :
+	if (10 <= msvcVer) :  # vc10 and vc12
 		for node in  vcprojDoc.getElementsByTagName("AdditionalIncludeDirectories") :
 			incl =  node.childNodes[0].nodeValue
 			for i in includes :
@@ -230,7 +232,7 @@ def updateSettings(vcprojDoc,msvcVer) :
 				toolNode.setAttribute(tag,w)
 
 def	addSourceFile(vcprojDoc,msvcVer,file) :
-	if (10 == msvcVer) :
+	if (10 <= msvcVer) : # cv10 and vc12
 		itemGroup = vcprojDoc.getElementsByTagName("ItemGroup")[1]
 		ccNode = vcprojDoc.createElement("ClCompile")
 		ccNode.setAttribute("Include",relname(file))
@@ -238,7 +240,7 @@ def	addSourceFile(vcprojDoc,msvcVer,file) :
 		for config in configs:
 			fileConfigNode = vcprojDoc.createElement("ObjectFileName")
 			fileConfigNode.setAttribute("Condition","'$(Configuration)|$(Platform)'=='%s'"%config)
-			fileConfigNode.appendChild(vcprojDoc.createTextNode("$(OutDir)\\%s.obj"%treename(file).partition(".")[0]))
+			fileConfigNode.appendChild(vcprojDoc.createTextNode("$(IntDir)\\%s.obj"%treename(file).partition(".")[0]))
 			ccNode.appendChild(fileConfigNode)
 		itemGroup.appendChild(ccNode)
 	else :
@@ -257,15 +259,22 @@ def	addSourceFile(vcprojDoc,msvcVer,file) :
 			childFileNode.appendChild(fileConfigNode)
 		filterNode.appendChild(childFileNode)
 
+def getDecoratedVCProjExt(msvcVer) :
+	if 10==msvcVer : 
+		return "vcxproj"
+	if 12==msvcVer : 
+		return "vc12.vcxproj"
+	return "vcproj"
+
 def getVCProjExt(msvcVer) :
-	if 10==msvcVer :
+	if 10<=msvcVer : # vc10 and vc12
 		return "vcxproj"
 	return "vcproj"
 
 def openVCProjTemplate(templateName,msvcVer,projectName) :
 	projectGUID = GUIDs[projectName]
-	vcprojDoc = xml.dom.minidom.parse(templateName+"."+getVCProjExt(msvcVer)+".template")
-	if 10==msvcVer :
+	vcprojDoc = xml.dom.minidom.parse(templateName+"."+getDecoratedVCProjExt(msvcVer)+".template")
+	if 10<=msvcVer : # vc10 and vc12
 		for rns in vcprojDoc.getElementsByTagName("RootNamespace") :
 			rns.childNodes[0].nodeValue = projectName
 		for guid in vcprojDoc.getElementsByTagName("ProjectGuid") :
@@ -302,7 +311,7 @@ for line in buildlog_lines:
 		print line
 	if ("ProteoWizard " in line and "last committed" in line) :
 		buildversion = line.split(" ")[1].replace(".","_")
-	if ("file " in line and "obj.rsp" in line) : # beginning of a repsonse file
+	if ("file " in line and "obj.rsp" in line) : # beginning of a response file
 		in_rsp = True
 	elif ("call " in line) : # end of a response file
 		in_rsp = False
@@ -340,9 +349,10 @@ for project in projects:
 	GUIDs[makeProjectName(project)] = makeGUID(n_projects)
 
 #
-# write files for msvc 8,9, and 10
+# write files for msvc 8,9,10 and 12
 #
-msvcVerYear = dict([(8,2005),(9,2008),(10,2010)]) # yay, MSFT marketing team!
+msvcVerYear = dict([(8,2005),(9,2008),(10,2010),(12,2013)]) # yay, MSFT marketing team!
+msvcVerFormatSLN = dict([(8,9),(9,10),(10,11),(12,12)]) # more MSFT marketing genious
 for msvcVer in msvc_versions :
 
 	workdir = ac.get_pwizroot()+"\\msvc%d"%msvcVer
@@ -374,8 +384,8 @@ for msvcVer in msvc_versions :
 
 		# set the debug args if there's a file associated with a test
 		if projectname in testargs:
-			vcprojDoc = xml.dom.minidom.parse("tests.%s.user.template"%getVCProjExt(msvcVer))
-			if 10 == msvcVer :
+			vcprojDoc = xml.dom.minidom.parse("tests.%s.user.template"%getDecoratedVCProjExt(msvcVer))
+			if 10 <= msvcVer : # vc10 and vc12
 				for setting in vcprojDoc.getElementsByTagName("LocalDebuggerCommandArguments") :
 					setting.childNodes[0].nodeValue = testargs[projectname]
 			else :
@@ -397,7 +407,7 @@ for msvcVer in msvc_versions :
 
 	vcprojDoc = openVCProjTemplate(zlib_projectname,msvcVer,zlib_projectname)
 	if len(zlibPath) :
-		if 10==msvcVer :
+		if 10<=msvcVer :
 			fileElems = ["ClInclude","ClCompile"]
 			fileAttr = "Include"
 		else :
@@ -412,7 +422,7 @@ for msvcVer in msvc_versions :
 	saveDoc(vcprojDoc, zlib_projectname, msvcVer)
 
 	vcprojDoc = openVCProjTemplate(alltests_projectname,msvcVer,alltests_projectname)
-	if 10==msvcVer :
+	if 10<=msvcVer :
 		for project in projects:
 			addProjectReference(vcprojDoc,makeProjectName(project))
 	updateSettings(vcprojDoc,msvcVer)
@@ -468,7 +478,7 @@ for msvcVer in msvc_versions :
 	alltestsGUID=GUIDs[alltests_projectname]
 	testhelpersGUID=GUIDs[testhelpers_projectname]
 	sln=open(slnfile,"w")
-	sln.write('Microsoft Visual Studio Solution File, Format Version %d.00\n'%(msvcVer+1))
+	sln.write('Microsoft Visual Studio Solution File, Format Version %d.00\n'%msvcVerFormatSLN[msvcVer])
 	sln.write('# Visual C++ Express %d\n'%msvcVerYear[msvcVer])
 	writeProj(sln,libpwiz_projectname,msvcVer,set([zlibGUID]))
 	for project in projects :
