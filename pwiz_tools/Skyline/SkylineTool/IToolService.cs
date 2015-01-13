@@ -30,6 +30,7 @@ namespace SkylineTool
     public interface IToolService
     {
         string GetReport(string toolName, string reportName);
+        string GetReportFromDefinition(string reportDefinition);
 
         DocumentLocation GetDocumentLocation();
         void SetDocumentLocation(DocumentLocation documentLocation);

@@ -63,7 +63,9 @@ namespace SkylineNightly
                     break;
 
                 default:
-                    nightly.Parse(args[0]);
+                    var extension = Path.GetExtension(args[0]).ToLower();
+                    if (extension == ".log")
+                        nightly.Parse(args[0]);
                     nightly.Post(Path.ChangeExtension(args[0], ".xml"));
                     break;
             }

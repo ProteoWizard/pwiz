@@ -21,13 +21,21 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
+using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model
@@ -57,6 +65,43 @@ namespace pwiz.Skyline.Model
         {
             string report = ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, Program.MainWindow);
             return report;
+        }
+
+        public string GetReportFromDefinition(string reportDefinition)
+        {
+            var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(reportDefinition));
+            var reportOrViewSpecList = ReportSharing.DeserializeReportList(memoryStream);
+            if (reportOrViewSpecList.Count == 0)
+            {
+                throw new ArgumentException("No report definition found");
+            }
+            if (reportOrViewSpecList.Count > 1)
+            {
+                throw new ArgumentException("Too many report definitions");
+            }
+            var reportOrViewSpec = reportOrViewSpecList.First();
+            if (null == reportOrViewSpec.ViewSpec)
+            {
+                throw new ArgumentException("The report definition uses the old format.");
+            }
+            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpec, Program.MainWindow);
+        }
+
+        private string GetReportRows(SrmDocument document, ViewSpec viewSpec, IProgressMonitor progressMonitor)
+        {
+            var container = new MemoryDocumentContainer();
+            container.SetDocument(document, container.Document);
+            var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
+            var viewContext = new DocumentGridViewContext(dataSchema);
+            var status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+                viewSpec.Name));
+            var writer = new StringWriter();
+            if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer,
+                new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
+            {
+                return writer.ToString();
+            }
+            return null;
         }
 
         public DocumentLocation GetDocumentLocation()

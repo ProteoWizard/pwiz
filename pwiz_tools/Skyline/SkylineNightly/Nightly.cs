@@ -244,6 +244,9 @@ namespace SkylineNightly
                 var total = endMatch.Groups[2].Value;
                 var duration = endMatch.Groups[3].Value;
 
+                if (string.IsNullOrEmpty(managed) || string.IsNullOrEmpty(total) || string.IsNullOrEmpty(duration))
+                    continue;
+
                 if (lastPass != passId)
                 {
                     lastPass = passId;
@@ -275,13 +278,17 @@ namespace SkylineNightly
             {
                 var name = startMatch.Groups[1].Value;
                 var endMatch = endFailure.Match(log, startMatch.Index);
+                var failureTestMatch = failureTest.Match(log, startMatch.Index);
+                var passId = failureTestMatch.Groups[1].Value;
+                var testId = failureTestMatch.Groups[2].Value;
+                if (string.IsNullOrEmpty(passId) || string.IsNullOrEmpty(testId))
+                    continue;
                 var failureDescription = log.Substring(startMatch.Index + startMatch.Length,
                     endMatch.Index - startMatch.Index - startMatch.Length);
-                var failureTestMatch = failureTest.Match(log, startMatch.Index);
                 var failure = _failures.Append("failure");
                 failure["name"] = name;
-                failure["pass"] = failureTestMatch.Groups[1].Value;
-                failure["test"] = failureTestMatch.Groups[2].Value;
+                failure["pass"] = passId;
+                failure["test"] = testId;
                 failure.Set(Environment.NewLine + failureDescription + Environment.NewLine);
             }
         }

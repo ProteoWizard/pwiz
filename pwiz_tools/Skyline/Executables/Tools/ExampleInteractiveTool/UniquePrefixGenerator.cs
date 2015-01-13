@@ -97,7 +97,7 @@ namespace ExampleInteractiveTool
                 int matchCount = matches.Count;
                 for (int j = matchCount - 1; j >= 0; j--)
                 {
-                    if (matches[j][i] != seq[i])
+                    if (matches[j].Length <= i || matches[j][i] != seq[i]) 
                         matches.RemoveAt(j);
                 }
 
@@ -116,9 +116,14 @@ namespace ExampleInteractiveTool
                 }
             }
 
-            // Never expect to get here.
-            //Assume.Fail();
-            return null;
+            // If we got here, then it means that there is something else which matches this identifier's suffix
+            // and is longer.  Return either the prefix with the length specifier, or the entire identifier.
+            return ShorterOf(string.Format("{0}({1})", prefix, seq.Length), seq); // Not L10N
+        }
+
+        private static string ShorterOf(string elided, string original)
+        {
+            return (elided.Length < original.Length) ? elided : original;
         }
 
         /// <summary>

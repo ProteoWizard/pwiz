@@ -63,6 +63,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SkylineTool">
+      <HintPath>..\..\..\SkylineTool\bin\x64\Release\SkylineTool.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -83,12 +86,6 @@
     <None Include="tool-inf\ExampleTool_report.skyr" />
     <None Include="tool-inf\info.properties" />
     <None Include="tool-inf\TestInteractiveTool.properties" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\SkylineTool\SkylineTool.csproj">
-      <Project>{3fd4e167-8f9c-4116-8122-67c7ad143490}</Project>
-      <Name>SkylineTool</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

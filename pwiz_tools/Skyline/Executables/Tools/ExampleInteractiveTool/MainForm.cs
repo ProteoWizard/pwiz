@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using SkylineTool;
@@ -58,7 +60,15 @@ namespace ExampleInteractiveTool
             CreateGraph();
 
             // Create chromatogram graph.
-            _chromatogramGraph = new Graph(chromatogramGraph, "Retention Time", "Intensity"); // Not L10N
+            _chromatogramGraph = new ChromatogramGraph(chromatogramGraph, "Retention Time", "Intensity"); // Not L10N
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            // Load initial chromatogram when window loads.
+            OnSelectionChanged(null, null);
         }
 
         protected override void OnClosed(EventArgs e)
@@ -79,6 +89,9 @@ namespace ExampleInteractiveTool
             _toolClient = null;
         }
 
+        /// <summary>
+        /// Select a peptide in Skyline when the user clicks on the corresponding area bar.
+        /// </summary>
         private void GraphClick(object sender, ClickEventArgs e)
         {
             // Select the peptide in Skyline when the user clicks on it.
@@ -87,6 +100,9 @@ namespace ExampleInteractiveTool
             _toolClient.SetDocumentLocation(documentLocation);
         }
 
+        /// <summary>
+        /// Choose a replicate.
+        /// </summary>
         private void SelectReplicate(string replicateName)
         {
             _selectedReplicate = replicateName;
@@ -98,18 +114,27 @@ namespace ExampleInteractiveTool
             }
         }
 
+        /// <summary>
+        /// Choose a replicate from drop-down menu.
+        /// </summary>
         void ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             SelectReplicate(e.ClickedItem.Text);
             CreateGraph();
         }
 
+        /// <summary>
+        /// Recreate graph when the Skyline document changes.
+        /// </summary>
         private void OnDocumentChanged(object sender, EventArgs eventArgs)
         {
             // Create graph on UI thread.
             Invoke(new Action(CreateGraph));
         }
 
+        /// <summary>
+        /// Change the chromatogram graph when the selection changes.
+        /// </summary>
         private void OnSelectionChanged(object sender, EventArgs eventArgs)
         {
             // Create graph on UI thread.
@@ -120,6 +145,9 @@ namespace ExampleInteractiveTool
                 _chromatogramGraph.CreateChromatograms(chromatograms, documentLocationName)));
         }
 
+        /// <summary>
+        /// Show Skyline version information from within the tool.
+        /// </summary>
         private void InfoClick(object sender, EventArgs e)
         {
             if (_toolClient == null)
@@ -130,13 +158,23 @@ namespace ExampleInteractiveTool
                 _toolClient.DocumentPath));
         }
 
+        /// <summary>
+        /// Create bar graph showing peak areas.
+        /// </summary>
         private void CreateGraph()
         {
             if (_toolClient == null)
                 return;
 
             // Retrieve the current report.
-            var report = _toolClient.GetReport("Peak Area"); // Not L10N
+            IReport report = _toolClient.GetReport("Peak Area"); // Not L10N
+
+            // Get the same report, more dynamically.
+            var reportStream = typeof(MainForm).Assembly.GetManifestResourceStream("ExampleInteractiveTool.tool_inf.ExampleTool_report.skyr");
+            var reader = new StreamReader(reportStream);
+            IReport report2 = _toolClient.GetReportFromDefinition(reader.ReadToEnd());
+            AssertReportsEquals(report, report2);
+
             _peptides = new List<string>();
             _peptideLinks = new List<string>();
             _replicateLinks = new List<string>();
@@ -202,6 +240,18 @@ namespace ExampleInteractiveTool
 
             // Create bar graph showing summed peak area for each peptide.
             _graph.CreateBars(_peptides.Select(prefixGenerator.GetUniquePrefix).ToArray(), areas);
+        }
+
+        /// <summary>
+        /// Make sure two reports are the same.
+        /// </summary>
+        private static void AssertReportsEquals(IReport report1, IReport report2)
+        {
+            Debug.Assert(report1.Cells.Length == report2.Cells.Length);
+            for (int iRow = 0; iRow < report1.Cells.Length; iRow++)
+            {
+                Debug.Assert(report1.Cells[iRow].SequenceEqual(report2.Cells[iRow]));
+            }
         }
     }
 }

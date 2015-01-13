@@ -134,17 +134,22 @@ namespace ExampleInteractiveTool
             _graphControl.Refresh();
         }
 
+        /// <summary>
+        /// Create chromatogram graph.
+        /// </summary>
         public void CreateChromatograms(IEnumerable<Chromatogram> chromatograms, string name)
         {
             var pane = _graphControl.GraphPane;
             pane.CurveList.Clear();
             pane.Title.IsVisible = true;
             pane.Title.Text = name;
-            _graphControl.IsAntiAlias = true;
+            _graphControl.IsAntiAlias = false;
 
             foreach (var chromatogram in chromatograms)
             {
-                pane.AddCurve("", ToDoubles(chromatogram.Times), ToDoubles(chromatogram.Intensities), chromatogram.Color, SymbolType.None);
+                var line = pane.AddCurve("", ToDoubles(chromatogram.Times), ToDoubles(chromatogram.Intensities), chromatogram.Color, SymbolType.None);
+                line.Line.Width = 2.0f;
+                line.Line.IsAntiAlias = true;
             }
 
             _graphControl.AxisChange();
@@ -158,6 +163,18 @@ namespace ExampleInteractiveTool
             for (int i = 0; i < fa.Count; i++)
                 da[i] = fa[i];
             return da;
+        }
+    }
+
+    public class ChromatogramGraph : Graph
+    {
+        public ChromatogramGraph(ZedGraphControl graphControl, string xLabel, string yLabel)
+            : base(graphControl, xLabel, yLabel)
+        {
+            var pane = graphControl.GraphPane;
+            pane.XAxis.MajorTic.IsAllTics = true;
+            pane.XAxis.MajorTic.IsOpposite = false;
+            pane.XAxis.Scale.FontSpec.Angle = 0;
         }
     }
 

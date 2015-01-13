@@ -51,6 +51,12 @@ namespace SkylineTool
             return new Report(reportCsv);
         }
 
+        public IReport GetReportFromDefinition(string reportDefinition)
+        {
+            var reportCsv = _client.GetReportFromDefinition(reportDefinition);
+            return new Report(reportCsv);
+        }
+
         public DocumentLocation GetDocumentLocation()
         {
             return _client.GetDocumentLocation();
@@ -122,6 +128,11 @@ namespace SkylineTool
             public string GetReport(string toolName, string reportName)
             {
                 return RemoteCallFunction(GetReport, toolName, reportName);
+            }
+
+            public string GetReportFromDefinition(string reportDefinition)
+            {
+                return RemoteCallFunction(GetReportFromDefinition, reportDefinition);
             }
 
             public DocumentLocation GetDocumentLocation()
