@@ -68,10 +68,10 @@ if %ERRORLEVEL% NEQ 0 exit /b 1
 
 echo Building %TARGETPLATFORM%-bit %ALL_ARGS%
 echo.
-echo %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
+echo %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash --without-compassxtract optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
 
 if "%NOLOG%"=="1" (
-    call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
+    call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash --without-compassxtract optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
     GOTO BUILD_DONE
 )
 
