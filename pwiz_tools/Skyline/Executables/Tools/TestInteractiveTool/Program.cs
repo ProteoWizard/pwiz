@@ -124,7 +124,7 @@ namespace TestInteractiveTool
                 Console.WriteLine("Version");
                 try
                 {
-                    return _toolClient.SkylineVersion;
+                    return _toolClient.GetSkylineVersion();
                 }
                 catch (Exception ex)
                 {
@@ -136,7 +136,7 @@ namespace TestInteractiveTool
             public string TestDocumentPath()
             {
                 Console.WriteLine("DocumentPath");
-                return _toolClient.DocumentPath;
+                return _toolClient.GetDocumentPath();
             }
 
             public int GetDocumentChangeCount()

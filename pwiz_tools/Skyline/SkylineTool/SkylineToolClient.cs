@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 
 namespace SkylineTool
 {
@@ -77,22 +76,19 @@ namespace SkylineTool
             return _client.GetReplicateName();
         }
 
-        public IEnumerable<Chromatogram> GetChromatograms(DocumentLocation documentLocation)
+        public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
         {
             return _client.GetChromatograms(documentLocation);
         }
 
-        public string DocumentPath
+        public string GetDocumentPath()
         {
-            get { return _client.GetDocumentPath(); }
+            return _client.GetDocumentPath();
         }
 
-        public Version SkylineVersion
+        public Version GetSkylineVersion()
         {
-            get
-            {
-                return _client.GetVersion();
-            }
+            return _client.GetVersion();
         }
 
         private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver

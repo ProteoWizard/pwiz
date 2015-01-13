@@ -83,7 +83,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SkylineTool, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="SkylineTool, Version=1.0.0.0, Culture=neutral">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\SkylineTool\bin\$(Platform)\$(Configuration)\SkylineTool.dll</HintPath>
     </Reference>

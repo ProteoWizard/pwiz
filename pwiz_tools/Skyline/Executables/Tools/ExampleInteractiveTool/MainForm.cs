@@ -152,10 +152,10 @@ namespace ExampleInteractiveTool
         {
             if (_toolClient == null)
                 return;
-            var version = _toolClient.SkylineVersion;
+            var version = _toolClient.GetSkylineVersion();
             MessageBox.Show(string.Format("Skyline version: {0}.{1}.{2}.{3}\nDocument: {4}", // Not L10N
                 version.Major, version.Minor, version.Build, version.Revision,
-                _toolClient.DocumentPath));
+                _toolClient.GetDocumentPath()));
         }
 
         /// <summary>
