@@ -79,6 +79,14 @@ namespace pwiz.SkylineTestFunctional
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
 
             // Provoke some errors
+            int badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
+            TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
+                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__, 
+                badcharge, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
+            badcharge = 120;
+            TestError(line1 + line2start + "\t\t" + badcharge + "\t1", // Insanely large charge for precursor
+                String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                badcharge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
             TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
             TestError(line1 + line2start + "99\t15", // Precursor Formula and m/z don't make sense together
@@ -169,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
             // (tests fix for Issue 373: Small molecules: Insert Transition list doesn't construct the tree properly)
             RunUI(() => SkylineWindow.NewDocument(true));
             docOrig = SkylineWindow.Document;
-            pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // small_molecule_paste_test.csv has non-standard column order (mz and formula swapped)
             var columnOrder = new[]
             {
@@ -185,9 +193,30 @@ namespace pwiz.SkylineTestFunctional
             };
             RunUI(() =>
             {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList()); 
+                pasteDlg2.IsMolecule = true;
+                pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList()); 
             });
+
+            // Bad charge states mid-list were handled ungracefully due to lookahead in figuring out transition groups
+            badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
+            SetClipboardText(GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(",4,4", ",4," + badcharge));
+            RunUI(pasteDlg2.PasteTransitions);
+            RunUI(pasteDlg2.OkDialog);  // Don't expect this to work, form stays open
+            WaitForConditionUI(() => pasteDlg2.ErrorText != null);
+            var errText =
+                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
+                    badcharge, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+            RunUI(() => Assert.IsTrue(pasteDlg2.ErrorText.Contains(errText), 
+                string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"", errText, pasteDlg2.ErrorText)));
+            OkDialog(pasteDlg2, pasteDlg2.CancelDialog);
+
+            pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            RunUI(() =>
+            {
+                pasteDlg.IsMolecule = true;
+                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
+            });
+
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
             RunUI(pasteDlg.PasteTransitions);
             OkDialog(pasteDlg, pasteDlg.OkDialog);

@@ -24,7 +24,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
-using NHibernate.Util;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -697,7 +696,19 @@ namespace pwiz.Skyline.EditUI
             }
             var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
             var massOk = true;
-            if (NullForEmpty(formula) != null)
+            if (getPrecursorColumns && charge != 0 && (charge < TransitionGroup.MIN_PRECURSOR_CHARGE || charge > TransitionGroup.MAX_PRECURSOR_CHARGE))
+            {
+                errMessage = String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                    charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                errColumn = indexCharge;
+            }
+            else if (!getPrecursorColumns && charge != 0 && (charge < Transition.MIN_PRODUCT_CHARGE || charge > Transition.MAX_PRODUCT_CHARGE))
+            {
+                errMessage = String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
+                    charge, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+                errColumn = indexCharge;
+            }
+            else if (NullForEmpty(formula) != null)
             {
                 // We have a formula
                 try
@@ -831,20 +842,34 @@ namespace pwiz.Skyline.EditUI
                                         {
                                             tranGroupFound = true;
                                             var tranFound = false;
-                                            var tranNode = GetMoleculeTransition(document, row, pep.Peptide, tranGroup.TransitionGroup);
-                                            if (tranNode == null)
-                                                return null;
-                                            foreach (var tran in tranGroup.Transitions)
+                                            try
                                             {
-                                                if (Equals(tranNode.Transition.CustomIon,tran.Transition.CustomIon))
+                                                var tranNode = GetMoleculeTransition(document, row, pep.Peptide, tranGroup.TransitionGroup);
+                                                if (tranNode == null)
+                                                    return null;
+                                                foreach (var tran in tranGroup.Transitions)
                                                 {
-                                                    tranFound = true;
-                                                    break;
+                                                    if (Equals(tranNode.Transition.CustomIon,tran.Transition.CustomIon))
+                                                    {
+                                                        tranFound = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (!tranFound)
+                                                {
+                                                    document = (SrmDocument) document.Add(pathGroup, tranNode);
                                                 }
                                             }
-                                            if (!tranFound)
+                                            catch (InvalidDataException e)
                                             {
-                                                document = (SrmDocument) document.Add(pathGroup, tranNode);
+                                                // Some error we didn't catch in the basic checks
+                                                ShowTransitionError(new PasteError
+                                                {
+                                                    Column = 0,
+                                                    Line = row.Index,
+                                                    Message = e.Message
+                                                }); 
+                                                return null;
                                             }
                                             break;
                                         }
@@ -1084,6 +1109,8 @@ namespace pwiz.Skyline.EditUI
             try
             {
                 moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+                if (moleculeInfo == null)
+                    return null; // Some failure, but exception was already handled
                 ion = new DocNodeCustomIon(moleculeInfo.Formula, moleculeInfo.MonoMass, moleculeInfo.AverageMass,
                     Convert.ToString(row.Cells[INDEX_MOLECULE_NAME].Value)); // Short name
             }
@@ -1131,11 +1158,24 @@ namespace pwiz.Skyline.EditUI
                 return null;
             }
             var group = new TransitionGroup(pep, moleculeInfo.Charge, IsotopeLabelType.light);
-            var tran = GetMoleculeTransition(document, row, pep, group);
-            if (tran == null)
-                return null;
-            return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
-                null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, true);
+            try
+            {
+                var tran = GetMoleculeTransition(document, row, pep, group);
+                if (tran == null)
+                    return null;
+                return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
+                    null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] {tran}, true);
+            }
+            catch (InvalidDataException e)
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_PRODUCT_MZ, // Don't actually know that mz was the issue, but at least it's the right row, and in the product columns
+                    Line = row.Index,
+                    Message = e.Message
+                });
+                return null;                
+            }
         }
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, DataGridViewRow row, Peptide pep, TransitionGroup group)
