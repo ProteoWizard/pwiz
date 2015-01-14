@@ -267,7 +267,14 @@ namespace pwiz.Skyline.Model.Optimization
                 }
                 catch (GenericADOException)
                 {
-                    return ConvertFromOldFormat(path, loadMonitor, status, document);
+                    try
+                    {
+                        return ConvertFromOldFormat(path, loadMonitor, status, document);
+                    }
+                    catch (Exception e)
+                    {
+                        message = string.Format(Resources.OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_from_old_format_failed____1_, path, e.Message);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -290,7 +297,7 @@ namespace pwiz.Skyline.Model.Optimization
             // Try to open assuming old format (Id, PeptideModSeq, Charge, Mz, Value, Type)
             var precursors = new Dictionary<string, HashSet<int>>(); // PeptideModSeq -> charges
             var optimizations = new List<Tuple<DbOptimization, double>>(); // DbOptimization, product m/z
-            int maxCharge = 0;
+            int maxCharge = 1;
             using (SQLiteConnection connection = new SQLiteConnection("Data Source = " + path)) // Not L10N
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {
@@ -328,10 +335,11 @@ namespace pwiz.Skyline.Model.Optimization
             var newDoc = new SrmDocument(document != null ? document.Settings : SrmSettingsList.GetDefault());
             newDoc = newDoc.ChangeSettings(newDoc.Settings
                 .ChangePeptideLibraries(libs => libs.ChangePick(PeptidePick.filter))
-                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeFirstName("ion 1")) // Not L10N
-                .ChangeTransitionFilter(filter => filter.ChangeFragmentRangeLastName("last ion")) // Not L10N
-                .ChangeTransitionFilter(filter => filter.ChangeProductCharges(Enumerable.Range(1, maxCharge).ToList()))
-                .ChangeTransitionFilter(filter => filter.ChangeIonTypes(new []{ IonType.y, IonType.b }.ToList()))
+                .ChangeTransitionFilter(filter =>
+                    filter.ChangeFragmentRangeFirstName("ion 1") // Not L10N
+                          .ChangeFragmentRangeLastName("last ion") // Not L10N
+                          .ChangeProductCharges(Enumerable.Range(1, maxCharge).ToList())
+                          .ChangeIonTypes(new []{ IonType.y, IonType.b }))
                 .ChangeTransitionLibraries(libs => libs.ChangePick(TransitionLibraryPick.none))
                 );
             var matcher = new ModificationMatcher { FormatProvider = NumberFormatInfo.InvariantInfo };
