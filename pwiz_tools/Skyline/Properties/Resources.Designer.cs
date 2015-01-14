@@ -10693,6 +10693,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS/MS full-scan settings were configured, please verify or change your current full-scan settings..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_confi" +
+                        "gured__please_verify_or_change_your_current_full_scan_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Next &gt;.
         /// </summary>
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {

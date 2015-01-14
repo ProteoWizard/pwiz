@@ -8156,4 +8156,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_" xml:space="preserve">
     <value>The current document settings would cause the number of peptides to exceed {0:n0}. The document settings must be more restrictive or add fewer proteins.</value>
   </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_" xml:space="preserve">
+    <value>MS/MS full-scan settings were configured, please verify or change your current full-scan settings.</value>
+  </data>
 </root>

@@ -112,8 +112,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             getChromatogramsPage.Controls.Add(ImportResultsControl);
 
             _pagesToSkip = new HashSet<Pages>();
-            if (SkylineWindow.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled)
-                _pagesToSkip.Add(Pages.ms1_full_scan_settings_page);
+
+            if (SkylineWindow.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabledMsMs)
+            {
+                MessageDlg.Show(skylineWindow, Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_);
+                using (TransitionSettingsUI ts = new TransitionSettingsUI(SkylineWindow) { TabControlSel = TransitionSettingsUI.TABS.FullScan })
+                {
+                    switch (ts.ShowDialog(SkylineWindow))
+                    {
+                        case DialogResult.OK:
+                            // At this point the dialog does everything by itself.
+                            _pagesToSkip.Add(Pages.ms1_full_scan_settings_page);
+                            break;
+                        default:
+                            Load += (obj, e) => CloseWizard(DialogResult.Cancel);
+                            return;
+                    }
+                }
+            }
         }
 
         private SkylineWindow SkylineWindow { get; set; }

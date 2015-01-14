@@ -345,7 +345,12 @@ namespace pwiz.SkylineTestTutorial
 
             //p. 12 Import Full-Scan Data
             // Launch import peptide search wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var fullScanWarningDlg = ShowDialog<MessageDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            Assert.AreEqual(Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_,
+                            fullScanWarningDlg.Message);
+
+            var fullScanSettingsDlg = ShowDialog<TransitionSettingsUI>(fullScanWarningDlg.OkDialog);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(fullScanSettingsDlg.OkDialog);
 
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page", 15);
 
