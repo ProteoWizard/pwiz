@@ -68,15 +68,15 @@ namespace BiblioSpec
         struct ProcessedMsfSpectrum {
             PSM* psm;
             double qvalue;
-            double xcorr;
+            double altScore;
             bool ambiguous;
 
             ProcessedMsfSpectrum():
-                psm(NULL), qvalue(numeric_limits<double>::max()), xcorr(-numeric_limits<double>::max()), ambiguous(false) {
+                psm(NULL), qvalue(numeric_limits<double>::max()), altScore(-numeric_limits<double>::max()), ambiguous(false) {
             };
 
-            ProcessedMsfSpectrum(PSM* psmPtr, double qvalueScore, double xcorrScore):
-                psm(psmPtr), qvalue(qvalueScore), xcorr(xcorrScore), ambiguous(false) {
+            ProcessedMsfSpectrum(PSM* psmPtr, double qvalueScore, double alt):
+                psm(psmPtr), qvalue(qvalueScore), altScore(alt), ambiguous(false) {
             };
         };
 

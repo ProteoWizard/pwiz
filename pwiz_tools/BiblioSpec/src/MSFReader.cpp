@@ -263,16 +263,24 @@ namespace BiblioSpec
     {
         sqlite3_stmt* statement;
         int resultCount;
-        map<int, double> xcorrs; // peptide id --> xcorr, for breaking ties when q-values are identical
+        map<int, double> alts; // peptide id --> alt score, for breaking ties when q-values are identical
+        vector<string> altScoreNames;
+        altScoreNames.push_back("XCorr");
+        altScoreNames.push_back("IonScore");
 
         if (!filtered_)
         {
-            statement = getStmt(
-                "SELECT PeptideID, ScoreValue "
-                "FROM PeptideScores JOIN ProcessingNodeScores ON PeptideScores.ScoreID = ProcessingNodeScores.ScoreID "
-                "WHERE ScoreName = 'XCorr'");
-            while (hasNext(statement)) {
-                xcorrs[sqlite3_column_int(statement, 0)] = sqlite3_column_double(statement, 1);
+            for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
+                statement = getStmt(
+                    "SELECT PeptideID, ScoreValue "
+                    "FROM PeptideScores JOIN ProcessingNodeScores ON PeptideScores.ScoreID = ProcessingNodeScores.ScoreID "
+                    "WHERE ScoreName = '" + *i + "'");
+                while (hasNext(statement)) {
+                    alts[sqlite3_column_int(statement, 0)] = sqlite3_column_double(statement, 1);
+                }
+                if (!alts.empty()) {
+                    break;
+                }
             }
         }
 
@@ -343,8 +351,8 @@ namespace BiblioSpec
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
             double qvalue = qValues ? sqlite3_column_double(statement, 3) : 0.0;
 
-            map<int, double>::const_iterator xcorrIter = xcorrs.find(peptideId);
-            double xcorr = (xcorrIter != xcorrs.end()) ? xcorrIter->second : -numeric_limits<double>::max();
+            map<int, double>::const_iterator altIter = alts.find(peptideId);
+            double altScore = (altIter != alts.end()) ? altIter->second : -numeric_limits<double>::max();
 
             // check if we already processed a peptide that references this spectrum
             map<int, ProcessedMsfSpectrum>::iterator processedSpectraSearch = processedSpectra.find(specId);
@@ -355,7 +363,7 @@ namespace BiblioSpec
                 if (!processed.ambiguous)
                 {
                     // worse than other score, skip this
-                    if (qvalue > processed.qvalue || (qvalue == processed.qvalue && xcorr < processed.xcorr))
+                    if (qvalue > processed.qvalue || (qvalue == processed.qvalue && altScore < processed.altScore))
                     {
                         Verbosity::debug("Peptide %d (%s) had a worse score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring this peptide).",
@@ -363,7 +371,7 @@ namespace BiblioSpec
                         continue;
                     }
                     // equal, discard other and skip this
-                    else if (qvalue == processed.qvalue && xcorr == processed.xcorr)
+                    else if (qvalue == processed.qvalue && altScore == processed.altScore)
                     {
                         Verbosity::debug("Peptide %d (%s) had the same score as another peptide (%s) "
                                          "referencing spectrum %d (ignoring both peptides).",
@@ -386,7 +394,7 @@ namespace BiblioSpec
                         curPSM_ = processed.psm;
                         curPSM_->mods.clear();
                         processed.qvalue = qvalue;
-                        processed.xcorr = xcorr;
+                        processed.altScore = altScore;
                     }
                 }
                 // ambigous spectrum, check if score is better
@@ -394,10 +402,10 @@ namespace BiblioSpec
                 {
                     Verbosity::debug("Peptide %d (%s) with score %f references same spectrum as other peptides "
                                      "that had score %f.", peptideId, sequence.c_str(), qvalue, processed.qvalue);
-                    if (qvalue < processed.qvalue || (qvalue == processed.qvalue && xcorr > processed.xcorr))
+                    if (qvalue < processed.qvalue || (qvalue == processed.qvalue && altScore > processed.altScore))
                     {
                         curPSM_ = new PSM();
-                        processedSpectraSearch->second = ProcessedMsfSpectrum(curPSM_, qvalue, xcorr);
+                        processedSpectraSearch->second = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
                     }
                     else
                     {
@@ -409,7 +417,7 @@ namespace BiblioSpec
             {
                 // unseen spectrum
                 curPSM_ = new PSM();
-                processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, xcorr);
+                processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
             }
 
             curPSM_->charge = spectraChargeStates_[specId];
@@ -673,9 +681,9 @@ namespace BiblioSpec
         memFunctions.opaque = NULL;
 
         // fopenMem function expects filename parameter to be:
-        // "<hex base of archive> <hex size of archive>"
+        // "<hex base of archive>+<hex size of archive>"
         stringstream zipInfo;
-        zipInfo << hex << reinterpret_cast<const void*&>(src) << " " << srcLen;
+        zipInfo << hex << src << "+" << srcLen;
 
         // try to open zip archive 
         return unzOpen2(zipInfo.str().c_str(), &memFunctions);
@@ -689,10 +697,7 @@ namespace BiblioSpec
     {
         zlib_mem* mem = new zlib_mem();
 
-        istringstream zipInfo(filename);
-        zipInfo >> hex >> reinterpret_cast<void*&>(mem->base) >> mem->size;
-
-        if (!zipInfo)
+        if (sscanf(filename, "%x+%x", &mem->base, &mem->size) != 2)
         {
             // couldn't read base and size into struct from filename parameter
             return NULL;
