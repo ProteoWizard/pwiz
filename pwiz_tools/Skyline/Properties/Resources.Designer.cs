@@ -14144,6 +14144,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file {0} could not be opened (conversion from old format failed). {1}.
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_from_old_format_failed____1_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_fro" +
+                        "m_old_format_failed____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} does not exist..
         /// </summary>
         public static string OptimizationDb_GetOptimizationDb_The_file__0__does_not_exist_ {

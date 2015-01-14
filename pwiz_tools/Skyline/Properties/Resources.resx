@@ -8159,4 +8159,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_" xml:space="preserve">
     <value>MS/MS full-scan settings were configured, please verify or change your current full-scan settings.</value>
   </data>
+  <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_from_old_format_failed____1_" xml:space="preserve">
+    <value>The file {0} could not be opened (conversion from old format failed). {1}</value>
+  </data>
 </root>
