@@ -16,11 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// ReSharper disable NonLocalizedString
 namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniModData
     {
-        public static readonly UniModModificationData[] UNI_MOD_DATA = new[]
+        public static readonly UniModModificationData DEFAULT = new UniModModificationData
+        {
+                 Name = "Carbamidomethyl (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H3C2NO", ID = 4, 
+                 Structural = true, ShortName = "CAM", Hidden = false, 
+        };
+        
+        public static readonly UniModModificationData[] UNI_MOD_DATA =
         {
             // ADD MODS.
             

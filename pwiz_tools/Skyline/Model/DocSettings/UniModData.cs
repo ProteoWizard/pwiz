@@ -21,6 +21,13 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniModData
     {
+        public static readonly UniModModificationData DEFAULT = new UniModModificationData
+        {
+                 Name = "Carbamidomethyl (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H3C2NO", ID = 4, 
+                 Structural = true, ShortName = "CAM", Hidden = false, 
+        };
+        
         public static readonly UniModModificationData[] UNI_MOD_DATA =
         {
             new UniModModificationData
