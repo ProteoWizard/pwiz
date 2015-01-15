@@ -850,30 +850,31 @@ Here is a list of recognized arguments:
 
     public class SystemSleep : IDisposable
     {
+        private readonly EXECUTION_STATE _previousState;
+
         public SystemSleep()
         {
             // Prevent system sleep.
-            SetThreadExecutionState(
-                EXECUTION_STATE.ES_AWAYMODE_REQUIRED |
-                EXECUTION_STATE.ES_CONTINUOUS |
-                EXECUTION_STATE.ES_SYSTEM_REQUIRED);
+            _previousState = SetThreadExecutionState(
+                EXECUTION_STATE.awaymode_required |
+                EXECUTION_STATE.continuous |
+                EXECUTION_STATE.system_required);
         }
-
 
         public void Dispose()
         {
-            SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS);
+            SetThreadExecutionState(_previousState);
         }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+        private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
         [Flags]
-        public enum EXECUTION_STATE : uint
+        private enum EXECUTION_STATE : uint
         {
-            ES_AWAYMODE_REQUIRED = 0x00000040,
-            ES_CONTINUOUS = 0x80000000,
-            ES_SYSTEM_REQUIRED = 0x00000001
+            awaymode_required = 0x00000040,
+            continuous = 0x80000000,
+            system_required = 0x00000001
         }
     }
 }
