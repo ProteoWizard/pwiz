@@ -128,7 +128,6 @@ namespace BiblioSpec
                 "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
                 "WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
 
-        Verbosity::status("Iterating over records");
         // turn each row of returned table into a spectrum
         while (hasNext(statement))
         {
@@ -155,7 +154,7 @@ namespace BiblioSpec
             progress.increment();
         }
 
-        Verbosity::status("Map has %d spectra", spectra_.size());
+        Verbosity::debug("Map has %d spectra", spectra_.size());
     }
 
     /**
@@ -271,7 +270,6 @@ namespace BiblioSpec
 
         if (!filtered_)
         {
-            Verbosity::status("Looking for alternate score types");
             for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
                 statement = getStmt(
                     "SELECT PeptideID, ScoreValue "
@@ -286,11 +284,9 @@ namespace BiblioSpec
             }
         }
 
-        Verbosity::status("Checking for q-values in file");
         bool qValues = hasQValues();
         if (!qValues)
         {
-            Verbosity::status("q-values not in file");
             // no q-value fields in this database, error unless user wants everything
             if (getScoreThreshold(SQT) < 1)
                 throw BlibException(false, "This file does not contain q-values. You can set "
@@ -302,7 +298,6 @@ namespace BiblioSpec
         }
         else
         {
-            Verbosity::status("q-values in file");
             // get peptides with q-value <= threshold
             if (!filtered_)
             {
@@ -686,9 +681,9 @@ namespace BiblioSpec
         memFunctions.opaque = NULL;
 
         // fopenMem function expects filename parameter to be:
-        // "<hex base of archive>+<hex size of archive>"
+        // "<hex base of archive> <hex size of archive>"
         stringstream zipInfo;
-        zipInfo << hex << src << "+" << srcLen;
+        zipInfo << hex << reinterpret_cast<const void*&>(src) << " " << srcLen;
 
         // try to open zip archive 
         return unzOpen2(zipInfo.str().c_str(), &memFunctions);
@@ -702,7 +697,10 @@ namespace BiblioSpec
     {
         zlib_mem* mem = new zlib_mem();
 
-        if (sscanf(filename, "%x+%x", &mem->base, &mem->size) != 2)
+        istringstream zipInfo(filename);
+        zipInfo >> hex >> reinterpret_cast<void*&>(mem->base) >> mem->size;
+        
+        if (!zipInfo)
         {
             // couldn't read base and size into struct from filename parameter
             return NULL;
