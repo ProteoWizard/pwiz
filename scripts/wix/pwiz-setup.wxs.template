@@ -195,7 +195,7 @@
                       <Component Feature="MainFeature"><File Id="_msparser.dll" Name="msparser.dll" Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
                       <Component Feature="MainFeature"><File Id="_unimod_2.xsd" Name="unimod_2.xsd" Source="msvc-release\unimod_2.xsd" KeyPath="yes"/></Component> -->
                     
-<!-- Agilent DLLs
+<!-- Agilent DLLs -->
 <Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_agtsampleinforw.dll" Name="agtsampleinforw.dll" Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_MassSpecDataReader.dll" Name="MassSpecDataReader.dll" Source="msvc-release\MassSpecDataReader.dll" KeyPath="yes"/></Component>
@@ -204,7 +204,7 @@
 <Component Feature="MainFeature"><File Id="_BaseDataAccess.dll.config" Name="BaseDataAccess.dll.config" Source="msvc-release\BaseDataAccess.dll.config" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_MIDAC.dll" Name="MIDAC.dll" Source="msvc-release\MIDAC.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_BaseError.dll" Name="BaseError.dll" Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component> -->
+<Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
 
 
 <!-- Bruker DLLs -->
