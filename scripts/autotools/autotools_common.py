@@ -16,14 +16,17 @@ def get_pwizroot() :
 
 # we want to deal in straight up code that could be found on any platform - don't pull in libgd etc
 # also avoid any non-apache code like RAMP (LGPL) and vendor-supplied headers
-forbidden=set(["bindings","mz5","Image.cpp","COM",".svn","automation_vector","Pseudo2DGel","pwiz_tools\\commandline","pwiz_tools\\BiblioSpec","\\utility\\misc\\sha1calc.cpp","RegionAnalyzerTest","msbenchmark","data\\msdata\\ramp","hello_ramp","pwiz_aux","RAMPAdapter","MascotReader.cpp","Reader_Agilent_Detail","Reader_ABI_T2D_Detail"])
+forbidden=set(["bindings","mz5","Image.cpp","COM",".svn","automation_vector","MascotReaderTest","Reader_UIMF_Test","Reader_Shimadzu_Test","Pseudo2DGel","pwiz_tools\\commandline","pwiz_tools\\BiblioSpec","\\utility\\misc\\sha1calc.cpp","RegionAnalyzerTest","msbenchmark","data\\msdata\\ramp","hello_ramp","pwiz_aux","RAMPAdapter","MascotReader.cpp","Reader_Agilent_Detail","Reader_ABI_T2D_Detail"])
 excepted=set(["pwiz_tools\\commandline\\msconvert","pwiz_tools\\commandline\\idconvert","pwiz_tools\\commandline\\pepcat","\\Version.","ExtendedReaderList"])
 welcomeIncludes=set(["pwiz\\pwiz","pwiz\\data","libraries\\zlib","libraries\\libsvm","libraries\\boost_aux","findmf"])
-welcomeSrcDirs=set(["pwiz\\data","pwiz\\analysis","pwiz\\utility","pwiz_tools\\examples\\"])
+welcomeSrcDirs=set(["pwiz\\data","pwiz\\analysis","pwiz\\utility","pwiz_tools\\examples\\","pwiz_tools\\common\\","libraries\\libsvm"])
 
 # include the whole boost_aux tree, and others with depth but no -I reference
 complicatedTrees = ["boost_aux"]
 subtleIncludes = ["pwiz_aux","pwiz/utility/findmf"]
+
+# boost aux source files we need to compile
+boostAuxSources = ["libraries/boost_aux/libs/nowide/src/iostream.cpp"]
 
 
 def contains_none(line,badwords) :
@@ -88,9 +91,9 @@ def replace_pwizroot(str,repl) : # case insensitive
 import subprocess
 
 def runcmd(cmd) :
-	print 'run "'+cmd+'"...\n'
+	print ('run "'+cmd+'"...\n')
 	p=subprocess.Popen(cmd.split(' '),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	outs, errors = p.communicate()
-	print outs
-	print errors
-	print 'done with "'+cmd+'".\n'
+	print (outs)
+	print (errors)
+	print ('done with "'+cmd+'".\n')

@@ -31,7 +31,9 @@
 //#include "Serializer_idpDB.hpp"
 #include "Serializer_pepXML.hpp"
 #include "Serializer_protXML.hpp"
+#ifndef NO_MASCOT_READER
 #include "MascotReader.hpp"
+#endif
 //#include "References.hpp"
 #include "pwiz/data/identdata/Version.hpp"
 
@@ -358,7 +360,9 @@ PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
     push_back(ReaderPtr(new Reader_mzid));
     push_back(ReaderPtr(new Reader_pepXML));
     push_back(ReaderPtr(new Reader_protXML));
+#ifndef NO_MASCOT_READER
     push_back(ReaderPtr(new MascotReader));
+#endif
     //push_back(ReaderPtr(new Reader_idpDB));
 }
 

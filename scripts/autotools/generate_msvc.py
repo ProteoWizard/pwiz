@@ -41,7 +41,7 @@ args = sys.argv
 
 if "-d" in args :
 	dbug = True
-	print "-d debug option enabled"
+	print ("-d debug option enabled")
 	for i in range(1,len(args)) :
 		if "-d"==args[i] :
 			for j in range(i,len(args)-1) :
@@ -49,10 +49,10 @@ if "-d" in args :
 	args = args[:len(args)-1]
 
 if (len(args) == 1) :
-	print "usage: %s <pwizroot> [-d] [<msvc_build_log> <msvc_ver(8,9,10 or 12)]"%sys.argv[0]
-	print " if build log isn't provided we'll make one by doing a clean bjam build."
-	print " if msvc version isn't provided we'll produce msvc8, msvc9, msvc10 and msvc12 projects."
-	print " pwizroot is usually \ProteoWizard\pwiz (not \ProteoWizard or \ProteoWizard\pwiz\pwiz)."
+	print ("usage: %s <pwizroot> [-d] [<msvc_build_log> <msvc_ver(8,9,10 or 12)]"%sys.argv[0])
+	print (" if build log isn't provided we'll make one by doing a clean bjam build.")
+	print (" if msvc version isn't provided we'll produce msvc8, msvc9, msvc10 and msvc12 projects.")
+	print (" pwizroot is usually \ProteoWizard\pwiz (not \ProteoWizard or \ProteoWizard\pwiz\pwiz).")
 	quit(1)
 	
 ac.set_pwizroot(args[1])
@@ -63,22 +63,22 @@ buildlog_lines = []
 
 if (len(args) >= 3) :
 	buildlog = args[2]
-	print "using build log %s\n"%buildlog
+	print ("using build log %s\n"%buildlog)
 	buildlog_lines = open(buildlog).readlines()
 	if (len(args) >= 4) :
 		v = int(args[3])
 		msvc_versions = range(v,v+1)
 else : # no build log provided, go make one
-	print "performing clean: clean.bat\n"
+	print ("performing clean: clean.bat\n")
 	here = os.getcwd()
 	os.chdir(ac.get_pwizroot())
 	os.system("clean.bat")
 	buildcmd="quickbuild.bat --without-binary-msdata -d+2"
-	print "performing build: %s\n"%buildcmd
+	print ("performing build: %s\n"%buildcmd)
 	p=subprocess.Popen(buildcmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	outs, errors = p.communicate()
 	buildlog_lines = outs.split("\r\n")
-	print errors
+	print (errors)
 	os.chdir(here)
 
 srcs=set()
@@ -88,7 +88,7 @@ libnames=set()
 projects=set()
 includes=set([".","$(ProjectDir)..","$(BOOST_ROOT)","$(ZLIB_SOURCE)."])
 # BOOST_DISABLE_ASSERTS prevents weirdness in debug boost 1_46 in which we're supposed to present our own assertion_failed_msg() implementation
-defines=["WITHOUT_MZ5","WINDOWS_NATIVE","_SCL_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE","_USE_MATH_DEFINES","BOOST_DISABLE_ASSERTS"]
+defines=["WITHOUT_MZ5","WINDOWS_NATIVE","_SCL_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE","_USE_MATH_DEFINES","BOOST_DISABLE_ASSERTS","BOOST_NOWIDE_NO_LIB=1","NO_MASCOT_READER"]
 disableWarnings=["4996","4244","4355","4800","4146","4748"]
 shipdirs=set() # set of directories of interest
 
@@ -308,7 +308,7 @@ for line in buildlog_lines:
 	if "]: " in line : # strip the timestamp if any
 		line = line.split("]: ")[1]
 	if dbug :
-		print line
+		print (line)
 	if ("ProteoWizard " in line and "last committed" in line) :
 		buildversion = line.split(" ")[1].replace(".","_")
 	if ("file " in line and "obj.rsp" in line) : # beginning of a response file
@@ -316,6 +316,8 @@ for line in buildlog_lines:
 	elif ("call " in line) : # end of a response file
 		in_rsp = False
 	elif in_rsp :
+		if dbug:
+			print ("consider line "+line)
 		if ("-I" in line and ac.isWelcomeInclude(line)):
 			ipath = relname(line.rpartition('-I')[2].replace('"',''))
 			includes.add(ipath)
@@ -327,6 +329,8 @@ for line in buildlog_lines:
 				line = line.split("-F")[0].strip()
 			if (ac.isWelcomeSrcDir(line) and ac.isNotForbidden(line)) :
 				file = absname(line.replace('"',''))
+				if dbug:
+					print ("consider file "+file)
 				if ac.isSrcFile(file) or ac.isExampleFile(file):
 					addFile(file)
 	elif ".test\\" in line and '.exe" ' in line and "2>&1" in line : # running a test
@@ -341,6 +345,10 @@ for line in buildlog_lines:
 			if (t < len(test)-1) :
 				args += " "
 		testargs[cmd]=args
+
+# add any boost_aux source files
+for boostauxsrc in ac.boostAuxSources:
+	addFile(ac.get_pwizroot()+"\\"+boostauxsrc)
 
 # set project GUIDs
 n_projects = 0
@@ -361,7 +369,7 @@ for msvcVer in msvc_versions :
 		os.mkdir(workdir)
 
 	slnfile = "%s\\libpwiz.sln"%workdir
-	print "creating %s and related %s files\n"%(slnfile,getVCProjExt(msvcVer))
+	print ("creating %s and related %s files\n"%(slnfile,getVCProjExt(msvcVer)))
 
 
 	# snork up a nearly empty vcproj file
@@ -436,7 +444,8 @@ for msvcVer in msvc_versions :
 	for writer in writers :
 		alltests.write('{"%s",""},\n'%(writer))
 	for test in testargs :
-		alltests.write('{"%s","%s"},\n'%(test,testargs[test].replace(relroot,"").replace("\\","\\\\")))
+		if (not test.startswith("example_")) :
+			alltests.write('{"%s","%s"},\n'%(test,testargs[test].replace(relroot,"").replace("\\","\\\\")))
 	alltests.write('{NULL,NULL}};\n')
 	alltests.write('#include <direct.h>\n')
 	alltests.write('void main(int arg,char *argv[]) {\n')
@@ -519,7 +528,7 @@ readmeMSVC.write(faq)
 readmeMSVC.close()
 
 fz="%s\\build-nt-x86\\libpwiz_msvc_%s.zip"%(ac.get_pwizroot(),buildversion)
-print "creating MSVC source build distribution kit %s"%(fz)
+print ("creating MSVC source build distribution kit %s"%(fz))
 z = zipfile.ZipFile(fz,"w",zipfile.ZIP_DEFLATED)
 exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt","inl"]
 
@@ -532,19 +541,19 @@ for tree in ac.complicatedTrees:
 for d in ac.subtleIncludes : # any others not mentioned?
 	addShipDir(ac.get_pwizroot()+"\\"+d,addTree=True)
 if (dbug) :
-	print 'processing directories:'
-	print shipdirs
+	print ('processing directories:')
+	print (shipdirs)
 
 for shipdir in shipdirs :
 	if (dbug) :
-		print 'processing directory %s'%shipdir
+		print ('processing directory %s'%shipdir)
 	for file in os.listdir(shipdir) :
 		f = shipdir+"\\"+file
 		ext = file.partition(".")[2]
 		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
 			tname = ac.replace_pwizroot(f,"pwiz")
 			if not tname in files_not_to_be_shipped :
-				print 'adding %s as %s'%(f,tname)
+				print ('adding %s as %s'%(f,tname))
 				z.write(f,tname)
 			
 testfiles = set()
@@ -560,5 +569,5 @@ for test in testargs : # grab data files
 				testfiles.add(ff)
 for f in testfiles :
 	tname = ac.replace_pwizroot(f,"pwiz")
-	print 'adding %s as %s'%(f,tname)
+	print ('adding %s as %s'%(f,tname))
 	z.write(f,tname)
