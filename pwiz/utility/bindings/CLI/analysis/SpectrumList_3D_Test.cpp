@@ -111,6 +111,9 @@ void test(MSDataFile^ msd, double scanStartTime, const char* driftTimeRanges, co
 
     SpectrumList_3D^ sl = gcnew SpectrumList_3D(msd->run->spectrumList);
     pwiz::CLI::analysis::Spectrum3D^ resultSpectrum3d_CLI = sl->spectrum3d(scanStartTime, driftTimeRangesSet);
+    System::GC::KeepAlive(msd);
+    System::GC::KeepAlive(sl);
+    System::GC::KeepAlive(driftTimeRangesSet);
     pwiz::analysis::Spectrum3D resultSpectrum3d;
     for each (KeyValuePair<double, Spectrum3DValue^> itr1 in resultSpectrum3d_CLI)
     {
