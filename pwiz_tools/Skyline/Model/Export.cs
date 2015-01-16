@@ -529,7 +529,6 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new ThermoMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
-            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
@@ -1329,6 +1328,7 @@ namespace pwiz.Skyline.Model
         public ThermoMethodExporter(SrmDocument document)
             : base(document)
         {
+            RetentionStartAndEnd = true;    // Because the converter depends on this format
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
@@ -1336,6 +1336,7 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
+            RetentionStartAndEnd = true;    // Because the converter depends on this format
             MethodExporter.ExportMethod(EXE_BUILD_TSQ_METHOD, new List<string>(),
                 fileName, templateName, MemoryOutput, progressMonitor);
         }
