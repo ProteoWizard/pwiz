@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
     [TestClass]
     public class ChromTaskListTest : AbstractUnitTest
     {
-        [TestMethod]
+        //[TestMethod]
         public void TestDdaSmall()
         {
             ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
