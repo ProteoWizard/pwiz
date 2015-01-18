@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         public override IList<PrecursorResult> DeepClone()
         {
-            return new PrecursorResultList(new Precursor(DataSchema, Precursor.IdentityPath));
+            return new PrecursorResultList(new Precursor(DataSchema.Clone(), Precursor.IdentityPath));
         }
     }
 
