@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestTutorial
             var isolationSchemeGraphDlg = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeDlg.OpenGraph);
             PauseForScreenShot<DiaIsolationWindowsGraphForm>("Graph of Isolation Scheme", 8);
             OkDialog(isolationSchemeGraphDlg, isolationSchemeGraphDlg.CloseButton);
-            RunUI(() => isolationSchemeDlg.IsolationSchemeName = "DIA tutorial isolation"); // Not L10N
+            RunUI(() => isolationSchemeDlg.IsolationSchemeName = "500 to 900 by 20");
             OkDialog(isolationSchemeDlg, isolationSchemeDlg.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             
