@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
     public class ChorusContentsTest : AbstractUnitTest
     {
         private static readonly ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
-        [TestMethod]
+        //[TestMethod]
         public void TestAuthenticate()
         {
             CookieContainer cookieContainer = new CookieContainer();
