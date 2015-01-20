@@ -415,7 +415,7 @@ namespace seems
             return "Peptide Fragmentation (" + sequence + ")";
         }
 
-        private int findPointWithTolerance(pwiz.MSGraph.MSPointList points, double mz, MZTolerance tolerance, bool scaled = true)
+        private int findPointWithTolerance(pwiz.MSGraph.MSPointList points, double mz, MZTolerance tolerance, bool scaled = false)
         {
             double lowestMatchMz = mz - tolerance;
             double highestMatchMz = mz + tolerance;
@@ -494,23 +494,9 @@ namespace seems
             else
             // matching point found: present the point as the fragment
             {
-                // try to find a closer point
-                double minError = Math.Abs(points.ScaledList[index].X - mz);
-                for (int i = index; i < points.ScaledCount; ++i)
-                {
-                    double curError = Math.Abs(points.ScaledList[i].X - mz);
-                    if (curError < minError)
-                    {
-                        minError = curError;
-                        index = i;
-                    }
-                    else if (points.ScaledList[i].X > mz)
-                        break;
-                }
-
                 if (list.Count(o => o.Location.X == mz) == 0)
                 {
-                    LineObj stick = new LineObj(color, mz, points.ScaledList[index].Y, mz, 0);
+                    LineObj stick = new LineObj(color, mz, points.FullList[index].Y, mz, 0);
                     stick.Location.CoordinateFrame = CoordType.AxisXYScale;
                     stick.Line.Width = 2;
                     stick.IsClippedToChartRect = true;
@@ -521,14 +507,14 @@ namespace seems
                 {
                     // use an existing text point annotation if possible
                     TextObj text = null;
-                    minError = Double.MaxValue;
+                    double minError = Double.MaxValue;
                     foreach (GraphObj obj in list)
                     {
                         if (obj is TextObj &&
                             (obj.Location.CoordinateFrame == CoordType.AxisXYScale ||
                              obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction))
                         {
-                            double curError = Math.Abs(obj.Location.X - points.ScaledList[index].X);
+                            double curError = Math.Abs(obj.Location.X - points.FullList[index].X);
                             if (curError < 1e-4 && curError < minError)
                             {
                                 minError = curError;
@@ -541,7 +527,7 @@ namespace seems
 
                     if (text == null)
                     {
-                        text = new TextObj(label, mz, points.ScaledList[index].Y, CoordType.AxisXYScale,
+                        text = new TextObj(label, mz, points.FullList[index].Y, CoordType.AxisXYScale,
                                             AlignH.Center, AlignV.Bottom);
                         list.Add(text);
                     }
@@ -597,6 +583,7 @@ namespace seems
             // Set the constants for starting the label paint
             double topSeriesLeftPoint = 0.025;
             double residueWidth = 0.5 / ((double) sequence.Length);
+            double topSeriesRightPoint = topSeriesLeftPoint + 0.5 - residueWidth;
             double tickStart = residueWidth / 2.0;
 
             // Process all the series except c and x
@@ -651,7 +638,7 @@ namespace seems
                 text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
                 text.FontSpec.Border.IsVisible = false;
                 text.FontSpec.Fill.Color = Color.White;
-                text.IsClippedToChartRect = true;
+                text.IsClippedToChartRect = false;
                 list.Add(text);
 
                 if (topSeriesHasMatch)
@@ -673,13 +660,13 @@ namespace seems
                 if (bottomSeriesHasMatch)
                 {
                     // Paint the tick in the middle
-                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart - residueWidth, seriesTopLeftOffset, topSeriesLeftPoint + tickStart - residueWidth, seriesTopLeftOffset + 0.05);
+                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesRightPoint + tickStart, seriesTopLeftOffset, topSeriesRightPoint + tickStart, seriesTopLeftOffset + 0.05);
                     tick.Location.CoordinateFrame = CoordType.ChartFraction;
                     tick.Line.Width = 2;
                     tick.IsClippedToChartRect = true;
                     list.Add(tick);
                     // Paint the hook
-                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart - residueWidth, seriesTopLeftOffset + 0.05, topSeriesLeftPoint + 2.0 * tickStart - residueWidth, seriesTopLeftOffset + 0.08);
+                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesRightPoint + tickStart, seriesTopLeftOffset + 0.05, topSeriesRightPoint + 2.0 * tickStart, seriesTopLeftOffset + 0.08);
                     hook.Location.CoordinateFrame = CoordType.ChartFraction;
                     hook.Line.Width = 2;
                     hook.IsClippedToChartRect = true;
@@ -687,6 +674,7 @@ namespace seems
                 }
                 // Update the next paint point
                 topSeriesLeftPoint += residueWidth;
+                topSeriesRightPoint -= residueWidth;
             }
         }
 
@@ -1119,6 +1107,8 @@ namespace seems
 
                     if (findPointWithTolerance(points, mz, tolerance) > -1)
                         cell.Style.Font = new Font(annotationPanels.fragmentInfoGridView.Font, FontStyle.Bold);
+                    else
+                        cell.Style.Font = annotationPanels.fragmentInfoGridView.Font;
                 }
             }
 
