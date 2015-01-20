@@ -345,6 +345,9 @@ struct MSSpectrumImpl : public MSSpectrum
         CATCH_AND_FORWARD
     }
 
+    virtual double getTIC() const { return 0; }
+    virtual double getBPI() const { return 0; }
+
     virtual int getMSMSStage() const {try {return (int) spectrum_->MSMSStage;} CATCH_AND_FORWARD}
 
     virtual double getRetentionTime() const {try {return spectrum_->RetentionTime;} CATCH_AND_FORWARD}

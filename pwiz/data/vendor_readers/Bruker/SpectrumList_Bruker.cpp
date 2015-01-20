@@ -229,9 +229,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         if (detailLevel == DetailLevel_InstantMetadata)
             return result;
 
-        /*sd.set(MS_base_peak_m_z, pScanStats_->BPM);
-        sd.set(MS_base_peak_intensity, pScanStats_->BPI);
-        sd.set(MS_total_ion_current, pScanStats_->TIC);*/
+        //sd.set(MS_base_peak_m_z, pScanStats_->BPM);
+        if (spectrum->getTIC() > 0)
+        {
+            result->set(MS_base_peak_intensity, spectrum->getBPI());
+            result->set(MS_total_ion_current, spectrum->getTIC());
+        }
 
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);

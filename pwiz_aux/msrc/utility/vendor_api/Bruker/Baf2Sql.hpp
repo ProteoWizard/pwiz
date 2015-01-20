@@ -69,6 +69,9 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
     virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
     virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
 
+    virtual double getTIC() const { return tic_; }
+    virtual double getBPI() const { return bpi_; }
+
     virtual int getMSMSStage() const;
     virtual double getRetentionTime() const;
     virtual void getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const;

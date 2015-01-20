@@ -129,7 +129,7 @@ namespace seems
             Properties.Settings.Default.MainFormSize = this.Size;
             Properties.Settings.Default.MainFormWindowState = this.WindowState;
 			Properties.Settings.Default.Save();
-
+            Environment.Exit(0);
 			/*foreach( DataSourceMap.MapPair sourceItr in dataSources )
 				if( sourceItr.Value != null &&
 					sourceItr.Value.first != null &&

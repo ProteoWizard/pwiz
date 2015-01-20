@@ -187,6 +187,9 @@ struct PWIZ_API_DECL MSSpectrum
     virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
     virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
 
+    virtual double getTIC() const = 0;
+    virtual double getBPI() const = 0;
+
     virtual int getMSMSStage() const = 0;
     virtual double getRetentionTime() const = 0;
     virtual void getIsolationData(std::vector<double>& isolatedMZs,
