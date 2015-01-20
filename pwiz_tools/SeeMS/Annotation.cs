@@ -415,6 +415,24 @@ namespace seems
             return "Peptide Fragmentation (" + sequence + ")";
         }
 
+        private int findPointWithTolerance(pwiz.MSGraph.MSPointList points, double mz, MZTolerance tolerance, bool scaled = true)
+        {
+            double lowestMatchMz = mz - tolerance;
+            double highestMatchMz = mz + tolerance;
+
+            var pointPairList = scaled ? points.ScaledList : points.FullList;
+            int index = scaled ? points.ScaledLowerBound(mz) : points.FullLowerBound(mz);
+
+            // if index is below the tolerance threshold, bump it to the next one or set to -1 if doing so would exceed the list size
+            if (index > -1 && pointPairList[index].X < lowestMatchMz)
+                index = index + 1 == pointPairList.Count ? -1 : index + 1;
+
+            if (index == -1 || pointPairList[index].X > highestMatchMz)
+                return -1;
+
+            return index;
+        }
+
         private void addFragment (GraphObjList list, pwiz.MSGraph.MSPointList points, string series, int length, int charge, double mz)
         {
             string label = String.Format("{0}{1}{2}",
@@ -439,14 +457,12 @@ namespace seems
                 case "z*": color = Color.Crimson; offset = 0.4; break;
             }
 
-            double lowestMatchMz = mz - tolerance;
-            double highestMatchMz = mz + tolerance;
 
             int index = -1;
             if (points != null)
-                index = points.ScaledLowerBound(mz);
+                index = findPointWithTolerance(points, mz, tolerance);
 
-            if (index == -1 || points.ScaledList[index].X > highestMatchMz || points.ScaledList[index].X < lowestMatchMz)
+            if (index == -1)
             // no matching point: present a "missed" fragment annotation
             {
                 if (!showMisses)
@@ -543,23 +559,9 @@ namespace seems
         ///</summary>
         private bool aminoAcidHasFragmentEvidence (pwiz.MSGraph.MSPointList points, double leftMZ, double rightMZ)
         {
-            // Search index
-            int index = -1;
-            bool leftMZFound = false;
-            bool righMZFound = false;
-            if (points != null)
-            {
-                // Find the left mz value using mass tolerance
-                index = points.FullLowerBound(leftMZ - tolerance);
-                if (index != -1 && points.FullList[index].X <= (leftMZ + tolerance))
-                    leftMZFound = true;
-                // Find the right mz value using mass tolerance
-                index = points.FullLowerBound(rightMZ - tolerance);
-                if (index != -1 && points.FullList[index].X <= (rightMZ + tolerance))
-                    righMZFound = true;
-            }
-            // Return if both are found
-            return (leftMZFound & righMZFound);
+            return points != null &&
+                   findPointWithTolerance(points, leftMZ, tolerance, false) > -1 &&
+                   findPointWithTolerance(points, rightMZ, tolerance, false) > -1;
         }
 
         ///<summary>Adds user requested ion series to the fragmentation summary.</summary>
@@ -588,9 +590,10 @@ namespace seems
                 case "z": bottomSeriesColor = Color.OrangeRed; break;
                 case "z*": bottomSeriesColor = Color.Crimson; break;
             }
-            // Ion series offsets. These offsets control where on the chart a particular ion series
-            // get displayed
+
+            // Ion series offsets. These offsets control where on the chart a particular ion series get displayed
             double seriesTopLeftOffset = 0.2;
+
             // Set the constants for starting the label paint
             double topSeriesLeftPoint = 0.025;
             double residueWidth = 0.5 / ((double) sequence.Length);
@@ -605,14 +608,16 @@ namespace seems
                 {
                     case "a": topSeriesFragmentMZ = fragmentation.a(i, ionSeriesChargeState); break;
                     case "b": topSeriesFragmentMZ = fragmentation.b(i, ionSeriesChargeState); break;
-                    default: topSeriesFragmentMZ = 0.0; break;
+                    case "c": if (i < sequence.Length) topSeriesFragmentMZ = fragmentation.c(i, ionSeriesChargeState); break;
+                    default: continue;
                 }
                 switch (bottomSeries)
                 {
+                    case "x": if (i < sequence.Length) bottomSeriesFragmentMZ = fragmentation.x(i, ionSeriesChargeState); break;
                     case "y": bottomSeriesFragmentMZ = fragmentation.y(i, ionSeriesChargeState); break;
                     case "z": bottomSeriesFragmentMZ = fragmentation.z(i, ionSeriesChargeState); break;
                     case "z*": bottomSeriesFragmentMZ = fragmentation.zRadical(i, ionSeriesChargeState); break;
-                    default: bottomSeriesFragmentMZ = 0.0; break;
+                    default: continue;
                 }
 
                 // Check if the top and bottom fragments have evidence
@@ -620,25 +625,17 @@ namespace seems
                 bool bottomSeriesHasMatch = false;
                 if (points != null)
                 {
-                    // Search index
-                    int index = -1;
-                    // Find the left mz value using a mass tolerance
-                    index = points.FullLowerBound(topSeriesFragmentMZ - tolerance);
-                    if (index != -1 && points.FullList[index].X <= (topSeriesFragmentMZ + tolerance))
-                        topSeriesHasMatch = true;
-
-                    // Reset the search index
-                    index = -1;
-                    // Find the left mz value using a mass tolerance
-                    index = points.FullLowerBound(bottomSeriesFragmentMZ - tolerance);
-                    if (index != -1 && points.FullList[index].X <= (bottomSeriesFragmentMZ + tolerance))
-                        bottomSeriesHasMatch = true;
+                    topSeriesHasMatch = topSeriesFragmentMZ > 0 && findPointWithTolerance(points, topSeriesFragmentMZ, tolerance) > -1;
+                    bottomSeriesHasMatch = bottomSeriesFragmentMZ > 0 && findPointWithTolerance(points, bottomSeriesFragmentMZ, tolerance) > -1;
                 }
+
                 // Build the label for the amino acid
                 // Add a text box in the middle of the left and right mz boundaries
                 StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
+
                 // Figure out if any mods are there on this amino acid
                 double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+
                 // Round the mod mass and append it to the amino acid as a string
                 if (deltaMass > 0.0)
                 {
@@ -648,14 +645,15 @@ namespace seems
                 {
                     label.Append(Math.Round(deltaMass));
                 }
-                TextObj text = new TextObj(label.ToString(), topSeriesLeftPoint,
-                            seriesTopLeftOffset, CoordType.ChartFraction, AlignH.Center, AlignV.Center);
+
+                TextObj text = new TextObj(label.ToString(), topSeriesLeftPoint, seriesTopLeftOffset, CoordType.ChartFraction, AlignH.Center, AlignV.Center);
                 text.ZOrder = ZOrder.A_InFront;
                 text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
                 text.FontSpec.Border.IsVisible = false;
                 text.FontSpec.Fill.Color = Color.White;
                 text.IsClippedToChartRect = true;
                 list.Add(text);
+
                 if (topSeriesHasMatch)
                 {
                     // Paint the tick in the middle
@@ -671,108 +669,17 @@ namespace seems
                     hook.IsClippedToChartRect = true;
                     list.Add(hook);
                 }
+
                 if (bottomSeriesHasMatch)
                 {
                     // Paint the tick in the middle
-                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05);
+                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart - residueWidth, seriesTopLeftOffset, topSeriesLeftPoint + tickStart - residueWidth, seriesTopLeftOffset + 0.05);
                     tick.Location.CoordinateFrame = CoordType.ChartFraction;
                     tick.Line.Width = 2;
                     tick.IsClippedToChartRect = true;
                     list.Add(tick);
                     // Paint the hook
-                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05, topSeriesLeftPoint + 2.0 * tickStart, seriesTopLeftOffset + 0.08);
-                    hook.Location.CoordinateFrame = CoordType.ChartFraction;
-                    hook.Line.Width = 2;
-                    hook.IsClippedToChartRect = true;
-                    list.Add(hook);
-                }
-                // Update the next paint point
-                topSeriesLeftPoint += residueWidth;
-            }
-            // Reset the series starting point
-            topSeriesLeftPoint = 0.025;
-            // Process the x and c series
-            for (int i = 1; i < sequence.Length; ++i)
-            {
-                double topSeriesFragmentMZ = 0.0;
-                double bottomSeriesFragmentMZ = 0.0;
-                switch (topSeries)
-                {
-                    case "c": topSeriesFragmentMZ = fragmentation.c(i, ionSeriesChargeState); break;
-                    default: topSeriesFragmentMZ = 0.0; break;
-                }
-                switch (bottomSeries)
-                {
-                    case "x": bottomSeriesFragmentMZ = fragmentation.x(i, ionSeriesChargeState); break;
-                    default: bottomSeriesFragmentMZ = 0.0; break;
-                }
-
-                // Check if the top and bottom fragments have evidence
-                bool topSeriesHasMatch = false;
-                bool bottomSeriesHasMatch = false;
-                if (points != null)
-                {
-                    // Search index
-                    int index = -1;
-                    // Find the left mz value using a mass tolerance
-                    index = points.FullLowerBound(topSeriesFragmentMZ - tolerance);
-                    if (index != -1 && points.FullList[index].X <= (topSeriesFragmentMZ + tolerance))
-                        topSeriesHasMatch = true;
-
-                    // Reset the search index
-                    index = -1;
-                    // Find the left mz value using a mass tolerance
-                    index = points.FullLowerBound(bottomSeriesFragmentMZ - tolerance);
-                    if (index != -1 && points.FullList[index].X <= (bottomSeriesFragmentMZ + tolerance))
-                        bottomSeriesHasMatch = true;
-                }
-                // Build the label for the amino acid
-                // Add a text box in the middle of the left and right mz boundaries
-                StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
-                // Figure out if any mods are there on this amino acid
-                double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
-                // Round the mod mass and append it to the amino acid as a string
-                if (deltaMass > 0.0)
-                {
-                    label.Append("+" + Math.Round(deltaMass));
-                }
-                else if (deltaMass < 0.0)
-                {
-                    label.Append(Math.Round(deltaMass));
-                }
-                TextObj text = new TextObj(label.ToString(), topSeriesLeftPoint,
-                            seriesTopLeftOffset, CoordType.ChartFraction, AlignH.Center, AlignV.Center);
-                text.ZOrder = ZOrder.A_InFront;
-                text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
-                text.FontSpec.Border.IsVisible = false;
-                text.FontSpec.Fill.Color = Color.White;
-                text.IsClippedToChartRect = true;
-                list.Add(text);
-                if (topSeriesHasMatch)
-                {
-                    // Paint the tick in the middle
-                    LineObj tick = new LineObj(topSeriesColor, topSeriesLeftPoint + tickStart, (seriesTopLeftOffset - 0.05), topSeriesLeftPoint + tickStart, seriesTopLeftOffset);
-                    tick.Location.CoordinateFrame = CoordType.ChartFraction;
-                    tick.Line.Width = 2;
-                    tick.IsClippedToChartRect = true;
-                    list.Add(tick);
-                    // Paint the hook
-                    LineObj hook = new LineObj(topSeriesColor, topSeriesLeftPoint, (seriesTopLeftOffset - 0.08), topSeriesLeftPoint + tickStart, seriesTopLeftOffset - 0.05);
-                    hook.Location.CoordinateFrame = CoordType.ChartFraction;
-                    hook.Line.Width = 2;
-                    hook.IsClippedToChartRect = true;
-                    list.Add(hook);
-                }
-                if (bottomSeriesHasMatch)
-                {
-                    // Paint the tick in the middle
-                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05);
-                    tick.Location.CoordinateFrame = CoordType.ChartFraction;
-                    tick.Line.Width = 2;
-                    tick.IsClippedToChartRect = true;
-                    list.Add(tick);
-                    // Paint the hook
-                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05, topSeriesLeftPoint + 2.0 * tickStart, seriesTopLeftOffset + 0.08);
+                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart - residueWidth, seriesTopLeftOffset + 0.05, topSeriesLeftPoint + 2.0 * tickStart - residueWidth, seriesTopLeftOffset + 0.08);
                     hook.Location.CoordinateFrame = CoordType.ChartFraction;
                     hook.Line.Width = 2;
                     hook.IsClippedToChartRect = true;
@@ -818,245 +725,134 @@ namespace seems
 
             double topSeriesLeftPoint = 0.0;
             double bottomSeriesLeftPoint = 0.0;
-            // If the series is a, b, y, z, or z radical
-            if (topSeries == "a" || topSeries == "b" || bottomSeries == "y" || bottomSeries == "z" || bottomSeries == "z*")
-            {
-                // Step through each fragmentation site
-                for (int i = 1; i <= sequence.Length; ++i)
-                {
-                    // Paint the top series first
-                    double rightPoint = 0.0;
-                    // Figure out the right mz for this fragmentaion site
-                    switch (topSeries)
-                    {
-                        case "a": rightPoint = fragmentation.a(i, ionSeriesChargeState); break;
-                        case "b": rightPoint = fragmentation.b(i, ionSeriesChargeState); break;
-                        default: rightPoint = 0.0; break;
-                    }
-                    // If the left mz and right mz are different
-                    if (topSeriesLeftPoint != rightPoint)
-                    {
-                        LineObj line;
-                        // Use a dashed line format if there are fragment ions supporting this
-                        // amino acid
-                        if (!aminoAcidHasFragmentEvidence(points, topSeriesLeftPoint, rightPoint))
-                        {
-                            // Draw the line from previous mz to site to this mz in trasparent color.
-                            line = new LineObj(Color.FromArgb(115, topSeriesColor), topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset);
-                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
-                        }
-                        else
-                        {
-                            // Draw the line from previous mz to site to this mz in solid color.
-                            line = new LineObj(topSeriesColor, topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset);
-                        }
-                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        line.Line.Width = 2;
-                        line.ZOrder = ZOrder.F_BehindGrid;
-                        line.IsClippedToChartRect = true;
-                        list.Add(line);
-                        // Add a tick demarking the fragmentation site.
-                        LineObj tick = new LineObj(topSeriesColor, rightPoint, (topSeriesOffset - 0.015), rightPoint, (topSeriesOffset + 0.015));
-                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        tick.Line.Width = 2;
-                        tick.IsClippedToChartRect = true;
-                        list.Add(tick);
-                        // Add a text box in the middle of the left and right mz boundaries
-                        StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
-                        // Figure out if any mods are there on this amino acid
-                        double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
-                        // Round the mod mass and append it to the amino acid as a string
-                        if (deltaMass > 0.0)
-                        {
-                            label.Append("+" + Math.Round(deltaMass));
-                        }
-                        else if (deltaMass < 0.0)
-                        {
-                            label.Append(Math.Round(deltaMass));
-                        }
-                        TextObj text = new TextObj(label.ToString(), (topSeriesLeftPoint + rightPoint) / 2.0,
-                            topSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
-                        text.ZOrder = ZOrder.A_InFront;
-                        text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
-                        text.FontSpec.Border.IsVisible = false;
-                        text.FontSpec.Fill.Color = Color.White;
-                        text.IsClippedToChartRect = true;
-                        list.Add(text);
-                        topSeriesLeftPoint = rightPoint;
-                    }
 
-                    // Time to paint the bottom series
-                    // Get the right mz for this series
-                    switch (bottomSeries)
-                    {
-                        case "y": rightPoint = fragmentation.y(i, ionSeriesChargeState); break;
-                        case "z": rightPoint = fragmentation.z(i, ionSeriesChargeState); break;
-                        case "z*": rightPoint = fragmentation.zRadical(i, ionSeriesChargeState); break;
-                        default: rightPoint = 0.0; break;
-                    }
-                    // If the left and right mz are different
-                    if (bottomSeriesLeftPoint != rightPoint)
-                    {
-                        LineObj line;
-                        // Use a dashed line format if there are fragment ions supporting this
-                        // amino acid
-                        if (!aminoAcidHasFragmentEvidence(points, bottomSeriesLeftPoint, rightPoint))
-                        {
-                            // Draw the line from previous mz to site to this mz in trasparent color.
-                            line = new LineObj(Color.FromArgb(115, bottomSeriesColor), bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset);
-                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
-                        }
-                        else
-                        {
-                            // Draw the line from previous mz to site to this mz in solid color.
-                            line = new LineObj(bottomSeriesColor, bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset);
-                        }
-                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        line.Line.Width = 2;
-                        line.ZOrder = ZOrder.F_BehindGrid;
-                        line.IsClippedToChartRect = true;
-                        list.Add(line);
-                        // Draw a tick mark demarking the fragmentation site
-                        LineObj tick = new LineObj(bottomSeriesColor, rightPoint, (bottomSeriesOffset - 0.015), rightPoint, (bottomSeriesOffset + 0.015));
-                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        tick.Line.Width = 2;
-                        tick.IsClippedToChartRect = true;
-                        list.Add(tick);
-                        // Add the text label containing the amino acid
-                        StringBuilder label = new StringBuilder(sequence[sequence.Length - i].ToString());
-                        // Figure out if any mods are there on this amino acid
-                        double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
-                        // Round the mod mass and append it to the amino acid as a string
-                        if (deltaMass > 0.0)
-                        {
-                            label.Append("+" + Math.Round(deltaMass));
-                        }
-                        else if (deltaMass < 0.0)
-                        {
-                            label.Append(Math.Round(deltaMass));
-                        }
-                        TextObj text = new TextObj(label.ToString(), (bottomSeriesLeftPoint + rightPoint) / 2.0,
-                            bottomSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
-                        text.ZOrder = ZOrder.A_InFront;
-                        text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
-                        text.FontSpec.Border.IsVisible = false;
-                        text.FontSpec.Fill.Color = Color.White;
-                        text.IsClippedToChartRect = true;
-                        list.Add(text);
-                        bottomSeriesLeftPoint = rightPoint;
-                    }
+            // Step through each fragmentation site
+            for (int i = 1; i <= sequence.Length; ++i)
+            {
+                // Paint the top series first
+                double rightPoint = 0.0;
+                // Figure out the right mz for this fragmentaion site
+                switch (topSeries)
+                {
+                    case "a": rightPoint = fragmentation.a(i, ionSeriesChargeState); break;
+                    case "b": rightPoint = fragmentation.b(i, ionSeriesChargeState); break;
+                    case "c": if (i < sequence.Length) rightPoint = fragmentation.c(i, ionSeriesChargeState); break;
+                    default: continue;
                 }
-            }
-            // Handle the C and X series separately
-            if (topSeries == "c" || bottomSeries == "x")
-            {
-                topSeriesLeftPoint = 0.0;
-                bottomSeriesLeftPoint = 0.0;
-                for (int i = 1; i < sequence.Length; ++i)
+
+                // If the left mz and right mz are different
+                if (rightPoint > 0 && topSeriesLeftPoint != rightPoint)
                 {
-                    double rightPoint = fragmentation.c(i, ionSeriesChargeState);
-                    if (topSeriesLeftPoint != rightPoint && topSeries == "c")
+                    LineObj line;
+                    // Use a dashed line format if there are fragment ions supporting this
+                    // amino acid
+                    if (!aminoAcidHasFragmentEvidence(points, topSeriesLeftPoint, rightPoint))
                     {
-                        LineObj line;
-                        // Use a dashed line format if there are fragment ions supporting this
-                        // amino acid
-                        if (!aminoAcidHasFragmentEvidence(points, topSeriesLeftPoint, rightPoint))
-                        {
-                            // Draw the line from previous mz to site to this mz in trasparent color.
-                            line = new LineObj(Color.FromArgb(115, topSeriesColor), topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset);
-                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
-                        }
-                        else
-                        {
-                            // Draw the line from previous mz to site to this mz in solid color.
-                            line = new LineObj(topSeriesColor, topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset);
-                        }
-                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        line.Line.Width = 2;
-                        line.ZOrder = ZOrder.F_BehindGrid;
-                        line.IsClippedToChartRect = true;
-                        list.Add(line);
-                        // Add a tick to mark the fragmentation site
-                        LineObj tick = new LineObj(topSeriesColor, rightPoint, (topSeriesOffset - 0.015), rightPoint, (topSeriesOffset + 0.015));
-                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        tick.Line.Width = 2;
-                        tick.IsClippedToChartRect = true;
-                        list.Add(tick);
-
-                        // Add a text box in the middle of the left and right mz boundaries
-                        StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
-                        // Figure out if any mods are there on this amino acid
-                        double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
-                        // Round the mod mass and append it to the amino acid as a string
-                        if (deltaMass > 0.0)
-                        {
-                            label.Append("+" + Math.Round(deltaMass));
-                        }
-                        else if (deltaMass < 0.0)
-                        {
-                            label.Append(Math.Round(deltaMass));
-                        }
-                        TextObj text = new TextObj(label.ToString(), (topSeriesLeftPoint + rightPoint) / 2.0,
-                            topSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
-                        text.ZOrder = ZOrder.A_InFront;
-                        text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
-                        text.FontSpec.Border.IsVisible = false;
-                        text.FontSpec.Fill.Color = Color.White;
-                        text.IsClippedToChartRect = true;
-                        list.Add(text);
-                        topSeriesLeftPoint = rightPoint;
-
+                        // Draw the line from previous mz to site to this mz in trasparent color.
+                        line = new LineObj(Color.FromArgb(115, topSeriesColor), topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset);
+                        line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
                     }
-                    rightPoint = fragmentation.x(i, ionSeriesChargeState);
-                    if (bottomSeriesLeftPoint != rightPoint && bottomSeries == "x")
+                    else
                     {
-                        LineObj line;
-                        // Use a dashed line format if there are fragment ions supporting this
-                        // amino acid
-                        if (!aminoAcidHasFragmentEvidence(points, bottomSeriesLeftPoint, rightPoint))
-                        {
-                            // Draw the line from previous mz to site to this mz in trasparent color.
-                            line = new LineObj(Color.FromArgb(115, bottomSeriesColor), bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset);
-                            line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
-                        }
-                        else
-                        {
-                            // Draw the line from previous mz to site to this mz in solid color.
-                            line = new LineObj(bottomSeriesColor, bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset);
-                        }
-                        line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        line.Line.Width = 2;
-                        line.ZOrder = ZOrder.F_BehindGrid;
-                        line.IsClippedToChartRect = true;
-                        list.Add(line);
-                        LineObj tick = new LineObj(bottomSeriesColor, rightPoint, (bottomSeriesOffset - 0.015), rightPoint, (bottomSeriesOffset + 0.015));
-                        tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
-                        tick.Line.Width = 2;
-                        tick.IsClippedToChartRect = true;
-                        list.Add(tick);
-                        // Add the text label containing the amino acid
-                        StringBuilder label = new StringBuilder(sequence[sequence.Length - i].ToString());
-                        // Figure out if any mods are there on this amino acid
-                        double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
-                        // Round the mod mass and append it to the amino acid as a string
-                        if (deltaMass > 0.0)
-                        {
-                            label.Append("+" + Math.Round(deltaMass));
-                        }
-                        else if (deltaMass < 0.0)
-                        {
-                            label.Append(Math.Round(deltaMass));
-                        }
-                        TextObj text = new TextObj(label.ToString(), (bottomSeriesLeftPoint + rightPoint) / 2.0,
-                            bottomSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
-                        text.ZOrder = ZOrder.A_InFront;
-                        text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
-                        text.FontSpec.Border.IsVisible = false;
-                        text.FontSpec.Fill.Color = Color.White;
-                        text.IsClippedToChartRect = true;
-                        list.Add(text);
-                        bottomSeriesLeftPoint = rightPoint;
+                        // Draw the line from previous mz to site to this mz in solid color.
+                        line = new LineObj(topSeriesColor, topSeriesLeftPoint, topSeriesOffset, rightPoint, topSeriesOffset);
                     }
+                    line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                    line.Line.Width = 2;
+                    line.ZOrder = ZOrder.F_BehindGrid;
+                    line.IsClippedToChartRect = true;
+                    list.Add(line);
+                    // Add a tick demarking the fragmentation site.
+                    LineObj tick = new LineObj(topSeriesColor, rightPoint, (topSeriesOffset - 0.015), rightPoint, (topSeriesOffset + 0.015));
+                    tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                    tick.Line.Width = 2;
+                    tick.IsClippedToChartRect = true;
+                    list.Add(tick);
+                    // Add a text box in the middle of the left and right mz boundaries
+                    StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
+                    // Figure out if any mods are there on this amino acid
+                    double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                    // Round the mod mass and append it to the amino acid as a string
+                    if (deltaMass > 0.0)
+                    {
+                        label.Append("+" + Math.Round(deltaMass));
+                    }
+                    else if (deltaMass < 0.0)
+                    {
+                        label.Append(Math.Round(deltaMass));
+                    }
+                    TextObj text = new TextObj(label.ToString(), (topSeriesLeftPoint + rightPoint) / 2.0,
+                        topSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
+                    text.ZOrder = ZOrder.A_InFront;
+                    text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
+                    text.FontSpec.Border.IsVisible = false;
+                    text.FontSpec.Fill.Color = Color.White;
+                    text.IsClippedToChartRect = true;
+                    list.Add(text);
+                    topSeriesLeftPoint = rightPoint;
+                }
+
+                // Time to paint the bottom series
+                // Get the right mz for this series
+                switch (bottomSeries)
+                {
+                    case "x": if (i < sequence.Length) rightPoint = fragmentation.x(i, ionSeriesChargeState); break;
+                    case "y": rightPoint = fragmentation.y(i, ionSeriesChargeState); break;
+                    case "z": rightPoint = fragmentation.z(i, ionSeriesChargeState); break;
+                    case "z*": rightPoint = fragmentation.zRadical(i, ionSeriesChargeState); break;
+                    default: rightPoint = 0.0; break;
+                }
+
+                // If the left and right mz are different
+                if (rightPoint > 0 && bottomSeriesLeftPoint != rightPoint)
+                {
+                    LineObj line;
+                    // Use a dashed line format if there are fragment ions supporting this
+                    // amino acid
+                    if (!aminoAcidHasFragmentEvidence(points, bottomSeriesLeftPoint, rightPoint))
+                    {
+                        // Draw the line from previous mz to site to this mz in trasparent color.
+                        line = new LineObj(Color.FromArgb(115, bottomSeriesColor), bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset);
+                        line.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
+                    }
+                    else
+                    {
+                        // Draw the line from previous mz to site to this mz in solid color.
+                        line = new LineObj(bottomSeriesColor, bottomSeriesLeftPoint, bottomSeriesOffset, rightPoint, bottomSeriesOffset);
+                    }
+                    line.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                    line.Line.Width = 2;
+                    line.ZOrder = ZOrder.F_BehindGrid;
+                    line.IsClippedToChartRect = true;
+                    list.Add(line);
+                    // Draw a tick mark demarking the fragmentation site
+                    LineObj tick = new LineObj(bottomSeriesColor, rightPoint, (bottomSeriesOffset - 0.015), rightPoint, (bottomSeriesOffset + 0.015));
+                    tick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
+                    tick.Line.Width = 2;
+                    tick.IsClippedToChartRect = true;
+                    list.Add(tick);
+                    // Add the text label containing the amino acid
+                    StringBuilder label = new StringBuilder(sequence[sequence.Length - i].ToString());
+                    // Figure out if any mods are there on this amino acid
+                    double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
+                    // Round the mod mass and append it to the amino acid as a string
+                    if (deltaMass > 0.0)
+                    {
+                        label.Append("+" + Math.Round(deltaMass));
+                    }
+                    else if (deltaMass < 0.0)
+                    {
+                        label.Append(Math.Round(deltaMass));
+                    }
+                    TextObj text = new TextObj(label.ToString(), (bottomSeriesLeftPoint + rightPoint) / 2.0,
+                        bottomSeriesOffset, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Center);
+                    text.ZOrder = ZOrder.A_InFront;
+                    text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
+                    text.FontSpec.Border.IsVisible = false;
+                    text.FontSpec.Fill.Color = Color.White;
+                    text.IsClippedToChartRect = true;
+                    list.Add(text);
+                    bottomSeriesLeftPoint = rightPoint;
                 }
             }
         }
@@ -1321,13 +1117,8 @@ namespace seems
 
                     double mz = (double) cell.Value;
 
-                    int index = -1;
-                    if (points != null)
-                        index = points.FullLowerBound(mz - tolerance);
-
-                    if (index == -1 || points.FullList[index].X > (mz + tolerance))
-                        continue;
-                    cell.Style.Font = new Font(annotationPanels.fragmentInfoGridView.Font, FontStyle.Bold);
+                    if (findPointWithTolerance(points, mz, tolerance) > -1)
+                        cell.Style.Font = new Font(annotationPanels.fragmentInfoGridView.Font, FontStyle.Bold);
                 }
             }
 
