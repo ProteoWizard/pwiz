@@ -257,7 +257,11 @@ void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result,
 void Baf2SqlSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
     if (!lineIntensityArrayId_.is_initialized())
-        throw runtime_error("[Baf2SqlSpectrum::getLineData] no line data available for spectrum " + lexical_cast<string>(index_));
+    {
+        mz.clear();
+        intensities.clear();
+        return;
+    }
     readArray(lineIntensityArrayId_.get(), intensities); // These are quicker to inspect than mz - probably because they're stored as float instead of double
     size_t n = intensities.size();
     if (n == 0)
@@ -271,7 +275,11 @@ void Baf2SqlSpectrum::getLineData(automation_vector<double>& mz, automation_vect
 void Baf2SqlSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
     if (!profileIntensityArrayId_.is_initialized())
-        throw runtime_error("[Baf2SqlSpectrum::getProfileData] no profile data available for spectrum " + lexical_cast<string>(index_));
+    {
+        mz.clear();
+        intensities.clear();
+        return;
+    }
     readArray(profileIntensityArrayId_.get(), intensities); // These are quicker to inspect than mz - probably because they're stored as float instead of double
     size_t n = intensities.size();
     if (n == 0)
