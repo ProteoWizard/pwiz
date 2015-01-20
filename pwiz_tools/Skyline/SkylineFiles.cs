@@ -219,25 +219,92 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Utility class to update progress while reading a Skyline document.
+        /// </summary>
+        private class StreamReaderWithProgress : StreamReader
+        {
+            private readonly long _totalBytes;
+            private long _bytesRead;
+
+            public StreamReaderWithProgress(string path)
+                : base(path)
+            {
+                _totalBytes = new FileInfo(path).Length;
+            }
+
+            public ILongWaitBroker WaitBroker { private get; set; }
+
+            public override int Read(char[] buffer, int index, int count)
+            {
+                if (WaitBroker.IsCanceled)
+                    throw new OperationCanceledException();
+                var byteCount = base.Read(buffer, index, count);
+                _bytesRead += byteCount;
+                WaitBroker.ProgressValue = (int)(100 * _bytesRead / _totalBytes);
+                return byteCount;
+            }
+        }
+
         public bool OpenFile(string path)
         {
-            try
-            {
-                using (TextReader reader = new StreamReader(path))
-                using (new LongOp(this))
-                {
-                    XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                    SrmDocument document = ConnectDocument((SrmDocument)ser.Deserialize(reader), path);
-                    if (document == null)
-                        return false;   // User cancelled
+            Exception exception = null;
+            SrmDocument document = null;
 
-                    if (!CheckResults(document, path))
+            using (var reader = new StreamReaderWithProgress(path))
+            {
+                using (var longWaitDlg = new LongWaitDlg(this))
+                {
+                    reader.WaitBroker = longWaitDlg;
+                    longWaitDlg.Text = Resources.SkylineWindow_OpenFile_Loading___;
+                    longWaitDlg.Message = Path.GetFileName(path);
+                    longWaitDlg.PerformWork(this, 800, () =>
+                    {
+                        try
+                        {
+                            XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
+                            document = (SrmDocument) ser.Deserialize(reader);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            document = null;
+                        }
+                        catch (Exception x)
+                        {
+                            exception = x;
+                        }
+                    });
+
+                    if (longWaitDlg.IsCanceled)
+                        document = null;
+                }
+            }
+
+            if (exception == null)
+            {
+                if (document == null)
+                    return false;
+
+                try
+                {
+                    document = ConnectDocument(document, path);
+                    if (document == null || !CheckResults(document, path))
                         return false;
 
                     // Make sure settings lists contain correct values for
                     // this document.
                     document.Settings.UpdateLists(path);
+                }
+                catch (Exception x)
+                {
+                    exception = x;
+                }
+            }
 
+            if (exception == null)
+            {
+                try
+                {
                     using (new SequenceTreeForm.LockDoc(_sequenceTreeForm))
                     {
                         // Switch over to the opened document
@@ -246,17 +313,21 @@ namespace pwiz.Skyline
                     // Locking the sequenceTree can throw off the node count status
                     UpdateNodeCountStatus();
                 }
+                catch (Exception x)
+                {
+                    exception = x;
+                }
             }
-            catch (Exception x)
+
+            if (exception != null)
             {
                 new MessageBoxHelper(this).ShowXmlParsingError(
-                    string.Format(Resources.SkylineWindow_OpenFile_Failure_opening__0__, path), path, x);
+                    string.Format(Resources.SkylineWindow_OpenFile_Failure_opening__0__, path), path, exception);
                 return false;
             }
 
             if (SequenceTree != null && SequenceTree.Nodes.Count > 0 && !SequenceTree.RestoredFromPersistentString)
                 SequenceTree.SelectedNode = SequenceTree.Nodes[0];
-
 
             return true;
         }
@@ -666,7 +737,7 @@ namespace pwiz.Skyline
                 // figure out if any of the sample files are missing from places
                 // Skyline will find them.
                 var missingFiles = new List<string>();
-                var foundFiles = new List<string>();
+                //var foundFiles = new List<string>();
                 foreach (var chromSet in document.Settings.MeasuredResults.Chromatograms)
                 {
                     foreach (var pathFileSample in chromSet.MSDataFilePaths)
@@ -685,7 +756,7 @@ namespace pwiz.Skyline
                             File.Exists(pathPartCache) ||
                             File.Exists(Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, Path.GetFileName(pathFile) ?? string.Empty)))
                         {
-                            foundFiles.Add(pathFile);
+                            //foundFiles.Add(pathFile);
                         }
                         else
                         {
@@ -1515,7 +1586,7 @@ namespace pwiz.Skyline
             SrmDocument docNew = null;
             var retentionTimeRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
             bool calculatorMissing = retentionTimeRegression == null ||
-                                     retentionTimeRegression.Calculator as RCalcIrt == null;
+                                     !(retentionTimeRegression.Calculator is RCalcIrt);
             long countLines = Helpers.CountLinesInString(inputString);
             using (var reader = new StringReader(inputString))
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})

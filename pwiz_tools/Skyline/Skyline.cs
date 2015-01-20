@@ -114,7 +114,7 @@ namespace pwiz.Skyline
         /// <summary>
         /// Constructor for the main window of the Skyline program.
         /// </summary>
-        public SkylineWindow()
+        public SkylineWindow(string[] args = null)
         {
             LocalizationHelper.InitThread();
 
@@ -211,33 +211,35 @@ namespace pwiz.Skyline
                 throw new InvalidOperationException(Resources.SkylineWindow_SkylineWindow_Must_have_a_window_handle_to_begin_processing);
 
             // Load any file the user may have double-clicked on to run this application
-            bool newFile = true;
-            var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-            string fileToOpen = string.Empty;
-
-            string[] args = (activationArgs != null ? activationArgs.ActivationData : null);
+            if (args == null || args.Length == 0)
+            {
+                var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+                args = (activationArgs != null ? activationArgs.ActivationData : null);
+            }
             if (args != null && args.Length != 0)
             {
-                fileToOpen = args[0];
+                _fileToOpen = args[args.Length-1];
             }
-            if (!fileToOpen.Equals(string.Empty))
+            NewDocument();
+            chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (_fileToOpen != null)
             {
                 try
                 {
-                    newFile = !LoadFile(fileToOpen);
+                    LoadFile(_fileToOpen);
                 }
                 catch (UriFormatException)
                 {
                     MessageBox.Show(this, Resources.SkylineWindow_SkylineWindow_Invalid_file_specified, Program.Name);
                 }
+                _fileToOpen = null;
             }
-            // If no file was loaded, create a new one.
-            if (newFile)
-            {
-                // CONSIDER: Reload last document?
-                NewDocument();
-            }
-            chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
         }
 
         public void OpenPasteFileDlg(PasteFormat pf)
@@ -3930,6 +3932,7 @@ namespace pwiz.Skyline
         }
 
         private Control _activeClipboardControl;
+        private string _fileToOpen;
 
         public void ClipboardControlGotFocus(Control clipboardControl)
         {

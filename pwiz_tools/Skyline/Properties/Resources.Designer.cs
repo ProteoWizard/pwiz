@@ -19893,6 +19893,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading....
+        /// </summary>
+        public static string SkylineWindow_OpenFile_Loading___ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFile_Loading___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extracting Files.
         /// </summary>
         public static string SkylineWindow_OpenSharedFile_Extracting_Files {

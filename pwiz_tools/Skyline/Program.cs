@@ -92,7 +92,7 @@ namespace pwiz.Skyline
             }
 
             // For testing and debugging Skyline command-line interface
-            if (args != null && args.Length > 0)
+            if (args != null && args.Length > 0 && !args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
@@ -209,7 +209,7 @@ namespace pwiz.Skyline
                         activationArgs.ActivationData.Length != 0) ||
                         !Settings.Default.ShowStartupForm)
                     {
-                        MainWindow = new SkylineWindow();
+                        MainWindow = new SkylineWindow(args);
                     }
                     else
                     {

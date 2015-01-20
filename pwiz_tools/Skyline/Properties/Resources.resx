@@ -8162,4 +8162,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened__conversion_from_old_format_failed____1_" xml:space="preserve">
     <value>The file {0} could not be opened (conversion from old format failed). {1}</value>
   </data>
+  <data name="SkylineWindow_OpenFile_Loading___" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
 </root>
