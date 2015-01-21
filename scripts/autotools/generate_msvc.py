@@ -86,7 +86,7 @@ testhelpers=set()
 testargs=dict()
 libnames=set()
 projects=set()
-includes=set([".","$(ProjectDir)..","$(BOOST_ROOT)","$(ZLIB_SOURCE).","libraries\\boost_aux"])
+includes=set([".","$(ProjectDir)..","$(BOOST_ROOT)","$(ZLIB_SOURCE).","$(ProjectDir)..\\libraries\\boost_aux"])
 # BOOST_DISABLE_ASSERTS prevents weirdness in debug boost 1_46 in which we're supposed to present our own assertion_failed_msg() implementation
 defines=["WITHOUT_MZ5","WINDOWS_NATIVE","_SCL_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE","_USE_MATH_DEFINES","BOOST_DISABLE_ASSERTS","BOOST_NOWIDE_NO_LIB=1","NO_MASCOT_READER"]
 disableWarnings=["4996","4244","4355","4800","4146","4748"]
