@@ -284,41 +284,51 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculate effect of charge on mass due to electon loss
+        /// Calculate effect of charge on mass due to electon loss or gain
+        /// This is intended for use with non-peptide molecules where we assume
+        /// the formula is that of the ion and don't do protonation./// 
         /// </summary>
         /// <param name="mass">mass without charge</param>
         /// <param name="charge">charge state</param>
         /// <returns></returns>
-        static public double CalculateMassWithElectronLoss(double mass, int charge)
+        static public double CalculateMassWithElectronLossOrGain(double mass, int charge)
         {
             return mass - charge * MassElectron;
         }
 
         /// <summary>
-        /// work back from mz to mass, accounting for electron loss
+        /// Work back from mz to mass, accounting for electron loss or gain
+        /// This is intended for use with non-peptide molecules where we assume
+        /// the formula is that of the ion and don't do protonation.
         /// </summary>
         /// <returns></returns>
-        static public double CalculateMassFromMz(double mz, int charge)
+        static public double CalculateIonMassFromMz(double mz, int charge)
         {
-            return (mz + MassElectron) * charge;
+            return (mz * Math.Abs(charge)) + (MassElectron * charge);
         }
 
-        public double CalculateMz(string desc, int charge)
+        /// <summary>
+        /// This is intended for use with non-peptide molecules where we assume
+        /// the formula is that of the ion and don't add a hydrogen mass.
+        /// </summary>
+        /// <returns></returns>
+        public double CalculateIonMz(string desc, int charge)
         {
             var mass = CalculateMassFromFormula(desc);
-            return  CalculateMz(mass, charge);
+            return  CalculateIonMz(mass, charge);
         }
 
-        static public double CalculateMz(double mass, int charge)
+        static public double CalculateIonMz(double mass, int charge)
         {
-            return CalculateMassWithElectronLoss(mass, charge) / charge;
+            return CalculateMassWithElectronLossOrGain(mass, charge) / Math.Abs(charge);
         }
 
         /// <summary>
         /// For fixing up old custom ion formulas in which we artificially
         /// reduced the hydrogen count by one, in anticipation of our
         /// calculations adding it back in because they thought that was
-        /// the only kind of ionization
+        /// the only kind of ionization.  Now we assume that the formula is that
+        /// of the ion, and don't perform protonation by adding a hydrogen mass
         /// </summary>
         /// <param name="formula">the formula that needs an H added</param>
         /// <returns></returns>

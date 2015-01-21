@@ -32,46 +32,52 @@ namespace pwiz.Skyline.Model
         /// <param name="massH">The mass to calculate charge for</param>
         /// <param name="mz">The desired m/z value the charge should produce</param>
         /// <param name="tolerance">How far off the actual m/z is allowed to be</param>
-        /// <param name="isCustomIon">Is this a custom ion (and thus ionized by electron loss instead of proton gain)?</param>
-        /// <param name="min">Minimum charge to consider</param>
-        /// <param name="max">Maximum charge to consider</param>
+        /// <param name="isCustomIon">Is this a custom ion formula?</param>
+        /// <param name="minCharge">Minimum charge to consider</param>
+        /// <param name="maxCharge">Maximum charge to consider</param>
         /// <param name="massShifts">Possible mass shifts that may have been applied to decoys</param>
         /// <param name="massShiftType"></param>
         /// <param name="massShift">Mass shift required to to achieve this charge state or zero</param>
-        /// <returns>A matching charge or the closest non-matching charge negated.</returns>
-        public static int CalcCharge(double massH, double mz, double tolerance, bool isCustomIon, int min, int max,
-            ICollection<int> massShifts, MassShiftType massShiftType, out int massShift)
+        /// <param name="nearestCharge">closest matching charge, useful when return value is null</param>
+        /// <returns>A matching charge or null, in which case the closest non-matching charge can be found in the nearestCharge value.</returns>
+        public static int? CalcCharge(double massH, double mz, double tolerance, bool isCustomIon, int minCharge, int maxCharge,
+            ICollection<int> massShifts, MassShiftType massShiftType, out int massShift, out int nearestCharge)
         {
-            Debug.Assert(min <= max);
+            Assume.IsTrue(minCharge <= maxCharge);
 
             massShift = 0;
 
-            int nearestCharge = 0;
+            nearestCharge = 0;
             double nearestDelta = double.MaxValue;
 
-            for (int i = min; i <= max; i++)
+            for (int i = minCharge; i <= maxCharge; i++)
             {
-                double delta = mz - ( isCustomIon ? BioMassCalc.CalculateMz(massH, i) : SequenceMassCalc.GetMZ(massH, i) );
-                double deltaAbs = Math.Abs(delta);
-                int potentialShift = (int) Math.Round(deltaAbs);
-                double fractionalDelta = deltaAbs - potentialShift;
-                if (MatchMz(fractionalDelta, tolerance) && MatchMassShift(potentialShift, massShifts, massShiftType))
+                if (i != 0) // Avoid z=0 if we're entertaining negative charge states
                 {
-                    massShift = potentialShift;
-                    if (delta < 0)
-                        massShift = -massShift;
-                    return i;
-                }
-                if (deltaAbs < nearestDelta)
-                {
-                    nearestDelta = deltaAbs;
-                    nearestCharge = i;
+                    double delta = mz - ( isCustomIon ? BioMassCalc.CalculateIonMz(massH, i) : SequenceMassCalc.GetMZ(massH, i) );
+                    double deltaAbs = Math.Abs(delta);
+                    int potentialShift = (int) Math.Round(deltaAbs);
+                    double fractionalDelta = deltaAbs - potentialShift;
+                    if (MatchMz(fractionalDelta, tolerance) && MatchMassShift(potentialShift, massShifts, massShiftType))
+                    {
+                        massShift = potentialShift;
+                        if (delta < 0)
+                            massShift = -massShift;
+                        int? result = i;
+                        nearestCharge = i;
+                        return result;
+                    }
+                    if (deltaAbs < nearestDelta)
+                    {
+                        nearestDelta = deltaAbs;
+                        nearestCharge = i;
+                    }
                 }
             }
 
             Debug.Assert(nearestCharge != 0);   // Could only happen if min > max
 
-            return -nearestCharge;
+            return null;
         }
 
         private static bool MatchMassShift(int potentialShift, ICollection<int> massShifts, MassShiftType massShiftType)
@@ -85,30 +91,32 @@ namespace pwiz.Skyline.Model
             return (delta <= tolerance);
         }
 
-        public static int CalcPrecursorCharge(double precursorMassH,
+        public static int? CalcPrecursorCharge(double precursorMassH,
                                               double precursorMz,
                                               double tolerance,
                                               bool isCustomIon,
                                               bool isDecoy,
-                                              out int massShift)
+                                              out int massShift,
+                                              out int nearestCharge)
         {
             return CalcCharge(precursorMassH, precursorMz, tolerance, isCustomIon,
                 TransitionGroup.MIN_PRECURSOR_CHARGE,
                 TransitionGroup.MAX_PRECURSOR_CHARGE,
                 TransitionGroup.MassShifts,
                 isDecoy ? MassShiftType.shift_only : MassShiftType.none,
-                out massShift);
+                out massShift, out nearestCharge);
         }
 
-        private static int CalcProductCharge(double productMassH, double productMz, double tolerance, bool isCustomIon,
-                                             int maxCharge, MassShiftType massShiftType, out int massShift)
+        private static int? CalcProductCharge(double productMassH, double productMz, double tolerance, bool isCustomIon,
+                                             int maxCharge, MassShiftType massShiftType, out int massShift, out int nearestCharge)
         {
             return CalcCharge(productMassH, productMz, tolerance, isCustomIon,
                 Transition.MIN_PRODUCT_CHARGE,
                 maxCharge,
                 Transition.MassShifts,
                 massShiftType,
-                out massShift);
+                out massShift,
+                out nearestCharge);
         }
 
         public enum MassShiftType { none, shift_only, either }
@@ -142,16 +150,17 @@ namespace pwiz.Skyline.Model
             {
                 double productMass = productPrecursorMass - (lossesTrial != null ? lossesTrial.Mass : 0);
                 int potentialMassShift;
-                int charge = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
-                                               massShiftType, out potentialMassShift);
-                if (charge == precursorCharge)
+                int nearestCharge;
+                int? charge = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
+                                               massShiftType, out potentialMassShift, out nearestCharge);
+                if (charge.HasValue && charge.Value == precursorCharge)
                 {
-                    double potentialMz = SequenceMassCalc.GetMZ(productMass, charge) + potentialMassShift;
+                    double potentialMz = SequenceMassCalc.GetMZ(productMass, charge.Value) + potentialMassShift;
                     double delta = Math.Abs(productMz - potentialMz);
 
                     if (potentialMassShift == 0 && minDeltaNs > delta)
                     {
-                        bestChargeNs = charge;
+                        bestChargeNs = charge.Value;
                         bestIonTypeNs = IonType.precursor;
                         bestOrdinalNs = len + 1;
                         bestLossesNs = lossesTrial;
@@ -160,7 +169,7 @@ namespace pwiz.Skyline.Model
                     }
                     else if (potentialMassShift != 0 && minDelta > delta)
                     {
-                        bestCharge = charge;
+                        bestCharge = charge.Value;
                         bestIonType = IonType.precursor;
                         bestOrdinal = len + 1;
                         bestLosses = lossesTrial;
@@ -188,10 +197,12 @@ namespace pwiz.Skyline.Model
                         if (lossesTrial != null)
                             productMass -= lossesTrial.Mass;
                         int potentialMassShift;
-                        int charge = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
-                                                       massShiftType, out potentialMassShift);
-                        if (charge > 0)
+                        int nearestCharge;
+                        int? chargeFound = CalcProductCharge(productMass, productMz, tolerance, false, precursorCharge,
+                                                       massShiftType, out potentialMassShift, out nearestCharge);
+                        if (chargeFound.HasValue)
                         {
+                            int charge = chargeFound.Value;
                             double potentialMz = SequenceMassCalc.GetMZ(productMass, charge) + potentialMassShift;
                             double delta = Math.Abs(productMz - potentialMz);
                             if (potentialMassShift == 0 && minDeltaNs > delta)

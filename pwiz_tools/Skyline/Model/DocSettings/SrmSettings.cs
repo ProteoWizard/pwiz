@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (nodePep.Peptide.IsCustomIon)
                 {
                     double mass = nodePep.Peptide.CustomIon.GetMass(TransitionSettings.Prediction.PrecursorMassType);
-                    mz = BioMassCalc.CalculateMz(mass, nodeGroup.TransitionGroup.PrecursorCharge);
+                    mz = BioMassCalc.CalculateIonMz(mass, nodeGroup.TransitionGroup.PrecursorCharge);
                 }
                 else
                 {

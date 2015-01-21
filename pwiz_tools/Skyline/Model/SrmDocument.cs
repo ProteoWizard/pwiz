@@ -1005,13 +1005,13 @@ namespace pwiz.Skyline.Model
         {
             var pepGroup = new PeptideGroup();
             var pep = new Peptide(new DocNodeCustomIon("C16O4H4", TestingNonProteomicMoleculeName)); // Not L10N
-            const int charge = 1;
+            const int charge = -1; // Negative charge for maximum test value, since that's new too
             var tranGroup = new TransitionGroup(pep, charge, IsotopeLabelType.light);
-            var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, 1);
+            var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, charge);
             // Specify formula
-            var tranFragment = new Transition(tranGroup, 1, 0, new DocNodeCustomIon("H2O2", TestingNonProteomicFragmentName)); // Not L10N
+            var tranFragment = new Transition(tranGroup, charge, 0, new DocNodeCustomIon("H2O2", TestingNonProteomicFragmentName)); // Not L10N
             // Specify mass
-            var tranFragment2 = new Transition(tranGroup, 1, 0, new DocNodeCustomIon(tranFragment.CustomIon.MonoisotopicMass, tranFragment.CustomIon.AverageMass, TestingNonProteomicFragment2Name)); // Not L10N
+            var tranFragment2 = new Transition(tranGroup, charge, 0, new DocNodeCustomIon(tranFragment.CustomIon.MonoisotopicMass, tranFragment.CustomIon.AverageMass, TestingNonProteomicFragment2Name)); // Not L10N
 
             var peptideGroupDocNodes = existingPeptideGroups as PeptideGroupDocNode[] ?? existingPeptideGroups.ToArray();
             bool autoManageChildren = (!peptideGroupDocNodes.Any()) || peptideGroupDocNodes.First().AutoManageChildren; // Try to look like any existing

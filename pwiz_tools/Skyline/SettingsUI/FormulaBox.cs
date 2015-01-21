@@ -206,7 +206,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (Charge.HasValue)
                     {
                         // Convert from m/z to mass
-                        return BioMassCalc.CalculateMassFromMz(parsed, Charge.Value);
+                        return BioMassCalc.CalculateIonMassFromMz(parsed, Charge.Value);
                     }
                     return parsed;
                 }
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.SettingsUI
             if (Charge.HasValue)
             {
                 // We want to show this as an m/z value, rounded to a reasonable length
-                result = SequenceMassCalc.PersistentMZ(BioMassCalc.CalculateMz(result, Charge.Value));
+                result = SequenceMassCalc.PersistentMZ(BioMassCalc.CalculateIonMz(result, Charge.Value));
             }
             return result.ToString(CultureInfo.CurrentCulture);
         }

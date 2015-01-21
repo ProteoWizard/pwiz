@@ -172,10 +172,21 @@ namespace pwiz.Skyline.Model
 
         public static string GetChargeIndicator(int charge)
         {
-            const string pluses = "++++"; // Not L10N
-            return charge < 5
-                ? pluses.Substring(0, Math.Min(charge, pluses.Length))
-                : string.Format("{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+            if (charge >= 0)
+            {
+                const string pluses = "++++"; // Not L10N
+                return charge <= pluses.Length
+                    ? pluses.Substring(0, Math.Min(charge, pluses.Length))
+                    : string.Format("{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+            }
+            else
+            {
+                const string minuses = "--"; // Not L10N
+                charge = -charge;
+                return charge <= minuses.Length
+                    ? minuses.Substring(0, Math.Min(charge, minuses.Length))
+                    : string.Format("{0} -{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
+            }
         }
 
         public static string StripChargeIndicators(string text, int min, int max)
@@ -186,7 +197,14 @@ namespace pwiz.Skyline.Model
                 int chargePos = -1;
                 for (int i = max; i >= min; i--)
                 {
-                    var charge = GetChargeIndicator(i);
+                    // Handle negative charges
+                    var charge = GetChargeIndicator(-i);
+                    if (line.EndsWith(charge))
+                    {
+                        chargePos = line.LastIndexOf(charge, StringComparison.CurrentCulture);
+                        break;
+                    }
+                    charge = GetChargeIndicator(i);
                     if (line.EndsWith(charge))
                     {
                         chargePos = line.LastIndexOf(charge, StringComparison.CurrentCulture);
@@ -202,6 +220,9 @@ namespace pwiz.Skyline.Model
         {
             for (int i = max; i >= min; i--)
             {
+                // Handle negative charges
+                if (text.EndsWith(GetChargeIndicator(-i)))
+                    return -i;
                 if (text.EndsWith(GetChargeIndicator(i)))
                     return i;
             }
@@ -349,20 +370,41 @@ namespace pwiz.Skyline.Model
 
         private void Validate()
         {
-            if (IsPrecursor())
+            if (IsCustom())
             {
-                if (TransitionGroup.MIN_PRECURSOR_CHARGE > Charge || Charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                if (IsPrecursor())
+                {
+                    if (TransitionGroup.MIN_PRECURSOR_CHARGE > Math.Abs(Charge) || Math.Abs(Charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
+                            Charge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                    }
+                }
+                else if (MIN_PRODUCT_CHARGE > Math.Abs(Charge) || Math.Abs(Charge) > MAX_PRODUCT_CHARGE)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
-                        Charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));                    
+                        string.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
+                                                                 Charge, -MAX_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
                 }
             }
-            else if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
+            else
             {
-                throw new InvalidDataException(
-                    string.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
-                                                             Charge, MIN_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
+                if (IsPrecursor())
+                {
+                    if (TransitionGroup.MIN_PRECURSOR_CHARGE > Charge || Charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                            Charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));                    
+                    }
+                }
+                else if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
+                                                                 Charge, MIN_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
+                }
             }
             if (CustomIon != null)
             {

@@ -132,8 +132,44 @@ namespace pwiz.Skyline.Controls
             ShowTextBoxError(control, message, new object[] { null });
         }
 
+
+
+
         /// <summary>
-        /// Validates a TextBox that should containe an integer value.
+        /// Validates a TextBox that should contain a integer value, possibly negative.
+        /// </summary>
+        /// <param name="control">The TextBox control to validate</param>
+        /// <param name="absMin">Minimum allowed absolute value</param>
+        /// <param name="absMax">Maximum allowed absolute value</param>
+        /// <param name="val">The integer value in the TextBox, if the function returns true</param>
+        /// <returns>True if a valid integer was found</returns>
+        public bool ValidateSignedNumberTextBox(TextBox control,
+                                          int absMin, int absMax, out int val)
+        {
+            bool valid = false;
+            val = int.MinValue;  // Invalid value in case of failure
+            try
+            {
+                var n = int.Parse(control.Text);
+                if ((n == 0) || (Math.Abs(n) < absMin) || (Math.Abs(n) > absMax))
+                {
+                    ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2__or__3__and__4__, n, -absMax, -absMin, absMin, absMax);
+                }
+                else
+                {
+                    val = n;
+                    valid = true;
+                }
+            }
+            catch (FormatException)
+            {
+                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer);
+            }
+            return valid;
+        }
+
+        /// <summary>
+        /// Validates a TextBox that should contain a positive integer value.
         /// </summary>
         /// <param name="control">The TextBox control to validate</param>
         /// <param name="min">Minimum allowed value</param>

@@ -328,7 +328,7 @@
                 <xs:attribute name="ion_formula" type="xs:string"/>
                 <xs:attribute name="mass_monoisotopic" type="xs:double"/>
                 <xs:attribute name="mass_average" type="xs:double"/>
-                <xs:attribute name="charge" type="xs:positiveInteger"/>
+                <xs:attribute name="charge" type="xs:integer"/>
                 <xs:attribute name="optional" type="xs:boolean"/>
               </xs:complexType>
             </xs:element>
@@ -765,7 +765,7 @@
   <xs:complexType name="general_transition_group_type">
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
-        <xs:attribute name="charge" type="xs:positiveInteger" use="required"/>
+        <xs:attribute name="charge" type="xs:integer" use="required"/>
         <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
         <xs:attribute name="collision_energy" type="xs:double"/>
         <xs:attribute name="declustering_potential" type="xs:double"/>
@@ -897,7 +897,7 @@
           </xs:annotation>
         </xs:attribute>
         <!-- charge is taken from parent precursor charge for precursor transitions, or from product_charge for non-precursor transitions -->
-        <xs:attribute name="product_charge" type="xs:positiveInteger">
+        <xs:attribute name="product_charge" type="xs:integer">
           <xs:annotation>
             <xs:documentation>
               Value is NULL if fragment_type is "precursor" or "custom_precursor".

@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Results
             // Get peak center of mass values for the given resolution
             var q1FilterValues = MassDistribution.NewInstance(massDistribution, massResolution, 0).Keys.ToList();
             // Find the monoisotopic m/z and make sure it is exactly the expected number
-            double monoMz = isMassH ? SequenceMassCalc.GetMZ(_monoisotopicMass, _charge) : BioMassCalc.CalculateMz(_monoisotopicMass, _charge);
+            double monoMz = isMassH ? SequenceMassCalc.GetMZ(_monoisotopicMass, _charge) : BioMassCalc.CalculateIonMz(_monoisotopicMass, _charge);
             double monoMzDist = monoMz;
             int monoMassIndex = 0;
             for (int i = 0; i < q1FilterValues.Count; i++)
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model.Results
                 return _monoisotopicMass;
             // Otherwize use the charge to convert from the peak center m/z values
             double shift = SequenceMassCalc.GetPeptideInterval(decoyMassShift);    // Correct for shift applied to the distribution
-            return _isMassH ? SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge) : BioMassCalc.CalculateMassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge);
+            return _isMassH ? SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge) : BioMassCalc.CalculateIonMassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge);
         }
 
         #region object overrides

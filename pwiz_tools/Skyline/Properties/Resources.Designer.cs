@@ -12917,6 +12917,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value {0} must be between {1} and {2} or {3} and {4}..
+        /// </summary>
+        public static string MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2__or__3__and__4__ {
+            get {
+                return ResourceManager.GetString("MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2" +
+                        "__or__3__and__4__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap MethodEdit_thumb {
@@ -22678,6 +22688,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor charge {0} must be non-zero and between {1} and {2}..
+        /// </summary>
+        public static string Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__ {
+            get {
+                return ResourceManager.GetString("Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2_" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor ordinal must be the length of the peptide..
         /// </summary>
         public static string Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide {
@@ -22692,6 +22712,16 @@ namespace pwiz.Skyline.Properties {
         public static string Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__ {
             get {
                 return ResourceManager.GetString("Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product ion charge {0} must be non-zero and between {1} and {2}..
+        /// </summary>
+        public static string Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__ {
+            get {
+                return ResourceManager.GetString("Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__" +
+                        "2__", resourceCulture);
             }
         }
         

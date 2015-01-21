@@ -328,7 +328,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted oe library collision energy value</value>
+    <value>Overrides any predicted or library collision energy value</value>
   </data>
   <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
     <value>textCollisionEnergy</value>

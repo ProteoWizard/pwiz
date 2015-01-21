@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model
                 foreach (int charge in charges)
                 {
                     // Precursor charge can never be lower than product ion charge.
-                    if (PrecursorCharge < charge)
+                    if (Math.Abs(PrecursorCharge) < Math.Abs(charge))
                         continue;
 
                     int start = 0, end = 0;
@@ -452,7 +452,7 @@ namespace pwiz.Skyline.Model
             if (IsCustomIon)
             {
                 var ionMz =
-                    BioMassCalc.CalculateMz(
+                    BioMassCalc.CalculateIonMz(
                         Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType),
                         PrecursorCharge);
                 if (!useFilter ||
@@ -466,7 +466,7 @@ namespace pwiz.Skyline.Model
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
                         {
                             double precursorMS1Mass = isotopeDist.GetMassI(i);
-                            ionMz = BioMassCalc.CalculateMz(precursorMS1Mass, PrecursorCharge);
+                            ionMz = BioMassCalc.CalculateIonMz(precursorMS1Mass, PrecursorCharge);
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
                             var isotopeDistInfo = new TransitionIsotopeDistInfo(isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
@@ -816,7 +816,14 @@ namespace pwiz.Skyline.Model
         {
             if (unlimitedCharge)
                 return;
-            if (MIN_PRECURSOR_CHARGE > PrecursorCharge || PrecursorCharge > MAX_PRECURSOR_CHARGE)
+            if (IsCustomIon)
+            {
+                if (MIN_PRECURSOR_CHARGE > Math.Abs(PrecursorCharge) || Math.Abs(PrecursorCharge) > MAX_PRECURSOR_CHARGE)
+                    throw new InvalidDataException(
+                        string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
+                                      PrecursorCharge, -MAX_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
+            }
+            else if (MIN_PRECURSOR_CHARGE > PrecursorCharge || PrecursorCharge > MAX_PRECURSOR_CHARGE)
             {
                 throw new InvalidDataException(
                     string.Format(Resources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,

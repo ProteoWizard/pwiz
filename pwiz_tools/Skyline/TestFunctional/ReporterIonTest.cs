@@ -1,7 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -90,8 +92,18 @@ namespace pwiz.SkylineTestFunctional
             {
                 editMeasuredIon1.SwitchToCustom();
                 editMeasuredIon1.TextName = "Water";
-                editMeasuredIon1.Charge = 1;
+                editMeasuredIon1.Charge = -1;  // Negative charge states are valid for small molecule only, not for reporter ions
                 editMeasuredIon1.Formula = "H2O";
+            });
+            RunDlg<MessageDlg>(editMeasuredIon1.OkDialog, dlg =>
+            {
+                // Trying to exit the dialog should cause a warning about charge
+                AssertEx.AreComparableStrings(String.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, String.Empty, 1), dlg.Message);
+                dlg.OkDialog(); // Dismiss the warning
+            });
+            RunUI(() =>
+            {
+                editMeasuredIon1.Charge = 1;
             });
             OkDialog(editMeasuredIon1,editMeasuredIon1.OkDialog);
             var editMeasuredIon2 = ShowDialog<EditMeasuredIonDlg>(editMeasuredIonList.AddItem);

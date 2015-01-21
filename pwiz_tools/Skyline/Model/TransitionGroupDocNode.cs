@@ -621,7 +621,7 @@ namespace pwiz.Skyline.Model
             double mass = TransitionGroup.Peptide.IsCustomIon
                 ? TransitionGroup.Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType)
                 : calc.GetPrecursorMass(seq);
-            double mz = ( TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateMz(mass, charge) : SequenceMassCalc.GetMZ(mass, charge) ) +
+            double mz = ( TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateIonMz(mass, charge) : SequenceMassCalc.GetMZ(mass, charge) ) +
                 SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
             if (TransitionGroup.DecoyMassShift.HasValue)
                 mass = SequenceMassCalc.GetMH(mz, charge);
@@ -1981,7 +1981,7 @@ namespace pwiz.Skyline.Model
         {
             var precursorCharge = TransitionGroup.PrecursorCharge;
             var precursorMz = PrecursorMz;
-            return TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateMassFromMz(precursorMz, precursorCharge) : SequenceMassCalc.GetMH(precursorMz, precursorCharge);
+            return TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateIonMassFromMz(precursorMz, precursorCharge) : SequenceMassCalc.GetMH(precursorMz, precursorCharge);
         }
 
         /// <summary>

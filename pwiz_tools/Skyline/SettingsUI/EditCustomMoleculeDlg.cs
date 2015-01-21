@@ -111,7 +111,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             set
             {
-                if (value <= 0)
+                if (value == 0)
                 {
                     textCharge.Text = string.Empty;
                     _formulaBox.Charge = null;
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
             int charge;
-            if (!helper.ValidateNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
+            if (!helper.ValidateSignedNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
                 return;
             Charge = charge; // Note: order matters here, this settor indirectly updates _formulaBox.MonoMass when formula is empty
             if (string.IsNullOrEmpty(_formulaBox.Formula))
@@ -206,8 +206,8 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            if (!_settings.IsMeasurablePrecursor(BioMassCalc.CalculateMz(monoMass, charge)) ||
-                !_settings.IsMeasurablePrecursor(BioMassCalc.CalculateMz(averageMass, charge)))
+            if (!_settings.IsMeasurablePrecursor(BioMassCalc.CalculateIonMz(monoMass, charge)) ||
+                !_settings.IsMeasurablePrecursor(BioMassCalc.CalculateIonMz(averageMass, charge)))
             {
                 _formulaBox.ShowTextBoxErrorFormula(helper, Resources.SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_);
                 return;
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var helper = new MessageBoxHelper(this, false);
             int charge;
-            if (!helper.ValidateNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
+            if (!helper.ValidateSignedNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
                 return;
             Charge = charge;
         }

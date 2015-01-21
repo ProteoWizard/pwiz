@@ -1214,6 +1214,8 @@ namespace pwiz.Skyline.Model
             writer.Write(GetCompound(nodePep));
             for (int i = 0; i < nodeTranGroup.TransitionGroup.PrecursorCharge; ++i)
                 writer.Write('+');
+            for (int ineg = 0; ineg > nodeTranGroup.TransitionGroup.PrecursorCharge; --ineg)
+                writer.Write('-');
             writer.Write(FieldSeparator);
             // Retention Time
             double rtWindow;
@@ -1638,7 +1640,7 @@ namespace pwiz.Skyline.Model
             }
             else if (existCharge != charge)
             {
-                extGroupId = string.Format("{0} +{1}", extGroupId, charge); // Not L10N
+                extGroupId = string.Format("{0} {1:+#;#}", extGroupId, charge); // Not L10N
             }
         }
 
@@ -1760,16 +1762,16 @@ namespace pwiz.Skyline.Model
 
         public static string GetTransitionName(int precursorCharge, string fragmentIonName, int fragmentCharge)
         {
-            return string.Format("+{0}{1}{2}", precursorCharge, // Not L10N
+            return string.Format("{0:+#;#}{1}{2}", precursorCharge, // Not L10N
                                  fragmentIonName,
-                                 fragmentCharge > 1
-                                     ? string.Format("+{0}", fragmentCharge) // Not L10N
+                                 fragmentCharge != 1
+                                     ? string.Format("{0:+#;#}", fragmentCharge) // Not L10N
                                      : string.Empty); // Not L10N
         }
 
         public static string GetPrecursorTransitionName(int precursorCharge, string fragmentIonName, int isotopeIndex)
         {
-            return string.Format("+{0}{1}{2}", precursorCharge, // Not L10N
+            return string.Format("{0:+#;#}{1}{2}", precursorCharge, // Not L10N
                                  fragmentIonName,
                                  isotopeIndex > 0
                                      ? string.Format("[M+{0}]", isotopeIndex) // Not L10N
@@ -2097,8 +2099,8 @@ namespace pwiz.Skyline.Model
                 bool trigger = false;
                 if (IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
                 {
-                    int minCharge = nodePep.TransitionGroups.Select(g => g.TransitionGroup.PrecursorCharge).Min();
-                    if (nodeTranGroup.TransitionGroup.PrecursorCharge == minCharge)
+                    int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.TransitionGroup.PrecursorCharge)).Min();
+                    if (Math.Abs(nodeTranGroup.TransitionGroup.PrecursorCharge) == minCharge)
                         trigger = true;
                 }
                 writer.Write(trigger ? "TRUE" : "FALSE"); // Not L10N
@@ -2414,7 +2416,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
+            string z = Math.Abs(nodeTranGroup.TransitionGroup.PrecursorCharge).ToString(CultureInfo);
             // Note that this is normalized CE (not absolute)
             var fullScan = Document.Settings.TransitionSettings.FullScan;
             bool wideWindowDia = false;
@@ -2428,12 +2430,12 @@ namespace pwiz.Skyline.Model
                         iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
                 }
             }
-            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
+            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo); // Normalized CE, not a real voltage
             string comment = string.Format("{0} ({1})", // Not L10N
                 GetCompound(nodePep),
                 nodeTranGroup.TransitionGroup.LabelType);
 
-            Write(writer, precursorMz, string.Empty, string.Empty, z, "Positive", start, end, collisionEnergy, comment); // Not L10N
+            Write(writer, precursorMz, string.Empty, string.Empty, z, (nodeTranGroup.TransitionGroup.PrecursorCharge > 0) ? "Positive" : "Negative", start, end, collisionEnergy, comment); // Not L10N
         }
     }
 

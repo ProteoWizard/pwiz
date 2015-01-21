@@ -89,9 +89,9 @@ namespace pwiz.SkylineTest
             var transition = new DocNodeCustomIon(60, 60, "molecule");
             var transition2 = new DocNodeCustomIon(55, 55, "molecule fragment");
             var precursor = new DocNodeCustomIon(60, 60, "molecule");
-            Assert.AreEqual(BioMassCalc.CalculateMz(precursor.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz);
-            Assert.AreEqual(BioMassCalc.CalculateMz(transition.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(0).Mz);
-            Assert.AreEqual(BioMassCalc.CalculateMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(0).Mz);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomIon);
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
             Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime);

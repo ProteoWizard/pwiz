@@ -566,7 +566,7 @@ namespace pwiz.Skyline.EditUI
         private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 11;
         private const int INDEX_PRODUCT_DRIFT_TIME_MSEC = 12;
 
-        private int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, out double monoMass, out double averageMass)
+        private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass)
         {
             // Is the ion's formula the old style where user expected us to add a hydrogen?
             var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -577,10 +577,16 @@ namespace pwiz.Skyline.EditUI
             double mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType == MassType.Monoisotopic)
                 ? monoMass
                 : averageMass;
-            var charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
+            // Does given charge, if any, agree with mass and mz?
+            if (charge.HasValue && tolerance >= (Math.Abs(BioMassCalc.CalculateIonMz(mass, charge.Value) - mz)))
+            {
+                return charge;
+            }
+            int nearestCharge;
+            charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
                 TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0],
-                TransitionCalc.MassShiftType.none, out massShift);
-            if (charge < 0)
+                TransitionCalc.MassShiftType.none, out massShift, out nearestCharge);
+            if (!charge.HasValue)
             {
                 // That formula and this mz don't yield a reasonable charge state - try adding an H
                 var ion2 = new DocNodeCustomIon(BioMassCalc.AddH(ion.Formula));
@@ -590,8 +596,8 @@ namespace pwiz.Skyline.EditUI
                     ? monoMass
                     : averageMass;
                 charge = TransitionCalc.CalcCharge(mass, mz, tolerance, true, TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0], TransitionCalc.MassShiftType.none, out massShift);
-                if (charge > 0)
+                    TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0], TransitionCalc.MassShiftType.none, out massShift, out nearestCharge);
+                if (charge.HasValue)
                 {
                     moleculeFormula = ion2.Formula;
                 }
@@ -611,7 +617,7 @@ namespace pwiz.Skyline.EditUI
             double mass = ion.GetMass(massType);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
-            return BioMassCalc.CalculateMz(mass, charge);
+            return BioMassCalc.CalculateIonMz(mass, charge);
         }
 
         private class MoleculeInfo
@@ -655,9 +661,10 @@ namespace pwiz.Skyline.EditUI
             double mz;
             if (!double.TryParse(Convert.ToString(row.Cells[indexMz].Value), out mz))
                 mz = 0;
-            int charge;
-            if (!int.TryParse(Convert.ToString(row.Cells[indexCharge].Value), out charge))
-                charge =  0;
+            int? charge = null;
+            int trycharge;
+            if (int.TryParse(Convert.ToString(row.Cells[indexCharge].Value), out trycharge))
+                charge = trycharge;
             double dtmp;
             double? collisionEnergy = null;
             if (getPrecursorColumns && double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
@@ -671,97 +678,108 @@ namespace pwiz.Skyline.EditUI
             double? driftTimeProductMsec = null;
             if (double.TryParse(Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value), out dtmp))
                 driftTimeProductMsec = dtmp;
-            double monoMass;
-            double averageMmass;
             string errMessage = String.Format(getPrecursorColumns
                 ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
                 : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index+1);
             int errColumn = indexFormula;
-            double? driftTimeHighEnergyOffsetMsec = null;
-            if (driftTimePrecursorMsec.HasValue)
+            int countValues = 0;
+            if (charge.HasValue && charge.Value != 0)
+                countValues++;
+            if (mz > 0)
+                countValues++;
+            if (NullForEmpty(formula) != null)
+                countValues++;
+            if (countValues >= 2) // Do we have at least 2 of charge, mz, formula?
             {
-                if (driftTimeProductMsec.HasValue)
+                double monoMass;
+                double averageMmass;
+                double? driftTimeHighEnergyOffsetMsec = null;
+                if (driftTimePrecursorMsec.HasValue)
                 {
-                    driftTimeHighEnergyOffsetMsec = driftTimeProductMsec - driftTimePrecursorMsec; // Generally expect a negative offset, that is product flies faster than precursor
-                }
-                else
+                    if (driftTimeProductMsec.HasValue)
+                    {
+                        driftTimeHighEnergyOffsetMsec = driftTimeProductMsec - driftTimePrecursorMsec; // Generally expect a negative offset, that is product flies faster than precursor
+                    }
+                    else
+                    {
+                        driftTimeHighEnergyOffsetMsec = 0;
+                    }
+                } else if (driftTimeProductMsec.HasValue)
                 {
+                    // Product drift provided but not precursor - assume same
+                    driftTimePrecursorMsec = driftTimeProductMsec;
                     driftTimeHighEnergyOffsetMsec = 0;
                 }
-            } else if (driftTimeProductMsec.HasValue)
-            {
-                // Product drift provided but not precursor - assume same
-                driftTimePrecursorMsec = driftTimeProductMsec;
-                driftTimeHighEnergyOffsetMsec = 0;
-            }
-            var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
-            var massOk = true;
-            if (getPrecursorColumns && charge != 0 && (charge < TransitionGroup.MIN_PRECURSOR_CHARGE || charge > TransitionGroup.MAX_PRECURSOR_CHARGE))
-            {
-                errMessage = String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
-                    charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                errColumn = indexCharge;
-            }
-            else if (!getPrecursorColumns && charge != 0 && (charge < Transition.MIN_PRODUCT_CHARGE || charge > Transition.MAX_PRODUCT_CHARGE))
-            {
-                errMessage = String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
-                    charge, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
-                errColumn = indexCharge;
-            }
-            else if (NullForEmpty(formula) != null)
-            {
-                // We have a formula
-                try
+                var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
+                var massOk = true;
+                var absCharge = Math.Abs(charge ?? 0);
+                if (getPrecursorColumns && absCharge != 0 && (absCharge < TransitionGroup.MIN_PRECURSOR_CHARGE || absCharge > TransitionGroup.MAX_PRECURSOR_CHARGE))
                 {
-                    errColumn = indexMz;
-                    if (mz > 0)
+                    errMessage = String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
+                        charge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                    errColumn = indexCharge;
+                }
+                else if (!getPrecursorColumns && absCharge != 0 && (absCharge < Transition.MIN_PRODUCT_CHARGE || absCharge > Transition.MAX_PRODUCT_CHARGE))
+                {
+                    errMessage = String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
+                        charge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+                    errColumn = indexCharge;
+                }
+                else if (NullForEmpty(formula) != null)
+                {
+                    // We have a formula
+                    try
                     {
-                        // Is the ion's formula the old style where user expected us to add a hydrogen? 
-                        charge = ValidateFormulaWithMz(document, ref formula, mz, out monoMass, out averageMmass)??0;
-                        row.Cells[indexFormula].Value = formula;
-                        massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
-                        if (massOk)
+                        errColumn = indexMz;
+                        if (mz > 0)
                         {
-                            if (charge > 0)
+                            // Is the ion's formula the old style where user expected us to add a hydrogen? 
+                            charge = ValidateFormulaWithMz(document, ref formula, mz, charge, out monoMass, out averageMmass);
+                            row.Cells[indexFormula].Value = formula;
+                            massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                            if (massOk)
                             {
-                                row.Cells[indexCharge].Value = charge;
-                                return new MoleculeInfo(name, formula, charge, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                                if (charge.HasValue)
+                                {
+                                    row.Cells[indexCharge].Value = charge.Value;
+                                    return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                                }
+                                errMessage = String.Format(getPrecursorColumns
+                                    ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
+                                    : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
                             }
-                            errMessage = String.Format(getPrecursorColumns
-                                ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
-                                : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index+1);
+                        }
+                        else if (charge.HasValue)
+                        {
+                            // Get the mass from the formula, and mz from that and charge
+                            mz = ValidateFormulaWithCharge(document, formula, charge.Value, out monoMass, out averageMmass);
+                            massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                            row.Cells[indexMz].Value = mz;
+                            if (massOk)
+                                return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
                         }
                     }
-                    else if (charge > 0)
+                    catch (InvalidDataException)
                     {
-                        // Get the mass from the formula, and mz from that and charge
-                        mz = ValidateFormulaWithCharge(document, formula, charge, out monoMass, out averageMmass);
-                        massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
-                        row.Cells[indexMz].Value = mz;
-                        if (massOk)
-                            return new MoleculeInfo(name, formula, charge, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                        massOk = false;
                     }
-                }
-                catch (InvalidDataException)
+                } 
+                else if (mz != 0 && charge.HasValue)
                 {
-                    massOk = false;
+                    // No formula, just use charge and m/z
+                    monoMass = averageMmass = BioMassCalc.CalculateIonMassFromMz(mz, charge.Value);
+                    massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                    if (massOk)
+                        return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
                 }
-            } 
-            else if (mz != 0 && charge > 0)
-            {
-                // No formula, just use charge and m/z
-                monoMass = averageMmass = BioMassCalc.CalculateMassFromMz(mz, charge);
-                massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
-                if (massOk)
-                    return new MoleculeInfo(name, formula, charge, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
-            }
-            if (!massOk)
-            {
-                errColumn = indexMz;
-                errMessage = string.Format(
-                    Resources
-                        .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__,
-                    CustomIon.MAX_MASS);
+                if (!massOk)
+                {
+                    errColumn = indexMz;
+                    errMessage = string.Format(
+                        Resources
+                            .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__,
+                        CustomIon.MAX_MASS);
+                }
             }
             ShowTransitionError(new PasteError
             {
@@ -808,8 +826,8 @@ namespace pwiz.Skyline.EditUI
                         return null;
                     }
                     var charge = precursor.Charge;
-                    var precursorMonoMz = BioMassCalc.CalculateMz(precursor.MonoMass, charge);
-                    var precursorAverageMz = BioMassCalc.CalculateMz(precursor.AverageMass, charge);
+                    var precursorMonoMz = BioMassCalc.CalculateIonMz(precursor.MonoMass, charge);
+                    var precursorAverageMz = BioMassCalc.CalculateIonMz(precursor.AverageMass, charge);
 
                     // Preexisting molecule group?
                     bool pepGroupFound = false;
@@ -824,8 +842,8 @@ namespace pwiz.Skyline.EditUI
                             foreach (var pep in pepGroup.SmallMolecules)
                             {
                                 var pepPath = new IdentityPath(pathPepGroup, pep.Id);
-                                var ionMonoMz = BioMassCalc.CalculateMz(pep.Peptide.CustomIon.MonoisotopicMass, charge);
-                                var ionAverageMz = BioMassCalc.CalculateMz(pep.Peptide.CustomIon.AverageMass, charge);
+                                var ionMonoMz = BioMassCalc.CalculateIonMz(pep.Peptide.CustomIon.MonoisotopicMass, charge);
+                                var ionAverageMz = BioMassCalc.CalculateIonMz(pep.Peptide.CustomIon.AverageMass, charge);
                                 // Match existing molecule if same name (if any) and same formula (if any) and similar m/z at the precursor charge
                                 // (we don't just check mass since we don't have a tolerance value for that)
                                 if (Equals(pep.Peptide.CustomIon.Name, precursor.Name) &&
@@ -868,7 +886,7 @@ namespace pwiz.Skyline.EditUI
                                                     Column = 0,
                                                     Line = row.Index,
                                                     Message = e.Message
-                                                }); 
+                                                });
                                                 return null;
                                             }
                                             break;
@@ -1174,7 +1192,7 @@ namespace pwiz.Skyline.EditUI
                     Line = row.Index,
                     Message = e.Message
                 });
-                return null;                
+                return null;
             }
         }
 

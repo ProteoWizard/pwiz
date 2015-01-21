@@ -109,16 +109,19 @@ namespace pwiz.Common.Chemistry
         public MassDistribution OffsetAndDivide(double offset, int scale) 
         {
             var map = new SortedDictionary<double,double>();
+            int absScale = Math.Abs(scale); // Scale is typically a charge, which may be negative, but masses are always positive
             foreach (var entry in this) {
-                map.Add((entry.Key + offset) / scale, entry.Value);
+                map.Add((entry.Key + offset) / absScale, entry.Value);
             }
             return new MassDistribution(map, MassResolution, MinimumAbundance);
         }
 
+        /* If this is brought into use, it must be made aware of non-protonated ions
         public MassDistribution SetCharge(int charge)
         {
             return OffsetAndDivide(AminoAcidFormulas.ProtonMass*charge, charge);
         }
+        */
 
         /// <summary>
         /// Performs a weighted average of this MassDistribution with another.

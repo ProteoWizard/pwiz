@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -64,8 +65,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const double precursorMz = 88.0730104200905;
-            const double productMz = 31.0178414200905;
+            const double precursorMzAtZNeg2 = 242.0373281;
+            const double productMzAtZNeg2 = 213.5097436;
             const double precursorCE = 1.23;
             const double precursorDT = 2.34;
             const double highEnergyDtOffset = -.012;
@@ -74,44 +75,43 @@ namespace pwiz.SkylineTestFunctional
 
             var docEmpty = SkylineWindow.Document;
 
-            string line1 = "MyMolecule\tMyMol\tMyFrag\tCH12O4\tCH3O\t" + precursorMz + "\t" + productMz + "\t1\t1\t" + precursorRT + "\t" + precursorCE + "\t" + precursorDT + "\t" + productDT; // Legit
+            string line1 = "MyMolecule\tMyMol\tMyFrag\tC34H12O4\tC34H3O\t" + precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t" + precursorRT + "\t" + precursorCE + "\t" + precursorDT + "\t" + productDT; // Legit
             const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
 
             // Provoke some errors
             int badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
-                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__, 
-                badcharge, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
+                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__, 
+                badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
             badcharge = 120;
             TestError(line1 + line2start + "\t\t" + badcharge + "\t1", // Insanely large charge for precursor
-                String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
-                badcharge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
+                badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
             TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
-            TestError(line1 + line2start + "99\t15", // Precursor Formula and m/z don't make sense together
+            TestError(line1 + line2start + "19\t5", // Precursor Formula and m/z don't make sense together
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
-            TestError(line1 + line2start + "\t15\t1", // Product Formula and m/z don't make sense together
+            TestError(line1 + line2start + "\t5\t1", // Product Formula and m/z don't make sense together
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2));
             TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
             TestError(line1 + line3, // Insanely large molecule
                 string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS));
-
             // Now load the document with a legit paste
-            TestError(line1, String.Empty); 
+            TestError(line1+line2start+"\t\t1\t1", String.Empty); 
             var docOrig = WaitForDocumentChange(docEmpty);
             var testTransitionGroups = docOrig.MoleculeTransitionGroups.ToArray();
-            Assert.AreEqual(1, testTransitionGroups.Count());
+            Assert.AreEqual(2, testTransitionGroups.Count());
             var transitionGroup = testTransitionGroups[0];
             var precursor = docOrig.Molecules.First();
             var product = transitionGroup.Transitions.First();
             Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
             Assert.AreEqual(precursorDT, transitionGroup.ExplicitValues.DriftTimeMsec);
-            Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
+            Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-7);
             Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime);
-            Assert.AreEqual(precursorMz, BioMassCalc.CalculateMz(precursor.Peptide.CustomIon.MonoisotopicMass, product.Transition.Group.PrecursorCharge), 1E-12);
-            Assert.AreEqual(productMz, BioMassCalc.CalculateMz(product.GetIonMass(), product.Transition.Charge), 1E-12);
+            Assert.AreEqual(precursorMzAtZNeg2, BioMassCalc.CalculateIonMz(precursor.Peptide.CustomIon.MonoisotopicMass, product.Transition.Group.PrecursorCharge), 1E-7);
+            Assert.AreEqual(productMzAtZNeg2, BioMassCalc.CalculateIonMz(product.GetIonMass(), product.Transition.Charge), 1E-7);
             // Does that produce the expected transition list file?
             TestTransitionListOutput(docOrig, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
             // Does serialization of imported values work properly?
@@ -199,13 +199,14 @@ namespace pwiz.SkylineTestFunctional
 
             // Bad charge states mid-list were handled ungracefully due to lookahead in figuring out transition groups
             badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
-            SetClipboardText(GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(",4,4", ",4," + badcharge));
+            SetClipboardText(GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(
+                ",4,4".Replace(',', TextUtil.CsvSeparator), (",4," + badcharge).Replace(',', TextUtil.CsvSeparator)));
             RunUI(pasteDlg2.PasteTransitions);
             RunUI(pasteDlg2.OkDialog);  // Don't expect this to work, form stays open
             WaitForConditionUI(() => pasteDlg2.ErrorText != null);
             var errText =
-                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
-                    badcharge, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
+                    badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
             RunUI(() => Assert.IsTrue(pasteDlg2.ErrorText.Contains(errText), 
                 string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"", errText, pasteDlg2.ErrorText)));
             OkDialog(pasteDlg2, pasteDlg2.CancelDialog);
@@ -265,7 +266,7 @@ namespace pwiz.SkylineTestFunctional
                     exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_TOF;
                     exportMethodDlg.ExportStrategy = ExportStrategy.Single;
                     exportMethodDlg.OptimizeType = ExportOptimize.CE;
-                    exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                    exportMethodDlg.MethodType = ExportMethodType.Standard;
                 });
             }
             else
@@ -278,8 +279,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(exportMethodDlg, () => exportMethodDlg.OkDialog(csvPath));
 
             // Check for expected output.
-            string csvOut = File.ReadAllText(csvPath);
-            string csvExpected = File.ReadAllText(csvExpectedPath);
+            var csvOut = File.ReadAllText(csvPath);
+            var csvExpected = File.ReadAllText(csvExpectedPath);
             AssertEx.Contains(csvExpected, csvOut);
         }
 

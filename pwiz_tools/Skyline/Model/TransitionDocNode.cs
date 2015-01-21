@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model
             if (losses != null)
                 massH -= losses.Mass;
             if (id.IsCustom())
-                Mz = BioMassCalc.CalculateMz(massH, id.Charge);
+                Mz = BioMassCalc.CalculateIonMz(massH, id.Charge);
             else
                 Mz = SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift);
             IsotopeDistInfo = isotopeDistInfo;
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model
         public double GetIonMass()
         {
             return Transition.IsCustom()
-                ? BioMassCalc.CalculateMassFromMz(Mz, Transition.Charge)
+                ? BioMassCalc.CalculateIonMassFromMz(Mz, Transition.Charge)
                 : SequenceMassCalc.GetMH(Mz, Transition.Charge);            
         }
 

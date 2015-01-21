@@ -121,8 +121,8 @@ namespace pwiz.SkylineTestA
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron/100);
-                Assert.AreEqual(BioMassCalc.CalculateMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateIonMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron/100);
+                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Check with Average
@@ -138,8 +138,8 @@ namespace pwiz.SkylineTestA
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
-                Assert.AreEqual(BioMassCalc.CalculateMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateIonMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Make sure the rest of the transitions aren't reporter ions

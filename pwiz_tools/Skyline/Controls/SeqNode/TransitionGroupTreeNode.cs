@@ -451,7 +451,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // Get charges and type pairs, making sure all chosen charges are included
             HashSet<int> setCharges = new HashSet<int>(filter.ProductCharges.Where(charge =>
-                charge <= nodeGroup.TransitionGroup.PrecursorCharge));
+                Math.Abs(charge) <= Math.Abs(nodeGroup.TransitionGroup.PrecursorCharge) &&
+                Math.Sign(charge) == Math.Sign(nodeGroup.TransitionGroup.PrecursorCharge)));
             HashSet<IonType> setTypes = new HashSet<IonType>(filter.IonTypes);
             foreach (TransitionDocNode nodTran in chosen)
             {

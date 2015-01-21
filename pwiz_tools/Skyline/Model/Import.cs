@@ -602,16 +602,17 @@ namespace pwiz.Skyline.Model
                     var defaultLabelType = info.DefaultLabelType;
                     double precursorMassH = Settings.GetPrecursorMass(defaultLabelType, info.PeptideSequence, variableMods);
                     int precursorMassShift;
-                    int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
-                                                              info.IsDecoy, out precursorMassShift);
-                    if (precursorCharge > 0)
+                    int nearestCharge;
+                    int? precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
+                                                              info.IsDecoy, out precursorMassShift, out nearestCharge);
+                    if (precursorCharge.HasValue)
                     {
-                        info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType,
+                        info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge.Value, defaultLabelType,
                                                                   precursorMassShift));
                     }
                     else
                     {
-                        nearestMz = NearestMz(info.PrecursorMz, nearestMz, precursorMassH, -precursorCharge);
+                        nearestMz = NearestMz(info.PrecursorMz, nearestMz, precursorMassH, nearestCharge);
                     }
 
                     if (!IsHeavyAllowed || info.IsExplicitLabelType)
@@ -625,15 +626,15 @@ namespace pwiz.Skyline.Model
                         }
                         precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideSequence, variableMods);
                         precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
-                                                              info.IsDecoy, out precursorMassShift);
-                        if (precursorCharge > 0)
+                                                              info.IsDecoy, out precursorMassShift, out nearestCharge);
+                        if (precursorCharge.HasValue)
                         {
-                            info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType,
+                            info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge.Value, labelType,
                                                                       precursorMassShift));
                         }
                         else
                         {
-                            nearestMz = NearestMz(info.PrecursorMz, nearestMz, precursorMassH, -precursorCharge);
+                            nearestMz = NearestMz(info.PrecursorMz, nearestMz, precursorMassH, nearestCharge);
                         }
                     }
                 }
@@ -683,14 +684,15 @@ namespace pwiz.Skyline.Model
                             : nearestMz;
             }
 
-            private static int CalcPrecursorCharge(double precursorMassH,
+            private static int? CalcPrecursorCharge(double precursorMassH,
                                                    double precursorMz,
                                                    double tolerance,
                                                    bool isCustomIon,
                                                    bool isDecoy,
-                                                   out int massShift)
+                                                   out int massShift,
+                                                   out int nearestCharge)
             {
-                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isCustomIon, isDecoy, out massShift);
+                return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isCustomIon, isDecoy, out massShift, out nearestCharge);
             }
 
             private ExTransitionInfo CalcTransitionExplanations(ExTransitionInfo info, long lineNum, out TransitionImportErrorInfo errorInfo)
@@ -817,11 +819,12 @@ namespace pwiz.Skyline.Model
                             continue;
 
                         int massShift;
-                        int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift);
-                        if (charge > 0)
+                        int nearestCharge;
+                        int? charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift, out nearestCharge);
+                        if (charge.HasValue)
                         {
                             indexPrec = i;
-                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift));
+                            transitionExps.Add(new TransitionExp(mods, charge.Value, labelType, massShift));
                         }
                     }
                 }

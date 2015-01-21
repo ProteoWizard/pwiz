@@ -266,7 +266,7 @@ namespace pwiz.SkylineTestA.Results
                 // Precursor mass and m/z values are expected to match exactly
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0));
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
-                                BioMassCalc.CalculateMz(nodeGroup.IsotopeDist.GetMassI(0),
+                                BioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorCharge) :
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorCharge));
