@@ -532,7 +532,10 @@ print ("creating MSVC source build distribution kit %s"%(fz))
 z = zipfile.ZipFile(fz,"w",zipfile.ZIP_DEFLATED)
 exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt","inl"]
 
+addedFiles = set()
+
 # include the whole boost_aux tree, and others with depth but no -I reference
+addShipDir(ac.get_pwizroot()+"\\libraries\\boost_aux",addTree=True)
 for tree in ac.complicatedTrees:
 	for shipdir in shipdirs :
 		if tree in shipdir :
@@ -554,7 +557,9 @@ for shipdir in shipdirs :
 			tname = ac.replace_pwizroot(f,"pwiz")
 			if not tname in files_not_to_be_shipped :
 				print ('adding %s as %s'%(f,tname))
-				z.write(f,tname)
+				if tname not in addedFiles :
+					z.write(f,tname)
+					addedFiles.add(tname)
 			
 testfiles = set()
 for test in testargs : # grab data files
@@ -570,4 +575,6 @@ for test in testargs : # grab data files
 for f in testfiles :
 	tname = ac.replace_pwizroot(f,"pwiz")
 	print ('adding %s as %s'%(f,tname))
-	z.write(f,tname)
+	if tname not in addedFiles :
+		z.write(f,tname)
+		addedFiles.add(tname)
