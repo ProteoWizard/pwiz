@@ -208,15 +208,19 @@ namespace pwiz.Skyline.Model
                 zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath, string.Empty);
             if (Document.Settings.HasIonMobilityLibraryPersisted)
                 zip.AddFile(pepSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath, string.Empty);
+            var libfiles = new HashSet<string>();
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
-                zip.AddFile(librarySpec.FilePath, string.Empty);
-
-                if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
+                if (libfiles.Add(librarySpec.FilePath)) // Sometimes the same .blib file is referred to by different library specs
                 {
-                    // If there is a .redundant.blib file that corresponds 
-                    // to a .blib file, add that as well
-                    IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
+                    zip.AddFile(librarySpec.FilePath, string.Empty);
+
+                    if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
+                    {
+                        // If there is a .redundant.blib file that corresponds 
+                        // to a .blib file, add that as well
+                        IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
+                    }
                 }
             }
 
