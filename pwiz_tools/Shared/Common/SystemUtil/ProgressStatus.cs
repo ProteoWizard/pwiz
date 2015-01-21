@@ -49,7 +49,7 @@ namespace pwiz.Common.SystemUtil
         public object Id { get; private set; }
 
         /// <summary>
-        /// Any innactive state after begin
+        /// Any inactive state after begin
         /// </summary>
         public bool IsFinal
         {

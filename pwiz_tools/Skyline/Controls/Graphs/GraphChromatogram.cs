@@ -2845,7 +2845,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
             var selectedPane = GetScanSelectedPane();
-            if (selectedPane != null)
+            if (selectedPane != null && selectedPane.CurveList.Count > FULLSCAN_SELECTED_INDEX)
                 selectedPane.CurveList[FULLSCAN_SELECTED_INDEX].IsVisible = true;
 
             if (graphPane != null && showPoint)
@@ -2854,7 +2854,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphPane.FindClosestCurve(GetCurvesExcludingDots(graphPane), pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
 
                 // Display the highlight point.
-                if (_closestCurve != null)
+                if (_closestCurve != null && graphPane.CurveList.Count > FULLSCAN_TRACKING_INDEX)
                 {
                     double x, y;
                     graphPane.ReverseTransform(_fullScanTrackingPointLocation, out x, out y);
