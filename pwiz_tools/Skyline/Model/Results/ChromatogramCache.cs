@@ -1194,7 +1194,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public ChromatogramCache Optimize(string documentPath, IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager)
+        public ChromatogramCache Optimize(string documentPath, IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager,
+            ILongWaitBroker progress)
         {
             string cachePathOpt = FinalPathForName(documentPath, null);
 
@@ -1332,6 +1333,9 @@ namespace pwiz.Skyline.Model.Results
 
                     // Advance to next file
                     i = iNext;
+
+                    if (progress != null)
+                        progress.SetProgressCheckCancel(i, listEntries.Count);
                 }
                 while (i < listEntries.Count);
 

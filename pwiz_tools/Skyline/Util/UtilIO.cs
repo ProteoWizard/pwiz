@@ -928,34 +928,41 @@ namespace pwiz.Skyline.Util
 
         public bool CanSave(IWin32Window parent = null)
         {
-            if (SafeName == null)
-            {
-                if (parent != null)
-                {
-                    MessageDlg.Show(parent, string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists,
-                                                          RealName));
-                }
-                return false;
-            }
-            if (!_streamManager.Exists(RealName))
-                return true;
-
+            Exception ex;
             try
             {
-                if ((_streamManager.GetAttributes(RealName) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-                {
-                    if (parent != null)
-                    {
-                        MessageDlg.Show(parent, string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only,
-                                                              RealName));
-                    }
-                    return false;
-                }
+                CheckException();
                 return true;
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException x) { ex = x; }
+            catch (UnauthorizedAccessException x) { ex = x; }
+
+            if (parent != null)
+                MessageDlg.Show(parent, ex.Message);
+            return false;
+        }
+
+        public void CheckException()
+        {
+            if (SafeName == null)
             {
-                return true;
+                throw new DirectoryNotFoundException(
+                    string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists, RealName));
+            }
+
+            if (_streamManager.Exists(RealName))
+            {
+                try
+                {
+                    if ((_streamManager.GetAttributes(RealName) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                    {
+                        throw new UnauthorizedAccessException(
+                            string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only, RealName));
+                    }
+                }
+                catch (FileNotFoundException)
+                {
+                }
             }
         }
 

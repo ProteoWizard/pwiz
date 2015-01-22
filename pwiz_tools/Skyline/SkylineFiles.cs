@@ -859,82 +859,109 @@ namespace pwiz.Skyline
         public bool SaveDocument(String fileName, bool includingCacheFile = true)
         {
             SrmDocument document = DocumentUI;
+
+            Exception exception = null;
             try
             {
                 using (var saver = new FileSaver(fileName))
                 {
-                    if (!saver.CanSave(this))
-                        return false;
-                    using (var writer = new XmlTextWriter(saver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
-                    using (new LongOp(this))
-                    {
+                    saver.CheckException();
 
-                        XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                        ser.Serialize(writer, document);
-
-                        writer.Flush();
-                        writer.Close();
-
-                        // If the user has chosen "Save As", and the document has a
-                        // document specific spectral library, copy this library to 
-                        // the new name.
-                        if (!Equals(DocumentFilePath, fileName))
+                    using (var longWaitDlg = new LongWaitDlg(this)
                         {
-                            if (!SaveDocumentLibraryAs(fileName))
-                                return false;
-                        }
+                            Text = Resources.SkylineWindow_SaveDocument_Saving___,
+                            Message = Path.GetFileName(fileName)
+                        })
+                    using (var writer = new XmlWriterWithProgress(saver.SafeName, Encoding.UTF8, longWaitDlg)
+                        {
+                            Formatting = Formatting.Indented
+                        })
+                    {
+                        writer.TransitionCount = document.MoleculeTransitionCount;
+                        longWaitDlg.PerformWork(this, 0, () =>
+                        {
+                            XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
+                            ser.Serialize(writer, document);
 
-                        saver.Commit();
+                            writer.Flush();
+                            writer.Close();
 
-                        DocumentFilePath = fileName;
-                        _savedVersion = document.RevisionIndex;
-                        SetActiveFile(fileName);
+                            // If the user has chosen "Save As", and the document has a
+                            // document specific spectral library, copy this library to 
+                            // the new name.
+                            if (!Equals(DocumentFilePath, fileName))
+                                SaveDocumentLibraryAs(fileName);
 
+                            saver.Commit();
+                        });
 
-                        // Make sure settings lists contain correct values for this document.
-                        document.Settings.UpdateLists(DocumentFilePath);
+                        // Sometimes this catches a cancellation that doesn't throw an OperationCanceledException.
+                        if (longWaitDlg.IsCanceled)
+                            return false;
                     }
                 }
             }
-            catch (Exception x)
+            catch (UnauthorizedAccessException ex) { exception = ex; }
+            catch (IOException ex) { exception = ex; }
+            catch (OperationCanceledException)
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), x.Message);
+                return false;
+            }
+
+            if (exception != null)
+            {
+                var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), exception.Message);
                 MessageBox.Show(message);
                 return false;
             }
 
+            DocumentFilePath = fileName;
+            _savedVersion = document.RevisionIndex;
+            SetActiveFile(fileName);
+
+            // Make sure settings lists contain correct values for this document.
+            document.Settings.UpdateLists(DocumentFilePath);
+
             try
             {
+                SaveLayout(fileName);
+
                 // CONSIDER: Is this really optional?
                 if (includingCacheFile)
                 {
-                    OptimizeCache(fileName);
+                    using (var longWaitDlg = new LongWaitDlg(this)
+                    {
+                        Text = Resources.SkylineWindow_SaveDocument_Optimizing_data_file___,
+                        Message = Path.GetFileName(fileName)
+                    })
+                    {
+                        longWaitDlg.PerformWork(this, 0, () =>
+                            OptimizeCache(fileName, longWaitDlg));
+                    }
                 }
-                SaveLayout(fileName);
             }
-            catch (UnauthorizedAccessException)
-            {
-                // Fail silently
-            }
-            catch (IOException)
-            {
-                // Fail silently
-            }            
+
+            // We allow silent failures because it is OK for the cache to remain unoptimized
+            // or the layout to not be saved.  These aren't critical as long as the document
+            // was saved correctly.
+            catch (UnauthorizedAccessException) {}
+            catch (IOException) {}
+            catch (OperationCanceledException) {}
 
             return true;
         }
 
-        private void OptimizeCache(string fileName)
+        private void OptimizeCache(string fileName, ILongWaitBroker progress)
         {
             // Optimize the results cache to get rid of any unnecessary
             // chromatogram data.
-            var settings = DocumentUI.Settings;
+            var settings = Document.Settings;
             if (settings.HasResults)
             {
                 var results = settings.MeasuredResults;
                 if (results.IsLoaded)
                 {
-                    var resultsNew = results.OptimizeCache(fileName, _chromatogramManager.StreamManager);
+                    var resultsNew = results.OptimizeCache(fileName, _chromatogramManager.StreamManager, progress);
                     if (!ReferenceEquals(resultsNew, results))
                     {
                         SrmDocument docNew, docCurrent;
@@ -954,13 +981,13 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool SaveDocumentLibraryAs(string newDocFilePath)
+        private void SaveDocumentLibraryAs(string newDocFilePath)
         {
             string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
             // If the document has a document-specific library, and the files for it
             // exist on disk
-            var document = DocumentUI;
+            var document = Document;
             if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
                 && File.Exists(oldDocLibFile) && File.Exists(oldRedundantDocLibFile))
             {
@@ -969,11 +996,8 @@ namespace pwiz.Skyline
                 using (var saverLib = new FileSaver(newDocLibFile))
                 using (var saverRedundant = new FileSaver(newRedundantDocLibFile))
                 {
-                    if (!CopyFile(oldDocLibFile, saverLib))
-                        return false;
-
-                    if (!CopyFile(oldRedundantDocLibFile, saverRedundant))
-                        return false;
+                    CopyFile(oldDocLibFile, saverLib);
+                    CopyFile(oldRedundantDocLibFile, saverRedundant);
                     saverLib.Commit();
                     saverRedundant.Commit();
                 }
@@ -988,18 +1012,13 @@ namespace pwiz.Skyline
                 }
                 while (!SetDocument(docNew, docOriginal));
             }
-
-            return true;
         }
 
-        private bool CopyFile(string source, FileSaver destSaver)
+        private void CopyFile(string source, FileSaver destSaver)
         {
             // Copy the specified file to the new name using a FileSaver
-            if (!destSaver.CanSave(this))
-                return false;
-
+            destSaver.CheckException();
             File.Copy(source, destSaver.SafeName, true);
-            return true;
         }
 
         private void SaveLayout(string fileName)
@@ -2500,5 +2519,23 @@ namespace pwiz.Skyline
         }
 
         #endregion
+    }
+
+    public class XmlWriterWithProgress : XmlTextWriter
+    {
+        private int _transitionsWritten;
+        private readonly ILongWaitBroker _monitor;
+
+        public XmlWriterWithProgress(string filename, Encoding encoding, ILongWaitBroker monitor) : base(filename, encoding)
+        {
+            _monitor = monitor;
+        }
+
+        public int TransitionCount { get; set; }
+
+        public void WroteTransition()
+        {
+            _monitor.SetProgressCheckCancel(++_transitionsWritten, TransitionCount);
+        }
     }
 }

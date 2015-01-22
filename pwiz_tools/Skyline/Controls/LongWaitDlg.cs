@@ -87,6 +87,13 @@ namespace pwiz.Skyline.Controls
             return result;
         }
 
+        public void SetProgressCheckCancel(int step, int totalSteps)
+        {
+            if (IsCanceled)
+                throw new OperationCanceledException();
+            ProgressValue = 100 * step / totalSteps;
+        }
+
         public void PerformWork(Control parent, int delayMillis, Action performWork)
         {
             var indefiniteWaitBroker = new IndefiniteWaitBroker(performWork);
@@ -174,6 +181,8 @@ namespace pwiz.Skyline.Controls
                         throw new InvalidDataException(x.Message, x);
                     if (x is IOException)
                         throw new IOException(x.Message, x);
+                    if (x is OperationCanceledException)
+                        throw new OperationCanceledException(x.Message, x);
                     throw new TargetInvocationException(x.Message, x);
                 }
             }

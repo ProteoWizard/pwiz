@@ -20231,6 +20231,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimizing data file....
+        /// </summary>
+        public static string SkylineWindow_SaveDocument_Optimizing_data_file___ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SaveDocument_Optimizing_data_file___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saving....
+        /// </summary>
+        public static string SkylineWindow_SaveDocument_Saving___ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SaveDocument_Saving___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline Documents.
         /// </summary>
         public static string SkylineWindow_SaveDocumentAs_Skyline_Documents {

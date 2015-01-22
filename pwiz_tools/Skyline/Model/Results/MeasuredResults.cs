@@ -280,12 +280,12 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im._cacheFinal = null);
         }
 
-        public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager)
+        public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager, ILongWaitBroker progress = null)
         {
             if (!IsLoaded)
                 throw new InvalidOperationException(Resources.MeasuredResults_OptimizeCache_The_chromatogram_cache_must_be_loaded_before_it_is_optimized);
 
-            var cacheOptimized = _cacheFinal.Optimize(documentPath, MSDataFilePaths, streamManager);
+            var cacheOptimized = _cacheFinal.Optimize(documentPath, MSDataFilePaths, streamManager, progress);
             if (ReferenceEquals(cacheOptimized, _cacheFinal))
                 return this;
             return ChangeProp(ImClone(this), im => im._cacheFinal = cacheOptimized);

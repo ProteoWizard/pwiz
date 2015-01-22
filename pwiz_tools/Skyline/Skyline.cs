@@ -4268,6 +4268,11 @@ namespace pwiz.Skyline
                 }
             }
         }
+
+        private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("explorer.exe", @"/select, " + DocumentFilePath);
+        }
     }
 }
 

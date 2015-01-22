@@ -421,6 +421,8 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openContainingFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator53 = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1784,6 +1786,8 @@ namespace pwiz.Skyline
             this.startPageMenuItem,
             this.newMenuItem,
             this.openMenuItem,
+            this.openContainingFolderMenuItem,
+            this.toolStripSeparator53,
             this.saveMenuItem,
             this.saveAsMenuItem,
             this.shareDocumentMenuItem,
@@ -3183,6 +3187,17 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
+            // openContainingFolderMenuItem
+            // 
+            this.openContainingFolderMenuItem.Name = "openContainingFolderMenuItem";
+            resources.ApplyResources(this.openContainingFolderMenuItem, "openContainingFolderMenuItem");
+            this.openContainingFolderMenuItem.Click += new System.EventHandler(this.openContainingFolderMenuItem_Click);
+            // 
+            // toolStripSeparator53
+            // 
+            this.toolStripSeparator53.Name = "toolStripSeparator53";
+            resources.ApplyResources(this.toolStripSeparator53, "toolStripSeparator53");
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -3603,6 +3618,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem arrangeColumnMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arrangeRowMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addTransitionMoleculeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator53;
     }
 }
 

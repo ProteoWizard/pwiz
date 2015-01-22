@@ -8174,4 +8174,10 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2__or__3__and__4__" xml:space="preserve">
     <value>Value {0} must be between {1} and {2} or {3} and {4}.</value>
   </data>
+  <data name="SkylineWindow_SaveDocument_Saving___" xml:space="preserve">
+    <value>Saving...</value>
+  </data>
+  <data name="SkylineWindow_SaveDocument_Optimizing_data_file___" xml:space="preserve">
+    <value>Optimizing data file...</value>
+  </data>
 </root>

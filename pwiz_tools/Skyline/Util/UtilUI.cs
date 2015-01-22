@@ -115,6 +115,12 @@ namespace pwiz.Skyline.Util
         /// Shows a dialog box on the right thread, parented to the progress form
         /// </summary>
         DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
+
+        /// <summary>
+        /// Convenience function which calculates progress percentage and throws
+        /// an OperationCanceledOperation if the user has canceled.
+        /// </summary>
+        void SetProgressCheckCancel(int step, int totalSteps);
     }
 
     /// <summary>

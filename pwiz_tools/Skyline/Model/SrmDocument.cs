@@ -3246,6 +3246,9 @@ namespace pwiz.Skyline.Model
                     EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
             }
 
+            var progressWriter = writer as XmlWriterWithProgress;
+            if (progressWriter != null)
+                progressWriter.WroteTransition();
         }
 
         public double GetCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int step)
