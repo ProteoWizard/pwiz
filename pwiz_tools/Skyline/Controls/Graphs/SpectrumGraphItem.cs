@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using NHibernate.Bytecode;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
@@ -122,8 +123,11 @@ namespace pwiz.Skyline.Controls.Graphs
         protected AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
         {
             SpectrumInfo = spectrumInfo;
-
-            _ionMatches = spectrumInfo.PeaksMatched.ToDictionary(rmi => rmi.ObservedMz);
+            _ionMatches = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
+            foreach (var rmi in spectrumInfo.PeaksMatched)
+            {
+                _ionMatches[rmi.ObservedMz] = rmi;
+            }
 
             // Default values
             FontSize = 10;
