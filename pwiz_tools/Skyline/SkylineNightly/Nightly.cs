@@ -42,7 +42,7 @@ namespace SkylineNightly
         private const int TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
-        private const string LABKEY_URL = "http://128.208.10.2:8080/labkey/testresults/home/post.view?";
+        private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
 
         private DateTime _startTime;
         private string _logFile;
