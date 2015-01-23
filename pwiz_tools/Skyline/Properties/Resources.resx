@@ -8180,4 +8180,19 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="SkylineWindow_SaveDocument_Optimizing_data_file___" xml:space="preserve">
     <value>Optimizing data file...</value>
   </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_" xml:space="preserve">
+    <value>Invalid m/z value {0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_" xml:space="preserve">
+    <value>Invalid charge value {0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_" xml:space="preserve">
+    <value>Invalid collision energy value {0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_" xml:space="preserve">
+    <value>Invalid retention time value {0}</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_" xml:space="preserve">
+    <value>Invalid drift time value {0}</value>
+  </data>
 </root>

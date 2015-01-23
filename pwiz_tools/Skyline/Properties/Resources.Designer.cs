@@ -14616,6 +14616,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid charge value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid collision energy value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid drift time value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid m/z value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid retention time value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No errors.
         /// </summary>
         public static string PasteDlg_ShowNoErrors_No_errors {

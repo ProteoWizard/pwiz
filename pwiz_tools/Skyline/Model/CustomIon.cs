@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Xml;
 using pwiz.Common.SystemUtil;
@@ -90,8 +91,15 @@ namespace pwiz.Skyline.Model
         {
             if (!string.IsNullOrEmpty(Formula))
             {
-                MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
-                AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
+                try
+                {
+                    MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
+                    AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(x.Message, x);  // Pass original as inner exception
+                }
             }
             if (AverageMass == 0 || MonoisotopicMass == 0)
                 throw new InvalidDataException(Resources.CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);

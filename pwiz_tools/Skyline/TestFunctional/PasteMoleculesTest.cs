@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
 
             // Provoke some errors
-            int badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
+            var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__, 
                 badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE));
@@ -97,7 +97,33 @@ namespace pwiz.SkylineTestFunctional
             TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2));
             TestError(line1 + line3, // Insanely large molecule
-                string.Format(Resources.EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__, CustomIon.MAX_MASS));
+                string.Format(Resources.CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_, CustomIon.MAX_MASS));
+            // Take a legit full paste and mess with each field in turn
+            string[] fields = { "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "123", "25", "7", "9" };
+            string[] badfields = { "", "", "", "123", "123", "fish", "-345", "cat", "pig", "frog", "hamster", "boston", "foosball" };
+            string[] expectedErrors =
+            {
+                Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,  // No name, no problem
+                string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, badfields[3]),
+                string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula,  badfields[4]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, badfields[5]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_,  badfields[6]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_,  badfields[7]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_,  badfields[8]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_,  badfields[9]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_,  badfields[10]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_,  badfields[11]),
+                string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_,  badfields[12]),
+                Resources.PasteDlg_ShowNoErrors_No_errors // N+1'th pass is unadulterated
+            };
+            for (int bad = 0; bad <= fields.Count(); bad++)
+            {
+                var line = "";
+                for (var f = 0; f < fields.Count(); f++)
+                    line += ((bad == f) ? badfields[f] : fields[f]) + "\t";
+                TestError(line, expectedErrors[bad]);
+            }
+
             // Now load the document with a legit paste
             TestError(line1+line2start+"\t\t1\t1", String.Empty); 
             var docOrig = WaitForDocumentChange(docEmpty);

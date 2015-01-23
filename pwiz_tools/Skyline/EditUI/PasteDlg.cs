@@ -659,25 +659,95 @@ namespace pwiz.Skyline.EditUI
             var name = NullForEmpty(Convert.ToString(row.Cells[indexName].Value));
             var formula = NullForEmpty(Convert.ToString(row.Cells[indexFormula].Value));
             double mz;
+            bool badMz = false;
             if (!double.TryParse(Convert.ToString(row.Cells[indexMz].Value), out mz))
+            {
+                if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[indexMz].Value)))
+                {
+                    badMz = true;
+                }
                 mz = 0;
+            }
+            if ((mz < 0) || badMz)
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexMz,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, Convert.ToString(row.Cells[indexMz].Value))
+                });
+                return null;
+            }
             int? charge = null;
             int trycharge;
             if (int.TryParse(Convert.ToString(row.Cells[indexCharge].Value), out trycharge))
                 charge = trycharge;
+            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[indexCharge].Value)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = indexCharge,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_, Convert.ToString(row.Cells[indexCharge].Value))
+                });
+                return null;
+            }
             double dtmp;
             double? collisionEnergy = null;
-            if (getPrecursorColumns && double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
-                collisionEnergy = dtmp;
             double? retentionTime = null;
-            if (getPrecursorColumns && double.TryParse(Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value), out dtmp))
-                retentionTime = dtmp;
+            if (getPrecursorColumns)
+            {
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
+                    collisionEnergy = dtmp;
+                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_COLLISION_ENERGY,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_, Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value))
+                    });
+                    return null;
+                }
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value), out dtmp))
+                    retentionTime = dtmp;
+                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_RETENTION_TIME,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_, Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value))
+                    });
+                    return null;
+                }
+            }
             double? driftTimePrecursorMsec = null;
             if (double.TryParse(Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value), out dtmp))
                 driftTimePrecursorMsec = dtmp;
+            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_MOLECULE_DRIFT_TIME_MSEC,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_, Convert.ToString(row.Cells[INDEX_MOLECULE_DRIFT_TIME_MSEC].Value))
+                });
+                return null;
+            }
             double? driftTimeProductMsec = null;
             if (double.TryParse(Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value), out dtmp))
                 driftTimeProductMsec = dtmp;
+            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value)))
+            {
+                ShowTransitionError(new PasteError
+                {
+                    Column = INDEX_PRODUCT_DRIFT_TIME_MSEC,
+                    Line = row.Index,
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_, Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value))
+                });
+                return null;
+            }
             string errMessage = String.Format(getPrecursorColumns
                 ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
                 : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index+1);
@@ -712,6 +782,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
                 var massOk = true;
+                string massErrMsg = null;
                 var absCharge = Math.Abs(charge ?? 0);
                 if (getPrecursorColumns && absCharge != 0 && (absCharge < TransitionGroup.MIN_PRECURSOR_CHARGE || absCharge > TransitionGroup.MAX_PRECURSOR_CHARGE))
                 {
@@ -730,7 +801,6 @@ namespace pwiz.Skyline.EditUI
                     // We have a formula
                     try
                     {
-                        errColumn = indexMz;
                         if (mz > 0)
                         {
                             // Is the ion's formula the old style where user expected us to add a hydrogen? 
@@ -759,9 +829,10 @@ namespace pwiz.Skyline.EditUI
                                 return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
                         }
                     }
-                    catch (InvalidDataException)
+                    catch (InvalidDataException x)
                     {
                         massOk = false;
+                        massErrMsg = x.Message;
                     }
                 } 
                 else if (mz != 0 && charge.HasValue)
@@ -769,13 +840,13 @@ namespace pwiz.Skyline.EditUI
                     // No formula, just use charge and m/z
                     monoMass = averageMmass = BioMassCalc.CalculateIonMassFromMz(mz, charge.Value);
                     massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
+                    errColumn = indexMz;
                     if (massOk)
                         return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
                 }
                 if (!massOk)
                 {
-                    errColumn = indexMz;
-                    errMessage = string.Format(
+                    errMessage = massErrMsg ?? string.Format(
                         Resources
                             .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__,
                         CustomIon.MAX_MASS);
