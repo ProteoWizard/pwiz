@@ -2844,9 +2844,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ShowHighlightPoint(PointF pt, bool showPoint)
         {
             var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
-            var selectedPane = GetScanSelectedPane();
-            if (selectedPane != null && selectedPane.CurveList.Count > FULLSCAN_SELECTED_INDEX)
-                selectedPane.CurveList[FULLSCAN_SELECTED_INDEX].IsVisible = true;
 
             if (graphPane != null && showPoint)
             {
