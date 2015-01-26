@@ -65,7 +65,7 @@ namespace IDPicker.Forms
             this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.findTextBox = new IDPicker.SilentToolStripTextBox();
+            this.findTextBox = new IDPicker.Controls.SilentToolStripTextBox();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.exportButton = new System.Windows.Forms.ToolStripButton();
             this.displayOptionsButton = new System.Windows.Forms.ToolStripButton();
@@ -281,6 +281,6 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem copyToClipboardSelectedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        protected IDPicker.SilentToolStripTextBox findTextBox;
+        protected IDPicker.Controls.SilentToolStripTextBox findTextBox;
     }
 }

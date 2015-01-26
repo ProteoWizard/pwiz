@@ -54,6 +54,9 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
+            // set Name of controls hosted in ToolStripControlHosts to the ToolStripItem's Name, for better UI Automation access
+            this.InitializeAccessibleNames();
+
             FormClosing += delegate(object sender, FormClosingEventArgs e)
             {
                 e.Cancel = true;
@@ -68,6 +71,8 @@ namespace IDPicker.Forms
             dataGridView.KeyDown += dataGridView_KeyDown;
             dataGridView.CellFormatting += dataGridView_CellFormatting;
             dataGridView.DefaultCellStyleChanged += dataGridView_DefaultCellStyleChanged;
+            dataGridView.RowTemplate = new DataGridViewRowWithAccessibleValues() { RowHeaderCellEmptyString = "Total" };
+            dataGridView.RowTemplate.HeaderCell = new DataGridViewRowHeaderCellWithAccessibleValue();
 
             dataGridView.ShowCellToolTips = true;
             dataGridView.CellToolTipTextNeeded += dataGridView_CellToolTipTextNeeded;
@@ -86,6 +91,7 @@ namespace IDPicker.Forms
             _unimodPopup.Closed += unimodPopup_Closed;
 
             pivotModeComboBox.SelectedIndex = 0;
+            viewModeComboBox.SelectedIndex = 0;
             DistinctModificationFormat = new DistinctMatchFormat() { ModificationMassRoundToNearest = roundToNearestUpDown.Value };
         }
 
@@ -193,11 +199,14 @@ namespace IDPicker.Forms
 
                 bool xNull = x[sortColumnIndex] == DBNull.Value;
                 bool yNull = y[sortColumnIndex] == DBNull.Value;
-                if (xNull && yNull) return 0;
+                if (xNull && yNull) return -((IComparable) x[0]).CompareTo((IComparable) y[0]); // tie-breaker is delta mass (descending)
                 if (xNull) return sortMultiplier * -1;
                 if (yNull) return sortMultiplier * 1;
 
-                return sortMultiplier * ((IComparable) x[sortColumnIndex]).CompareTo((IComparable) y[sortColumnIndex]);
+                int compare = ((IComparable) x[sortColumnIndex]).CompareTo((IComparable) y[sortColumnIndex]);
+                if (compare == 0)
+                    return -((IComparable) x[0]).CompareTo((IComparable) y[0]); // tie-breaker is delta mass (descending)
+                return sortMultiplier * compare;
             });
 
             // after setting DataSource, table must be refiltered
@@ -227,6 +236,7 @@ namespace IDPicker.Forms
                 foreach (var itr in columns)
                     foreach (var itr2 in itr)
                         itr2.Value.DisplayIndex = ++displayIndex;
+                //dataGridView.Rows.OfType<DataGridViewRowWithAccessibleValues>().ForEach(o => o);
             }
         }
 
@@ -528,6 +538,13 @@ namespace IDPicker.Forms
 
             ClearData();
 
+            bool phosphositeViewMode = viewModeComboBox.SelectedIndex == 2;
+            accessionColumn.Visible = phosphositeViewMode;
+            offsetColumn.Visible = phosphositeViewMode;
+            probabilityColumn.Visible = phosphositeViewMode;
+            massColumn.Visible = !phosphositeViewMode;
+            unimodColumn.Visible = !phosphositeViewMode;
+
             Text = TabText = "Loading modification view...";
 
             var workerThread = new BackgroundWorker()
@@ -536,7 +553,7 @@ namespace IDPicker.Forms
                 WorkerSupportsCancellation = true
             };
 
-            workerThread.DoWork += setData;
+            workerThread.DoWork += phosphositeViewMode ? new DoWorkEventHandler(setDataForPhosphositeView) : setData;
             workerThread.RunWorkerCompleted += renderData;
             workerThread.RunWorkerAsync();
         }
@@ -547,6 +564,7 @@ namespace IDPicker.Forms
 
             Controls.OfType<Control>().ForEach(o => o.Enabled = false);
 
+            detailDataGridView.Rows.Clear();
             dataGridView.DataSource = null;
             dataGridView.Columns.Clear();
             dataGridView.Refresh();
@@ -615,6 +633,83 @@ namespace IDPicker.Forms
             }
         }
 
+        void setDataForPhosphositeView(object sender, DoWorkEventArgs e)
+        {
+            // get the modifications grouped by protein and protein offset, using the additional detailTableGridDataView columns for this view mode
+            // don't populate the delta mass table or main detail view table; if the view mode is switched, those queries will have to be run
+            try
+            {
+                var phosphoFilter = new DataFilter(dataFilter);
+                phosphoFilter.Modifications = session.Query<Modification>().Where(o => Math.Round(o.MonoMassDelta) == 80.0).ToList();
+                var query = session.CreateQuery("SELECT pro.Accession, pi.Offset+pm.Offset+1, pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.DistinctMatchId), COUNT(DISTINCT psm.Peptide.id) " +
+                                                phosphoFilter.GetFilteredQueryString(DataFilter.FromProtein,
+                                                                                     DataFilter.ProteinToPeptideModification) +
+                                                " AND pro.IsDecoy = 0 " +
+                                                "GROUP BY pro.Id, pm.Modification.Id, pi.Offset+pm.Offset");
+                query.SetReadOnly(true);
+                IList<object[]> queryRows = null;
+
+                if (dataFilter.IsBasicFilter || viewFilter.Modifications != null || viewFilter.ModifiedSite != null)
+                {
+
+                    // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
+                    //if (basicDataFilter == null || (dataFilter.IsBasicFilter && !dataFilter.Equals(basicDataFilter)))
+                    {
+                        basicDataFilter = new DataFilter(dataFilter);
+                        lock (session) queryRows = query.List<object[]>();
+                        //basicDeltaMassTable = createDeltaMassTableFromQuery(queryRows, out basicTotalModifications, out siteColumnNameToSite);
+                        //findDeltaMassAnnotations();
+                        //deltaMassTable = basicDeltaMassTable;
+                        //SetUnimodDefaults(queryRows);
+                    }
+
+                    //deltaMassTable = basicDeltaMassTable;
+                    //totalModifications = basicTotalModifications;
+                }
+                else
+                {
+                    //Map<string, char> dummy;
+                    lock (session) queryRows = query.List<object[]>();
+                    //deltaMassTable = createDeltaMassTableFromQuery(queryRows, out totalModifications, out dummy);
+                    //SetUnimodDefaults(queryRows);
+                }
+
+                detailDataGridView.Rows.Clear();
+                foreach (var tuple in queryRows)
+                {
+                    try
+                    {
+                        var mod = (tuple[3] as DataModel.Modification);
+                        var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
+                        var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[2], roundedMass).Distinct();
+
+                        var newRow = new object[]
+                        {
+                            tuple[0], // accession
+                            Convert.ToInt32(tuple[1]), // offset
+                            tuple[2], // site
+                            roundedMass, // mass
+                            null, // probability
+                            Convert.ToInt32(tuple[6]), // spectra
+                            Convert.ToInt32(tuple[5]), // matches
+                            Convert.ToInt32(tuple[4]), // peptides
+                            String.Join("; ", explanations) // description
+                        };
+
+                        var rowIndex = detailDataGridView.Rows.Add(newRow);
+                    }
+                    catch { } //if row gives errors dont add it
+                }
+
+                if (FinishedSetData != null)
+                    FinishedSetData(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                e.Result = ex;
+            }
+        }
+
         private void PopulateModificationDetailView(IEnumerable<object[]> queryRows)
         {
             detailDataGridView.Rows.Clear();
@@ -626,25 +721,96 @@ namespace IDPicker.Forms
                     var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
                     var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[0], roundedMass).Distinct();
 
-                    var newRow = new object[6];
-                    newRow[0] = tuple[0];
-                    newRow[1] = roundedMass;
-                    newRow[2] = Convert.ToInt32(tuple[2]);
-                    newRow[3] = Convert.ToInt32(tuple[3]);
-                    newRow[4] = Convert.ToInt32(tuple[4]);
-                    newRow[5] = String.Join("; ", explanations);
+                    var newRow = new object[]
+                    {
+                        null, // accession
+                        null, // offset
+                        tuple[0], // site
+                        roundedMass, // mass
+                        null, // probability
+                        Convert.ToInt32(tuple[4]), // spectra
+                        Convert.ToInt32(tuple[3]), // matches
+                        Convert.ToInt32(tuple[2]), // peptides
+                        String.Join("; ", explanations) // description
+                    };
 
                     var rowIndex = detailDataGridView.Rows.Add(newRow);
                 }
-                catch{} //if row gives errors dont add it
+                catch { } //if row gives errors dont add it
+            }
+        }
+
+        private class DataGridViewRowWithAccessibleValues : DataGridViewRow
+        {
+            public string RowHeaderCellEmptyString { get; set; }
+
+            protected class DataGridViewRowWithAccessibleValuesAccessibleObject : DataGridViewRowAccessibleObject
+            {
+                public string RowHeaderCellEmptyString { get; set; }
+
+                public DataGridViewRowWithAccessibleValuesAccessibleObject(DataGridViewRow owner) : base(owner) { RowHeaderCellEmptyString = String.Empty; }
+                public override string Value
+                {
+                    get
+                    {
+                        return String.Format("{0};{1}", Owner.HeaderCell.Value ?? RowHeaderCellEmptyString, String.Join(";", Owner.Cells.OfType<DataGridViewCell>().Where(o => o.Visible).Select(o => o.Value ?? String.Empty)));
+                    }
+                }
+            }
+
+            protected override AccessibleObject CreateAccessibilityInstance()
+            {
+                return new DataGridViewRowWithAccessibleValuesAccessibleObject(this) { RowHeaderCellEmptyString = RowHeaderCellEmptyString };
+            }
+        }
+
+        private class DataGridViewRowHeaderCellWithAccessibleValue : DataGridViewRowHeaderCell
+        {
+            public void SnapToUnimod(double tolerance)
+            {
+                double deltaMass = (double) (OwningRow.DataBoundItem as DataRowView).Row[deltaMassColumnName];
+                var headerText = new StringBuilder(deltaMass.ToString());
+
+                // see if row snaps to a single Unimod delta mass at a very tight tolerance (note that a single exact mass can match multiple mods)
+                var filter = new unimod.Filter(deltaMass, tolerance) { approved = null, hidden = null };
+                var mods = unimod.modifications(filter);
+                //if (mods.Select(o => o.deltaMonoisotopicMass).Distinct().Count() == 1)
+                {
+                    foreach (var mod in mods)
+                        headerText.AppendFormat("\n{0}", mod.name);
+                }
+                Value = headerText.ToString();
+            }
+
+            protected class DataGridViewRowHeaderCellWithAccessibleValueAccessibleObject : DataGridViewRowHeaderCellAccessibleObject
+            {
+                public DataGridViewRowHeaderCellWithAccessibleValueAccessibleObject(DataGridViewRowHeaderCell owner) : base(owner) {}
+                public override string Name
+                {
+                    get
+                    {
+                        var row = Owner.OwningRow;
+                        if (Double.IsInfinity((double) (row.DataBoundItem as DataRowView).Row[deltaMassColumnName]))
+                            return "Total";
+                        else
+                        {
+                            return row.HeaderCell.Value.ToString();
+                        }
+                    }
+                }
+            }
+
+            protected override AccessibleObject CreateAccessibilityInstance()
+            {
+                return new DataGridViewRowHeaderCellWithAccessibleValueAccessibleObject(this);
             }
         }
 
         private void trimModificationGrid()
         {
             int minColumns, minRows;
-            if (!Int32.TryParse(MinColumnBox.Text, out minColumns) ||
-                !Int32.TryParse(MinRowBox.Text, out minRows))
+            if (!Int32.TryParse(minColumnTextBox.Text, out minColumns) ||
+                !Int32.TryParse(minRowTextBox.Text, out minRows))
                 return;
 
             (dataGridView.DataSource as DataTable).DefaultView.RowFilter = "";
@@ -695,21 +861,13 @@ namespace IDPicker.Forms
                 }
                 else
                 {
-                    row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
-
-                    // see if row snaps to a single Unimod delta mass at a very tight tolerance
-                    double deltaMass = (double) (row.DataBoundItem as DataRowView).Row[deltaMassColumnName];
-                    var filter = new unimod.Filter(deltaMass, (double) roundToNearestUpDown.Value) { approved = null, hidden = null };
-                    var mods = unimod.modifications(filter);
-                    if (mods.Select(o => o.deltaMonoisotopicMass).Distinct().Count() == 1)
+                    (row.HeaderCell as DataGridViewRowHeaderCellWithAccessibleValue).SnapToUnimod((double)roundToNearestUpDown.Value);
+                    string[] lines = row.HeaderCell.Value.ToString().Split('\n');
+                    if (lines.Length > 1)
                     {
                         row.HeaderCell.Style = unimodRowStyle;
-                        foreach (var mod in mods)
-                        {
-                            row.HeaderCell.Value += "\n" + mod.name;
-                            maxRowHeaderWidth = Math.Max(maxRowHeaderWidth, g.MeasureString(mod.name, unimodRowStyle.Font).Width);
-                        }
-                        row.Height = (int) Math.Ceiling(g.MeasureString((string) row.HeaderCell.Value, unimodRowStyle.Font).Height) + 12;
+                        maxRowHeaderWidth = Math.Max(maxRowHeaderWidth, (float) lines.Max(line => g.MeasureString(line, unimodRowStyle.Font).Width));
+                        row.Height = (int) Math.Ceiling(lines.Sum(line => g.MeasureString(line, unimodRowStyle.Font).Height)) + 12;
                     }
                 }
                 maxRowHeaderWidth = Math.Max(maxRowHeaderWidth, g.MeasureString((string) row.HeaderCell.Value, unimodRowStyle.Font).Width);
@@ -727,7 +885,7 @@ namespace IDPicker.Forms
                 return;
 
             var pairs = _unimodControl.GetUnimodPairs();
-            var minMatches = Int32.Parse(tablePeptidesFilterBox.Text);
+            var minMatches = Int32.Parse(minMatchesTextBox.Text);
 
             if (!pairs.Any())
             {
@@ -782,9 +940,10 @@ namespace IDPicker.Forms
 
             Text = TabText = String.Format("Modification View: {0} modified {1}", totalModifications, PivotMode.ToLower());
 
-            dataGridView.Visible = totalModifications > 0;
-            if (totalModifications > 0 || TablePanel.Visible)
+            var currentView = viewModeComboBox.SelectedIndex == 0 ? dataGridView : detailDataGridView;
+            if (totalModifications > 0)
             {
+                currentView.Visible = true;
                 dataGridView.DataSource = deltaMassTable;
                 dataGridView.Columns[deltaMassColumnName].Visible = false;
 
@@ -810,8 +969,10 @@ namespace IDPicker.Forms
                     }
                 }
             }
+            else
+                currentView.Visible = false;
 
-            dataGridView.Refresh();
+            currentView.Refresh();
         }
 
         private void dataGridView_DefaultCellStyleChanged (object sender, EventArgs e)
@@ -929,7 +1090,7 @@ namespace IDPicker.Forms
         {
             IEnumerable exportedRows;
             IList<int> exportedColumns;
-            var currentTable = TablePanel.Visible ? detailDataGridView : dataGridView;
+            var currentTable = detailDataGridView.Visible ? detailDataGridView : dataGridView;
 
             if (exportSelectedCellsOnly &&
                 currentTable.SelectedCells.Count > 0 &&
@@ -1202,16 +1363,7 @@ namespace IDPicker.Forms
 
         private void unimodButton_Click (object sender, EventArgs e)
         {
-            var showOnLeft = (dataGridView.Width/2) < unimodButton.Location.X;
-            var location = showOnLeft
-                               ? new Point(10, unimodButton.Location.Y + unimodButton.Size.Height + 1)
-                               : new Point(unimodButton.Location.X,
-                                           unimodButton.Location.Y + unimodButton.Size.Height + 1);
-            _unimodPopup.Size = new Size(showOnLeft
-                                             ? unimodButton.Location.X + unimodButton.Width - 10
-                                             : dataGridView.Width - unimodButton.Location.X - 10,
-                                         dataGridView.Height - 10);
-            _unimodPopup.Show(PointToScreen(location));
+            _unimodPopup.Show(unimodButton);
         }
 
         private void unimodPopup_Closed (object sender, EventArgs e)
@@ -1235,17 +1387,16 @@ namespace IDPicker.Forms
         private decimal roundToNearestValue = 1;
         private void roundToNearestUpDown_ValueChanged (object sender, EventArgs e)
         {
-            var currentControl = (NumericUpDown)sender;
             if (roundToNearestUpDownChanging)
             {
-                if (!System.Text.RegularExpressions.Regex.IsMatch(currentControl.Value.ToString(), @"^10*\.?0*$") &&
-                !System.Text.RegularExpressions.Regex.IsMatch(currentControl.Value.ToString(), @"^0?\.0*10*$"))
-                    currentControl.Value = roundToNearestValue;
+                if (!System.Text.RegularExpressions.Regex.IsMatch(roundToNearestUpDown.Value.ToString(), @"^10*\.?0*$") &&
+                !System.Text.RegularExpressions.Regex.IsMatch(roundToNearestUpDown.Value.ToString(), @"^0?\.0*10*$"))
+                    roundToNearestUpDown.Value = roundToNearestValue;
                 return;
             }
 
             //make sure not rounding to strange numbers
-            var valueAsString = currentControl.Value.ToString();
+            var valueAsString = roundToNearestUpDown.Value.ToString();
             decimal oldValue = DistinctModificationFormat.ModificationMassRoundToNearest.Value;
             roundToNearestUpDownChanging = true;
 
@@ -1254,23 +1405,18 @@ namespace IDPicker.Forms
                 (System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), @"^10*\.?0*$") ||
                 System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), @"^0?\.0*10*$")))
             {
-                currentControl.Value = currentControl.Value < oldValue
-                                           ? Math.Max(currentControl.Minimum, oldValue/10)
-                                           : Math.Min(currentControl.Maximum, oldValue*10);
+                roundToNearestUpDown.Value = roundToNearestUpDown.Value < oldValue
+                                           ? Math.Max(roundToNearestUpDown.NumericUpDownControl.Minimum, oldValue / 10)
+                                           : Math.Min(roundToNearestUpDown.NumericUpDownControl.Maximum, oldValue * 10);
             }
             else
             {
-                if (currentControl.Value - currentControl.Increment == oldValue)
-                    currentControl.Value = Math.Min(currentControl.Maximum, oldValue * 10);
-                else if (currentControl.Value + currentControl.Increment == oldValue)
-                    currentControl.Value = Math.Max(currentControl.Minimum, oldValue / 10);
+                if (roundToNearestUpDown.Value - roundToNearestUpDown.NumericUpDownControl.Increment == oldValue)
+                    roundToNearestUpDown.Value = Math.Min(roundToNearestUpDown.NumericUpDownControl.Maximum, oldValue * 10);
+                else if (roundToNearestUpDown.Value + roundToNearestUpDown.NumericUpDownControl.Increment == oldValue)
+                    roundToNearestUpDown.Value = Math.Max(roundToNearestUpDown.NumericUpDownControl.Minimum, oldValue / 10);
             }
-            roundToNearestValue = currentControl.Value;
-
-            if (sender == roundToNearestUpDown)
-                roundToNearestTableUpDown.Value = roundToNearestUpDown.Value;
-            else
-                roundToNearestUpDown.Value = roundToNearestTableUpDown.Value;
+            roundToNearestValue = roundToNearestUpDown.Value;
             roundToNearestUpDownChanging = false;
 
             basicDataFilter = null;
@@ -1281,7 +1427,6 @@ namespace IDPicker.Forms
 
             if (session != null)
                 SetData(session, viewFilter);
-
         }
 
         private void pivotModeComboBox_SelectedIndexChanged (object sender, EventArgs e)
@@ -1298,9 +1443,70 @@ namespace IDPicker.Forms
 
         private void switchViewButton_Click(object sender, EventArgs e)
         {
-            GridPanel.Visible = sender == switchToGridButton;
-            TablePanel.Visible = sender == switchtoTableButton;
-        }
+            bool needDataRefresh = false;
 
+            switch(viewModeComboBox.SelectedIndex)
+            {
+                // Grid view
+                case 0:
+                    dataGridView.Visible = true;
+                    needDataRefresh = accessionColumn.Visible;
+
+                    minRowLabel.Visible = true;
+                    minRowTextBox.Visible = true;
+
+                    minColumnLabel.Visible = true;
+                    minColumnTextBox.Visible = true;
+
+                    detailDataGridView.Visible = false;
+                    pivotModeComboBox.Visible = true;
+
+                    minMatchesTextBox.Visible = false;
+                    minMatchesLabel.Visible = false;
+                    break;
+
+                // Detail table view
+                case 1:
+                    dataGridView.Visible = false;
+                    needDataRefresh = accessionColumn.Visible;
+
+                    minRowLabel.Visible = false;
+                    minRowTextBox.Visible = false;
+
+                    minColumnLabel.Visible = false;
+                    minColumnTextBox.Visible = false;
+
+                    detailDataGridView.Visible = true;
+                    pivotModeComboBox.Visible = false;
+
+                    minMatchesTextBox.Visible = true;
+                    minMatchesLabel.Visible = true;
+                    break;
+
+                // Phosphosite view
+                case 2:
+                    dataGridView.Visible = false;
+                    needDataRefresh = !accessionColumn.Visible;
+
+                    minRowLabel.Visible = false;
+                    minRowTextBox.Visible = false;
+
+                    minColumnLabel.Visible = false;
+                    minColumnTextBox.Visible = false;
+
+                    detailDataGridView.Visible = true;
+                    pivotModeComboBox.Visible = false;
+
+                    minMatchesTextBox.Visible = false;
+                    minMatchesLabel.Visible = false;
+                    break;
+            }
+
+            if (needDataRefresh && session != null)
+            {
+                ClearData(true);
+                SetData(session, viewFilter);
+            }
+        }
     }
 }

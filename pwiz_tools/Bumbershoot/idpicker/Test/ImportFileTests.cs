@@ -87,22 +87,6 @@ namespace Test
         }
         #endregion
 
-        public static void WaitForReady(TextBox statusTextBox, int maxMillisecondsToWait = 15000)
-        {
-            const int msToWait = 200;
-
-            // FIXME: depends on English text
-            for (int i = 0; i < maxMillisecondsToWait; i += msToWait)
-            {
-                if (statusTextBox.Text == "Ready")
-                    return;
-
-                Thread.Sleep(msToWait);
-            }
-
-            throw new TimeoutException("timeout waiting for status to return to 'Ready'");
-        }
-
         [TestMethod]
         public void OpenWithoutFileArguments()
         {
@@ -115,7 +99,7 @@ namespace Test
 
                 var statusBar = window.Get<StatusStrip>();
                 var statusText = statusBar.Get<TextBox>();
-                WaitForReady(statusText);
+                statusText.WaitForReady();
             });
         }
 
@@ -129,154 +113,22 @@ namespace Test
             });
         }
 
-
-        public class IDPickerAllSettings
-        {
-            public IDPickerAllSettings()
-            {
-                GeneralSettings = new IDPicker.Properties.Settings();
-                GUISettings = new IDPicker.Properties.GUI.Settings();
-            }
-
-            public IDPicker.Properties.Settings GeneralSettings { get; private set; }
-            public IDPicker.Properties.GUI.Settings GUISettings { get; private set; }
-        }
-
-
         /// <summary>
-        /// Get the values from the options menu of an existing IDPicker Application instance (the Settings are not directly accessible from a separate process)
+        /// If originalFilepath exists, returns it unchanged; otherwise, returns only the filename part of the filepath.
         /// </summary>
-        public IDPickerAllSettings GetSettings(Application app, Stack<Window> windowStack)
+        private string FilepathOrFilename(string originalFilepath)
         {
-            var settings = new IDPickerAllSettings();
-
-            var window = app.GetWindow(SearchCriteria.ByAutomationId("IDPickerForm"), InitializeOption.NoCache);
-            windowStack.Push(window);
-
-            var menu = window.RawGet<MenuBar>(SearchCriteria.ByAutomationId("menuStrip1"), 2);
-            //menu.MenuItemBy(SearchCriteria.ByAutomationId("toolsToolStripMenuItem"), SearchCriteria.ByAutomationId("optionsToolStripMenuItem")).Click();
-            menu.MenuItem("Tools", "Options...").RaiseClickEvent(); // FIXME: not localized, but the AutomationIds aren't being set properly so the above line won't work
-
-            var options = window.ModalWindow(SearchCriteria.ByAutomationId("DefaultSettingsManagerForm"), InitializeOption.WithCache);
-            windowStack.Push(options);
-
-            settings.GeneralSettings.DefaultMinSpectraPerDistinctMatch = Convert.ToInt32(options.Get<TextBox>("minSpectraPerMatchTextBox").Text);
-            settings.GeneralSettings.DefaultMinSpectraPerDistinctPeptide = Convert.ToInt32(options.Get<TextBox>("minSpectraPerPeptideTextBox").Text);
-            settings.GeneralSettings.DefaultMaxProteinGroupsPerPeptide = Convert.ToInt32(options.Get<TextBox>("maxProteinGroupsTextBox").Text);
-            settings.GeneralSettings.DefaultMinSpectra = Convert.ToInt32(options.Get<TextBox>("minSpectraTextBox").Text);
-            settings.GeneralSettings.DefaultMinDistinctPeptides = Convert.ToInt32(options.Get<TextBox>("minDistinctPeptidesTextBox").Text);
-            settings.GeneralSettings.DefaultMinAdditionalPeptides = Convert.ToInt32(options.Get<TextBox>("minAdditionalPeptidesTextBox").Text);
-            settings.GeneralSettings.DefaultMaxRank = Convert.ToInt32(options.Get<TextBox>("maxImportRankTextBox").Text);
-
-            settings.GeneralSettings.DefaultMaxFDR = Convert.ToDouble(options.Get<ComboBox>("maxQValueComboBox").EditableText) / 100;
-            settings.GeneralSettings.DefaultMaxImportFDR = Convert.ToDouble(options.Get<ComboBox>("maxImportFdrComboBox").EditableText) / 100;
-
-            settings.GeneralSettings.DefaultDecoyPrefix = options.Get<TextBox>("defaultDecoyPrefixTextBox").Text;
-            settings.GeneralSettings.DefaultIgnoreUnmappedPeptides = options.Get<CheckBox>("ignoreUnmappedPeptidesCheckBox").Checked;
-
-            settings.GeneralSettings.DefaultGeneLevelFiltering = options.Get<CheckBox>("filterByGeneCheckBox").Checked;
-            settings.GeneralSettings.DefaultChargeIsDistinct = options.Get<CheckBox>("chargeIsDistinctCheckBox").Checked;
-            settings.GeneralSettings.DefaultAnalysisIsDistinct = options.Get<CheckBox>("analysisIsDistinctCheckBox").Checked;
-            settings.GeneralSettings.DefaultModificationsAreDistinct = options.Get<CheckBox>("modificationsAreDistinctCheckbox").Checked;
-            settings.GeneralSettings.DefaultModificationRoundToNearest = Convert.ToDecimal(options.Get<TextBox>("modificationRoundToMassTextBox").Text);
-
-            //settings.GeneralSettings.FastaPaths.Clear(); settings.GeneralSettings.FastaPaths.AddRange(lbFastaPaths.Items.OfType<string>().ToArray());
-            //settings.GeneralSettings.SourcePaths.Clear(); settings.GeneralSettings.SourcePaths.AddRange(lbSourcePaths.Items.OfType<string>().ToArray());
-
-            settings.GeneralSettings.SourceExtensions = options.Get<TextBox>("sourceExtensionsTextBox").Text;
-
-            settings.GUISettings.WarnAboutNonFixedDrive = options.Get<CheckBox>("nonFixedDriveWarningCheckBox").Checked;
-            settings.GUISettings.WarnAboutNoGeneMetadata = options.Get<CheckBox>("embedGeneMetadataWarningCheckBox").Checked;
-
-            options.Get<Button>("btnOk").RaiseClickEvent();
-            windowStack.Pop();
-
-            return settings;
-        }
-
-        public void SetSettings(Application app, Stack<Window> windowStack, IDPickerAllSettings settings)
-        {
-            var window = app.GetWindow(SearchCriteria.ByAutomationId("IDPickerForm"), InitializeOption.NoCache);
-            windowStack.Push(window);
-
-            var menu = window.RawGet<MenuBar>(SearchCriteria.ByAutomationId("menuStrip1"), 2);
-            //menu.MenuItemBy(SearchCriteria.ByAutomationId("toolsToolStripMenuItem"), SearchCriteria.ByAutomationId("optionsToolStripMenuItem")).Click();
-            menu.MenuItem("Tools", "Options...").Click(); // FIXME: not localized, but the AutomationIds aren't being set properly so the above line won't work
-
-            var options = window.ModalWindow(SearchCriteria.ByAutomationId("DefaultSettingsManagerForm"), InitializeOption.WithCache);
-            windowStack.Push(options);
-
-            options.Get<TextBox>("minSpectraPerMatchTextBox").Text = settings.GeneralSettings.DefaultMinSpectraPerDistinctMatch.ToString();
-            options.Get<TextBox>("minSpectraPerPeptideTextBox").Text = settings.GeneralSettings.DefaultMinSpectraPerDistinctPeptide.ToString();
-            options.Get<TextBox>("maxProteinGroupsTextBox").Text = settings.GeneralSettings.DefaultMaxProteinGroupsPerPeptide.ToString();
-            options.Get<TextBox>("minSpectraTextBox").Text = settings.GeneralSettings.DefaultMinSpectra.ToString();
-            options.Get<TextBox>("minDistinctPeptidesTextBox").Text = settings.GeneralSettings.DefaultMinDistinctPeptides.ToString();
-            options.Get<TextBox>("minAdditionalPeptidesTextBox").Text = settings.GeneralSettings.DefaultMinAdditionalPeptides.ToString();
-            options.Get<TextBox>("maxImportRankTextBox").Text = settings.GeneralSettings.DefaultMaxRank.ToString();
-
-            options.Get<ComboBox>("maxQValueComboBox").EditableText = (settings.GeneralSettings.DefaultMaxFDR * 100).ToString();
-            options.Get<ComboBox>("maxImportFdrComboBox").EditableText = (settings.GeneralSettings.DefaultMaxImportFDR * 100).ToString();
-
-            options.Get<TextBox>("defaultDecoyPrefixTextBox").Text = settings.GeneralSettings.DefaultDecoyPrefix;
-            options.Get<CheckBox>("ignoreUnmappedPeptidesCheckBox").Checked = settings.GeneralSettings.DefaultIgnoreUnmappedPeptides;
-
-            options.Get<CheckBox>("filterByGeneCheckBox").Checked = settings.GeneralSettings.DefaultGeneLevelFiltering;
-            options.Get<CheckBox>("chargeIsDistinctCheckBox").Checked = settings.GeneralSettings.DefaultChargeIsDistinct;
-            options.Get<CheckBox>("analysisIsDistinctCheckBox").Checked = settings.GeneralSettings.DefaultAnalysisIsDistinct;
-            options.Get<CheckBox>("modificationsAreDistinctCheckbox").Checked = settings.GeneralSettings.DefaultModificationsAreDistinct;
-            options.Get<TextBox>("modificationRoundToMassTextBox").Text = settings.GeneralSettings.DefaultModificationRoundToNearest.ToString();
-
-            //settings.GeneralSettings.FastaPaths.Clear(); settings.GeneralSettings.FastaPaths.AddRange(lbFastaPaths.Items.OfType<string>().ToArray());
-            //settings.GeneralSettings.SourcePaths.Clear(); settings.GeneralSettings.SourcePaths.AddRange(lbSourcePaths.Items.OfType<string>().ToArray());
-
-            options.Get<TextBox>("sourceExtensionsTextBox").Text = settings.GeneralSettings.SourceExtensions;
-
-            options.Get<CheckBox>("nonFixedDriveWarningCheckBox").Checked = settings.GUISettings.WarnAboutNonFixedDrive;
-            options.Get<CheckBox>("embedGeneMetadataWarningCheckBox").Checked = settings.GUISettings.WarnAboutNoGeneMetadata;
-
-            options.Get<Button>("btnOk").RaiseClickEvent();
-            windowStack.Pop();
-        }
-
-        /// <summary>
-        /// Launch IDPicker without any arguments and return the values from the options menu (the Settings are not directly accessible from a separate process)
-        /// </summary>
-        public IDPickerAllSettings GetSettings()
-        {
-            var settings = new IDPickerAllSettings();
-
-            TestContext.LaunchAppTest("IDPicker.exe", "", (app, windowStack) => { settings = GetSettings(app, windowStack); });
-
-            return settings;
-        }
-
-        /// <summary>
-        /// Launch IDPicker without any arguments and set up the options menu according to the given settings parameter (the Settings are not directly accessible from a separate process)
-        /// </summary>
-        public void SetSettings(IDPickerAllSettings settings)
-        {
-            TestContext.LaunchAppTest("IDPicker.exe", "", (app, windowStack) => { SetSettings(app, windowStack, settings); });
-        }
-
-        public IDPickerAllSettings GetAndSetTestSettings(Application app, Stack<Window> windowStack)
-        {
-            var settings = new IDPickerAllSettings();
-            SetSettings(app, windowStack, settings);
-            return settings;
-        }
-
-        public IDPickerAllSettings GetAndSetTestSettings()
-        {
-            IDPickerAllSettings settings = null;
-            TestContext.LaunchAppTest("IDPicker.exe", "", (app, windowStack) => { settings = GetAndSetTestSettings(app, windowStack); });
-            return settings;
+            if (File.Exists(originalFilepath))
+                return originalFilepath;
+            else
+                return Path.GetFileName(originalFilepath);
         }
 
         [TestMethod]
         public void ImportSingleFileOnOpen()
         {
             // get settings in a separate invocation because import starts immediately when a file is passed on the command-line
-            var settings = GetAndSetTestSettings();
+            var settings = TestContext.GetAndSetTestSettings();
 
             // this lambda allow reusing of the testing code; we can change only UI parameters to create a specific AppRunner
             Func<AppRunner> createTestCase = () =>
@@ -337,15 +189,15 @@ namespace Test
                             Thread.Sleep(500);
 
                         // refresh settings
-                        settings = GetSettings(app, windowStack);
+                        settings = app.GetSettings(windowStack);
                         Assert.AreEqual(false, settings.GUISettings.WarnAboutNoGeneMetadata);
 
                         // reset to original state
                         settings.GUISettings.WarnAboutNoGeneMetadata = true;
-                        SetSettings(app, windowStack, settings);
+                        app.SetSettings(windowStack, settings);
                     }
 
-                    WaitForReady(statusText);
+                    statusText.WaitForReady();
 
                     window = app.GetWindow(SearchCriteria.ByAutomationId("IDPickerForm"), InitializeOption.NoCache);
                     var dockableForms = window.GetDockableForms();
@@ -377,7 +229,7 @@ namespace Test
             if (!settings.GUISettings.WarnAboutNoGeneMetadata)
             {
                 settings.GUISettings.WarnAboutNoGeneMetadata = true;
-                SetSettings(settings);
+                TestContext.SetSettings(settings);
             }
 
             var inputFiles = new string[] { "201203-624176-12-mm.pepXML" };
@@ -387,7 +239,7 @@ namespace Test
             TestContext.LaunchAppTest("IDPicker.exe", TestContext.TestOutputPath("*.*").QuotePathWithSpaces() + " --test-ui-layout", createTestCase(), closeAppOnError: true);
 
             settings.GUISettings.WarnAboutNoGeneMetadata = false;
-            SetSettings(settings);
+            TestContext.SetSettings(settings);
 
             TestOutputSubdirectory = TestContext.TestName;
             TestContext.CopyTestInputFiles(inputFiles);
@@ -398,7 +250,7 @@ namespace Test
         public void ImportMultipleFilesOnOpen()
         {
             // get settings in a separate invocation because import starts immediately when a file is passed on the command-line
-            var settings = GetAndSetTestSettings();
+            var settings = TestContext.GetAndSetTestSettings();
 
             // this lambda allow reusing of the testing code; we can change only UI parameters to create a specific AppRunner
             Func<string, AppRunner> createTestCase = (mergedOutputFilepath) =>
@@ -439,9 +291,9 @@ namespace Test
                     Assert.AreEqual(4, settingsTable.Rows.Count);
 
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", "cow.protein.PRG2012-subset.fasta", "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", FilepathOrFilename(settingsTable.Rows[0].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", FilepathOrFilename(settingsTable.Rows[1].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", FilepathOrFilename(settingsTable.Rows[2].Cells[1].Value.ToString()), "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
                     UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
@@ -479,15 +331,15 @@ namespace Test
                             Thread.Sleep(500);
 
                         // refresh settings
-                        settings = GetSettings(app, windowStack);
+                        settings = app.GetSettings(windowStack);
                         Assert.AreEqual(false, settings.GUISettings.WarnAboutNoGeneMetadata);
 
                         // reset to original state
                         settings.GUISettings.WarnAboutNoGeneMetadata = true;
-                        SetSettings(app, windowStack, settings);
+                        app.SetSettings(windowStack, settings);
                     }
 
-                    WaitForReady(statusText);
+                    statusText.WaitForReady();
 
                     window = app.GetWindow(SearchCriteria.ByAutomationId("IDPickerForm"), InitializeOption.NoCache);
                     var dockableForms = window.GetDockableForms();
@@ -519,7 +371,7 @@ namespace Test
             if (!settings.GUISettings.WarnAboutNoGeneMetadata)
             {
                 settings.GUISettings.WarnAboutNoGeneMetadata = true;
-                SetSettings(settings);
+                TestContext.SetSettings(settings);
             }
 
             var inputFiles = new string[] { "201208-378803-*.mzid", "201208-378803-*xml", "F003098.dat" };
@@ -533,7 +385,7 @@ namespace Test
             TestContext.LaunchAppTest("IDPicker.exe", TestContext.TestOutputPath("*.*").QuotePathWithSpaces() + " -MergedOutputFilepath foobar.idpDB --test-ui-layout", createTestCase("foobar.idpDB"), closeAppOnError: true);
 
             settings.GUISettings.WarnAboutNoGeneMetadata = false;
-            SetSettings(settings);
+            TestContext.SetSettings(settings);
 
             TestOutputSubdirectory = TestContext.TestName + "-MergedOutputFilepath";
             TestContext.CopyTestInputFiles(inputFiles);
@@ -554,7 +406,7 @@ namespace Test
                     var statusText = statusBar.Get<TextBox>();
                     windowStack.Push(window);
 
-                    settings = GetAndSetTestSettings(app, windowStack);
+                    settings = app.GetAndSetTestSettings(windowStack);
 
                     var menu = window.RawGet<MenuBar>(SearchCriteria.ByAutomationId("menuStrip1"), 2);
                     //menu.MenuItemBy(SearchCriteria.ByAutomationId("toolsToolStripMenuItem"), SearchCriteria.ByAutomationId("optionsToolStripMenuItem")).Click();
@@ -602,9 +454,9 @@ namespace Test
                     Assert.AreEqual(4, settingsTable.Rows.Count);
 
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", "cow.protein.PRG2012-subset.fasta", "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", FilepathOrFilename(settingsTable.Rows[0].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", FilepathOrFilename(settingsTable.Rows[1].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", FilepathOrFilename(settingsTable.Rows[2].Cells[1].Value.ToString()), "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
                     UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
@@ -634,7 +486,7 @@ namespace Test
                         prompt.Get<Button>("embedButton").RaiseClickEvent();
                     }
 
-                    WaitForReady(statusText);
+                    statusText.WaitForReady();
 
                     window = app.GetWindow(SearchCriteria.ByAutomationId("IDPickerForm"), InitializeOption.NoCache);
                     var dockableForms = window.GetDockableForms();
@@ -670,7 +522,7 @@ namespace Test
 
             // toggle embed gene metadata warning
             settings.GUISettings.WarnAboutNoGeneMetadata = !settings.GUISettings.WarnAboutNoGeneMetadata;
-            SetSettings(settings);
+            TestContext.SetSettings(settings);
 
             // delete the idpDB files between tests
             Directory.GetFiles(TestContext.TestOutputPath(), "*.idpDB").ToList().ForEach(o => File.Delete(o));
@@ -697,7 +549,7 @@ namespace Test
 
                 var statusBar = window.Get<StatusStrip>();
                 var statusText = statusBar.Get<TextBox>();
-                WaitForReady(statusText);
+                statusText.WaitForReady();
 
                 window = app.GetWindow(SearchCriteria.ByAutomationId("IDPickerForm"), InitializeOption.NoCache);
                 var dockableForms = window.GetDockableForms();

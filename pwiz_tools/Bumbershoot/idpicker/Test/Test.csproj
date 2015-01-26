@@ -96,6 +96,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Accessibility" />
     <Reference Include="Castle.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
@@ -147,8 +148,10 @@
     </Reference>
     <Reference Include="UIAutomationClient" />
     <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmbedSpectraTests.cs" />
     <Compile Include="ImportFileTests.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -158,6 +161,7 @@
     <Compile Include="TestModel.cs" />
     <Compile Include="TestQonverter.cs" />
     <Compile Include="TestUtil.cs" />
+    <Compile Include="ModificationViewTests.cs" />
     <Compile Include="UnitTestExtensions.cs" />
     <Compile Include="WhiteExtensions.cs">
       <SubType>Code</SubType>

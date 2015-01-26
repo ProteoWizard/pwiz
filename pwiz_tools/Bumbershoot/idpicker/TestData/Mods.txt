@@ -40,7 +40,7 @@ NumMods=2
 #15.994915,M,opt,any,Oxidation			# Oxidation M (mass is used instead of CompositionStr)
 #C2H3NO,*,opt,N-term,Carbamidomethyl		# Variable Carbamidomethyl N-term
 #H-2O-1,E,opt,N-term,Glu->pyro-Glu			# Pyro-glu from E
-#C2H2O,*,opt,Prot-N-term,Acetyl			# Acetylation Protein N-term
+C2H2O,*,opt,Prot-N-term,Acetyl			# Acetylation Protein N-term
 #C2H2O1,K,opt,any,Acetyl			# Acetylation K
 #CH2,K,opt,any,Methyl				# Methylation K
 #HO3P,STY,opt,any,Phospho			# Phosphorylation STY

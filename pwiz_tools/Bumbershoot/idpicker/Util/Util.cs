@@ -33,6 +33,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace IDPicker
 {
@@ -70,6 +71,24 @@ namespace IDPicker
         /// </summary>
         /// <param name="action">action to try</param>
         public static void TryRepeatedly (Action action) { TryRepeatedly<Exception>(action, 2, 500); }
+
+        public static void InitializeAccessibleNames(this Control control)
+        {
+            var toolstrip = control as ToolStrip;
+            //var dgv = control as DataGridView;
+            if (toolstrip != null)
+            {
+                foreach (var button in toolstrip.Items.OfType<ToolStripButton>())
+                    button.AccessibleName = button.Name;
+
+                var hostedControls = toolstrip.Items.OfType<ToolStripControlHost>().ToList();
+                for (int i = 0; i < hostedControls.Count && i < control.Controls.Count; ++i)
+                    control.Controls[i].Name = hostedControls[i].Name;
+            }
+            else
+                foreach (var child in control.Controls.Cast<Control>())
+                    InitializeAccessibleNames(child);
+        }
 
         /// <summary>
         /// Generate a CRC32 checksum from a byte array.

@@ -115,6 +115,15 @@ namespace Test
         {
             string[] input;
 
+            Assert.AreEqual("D:/testfoo.idpDB", Util.GetCommonFilename("D:/testfoo.pepXML"));
+            Assert.AreEqual("D:/test.foo.idpDB", Util.GetCommonFilename("D:/test.foo.pepXML"));
+            Assert.AreEqual("D:/test.idpDB", Util.GetCommonFilename("D:/test.pep.xml"));
+            Assert.AreEqual("D:/test.foo.idpDB", Util.GetCommonFilename("D:/test.foo.pep.xml"));
+            Assert.AreEqual("D:/test.mzid.idpDB", Util.GetCommonFilename("D:/test.mzid.xml"));
+            Assert.AreEqual("D:/test.foo.mzid.idpDB", Util.GetCommonFilename("D:/test.foo.mzid.xml"));
+            Assert.AreEqual("D:/test.idpDB", Util.GetCommonFilename("D:/test.idpDB"));
+            Assert.AreEqual("D:/test.foo.idpDB", Util.GetCommonFilename("D:/test.foo.idpDB"));
+
             input = new string[] {"D:/testfoo.pepXML", "D:/testbar.pepXML"};
             Assert.AreEqual("D:/test.idpDB", Util.GetCommonFilename(input));
 

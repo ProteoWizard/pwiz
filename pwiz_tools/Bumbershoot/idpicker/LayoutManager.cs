@@ -49,7 +49,7 @@ namespace IDPicker
                 foreach(var form in dockPanel.Contents.OfType<DockableForm>())
                     if (!_currentLayout.PaneLocations.Contains(form.Name))
                     {
-                        MessageBox.Show("No entry in layout for form \"" + form.Name + "\"");
+                        // TODO: log this message MessageBox.Show("No entry in layout for form \"" + form.Name + "\"");
                         _currentLayout.PaneLocations = getPaneLocationXML();
                         break;
                     }

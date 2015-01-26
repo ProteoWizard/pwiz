@@ -124,7 +124,7 @@ namespace Test
             {
                 testAction(app, windowStack);
 
-                if (!closeAppOnError)
+                if (!closeAppOnError && !app.HasExited)
                     app.Kill();
             }
             catch (Exception e)
@@ -141,7 +141,7 @@ namespace Test
             }
             finally
             {
-                if (closeAppOnError)
+                if (closeAppOnError && !app.HasExited)
                     app.Kill();
             }
         }

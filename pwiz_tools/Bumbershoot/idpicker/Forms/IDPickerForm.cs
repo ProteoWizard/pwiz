@@ -74,6 +74,7 @@ namespace IDPicker
         DistributionStatisticsForm distributionStatisticsForm;
         RescuePSMsForm reassignPSMsForm;
         FilterHistoryForm filterHistoryForm;
+        PTMAttestationForm ptmAttestationForm;
 
         IList<IPersistentForm> persistentForms;
 
@@ -161,6 +162,10 @@ namespace IDPicker
             reassignPSMsForm = new RescuePSMsForm(this);
             reassignPSMsForm.Show(dockPanel, DockState.DockBottomAutoHide);
             reassignPSMsForm.AutoHidePortion = 0.5;
+
+            ptmAttestationForm = new PTMAttestationForm(this);
+            ptmAttestationForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            ptmAttestationForm.AutoHidePortion = 0.5;
 
             spectrumTableForm = new SpectrumTableForm();
             spectrumTableForm.Show(dockPanel, DockState.DockLeft);
@@ -294,7 +299,7 @@ namespace IDPicker
                 var clearProgressInvoker = new BackgroundWorker();
                 clearProgressInvoker.DoWork += delegate
                 {
-                    Thread.Sleep(500);
+                    Thread.Sleep(200);
                     clearProgress(e.Message);
                 };
                 clearProgressInvoker.RunWorkerAsync();
@@ -746,6 +751,7 @@ namespace IDPicker
             distributionStatisticsForm.SetData(session, viewFilter);
 
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
+            ptmAttestationForm.SetData(session, basicFilter);
         }
 
         void setControlsWhenDatabaseLocked(bool isLocked)
@@ -1092,7 +1098,7 @@ namespace IDPicker
                                                                    string.Empty) + ".idpDB").ToList();
 
                 // for Mascot files (*.dat), use parseSource() to get the real filename, else save time by just using filename without extension
-                var sourceNames = filepaths.Select(o => Path.Combine(Path.GetDirectoryName(o), o.ToLower().EndsWith(".dat") ? Parser.ParseSource(o) : Path.GetFileNameWithoutExtension(o.Replace(".pep.xml", ".pepXML"))));
+                var sourceNames = filepaths.Select(o => Path.Combine(Path.GetDirectoryName(o), o.ToLower().EndsWith(".dat") ? Parser.ParseSource(o) : Path.GetFileNameWithoutExtension(o.Replace(".pep.xml", ".pepXML")) + Path.GetExtension(o)));
 
                 string commonFilepath = Util.GetCommonFilename(sourceNames);
                 if (!openSingleFile && potentialPaths.Contains(commonFilepath))
@@ -1105,6 +1111,10 @@ namespace IDPicker
                     // check that the single idpDB is writable; if not, it needs to be copied
                     if (openSingleFile)
                     {
+                        // sanity check that file exists after the path manipulation above
+                        if (idpDB_filepaths.Count() == 1 && !File.Exists(mergeTargetFilepath))
+                            throw new Exception(String.Format("error in internal path manipulation for opening single idpDB: {0} transformed to {1} which does not exist", sourceNames.First(), mergeTargetFilepath));
+
                         string oldFilename = mergeTargetFilepath;
 
                         while (true)
@@ -1390,7 +1400,7 @@ namespace IDPicker
                             form.DockingHandler.DockAreas = (form.DockingHandler.DockAreas | DockAreas.Float);
                             var rect = dockPanel.ClientRectangle;
                             rect.Offset(i * 50, i * 50);
-                            rect.Size = new System.Drawing.Size(800, 600);
+                            rect.Size = new System.Drawing.Size(960, 600);
                             form.DockingHandler.Show(dockPanel, rect);
                         }
                     }
@@ -1512,7 +1522,8 @@ namespace IDPicker
                 return peakStatisticsForm;
             if (persistantString == typeof(DistributionStatisticsForm).ToString())
                 return distributionStatisticsForm;
-            
+            if (persistantString == typeof(PTMAttestationForm).ToString())
+                return ptmAttestationForm;
             return null;
         }
 

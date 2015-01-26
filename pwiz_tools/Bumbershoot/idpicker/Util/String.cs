@@ -35,6 +35,11 @@ namespace IDPicker
 {
     public static partial class Util
     {
+        public static string GetCommonFilename(params string[] filepaths)
+        {
+            return GetCommonFilename((IEnumerable<string>) filepaths);
+        }
+
         public static string GetCommonFilename (IEnumerable<string> filepaths)
         {
             // find longest common case-insensitive prefix, but then restore the real case

@@ -105,6 +105,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Accessibility" />
     <Reference Include="Castle.Core">
       <HintPath>packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
@@ -115,6 +116,10 @@
     <Reference Include="Iesi.Collections, Version=1.0.1.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Iesi.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="IMP.PhosphoRS, Version=3.0.0.3, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\PhosphoRS\IMP.PhosphoRS.dll</HintPath>
     </Reference>
     <Reference Include="InteropQonverter, Version=3.0.511.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
@@ -296,6 +301,12 @@
     <Compile Include="Forms\ProgressForm.Designer.cs">
       <DependentUpon>ProgressForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\PTMAttestationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PTMAttestationForm.Designer.cs">
+      <DependentUpon>PTMAttestationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\QonverterSettingsManagerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -393,6 +404,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\EmbedGeneMetadataWarningForm.resx">
       <DependentUpon>EmbedGeneMetadataWarningForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PTMAttestationForm.resx">
+      <DependentUpon>PTMAttestationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\RTGroupingForm.resx">
       <DependentUpon>RTGroupingForm.cs</DependentUpon>

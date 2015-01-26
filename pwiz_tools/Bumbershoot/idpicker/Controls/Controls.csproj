@@ -142,6 +142,9 @@
     <Compile Include="SilentTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ToolStripNumericUpDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TreeDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>

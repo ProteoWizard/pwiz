@@ -214,6 +214,9 @@ namespace IDPicker.Forms
             base.OnLoad(e);
 
             treeDataGridView.ClearSelection();
+
+            // set Name of controls hosted in ToolStripControlHosts to the ToolStripItem's Name, for better UI Automation access
+            this.InitializeAccessibleNames();
         }
         
         protected virtual void OnFinishedSetData()

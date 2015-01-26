@@ -53,10 +53,10 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle15 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.exportButton = new System.Windows.Forms.Button();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.exportButton = new System.Windows.Forms.ToolStripButton();
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,26 +65,28 @@ namespace IDPicker.Forms
             this.copySelectedCellsToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectedCellsInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.MinRowLabel = new System.Windows.Forms.Label();
-            this.MinRowBox = new System.Windows.Forms.TextBox();
-            this.MinColumnBox = new System.Windows.Forms.TextBox();
-            this.MinColumnLabel = new System.Windows.Forms.Label();
-            this.unimodButton = new System.Windows.Forms.Button();
-            this.roundToNearestUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label1 = new System.Windows.Forms.Label();
-            this.pivotModeComboBox = new System.Windows.Forms.ComboBox();
-            this.switchtoTableButton = new System.Windows.Forms.Button();
-            this.GridPanel = new System.Windows.Forms.Panel();
+            this.minRowLabel = new System.Windows.Forms.ToolStripLabel();
+            this.minRowTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.minColumnTextBox = new System.Windows.Forms.ToolStripTextBox();
+            this.minColumnLabel = new System.Windows.Forms.ToolStripLabel();
+            this.unimodButton = new System.Windows.Forms.ToolStripButton();
+            this.roundToNearestUpDown = new IDPicker.Controls.ToolStripNumericUpDown();
+            this.pivotModeComboBox = new System.Windows.Forms.ToolStripComboBox();
+            this.viewModeComboBox = new System.Windows.Forms.ToolStripComboBox();
+            this.minMatchesLabel = new System.Windows.Forms.ToolStripLabel();
+            this.roundToNearestLabel = new System.Windows.Forms.ToolStripLabel();
+            this.minMatchesTextBox = new System.Windows.Forms.ToolStripTextBox();
             this.dataGridView = new IDPicker.Controls.PreviewDataGridView();
-            this.TablePanel = new System.Windows.Forms.Panel();
-            this.label3 = new System.Windows.Forms.Label();
-            this.roundToNearestTableUpDown = new System.Windows.Forms.NumericUpDown();
-            this.tablePeptidesFilterBox = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.detailDataGridView = new System.Windows.Forms.DataGridView();
-            this.switchToGridButton = new System.Windows.Forms.Button();
-            this.exportTableButton = new System.Windows.Forms.Button();
-            this.unimodTableButton = new System.Windows.Forms.Button();
+            this.accessionColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.offsetColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.siteColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.massColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.probabilityColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.peptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.matchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.spectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.unimodColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.exportDetailMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToClipboardDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToFileDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -93,31 +95,20 @@ namespace IDPicker.Forms
             this.copySelectedCellsToClipboardDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedCellsToFileDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectedCellsInExcelDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.siteColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.massColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.peptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.matchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.spectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.unimodColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.exportMenu.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.roundToNearestUpDown)).BeginInit();
-            this.GridPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
-            this.TablePanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.roundToNearestTableUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.detailDataGridView)).BeginInit();
             this.exportDetailMenu.SuspendLayout();
+            this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(718, 3);
             this.exportButton.Name = "exportButton";
-            this.exportButton.Size = new System.Drawing.Size(30, 23);
-            this.exportButton.TabIndex = 7;
-            this.exportButton.UseVisualStyleBackColor = true;
+            this.exportButton.Size = new System.Drawing.Size(23, 23);
             this.exportButton.Click += new System.EventHandler(this.exportButton_Click);
             // 
             // exportMenu
@@ -180,69 +171,55 @@ namespace IDPicker.Forms
             this.showSelectedCellsInExcelToolStripMenuItem.Text = "Show Selected Cells in Excel";
             this.showSelectedCellsInExcelToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
-            // MinRowLabel
+            // minRowLabel
             // 
-            this.MinRowLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.MinRowLabel.AutoSize = true;
-            this.MinRowLabel.Location = new System.Drawing.Point(312, 8);
-            this.MinRowLabel.Name = "MinRowLabel";
-            this.MinRowLabel.Size = new System.Drawing.Size(75, 13);
-            this.MinRowLabel.TabIndex = 5;
-            this.MinRowLabel.Text = "Row minimum:";
+            this.minRowLabel.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.minRowLabel.Name = "minRowLabel";
+            this.minRowLabel.Size = new System.Drawing.Size(89, 23);
+            this.minRowLabel.Text = "Row minimum:";
             // 
-            // MinRowBox
+            // minRowTextBox
             // 
-            this.MinRowBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.MinRowBox.Location = new System.Drawing.Point(394, 5);
-            this.MinRowBox.Name = "MinRowBox";
-            this.MinRowBox.Size = new System.Drawing.Size(47, 20);
-            this.MinRowBox.TabIndex = 3;
-            this.MinRowBox.Text = "2";
-            this.MinRowBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
-            this.MinRowBox.Leave += new System.EventHandler(this.ModFilter_Leave);
+            this.minRowTextBox.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.minRowTextBox.Name = "minRowTextBox";
+            this.minRowTextBox.Size = new System.Drawing.Size(47, 26);
+            this.minRowTextBox.Text = "2";
+            this.minRowTextBox.Leave += new System.EventHandler(this.ModFilter_Leave);
+            this.minRowTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
             // 
-            // MinColumnBox
+            // minColumnTextBox
             // 
-            this.MinColumnBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.MinColumnBox.Location = new System.Drawing.Point(259, 5);
-            this.MinColumnBox.Name = "MinColumnBox";
-            this.MinColumnBox.Size = new System.Drawing.Size(47, 20);
-            this.MinColumnBox.TabIndex = 2;
-            this.MinColumnBox.Text = "2";
-            this.MinColumnBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
-            this.MinColumnBox.Leave += new System.EventHandler(this.ModFilter_Leave);
+            this.minColumnTextBox.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.minColumnTextBox.Name = "minColumnTextBox";
+            this.minColumnTextBox.Size = new System.Drawing.Size(47, 26);
+            this.minColumnTextBox.Text = "2";
+            this.minColumnTextBox.Leave += new System.EventHandler(this.ModFilter_Leave);
+            this.minColumnTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
             // 
-            // MinColumnLabel
+            // minColumnLabel
             // 
-            this.MinColumnLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.MinColumnLabel.AutoSize = true;
-            this.MinColumnLabel.Location = new System.Drawing.Point(164, 8);
-            this.MinColumnLabel.Name = "MinColumnLabel";
-            this.MinColumnLabel.Size = new System.Drawing.Size(88, 13);
-            this.MinColumnLabel.TabIndex = 7;
-            this.MinColumnLabel.Text = "Column minimum:";
+            this.minColumnLabel.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.minColumnLabel.Name = "minColumnLabel";
+            this.minColumnLabel.Size = new System.Drawing.Size(109, 23);
+            this.minColumnLabel.Text = "Column minimum:";
             // 
             // unimodButton
             // 
-            this.unimodButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.unimodButton.Location = new System.Drawing.Point(559, 3);
+            this.unimodButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.unimodButton.Name = "unimodButton";
-            this.unimodButton.Size = new System.Drawing.Size(77, 23);
-            this.unimodButton.TabIndex = 5;
+            this.unimodButton.Size = new System.Drawing.Size(83, 23);
             this.unimodButton.Text = "Unimod Filter";
-            this.unimodButton.UseVisualStyleBackColor = true;
             this.unimodButton.Click += new System.EventHandler(this.unimodButton_Click);
             // 
             // roundToNearestUpDown
             // 
-            this.roundToNearestUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.roundToNearestUpDown.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.roundToNearestUpDown.DecimalPlaces = 4;
             this.roundToNearestUpDown.Increment = new decimal(new int[] {
             1,
             0,
             0,
             262144});
-            this.roundToNearestUpDown.Location = new System.Drawing.Point(105, 5);
             this.roundToNearestUpDown.Maximum = new decimal(new int[] {
             10,
             0,
@@ -254,69 +231,62 @@ namespace IDPicker.Forms
             0,
             262144});
             this.roundToNearestUpDown.Name = "roundToNearestUpDown";
-            this.roundToNearestUpDown.Size = new System.Drawing.Size(53, 20);
-            this.roundToNearestUpDown.TabIndex = 1;
+            this.roundToNearestUpDown.Size = new System.Drawing.Size(62, 23);
+            this.roundToNearestUpDown.Text = "0.0001";
             this.roundToNearestUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
-            0});
+            262144});
             this.roundToNearestUpDown.ValueChanged += new System.EventHandler(this.roundToNearestUpDown_ValueChanged);
-            // 
-            // label1
-            // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 8);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(92, 13);
-            this.label1.TabIndex = 11;
-            this.label1.Text = "Round to nearest:";
             // 
             // pivotModeComboBox
             // 
-            this.pivotModeComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.pivotModeComboBox.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.pivotModeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.pivotModeComboBox.FormattingEnabled = true;
             this.pivotModeComboBox.Items.AddRange(new object[] {
             "Spectra",
             "Distinct Matches",
             "Distinct Peptides"});
-            this.pivotModeComboBox.Location = new System.Drawing.Point(447, 4);
             this.pivotModeComboBox.Name = "pivotModeComboBox";
-            this.pivotModeComboBox.Size = new System.Drawing.Size(106, 21);
-            this.pivotModeComboBox.TabIndex = 4;
+            this.pivotModeComboBox.Size = new System.Drawing.Size(106, 26);
             this.pivotModeComboBox.SelectedIndexChanged += new System.EventHandler(this.pivotModeComboBox_SelectedIndexChanged);
             // 
-            // switchtoTableButton
+            // viewModeComboBox
             // 
-            this.switchtoTableButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.switchtoTableButton.Location = new System.Drawing.Point(642, 3);
-            this.switchtoTableButton.Name = "switchtoTableButton";
-            this.switchtoTableButton.Size = new System.Drawing.Size(70, 23);
-            this.switchtoTableButton.TabIndex = 6;
-            this.switchtoTableButton.Text = "Detail View";
-            this.switchtoTableButton.UseVisualStyleBackColor = true;
-            this.switchtoTableButton.Click += new System.EventHandler(this.switchViewButton_Click);
+            this.viewModeComboBox.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.viewModeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.viewModeComboBox.DropDownWidth = 120;
+            this.viewModeComboBox.Items.AddRange(new object[] {
+            "Grid View",
+            "Detail View",
+            "Phosphosite View"});
+            this.viewModeComboBox.Name = "viewModeComboBox";
+            this.viewModeComboBox.Size = new System.Drawing.Size(120, 26);
+            this.viewModeComboBox.SelectedIndexChanged += new System.EventHandler(this.switchViewButton_Click);
             // 
-            // GridPanel
+            // minMatchesLabel
             // 
-            this.GridPanel.Controls.Add(this.label1);
-            this.GridPanel.Controls.Add(this.switchtoTableButton);
-            this.GridPanel.Controls.Add(this.pivotModeComboBox);
-            this.GridPanel.Controls.Add(this.exportButton);
-            this.GridPanel.Controls.Add(this.MinRowLabel);
-            this.GridPanel.Controls.Add(this.roundToNearestUpDown);
-            this.GridPanel.Controls.Add(this.MinRowBox);
-            this.GridPanel.Controls.Add(this.MinColumnBox);
-            this.GridPanel.Controls.Add(this.MinColumnLabel);
-            this.GridPanel.Controls.Add(this.unimodButton);
-            this.GridPanel.Controls.Add(this.dataGridView);
-            this.GridPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GridPanel.Location = new System.Drawing.Point(0, 0);
-            this.GridPanel.Name = "GridPanel";
-            this.GridPanel.Size = new System.Drawing.Size(751, 262);
-            this.GridPanel.TabIndex = 14;
+            this.minMatchesLabel.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.minMatchesLabel.Name = "minMatchesLabel";
+            this.minMatchesLabel.Size = new System.Drawing.Size(111, 23);
+            this.minMatchesLabel.Text = "Minimum Matches:";
+            // 
+            // roundToNearestLabel
+            // 
+            this.roundToNearestLabel.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.roundToNearestLabel.Name = "roundToNearestLabel";
+            this.roundToNearestLabel.Size = new System.Drawing.Size(100, 23);
+            this.roundToNearestLabel.Text = "Round to nearest:";
+            // 
+            // minMatchesTextBox
+            // 
+            this.minMatchesTextBox.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.minMatchesTextBox.Name = "minMatchesTextBox";
+            this.minMatchesTextBox.Size = new System.Drawing.Size(47, 26);
+            this.minMatchesTextBox.Text = "2";
+            this.minMatchesTextBox.Leave += new System.EventHandler(this.ModFilter_Leave);
+            this.minMatchesTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
             // 
             // dataGridView
             // 
@@ -329,117 +299,39 @@ namespace IDPicker.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle13.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle13.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle13.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle13.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle13.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle13;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle14.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle14;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView.GridColor = System.Drawing.SystemColors.Control;
             this.dataGridView.Location = new System.Drawing.Point(2, 28);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
-            dataGridViewCellStyle15.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle15.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle15.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle15.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle15.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle15.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle15.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle15;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView.RowHeadersWidth = 80;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView.Size = new System.Drawing.Size(749, 235);
+            this.dataGridView.Size = new System.Drawing.Size(1035, 235);
             this.dataGridView.TabIndex = 8;
-            // 
-            // TablePanel
-            // 
-            this.TablePanel.Controls.Add(this.detailDataGridView);
-            this.TablePanel.Controls.Add(this.label3);
-            this.TablePanel.Controls.Add(this.roundToNearestTableUpDown);
-            this.TablePanel.Controls.Add(this.tablePeptidesFilterBox);
-            this.TablePanel.Controls.Add(this.label2);
-            this.TablePanel.Controls.Add(this.switchToGridButton);
-            this.TablePanel.Controls.Add(this.exportTableButton);
-            this.TablePanel.Controls.Add(this.unimodTableButton);
-            this.TablePanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TablePanel.Location = new System.Drawing.Point(0, 0);
-            this.TablePanel.Name = "TablePanel";
-            this.TablePanel.Size = new System.Drawing.Size(751, 262);
-            this.TablePanel.TabIndex = 15;
-            this.TablePanel.Visible = false;
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(248, 8);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(92, 13);
-            this.label3.TabIndex = 21;
-            this.label3.Text = "Round to nearest:";
-            // 
-            // roundToNearestTableUpDown
-            // 
-            this.roundToNearestTableUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.roundToNearestTableUpDown.DecimalPlaces = 4;
-            this.roundToNearestTableUpDown.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            262144});
-            this.roundToNearestTableUpDown.Location = new System.Drawing.Point(346, 5);
-            this.roundToNearestTableUpDown.Maximum = new decimal(new int[] {
-            10,
-            0,
-            0,
-            0});
-            this.roundToNearestTableUpDown.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            262144});
-            this.roundToNearestTableUpDown.Name = "roundToNearestTableUpDown";
-            this.roundToNearestTableUpDown.Size = new System.Drawing.Size(53, 20);
-            this.roundToNearestTableUpDown.TabIndex = 1;
-            this.roundToNearestTableUpDown.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.roundToNearestTableUpDown.ValueChanged += new System.EventHandler(this.roundToNearestUpDown_ValueChanged);
-            // 
-            // tablePeptidesFilterBox
-            // 
-            this.tablePeptidesFilterBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tablePeptidesFilterBox.Location = new System.Drawing.Point(506, 5);
-            this.tablePeptidesFilterBox.Name = "tablePeptidesFilterBox";
-            this.tablePeptidesFilterBox.Size = new System.Drawing.Size(47, 20);
-            this.tablePeptidesFilterBox.TabIndex = 2;
-            this.tablePeptidesFilterBox.Text = "2";
-            this.tablePeptidesFilterBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
-            this.tablePeptidesFilterBox.Leave += new System.EventHandler(this.ModFilter_Leave);
-            // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(408, 8);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(95, 13);
-            this.label2.TabIndex = 18;
-            this.label2.Text = "Minimum Matches:";
             // 
             // detailDataGridView
             // 
@@ -450,50 +342,90 @@ namespace IDPicker.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
             this.detailDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.detailDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.accessionColumn,
+            this.offsetColumn,
             this.siteColumn,
             this.massColumn,
+            this.probabilityColumn,
             this.peptidesColumn,
             this.matchesColumn,
             this.spectraColumn,
             this.unimodColumn});
-            this.detailDataGridView.Location = new System.Drawing.Point(2, 28);
+            this.detailDataGridView.Location = new System.Drawing.Point(2, 26);
             this.detailDataGridView.Name = "detailDataGridView";
             this.detailDataGridView.RowHeadersVisible = false;
-            this.detailDataGridView.Size = new System.Drawing.Size(749, 234);
+            this.detailDataGridView.Size = new System.Drawing.Size(1035, 236);
             this.detailDataGridView.TabIndex = 6;
             // 
-            // switchToGridButton
+            // accessionColumn
             // 
-            this.switchToGridButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.switchToGridButton.Location = new System.Drawing.Point(642, 3);
-            this.switchToGridButton.Name = "switchToGridButton";
-            this.switchToGridButton.Size = new System.Drawing.Size(70, 23);
-            this.switchToGridButton.TabIndex = 4;
-            this.switchToGridButton.Text = "Grid View";
-            this.switchToGridButton.UseVisualStyleBackColor = true;
-            this.switchToGridButton.Click += new System.EventHandler(this.switchViewButton_Click);
+            this.accessionColumn.HeaderText = "Accession";
+            this.accessionColumn.Name = "accessionColumn";
+            this.accessionColumn.Width = 140;
             // 
-            // exportTableButton
+            // offsetColumn
             // 
-            this.exportTableButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.exportTableButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportTableButton.Location = new System.Drawing.Point(718, 3);
-            this.exportTableButton.Name = "exportTableButton";
-            this.exportTableButton.Size = new System.Drawing.Size(30, 23);
-            this.exportTableButton.TabIndex = 5;
-            this.exportTableButton.UseVisualStyleBackColor = true;
-            this.exportTableButton.Click += new System.EventHandler(this.exportButton_Click);
+            this.offsetColumn.HeaderText = "Position";
+            this.offsetColumn.Name = "offsetColumn";
+            this.offsetColumn.Width = 60;
             // 
-            // unimodTableButton
+            // siteColumn
             // 
-            this.unimodTableButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.unimodTableButton.Location = new System.Drawing.Point(559, 3);
-            this.unimodTableButton.Name = "unimodTableButton";
-            this.unimodTableButton.Size = new System.Drawing.Size(77, 23);
-            this.unimodTableButton.TabIndex = 3;
-            this.unimodTableButton.Text = "Unimod Filter";
-            this.unimodTableButton.UseVisualStyleBackColor = true;
-            this.unimodTableButton.Click += new System.EventHandler(this.unimodButton_Click);
+            this.siteColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+            this.siteColumn.FillWeight = 50F;
+            this.siteColumn.HeaderText = "Site";
+            this.siteColumn.MinimumWidth = 20;
+            this.siteColumn.Name = "siteColumn";
+            this.siteColumn.Width = 50;
+            // 
+            // massColumn
+            // 
+            this.massColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.massColumn.FillWeight = 50F;
+            this.massColumn.HeaderText = "ΔMass";
+            this.massColumn.MinimumWidth = 20;
+            this.massColumn.Name = "massColumn";
+            this.massColumn.Width = 70;
+            // 
+            // probabilityColumn
+            // 
+            this.probabilityColumn.HeaderText = "Probability";
+            this.probabilityColumn.Name = "probabilityColumn";
+            this.probabilityColumn.Width = 60;
+            // 
+            // peptidesColumn
+            // 
+            this.peptidesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.peptidesColumn.HeaderText = "Distinct Peptides";
+            this.peptidesColumn.MinimumWidth = 20;
+            this.peptidesColumn.Name = "peptidesColumn";
+            this.peptidesColumn.Width = 110;
+            // 
+            // matchesColumn
+            // 
+            this.matchesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.matchesColumn.HeaderText = "Distinct Matches";
+            this.matchesColumn.MinimumWidth = 20;
+            this.matchesColumn.Name = "matchesColumn";
+            this.matchesColumn.Width = 110;
+            // 
+            // spectraColumn
+            // 
+            this.spectraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.spectraColumn.HeaderText = "Filtered Spectra";
+            this.spectraColumn.MinimumWidth = 20;
+            this.spectraColumn.Name = "spectraColumn";
+            this.spectraColumn.Width = 110;
+            // 
+            // unimodColumn
+            // 
+            this.unimodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.unimodColumn.FillWeight = 200F;
+            this.unimodColumn.HeaderText = "Description";
+            this.unimodColumn.MinimumWidth = 20;
+            this.unimodColumn.Name = "unimodColumn";
+            this.unimodColumn.ReadOnly = true;
+            this.unimodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
             // exportDetailMenu
             // 
@@ -555,65 +487,37 @@ namespace IDPicker.Forms
             this.showSelectedCellsInExcelDetailToolStripMenuItem.Text = "Show Selected Cells in Excel";
             this.showSelectedCellsInExcelDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
-            // siteColumn
+            // toolStrip
             // 
-            this.siteColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            this.siteColumn.FillWeight = 50F;
-            this.siteColumn.HeaderText = "Site";
-            this.siteColumn.MinimumWidth = 20;
-            this.siteColumn.Name = "siteColumn";
-            this.siteColumn.Width = 50;
-            // 
-            // massColumn
-            // 
-            this.massColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.massColumn.FillWeight = 50F;
-            this.massColumn.HeaderText = "ΔMass";
-            this.massColumn.MinimumWidth = 20;
-            this.massColumn.Name = "massColumn";
-            this.massColumn.Width = 70;
-            // 
-            // peptidesColumn
-            // 
-            this.peptidesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.peptidesColumn.HeaderText = "Distinct Peptides";
-            this.peptidesColumn.MinimumWidth = 20;
-            this.peptidesColumn.Name = "peptidesColumn";
-            this.peptidesColumn.Width = 110;
-            // 
-            // matchesColumn
-            // 
-            this.matchesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.matchesColumn.HeaderText = "Distinct Matches";
-            this.matchesColumn.MinimumWidth = 20;
-            this.matchesColumn.Name = "matchesColumn";
-            this.matchesColumn.Width = 110;
-            // 
-            // spectraColumn
-            // 
-            this.spectraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.spectraColumn.HeaderText = "Filtered Spectra";
-            this.spectraColumn.MinimumWidth = 20;
-            this.spectraColumn.Name = "spectraColumn";
-            this.spectraColumn.Width = 110;
-            // 
-            // unimodColumn
-            // 
-            this.unimodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.unimodColumn.FillWeight = 200F;
-            this.unimodColumn.HeaderText = "Description";
-            this.unimodColumn.MinimumWidth = 20;
-            this.unimodColumn.Name = "unimodColumn";
-            this.unimodColumn.ReadOnly = true;
-            this.unimodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportButton,
+            this.unimodButton,
+            this.viewModeComboBox,
+            this.pivotModeComboBox,
+            this.roundToNearestUpDown,
+            this.roundToNearestLabel,
+            this.minMatchesTextBox,
+            this.minMatchesLabel,
+            this.minRowTextBox,
+            this.minRowLabel,
+            this.minColumnTextBox,
+            this.minColumnLabel});
+            this.toolStrip.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip.Name = "toolStrip";
+            this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.toolStrip.Size = new System.Drawing.Size(1037, 26);
+            this.toolStrip.TabIndex = 15;
+            this.toolStrip.Text = "Tools";
             // 
             // ModificationTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(751, 262);
-            this.Controls.Add(this.TablePanel);
-            this.Controls.Add(this.GridPanel);
+            this.ClientSize = new System.Drawing.Size(1037, 262);
+            this.Controls.Add(this.toolStrip);
+            this.Controls.Add(this.detailDataGridView);
+            this.Controls.Add(this.dataGridView);
             this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right) 
             | DigitalRune.Windows.Docking.DockAreas.Top) 
             | DigitalRune.Windows.Docking.DockAreas.Bottom) 
@@ -622,23 +526,20 @@ namespace IDPicker.Forms
             this.TabText = "ModificationTableForm";
             this.Text = "ModificationTableForm";
             this.exportMenu.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.roundToNearestUpDown)).EndInit();
-            this.GridPanel.ResumeLayout(false);
-            this.GridPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
-            this.TablePanel.ResumeLayout(false);
-            this.TablePanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.roundToNearestTableUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.detailDataGridView)).EndInit();
             this.exportDetailMenu.ResumeLayout(false);
+            this.toolStrip.ResumeLayout(false);
+            this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
         private IDPicker.Controls.PreviewDataGridView dataGridView;
-        private System.Windows.Forms.Button exportButton;
+        private System.Windows.Forms.ToolStripButton exportButton;
         private System.Windows.Forms.ContextMenuStrip exportMenu;
         private System.Windows.Forms.ToolStripMenuItem copyToClipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToFileToolStripMenuItem;
@@ -647,25 +548,18 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem copySelectedCellsToClipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectedCellsInExcelToolStripMenuItem;
-        private System.Windows.Forms.Label MinRowLabel;
-        private System.Windows.Forms.TextBox MinRowBox;
-        private System.Windows.Forms.TextBox MinColumnBox;
-        private System.Windows.Forms.Label MinColumnLabel;
-        private System.Windows.Forms.Button unimodButton;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox pivotModeComboBox;
-        private System.Windows.Forms.NumericUpDown roundToNearestUpDown;
-        private System.Windows.Forms.Button switchtoTableButton;
-        private System.Windows.Forms.Panel GridPanel;
-        private System.Windows.Forms.Panel TablePanel;
-        private System.Windows.Forms.Button switchToGridButton;
-        private System.Windows.Forms.Button exportTableButton;
-        private System.Windows.Forms.Button unimodTableButton;
+        private System.Windows.Forms.ToolStripLabel minRowLabel;
+        private System.Windows.Forms.ToolStripTextBox minRowTextBox;
+        private System.Windows.Forms.ToolStripTextBox minColumnTextBox;
+        private System.Windows.Forms.ToolStripLabel minColumnLabel;
+        private System.Windows.Forms.ToolStripButton unimodButton;
+        private System.Windows.Forms.ToolStripComboBox pivotModeComboBox;
+        private System.Windows.Forms.ToolStripComboBox viewModeComboBox;
         private System.Windows.Forms.DataGridView detailDataGridView;
-        private System.Windows.Forms.TextBox tablePeptidesFilterBox;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.NumericUpDown roundToNearestTableUpDown;
+        private System.Windows.Forms.ToolStripTextBox minMatchesTextBox;
+        private System.Windows.Forms.ToolStripLabel minMatchesLabel;
+        private System.Windows.Forms.ToolStripLabel roundToNearestLabel;
+        private IDPicker.Controls.ToolStripNumericUpDown roundToNearestUpDown;
         private System.Windows.Forms.ContextMenuStrip exportDetailMenu;
         private System.Windows.Forms.ToolStripMenuItem copyToClipboardDetailToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToFileDetailToolStripMenuItem;
@@ -674,8 +568,12 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem copySelectedCellsToClipboardDetailToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileDetailToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectedCellsInExcelDetailToolStripMenuItem;
+        private System.Windows.Forms.ToolStrip toolStrip;
+        private System.Windows.Forms.DataGridViewTextBoxColumn accessionColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn offsetColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn siteColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn massColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn probabilityColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn peptidesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn matchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn spectraColumn;

@@ -25,7 +25,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace IDPicker
+namespace IDPicker.Controls
 {
     /// <summary>
     /// TextBox subclass that can be customized to not play a beep sound for special keys like enter.
