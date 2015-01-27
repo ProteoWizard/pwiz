@@ -27,6 +27,10 @@ import modules path feature ;
 
 path-constant THIS_PATH : . ;
 
+# read these from global module
+TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
+TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
+
 rule msbuild_deploy ( targets + : sources * : properties * )
 {
     local address-model = [ feature.get-values <address-model> : $(properties) ] ;
@@ -112,6 +116,9 @@ rule test_msi ( targets + : sources * : properties * )
 
 actions test_msi
 {
+    set name=DeployTest
+    $(TEST_PRECOMMAND)
+
     IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     echo Installing $(ARTIFACT_NAME)...
@@ -119,7 +126,11 @@ actions test_msi
     msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
-    IF %EXIT% NEQ 0 exit %EXIT%
+    set status=%EXIT%
+    IF %EXIT% NEQ 0 (
+      $(TEST_POSTCOMMAND)
+      exit %EXIT%
+    )
 
     set PATH_TMP=%PATH%
     set PATH=
@@ -131,12 +142,13 @@ actions test_msi
     echo Uninstalling $(ARTIFACT_NAME)...
     msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
+    IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
     IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
-    IF %EXIT% NEQ 0 exit %EXIT%
-
-    IF %TEST_EXIT% NEQ 0 exit %TEST_EXIT%
-    echo Deployment test passed.
-    echo Deployment test passed. > $(LOCATION)\Test.passed
+    
+    set status=%TEST_EXIT%
+    $(TEST_POSTCOMMAND)
+    IF %TEST_EXIT% NEQ 0 echo Deployment test passed.
+    IF %TEST_EXIT% NEQ 0 echo Deployment test passed. > $(LOCATION)\Test.passed
 
     popd
 }

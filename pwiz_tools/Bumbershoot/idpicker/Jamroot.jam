@@ -92,6 +92,39 @@ import package ;
 import errors : error ;
 import feature ;
 import path ;
+import testing ; # needed to enable unit-test rule
+
+
+if --teamcity-test-decoration in [ modules.peek : ARGV ]
+{
+    if [ modules.peek : NT ]
+    {
+        TEST_PRECOMMAND = "set pp=##\necho %pp%teamcity[testStarted name='%name%']" ;
+        TEST_POSTCOMMAND =
+            "set pp=##\n"
+            "IF %status% NEQ 0"
+                "(echo %pp%teamcity[testFailed name='%name%' message='Exit status: %status%'] )\n" # TODO: does testFailed go to stderr? 1>&2
+            "echo %pp%teamcity[testFinished name='%name%']" ;
+        TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=" ") ;
+    }
+    else
+    {
+        TEST_PRECOMMAND = "pp=##\necho $pp\"teamcity[testStarted name='$name']\"" ;
+        TEST_POSTCOMMAND = 
+            "pp=##"
+            "if test $status -ne 0 ; then"
+                "echo $pp\"teamcity[testFailed name='$name' message='Exit status: $status']\" ;"
+            "fi"
+            "echo $pp\"teamcity[testFinished name='$name']\"" ;
+        TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
+    }
+    
+    # put raw commands in global module
+    modules.poke : TEST_PRECOMMAND : $(TEST_PRECOMMAND) ;
+    modules.poke : TEST_POSTCOMMAND : $(TEST_POSTCOMMAND) ;
+
+    TEAMCITY_TEST_DECORATION = <testing.arg>--teamcity-test-decoration ;
+}
 
 
 project idpicker
@@ -159,6 +192,8 @@ project idpicker
       <variant>debug,<toolset>msvc:<cxxflags>/FIpwiz/utility/misc/Exception.hpp
       <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
       <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+
+      $(TEAMCITY_TEST_DECORATION)
 
   : build-dir $(BUILD_PATH)
   : default-build
@@ -663,7 +698,7 @@ actions do_IDPicker_test
 {
     IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
+    echo Unit testing IDPicker in $(CONFIGURATION:L) configuration...
     set name="IDPicker unit test"
     $(TEST_PRECOMMAND)
     msbuild $(ROOT_PATH)/IDPicker.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
