@@ -104,8 +104,8 @@ namespace pwiz.SkylineTestFunctional
             string[] expectedErrors =
             {
                 Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,  // No name, no problem
-                string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, badfields[3]),
-                string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula,  badfields[4]),
+                BioMassCalc.MONOISOTOPIC.FormatArgumentExceptionMessage(badfields[3]),
+                BioMassCalc.MONOISOTOPIC.FormatArgumentExceptionMessage(badfields[4]),
                 string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, badfields[5]),
                 string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_,  badfields[6]),
                 string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_,  badfields[7]),

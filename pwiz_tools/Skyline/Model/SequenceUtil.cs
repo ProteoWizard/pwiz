@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model
             }
 
             if (totalMass == 0.0 || parse.Length > 0)
-                throw new ArgumentException(string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, desc));
+                calc.ThrowArgumentException(desc);
 
             return Math.Round(totalMass, MassPrecision);
         }
@@ -229,7 +229,7 @@ namespace pwiz.Skyline.Model
             }
 
             if ((part1.Length == 0 && part2.Length == 0) || parse.Length > 0)
-                throw new ArgumentException(string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, desc));
+                calc.ThrowArgumentException(desc);
 
             return new[] { part1, part2 };
         }
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model
             }
 
             if (parse.Length > 0)
-                throw new ArgumentException(string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, desc));
+                calc.ThrowArgumentException(desc);
         }
 
         public static string GetModDiffDescription(double massDiff)

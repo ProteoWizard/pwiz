@@ -1737,6 +1737,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  Supported chemical symbols include: .
+        /// </summary>
+        public static string BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__ {
+            get {
+                return ResourceManager.GetString("BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fixing isotope abundance masses requires a monoisotopic mass calculator.
         /// </summary>
         public static string BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator {

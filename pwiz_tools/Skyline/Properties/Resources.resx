@@ -8195,4 +8195,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_" xml:space="preserve">
     <value>Invalid drift time value {0}</value>
   </data>
+  <data name="BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__" xml:space="preserve">
+    <value> Supported chemical symbols include: </value>
+  </data>
 </root>

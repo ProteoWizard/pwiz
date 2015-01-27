@@ -264,6 +264,22 @@ namespace pwiz.Skyline.Util
 
         public MassType MassType { get; private set; }
 
+        public string FormatArgumentExceptionMessage(string desc)
+        {
+            string errmsg =
+                string.Format(
+                    Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, desc) +
+                Resources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__;
+            foreach (var key in _atomicMasses.Keys)
+                errmsg += key + " "; // NOt L10N
+            return errmsg;
+        }
+
+        public void ThrowArgumentException(string desc)
+        {
+            throw new ArgumentException(FormatArgumentExceptionMessage(desc));
+        }
+
         /// <summary>
         /// Calculate the mass of a molecule specified as a character
         /// string like "C6H11ON", or "[{atom}[count][spaces]]*", where the
@@ -277,8 +293,7 @@ namespace pwiz.Skyline.Util
             double totalMass = ParseMass(ref parse);
 
             if (totalMass == 0.0 || parse.Length > 0)
-                throw new ArgumentException(
-                    Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula);
+                ThrowArgumentException(desc);
 
             return totalMass;
         }
