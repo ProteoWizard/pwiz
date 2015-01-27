@@ -320,26 +320,26 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         if (detailLevel == DetailLevel_FullData)
         {
-        bool getLineData = msLevelsToCentroid.contains(msLevel);
+            bool getLineData = msLevelsToCentroid.contains(msLevel);
 
             result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
             automation_vector<double> mzArray, intensityArray;
 
             if (!getLineData)
-        {
+            {
                 spectrum->getProfileData(mzArray, intensityArray);
                 if (mzArray.size() == 0)
                     getLineData = true;  // We preferred profile, but there isn't any - try centroided
-        else
-            result->set(MS_profile_spectrum);
-        }
+                else
+                    result->set(MS_profile_spectrum);
+            }
 
             if (getLineData)
             {
+                result->set(MS_centroid_spectrum); // Declare this as centroided data even if scan is empty
                 spectrum->getLineData(mzArray, intensityArray);
                 if (mzArray.size() > 0)
                 {
-                    result->set(MS_centroid_spectrum);
                     result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was probably also a profile spectrum, but doesn't need conversion (actually checking for profile data is crazy slow)
                 }
             }
