@@ -53,17 +53,19 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = true;   // 2-3x faster than raw files for this test.
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-1_4.pdf";
 
             // Set to use MzML for speed, especially during debugging.
             //Skyline.Program.NoVendorReaders = true;
 
-            string supplementZip = (ExtensionTestContext.CanImportThermoRaw ?
+            string supplementZip = (UseRawFiles ?
                 @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplement.zip" : // Not L10N
                 @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip"); // Not L10N
 
             TestFilesZipPaths = new[] { supplementZip,
-                ExtensionTestContext.CanImportThermoRaw ?
+                UseRawFiles ?
                     @"https://skyline.gs.washington.edu/tutorials/MethodRefine.zip" : // Not L10N
                     @"https://skyline.gs.washington.edu/tutorials/MethodRefineMzml.zip", // Not L10N
                 @"TestTutorial\MethodRefinementViews.zip",                     
@@ -76,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Skyline Targeted Method Refinement
 
-            var folderMethodRefine = ExtensionTestContext.CanImportThermoRaw ? "MethodRefine" : "MethodRefineMzml"; // Not L10N
+            var folderMethodRefine = UseRawFiles ? "MethodRefine" : "MethodRefineMzml"; // Not L10N
 
             // Results Data, p. 2
             var doc = SkylineWindow.Document;
@@ -470,7 +472,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets = importResultsDlg1.GetDataSourcePathsFile(null),
                 openDataSourceDialog =>
                 {
-                    openDataSourceDialog.SelectAllFileType(ExtensionTestContext.ExtThermoRaw);
+                    openDataSourceDialog.SelectAllFileType(ExtThermoRaw);
                     openDataSourceDialog.Open();
                 });
             RunDlg<ImportResultsNameDlg>(importResultsDlg1.OkDialog, importResultsNameDlg0 =>

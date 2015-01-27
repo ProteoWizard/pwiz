@@ -60,6 +60,8 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = true;   // 2-3x faster than raw files for this test.
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf";
 
             TestFilesZipPaths = new[]
@@ -70,24 +72,6 @@ namespace pwiz.SkylineTestTutorial
                     @"TestTutorial\TargetedMSMSViews.zip"
                 };
             RunFunctionalTest();
-        }
-
-        private bool UseRawFiles
-        {
-            get
-            {
-                return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAgilentRaw;
-            }
-        }
-
-        private string ExtThermoRaw
-        {
-            get { return UseRawFiles ? ExtensionTestContext.ExtThermoRaw : ExtensionTestContext.ExtMzml; }
-        }
-
-        private string ExtAgilentRaw
-        {
-            get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
         }
 
         private string GetTestPath(string relativePath)
@@ -359,7 +343,7 @@ namespace pwiz.SkylineTestTutorial
             const string searchDir = "search";
             const string lowRes20Base = "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1";
             string lowRes20File = GetTestPath(Path.Combine(lowResDir, lowRes20Base + ExtThermoRaw));
-            string lowRes20FileRaw = Path.ChangeExtension(lowRes20File, ExtensionTestContext.ExtThermoRaw);
+            string lowRes20FileRaw = Path.ChangeExtension(lowRes20File, ExtThermoRaw);
             string lowRes20Search = GetTestPath(Path.Combine(lowResDir, Path.Combine(searchDir, lowRes20Base + BiblioSpecLiteBuilder.EXT_PERCOLATOR)));
             string shortLowRes20FileName = (Path.GetFileNameWithoutExtension(lowRes20File) ?? "").Substring(prefixLen);
             const string lowRes80Base = "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1";

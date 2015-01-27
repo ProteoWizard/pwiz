@@ -77,6 +77,26 @@ namespace pwiz.SkylineTestUtil
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
 
+        protected bool ForceMzml { get; set; }
+
+        protected bool UseRawFiles
+        {
+            get
+            {
+                return !ForceMzml && ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAgilentRaw;
+            }
+        }
+
+        protected string ExtThermoRaw
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtThermoRaw : ExtensionTestContext.ExtMzml; }
+        }
+
+        protected string ExtAgilentRaw
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
+        }
+
         protected bool IsEnableLiveReports
         {
             get { return Settings.Default.EnableLiveReports; }

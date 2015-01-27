@@ -50,11 +50,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = true;   // 2-3x faster than raw files for this test.
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-1_4.pdf";
 
             TestFilesZipPaths = new[]
             {
-                ExtensionTestContext.CanImportThermoRaw
+                UseRawFiles
                     ? @"https://skyline.gs.washington.edu/tutorials/iRT.zip"
                     : @"https://skyline.gs.washington.edu/tutorials/iRTMzml.zip",
                 @"TestTutorial\IrtViews.zip"
@@ -64,7 +66,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            string folderIrt = ExtensionTestContext.CanImportThermoRaw ? "iRT" : "iRTMzml"; // Not L10N
+            string folderIrt = UseRawFiles ? "iRT" : "iRTMzml"; // Not L10N
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderIrt, relativePath));
         }
 
@@ -680,7 +682,7 @@ namespace pwiz.SkylineTestTutorial
             var listPaths = new List<string>();
             foreach (string baseName in baseNames)
             {
-                string fileName = GetTestPath(baseName + ExtensionTestContext.ExtThermoRaw);
+                string fileName = GetTestPath(baseName + ExtThermoRaw);
                 if (multiFile)
                     listPaths.Add(fileName);
                 else
