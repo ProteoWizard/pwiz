@@ -27,6 +27,7 @@
  */
 
 
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -94,6 +95,10 @@ int main(int argc, char* argv[])
     BiblioSpec::Reportfile targetReport(options_table);
     BiblioSpec::Reportfile decoyReport(options_table);
     string reportFileName = getTargetReportName(specFileName, options_table);
+    string finalReport = reportFileName;
+    string tmpReport = reportFileName;
+    tmpReport += ".tmp";
+    reportFileName = tmpReport;
     targetReport.open(reportFileName.c_str());
     if( options_table["decoys-per-target"].as<int>() > 0 ){
         BiblioSpec::replaceExtension(reportFileName,"decoy.report"); 
@@ -154,6 +159,9 @@ int main(int argc, char* argv[])
     // todo close report file
     delete fileReader;
     delete psmFile;
+    
+    rename(tmpReport.c_str(), finalReport.c_str());
+    
     return 0;
 
 }// end main
