@@ -51,9 +51,11 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = true;   // Mzml is ~8x faster for this test.
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf";
 
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw
+            TestFilesZip = UseRawFiles
                                ? @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip"
                                : @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuantMzml.zip";
             RunFunctionalTest();
@@ -61,7 +63,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";
+            var folderAbsoluteQuant = UseRawFiles ? "AbsoluteQuant" : "AbsoluteQuantMzml";
             // Generating a Transition List, p. 4
             {
                 var doc = SkylineWindow.Document;

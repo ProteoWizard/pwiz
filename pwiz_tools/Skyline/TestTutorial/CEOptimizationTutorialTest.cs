@@ -48,11 +48,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = true;   // Mzml is ~2x faster for this test.
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf";
 
             TestFilesZipPaths = new[]
                 {
-                    ExtensionTestContext.CanImportThermoRaw
+                    UseRawFiles
                         ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
                         : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip",
                     @"TestTutorial\CEOptimizationViews.zip"
@@ -62,7 +64,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
+            var folderOptimizeCE = UseRawFiles ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderOptimizeCE, relativePath));
         }
 
@@ -126,7 +128,7 @@ namespace pwiz.SkylineTestTutorial
                         // This is not actually a valid file path (missing OptimizeCE)
                         // but Skyline should correctly find the file in the same folder
                         // as the document.
-                        new[] { MsDataFileUri.Parse(GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw))})}; // Not L10N
+                        new[] { MsDataFileUri.Parse(GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtThermoRaw))})}; // Not L10N
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });

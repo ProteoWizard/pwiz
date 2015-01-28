@@ -62,11 +62,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = false;  // Mzml isn't faster for this test.
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/PeakPicking_2-5.pdf";
 
             TestFilesZipPaths = new[]
                 {
-                    ExtensionTestContext.CanImportAbWiff
+                    UseRawFiles
                         ? @"https://skyline.gs.washington.edu/tutorials/PeakPicking.zip"
                         : @"https://skyline.gs.washington.edu/tutorials/PeakPickingMzml.zip",
                     @"TestTutorial\PeakPickingViews.zip"
@@ -76,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            var folderTutorial = ExtensionTestContext.CanImportAbWiff ? "PeakPicking" : "PeakPickingMzml"; // Not L10N
+            var folderTutorial = UseRawFiles ? "PeakPicking" : "PeakPickingMzml"; // Not L10N
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderTutorial, relativePath));
         }
 
@@ -128,7 +130,7 @@ namespace pwiz.SkylineTestTutorial
                 for (int i = 0; i < 5; ++i)
                 {
                     path[i] = new KeyValuePair<string, MsDataFileUri[]>(_importFiles[i],
-                                            new[] { MsDataFileUri.Parse(GetTestPath(_importFiles[i] + ExtensionTestContext.ExtAbWiff)) });
+                                            new[] { MsDataFileUri.Parse(GetTestPath(_importFiles[i] + ExtAbWiff)) });
                 }
 
                 importResultsDlg.NamedPathSets = path;

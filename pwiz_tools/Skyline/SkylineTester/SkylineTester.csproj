@@ -181,6 +181,7 @@
     <Compile Include="TabNightly.cs" />
     <Compile Include="TabOutput.cs" />
     <Compile Include="TabQuality.cs" />
+    <Compile Include="TabRunStats.cs" />
     <Compile Include="TabTests.cs" />
     <Compile Include="TabTutorials.cs" />
     <Compile Include="Try.cs" />

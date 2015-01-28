@@ -54,11 +54,13 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            ForceMzml = false;
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-1_4.pdf";
 
             TestFilesZipPaths = new[]
                 {
-                    ExtensionTestContext.CanImportAbWiff
+                    UseRawFiles
                         ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
                         : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip",
                     @"TestTutorial\ExistingExperimentsViews.zip"
@@ -72,7 +74,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            var folderExistQuant = ExtensionTestContext.CanImportAbWiff ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
+            var folderExistQuant = UseRawFiles ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
             return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
@@ -290,9 +292,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Study 7"));
-                openDataSourceDialog1.SelectAllFileType(ExtensionTestContext.ExtAbWiff);
+                openDataSourceDialog1.SelectAllFileType(ExtAbWiff);
             });
-            if (ExtensionTestContext.CanImportAbWiff)
+            if (UseRawFiles)
             {
                 var importResultsSamplesDlg = ShowDialog<ImportResultsSamplesDlg>(openDataSourceDialog1.Open);
                 PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form", 23);

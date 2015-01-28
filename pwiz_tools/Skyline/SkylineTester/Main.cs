@@ -267,7 +267,7 @@ namespace SkylineTester
             }
         }
 
-        public void InitLogSelector(ComboBox combo, Button openButton)
+        public void InitLogSelector(ComboBox combo, Button openButton = null)
         {
             combo.Items.Clear();
             
@@ -275,7 +275,8 @@ namespace SkylineTester
             foreach (var run in Summary.Runs)
                 AddRun(run, combo);
 
-            openButton.Enabled = (combo.Items.Count > 0);
+            if (openButton != null)
+                openButton.Enabled = (combo.Items.Count > 0);
         }
 
         public void AddRun(Summary.Run run, ComboBox combo)

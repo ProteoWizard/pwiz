@@ -113,6 +113,7 @@ namespace SkylineTester
         private TabQuality _tabQuality;
         private TabNightly _tabNightly;
         private TabOutput _tabOutput;
+        private TabRunStats _tabRunStats;
         private TabBase[] _tabs;
 
         private int _findPosition;
@@ -299,6 +300,7 @@ namespace SkylineTester
             _tabQuality = new TabQuality();
             _tabNightly = new TabNightly();
             _tabOutput = new TabOutput();
+            _tabRunStats = new TabRunStats();
 
             _tabs = new TabBase[]
             {
@@ -308,7 +310,8 @@ namespace SkylineTester
                 _tabBuild,
                 _tabQuality,
                 _tabNightly,
-                _tabOutput
+                _tabOutput,
+                _tabRunStats
             };
             NightlyTabIndex = Array.IndexOf(_tabs, _tabNightly);
 
@@ -964,7 +967,9 @@ namespace SkylineTester
         public Button           ButtonOpenLog               { get { return buttonOpenLog; } }
         public Button           ButtonViewLog               { get { return buttonViewLog; } }
         public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
+        public ComboBox         ComboRunStats               { get { return comboBoxRunStats; } }
         public CommandShell     CommandShell                { get { return commandShell; } }
+        public DataGridView     DataGridRunStats            { get { return dataGridRunStats; } }
         public Button           DeleteNightlyTask           { get { return buttonDeleteNightlyTask; } }
         public RichTextBox      ErrorConsole                { get { return errorConsole; } }
         public ComboBox         FormsLanguage               { get { return formsLanguage; } }
@@ -1246,6 +1251,11 @@ namespace SkylineTester
             showMatchingPagesTutorial.Enabled = pauseChecked;
             if (!pauseChecked)
                 showMatchingPagesTutorial.Checked = false;
+        }
+
+        private void comboBoxRunStats_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _tabRunStats.Process(GetSelectedLog(comboBoxRunStats));
         }
 
         #endregion Control events

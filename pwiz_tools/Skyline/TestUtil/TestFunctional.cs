@@ -83,13 +83,18 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return !ForceMzml && ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAgilentRaw;
+                return !ForceMzml && ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAgilentRaw && ExtensionTestContext.CanImportAbWiff;
             }
         }
 
         protected string ExtThermoRaw
         {
             get { return UseRawFiles ? ExtensionTestContext.ExtThermoRaw : ExtensionTestContext.ExtMzml; }
+        }
+
+        protected string ExtAbWiff
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtAbWiff : ExtensionTestContext.ExtMzml; }
         }
 
         protected string ExtAgilentRaw
