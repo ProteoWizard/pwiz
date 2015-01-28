@@ -404,8 +404,8 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<PeptidePrediction>("<peptide_prediction measured_rt_window=\"5.0\"/>");
 
             // Errors (out of range)
-            AssertEx.DeserializeError<PeptidePrediction>("<peptide_prediction measured_rt_window=\"0.1\"/>");
-            AssertEx.DeserializeError<PeptidePrediction>("<peptide_prediction measured_rt_window=\"60.0\"/>");
+            AssertEx.DeserializeError<PeptidePrediction>("<peptide_prediction measured_rt_window=\"0.01\"/>");
+            AssertEx.DeserializeError<PeptidePrediction>("<peptide_prediction measured_rt_window=\"600.0\"/>");
         }
 
         /// <summary>

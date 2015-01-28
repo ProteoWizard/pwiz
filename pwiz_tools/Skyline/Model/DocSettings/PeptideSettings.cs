@@ -228,8 +228,8 @@ namespace pwiz.Skyline.Model.DocSettings
     public class PeptidePrediction : Immutable, IValidating, IXmlSerializable
     {
         public const int MAX_TREND_PREDICTION_REPLICATES = 20;
-        public const double MIN_MEASURED_RT_WINDOW = 0.5;
-        public const double MAX_MEASURED_RT_WINDOW = 30.0;
+        public const double MIN_MEASURED_RT_WINDOW = 0.1;
+        public const double MAX_MEASURED_RT_WINDOW = 300.0;
         public const double DEFAULT_MEASURED_RT_WINDOW = 2.0;
 
         public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor = null)
