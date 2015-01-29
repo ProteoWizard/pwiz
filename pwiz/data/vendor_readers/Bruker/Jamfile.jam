@@ -44,6 +44,7 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
+       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ bruker-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -62,6 +63,10 @@ rule vendor-api-requirements ( properties * )
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <runtime-debugging>on in $(properties)
+        {
+            echo "[$(READER_PATH)] Debug build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -156,6 +161,10 @@ rule test-requirements ( properties * )
     else if ! <toolset>msvc in $(properties)
     {
         warn-once "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if <runtime-debugging>on in $(properties)
+    {
+        warn-once "[$(READER_PATH)] Debug build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
     else if ! [ project-exists $(API_PATH) ]
     {
