@@ -402,11 +402,14 @@ namespace TestRunner
                         // Run linear regression on memory size samples.
                         var memoryBytes = runTests.TotalMemoryBytes;
                         memoryPoints.Add(memoryBytes);
-                        slope = CalculateSlope(memoryPoints);
+                        if (memoryPoints.Count < 8)
+                            continue;
 
                         // Stop early if the leak magnitude is outside any ambiguous range.
-                        if (i >= 8 && (slope < LeakThresholdLow || slope > LeakThresholdHigh))
+                        slope = CalculateSlope(memoryPoints);
+                        if (slope < LeakThresholdLow || slope > LeakThresholdHigh)
                             break;
+                        memoryPoints.RemoveAt(0);
                     }
 
                     if (failed)
