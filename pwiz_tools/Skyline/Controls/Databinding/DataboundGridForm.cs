@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -216,6 +217,28 @@ namespace pwiz.Skyline.Controls.Databinding
         private void clearSortToolStripMenuItem_Click(object sender, EventArgs e)
         {
             BindingListSource.ApplySort(new ListSortDescriptionCollection());
+        }
+
+        /// <summary>
+        /// Displays the context menu if the user left-clicks on a column header.
+        /// </summary>
+        private void boundDataGridView_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.RowIndex != -1 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+            var args = new DataGridViewCellContextMenuStripNeededEventArgs(e.ColumnIndex, e.RowIndex);
+            boundDataGridView_CellContextMenuStripNeeded(sender, args);
+            if (null != args.ContextMenuStrip)
+            {
+                var rcCell = boundDataGridView.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
+                args.ContextMenuStrip.Show(boundDataGridView, new Point(rcCell.X + e.X, rcCell.Y + e.Y));
+            }
         }
     }
 }

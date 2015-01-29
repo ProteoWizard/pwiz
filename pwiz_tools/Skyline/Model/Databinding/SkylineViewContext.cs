@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -510,5 +511,13 @@ namespace pwiz.Skyline.Model.Databinding
             return new RowSourceInfo(rows, viewInfo);
         }
 
+        protected override TColumn InitializeColumn<TColumn>(TColumn column, PropertyDescriptor propertyDescriptor)
+        {
+            column = base.InitializeColumn(column, propertyDescriptor);
+            // Disable sorting by clicking on column headers because DataboundGridForm shows
+            // context menu on left click.
+            column.SortMode = DataGridViewColumnSortMode.Programmatic;
+            return column;
+        }
     }
 }
