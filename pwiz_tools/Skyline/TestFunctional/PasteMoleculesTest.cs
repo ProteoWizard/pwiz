@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -120,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var line = "";
                 for (var f = 0; f < fields.Count(); f++)
-                    line += ((bad == f) ? badfields[f] : fields[f]) + "\t";
+                    line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
                 TestError(line, expectedErrors[bad]);
             }
 
