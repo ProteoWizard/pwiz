@@ -60,24 +60,9 @@ namespace pwiz.SkylineTestTutorial
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
         private const string HUMAN_MINI = "Human Plasma (mini)"; // Not L10N
 
-        private static bool CanImportRawData
-        {
-            get { return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAbWiff; }
-        }
-
-        private static string ExtAbWiff
-        {
-            get { return CanImportRawData ? ExtensionTestContext.ExtAbWiff : ExtensionTestContext.ExtMzml; }
-        }
-
-//        private static string ExtThermoRaw
-//        {
-//            get { return CanImportRawData ? ExtensionTestContext.ExtThermoRaw : ExtensionTestContext.ExtMzml; }
-//        }
-
         private string GetTestPath(string relativePath)
         {
-            var folderExistGroupedStudies = CanImportRawData ? "GroupedStudies" : "GroupedStudiesMzml";
+            var folderExistGroupedStudies = UseRawFiles ? "GroupedStudies" : "GroupedStudiesMzml";
             return TestFilesDirs[0].GetTestPath(Path.Combine(folderExistGroupedStudies, relativePath));
         }
 

@@ -228,6 +228,17 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             foreach (var graphPane in GraphPanes)
             {
+                if (chromDisplayState.MinIntensity == 0)
+                {
+                    graphPane.LockYAxisAtZero = true;
+                    graphPane.YAxis.Scale.MinAuto = true;
+                }
+                else
+                {
+                    graphPane.LockYAxisAtZero = false;
+                    graphPane.YAxis.Scale.MinAuto = false;
+                    graphPane.YAxis.Scale.Min = chromDisplayState.MinIntensity;
+                }
                 if (chromDisplayState.MaxIntensity == 0)
                     graphPane.YAxis.Scale.MaxAuto = true;
                 else
@@ -419,6 +430,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected) : base(transitionGroups)
             {
                 AutoZoomChrom = GraphChromatogram.AutoZoom;
+                MinIntensity = settings.ChromatogramMinIntensity;
                 MaxIntensity = settings.ChromatogramMaxIntensity;
                 TimeRange = settings.ChromatogramTimeRange;
                 PeakRelativeTime = settings.ChromatogramTimeRangeRelative;
@@ -430,6 +442,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             
             public AutoZoomChrom AutoZoomChrom { get; private set; }
+            public double MinIntensity { get; private set; }
             public double MaxIntensity { get; private set; }
             public double TimeRange { get; private set; }
             public bool PeakRelativeTime { get; private set; }
@@ -441,6 +454,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (null != prevChromDisplayState)
                 {
                     if (Equals(AutoZoomChrom, prevChromDisplayState.AutoZoomChrom) &&
+                        Equals(MinIntensity, prevChromDisplayState.MinIntensity) &&
                         Equals(MaxIntensity, prevChromDisplayState.MaxIntensity) &&
                         Equals(TimeRange, prevChromDisplayState.TimeRange) &&
                         Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime) &&

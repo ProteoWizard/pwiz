@@ -39,6 +39,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.labelTimeUnits = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textMinIntensity = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.cbRelative = new System.Windows.Forms.CheckBox();
             this.textMaxIntensity = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -99,6 +101,8 @@
             // groupBox1
             // 
             resources.ApplyResources(this.groupBox1, "groupBox1");
+            this.groupBox1.Controls.Add(this.textMinIntensity);
+            this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.cbRelative);
             this.groupBox1.Controls.Add(this.textMaxIntensity);
             this.groupBox1.Controls.Add(this.label5);
@@ -107,6 +111,16 @@
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
+            // 
+            // textMinIntensity
+            // 
+            resources.ApplyResources(this.textMinIntensity, "textMinIntensity");
+            this.textMinIntensity.Name = "textMinIntensity";
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
             // 
             // cbRelative
             // 
@@ -185,5 +199,7 @@
         private System.Windows.Forms.CheckBox cbRelative;
         private System.Windows.Forms.CheckBox cbShowOverlappingLabels;
         private System.Windows.Forms.CheckBox cbShowMultiplePeptides;
+        private System.Windows.Forms.TextBox textMinIntensity;
+        private System.Windows.Forms.Label label4;
     }
 }

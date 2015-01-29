@@ -24,7 +24,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms.VisualStyles;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;

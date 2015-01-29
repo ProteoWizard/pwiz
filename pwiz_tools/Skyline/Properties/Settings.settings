@@ -494,5 +494,8 @@
     <Setting Name="DisplayGraphsType" Type="System.String" Scope="User">
       <Value Profile="(Default)">Tiled</Value>
     </Setting>
+    <Setting Name="ChromatogramMinIntensity" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

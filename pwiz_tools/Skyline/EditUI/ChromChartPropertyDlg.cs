@@ -45,6 +45,8 @@ namespace pwiz.Skyline.EditUI
             cbRelative.Checked = Settings.Default.ChromatogramTimeRangeRelative;
             textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString(LocalizationHelper.CurrentCulture);
 
+            if (Settings.Default.ChromatogramMinIntensity != 0)
+                textMinIntensity.Text = Settings.Default.ChromatogramMinIntensity.ToString(LocalizationHelper.CurrentCulture);
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(LocalizationHelper.CurrentCulture);
             cbShowOverlappingLabels.Checked = Settings.Default.AllowLabelOverlap;
@@ -71,6 +73,13 @@ namespace pwiz.Skyline.EditUI
             }
             bool relative = cbRelative.Checked;
 
+            double minIntensity = 0;
+            if (!string.IsNullOrEmpty(textMinIntensity.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(textMinIntensity, 0, double.MaxValue, out minIntensity))
+                    return;
+            }
+
             double maxIntensity = 0;
             if (!string.IsNullOrEmpty(textMaxIntensity.Text))
             {
@@ -82,6 +91,7 @@ namespace pwiz.Skyline.EditUI
             Settings.Default.ChromatogramFontSize = fontSize;
             Settings.Default.ChromatogramTimeRange = timeRange;
             Settings.Default.ChromatogramTimeRangeRelative = relative;
+            Settings.Default.ChromatogramMinIntensity = minIntensity;
             Settings.Default.ChromatogramMaxIntensity = maxIntensity;
             if (maxIntensity != 0)
                 Settings.Default.LockYChrom = true;
