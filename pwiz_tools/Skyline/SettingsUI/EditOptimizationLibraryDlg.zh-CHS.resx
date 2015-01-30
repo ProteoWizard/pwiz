@@ -450,9 +450,6 @@
   <metadata name="columnProductMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnProductMz.HeaderText" xml:space="preserve">
-    <value>子离子质荷比</value>
-  </data>
   <metadata name="columnValue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -516,9 +513,6 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>467, 359</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>322, 322</value>
   </data>
@@ -538,12 +532,6 @@
     <value>columnCharge</value>
   </data>
   <data name=">>columnCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name=">>columnProductMz.Name" xml:space="preserve">
-    <value>columnProductMz</value>
-  </data>
-  <data name=">>columnProductMz.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name=">>columnValue.Name" xml:space="preserve">

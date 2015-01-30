@@ -143,6 +143,8 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestMProphetValidation()
         {
+            // ReSharper disable ObjectCreationAsStatement
+
             // Good validation.
             AssertEx.NoExceptionThrown<Exception>(new Action(() =>
                 new MProphetPeakScoringModel("GoodModel", new[] {0.0}, new[] {new LegacyLogUnforcedAreaCalc()})));   // Not L10N
@@ -150,6 +152,8 @@ namespace pwiz.SkylineTestA
             // No calculator.
             AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
                 new MProphetPeakScoringModel("NoCalculator", new double[0], new IPeakFeatureCalculator[0])));   // Not L10N
+
+            // ReSharper restore ObjectCreationAsStatement
         }
 
         [TestMethod]

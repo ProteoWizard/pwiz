@@ -126,9 +126,6 @@
     <value>19, 247</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-  <data name="linkProteome.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="linkProteome.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 17</value>
   </data>
@@ -156,9 +153,6 @@
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>579, 375</value>
   </data>
-  <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 28</value>
   </data>
@@ -182,9 +176,6 @@
   </data>
   <data name="pictureSkylineIcon.Location" type="System.Drawing.Point, System.Drawing">
     <value>20, 15</value>
-  </data>
-  <data name="pictureSkylineIcon.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="pictureSkylineIcon.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 229</value>
@@ -216,9 +207,6 @@
   <data name="labelSoftwareVersion.Location" type="System.Drawing.Point, System.Drawing">
     <value>216, 15</value>
   </data>
-  <data name="labelSoftwareVersion.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="labelSoftwareVersion.Size" type="System.Drawing.Size, System.Drawing">
     <value>83, 25</value>
   </data>
@@ -245,9 +233,6 @@
   </data>
   <data name="textBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>217, 207</value>
-  </data>
-  <data name="textBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="textBox1.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -366,9 +351,6 @@ http://www.zlib.net</value>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>217, 188</value>
   </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>199, 17</value>
   </data>
@@ -392,9 +374,6 @@ http://www.zlib.net</value>
   </data>
   <data name="pictureProteoWizardIcon.Location" type="System.Drawing.Point, System.Drawing">
     <value>20, 295</value>
-  </data>
-  <data name="pictureProteoWizardIcon.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="pictureProteoWizardIcon.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 89</value>
@@ -423,9 +402,6 @@ http://www.zlib.net</value>
   <data name="linkProteoWizard.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 388</value>
   </data>
-  <data name="linkProteoWizard.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="linkProteoWizard.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 17</value>
   </data>
@@ -452,9 +428,6 @@ http://www.zlib.net</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
     <value>221, 367</value>
-  </data>
-  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 17</value>
@@ -485,9 +458,6 @@ http://www.zlib.net</value>
   </data>
   <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
     <value>219, 44</value>
-  </data>
-  <data name="linkLabel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
   </data>
   <data name="linkLabel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>415, 108</value>
@@ -524,9 +494,6 @@ Skylineウェブサイトをご覧ください。</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>695, 423</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

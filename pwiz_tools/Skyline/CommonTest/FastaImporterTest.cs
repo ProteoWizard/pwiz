@@ -627,7 +627,8 @@ namespace CommonTest
         {
             List<FastaHeaderParserTest> tests = GetTests();
             var dbProteins = new List<DbProtein>();
-            var dbProteinNames = new List<DbProteinName>();
+            // ReSharper disable once CollectionNeverQueried.Local
+            var dbProteinNames = new List<DbProteinName>(); // Convenient for debugging
             WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
             int fakeID = 0;
             foreach (var dbProtein in fastaImporter.Import(new StringReader(GetFastaTestText())))

@@ -287,9 +287,6 @@ W = 2T/R
   <data name="MeasuredDriftTimeMsec.HeaderText" xml:space="preserve">
     <value>ドリフト時間（ミリ秒）</value>
   </data>
-  <data name="MeasuredDriftTimeMsec.Width" type="System.Int32, mscorlib">
-    <value>90</value>
-  </data>
   <data name="gridMeasuredDriftTimes.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 134</value>
   </data>

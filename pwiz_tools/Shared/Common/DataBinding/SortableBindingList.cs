@@ -16,7 +16,7 @@ namespace pwiz.Common.DataBinding
         private bool _isSorted;
         [NonSerialized] private PropertyDescriptorCollection _shape;
         [NonSerialized] private PropertyDescriptor _sort;
-        private bool _sortColumns = true;
+        private bool _sortColumns;
 
         #region Constructor
 

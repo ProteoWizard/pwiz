@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -93,7 +94,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             string resultsTable = Path.Combine(outDir, "results.txt");
             Directory.CreateDirectory(outDir); // In case it doesn't already exists
             File.Delete(resultsTable); // In case it does already exist
-            var none = new List<string>();
+            var none = new string[0];
             var openSwath = new List<string> { "OpenSwath.csv" };
             var spectronaut = new List<string> { "Spectronaut.csv" };
             var peakView = new List<string> { "PeakView.txt" };
@@ -296,11 +297,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     dataset,
                     toolName,
-                    Convert.ToString(peptides01),
-                    Convert.ToString(peptides05),
-                    Convert.ToString(peptidesAll),
-                    Convert.ToString(qValue01),
-                    Convert.ToString(qValue05),
+                    Convert.ToString(peptides01, CultureInfo.InvariantCulture),
+                    Convert.ToString(peptides05, CultureInfo.InvariantCulture),
+                    Convert.ToString(peptidesAll, CultureInfo.InvariantCulture),
+                    Convert.ToString(qValue01, CultureInfo.InvariantCulture),
+                    Convert.ToString(qValue05, CultureInfo.InvariantCulture),
                 };
                 bool first = true;
                 foreach (var name in fieldsArray)

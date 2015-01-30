@@ -287,9 +287,6 @@ D = 斜度 * C + 截距
   <data name="MeasuredDriftTimeMsec.HeaderText" xml:space="preserve">
     <value>漂移时间 (msec)</value>
   </data>
-  <data name="MeasuredDriftTimeMsec.Width" type="System.Int32, mscorlib">
-    <value>90</value>
-  </data>
   <data name="gridMeasuredDriftTimes.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 134</value>
   </data>

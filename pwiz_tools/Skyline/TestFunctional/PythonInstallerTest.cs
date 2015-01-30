@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Forms;
@@ -85,8 +86,7 @@ namespace pwiz.SkylineTestFunctional
         public static void TestDlgLoadNotInstalled()
         {
             var ppc = new ProgramPathContainer(PYTHON, VERSION_27);
-            var packageUris = new Collection<string>();
-            var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(ppc, packageUris, false));
+            var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(ppc, new String[0], false));
             WaitForConditionUI(5 * 1000, () => pythonInstaller.IsLoaded);
             RunUI(() => Assert.AreEqual(string.Format(Resources.PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0___Click_install_to_begin_the_installation_process_, VERSION_27), pythonInstaller.Message));
             OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
@@ -172,6 +172,7 @@ namespace pwiz.SkylineTestFunctional
                                                              bool installSuccess)
         {
             var ppc = new ProgramPathContainer(PYTHON, VERSION_27);
+            // ReSharper disable once CollectionNeverUpdated.Local
             var packageUris = new Collection<string>();
             var pythonInstaller = ShowDialog<PythonInstaller>(() => InstallProgram(ppc, packageUris, false));
             WaitForConditionUI(() => pythonInstaller.IsLoaded);

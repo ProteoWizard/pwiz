@@ -550,7 +550,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private void BuildRefSpectra(SrmDocument document,
                                      ISession session,
                                      DbRefSpectra refSpectra,
-                                     IEnumerable<SpectrumInfo> spectra,
+                                     SpectrumInfo[] spectra, // Yes, this could be IEnumerable, but then Resharper throws bogus warnings about possible multiple enumeration
                                      IDictionary<string, long> dictFiles,
                                      ICollection<SpectrumKeyTime> redundantSpectraKeys)
         {

@@ -1322,9 +1322,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Alerts\AboutDlg.ja.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AboutDlg.zh-CHS.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.ja.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
@@ -1548,6 +1550,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\LiveResultsGrid.ja.resx">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\LiveResultsGrid.zh-CHS.resx">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
@@ -2071,6 +2074,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.ja.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.zh-CHS.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
@@ -2078,6 +2082,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.ja.resx">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.zh-CHS.resx">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
@@ -2122,9 +2127,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.ja.resx">
       <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.zh-CHS.resx">
       <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.ja.resx">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
@@ -2159,12 +2166,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.ja.resx">
       <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.zh-CHS.resx">
       <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.ja.resx">
       <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
@@ -2185,6 +2195,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditStaticModDlg.zh-CHS.resx">
       <DependentUpon>EditStaticModDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.ja.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>

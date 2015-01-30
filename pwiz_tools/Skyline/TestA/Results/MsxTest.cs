@@ -168,7 +168,8 @@ namespace pwiz.SkylineTestA.Results
 
         private static void TestOverlapIsolationWindowMapper(AbstractIsoWindowMapper isoMapper, MsDataFileImpl file)
         {
-            var isoWinList = new List<IsoWin>();
+            // ReSharper disable once CollectionNeverQueried.Local
+            var isoWinList = new List<IsoWin>();  // Useful for debugging
             Assert.AreEqual(40,isoMapper.NumWindows);
             Assert.AreEqual(41,isoMapper.NumDeconvRegions);
             // Check that each isolation window has two overlap regions with mz values that are contained in it

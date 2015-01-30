@@ -3123,12 +3123,6 @@
   <data name="ExportMethodDlg_ValidateSettings__0__must_contain_a_value" xml:space="preserve">
     <value>{0}必须包含一个值。</value>
   </data>
-  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__has__2__transitions_which_exceeds_the_current_maximum__3__" xml:space="preserve">
-    <value>针对肽{1}的母离子{0}拥有 {2} 个离子对，这超过了当前最大 {3}。</value>
-  </data>
-  <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__requires__2__transitions_to_optimize_which_exceeds_the_current_maximum__3__" xml:space="preserve">
-    <value>针对肽{1}的母离子{0}需要优化 {2} 个离子对，这超过了当前最大 {3}。</value>
-  </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings" xml:space="preserve">
     <value>查看计算器设置。</value>
   </data>
@@ -6611,9 +6605,6 @@
   <data name="AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool" xml:space="preserve">
     <value> 冲突报告和一个</value>
   </data>
-  <data name="AddZipToolHelper_ShouldOverwrite__in_the_file__0_" xml:space="preserve">
-    <value> 冲突工具</value>
-  </data>
   <data name="AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_" xml:space="preserve">
     <value>请使用“--工具-zip-冲突-分辨率”命令指定“覆盖”或“并行”。</value>
   </data>
@@ -6777,9 +6768,6 @@
   </data>
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate" xml:space="preserve">
     <value>观察的错误判断比率</value>
-  </data>
-  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Correct_Peaks" xml:space="preserve">
-    <value>正确的峰值</value>
   </data>
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
     <value>添加模型/文件来比较，以查看 ROC 图。</value>
@@ -6972,9 +6960,6 @@
   </data>
   <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies" xml:space="preserve">
     <value>{0}最优碰撞能量</value>
-  </data>
-  <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_4_columns" xml:space="preserve">
-    <value>粘贴的文本必须有 4 列</value>
   </data>
   <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential" xml:space="preserve">
     <value>{0}最优去簇电压</value>
@@ -7258,9 +7243,6 @@
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_" xml:space="preserve">
     <value>从{0}添加离子迁移数据</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
-    <value>粘贴的文本必须有两列。</value>
-  </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__" xml:space="preserve">
     <value>第 {0} 行缺少肽序列</value>
   </data>
@@ -7339,12 +7321,6 @@
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>文件{0}无法被打开。{1}</value>
   </data>
-  <data name="LibraryGridViewDriver_DoCellValidating_Charges_must_be_valid_integer_numbers_" xml:space="preserve">
-    <value>电荷必须是有效的整数。</value>
-  </data>
-  <data name="LibraryGridViewDriver_ValidateMz_Product_m_zs_must_be_valid_decimal_numbers_" xml:space="preserve">
-    <value>子离子质荷比必须是有效的十进制数。</value>
-  </data>
   <data name="LibraryGridViewDriver_ValidateMz_Product_m_zs_must_be_greater_than_zero_" xml:space="preserve">
     <value>子离子质荷比必须大于零。</value>
   </data>
@@ -7353,9 +7329,6 @@
   </data>
   <data name="LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_" xml:space="preserve">
     <value>最优化值必须大于零。</value>
-  </data>
-  <data name="LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0____charge__1___and_m_z__2__in_the_list_" xml:space="preserve">
-    <value>列表中已经存在带有序列 '{0}'、电荷{1}和质荷比{2}的最优化。</value>
   </data>
   <data name="EditOptimizationLibraryDlg_OkDialog_library" xml:space="preserve">
     <value>库</value>

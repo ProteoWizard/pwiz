@@ -88,9 +88,8 @@ namespace pwiz.SkylineTestA
             ResetDocuments();
             _yeastDoc = (SrmDocument) _yeastDoc.ChangeChildren(new DocNode[0]);
             var settings = _yeastDoc.Settings;
-            var listStaticMods = new List<StaticMod>();
             _yeastDoc = _yeastDoc.ChangeSettings(settings.ChangePeptideModifications(mods =>
-                mods.ChangeStaticModifications(listStaticMods.ToArray())));
+                mods.ChangeStaticModifications(new StaticMod[0])));
             _yeastDoc = CopyPaste(_study7Doc, null, _yeastDoc, pathRoot);
             var pepMods = _yeastDoc.Settings.PeptideSettings.Modifications;
             Assert.IsTrue(pepMods.StaticModifications != null);

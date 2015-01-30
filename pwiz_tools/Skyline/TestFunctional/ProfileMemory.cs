@@ -23,6 +23,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // List allocates a static, zero-length array, which shows up in the SciTech
             // memory profiler as a potential leak.  Currently no way to hide it.
+            // ReSharper disable once CollectionNeverUpdated.Local
             var x = new List<MyClass>();
             x.Clear();
         }
