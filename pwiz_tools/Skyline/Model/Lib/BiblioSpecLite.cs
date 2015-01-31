@@ -448,19 +448,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 ILookup<int, KeyValuePair<int, double>> retentionTimesBySpectraIdAndFileId = null;
                 ILookup<int, KeyValuePair<int, IonMobilityInfo>> driftTimesBySpectraIdAndFileId = null;
-                var chargesByRefSpectraId = new Dictionary<int, int>();
-                if (schemaVer > 1)
-                {
-                    // We need a table of charge states for each RefSpectra for drift time info
-                    select.CommandText = "SELECT id, precursorCharge FROM [RefSpectra]"; // Not L10N
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            chargesByRefSpectraId[reader.GetInt32(0)] = reader.GetInt16(1);
-                        }
-                    }
-                }
 
                 if (schemaVer >= 1)
                 {
