@@ -38,6 +38,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -810,7 +811,10 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        // Restore minimal view layout in order to close extra windows.
+        
+        /// <summary>
+        /// Restore minimal view layout in order to close extra windows. 
+        /// </summary>
         private void RestoreMinimalView()
         {
             var assembly = Assembly.GetAssembly(typeof(AbstractFunctionalTest));
@@ -847,7 +851,7 @@ namespace pwiz.SkylineTestUtil
         {
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.SearchString = searchText;
+                findPeptideDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true);
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
@@ -1054,6 +1058,43 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(waitForLoadSeconds * 1000,
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
         }
+
+        /// <summary>
+        /// Imports results in a directory with an extension and potentially a filter.
+        /// </summary>
+        /// <param name="dirPath">The directory path in which the data files are found</param>
+        /// <param name="ext">The extension of the data files (e.g. raw, wiff, mzML, ...)</param>
+        /// <param name="filter">A filter string the files must contain or null for no extra filtering</param>
+        /// <param name="removePrefix">True to remove a shared prefix for the files</param>
+        public void ImportResultsFiles(string dirPath, string ext, string filter, bool? removePrefix)
+        {
+            var doc = SkylineWindow.Document;
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(() =>
+                importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null));
+            RunUI(() =>
+            {
+                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dirPath);
+                openDataSourceDialog.SelectAllFileType(ext, path => filter == null || path.Contains(filter));
+                openDataSourceDialog.Open();
+            });
+            WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
+
+            if (!removePrefix.HasValue)
+                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            else
+            {
+                var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
+                PauseForScreenShot();
+
+                if (removePrefix.Value)
+                    OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
+                else
+                    OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
+            }
+            WaitForDocumentChange(doc);
+        }
+
         #endregion
     }
 }

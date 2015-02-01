@@ -1633,7 +1633,7 @@ namespace pwiz.Skyline
             else
             {
                 var nodePepTree = SelectedNode as PeptideTreeNode;
-                Debug.Assert(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
+                Assume.IsTrue(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (nodePepTree == null || nodePepTree.Nodes.Count != 1)
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
@@ -1720,7 +1720,7 @@ namespace pwiz.Skyline
             ChromInfo chromInfo;
             Transition transition;
 
-            int iResults = SequenceTree.ResultsIndex;
+            int iResults = SelectedResultsIndex;
             if (nodeTran == null)
             {
                 message = string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup));
@@ -2521,7 +2521,14 @@ namespace pwiz.Skyline
                     var focusStart = User32.GetFocusedControl();
                     ComboResults.SelectedIndex = value;
                     if (focusStart != null)
-                        focusStart.Focus();
+                    {
+                        // Avoid just setting focus back to the chromatogram graph
+                        // that just lost activation and reactivating it.
+                        if (focusStart is GraphChromatogram)
+                            dockPanel.ActivePane.Focus();
+                        else
+                            focusStart.Focus();
+                    }
                 }
             }
         }

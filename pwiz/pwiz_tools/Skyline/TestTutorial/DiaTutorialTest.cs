@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
 
-            LinkPdf = "https://skyline.gs.washington.edu/tutorials/DIA-2_6.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/DIA-2_6.pdf";
 
             TestFilesZipPaths = new[]
                 {

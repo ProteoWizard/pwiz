@@ -37,9 +37,9 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class GroupedStudiesTutorialTest : AbstractFunctionalTest
+    public class GroupedStudiesTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod, NoLocalization]
+        [TestMethod]
         public void TestGroupedStudiesTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -227,30 +227,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
 
             PauseForScreenShot();
-        }
-
-        private void ImportResultsFiles(string dirPath, string ext, string filter, bool removePrefix)
-        {
-            var doc = SkylineWindow.Document;
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(() =>
-                importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null));
-            RunUI(() =>
-                {
-                    openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dirPath);
-                    openDataSourceDialog.SelectAllFileType(ext, path => path.Contains(filter));
-                    openDataSourceDialog.Open();
-                });
-            WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
-
-            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-            PauseForScreenShot();
-
-            if (removePrefix)
-                OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
-            else
-                OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
-            WaitForDocumentChange(doc);
         }
 
         private void SetTransitionClipboardText(int[] columnIndices, Func<string[], string[]> convertColumns = null)
