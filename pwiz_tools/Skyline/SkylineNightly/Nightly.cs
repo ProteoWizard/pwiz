@@ -74,6 +74,13 @@ namespace SkylineNightly
         /// </summary>
         public void Run()
         {
+            // Kill any other instance of SkylineNightly.
+            foreach (var process in Process.GetProcessesByName("skylinenightly"))
+            {
+                if (process.Id != Process.GetCurrentProcess().Id)
+                    process.Kill();
+            }
+
             _startTime = DateTime.Now;
 
             // Locate relevant directories.
@@ -90,10 +97,10 @@ namespace SkylineNightly
 
             // Delete source tree and old SkylineTester.
             Delete(skylineNightlySkytr);
-            Log("Delete pwiz folder");
-            Delete(_pwizDir);
             Log("Delete SkylineTester");
             Delete(skylineTesterDir);
+            Log("Delete pwiz folder");
+            Delete(_pwizDir);
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = skylineTesterDir + ".zip";
@@ -410,6 +417,11 @@ window.onload = submitForm;
 
         private void Delete(string fileOrDir)
         {
+            KillProcess("testrunner", fileOrDir);
+            KillProcess("skylinetester", fileOrDir);
+            KillProcess("skyline", fileOrDir);
+            KillProcess("skyline-daily", fileOrDir);
+
             for (int i = 0; i < 5; i++)
             {
                 try
@@ -425,6 +437,22 @@ window.onload = submitForm;
                     if (i == 4)
                         throw;
                     Thread.Sleep(1000);
+                }
+            }
+        }
+
+        private void KillProcess(string processName, string directory)
+        {
+            foreach (var process in Process.GetProcessesByName(processName))
+            {
+                try
+                {
+                    if (process.Modules[0].FileName.StartsWith(directory))
+                        process.Kill();
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
                 }
             }
         }
