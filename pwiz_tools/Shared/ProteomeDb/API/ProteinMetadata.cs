@@ -301,6 +301,8 @@ namespace pwiz.ProteomeDatabase.API
 
         public bool Equals(WebSearchTerm other)
         {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
             return Equals(Service,other.Service) && Equals(Query,other.Query);
         }
 
@@ -311,6 +313,8 @@ namespace pwiz.ProteomeDatabase.API
 
         public string ToFriendlyString()
         {
+            if (Query == null)
+                return null;
             if (Query.ToUpperInvariant().StartsWith("IPI")) // Not L10N
                 return Query; // we handled that ourselves
             switch (Service)
