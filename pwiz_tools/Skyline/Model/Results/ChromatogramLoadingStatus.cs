@@ -84,7 +84,10 @@ namespace pwiz.Skyline.Model.Results
                     MaxIntensity = 0.0f;
                     CurrentTime = 0.0f;
                     Progressive = false;
-                    _finishedPeaks = new List<Peak>();
+                    lock (this)
+                    {
+                        _finishedPeaks = new List<Peak>();
+                    }
                     _maxImportedIntensity = 0.0f;
                 }
             }

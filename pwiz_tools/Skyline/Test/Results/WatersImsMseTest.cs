@@ -155,6 +155,7 @@ namespace pwiz.SkylineTest.Results
                     // And round trip it to make sure we haven't left out any new features in minimized imdb or blib files
                     using (var longWaitDlg = new LongWaitDlg
                     {
+                        // ReSharper disable once LocalizableElement
                         Text = "unit test WatersImsTest",
                     })
                     {

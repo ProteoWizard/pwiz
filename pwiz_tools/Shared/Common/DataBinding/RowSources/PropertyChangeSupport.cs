@@ -87,15 +87,18 @@ namespace pwiz.Common.DataBinding.RowSources
 
         protected void BeforeListenerAdded()
         {
-            if (_eventHandlers == null)
+            lock (this)
             {
-                _eventHandlers = new HashSet<PropertyChangedEventHandler>();
-                _propertyChangers = ImmutableList.ValueOf(GetProperyChangersToPropagate());
-                foreach (var notifyPropertyChanged in _propertyChangers)
+                if (_eventHandlers == null)
                 {
-                    notifyPropertyChanged.PropertyChanged += ListenedPropertyChanged;
+                    _eventHandlers = new HashSet<PropertyChangedEventHandler>();
+                    _propertyChangers = ImmutableList.ValueOf(GetProperyChangersToPropagate());
+                    foreach (var notifyPropertyChanged in _propertyChangers)
+                    {
+                        notifyPropertyChanged.PropertyChanged += ListenedPropertyChanged;
+                    }
+                    BeforeFirstListenerAdded();
                 }
-                BeforeFirstListenerAdded();
             }
         }
         protected virtual void BeforeFirstListenerAdded()

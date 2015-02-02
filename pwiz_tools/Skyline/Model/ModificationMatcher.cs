@@ -71,13 +71,9 @@ namespace pwiz.Skyline.Model
             int prevIndexAA = -1;
             bool prevHeavy = false;
             int countModsPerAA = 0;
-            List<int> badSeqIndices = new List<int>();
             foreach (var info in EnumerateSequenceInfos(_sequences.Current ?? string.Empty, false))
             {
                 int indexAA = info.IndexAA;
-                var indexAAinSeq = info.IndexAAInSeq;
-                if (badSeqIndices.Contains(indexAAinSeq))
-                    continue;
                 countModsPerAA = prevIndexAA != indexAA ? 1 : countModsPerAA + 1;
                 bool tooManyMods = countModsPerAA > 1 && prevHeavy == info.UserIndicatedHeavy;
                 prevIndexAA = indexAA;

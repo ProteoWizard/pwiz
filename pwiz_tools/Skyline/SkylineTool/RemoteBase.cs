@@ -18,11 +18,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SkylineTool
@@ -33,18 +30,8 @@ namespace SkylineTool
     /// </summary>
     public class RemoteBase
     {
-        protected readonly Dictionary<string, MethodInfo> MethodInfos = new Dictionary<string, MethodInfo>();
-
         protected RemoteBase()
         {
-            foreach (var anInterface in GetType().FindInterfaces((type, criteria) => true, string.Empty))
-            {
-                if (anInterface.Name == "IDisposable") // Not L10N
-                    continue;
-                var interfaceMap = GetType().GetInterfaceMap(anInterface);
-                foreach (var method in interfaceMap.TargetMethods.Where(method => method.IsPublic))
-                    MethodInfos.Add(method.Name, method);
-            }
         }
 
         protected static byte[] ReadAllBytes(PipeStream stream)

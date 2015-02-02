@@ -446,7 +446,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var hold = graphControl.IsSynchronizeXAxes;
                 graphControl.IsSynchronizeXAxes = false; // just this one
                 ZoomState.ApplyState(pane);
-                ZoomAll.Invoke(this, new ZoomEventArgs(ZoomState));
+                if (ZoomAll != null)
+                    ZoomAll.Invoke(this, new ZoomEventArgs(ZoomState));
                 graphControl.IsSynchronizeXAxes = hold;
             }
         }
@@ -857,8 +858,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (_graphHelper.AllowSplitGraph)
                     {
                         var nodeGroupGraphPaneKeys = nodeGroups.Select(nodeGroup => new PaneKey(nodeGroup)).ToArray();
+                        // ReSharper disable PossibleMultipleEnumeration
                         var countDistinctGraphPaneKeys = nodeGroupGraphPaneKeys.Distinct().Count();
                         multipleGroupsPerPane = countDistinctGraphPaneKeys != nodeGroupGraphPaneKeys.Length;
+                        // ReSharper restore PossibleMultipleEnumeration
                         nodeGroupsInSeparatePanes = countDistinctGraphPaneKeys > 1;
                     }
                     else

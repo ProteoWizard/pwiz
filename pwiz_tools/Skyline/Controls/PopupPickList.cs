@@ -42,7 +42,6 @@ namespace pwiz.Skyline.Controls
         private readonly List<DocNode> _chosenAtStart;
         private readonly bool _okOnDeactivate;
         private List<PickListChoice> _choices;
-        private List<int> _indexListChoices;
         private bool _closing;
         private bool _autoManageChildren;
         private bool _selectalInternalChange;
@@ -238,7 +237,6 @@ namespace pwiz.Skyline.Controls
         private void ShowChoices()
         {
             pickListMulti.BeginUpdate();
-            _indexListChoices = new List<int>();
             pickListMulti.Items.Clear();
             
             string searchString = textSearch.Text;
@@ -250,7 +248,6 @@ namespace pwiz.Skyline.Controls
                 var choice = _choices[i];
                 if (!textSearch.Visible || AcceptChoice(choice, searches))
                 {
-                    _indexListChoices.Add(i);
                     pickListMulti.Items.Add(choice);
                 }
             }

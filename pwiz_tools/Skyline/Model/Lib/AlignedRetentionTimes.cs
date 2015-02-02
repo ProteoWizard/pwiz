@@ -68,8 +68,6 @@ namespace pwiz.Skyline.Model.Lib
         public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<string, double> target, IDictionary<string, double> originalTimes, double refinementThreshhold, Func<bool> isCanceled)
         {
             var calculator = new DictionaryRetentionScoreCalculator("alignment", originalTimes); // Not L10N
-            var xValues = new List<double>();
-            var yValues = new List<double>();
             var targetTimesList = new List<MeasuredRetentionTime>();
             foreach (var entry in calculator.RetentionTimes)
             {
@@ -87,8 +85,6 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     continue;
                 }
-                xValues.Add(entry.Value);
-                yValues.Add(targetTime);
                 targetTimesList.Add(measuredRetentionTime);
             }
             RetentionTimeStatistics regressionStatistics;

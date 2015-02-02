@@ -626,7 +626,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
 // ReSharper restore SuggestBaseTypeForParameter
             {
-                var areas = new List<double>();
                 var times = new List<double>();
                 foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
                 {
@@ -634,8 +633,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     CalcStats(nodePepChild, out meanArea, out meanTime);
                     if (nodeGroup.TransitionGroup.PrecursorCharge != nodePepChild.TransitionGroup.PrecursorCharge)
                         continue;
-                    if (meanArea.HasValue)
-                        areas.Add(meanArea.Value);
                     if (meanTime.HasValue)
                         times.Add(meanTime.Value);
                     if (ReferenceEquals(nodeGroup, nodePepChild))
