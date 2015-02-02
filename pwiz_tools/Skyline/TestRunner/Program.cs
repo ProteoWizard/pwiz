@@ -42,11 +42,9 @@ namespace TestRunner
     internal static class Program
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
-        private const int LeakThreshold = 100000;
-        private const int LeakThresholdLow = 25000;
-        private const int LeakThresholdHigh = 750000;
+        private const int LeakThreshold = 250000;
         private const int CrtLeakThreshold = 1000;
-        private const int LeakCheckIterations = 50;
+        private const int LeakCheckIterations = 20;
 
         [STAThread]
         static int Main(string[] args)
@@ -405,9 +403,9 @@ namespace TestRunner
                         if (memoryPoints.Count < 8)
                             continue;
 
-                        // Stop early if the leak magnitude is outside any ambiguous range.
-                        slope = CalculateSlope(memoryPoints);
-                        if (slope < LeakThresholdLow || slope > LeakThresholdHigh)
+                        // Stop if the leak magnitude is below our threshold.
+                        slope = CalculateSlope(memoryPoints); 
+                        if (slope < LeakThreshold)
                             break;
                         memoryPoints.RemoveAt(0);
                     }
@@ -465,9 +463,9 @@ namespace TestRunner
                     var test = testPass[testNumber];
 
                     // Run once (or repeat times) for each language.
-                    foreach (var language in languages)
+                    for (int i = 0; i < languages.Length; i++)
                     {
-                        runTests.Language = new CultureInfo(language);
+                        runTests.Language = new CultureInfo(languages[i]);
                         for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                         {
                             if (test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
@@ -481,7 +479,11 @@ namespace TestRunner
                                 break;
                             }
                             if (!runTests.Run(test, pass, testNumber))
+                            {
                                 removeList.Add(test);
+                                i = languages.Length - 1;   // Don't run other languages.
+                                break;
+                            }
                         }
                         if (profiling)
                             break;
