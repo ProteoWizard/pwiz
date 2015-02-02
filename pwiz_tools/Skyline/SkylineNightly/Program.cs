@@ -25,9 +25,9 @@ namespace SkylineNightly
 {
     static class Program
     {
-        public const string SCHEDULED_ARG = "scheduled";
-        public const string PARSE_ARG = "parse";
-        public const string POST_ARG = "post";
+        public const string SCHEDULED_ARG = "scheduled"; // Not L10N
+        public const string PARSE_ARG = "parse"; // Not L10N
+        public const string POST_ARG = "post"; // Not L10N
 
         /// <summary>
         /// The main entry point for the application.
@@ -64,9 +64,9 @@ namespace SkylineNightly
 
                 default:
                     var extension = Path.GetExtension(args[0]).ToLower();
-                    if (extension == ".log")
+                    if (extension == ".log") // Not L10N
                         nightly.Parse(args[0]);
-                    nightly.Post(Path.ChangeExtension(args[0], ".xml"));
+                    nightly.Post(Path.ChangeExtension(args[0], ".xml")); // Not L10N
                     break;
             }
         }

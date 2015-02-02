@@ -139,7 +139,10 @@ namespace pwiz.Skyline.Util
                         string strValue = values.Current;
                         editingControl = null;
                         DataGridView.BeginEdit(true);
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
                         if (null != editingControl)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+// ReSharper disable HeuristicUnreachableCode
                         {
                             object convertedValue;
                             if (!TryConvertValue(strValue, DataGridView.CurrentCell.FormattedValueType, out convertedValue))
@@ -148,6 +151,7 @@ namespace pwiz.Skyline.Util
                             }
                             editingControl.EditingControlFormattedValue = convertedValue;
                         }
+// ReSharper restore HeuristicUnreachableCode
                         else
                         {
                             object convertedValue;

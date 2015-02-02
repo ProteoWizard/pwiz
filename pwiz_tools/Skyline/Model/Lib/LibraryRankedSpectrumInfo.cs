@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             public override string ToString()
             {
-                return string.Format("i={0}, mz={1}", _mi.Intensity, _mi.Mz);
+                return string.Format("i={0}, mz={1}", _mi.Intensity, _mi.Mz); // Not L10N
             }
 
             private SpectrumPeaksInfo.MI _mi;

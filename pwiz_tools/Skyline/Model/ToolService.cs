@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Model
                     }
                     catch (TimeoutException)
                     {
-                        var error = "No response from " + documentChangeSender.Value.Name;
+                        var error = "No response from " + documentChangeSender.Value.Name; // Not L10N
                         _skylineWindow.BeginInvoke(new Action(() =>
                         {
                             _skylineWindow.ShowImmediateWindow();

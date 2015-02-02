@@ -92,7 +92,7 @@ namespace pwiz.Skyline
             }
 
             // For testing and debugging Skyline command-line interface
-            if (args != null && args.Length > 0 && !args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase))
+            if (args != null && args.Length > 0 && !args[0].Equals("--ui", StringComparison.InvariantCultureIgnoreCase)) // Not L10N
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {

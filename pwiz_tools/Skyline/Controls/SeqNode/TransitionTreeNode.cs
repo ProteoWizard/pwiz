@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             Transition tran = nodeTran.Transition;
             string labelPrefix;
-            const string labelPrefixSpacer = " - "; // NOt L10N
+            const string labelPrefixSpacer = " - "; // Not L10N
             if (tran.IsPrecursor())
             {
                 labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;

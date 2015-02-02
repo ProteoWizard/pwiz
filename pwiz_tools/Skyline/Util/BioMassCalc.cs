@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Util
                     Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, desc) +
                 Resources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__;
             foreach (var key in _atomicMasses.Keys)
-                errmsg += key + " "; // NOt L10N
+                errmsg += key + " "; // Not L10N
             return errmsg;
         }
 
