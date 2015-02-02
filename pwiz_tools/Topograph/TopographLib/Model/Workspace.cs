@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -548,6 +549,7 @@ namespace pwiz.Topograph.Model
                     .ExecuteUpdate();
                 session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramSet = NULL, PeakCount = 0")
                     .ExecuteUpdate();
+                session.CreateSQLQuery("DELETE FROM DbChromatogramSet").ExecuteUpdate();
                 session.CreateSQLQuery("DELETE FROM DbLock").ExecuteUpdate();
             }
             if (savedWorkspaceChange.HasTurnoverChange)
@@ -883,6 +885,40 @@ namespace pwiz.Topograph.Model
                 _lastChangeLogs[instanceId] = DateTime.Now;
             }
         }
+
+        public void LockTables(IDbConnection connection)
+        {
+            if (DatabaseTypeEnum != DatabaseTypeEnum.mysql)
+            {
+                return;
+            }
+            string[] tables =
+            {
+                "DbChromatogram", "DbMsDataFile", "DbPeptide", "DbTracerDef", "DbWorkspace", "DbModification",
+                "DbSetting", "DbPeak", "DbPeptideFileAnalysis", "DbChromatogramSet", "DbPeptideAnalysis", "DbChangeLog",
+                "DbLock", "DbPeptideSpectrumMatch"
+            };
+            string sql = "LOCK TABLES " + string.Join(",", tables.Select(name => name + " WRITE"));
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void UnlockTables(IDbConnection connection)
+        {
+            if (DatabaseTypeEnum != DatabaseTypeEnum.mysql)
+            {
+                return;
+            }
+            using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "UNLOCK TABLES";
+                cmd.ExecuteNonQuery();
+            }
+        }
+
 
         public void Dispose()
         {

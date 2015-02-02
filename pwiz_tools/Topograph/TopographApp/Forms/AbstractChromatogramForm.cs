@@ -32,7 +32,6 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class AbstractChromatogramForm : PeptideFileAnalysisForm
     {
-        private SelectionDragging _selectionDragging;
         // ReSharper restore InconsistentNaming
         private Point _ptClick;
         private bool _updatePending;
@@ -56,11 +55,11 @@ namespace pwiz.Topograph.ui.Forms
             Smooth = Settings.Default.SmoothChromatograms;
         }
         protected MSGraphControl MsGraphControl { get; private set; }
-        protected BoxObj SelectionBoxObj { get; set; }
         protected IList<double> Times { get; set; }
 
         void MsGraphControlOnContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
+            _ptClick = mousePt;
             menuStrip.Items.Insert(0, toolStripMenuItemShowSpectrum);
             menuStrip.Items.Insert(0, toolStripMenuItemSmooth);
         }
@@ -71,117 +70,24 @@ namespace pwiz.Topograph.ui.Forms
             UpdateUi();
         }
 
-        private SelectionDragging GetSelectionDragging(Point pt)
-        {
-            if (!PeptideFileAnalysis.PeakStartTime.HasValue || !PeptideFileAnalysis.PeakEndTime.HasValue)
-            {
-                return SelectionDragging.none;
-            }
-            const int mouseTolerance = 2;
-            float xPeakStart =
-                MsGraphControl.GraphPane.XAxis.Scale.Transform(PeptideFileAnalysis.PeakStartTime.Value);
-            float xPeakEnd =
-                MsGraphControl.GraphPane.XAxis.Scale.Transform(PeptideFileAnalysis.PeakEndTime.Value);
-            if (Math.Abs(pt.X - xPeakStart) <= Math.Abs(pt.X - xPeakEnd))
-            {
-                if (Math.Abs(pt.X - xPeakStart) <= mouseTolerance)
-                {
-                    return SelectionDragging.start;
-                }
-            }
-            else
-            {
-                if (Math.Abs(pt.X - xPeakEnd) <= mouseTolerance)
-                {
-                    return SelectionDragging.end;
-                }
-            }
-            return SelectionDragging.none;
-        }
-        private void GetPeakStartEnd(SelectionDragging selectionDragging, double curValue, out double peakStart, out double peakEnd)
-        {
-            double value2 = 0;
-            peakStart = Math.Min(curValue, value2);
-            peakEnd = Math.Max(curValue, value2);
-        }
-
-        protected double TimeFromScanIndex(int scanIndex)
-        {
-            return PeptideFileAnalysis.ChromatogramSet.TimeFromScanIndex(scanIndex);
-        }
-
         protected virtual bool MsGraphControlOnMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            _selectionDragging = GetSelectionDragging(e.Location);
-            if (_selectionDragging != SelectionDragging.none)
-            {
-                return true;
-            }
             return false;
         }
 
-       
-
         protected virtual bool MsGraphControlOnMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            if (_selectionDragging != SelectionDragging.none)
-            {
-                double value = MsGraphControl.GraphPane.XAxis.Scale.ReverseTransform(e.X);
-                double peakStart, peakEnd;
-                GetPeakStartEnd(_selectionDragging, value, out peakStart, out peakEnd);
-                MsGraphControl.GraphPane.GraphObjList.Remove(SelectionBoxObj);
-                SelectionBoxObj = new BoxObj(peakStart, int.MaxValue,
-                                                 peakEnd - peakStart,
-                                                 int.MaxValue, Color.Goldenrod,
-                                                 Color.Goldenrod)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.F_BehindGrid
-                };
-                MsGraphControl.GraphPane.GraphObjList.Add(SelectionBoxObj);
-                MsGraphControl.Refresh();
-                return true;
-            }
-            if (GetSelectionDragging(e.Location) != SelectionDragging.none)
-            {
-                sender.Cursor = Cursors.SizeWE;
-                return true;
-            }
             return false;
         }
 
         protected virtual bool MsGraphControlOnMouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            _ptClick = e.Location;
-            if (_selectionDragging == SelectionDragging.none)
-            {
-                return false;
-            }
-//            int value1 = ScanIndexFromTime(msGraphControl.GraphPane.XAxis.Scale.ReverseTransform(e.X));
-//            int value2;
-//            if (selectionDragging == SelectionDragging.start)
-//            {
-//                value2 = PeptideFileAnalysis.PeakEnd.Value;
-//            }
-//            else
-//            {
-//                value2 = PeptideFileAnalysis.PeakStart.Value;
-//            }
-//            PeptideFileAnalysis.AutoFindPeak = false;
-//            PeptideFileAnalysis.SetPeakStartEnd(Math.Min(value1, value2), Math.Max(value1, value2), PeptideFileAnalysis.Chromatograms);
-//            selectionDragging = SelectionDragging.none;
-//            Recalc();
-            return true;
+            return false;
         }
 
         protected virtual bool MsGraphControlOnDoubleClickEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return false;
-//            double x, y;
-//            msGraphControl.GraphPane.ReverseTransform(e.Location, out x, out y);
-//            int scanIndex = PeptideFileAnalysis.Chromatograms.ScanIndexFromTime(x);
-//            DisplaySpectrum(scanIndex);
-//            return true;
         }
 
         protected virtual ICollection<int> GetSelectedCharges()
@@ -350,14 +256,6 @@ namespace pwiz.Topograph.ui.Forms
 //            chromatogramGenerator.GenerateChromatograms(peptideData.MsDataFile, chromatograms, i => true);
 //            return Show(sibling, new PeptideAnalysis(workspace, peptideData));
 //        }
-        // ReSharper disable InconsistentNaming
-        private enum SelectionDragging
-        {
-            none,
-            start,
-            end,
-        }
-        // ReSharper restore InconsistentNaming
 
         private void ToolStripMenuItemShowSpectrumOnClick(object sender, EventArgs e)
         {
@@ -378,6 +276,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
+                PeptideAnalysis.EnsurePeaksCalculated();
                 var newPeaks = PeptideFileAnalysis.CalculatedPeaks.ChangeBasePeak(PeptideFileAnalysis.CalculatedPeaks.BasePeakKey);
                 Debug.Assert(!newPeaks.AutoFindPeak);
                 PeptideFileAnalysis.SetCalculatedPeaks(newPeaks);

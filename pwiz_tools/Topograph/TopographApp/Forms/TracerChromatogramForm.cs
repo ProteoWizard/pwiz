@@ -107,6 +107,7 @@ namespace pwiz.Topograph.ui.Forms
                 var newPeaks = peaks.ChangeTime(_peakResize.TracerFormula, Math.Min(newStart, newEnd), Math.Max(newStart, newEnd));
                 _peakResize = null;
                 PeptideFileAnalysis.SetCalculatedPeaks(newPeaks);
+                PeptideAnalysis.EnsurePeaksCalculated();
             }
             return base.MsGraphControlOnMouseUpEvent(sender, e);
         }
@@ -186,6 +187,10 @@ namespace pwiz.Topograph.ui.Forms
                 return null;
             }
             var peaks = PeptideFileAnalysis.CalculatedPeaks;
+            if (peaks == null)
+            {
+                return null;
+            }
             foreach (var entry in _peakLines)
             {
                 var peak = peaks.GetPeak(entry.Key);

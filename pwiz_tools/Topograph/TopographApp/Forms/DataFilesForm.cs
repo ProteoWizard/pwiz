@@ -39,10 +39,10 @@ namespace pwiz.Topograph.ui.Forms
         public DataFilesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            bindingSource1.SetViewContext(new TopographViewContext(workspace, typeof(DataFileRow), new DataFileRow[0])
-                                              {
-                                                  DeleteHandler = new DataFileDeleteHandler(this),
-                                              });
+            bindingSource1.SetViewContext(new TopographViewContext(workspace, typeof (DataFileRow), new DataFileRow[0])
+            {
+                DeleteHandler = new DataFileDeleteHandler(this),
+            });
         }
 
         private void Requery()
@@ -65,7 +65,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             try
             {
-                return (double)Convert.ChangeType(value, typeof(double));
+                return (double) Convert.ChangeType(value, typeof (double));
             }
             catch (Exception e)
             {
@@ -90,38 +90,48 @@ namespace pwiz.Topograph.ui.Forms
                                         sqlFileAnalysisIds + ")";
             using (var session = Workspace.OpenSession())
             {
-                session.BeginTransaction();
-                broker.UpdateStatusMessage("Deleting chromatograms");
-                session.CreateSQLQuery("DELETE FROM DbChromatogram WHERE ChromatogramSet IN " + sqlChromatogramSetIds)
-                    .ExecuteUpdate();
-                session.CreateQuery("DELETE FROM DbChromatogramSet WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
-                    .ExecuteUpdate();
-                broker.UpdateStatusMessage("Deleting peaks");
-                session.CreateSQLQuery("DELETE FROM DbPeak WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
-                    .ExecuteUpdate();
-                broker.UpdateStatusMessage("Deleting file analyses");
-                session.CreateSQLQuery("DELETE FROM DbPeptideFileAnalysis WHERE MsDataFile IN " + sqlDataFileIds)
-                    .ExecuteUpdate();
-                broker.UpdateStatusMessage("Deleting search results");
-                session.CreateSQLQuery("DELETE FROM DbPeptideSearchResult WHERE MsDataFile IN " + sqlDataFileIds)
-                    .ExecuteUpdate();
-                broker.UpdateStatusMessage("Deleting data files");
-                session.CreateSQLQuery("DELETE FROM DbMsDataFile WHERE Id IN " + sqlDataFileIds)
-                    .ExecuteUpdate();
-                broker.UpdateStatusMessage("Updating parent tables");
-                session.CreateSQLQuery(
-                    "UPDATE DbPeptideAnalysis SET FileAnalysisCount = (SELECT COUNT(Id) FROM DbPeptideFileAnalysis WHERE PeptideAnalysis = DbPeptideAnalysis.Id)")
-                    .ExecuteUpdate();
-//                session.CreateSQLQuery("UPDATE DbPeptide SET SearchResultCount = (SELECT Count(Id) FROM DbPeptideSearchResult WHERE Peptide = DbPeptide.Id)")
-//                    .ExecuteUpdate();
-                session.CreateSQLQuery(
-                    "Update DbWorkspace SET MsDataFileCount = (SELECT Count(Id) FROM DbMsDataFile WHERE Workspace = DbWorkspace.Id)")
-                    .ExecuteUpdate();
-                broker.SetIsCancelleable(false);
-                broker.UpdateStatusMessage("Committing transaction");
-                session.Transaction.Commit();
+                var connection = session.Connection;
+                try
+                {
+                    Workspace.LockTables(connection);
+                    using (var transaction = connection.BeginTransaction())
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        broker.UpdateStatusMessage("Deleting chromatograms");
+                        cmd.CommandText = "DELETE FROM DbChromatogram WHERE ChromatogramSet IN " +
+                                          sqlChromatogramSetIds;
+                        cmd.ExecuteNonQuery();
+                        cmd.CommandText = "DELETE FROM DbChromatogramSet WHERE PeptideFileAnalysis IN " +
+                                          sqlFileAnalysisIds;
+                        cmd.ExecuteNonQuery();
+                        broker.UpdateStatusMessage("Deleting peaks");
+                        cmd.CommandText = ("DELETE FROM DbPeak WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds);
+                        cmd.ExecuteNonQuery();
+                        broker.UpdateStatusMessage("Deleting file analyses");
+                        cmd.CommandText = ("DELETE FROM DbPeptideFileAnalysis WHERE MsDataFile IN " + sqlDataFileIds);
+                        cmd.ExecuteNonQuery();
+                        broker.UpdateStatusMessage("Deleting search results");
+                        cmd.CommandText = ("DELETE FROM DbPeptideSpectrumMatch WHERE MsDataFile IN " +
+                                           sqlDataFileIds);
+                        cmd.ExecuteNonQuery();
+                        broker.UpdateStatusMessage("Deleting data files");
+                        cmd.CommandText = ("DELETE FROM DbMsDataFile WHERE Id IN " + sqlDataFileIds);
+                        broker.UpdateStatusMessage("Updating parent tables");
+                        cmd.CommandText =
+                            "UPDATE DbPeptideAnalysis SET FileAnalysisCount = (SELECT COUNT(Id) FROM DbPeptideFileAnalysis WHERE PeptideAnalysis = DbPeptideAnalysis.Id)";
+                        cmd.ExecuteNonQuery();
+                        //                session.CreateSQLQuery("UPDATE DbPeptide SET SearchResultCount = (SELECT Count(Id) FROM DbPeptideSearchResult WHERE Peptide = DbPeptide.Id)")
+                        //                    .ExecuteUpdate();
+                        broker.SetIsCancelleable(false);
+                        broker.UpdateStatusMessage("Committing transaction");
+                        transaction.Commit();
+                    }
+                }
+                finally
+                {
+                    Workspace.UnlockTables(connection);
+                }
             }
-            
         }
 
         class DataFileRow : PropertyChangedSupport

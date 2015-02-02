@@ -46,7 +46,7 @@ namespace pwiz.Topograph.Model.Data
                 chromatogram => 
                     new KeyValuePair<MzKey,Chromatogram>(
                         chromatogram.MzKey,
-                        new Chromatogram())));
+                        new Chromatogram(chromatogram))));
         }
         public IList<double> Times { get; private set; }
         public int IndexFromTime(double time)
