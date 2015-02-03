@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                var status = longWaitDlg.PerformWork(owner, 5000, job);
+                var status = longWaitDlg.PerformWork(owner == null ? null : owner.TopLevelControl, 5000, job);
                 return status.IsComplete;
             }
         }

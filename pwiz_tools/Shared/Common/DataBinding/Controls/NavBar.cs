@@ -283,5 +283,10 @@ namespace pwiz.Common.DataBinding.Controls
                 navBarButtonViews.Visible = value;
             }
         }
+
+        private void NavBarButtonCopyAllOnClick(object sender, EventArgs e)
+        {
+            ViewContext.CopyAll(this, BindingListSource);
+        }
     }
 }

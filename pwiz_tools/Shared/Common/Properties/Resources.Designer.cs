@@ -61,6 +61,16 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an error copying the data to the clipboard: .
+        /// </summary>
+        internal static string AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard_" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exception constructing column of type {0}:{1}.
         /// </summary>
         internal static string AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_ {
@@ -76,6 +86,15 @@ namespace pwiz.Common.Properties {
         internal static string AbstractViewContext_ExecuteQuery_Executing_query {
             get {
                 return ResourceManager.GetString("AbstractViewContext_ExecuteQuery_Executing_query", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error writing to the file: .
+        /// </summary>
+        internal static string AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_Export_There_was_an_error_writing_to_the_file__", resourceCulture);
             }
         }
         

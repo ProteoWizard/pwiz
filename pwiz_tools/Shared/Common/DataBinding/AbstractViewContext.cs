@@ -185,43 +185,91 @@ namespace pwiz.Common.DataBinding
 
         public void Export(Control owner, BindingListSource bindingListSource)
         {
-            var dataFormats = new[] { DataFormats.CSV, DataFormats.TSV };
-            string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray()); // Not L10N
-            using (var saveFileDialog = new SaveFileDialog
-                {
-                Filter = fileFilter,
-                InitialDirectory = GetExportDirectory(),
-                FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
-            })
+            try
             {
-                if (saveFileDialog.ShowDialog(owner) == DialogResult.Cancel)
+                var dataFormats = new[] {DataFormats.CSV, DataFormats.TSV};
+                string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
+                // Not L10N
+                using (var saveFileDialog = new SaveFileDialog
                 {
-                    return;
-                }
-                var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName),
-                    new UTF8Encoding(false)))
+                    Filter = fileFilter,
+                    InitialDirectory = GetExportDirectory(),
+                    FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
+                })
                 {
-                    var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
-                    if (null == cloneableRowSource)
+                    if (saveFileDialog.ShowDialog(owner) == DialogResult.Cancel)
                     {
-                        var progressMonitor = new UncancellableProgressMonitor();
-                        WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
+                        return;
                     }
-                    else
+                    var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
+                    using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName),
+                        new UTF8Encoding(false)))
                     {
-                        var clonedList = cloneableRowSource.DeepClone();
-                        RunLongJob(owner, progressMonitor =>
+                        var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
+                        if (null == cloneableRowSource)
                         {
-                            using (var clonedBindingList = new BindingListSource())
+                            var progressMonitor = new UncancellableProgressMonitor();
+                            WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
+                        }
+                        else
+                        {
+                            var clonedList = cloneableRowSource.DeepClone();
+                            RunLongJob(owner, progressMonitor =>
                             {
-                                clonedBindingList.SetView(bindingListSource.ViewInfo, clonedList);
-                                WriteData(progressMonitor, writer, clonedBindingList, dataFormat.GetDsvWriter());
-                            }
-                        });
+                                using (var clonedBindingList = new BindingListSource())
+                                {
+                                    clonedBindingList.SetView(bindingListSource.ViewInfo, clonedList);
+                                    WriteData(progressMonitor, writer, clonedBindingList, dataFormat.GetDsvWriter());
+                                }
+                            });
+                        }
+                    }
+                    SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
+                }
+            }
+            catch (Exception exception)
+            {
+                ShowMessageBox(owner, Resources.AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ + exception.Message,
+                    MessageBoxButtons.OK);
+            }
+        }
+
+        public void CopyAll(Control owner, BindingListSource bindingListSource)
+        {
+            try
+            {
+                StringWriter tsvWriter = new StringWriter();
+                var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
+                if (null == cloneableRowSource)
+                {
+                    var progressMonitor = new UncancellableProgressMonitor();
+                    WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.GetDsvWriter());
+                }
+                else
+                {
+                    var clonedList = cloneableRowSource.DeepClone();
+                    if (!RunLongJob(owner, progressMonitor =>
+                    {
+                        using (var clonedBindingList = new BindingListSource())
+                        {
+                            clonedBindingList.SetView(bindingListSource.ViewInfo, clonedList);
+                            WriteData(progressMonitor, tsvWriter, clonedBindingList, DataFormats.TSV.GetDsvWriter());
+                            progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
+                        }
+                    }))
+                    {
+                        return;
                     }
                 }
-                SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
+                DataObject dataObject = new DataObject();
+                dataObject.SetText(tsvWriter.ToString());
+                Clipboard.SetDataObject(dataObject);
+            }
+            catch (Exception exception)
+            {
+                ShowMessageBox(owner, 
+                    Resources.AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ + exception.Message, 
+                    MessageBoxButtons.OK);
             }
         }
 
@@ -312,7 +360,7 @@ namespace pwiz.Common.DataBinding
             viewSpec = MakeEditable(viewSpec, originalName);
             using (var customizeViewForm = CreateViewEditor(viewSpec))
             {
-                if (customizeViewForm.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
+                if (customizeViewForm.ShowDialog(owner) == DialogResult.Cancel)
                 {
                     return null;
                 }

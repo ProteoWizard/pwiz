@@ -36,6 +36,7 @@ namespace pwiz.Common.DataBinding
         IEnumerable GetRowSource(ViewInfo viewInfo);
         ViewInfo GetViewInfo(ViewSpec viewSpec);
         void Export(Control owner, BindingListSource bindingListSource);
+        void CopyAll(Control owner, BindingListSource bindingListSource);
         BindingListSource ExecuteQuery(Control owner, ViewSpec viewSpec);
         ViewSpec NewView(Control owner);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec);

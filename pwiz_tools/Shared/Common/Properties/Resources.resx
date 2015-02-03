@@ -331,6 +331,12 @@
   <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
     <value>Show rows where {0}...</value>
   </data>
+  <data name="AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__" xml:space="preserve">
+    <value>There was an error copying the data to the clipboard: </value>
+  </data>
+  <data name="AbstractViewContext_Export_There_was_an_error_writing_to_the_file__" xml:space="preserve">
+    <value>There was an error writing to the file: </value>
+  </data>
   <data name="NavBar_NavBar_Waiting_for_data___" xml:space="preserve">
     <value>Waiting for data...</value>
   </data>
