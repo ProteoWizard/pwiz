@@ -185,7 +185,8 @@ int main(int argc, char* argv[])
         unit_assert(allInstrumentTestsPassed);
         #endif
 
-        pwiz::util::testReader(pwiz::msdata::Reader_Thermo(), testArgs, testAcceptOnly, IsRawFile());
+        bool requireUnicodeSupport = true;
+        pwiz::util::testReader(pwiz::msdata::Reader_Thermo(), testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile());
     }
     catch (exception& e)
     {

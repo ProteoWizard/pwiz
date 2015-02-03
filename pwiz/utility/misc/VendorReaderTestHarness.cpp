@@ -1,4 +1,4 @@
-//
+﻿//
 // $Id$
 //
 //
@@ -68,22 +68,29 @@ void testAccept(const Reader& reader, const string& rawpath)
 }
 
 
-void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles)
+void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles, const string& newSourceName = "")
 {
     // mangling the absolute paths is necessary for the test to work from any path
     BOOST_FOREACH(SourceFilePtr& sourceFilePtr, sourceFiles)
     {
-        // if the sourceName is in the location, preserve it (erase everything preceding it)
-        size_t sourceNameInLocation = sourceFilePtr->location.find(sourceName);
+        // if the sourceName or newSourceName is in the location, preserve it (erase everything preceding it)
+        size_t sourceNameInLocation = newSourceName.empty() ? sourceFilePtr->location.find(sourceName) : min(sourceFilePtr->location.find(sourceName), sourceFilePtr->location.find(newSourceName));
         if (sourceNameInLocation != string::npos)
         {
             sourceFilePtr->location.erase(0, sourceNameInLocation);
-            sourceFilePtr->location = "file:///" + sourceFilePtr->location;
+            sourceFilePtr->location = "file:///" + newSourceName.empty() ? sourceName : newSourceName;
         }
         else
             sourceFilePtr->location = "file:///";
-    }
 
+        if (!newSourceName.empty())
+        {
+            if (!bal::contains(sourceFilePtr->id, newSourceName))
+                bal::replace_all(sourceFilePtr->id, sourceName, newSourceName);
+            if (!bal::contains(sourceFilePtr->name, newSourceName))
+                bal::replace_all(sourceFilePtr->name, sourceName, newSourceName);
+        }
+    }
 }
 
 
@@ -132,14 +139,21 @@ void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 }
 
 
-void hackInMemoryMSData(const string& sourceName, MSData& msd)
+void hackInMemoryMSData(const string& sourceName, MSData& msd, const string& newSourceName = "")
 {
     // remove metadata ptrs appended on read
     vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
     if (!sfs.empty()) sfs.erase(sfs.end()-1);
 
-    mangleSourceFileLocations(sourceName, sfs);
+    mangleSourceFileLocations(sourceName, sfs, newSourceName);
     manglePwizSoftware(msd);
+
+    // if given a new source name, use it for the run id
+    if (!newSourceName.empty())
+    {
+        bal::replace_all(msd.id, sourceName, newSourceName);
+        bal::replace_all(msd.run.id, sourceName, newSourceName);
+    }
 
     // set current DataProcessing to the original conversion
     // NOTE: this only works for vendor readers that use a single dataProcessing element
@@ -227,7 +241,7 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
 };
 
 
-void testRead(const Reader& reader, const string& rawpath)
+void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSupport)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
@@ -332,6 +346,7 @@ void testRead(const Reader& reader, const string& rawpath)
     }
 
     msds.clear();
+    msdCount = msds.size();
 
     // test reverse iteration of metadata on a fresh document;
     // this tests that caching optimization for forward iteration doesn't hide problems;
@@ -349,15 +364,117 @@ void testRead(const Reader& reader, const string& rawpath)
             for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
                 msd_reverse.run.chromatogramListPtr->chromatogram(end - j - 1);
     }
+
+    msds.clear();
+    // test non-ASCII characters in the source name, which in case of failure is conditionally an error or warning;
+    // create a copy of the rawpath (file or directory) with non-ASCII characters in it
+    bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".试验"));
+    bfs::path rawpathPath(rawpath);
+    bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
+    newRawPath.replace_extension(unicodeTestString + newRawPath.extension().native());
+    if (bfs::exists(newRawPath))
+        bfs::remove_all(newRawPath);
+    if (bfs::is_directory(rawpathPath))
+        pwiz::util::copy_directory(rawpathPath, newRawPath);
+    else
+    {
+        // special case for wiff files with accompanying .scan files
+        if (bal::iequals(rawpathPath.extension().string(), ".wiff"))
+        {
+            bfs::path wiffscanPath(rawpathPath);
+            wiffscanPath.replace_extension(".wiff.scan");
+            if (bfs::exists(wiffscanPath))
+            {
+                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                newWiffscanPath.replace_extension(unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan"));
+                if (bfs::exists(newWiffscanPath))
+                    bfs::remove(newWiffscanPath);
+                bfs::copy_file(wiffscanPath, newWiffscanPath);
+            }
+        }
+        bfs::copy_file(rawpathPath, newRawPath);
+    }
+
+    try
+    {
+        rawheader = pwiz::util::read_file_header(newRawPath.string(), 512);
+        reader.read(newRawPath.string(), rawheader, msds);
+        msdCount = msds.size();
+
+        bfs::path sourceNameAsPath(sourceName);
+        sourceNameAsPath.replace_extension("");
+        bfs::path newSourceName = sourceNameAsPath;
+        newSourceName += unicodeTestString;
+
+        // Compensate for the change to the filename:
+        // - single-run sources will change like: <SourceName> -> <SourceName>.<UnicodeTestString>
+        // - multi-run sources (e.g. WIFF) will change like: <SourceName>-<SampleName> -> <SourceName>.<UnicodeTestString>-<SampleName>
+        for (size_t i = 0; i < msdCount; ++i)
+        {
+            MSData& msd = *msds[i];
+
+            calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
+            mangleSourceFileLocations(sourceNameAsPath.string(), msd.fileDescription.sourceFilePtrs, newSourceName.string());
+            manglePwizSoftware(msd);
+            if (os_) TextWriter(*os_, 0)(msd);
+
+            bfs::path::string_type targetResultFilename = (rawpathPath.parent_path() / (msd.run.id + ".mzML")).native();
+            bal::replace_all(targetResultFilename, unicodeTestString, L"");
+            MSDataFile targetResult(bfs::path(targetResultFilename).string());
+            hackInMemoryMSData(sourceNameAsPath.string(), targetResult, newSourceName.string());
+
+            // test for 1:1 equality with the target mzML
+            Diff<MSData, DiffConfig> diff(msd, targetResult);
+            if (diff) cerr << headDiff(diff, 5000) << endl;
+            unit_assert(!diff);
+
+            // test serialization of this vendor format in and out of pwiz's supported open formats
+            stringstream* stringstreamPtr = new stringstream;
+            boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
+#ifndef WITHOUT_MZ5
+            // mzML <-> mz5
+            string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
+            {
+                MSData msd_mz5;
+                Serializer_mz5 serializer_mz5;
+                serializer_mz5.write(targetResultFilename_mz5, msd);
+                serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
+
+                Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+                if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
+                unit_assert(!diff_mz5);
+            }
+            bfs::remove(targetResultFilename_mz5);
+#endif
+        }
+    }
+    catch (exception& e)
+    {
+        if (requireUnicodeSupport)
+            throw runtime_error(string("error while testing for Unicode support: ") + e.what());
+        else
+            cerr << "Warning: error while testing for Unicode support: " << e.what() << endl;
+    }
+
+    msds.clear(); // free the MSDataFiles
+
+    try
+    {
+        bfs::remove_all(newRawPath); // remove the copy of the RAW file with non-ASCII characters
+    }
+    catch (bfs::filesystem_error& e)
+    {
+        cerr << "Warning: non-ASCII copy of test file \"" << rawpath << "\" could not be removed after testing: " << e.what() << endl;
+    }
 }
 
 
-void test(const Reader& reader, bool testAcceptOnly, const string& rawpath)
+void test(const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath)
 {
     testAccept(reader, rawpath);
 
     if (!testAcceptOnly)
-        testRead(reader, rawpath);
+        testRead(reader, rawpath, requireUnicodeSupport);
 }
 
 
@@ -392,7 +509,7 @@ void parseArgs(const vector<string>& args, bool& generateMzML, vector<string>& r
     }
 }
 
-void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, const string* rawpath)
+void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, bool* requireUnicodeSupport, const string* rawpath)
 {
     testBarrier->wait(); // wait until all threads have started
 
@@ -401,7 +518,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, b
         testAccept(*reader, *rawpath);
 
         if (!(*testAcceptOnly))
-            testRead(*reader, *rawpath);
+            testRead(*reader, *rawpath, *requireUnicodeSupport);
     }
     catch (exception& e)
     {
@@ -413,12 +530,12 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, b
     }
 }
 
-void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, const string& rawpath)
+void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath)
 {
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
-        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &rawpath));
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &requireUnicodeSupport, &rawpath));
     testThreadGroup.join_all();
 }
 
@@ -426,7 +543,7 @@ void testThreadSafety(const int& testThreadCount, const Reader& reader, bool tes
 
 
 PWIZ_API_DECL
-int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, const TestPathPredicate& isPathTestable)
+int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport, const TestPathPredicate& isPathTestable)
 {
     bool generateMzML;
     vector<string> rawpaths;
@@ -450,12 +567,12 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 generate(reader, rawpath);
             else
             {
-                test(reader, testAcceptOnly, rawpath);
+                test(reader, testAcceptOnly, requireUnicodeSupport, rawpath);
 
                 /* TODO: there are issues to be resolved here but not just simple crashes
-                testThreadSafety(1, reader, testAcceptOnly, rawpath);
-                testThreadSafety(2, reader, testAcceptOnly, rawpath);
-                testThreadSafety(4, reader, testAcceptOnly, rawpath);*/
+                testThreadSafety(1, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
+                testThreadSafety(2, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
+                testThreadSafety(4, reader, testAcceptOnly, requireUnicodeSupport, rawpath);*/
 
                 // test that the reader releases any locks on the data so it can be moved/deleted
                 try

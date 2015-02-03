@@ -25,6 +25,8 @@
 
 #include "Filesystem.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+#include <boost/utility/singleton.hpp>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 
 using std::string;
@@ -50,12 +52,31 @@ using std::runtime_error;
 #endif
 
 
+namespace {
+
+class UTF8_BoostFilesystemPathImbuer : public boost::singleton<UTF8_BoostFilesystemPathImbuer>
+{
+    public:
+    UTF8_BoostFilesystemPathImbuer(boost::restricted)
+    {
+        std::locale global_loc = std::locale();
+        std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet);
+        bfs::path::imbue(loc);
+    }
+
+    void imbue() const {};
+};
+
+} // namespace
+
 namespace pwiz {
 namespace util {
 
 PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
                                   vector<bfs::path>& matchingPaths)
 {
+    UTF8_BoostFilesystemPathImbuer::instance->imbue();
+
     using bfs::path;
     int matchingPathCount = 0;
 
@@ -107,6 +128,73 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
 #endif
 
     return matchingPathCount;
+}
+
+
+namespace
+{
+    void copy_recursive(const bfs::path& from, const bfs::path& to)
+    {
+        bfs::copy_directory(from, to);
+
+        BOOST_FOREACH(bfs::directory_entry& entry, bfs::directory_iterator(from))
+        {
+            bfs::file_status status = entry.status();
+            if (status.type() == bfs::directory_file)
+                copy_recursive(entry.path(), to / entry.path().filename());
+            else if (status.type() == bfs::regular_file)
+                bfs::copy_file(entry.path(), to / entry.path().filename());
+            else
+                throw bfs::filesystem_error("[copy_directory] invalid path type", entry.path(), boost::system::error_code(boost::system::errc::no_such_file_or_directory, boost::system::system_category()));
+        }
+    }
+
+    void copy_recursive(const bfs::path& from, const bfs::path& to, boost::system::error_code& ec)
+    {
+        bfs::copy_directory(from, to, ec);
+        if (ec.value() != 0)
+            return;
+
+        BOOST_FOREACH(bfs::directory_entry& entry, bfs::directory_iterator(from))
+        {
+            bfs::file_status status = entry.status(ec);
+            if (status.type() == bfs::directory_file)
+                copy_recursive(entry.path(), to / entry.path().filename(), ec);
+            else if (status.type() == bfs::regular_file)
+                bfs::copy_file(entry.path(), to / entry.path().filename(), ec);
+            else if (ec.value() != 0)
+                ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::system_category());
+        }
+    }
+}
+
+PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bool recursive, boost::system::error_code* ec)
+{
+    if (!bfs::is_directory(from))
+        throw bfs::filesystem_error("[copy_directory] source path is not a directory", from, boost::system::error_code(boost::system::errc::not_a_directory, boost::system::system_category()));
+
+    if (bfs::exists(to))
+    {
+        if (ec != NULL)
+            ec->assign(boost::system::errc::file_exists, boost::system::system_category());
+        else
+            throw bfs::filesystem_error("[copy_directory] target path exists", to, boost::system::error_code(boost::system::errc::file_exists, boost::system::system_category()));
+    }
+
+    if (recursive)
+    {
+        if (ec != NULL)
+            copy_recursive(from, to, *ec);
+        else
+            copy_recursive(from, to);
+    }
+    else
+    {
+        if (ec != NULL)
+            bfs::copy_directory(from, to, *ec);
+        else
+            bfs::copy_directory(from, to);
+    }
 }
 
 
@@ -162,6 +250,8 @@ string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviatio
 
 PWIZ_API_DECL string read_file_header(const string& filepath, size_t length)
 {
+    UTF8_BoostFilesystemPathImbuer::instance->imbue();
+
     string head;
     if (!bfs::is_directory(filepath))
     {

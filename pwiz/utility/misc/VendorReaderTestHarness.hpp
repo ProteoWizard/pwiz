@@ -44,7 +44,7 @@ struct PWIZ_API_DECL TestPathPredicate
 PWIZ_API_DECL
 int testReader(const pwiz::msdata::Reader& reader,
                const std::vector<std::string>& args,
-               bool testAcceptOnly,
+               bool testAcceptOnly, bool requireUnicodeSupport,
                const TestPathPredicate& isPathTestable);
 
 

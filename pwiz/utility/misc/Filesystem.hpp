@@ -73,6 +73,11 @@ namespace util {
 PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
                                   vector<bfs::path>& matchingPaths);
 
+/// if recursive is true, then copies "from" and all its contents to "to";
+/// if "to" already exists or the copy fails for another reason, the error is reported in one of two ways:
+/// - if "ec" is not NULL, it will set it to the error code
+/// - if "ec" is NULL, a boost::filesystem_error is thrown
+PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bool recursive = true, boost::system::error_code* ec = 0);
 
 PWIZ_API_DECL enum ByteSizeAbbreviation
 {

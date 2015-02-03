@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        pwiz::util::testReader(pwiz::msdata::Reader_Waters(), testArgs, testAcceptOnly, IsRawData());
+        bool requireUnicodeSupport = false;
+        pwiz::util::testReader(pwiz::msdata::Reader_Waters(), testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData());
     }
     catch (exception& e)
     {

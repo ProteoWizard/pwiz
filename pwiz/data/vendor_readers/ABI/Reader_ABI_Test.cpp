@@ -46,7 +46,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        pwiz::util::testReader(pwiz::msdata::Reader_ABI(), testArgs, testAcceptOnly, IsWiffFile());
+        bool requireUnicodeSupport = true;
+        pwiz::util::testReader(pwiz::msdata::Reader_ABI(), testArgs, testAcceptOnly, requireUnicodeSupport, IsWiffFile());
     }
     catch (exception& e)
     {

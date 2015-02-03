@@ -46,7 +46,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        pwiz::util::testReader(pwiz::msdata::Reader_Shimadzu(), testArgs, testAcceptOnly, IsShimadzuLCD());
+        bool requireUnicodeSupport = true;
+        pwiz::util::testReader(pwiz::msdata::Reader_Shimadzu(), testArgs, testAcceptOnly, requireUnicodeSupport, IsShimadzuLCD());
     }
     catch (exception& e)
     {

@@ -257,7 +257,7 @@ RawFileImpl::RawFileImpl(const string& filename)
             isTemporary_ = true;
         }*/
 
-        if (raw_->Open(filename_.c_str()))
+        if (raw_->Open(bfs::path(filename_).native().c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
     }
     catch (_com_error& e)

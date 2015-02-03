@@ -46,7 +46,8 @@ int main(int argc, char* argv[])
 
     try
     {
-        pwiz::util::testReader(pwiz::msdata::Reader_Bruker(), testArgs, testAcceptOnly, IsDirectory());
+        bool requireUnicodeSupport = false;
+        pwiz::util::testReader(pwiz::msdata::Reader_Bruker(), testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory());
     }
     catch (exception& e)
     {
