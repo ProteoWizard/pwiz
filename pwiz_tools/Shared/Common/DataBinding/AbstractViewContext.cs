@@ -188,8 +188,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 var dataFormats = new[] {DataFormats.CSV, DataFormats.TSV};
-                string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
-                // Not L10N
+                string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray()); // Not L10N
                 using (var saveFileDialog = new SaveFileDialog
                 {
                     Filter = fileFilter,
