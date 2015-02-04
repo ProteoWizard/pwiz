@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -39,9 +41,16 @@ namespace pwiz.Skyline.EditUI
     /// </summary>
     public partial class UniquePeptidesDlg : FormEx
     {
+        private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
+        {
+            Name = "checkBoxPeptideIncludedColumnHeader",
+            Size = new Size(18, 18),
+            AutoCheck = false
+        };
         private List<ProteinColumn> _proteinColumns;
         private List<PeptideDocNode> _peptideDocNodes;
         private List<HashSet<Protein>> _peptideProteins;
+
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
@@ -49,7 +58,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             DocumentUIContainer = documentUiContainer;
-            dataGridView1.CurrentCellChanged += dataGridView1_CurrentCellChanged;
+            dataGridView1.CurrentCellChanged += dataGridView1_CurrentCellChanged; 
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
@@ -190,7 +199,8 @@ namespace pwiz.Skyline.EditUI
                     Tag = proteinColumn,
                 };
                 dataGridView1.Columns.Add(column);
-            }
+            }          
+
             for (int i = 0; i < _peptideDocNodes.Count; i++)
             {
                 var peptide = _peptideDocNodes[i];
@@ -210,6 +220,27 @@ namespace pwiz.Skyline.EditUI
                 // Select the first peptide to populate the other controls in the dialog.
                 dataGridView1.CurrentCell = dataGridView1.Rows[0].Cells[1];
             }
+
+            DrawCheckBoxOnPeptideIncludedColumnHeader();
+        }
+
+        private void DrawCheckBoxOnPeptideIncludedColumnHeader()
+        {
+            Rectangle headerRectangle = PeptideIncludedColumn.HeaderCell.ContentBounds;
+            headerRectangle.X = headerRectangle.Location.X;
+
+            _checkBoxPeptideIncludedColumnHeader.Location = headerRectangle.Location;
+            _checkBoxPeptideIncludedColumnHeader.Click += CheckboxPeptideIncludedColumnHeaderOnClick;
+
+            dataGridView1.Controls.Add(_checkBoxPeptideIncludedColumnHeader);
+
+            PeptideIncludedColumn.HeaderCell.Style.Padding =
+                new Padding(PeptideIncludedColumn.HeaderCell.Style.Padding.Left + 18,
+                    PeptideIncludedColumn.HeaderCell.Style.Padding.Top,
+                    PeptideIncludedColumn.HeaderCell.Style.Padding.Right,
+                    PeptideIncludedColumn.HeaderCell.Style.Padding.Bottom);
+
+            SetCheckBoxPeptideIncludedHeaderState();
         }
 
         private void QueryPeptideProteins(ILongWaitBroker longWaitBroker)
@@ -256,6 +287,13 @@ namespace pwiz.Skyline.EditUI
             public int Index { get; set; }
             public Protein Protein { get; set; }
         }
+       
+        private void CheckboxPeptideIncludedColumnHeaderOnClick(object sender, EventArgs eventArgs)
+        {
+            contextMenuStrip1.Show(
+                PointToScreen(new Point(PeptideIncludedColumn.HeaderCell.ContentBounds.X,
+                    PeptideIncludedColumn.HeaderCell.ContentBounds.Y)));
+        }
 
         private void includeToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -266,19 +304,79 @@ namespace pwiz.Skyline.EditUI
         {
             SetSelectedRowsIncluded(false);
         }
+        
+        private void uniqueOnlyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1);
+        }
+
+        private void excludeBackgroundProteomeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(0);
+        }
+
+        private void includeAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAllRowsIncluded(true);
+        }
+
+        private void excludeAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAllRowsIncluded(false);
+        }
+
+        private void SetAllRowsIncluded(bool included)
+        {
+            dataGridView1.EndEdit();
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                var row = dataGridView1.Rows[i];
+                row.Cells[PeptideIncludedColumn.Name].Value = included;
+            }
+            SetCheckBoxPeptideIncludedHeaderState();
+        }
+
+        private void SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(int threshold)
+        {
+            dataGridView1.EndEdit();
+            for (int rowIndex = 0; rowIndex < dataGridView1.Rows.Count; rowIndex++)
+            {
+                int matchCount = 0;
+                var row = dataGridView1.Rows[rowIndex];
+                bool included = true;
+                for (int col = 0; col < dataGridView1.ColumnCount; col++)
+                {
+                    if (col == PeptideIncludedColumn.Index || col == PeptideColumn.Index)
+                        continue;
+
+                    if (row.Cells[col].Value is bool && ((bool) row.Cells[col].Value))
+                    {
+                        matchCount++;
+                    }
+                    if (matchCount > threshold)
+                    {
+                        included = false;
+                        break;
+                    }
+                }
+                row.Cells[PeptideIncludedColumn.Name].Value = included;
+            }
+            SetCheckBoxPeptideIncludedHeaderState();
+        }
 
         private void SetSelectedRowsIncluded(bool included)
         {
             dataGridView1.EndEdit();
-            for (int i = 0; i < dataGridView1.SelectedRows.Count; i++)
+
+            IEnumerable<DataGridViewRow> selectedRows = dataGridView1.SelectedCells.Cast<DataGridViewCell>()
+                                                                     .Select(cell => cell.OwningRow)
+                                                                     .Distinct();
+            foreach (DataGridViewRow row in selectedRows)
             {
-                var row = dataGridView1.SelectedRows[i];
                 row.Cells[PeptideIncludedColumn.Name].Value = included;
             }
-            if (dataGridView1.CurrentRow != null)
-            {
-                dataGridView1.CurrentRow.Cells[PeptideIncludedColumn.Name].Value = included;
-            }
+
+            SetCheckBoxPeptideIncludedHeaderState();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -309,6 +407,7 @@ namespace pwiz.Skyline.EditUI
             }
             return new SrmDocument(srmDocument, srmDocument.Settings, children);
         }
+
         private PeptideGroupDocNode ExcludePeptides(PeptideGroupDocNode peptideGroupDocNode)
         {
             HashSet<PeptideDocNode> excludedPeptides = new HashSet<PeptideDocNode>();
@@ -336,6 +435,41 @@ namespace pwiz.Skyline.EditUI
                 peptideGroupDocNode.ProteinMetadata, 
                 children.ToArray(),
                 false);
+        }
+
+        private void dataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            dataGridView1.EndEdit();
+            SetCheckBoxPeptideIncludedHeaderState();
+        }
+
+        private void SetCheckBoxPeptideIncludedHeaderState()
+        {
+            bool atLeastOneChecked = false;
+            bool atLeastOneUnchecked = false;
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                var row = dataGridView1.Rows[i];
+                if (((bool)row.Cells[PeptideIncludedColumn.Name].Value))
+                {
+                    atLeastOneChecked = true;
+                }
+                if (((bool)row.Cells[PeptideIncludedColumn.Name].Value) == false)
+                {
+                    atLeastOneUnchecked = true;
+                }
+                if (atLeastOneChecked && atLeastOneUnchecked)
+                {
+                    break;
+                }
+            }
+
+            if (atLeastOneChecked && atLeastOneUnchecked)
+                _checkBoxPeptideIncludedColumnHeader.CheckState = CheckState.Indeterminate;
+            else if (atLeastOneChecked)
+                _checkBoxPeptideIncludedColumnHeader.CheckState = CheckState.Checked;
+            else
+                _checkBoxPeptideIncludedColumnHeader.CheckState = CheckState.Unchecked;
         }
 
         public DataGridView GetDataGridView()
