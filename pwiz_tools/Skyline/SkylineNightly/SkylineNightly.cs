@@ -102,7 +102,7 @@ namespace SkylineNightly
 
             using (var dlg = new FolderBrowserDialog
             {
-                Description = "Select or create a nightly build folder.",
+                Description = "Select or create a nightly build folder.", // Not L10N
                 ShowNewFolderButton = true,
                 SelectedPath = documentsFolder
             })
