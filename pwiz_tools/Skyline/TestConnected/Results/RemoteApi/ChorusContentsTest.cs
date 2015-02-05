@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA.Results.RemoteApi
+namespace pwiz.SkylineTestConnected.Results.RemoteApi
 {
     [TestClass]
     public class ChorusContentsTest : AbstractUnitTest

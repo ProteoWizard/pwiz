@@ -41,7 +41,7 @@ namespace TestRunner
 {
     internal static class Program
     {
-        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
+        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
         private const int LeakThreshold = 250000;
         private const int CrtLeakThreshold = 1000;
         private const int LeakCheckIterations = 20;

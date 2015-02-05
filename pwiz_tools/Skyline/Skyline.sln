@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C80CDBB4-AC19-4D59-B8AE-6424EA5C6D34}"
 	ProjectSection(SolutionItems) = preProject
@@ -56,6 +56,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineTool", "SkylineTool\SkylineTool.csproj", "{3FD4E167-8F9C-4116-8122-67C7AD143490}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightly", "SkylineNightly\SkylineNightly.csproj", "{32A40878-3053-4FFA-96C1-23FC27D46B65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnected", "TestConnected\TestConnected.csproj", "{5D4E9180-FD66-4C11-8C16-11921865EDBD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -233,6 +235,14 @@ Global
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Release|x64.Build.0 = Release|x64
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Release|x86.ActiveCfg = Release|x86
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Release|x86.Build.0 = Release|x86
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Debug|x64.ActiveCfg = Debug|x64
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Debug|x64.Build.0 = Debug|x64
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Debug|x86.ActiveCfg = Debug|x86
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Debug|x86.Build.0 = Debug|x86
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x64.ActiveCfg = Release|x64
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x64.Build.0 = Release|x64
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x86.ActiveCfg = Release|x86
+		{5D4E9180-FD66-4C11-8C16-11921865EDBD}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

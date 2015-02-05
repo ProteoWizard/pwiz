@@ -16,9 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -29,7 +30,7 @@ using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA.Results.RemoteApi
+namespace pwiz.SkylineTestConnected.Results.RemoteApi
 {
     /// <summary>
     /// Summary description for ChromTaskListTest
