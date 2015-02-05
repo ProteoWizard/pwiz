@@ -190,10 +190,8 @@
                     <Component Feature="MainFeature"><File Id="_seems.exe.manifest" Name="seems.exe.manifest" Source="msvc-release\seems.exe.manifest" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_STL_Containers.dll" Name="STL_Containers.dll" Source="msvc-release\STL_Containers.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Id="_ZedGraph.dll" Name="ZedGraph.dll" Source="msvc-release\ZedGraph.dll" KeyPath="yes"/></Component>
-
-                      <!-- Mascot support is not currently available for VC12
-                      <Component Feature="MainFeature"><File Id="_msparser.dll" Name="msparser.dll" Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
-                      <Component Feature="MainFeature"><File Id="_unimod_2.xsd" Name="unimod_2.xsd" Source="msvc-release\unimod_2.xsd" KeyPath="yes"/></Component> -->
+                    <Component Feature="MainFeature"><File Id="_msparser.dll" Name="msparser.dll" Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Id="_unimod_2.xsd" Name="unimod_2.xsd" Source="msvc-release\unimod_2.xsd" KeyPath="yes"/></Component>
                     
 <!-- Agilent DLLs -->
 <Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
