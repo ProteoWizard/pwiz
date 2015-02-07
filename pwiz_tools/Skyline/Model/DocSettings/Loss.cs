@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class FragmentLoss : Immutable, IXmlSerializable
     {
         public const double MIN_LOSS_MASS = 0.0001;
-        public const double MAX_LOSS_MASS = 600;
+        public const double MAX_LOSS_MASS = 5000;
 
         private string _formula;
 
