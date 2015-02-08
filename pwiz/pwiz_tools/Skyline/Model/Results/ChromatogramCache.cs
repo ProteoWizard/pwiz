@@ -86,8 +86,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 string dirData = Path.GetDirectoryName(msDataFilePath.FilePath);
                 // Perhaps one of these hasn't a path at all - are both in the current working directory?
-                string fullDocDirPath = String.IsNullOrEmpty(dirDocument) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirDocument));
-                string fullFileDirPath = String.IsNullOrEmpty(dirData) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirData));
+                string fullDocDirPath = String.IsNullOrEmpty(dirDocument) ? Directory.GetCurrentDirectory() : Path.GetFullPath(dirDocument);
+                string fullFileDirPath = String.IsNullOrEmpty(dirData) ? Directory.GetCurrentDirectory() : Path.GetFullPath(dirData);
                 if (!Equals(fullDocDirPath, fullFileDirPath))
                     sbName.Append('_').Append(AdlerChecksum.MakeForString(fullFileDirPath));
             }
