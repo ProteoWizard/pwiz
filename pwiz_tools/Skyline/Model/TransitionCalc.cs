@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         {
             return CalcCharge(productMassH, productMz, tolerance, isCustomIon,
                 Transition.MIN_PRODUCT_CHARGE,
-                maxCharge,
+                Math.Min(maxCharge, Transition.MAX_PRODUCT_CHARGE),
                 Transition.MassShifts,
                 massShiftType,
                 out massShift,
