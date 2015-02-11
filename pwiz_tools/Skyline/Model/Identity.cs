@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model
         /// to distinguish <see cref="Identity"/> objects.  Many derived classes have
         /// much more interesting overrides of "content equality" functions.
         /// </summary>
-        public bool Equals(Identity obj)
+        private bool Equals(Identity obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

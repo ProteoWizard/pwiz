@@ -23,6 +23,7 @@ namespace pwiz.Skyline.Controls.Graphs
     // Extra info for each peptide.
     public class PeptideGraphInfo
     {
-        public Color Color;
+        public Color Color { get; set; }
+        public bool IsSelected { get; set; }
     }
 }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -860,7 +861,6 @@ namespace pwiz.Skyline
         {
             SrmDocument document = DocumentUI;
 
-            Exception exception = null;
             try
             {
                 using (var saver = new FileSaver(fileName))
@@ -901,16 +901,13 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            catch (UnauthorizedAccessException ex) { exception = ex; }
-            catch (IOException ex) { exception = ex; }
             catch (OperationCanceledException)
             {
                 return false;
             }
-
-            if (exception != null)
+            catch (Exception ex) 
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), exception.Message);
+                var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), ex.Message);
                 MessageBox.Show(message);
                 return false;
             }
@@ -947,6 +944,7 @@ namespace pwiz.Skyline
             catch (UnauthorizedAccessException) {}
             catch (IOException) {}
             catch (OperationCanceledException) {}
+            catch (TargetInvocationException) {}
 
             return true;
         }

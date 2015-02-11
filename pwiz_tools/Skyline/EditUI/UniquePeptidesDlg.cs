@@ -43,7 +43,7 @@ namespace pwiz.Skyline.EditUI
     {
         private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
         {
-            Name = "checkBoxPeptideIncludedColumnHeader",
+            Name = "checkBoxPeptideIncludedColumnHeader", // Not L10N
             Size = new Size(18, 18),
             AutoCheck = false
         };

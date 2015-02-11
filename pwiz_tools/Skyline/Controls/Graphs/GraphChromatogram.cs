@@ -150,6 +150,8 @@ namespace pwiz.Skyline.Controls.Graphs
             TreeNodeMS SelectedNode { get; }
             IList<TreeNodeMS> SelectedNodes { get; }
 
+            void SelectPath(IdentityPath path);
+
             SpectrumDisplayInfo SelectedSpectrum { get; }
             GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation();
 
@@ -1942,6 +1944,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Display only the top peptides.
             int lastPeptideIndex = Math.Min(MaxPeptidesDisplayed, displayPeptides.Count);
+            var graphItems = new List<ChromGraphItem>();
             for (int i = lastPeptideIndex-1; i >= 0; i--) // smallest peaks first for good z-ordering in graph
             {
                 var bestPeakInfo = displayPeptides[i].BestPeakInfo;
@@ -1990,11 +1993,22 @@ namespace pwiz.Skyline.Controls.Graphs
                     fontSize,
                     lineWidth)
                 {
-                    CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.RawTextId, peptideDocNode.IsProteomic)
+                    CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.RawTextId, peptideDocNode.IsProteomic),
+                    IdPath = _groupPaths[displayPeptides[i].PeptideIndex],
+                    GraphInfo = peptideGraphInfo
                 };
-                var graphPaneKey = new PaneKey();
-                var curveItem = _graphHelper.AddChromatogram(graphPaneKey, graphItem);
-                ((LineItem)curveItem).Line.Fill = new Fill(Color.FromArgb(15, color));
+                if (peptideGraphInfo.IsSelected)
+                    graphItems.Insert(0, graphItem);
+                else
+                    graphItems.Add(graphItem);
+            }
+
+            foreach (var graphItem in graphItems)
+            {
+                var curveItem = _graphHelper.AddChromatogram(new PaneKey(), graphItem);
+                // Make the fill color under the curve more opaque if the curve is selected.
+                var fillAlpha = graphItem.GraphInfo.IsSelected ? 60 : 15;
+                ((LineItem)curveItem).Line.Fill = new Fill(Color.FromArgb(fillAlpha, graphItem.GraphInfo.Color));
             }
         }
 
@@ -2501,6 +2515,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Editing support
 
+        public IdentityPath FindIdentityPath(TextObj label)
+        {
+            foreach (var graphItem in GraphItems)
+            {
+                var idPath = graphItem.FindIdentityPath(label);
+                if (idPath != null)
+                    return idPath;
+            }
+            return null;
+        }
+
         public ScaledRetentionTime FindAnnotatedPeakRetentionTime(double time,
                                                                    out TransitionGroupDocNode nodeGroup,
                                                                    out TransitionDocNode nodeTran)
@@ -2733,20 +2758,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool HandleMouseMove(MouseEventArgs e)
         {
-            // Don't allow editing if multiple peptides are selected.
-            if (_showPeptideTotals)
-                return false;
-
             PointF pt = new PointF(e.X, e.Y);
-            if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
-            {
-                graphControl.Cursor = Cursors.VSplit;
-                DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
-                return true;
-            }
 
-            if (e.Button != MouseButtons.None)
-                return false;
+            if (!_showPeptideTotals)
+            {
+                if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
+                {
+                    graphControl.Cursor = Cursors.VSplit;
+                    DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
+                    return true;
+                }
+
+                if (e.Button != MouseButtons.None)
+                    return false;
+            }
 
             bool doFullScanTracking = _enableTrackingDot;
 
@@ -2763,13 +2788,18 @@ namespace pwiz.Skyline.Controls.Graphs
                         doFullScanTracking = false;
                         TransitionGroupDocNode nodeGroup;
                         TransitionDocNode nodeTran;
-                        if ((!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran).IsZero) ||
+                        if (_showPeptideTotals ||
+                            (!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran).IsZero) ||
                             !FindAnnotatedSpectrumRetentionTime(label).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
                             return true;
                         }
                     }
+
+                    if (_showPeptideTotals)
+                        return false;
+
                     var line = nearest as LineObj;
                     if (line != null)
                     {
@@ -2882,14 +2912,10 @@ namespace pwiz.Skyline.Controls.Graphs
        
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            // Don't allow editing if multiple peptides are selected.
-            if (_showPeptideTotals)
-                return false;
-
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
-                if (IsOverHighlightPoint(pt))
+                if (!_showPeptideTotals && IsOverHighlightPoint(pt))
                 {
                     var graphPane = GraphPaneFromPoint(pt);
                     if (graphPane != null)
@@ -2915,6 +2941,18 @@ namespace pwiz.Skyline.Controls.Graphs
                         var label = nearest as TextObj;
                         if (label != null)
                         {
+                            // Select corresponding peptide.
+                            if (_showPeptideTotals)
+                            {
+                                var idPath = FindIdentityPath(label);
+                                if (idPath != null)
+                                {
+                                    _stateProvider.SelectPath(idPath.Parent);
+                                    UpdateUI();
+                                }
+                                return true;
+                            }
+
                             if (!_extractor.HasValue)
                             {
                                 TransitionGroupDocNode nodeGroup;
@@ -2934,6 +2972,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                 return true;
                             }
                         }
+
+                        if (_showPeptideTotals)
+                            return false;
 
                         var line = nearest as LineObj;
                         if (line != null)

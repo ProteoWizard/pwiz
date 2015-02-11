@@ -178,6 +178,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _measuredTimes[_bestPeakTimeIndex] : 0; } }
 
         public string CurveAnnotation { get; set; }
+        public PeptideGraphInfo GraphInfo { get; set; }
+        public IdentityPath IdPath { get; set; }
 
         internal PeakBoundsDragInfo DragInfo
         {
@@ -318,8 +320,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             // Darken peptide name a little so light colors stand out against the white background.
                             var color = FontSpec.FontColor;
-                            color = Color.FromArgb(color.R*7/10, color.G*7/10, color.B*7/10);
-                            var fontSpec = new FontSpec(FontSpec) {FontColor = color, Angle = 90};
+                            if (!GraphInfo.IsSelected)
+                                color = Color.FromArgb(color.R*7/10, color.G*7/10, color.B*7/10);
+                            var fontSpec = new FontSpec(FontSpec) { FontColor = color, Angle = 90 };
+                            if (GraphInfo.IsSelected)
+                                fontSpec = new FontSpec(fontSpec) {IsBold = true, Size = fontSpec.Size + 2, IsAntiAlias = true};
 
                             // Display peptide name label using vertical text.
                             text = new TextObj(CurveAnnotation, timeBest.DisplayTime, intensityLabel,
@@ -645,7 +650,12 @@ namespace pwiz.Skyline.Controls.Graphs
             return label;
         }
 
-        
+        public IdentityPath FindIdentityPath(TextObj label)
+        {
+            var tag = label.Tag as GraphObjTag;
+            return tag != null ? tag.ChromGraphItem.IdPath : null;
+        }
+
         public ScaledRetentionTime FindPeakRetentionTime(TextObj label)
         {
             var tag = label.Tag as GraphObjTag;

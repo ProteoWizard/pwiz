@@ -214,6 +214,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                         g.FillRectangle(Brushes.White, backgroundRect);
                         var colorRect = new Rectangle(rightEdge, top, colorRectWidth - 2, colorRectHeight - 3);
                         g.FillRectangle(new SolidBrush(color.Value), colorRect);
+
+                        // Draw red outline around selected peptide if the tree isn't focused.
+                        if (IsSelected && !TreeView.Focused)
+                        {
+                            var bounds = BoundsMS;
+                            bounds.Width--;
+                            bounds.Height--;
+                            g.DrawRectangle(new Pen(Color.Red), bounds);
+                        }
                     }
                 }
             }

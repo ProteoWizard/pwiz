@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Controls
         private int _ratioIndex;
         private StatementCompletionTextBox _editTextBox;
         private readonly Dictionary<int, PeptideGraphInfo> _peptideGraphInfos = new Dictionary<int, PeptideGraphInfo>();
+        private bool _inhibitAfterSelect;
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
@@ -374,9 +375,19 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private static readonly PeptideGraphInfo SELECTED_PEPTIDE_GRAPH_INFO = new PeptideGraphInfo
+        {
+            Color = Color.Red,
+            IsSelected = true
+        };
+
         public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
         {
-            return _peptideGraphInfos[docNode.Id.GlobalIndex];
+            var selectedNode = SelectedNode as PeptideTreeNode;
+            var thisNode = docNode as PeptideDocNode;
+            return (selectedNode != null && thisNode != null && Equals(selectedNode.DocNode.Key, thisNode.Key))
+                ? SELECTED_PEPTIDE_GRAPH_INFO
+                : _peptideGraphInfos[docNode.Id.GlobalIndex];
         }
 
         [Browsable(false)]
@@ -529,6 +540,87 @@ namespace pwiz.Skyline.Controls
                     SelectNode(Nodes, new IdentityPathTraversal(value));    
                 }
             }
+        }
+
+        /// <summary>
+        /// Select a node in the tree without clearing the previous selection.
+        /// </summary>
+        public void SelectPath(IdentityPath path)
+        {
+            var node = (TreeNodeMS) FindNode(Nodes, new IdentityPathTraversal(path));
+            if (node == null)
+                return;
+
+            // Make sure all ancestors of this node are expanded
+            for (var parent = node.Parent; parent != null && !parent.IsExpanded; parent = parent.Parent)
+            {
+                parent.Expand();
+            }
+
+            // Scroll to show selected node.
+            node.EnsureVisible();
+
+            // Change the selected node without changing the total selection.  However, if the current
+            // node is already selected, allow the selection to collapse and show only the peptide's transitions.
+            _inhibitAfterSelect = !ReferenceEquals(SelectedNode, node);
+            SelectedNode = null;
+            SelectedNode = node;
+            _inhibitAfterSelect = false;
+
+            Refresh();
+        }
+
+        protected override void OnAfterSelect(TreeViewEventArgs e)
+        {
+            if (!_inhibitAfterSelect)
+                base.OnAfterSelect(e);
+        }
+
+        /// <summary>
+        /// Find the TreeNode corresponding to the given path traversal.
+        /// </summary>
+        private TreeNode FindNode(TreeNodeCollection treeNodes, IdentityPathTraversal traversal)
+        {
+            // Identity paths are not allowed to be empty, so we can get the
+            // first value, and then check to make sure we never descend further when
+            // no next value is available.
+            Identity id = traversal.Next();
+
+            // Check for the insert node, which is a special value
+            if (ReferenceEquals(id, NODE_INSERT_ID))
+                return (TreeNodeMS)Nodes[Nodes.Count - 1];
+
+            // Look for the specified child
+            foreach (TreeNode nodeTree in treeNodes)
+            {
+                SrmTreeNode node = nodeTree as SrmTreeNode;
+                if (node != null && ReferenceEquals(id, node.Model.Id))
+                {
+                    // If traversal is complete, select the specified node
+                    if (!traversal.HasNext)
+                    {
+                        return node;
+                    }
+                    // Otherwise continue descending
+                    else
+                    {
+                        // Make sure children have been materialized
+                        var nodeParent = node as SrmTreeNodeParent;
+                        if (nodeParent != null)
+                            nodeParent.EnsureChildren();
+
+                        // If no children are found, then select this node
+                        if (node.Nodes.Count == 0)
+                        {
+                            return node;
+                        }
+                        else
+                            return FindNode(node.Nodes, traversal);
+                    }
+                }
+            }
+
+            return null;
         }
 
         [Browsable(false)]

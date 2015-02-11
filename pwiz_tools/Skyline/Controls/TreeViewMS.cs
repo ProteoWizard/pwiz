@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline.Controls
 {
@@ -324,11 +325,11 @@ namespace pwiz.Skyline.Controls
 	        foreach (var node in nodes)
 	        {
 	            if (!unchangedNodes.Contains(node))
-	                IvalidateNode(node);
+	                InvalidateNode(node);
 	        }
 	    }
 
-	    protected void IvalidateNode(TreeNodeMS node)
+	    protected void InvalidateNode(TreeNodeMS node)
 	    {
 	        Invalidate(new Rectangle(0, node.BoundsMS.Top, ClientRectangle.Width, node.BoundsMS.Height));
 	    }
@@ -464,7 +465,7 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                if (!IsInSelection || !TreeViewMS.Focused)
+                if (!(IsSelected && IsInSelection) || !TreeViewMS.Focused)
                     return ForeColor;
                 return SystemColors.HighlightText;
             }
@@ -478,8 +479,16 @@ namespace pwiz.Skyline.Controls
                     return BackColor;
                 if (!TreeViewMS.Focused)
                     return Color.LightGray;
-                return SystemColors.Highlight;
+                if (IsSelected)
+                    return SystemColors.Highlight;
+                return Lighten(SystemColors.Highlight, 255);
             }
+        }
+
+        private static Color Lighten(Color color, byte brightness)
+        {
+            var hsbColor = new HSBColor(color) {B = brightness, S = 30};
+            return hsbColor.ToRGB();
         }
 
         public Brush SelectionBrush
@@ -490,7 +499,9 @@ namespace pwiz.Skyline.Controls
                     return null;
                 if (!TreeViewMS.Focused)
                     return Brushes.LightGray;
-                return SystemBrushes.Highlight;
+                if (IsSelected)
+                    return SystemBrushes.Highlight;
+                return new SolidBrush(BackColorMS);
             }
         }
 

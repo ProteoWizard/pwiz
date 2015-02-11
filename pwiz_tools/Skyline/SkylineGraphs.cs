@@ -2541,6 +2541,11 @@ namespace pwiz.Skyline
             }
         }
 
+        public void SelectPath(IdentityPath focusPath)
+        {
+            SequenceTree.SelectPath(focusPath);
+        }
+
         public SpectrumDisplayInfo SelectedSpectrum
         {
             get { return _graphSpectrum != null ? _graphSpectrum.SelectedSpectrum : null; }
