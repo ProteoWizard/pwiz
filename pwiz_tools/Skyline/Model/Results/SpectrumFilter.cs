@@ -680,6 +680,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 MaxMz = _instrument.MaxMz,
                 MinMz = _instrument.MinMz,
+                MzMatchTolerance = _instrument.MzMatchTolerance,
             };
             if (_minTime.HasValue)
             {
