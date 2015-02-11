@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public DocumentGridForm(SkylineViewContext viewContext)
         {
             InitializeComponent();
-            bindingListSource.SetViewContext(viewContext);
+            BindingListSource.SetViewContext(viewContext);
         }
 
         public DocumentGridForm(IDocumentContainer documentContainer) 
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var skylineWindow = documentContainer as SkylineWindow;
             if (null != skylineWindow)
             {
-                DataGridViewPasteHandler.Attach(skylineWindow, boundDataGridView);
+                DataGridViewPasteHandler.Attach(skylineWindow, DataGridView);
             }
         }
 
@@ -46,11 +46,11 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             get
             {
-                return bindingListSource.ViewInfo;
+                return BindingListSource.ViewInfo;
             }
             set
             {
-                bindingListSource.SetView(value, bindingListSource.ViewContext.GetRowSource(value));
+                BindingListSource.SetView(value, BindingListSource.ViewContext.GetRowSource(value));
             }
         }
 
@@ -58,11 +58,11 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             get
             {
-                return navBar.ShowViewsButton;
+                return NavBar.ShowViewsButton;
             }
             set
             {
-                navBar.ShowViewsButton = value;
+                NavBar.ShowViewsButton = value;
             }
         }
 

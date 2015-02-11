@@ -18,10 +18,13 @@
  */
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -33,10 +36,13 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("data_settings")]
     public class DataSettings : Immutable, IXmlSerializable
     {
+        public static DataSettings DEFAULT = new DataSettings(new AnnotationDef[0]);
         private ReadOnlyCollection<AnnotationDef> _annotationDefs;
+        private ReadOnlyCollection<GroupComparisonDef> _groupComparisonDefs;
         public DataSettings(IList<AnnotationDef> annotationDefs)
         {
             AnnotationDefs = annotationDefs;
+            _groupComparisonDefs = MakeReadOnly(new GroupComparisonDef[0]);
         }
 
         public IList<AnnotationDef> AnnotationDefs
@@ -45,14 +51,41 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _annotationDefs = MakeReadOnly(value); }
         }
 
+        public IList<GroupComparisonDef> GroupComparisonDefs
+        {
+            get { return _groupComparisonDefs;}
+            private set { _groupComparisonDefs = MakeReadOnly(value); }
+        }
+
         #region Property change methods
         public DataSettings ChangeAnnotationDefs(IList<AnnotationDef> annotationDefs)
         {
             return ChangeProp(ImClone(this), (im, v) => im.AnnotationDefs = v, annotationDefs);
         }
+
+        public DataSettings ChangeGroupComparisonDefs(IList<GroupComparisonDef> groupComparisonDefs)
+        {
+            return ChangeProp(ImClone(this), im => im.GroupComparisonDefs = groupComparisonDefs);
+        }
         #endregion
 
-                /// <summary>
+        public DataSettings AddGroupComparisonDef(GroupComparisonDef groupComparisonDef)
+        {
+            var groupComparisonDefs = GroupComparisonDefs.ToList();
+            int index = GroupComparisonDefs.IndexOf(def => def.Name == groupComparisonDef.Name);
+            if (index < 0)
+            {
+                groupComparisonDefs.Add(groupComparisonDef);
+            }
+            else
+            {
+                groupComparisonDefs[index] = groupComparisonDef;
+            }
+            return ChangeGroupComparisonDefs(groupComparisonDefs);
+        }
+
+        #region Serialization Methods
+        /// <summary>
         /// For serialization
         /// </summary>
         private DataSettings()
@@ -71,41 +104,42 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
-            var annotationDefs = new List<AnnotationDef>();
+            var allElements = new List<XmlNamedElement>();
             // Consume tag
             if (reader.IsEmptyElement)
                 reader.Read();
             else
             {
                 reader.ReadStartElement();
-                while (true)
-                {
-                    var annotationDef = reader.DeserializeElement<AnnotationDef>();
-                    if (annotationDef == null)
-                    {
-                        break;
-                    }
-                    annotationDefs.Add(annotationDef);
-                }
+                reader.ReadElements(allElements, GetElementHelpers());
                 reader.ReadEndElement();
             }
-            AnnotationDefs = annotationDefs;
+            AnnotationDefs = allElements.OfType<AnnotationDef>().ToArray();
+            GroupComparisonDefs = allElements.OfType<GroupComparisonDef>().ToArray();
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            foreach (var annotationDef in AnnotationDefs)
-            {
-                writer.WriteElement(annotationDef);
-            }
+            writer.WriteElements(AnnotationDefs.Cast<XmlNamedElement>().Concat(GroupComparisonDefs), GetElementHelpers());
         }
+
+        private static IXmlElementHelper<XmlNamedElement>[] GetElementHelpers()
+        {
+            return new IXmlElementHelper<XmlNamedElement>[]
+                {
+                    new XmlElementHelperSuper<AnnotationDef, XmlNamedElement>(),
+                    new XmlElementHelperSuper<GroupComparisonDef, XmlNamedElement>(), 
+                };
+        }
+        #endregion
 
         #region object overrides
         public bool Equals(DataSettings other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return ArrayUtil.EqualsDeep(other._annotationDefs, _annotationDefs);
+            return ArrayUtil.EqualsDeep(other._annotationDefs, _annotationDefs) 
+                && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs);
         }
 
         public override bool Equals(object obj)
@@ -118,7 +152,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override int GetHashCode()
         {
-            return _annotationDefs.GetHashCodeDeep();
+            unchecked
+            {
+                int result = _annotationDefs.GetHashCodeDeep();
+                result = result*397 + _groupComparisonDefs.GetHashCodeDeep();
+                return result;
+            }
         }
         #endregion
     }

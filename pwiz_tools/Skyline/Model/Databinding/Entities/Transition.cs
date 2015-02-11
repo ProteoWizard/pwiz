@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             _results = CachedValue.Create(DataSchema, MakeResults);
         }
 
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [HideWhen(AncestorOfType = typeof(Precursor))]
         public Precursor Precursor
         {
             get

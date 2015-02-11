@@ -161,6 +161,7 @@
     <Compile Include="ExportDiaListTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
+    <Compile Include="GroupComparisonTest.cs" />
     <Compile Include="ImmediateWindowTest.cs" />
     <Compile Include="ImportDocTest.cs" />
     <Compile Include="CopyPasteTest.cs" />
@@ -284,6 +285,7 @@
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
     <None Include="FullScanIdTest.zip" />
+    <None Include="GroupComparisonTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportPeptideSearchTest.zip" />
     <None Include="InsertTest.zip" />

@@ -67,6 +67,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -97,6 +98,16 @@
     <Compile Include="Controls\RecordNavBar.Designer.cs">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataAnalysis\LinearFitResult.cs" />
+    <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
+    <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />
+    <Compile Include="DataAnalysis\FoldChange\FoldChangeCalculator.cs" />
+    <Compile Include="DataAnalysis\LinearModel.cs" />
+    <Compile Include="DataAnalysis\Matrices\ImmutableMatrix.cs" />
+    <Compile Include="DataAnalysis\Matrices\QrFactorization.cs" />
+    <Compile Include="DataAnalysis\Matrices\QrFactorizationCache.cs" />
+    <Compile Include="DataAnalysis\Matrices\ReadOnlyMatrixStorage.cs" />
+    <Compile Include="DataAnalysis\PValues.cs" />
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />

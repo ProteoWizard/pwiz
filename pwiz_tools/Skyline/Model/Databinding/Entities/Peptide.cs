@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0)); // Not L10N
         }
 
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [HideWhen(AncestorOfType = typeof(Protein))]
         public Protein Protein
         {
             get { return new Protein(DataSchema, IdentityPath.Parent); }

@@ -52,10 +52,11 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             SkylineWindow = skylineWindow;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            DataGridViewPasteHandler.Attach(skylineWindow, boundDataGridView);
-            bindingListSource.ListChanged += bindingListSource_ListChanged;
-            bindingListSource.CurrentChanged += bindingListSource_CurrentChanged;
-            boundDataGridView.DataBindingComplete += boundDataGridView_DataBindingComplete;
+            DataGridViewPasteHandler.Attach(skylineWindow, DataGridView);
+            BindingListSource.ListChanged += bindingListSource_ListChanged;
+            BindingListSource.CurrentChanged += bindingListSource_CurrentChanged;
+            DataGridView.DataBindingComplete += boundDataGridView_DataBindingComplete;
+            var contextMenuStrip = databoundGridControl.contextMenuStrip;
             contextMenuStrip.Items.Insert(0, new ToolStripSeparator());
             for (int i = contextMenuResultsGrid.Items.Count - 1; i >= 0; i--)
             {
@@ -136,7 +137,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public int? GetReplicateIndex()
         {
-            return GetReplicateIndex(bindingListSource.Current as RowItem);
+            return GetReplicateIndex(BindingListSource.Current as RowItem);
         }
 
         public void SetReplicateIndex(int replicateIndex)
@@ -146,11 +147,11 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            for (int iRow = 0; iRow < bindingListSource.Count; iRow++)
+            for (int iRow = 0; iRow < BindingListSource.Count; iRow++)
             {
-                if (replicateIndex == GetReplicateIndex(bindingListSource[iRow] as RowItem))
+                if (replicateIndex == GetReplicateIndex(BindingListSource[iRow] as RowItem))
                 {
-                    bindingListSource.Position = iRow;
+                    BindingListSource.Position = iRow;
                 }
             }
         }
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public ChromFileInfoId GetCurrentChromFileInfoId()
         {
-            return GetChromFileInfoId(bindingListSource.Current as RowItem);
+            return GetChromFileInfoId(BindingListSource.Current as RowItem);
         }
 
         private ChromFileInfoId GetChromFileInfoId(RowItem rowItem)
@@ -252,13 +253,13 @@ namespace pwiz.Skyline.Controls.Databinding
             var parentColumn = ColumnDescriptor.RootColumn(_dataSchema, rowType);
             var builtInViewSpec = SkylineViewContext.GetDefaultViewInfo(parentColumn).GetViewSpec()
                 .SetName(builtInViewName).SetRowType(rowType);
-            if (null == bindingListSource.ViewContext ||
-                !bindingListSource.ViewContext.BuiltInViews.Contains(builtInViewSpec))
+            if (null == BindingListSource.ViewContext ||
+                !BindingListSource.ViewContext.BuiltInViews.Contains(builtInViewSpec))
             {
-                var oldViewContext = bindingListSource.ViewContext as ResultsGridViewContext;
+                var oldViewContext = BindingListSource.ViewContext as ResultsGridViewContext;
                 if (null != oldViewContext)
                 {
-                    oldViewContext.RememberColumnWidths(boundDataGridView);
+                    oldViewContext.RememberColumnWidths(DataGridView);
                 }
                 Debug.Assert(null != builtInViewName);
                 var builtInView = new ViewInfo(parentColumn, builtInViewSpec);
@@ -276,14 +277,14 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
                 activeView = activeView ?? builtInView;
-                bindingListSource.SetViewContext(viewContext, activeView);
+                BindingListSource.SetViewContext(viewContext, activeView);
             }
-            bindingListSource.RowSource = rowSource;
+            BindingListSource.RowSource = rowSource;
         }
 
         private void RememberActiveView()
         {
-            var viewInfo = bindingListSource.ViewInfo;
+            var viewInfo = BindingListSource.ViewInfo;
             if (null != viewInfo)
             {
                 var activeViews = Settings.Default.ResultsGridActiveViews;
@@ -311,9 +312,9 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             int? iRowMatch = null;
 
-            for (int iRow = 0; iRow < bindingListSource.Count; iRow++)
+            for (int iRow = 0; iRow < BindingListSource.Count; iRow++)
             {
-                var rowItem = bindingListSource[iRow] as RowItem;
+                var rowItem = BindingListSource[iRow] as RowItem;
                 if (rowItem == null)
                 {
                     continue;
@@ -341,7 +342,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            bindingListSource.Position = iRowMatch.Value;
+            BindingListSource.Position = iRowMatch.Value;
             DataGridViewColumn column;
             if (findResult.FindMatch.Note)
             {
@@ -390,18 +391,18 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void chooseColumnsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            navBar.CustomizeView();
+            NavBar.CustomizeView();
         }
 
 
         private bool _inReplicateChange;
         private void bindingListSource_CurrentChanged(object sender, EventArgs e)
         {
-            if (!Settings.Default.ResultsGridSynchSelection || _inReplicateChange || !bindingListSource.IsComplete)
+            if (!Settings.Default.ResultsGridSynchSelection || _inReplicateChange || !BindingListSource.IsComplete)
             {
                 return;
             }
-            int? replicateIndex = GetReplicateIndex(bindingListSource.Current as RowItem);
+            int? replicateIndex = GetReplicateIndex(BindingListSource.Current as RowItem);
             try
             {
                 _inReplicateChange = true;

@@ -43,8 +43,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var newDocNode = Transition.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Transition.DocNode.Results, newChromInfo));
             Transition.ChangeDocNode(newDocNode);
         }
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
-        [Advanced]
+        [HideWhen(AncestorOfType = typeof(Transition))]
         public Transition Transition { get { return (Transition)SkylineDocNode; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? RetentionTime { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.RetentionTime; } }

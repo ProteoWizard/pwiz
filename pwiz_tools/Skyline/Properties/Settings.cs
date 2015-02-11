@@ -46,6 +46,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Properties
@@ -921,6 +922,26 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this["AnnotationDefList"] = value; // Not L10N
+            }
+        }
+
+        [UserScopedSetting]
+        public GroupComparisonDefList GroupComparisonDefList
+        {
+            get
+            {
+                var list = (GroupComparisonDefList) this["GroupComparisonDefList"]; // Not L10N
+                if (list == null)
+                {
+                    list = new GroupComparisonDefList();
+                    list.AddDefaults();
+                    GroupComparisonDefList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this["GroupComparisonDefList"] = value; // Not L10N
             }
         }
 
@@ -2274,7 +2295,7 @@ namespace pwiz.Skyline.Properties
                     ),
                     TransitionFullScan.DEFAULT
                 ),
-                new DataSettings(new AnnotationDef[0]),
+                DataSettings.DEFAULT,
                 DocumentRetentionTimes.EMPTY
             );
 

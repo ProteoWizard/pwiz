@@ -432,8 +432,8 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Peptide Comparison graph metafile", 32);
 
             // Annotating replicates with concentration values
-            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
-            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            var chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditAnnotationList);
             RunUI(editListDlg.ResetList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             RunUI(() =>
@@ -446,7 +446,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.OK);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot<ChooseAnnotationsDlg>("Annotation Settings form", 34);
+            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 34);
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
             RunUI(() => SkylineWindow.ShowResultsGrid(true));
             RunUI(() =>

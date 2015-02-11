@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -412,6 +413,7 @@ namespace pwiz.Skyline
             }
 
             UpdateGraphPanes(listUpdateGraphs);
+            FoldChangeForm.CloseInapplicableForms(this);
         }
 
         // Load view layout from the given stream.
@@ -540,6 +542,11 @@ namespace pwiz.Skyline
                     if (hasName)
                         return GetGraphChrom(name) ?? CreateGraphChrom(name);
                 }
+            }
+            var foldChangeForm = FoldChangeForm.RestoreFoldChangeForm(this, persistentString);
+            if (null != foldChangeForm)
+            {
+                return foldChangeForm;
             }
             if (Equals(persistentString, typeof(GraphFullScan).ToString()))
             {

@@ -74,7 +74,16 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                BindingListView.SetViewAndRows(viewInfo, viewContext.GetRowSource(viewInfo));
+                IEnumerable rowSource = null;
+                if (null != ViewInfo)
+                {
+                    if (ViewInfo.RowSourceName == viewInfo.RowSourceName)
+                    {
+                        rowSource = RowSource;
+                    }
+                }
+                rowSource = rowSource ?? viewContext.GetRowSource(viewInfo);
+                BindingListView.SetViewAndRows(viewInfo, rowSource);
             }
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }

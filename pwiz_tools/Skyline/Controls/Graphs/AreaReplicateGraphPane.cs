@@ -705,8 +705,9 @@ namespace pwiz.Skyline.Controls.Graphs
             string[] resultNames = GraphData.GetReplicateLabels(document).ToArray();
 
             XAxis.Scale.TextLabels = resultNames;
-            _originalTextLabels = new string[XAxis.Scale.TextLabels.Length];
-            Array.Copy(XAxis.Scale.TextLabels, _originalTextLabels, XAxis.Scale.TextLabels.Length);
+            var originalTextLabels = new string[XAxis.Scale.TextLabels.Length];
+            Array.Copy(XAxis.Scale.TextLabels, originalTextLabels, XAxis.Scale.TextLabels.Length);
+            OriginalXAxisLabels = originalTextLabels;
             
             ScaleAxisLabels();
             // Add a missing point for each replicate name.

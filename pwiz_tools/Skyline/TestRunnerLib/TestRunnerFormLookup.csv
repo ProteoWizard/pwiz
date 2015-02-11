@@ -20,7 +20,6 @@ BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 ChangeIrtPeptidesDlg,IrtFunctionalTest
-ChooseAnnotationsDlg,TestAnnotations
 ChooseSchedulingReplicatesDlg,TestRetentionTimeFilter
 ChromatogramRTThresholdDlg,TestEditDialogs
 ChromChartPropertyDlg,TestPeakPickingTutorial
@@ -31,6 +30,7 @@ CreateIrtCalculatorDlg,TestAssayLibraryImport
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentGridForm,TestReportSummary
+DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
 EditChorusAccountDlg,*
 EditCustomMoleculeDlg, EditCustomMoleculeDlgTest
@@ -39,6 +39,7 @@ EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes
 EditExclusionDlg,TestEditDialogs
 EditFragmentLossDlg,TestNeutralLoss
+EditGroupComparisonDlg,TestGroupComparison
 EditIonMobilityLibraryDlg,TestIonMobility
 EditIrtCalcDlg,TestRetentionTimeFilter
 EditIsolationSchemeDlg,TestCalculateIsolationWindows
@@ -69,6 +70,8 @@ ExportReportDlg,TestReportSummaryWithOldReports
 FilterMatchedPeptidesDlg,TestInsert
 FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
+FoldChangeGrid,TestGroupComparison
+FoldChangeBarGraph,TextGroupComparison
 GenerateDecoysDlg,TestPeakPickingTutorial
 GraphChromatogram,TestCustomReportsTutorial
 GraphFullScan,TestFullScanGraph

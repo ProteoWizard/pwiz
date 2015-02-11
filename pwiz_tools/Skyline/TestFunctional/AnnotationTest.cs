@@ -84,8 +84,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected void DoCustomReportsTest()
         {
-            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
-            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            var chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditAnnotationList);
             // Define the annotations that we are going to be using in this test.
             RunUI(editListDlg.ResetList);
             DefineAnnotation(editListDlg, ANNOTATION_PROTEIN_TEXT, AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.protein), AnnotationDef.AnnotationType.text, null);
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
             // Open the .sky file
             RunUI(() =>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_missing_results.sky")));
             // Turn on the annotations
-            chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
+            chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>
                       {
                           var checkedListBox = chooseAnnotationsDlg.AnnotationsCheckedListBox;
@@ -288,8 +288,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected void DoLiveReportsTest()
         {
-            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
-            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            var chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditAnnotationList);
             // Define the annotations that we are going to be using in this test.
             RunUI(editListDlg.ResetList);
             DefineAnnotation(editListDlg, ANNOTATION_PROTEIN_TEXT, AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.protein), AnnotationDef.AnnotationType.text, null);
@@ -319,7 +319,7 @@ namespace pwiz.SkylineTestFunctional
             // Open the .sky file
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_missing_results.sky")));
             // Turn on the annotations
-            chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
+            chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>
             {
                 var checkedListBox = chooseAnnotationsDlg.AnnotationsCheckedListBox;

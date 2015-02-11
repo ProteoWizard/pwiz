@@ -111,7 +111,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditList()
         {
-            IEnumerable<TItem> listNew = List.EditList(ListBox.TopLevelControl, null);
+            EditList(null);
+        }
+
+        public void EditList(object tag)
+        {
+            IEnumerable<TItem> listNew = List.EditList(ListBox.TopLevelControl, tag);
             if (listNew != null)
             {
                 List.Clear();

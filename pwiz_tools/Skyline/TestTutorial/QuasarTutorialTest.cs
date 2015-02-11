@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
             RunUI(() => SkylineWindow.PopulateToolsMenu());
 
-            var annotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
+            var annotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>
                 {
                     var checkedListBox = annotationsDlg.AnnotationsCheckedListBox;

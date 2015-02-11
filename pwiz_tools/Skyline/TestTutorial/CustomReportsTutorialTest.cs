@@ -390,8 +390,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 
             // Custom Annotations, p. 25
-            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
-            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            var chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             RunUI(() =>
             {
@@ -404,7 +404,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot<ChooseAnnotationsDlg>("Annotation Settings form", 29);   // p. 26
+            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 29);   // p. 26
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
@@ -760,8 +760,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 
             // Custom Annotations, p. 25
-            var chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
-            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
+            var chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             RunUI(() =>
             {
@@ -774,7 +774,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot<ChooseAnnotationsDlg>("Annotation Settings form", 29);   // p. 26
+            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 29);   // p. 26
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 

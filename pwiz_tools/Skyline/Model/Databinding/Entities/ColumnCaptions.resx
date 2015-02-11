@@ -120,6 +120,9 @@
   <data name="AcquiredTime">
     <value>Acquired Time</value>
   </data>
+  <data name="AdjustedPValue">
+    <value>Adjusted P-Value</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -152,6 +155,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>Confidence Level</value>
   </data>
   <data name="CountTruncated">
     <value>Count Truncated</value>
@@ -198,11 +204,17 @@
   <data name="DecoyMzShift">
     <value>Decoy Mz Shift</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>Degrees Of Freedom</value>
+  </data>
   <data name="EndPos">
     <value>End Pos</value>
   </data>
   <data name="EndTime">
     <value>End Time</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>Estimated Value</value>
   </data>
   <data name="FileIndex">
     <value>File Index</value>
@@ -212,6 +224,12 @@
   </data>
   <data name="Files">
     <value>Files</value>
+  </data>
+  <data name="FoldChange">
+    <value>Fold Change</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>Fold Change Result</value>
   </data>
   <data name="FragmentIon">
     <value>Fragment Ion</value>
@@ -282,6 +300,12 @@
   <data name="LibraryType">
     <value>Library Type</value>
   </data>
+  <data name="LinearFit">
+    <value>Linear Fit</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>Log 2 Fold Change</value>
+  </data>
   <data name="Losses">
     <value>Losses</value>
   </data>
@@ -299,6 +323,9 @@
   </data>
   <data name="MaxEndTime">
     <value>Max End Time</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>Max Fold Change</value>
   </data>
   <data name="MaxFwhm">
     <value>Max Fwhm</value>
@@ -350,6 +377,9 @@
   </data>
   <data name="MinBestRetentionTime">
     <value>Min Best Retention Time</value>
+  </data>
+  <data name="MinFoldChange">
+    <value>Min Fold Change</value>
   </data>
   <data name="MinRetentionTime">
     <value>Min Retention Time</value>
@@ -498,6 +528,9 @@
   <data name="ProteinSpecies">
     <value>Protein Species</value>
   </data>
+  <data name="PValue">
+    <value>P-Value</value>
+  </data>
   <data name="Range">
     <value>Range</value>
   </data>
@@ -542,6 +575,9 @@
   </data>
   <data name="SampleName">
     <value>Sample Name</value>
+  </data>
+  <data name="StandardError">
+    <value>Standard Error</value>
   </data>
   <data name="StandardType">
     <value>Standard Type</value>
@@ -635,6 +671,9 @@
   </data>
   <data name="Truncated">
     <value>Truncated</value>
+  </data>
+  <data name="TValue">
+    <value>T-Value</value>
   </data>
   <data name="UserSetPeak">
     <value>User Set Peak</value>

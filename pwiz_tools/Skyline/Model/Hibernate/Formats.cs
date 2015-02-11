@@ -31,5 +31,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public const String OPT_PARAMETER = "0.#"; // Not L10N
         public const String MASS_ERROR = "0.#"; // Not L10N
         public const String CV = "0.#%"; // Not L10N
+        public const string PValue = "0.####"; // Not L10N
+        public const string FoldChange = "0.####"; // Not L10N
     }
 }

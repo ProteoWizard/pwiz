@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -26,6 +27,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -41,6 +43,8 @@ namespace pwiz.SkylineTest.Reporting
     [TestClass]
     public class ColumnCaptionLocalizationTest : AbstractUnitTest
     {
+        private static readonly IList<Type> STARTING_TYPES = new ReadOnlyCollection<Type>(new[]
+            {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow)});
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".
         /// </summary>
@@ -49,7 +53,7 @@ namespace pwiz.SkylineTest.Reporting
         {
             var documentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-            GenerateResXFile(new StringWriter() /* Console.Out */, new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT), new[]{typeof(SkylineDocument)});
+            GenerateResXFile(new StringWriter() /* Console.Out */, new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT), STARTING_TYPES);
         }
 
         /// <summary>
@@ -65,7 +69,7 @@ namespace pwiz.SkylineTest.Reporting
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var missingCaptions = new HashSet<ColumnCaption>();
             foreach (var columnDescriptor in
-                    EnumerateAllColumnDescriptors(skylineDataSchema, new[] {typeof (SkylineDocument)}))
+                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
             {
                 var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor);
                 if (!skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
@@ -106,7 +110,7 @@ namespace pwiz.SkylineTest.Reporting
                     }
                 }
             }
-            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, new[] {typeof (SkylineDocument)})
+            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES)
                 )
             {
                 var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);

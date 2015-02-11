@@ -260,6 +260,12 @@
     <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\Databinding\DataboundGridControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Databinding\DataboundGridControl.designer.cs">
+      <DependentUpon>DataboundGridControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Databinding\DataboundGridForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -295,6 +301,34 @@
     </Compile>
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\BaseGroupComparisonSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\EditGroupComparisonDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\EditGroupComparisonDlg.Designer.cs">
+      <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeBarGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeBarGraph.Designer.cs">
+      <DependentUpon>FoldChangeBarGraph.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeBindingSource.cs" />
+    <Compile Include="Controls\GroupComparison\FoldChangeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeForm.Designer.cs">
+      <DependentUpon>FoldChangeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeGrid.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeGrid.Designer.cs">
+      <DependentUpon>FoldChangeGrid.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AlignmentForm.cs">
       <SubType>Form</SubType>
@@ -364,6 +398,12 @@
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
+    <Compile Include="Controls\GroupComparison\GroupComparisonSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\GroupComparisonSettingsForm.Designer.cs">
+      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ImmediateWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -696,7 +736,21 @@
     <Compile Include="Model\Find\MissingAnyResultsFinder.cs" />
     <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
     <Compile Include="Model\Find\MissingAllResultsFinder.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeResult.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparer.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonDef.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonDefList.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonModel.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonResult.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonResults.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonStrings.Designer.cs">
+      <DependentUpon>GroupComparisonStrings.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Model\GroupComparison\NormalizationMethod.cs" />
     <Compile Include="Model\ExplicitTransitionGroupValues.cs" />
+    <Compile Include="Model\GroupComparison\SummarizationMethod.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\IonMobility\DbIonMobilityPeptide.cs" />
     <Compile Include="Model\IonMobility\DbVersionInfo.cs" />
@@ -1044,6 +1098,12 @@
     <Compile Include="SettingsUI\DiaIsolationWindowsGraphForm.Designer.cs">
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\DocumentSettingsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\DocumentSettingsDlg.Designer.cs">
+      <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditCustomMoleculeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1147,12 +1207,6 @@
     </Compile>
     <Compile Include="SettingsUI\Irt\CalibrateIrtDlg.Designer.cs">
       <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\ChooseAnnotationsDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\ChooseAnnotationsDlg.Designer.cs">
-      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\EditIsotopeEnrichmentDlg.cs">
       <SubType>Form</SubType>
@@ -1430,6 +1484,17 @@
     <EmbeddedResource Include="Controls\ColumnChooser.zh-CHS.resx">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DataboundGridControl.ja.resx">
+      <DependentUpon>DataboundGridControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DataboundGridControl.resx">
+      <DependentUpon>DataboundGridControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DataboundGridControl.zh-CHS.resx">
+      <DependentUpon>DataboundGridControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.ja.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1438,12 +1503,27 @@
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.resx">
+      <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeBarGraph.resx">
+      <DependentUpon>FoldChangeBarGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeForm.resx">
+      <DependentUpon>FoldChangeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.resx">
+      <DependentUpon>FoldChangeGrid.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.ja.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.zh-CHS.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.resx">
+      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
@@ -1942,6 +2022,11 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GroupComparisonStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -2033,12 +2118,6 @@
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.ja.resx">
-      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.zh-CHS.resx">
-      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.ja.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2055,6 +2134,9 @@
     <EmbeddedResource Include="SettingsUI\DiaIsolationWindowsGraphForm.zh-CHS.resx">
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DocumentSettingsDlg.resx">
+      <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.ja.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
@@ -2668,6 +2750,7 @@
     <Compile Include="ToolsUI\ToolUpdatesDlg.Designer.cs">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
@@ -3250,10 +3333,6 @@
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.resx">
       <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.resx">
-      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsotopeEnrichmentDlg.resx">
       <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -3509,7 +3588,9 @@
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="SettingsUI\DocumentSettings\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

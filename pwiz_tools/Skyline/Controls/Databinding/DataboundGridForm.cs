@@ -34,8 +34,6 @@ namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class DataboundGridForm : DockableFormEx
     {
-        private PropertyDescriptor _columnFilterPropertyDescriptor;
-
         public DataboundGridForm()
         {
             InitializeComponent();
@@ -49,196 +47,52 @@ namespace pwiz.Skyline.Controls.Databinding
         }
 
         #region Methods exposed for testing
-        public BindingListSource BindingListSource { get { return bindingListSource; } }
-        public BoundDataGridViewEx DataGridView { get { return boundDataGridView; } }
-        public NavBar NavBar { get { return navBar; } }
+        public BindingListSource BindingListSource { get { return databoundGridControl.BindingListSource; } }
+        public BoundDataGridViewEx DataGridView { get { return databoundGridControl.DataGridView; } }
+        public NavBar NavBar { get { return databoundGridControl.NavBar; } }
 
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)
         {
-            var propertyDescriptor =
-                BindingListSource.GetItemProperties(null)
-                    .OfType<ColumnPropertyDescriptor>()
-                    .FirstOrDefault(colPd => Equals(propertyPath, colPd.PropertyPath));
-            if (null == propertyDescriptor)
-            {
-                return null;
-            }
-            return DataGridView.Columns.Cast<DataGridViewColumn>().FirstOrDefault(col => col.DataPropertyName == propertyDescriptor.Name);
+            return databoundGridControl.FindColumn(propertyPath);
         }
         public bool IsComplete
         {
             get
             {
-                return BindingListSource.IsComplete;
+                return databoundGridControl.IsComplete;
             }
         }
 
         public void ChooseView(string viewName)
         {
-            var viewSpecs = BindingListSource.ViewContext.BuiltInViews.Concat(BindingListSource.ViewContext.CustomViews);
-            var viewSpec = viewSpecs.First(view => view.Name == viewName);
-            BindingListSource.SetViewSpec(viewSpec);
+            databoundGridControl.ChooseView(viewName);
         }
 
         public int RowCount
         {
-            get { return DataGridView.RowCount; }
+            get { return databoundGridControl.RowCount; }
         }
 
         public int ColumnCount
         {
-            get { return DataGridView.ColumnCount; }
+            get { return databoundGridControl.ColumnCount; }
         }
 
         public string[] ColumnHeaderNames
         {
-            get
-            {
-                return DataGridView.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText).ToArray();
-            }
+            get { return databoundGridControl.ColumnHeaderNames; }
         }
 
         public void ManageViews()
         {
-            BindingListSource.ViewContext.ManageViews(NavBar);
+            databoundGridControl.ManageViews();
         }
 
         public void QuickFilter(DataGridViewColumn column)
         {
-            _columnFilterPropertyDescriptor = BindingListSource.GetItemProperties(null)[column.DataPropertyName];
-            filterToolStripMenuItem_Click(filterToolStripMenuItem, new EventArgs());
+            databoundGridControl.QuickFilter(column);
         }
 
         #endregion
-
-        protected virtual void boundDataGridView_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
-        {
-            PropertyDescriptor propertyDescriptor = null;
-            if (e.ColumnIndex >= 0)
-            {
-                var column = boundDataGridView.Columns[e.ColumnIndex];
-                propertyDescriptor = bindingListSource.GetItemProperties(null)[column.DataPropertyName];
-            }
-            e.ContextMenuStrip = contextMenuStrip;
-            clearAllFiltersToolStripMenuItem.Enabled = !BindingListSource.RowFilter.IsEmpty;
-            _columnFilterPropertyDescriptor = propertyDescriptor;
-            if (null != _columnFilterPropertyDescriptor)
-            {
-
-                clearFilterToolStripMenuItem.Enabled =
-                    BindingListSource.RowFilter.ColumnFilters.Any(
-                        filter => Equals(_columnFilterPropertyDescriptor.DisplayName, filter.ColumnCaption));
-                filterToolStripMenuItem.Enabled = true;
-                ListSortDirection? sortDirection = null;
-                if (null != BindingListSource.SortDescriptions && BindingListSource.SortDescriptions.Count > 0)
-                {
-                    var sortDescription = BindingListSource.SortDescriptions.OfType<ListSortDescription>().First();
-                    if (sortDescription.PropertyDescriptor.Name == _columnFilterPropertyDescriptor.Name)
-                    {
-                        sortDirection = sortDescription.SortDirection;
-                    }
-                    clearSortToolStripMenuItem.Enabled = true;
-                }
-                else
-                {
-                    clearSortToolStripMenuItem.Enabled = false;
-                }
-                sortAscendingToolStripMenuItem.Enabled = true;
-                sortDescendingToolStripMenuItem.Enabled = true;
-                sortAscendingToolStripMenuItem.Checked = ListSortDirection.Ascending == sortDirection;
-                sortDescendingToolStripMenuItem.Checked = ListSortDirection.Descending == sortDirection;
-            }
-            else
-            {
-                clearFilterToolStripMenuItem.Enabled = false;
-                filterToolStripMenuItem.Enabled = false;
-                sortAscendingToolStripMenuItem.Enabled = false;
-                sortDescendingToolStripMenuItem.Enabled = false;
-                sortAscendingToolStripMenuItem.Checked = false;
-                sortDescendingToolStripMenuItem.Checked = false;
-            }
-        }
-
-        private void clearAllFiltersToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            BindingListSource.RowFilter = RowFilter.Empty;
-        }
-
-        private void clearFilterToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (null != _columnFilterPropertyDescriptor)
-            {
-                var rowFilter = BindingListSource.RowFilter;
-                rowFilter = rowFilter.SetColumnFilters(
-                    rowFilter.ColumnFilters.Where(spec => !Equals(spec.ColumnCaption, _columnFilterPropertyDescriptor.DisplayName)));
-                BindingListSource.RowFilter = rowFilter;
-            }
-        }
-
-        private void filterToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            using (var quickFilterForm = new QuickFilterForm())
-            {
-                quickFilterForm.SetFilter(BindingListSource.ViewInfo.DataSchema, _columnFilterPropertyDescriptor, BindingListSource.RowFilter);
-                if (quickFilterForm.ShowDialog(this) == DialogResult.OK)
-                {
-                    BindingListSource.RowFilter = quickFilterForm.RowFilter;
-                }
-            }
-        }
-
-        private void sortAscendingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetSortDirection(_columnFilterPropertyDescriptor, ListSortDirection.Ascending);
-        }
-
-        private void sortDescendingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetSortDirection(_columnFilterPropertyDescriptor, ListSortDirection.Descending);
-        }
-
-        protected void SetSortDirection(PropertyDescriptor propertyDescriptor, ListSortDirection direction)
-        {
-            if (null == propertyDescriptor)
-            {
-                return;
-            }
-            List<ListSortDescription> sortDescriptions = new List<ListSortDescription>();
-            sortDescriptions.Add(new ListSortDescription(propertyDescriptor, direction));
-            if (null != BindingListSource.SortDescriptions)
-            {
-                sortDescriptions.AddRange(
-                    BindingListSource.SortDescriptions.OfType<ListSortDescription>()
-                        .Where(sortDescription => sortDescription.PropertyDescriptor.Name != propertyDescriptor.Name));
-            }
-            BindingListSource.ApplySort(new ListSortDescriptionCollection(sortDescriptions.ToArray()));
-        }
-
-        private void clearSortToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            BindingListSource.ApplySort(new ListSortDescriptionCollection());
-        }
-
-        /// <summary>
-        /// Displays the context menu if the user left-clicks on a column header.
-        /// </summary>
-        private void boundDataGridView_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.RowIndex != -1 || e.ColumnIndex < 0)
-            {
-                return;
-            }
-            if (e.Button != MouseButtons.Left)
-            {
-                return;
-            }
-            var args = new DataGridViewCellContextMenuStripNeededEventArgs(e.ColumnIndex, e.RowIndex);
-            boundDataGridView_CellContextMenuStripNeeded(sender, args);
-            if (null != args.ContextMenuStrip)
-            {
-                var rcCell = boundDataGridView.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
-                args.ContextMenuStrip.Show(boundDataGridView, new Point(rcCell.X + e.X, rcCell.Y + e.Y));
-            }
-        }
     }
 }

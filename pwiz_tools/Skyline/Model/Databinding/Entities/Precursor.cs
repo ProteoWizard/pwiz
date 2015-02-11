@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             _results = CachedValue.Create(DataSchema, MakeResults);
         }
 
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [HideWhen(AncestorOfType = typeof(Peptide))]
         public Peptide Peptide
         {
             get { return _peptide.Value; }

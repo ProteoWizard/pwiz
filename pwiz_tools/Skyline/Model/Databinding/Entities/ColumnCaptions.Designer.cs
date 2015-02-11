@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adjusted P-Value.
+        /// </summary>
+        internal static string AdjustedPValue {
+            get {
+                return ResourceManager.GetString("AdjustedPValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area.
         /// </summary>
         internal static string Area {
@@ -165,6 +174,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string CollisionEnergy {
             get {
                 return ResourceManager.GetString("CollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confidence Level.
+        /// </summary>
+        internal static string ConfidenceLevel {
+            get {
+                return ResourceManager.GetString("ConfidenceLevel", resourceCulture);
             }
         }
         
@@ -304,6 +322,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Degrees Of Freedom.
+        /// </summary>
+        internal static string DegreesOfFreedom {
+            get {
+                return ResourceManager.GetString("DegreesOfFreedom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to End Pos.
         /// </summary>
         internal static string EndPos {
@@ -318,6 +345,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string EndTime {
             get {
                 return ResourceManager.GetString("EndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Estimated Value.
+        /// </summary>
+        internal static string EstimatedValue {
+            get {
+                return ResourceManager.GetString("EstimatedValue", resourceCulture);
             }
         }
         
@@ -345,6 +381,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string Files {
             get {
                 return ResourceManager.GetString("Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fold Change.
+        /// </summary>
+        internal static string FoldChange {
+            get {
+                return ResourceManager.GetString("FoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fold Change Result.
+        /// </summary>
+        internal static string FoldChangeResult {
+            get {
+                return ResourceManager.GetString("FoldChangeResult", resourceCulture);
             }
         }
         
@@ -556,6 +610,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Linear Fit.
+        /// </summary>
+        internal static string LinearFit {
+            get {
+                return ResourceManager.GetString("LinearFit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log 2 Fold Change.
+        /// </summary>
+        internal static string Log2FoldChange {
+            get {
+                return ResourceManager.GetString("Log2FoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Losses.
         /// </summary>
         internal static string Losses {
@@ -606,6 +678,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string MaxEndTime {
             get {
                 return ResourceManager.GetString("MaxEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max Fold Change.
+        /// </summary>
+        internal static string MaxFoldChange {
+            get {
+                return ResourceManager.GetString("MaxFoldChange", resourceCulture);
             }
         }
         
@@ -759,6 +840,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string MinBestRetentionTime {
             get {
                 return ResourceManager.GetString("MinBestRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min Fold Change.
+        /// </summary>
+        internal static string MinFoldChange {
+            get {
+                return ResourceManager.GetString("MinFoldChange", resourceCulture);
             }
         }
         
@@ -1204,6 +1294,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to P-Value.
+        /// </summary>
+        internal static string PValue {
+            get {
+                return ResourceManager.GetString("PValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Range.
         /// </summary>
         internal static string Range {
@@ -1335,6 +1434,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string SampleName {
             get {
                 return ResourceManager.GetString("SampleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard Error.
+        /// </summary>
+        internal static string StandardError {
+            get {
+                return ResourceManager.GetString("StandardError", resourceCulture);
             }
         }
         
@@ -1614,6 +1722,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string Truncated {
             get {
                 return ResourceManager.GetString("Truncated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to T-Value.
+        /// </summary>
+        internal static string TValue {
+            get {
+                return ResourceManager.GetString("TValue", resourceCulture);
             }
         }
         

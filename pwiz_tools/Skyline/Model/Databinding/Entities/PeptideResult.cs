@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
         }
 
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [HideWhen(AncestorOfType = typeof(Peptide))]
         [Advanced]
         public Peptide Peptide { get { return SkylineDocNode as Peptide; } }
 

@@ -225,6 +225,8 @@ namespace pwiz.Skyline
             this.startPageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openContainingFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator53 = new System.Windows.Forms.ToolStripSeparator();
             this.saveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -387,6 +389,8 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -400,7 +404,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.peptideSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.annotationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator37 = new System.Windows.Forms.ToolStripSeparator();
             this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
@@ -421,8 +425,6 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openContainingFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator53 = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1823,6 +1825,17 @@ namespace pwiz.Skyline
             this.openMenuItem.Name = "openMenuItem";
             this.openMenuItem.Click += new System.EventHandler(this.openMenuItem_Click);
             // 
+            // openContainingFolderMenuItem
+            // 
+            this.openContainingFolderMenuItem.Name = "openContainingFolderMenuItem";
+            resources.ApplyResources(this.openContainingFolderMenuItem, "openContainingFolderMenuItem");
+            this.openContainingFolderMenuItem.Click += new System.EventHandler(this.openContainingFolderMenuItem_Click);
+            // 
+            // toolStripSeparator53
+            // 
+            this.toolStripSeparator53.Name = "toolStripSeparator53";
+            resources.ApplyResources(this.toolStripSeparator53, "toolStripSeparator53");
+            // 
             // saveMenuItem
             // 
             this.saveMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Save;
@@ -2428,6 +2441,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator10,
             this.retentionTimesMenuItem,
             this.peakAreasMenuItem,
+            this.groupComparisonsMenuItem,
             this.resultsGridMenuItem,
             this.documentGridMenuItem,
             this.toolStripSeparator36,
@@ -2957,6 +2971,20 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
             this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
             // 
+            // groupComparisonsMenuItem
+            // 
+            this.groupComparisonsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addGroupComparisonMenuItem});
+            this.groupComparisonsMenuItem.Name = "groupComparisonsMenuItem";
+            resources.ApplyResources(this.groupComparisonsMenuItem, "groupComparisonsMenuItem");
+            this.groupComparisonsMenuItem.DropDownOpening += new System.EventHandler(this.groupComparisonsMenuItem_DropDownOpening);
+            // 
+            // addGroupComparisonMenuItem
+            // 
+            this.addGroupComparisonMenuItem.Name = "addGroupComparisonMenuItem";
+            resources.ApplyResources(this.addGroupComparisonMenuItem, "addGroupComparisonMenuItem");
+            this.addGroupComparisonMenuItem.Click += new System.EventHandler(this.addFoldChangeMenuItem_Click);
+            // 
             // toolStripSeparator36
             // 
             this.toolStripSeparator36.Name = "toolStripSeparator36";
@@ -2992,7 +3020,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator3,
             this.peptideSettingsMenuItem,
             this.transitionSettingsMenuItem,
-            this.annotationsToolStripMenuItem,
+            this.documentSettingsMenuItem,
             this.toolStripSeparator37,
             this.integrateAllMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
@@ -3050,11 +3078,11 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.transitionSettingsMenuItem, "transitionSettingsMenuItem");
             this.transitionSettingsMenuItem.Click += new System.EventHandler(this.transitionSettingsMenuItem_Click);
             // 
-            // annotationsToolStripMenuItem
+            // documentSettingsMenuItem
             // 
-            this.annotationsToolStripMenuItem.Name = "annotationsToolStripMenuItem";
-            resources.ApplyResources(this.annotationsToolStripMenuItem, "annotationsToolStripMenuItem");
-            this.annotationsToolStripMenuItem.Click += new System.EventHandler(this.annotationsToolStripMenuItem_Click);
+            this.documentSettingsMenuItem.Name = "documentSettingsMenuItem";
+            resources.ApplyResources(this.documentSettingsMenuItem, "documentSettingsMenuItem");
+            this.documentSettingsMenuItem.Click += new System.EventHandler(this.documentSettingsMenuItem_Click);
             // 
             // toolStripSeparator37
             // 
@@ -3186,17 +3214,6 @@ namespace pwiz.Skyline
             this.aboutMenuItem.Name = "aboutMenuItem";
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
-            // 
-            // openContainingFolderMenuItem
-            // 
-            this.openContainingFolderMenuItem.Name = "openContainingFolderMenuItem";
-            resources.ApplyResources(this.openContainingFolderMenuItem, "openContainingFolderMenuItem");
-            this.openContainingFolderMenuItem.Click += new System.EventHandler(this.openContainingFolderMenuItem_Click);
-            // 
-            // toolStripSeparator53
-            // 
-            this.toolStripSeparator53.Name = "toolStripSeparator53";
-            resources.ApplyResources(this.toolStripSeparator53, "toolStripSeparator53");
             // 
             // SkylineWindow
             // 
@@ -3453,7 +3470,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideOrderAreaContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
         private System.Windows.Forms.ToolStripMenuItem peptideCvsContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem annotationsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem documentSettingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem legendChromContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;
@@ -3618,6 +3635,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem arrangeColumnMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arrangeRowMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addTransitionMoleculeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem groupComparisonsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addGroupComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator53;
     }

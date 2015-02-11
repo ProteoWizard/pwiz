@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.ComponentModel;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public abstract class Result : SkylineObject
+    public abstract class Result : SkylineObject, ILinkValue
     {
         private readonly ResultFile _resultFile;
         protected Result(SkylineDocNode docNode, ResultFile resultFile) : base(docNode.DataSchema)
@@ -38,5 +40,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         public abstract override string ToString();
+        EventHandler ILinkValue.ClickEventHandler
+        {
+            get { return LinkValueOnClick; }
+        }
+        object ILinkValue.Value { get { return this; } }
+        public void LinkValueOnClick(object sender, EventArgs args)
+        {
+            var skylineWindow = DataSchema.SkylineWindow;
+            if (null == skylineWindow)
+            {
+                return;
+            }
+            skylineWindow.SelectedPath = SkylineDocNode.IdentityPath;
+            skylineWindow.SelectedResultsIndex = GetResultFile().Replicate.ReplicateIndex;
+        }
     }
 }

@@ -39,6 +39,7 @@ using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
@@ -57,6 +58,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -2628,16 +2630,22 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private void annotationsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void documentSettingsMenuItem_Click(object sender, EventArgs e)
         {
-            ShowAnnotationsDialog();
+            ShowDocumentSettingsDialog();
         }
 
-        public void ShowAnnotationsDialog()
+        public void ShowDocumentSettingsDialog()
         {
-            using (var dlg = new ChooseAnnotationsDlg(this))
+            using (var dlg = new DocumentSettingsDlg(this))
             {
-                 dlg.ShowDialog(this);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    ModifyDocument("Change Document Settings",
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                dlg.GetDataSettings(doc.Settings.DataSettings))));
+                }
             }
         }
 
@@ -4267,6 +4275,53 @@ namespace pwiz.Skyline
                     }
                 }
             }
+        }
+
+        private void addFoldChangeMenuItem_Click(object sender, EventArgs e)
+        {
+            AddGroupComparison();
+        }
+
+        public void AddGroupComparison()
+        {
+            using (var editDlg = new EditGroupComparisonDlg(this, GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
+                Settings.Default.GroupComparisonDefList))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.GroupComparisonDefList.Add(editDlg.GroupComparisonDef);
+                    ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.AddGroupComparisonDef(
+                                editDlg.GroupComparisonDef))));
+                }
+            }
+        }
+
+        private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            groupComparisonsMenuItem.DropDownItems.Clear();
+            if (DocumentUI.Settings.DataSettings.GroupComparisonDefs.Any())
+            {
+                foreach (var groupComparisonDef in DocumentUI.Settings.DataSettings.GroupComparisonDefs)
+                {
+                    groupComparisonsMenuItem.DropDownItems.Add(MakeToolStripMenuItem(groupComparisonDef));
+                }
+                groupComparisonsMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            }
+            groupComparisonsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                addGroupComparisonMenuItem,
+            });
+        }
+
+        private ToolStripMenuItem MakeToolStripMenuItem(GroupComparisonDef groupComparisonDef)
+        {
+            return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
+            {
+                FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonDef.Name);
+            });
         }
 
         private void openContainingFolderMenuItem_Click(object sender, EventArgs e)

@@ -1192,9 +1192,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {
-                if (!defSet.AnnotationDefList.ContainsKey(annotationDef.Name))
+                if (!defSet.AnnotationDefList.Contains(annotationDef))
                 {
                     defSet.AnnotationDefList.Add(annotationDef);
+                }
+            }
+            foreach (var groupComparisonDef in DataSettings.GroupComparisonDefs)
+            {
+                if (!defSet.GroupComparisonDefList.Contains(groupComparisonDef))
+                {
+                    defSet.GroupComparisonDefList.Add(groupComparisonDef);
                 }
             }
             if (!PeptideSettings.BackgroundProteome.IsNone)
@@ -1585,11 +1592,11 @@ namespace pwiz.Skyline.Model.DocSettings
             if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
             {
                 MeasuredResults = reader.DeserializeElement<MeasuredResults>();
-                DataSettings = reader.DeserializeElement<DataSettings>() ?? new DataSettings(new AnnotationDef[0]);   
+                DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;   
             }
             else
             {
-                DataSettings = reader.DeserializeElement<DataSettings>() ?? new DataSettings(new AnnotationDef[0]);
+                DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
                 MeasuredResults = reader.DeserializeElement<MeasuredResults>();
             }
             

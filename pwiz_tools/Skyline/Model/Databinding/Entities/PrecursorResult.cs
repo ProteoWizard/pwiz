@@ -37,8 +37,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
         }
 
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
-        [Advanced]
+        [HideWhen(AncestorOfType = typeof(Precursor))]
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
         public TransitionGroupChromInfo ChromInfo { get { return _chromInfo.Value; } }
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private PeptideResult _peptideResult;
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [HideWhen(AncestorOfType = typeof(Precursor))]
         public PeptideResult PeptideResult 
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }
