@@ -6,7 +6,7 @@
       <Value Profile="(Default)">9:00 PM</Value>
     </Setting>
     <Setting Name="NightlyFolder" Type="System.String" Scope="User">
-      <Value Profile="(Default)">SkylineNightly</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

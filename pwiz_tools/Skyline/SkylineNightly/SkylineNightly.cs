@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
@@ -32,6 +33,10 @@ namespace SkylineNightly
             InitializeComponent();
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
+            if (string.IsNullOrEmpty(textBoxFolder.Text))
+                textBoxFolder.Text = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "SkylineNightly"); // Not L10N
 
             using (var ts = new TaskService())
             {
@@ -48,7 +53,16 @@ namespace SkylineNightly
         private void OK(object sender, EventArgs e)
         {
             Settings.Default.StartTime = startTime.Text;
-            Settings.Default.NightlyFolder = textBoxFolder.Text;
+            var nightlyFolder = textBoxFolder.Text;
+            if (!Path.IsPathRooted(nightlyFolder))
+            {
+                nightlyFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    nightlyFolder);
+            }
+            if (!Directory.Exists(nightlyFolder))
+                Directory.CreateDirectory(nightlyFolder);
+            Settings.Default.NightlyFolder = nightlyFolder;
             Settings.Default.Save();
 
             // Create new scheduled task to run the nightly build.
@@ -98,21 +112,16 @@ namespace SkylineNightly
 
         private void buttonFolder_Click(object sender, EventArgs e)
         {
-            var documentsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
             using (var dlg = new FolderBrowserDialog
             {
                 Description = "Select or create a nightly build folder.", // Not L10N
                 ShowNewFolderButton = true,
-                SelectedPath = documentsFolder
+                SelectedPath = textBoxFolder.Text
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var nightlyRoot = dlg.SelectedPath;
-                    if (nightlyRoot.StartsWith(documentsFolder))
-                        nightlyRoot = nightlyRoot.Remove(0, documentsFolder.Length + 1);
-                    textBoxFolder.Text = nightlyRoot;
+                    textBoxFolder.Text = dlg.SelectedPath;
                 }
             }
         }
