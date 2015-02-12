@@ -101,6 +101,7 @@ namespace SkylineTester
                     var files = new[]
                     {
                         "SkylineNightly.exe",
+                        "SkylineNightly.pdb",
                         "Microsoft.Win32.TaskScheduler.dll",
                         "Ionic.Zip.dll"
                     };

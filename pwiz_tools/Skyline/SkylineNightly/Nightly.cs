@@ -104,7 +104,25 @@ namespace SkylineNightly
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = skylineTesterDir + ".zip";
-            DownloadSkylineTester(skylineTesterZip);
+            const int attempts = 30;
+            for (int i = 0; i < attempts; i++)
+            {
+                try
+                {
+                    DownloadSkylineTester(skylineTesterZip);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Log("Exception while downloading SkylineTester: " + ex.Message);
+                    if (i == attempts-1)
+                    {
+                        Log("Unable to download SkylineTester");
+                        return;
+                    }
+                    Thread.Sleep(60*1000);  // one minute
+                }
+            }
 
             // Install SkylineTester.
             if (!InstallSkylineTester(skylineTesterZip, skylineTesterDir))
