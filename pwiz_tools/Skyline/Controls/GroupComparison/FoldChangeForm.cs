@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
     {
         private IDocumentContainer _documentContainer;
         private string _groupComparisonName;
+        private Form _owner;
         public FoldChangeForm()
         {
             InitializeComponent();
@@ -86,6 +87,26 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     }
                 }
             }
+            _owner = Owner;
+            if (null != _owner)
+            {
+                _owner.FormClosed += OwnerFormClosed;
+            }
+        }
+
+        private void OwnerFormClosed(object sender, EventArgs args)
+        {
+            Close();
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+            if (null != _owner)
+            {
+                _owner.FormClosed -= OwnerFormClosed;
+            }
+            Dispose();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
