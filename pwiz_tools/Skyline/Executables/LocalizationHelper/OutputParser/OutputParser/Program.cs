@@ -30,21 +30,35 @@ namespace OutputParser
         {
             const int EXIT_SUCCESS = 0;
             const int EXIT_ERROR = 1;
+            const int MAX_ISSUES_ALLOWED = 0; // should be changed to permit more or less issues allowed before build fails
+            string NON_LOCALIZED_STRING = "NonLocalizedString"; // Exact name of the error that R# will throw for missing L10Ns
+
             bool containsNonLocalizedStrings = false;
             var totalIssueCounter = 0;
-            XmlDocument xmlDoc = new XmlDocument(); // Create an XML document object
-            xmlDoc.Load(args[0]); // Load the XML document from the specified file, args[0] is xml output file.
+            XmlDocument xmlDocL10N = new XmlDocument(); // Create an XML document object
+            xmlDocL10N.Load(args[0]); // Load the XML document from the specified file, args[0] is xml output file with all R# 9.0 warnings.
+
+            XmlDocument xmlDoc9 = new XmlDocument(); // Create an XML document object
+            xmlDoc9.Load(args[1]); // Load the XML document from the specified file, args[1] is xml output file with only l10n warnings.
+
             Console.WriteLine("Parsing");
             // Get elements
-            XmlNodeList ids = xmlDoc.GetElementsByTagName("IssueType");
-            // Display the results
-            Console.WriteLine("Code contains the following issues:");
+            XmlNodeList ids = xmlDoc9.GetElementsByTagName("IssueType");
             var severities = ids.Cast<XmlNode>().ToDictionary(id => id.Attributes["Id"].Value, id => id.Attributes["Severity"].Value);
+            severities.Add(NON_LOCALIZED_STRING, "WARNING");
 
-            XmlNodeList projects = xmlDoc.GetElementsByTagName("Project");
+            XmlNodeList projects = xmlDoc9.GetElementsByTagName("Project");
             Console.WriteLine("Checking projects for issues...");
+
+            // Issue list of file names
             var concatIssues = new Dictionary<string, List<string>>(); // Dictionary of issue type with value of string list of all files with that issue.
+            concatIssues.Add(NON_LOCALIZED_STRING, new List<string>()); // add empty L10N to issues list
+
+            // Issue Counter
             var issueCounter = new Dictionary<string, int>();
+            issueCounter.Add(NON_LOCALIZED_STRING, 0); // add L10N with coutn of 0 to issue counter
+
+            // R# 9.0 issues inspection
             foreach (XmlNode project in projects)
             {
                     Console.WriteLine("Project: " + project.Attributes["Name"].Value);
@@ -62,16 +76,38 @@ namespace OutputParser
                             if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(issue.Attributes["File"].Value))
                             {
                                 concatIssues[issue.Attributes["TypeId"].Value].Add(issue.Attributes["File"].Value);
-                                issueCounter[issue.Attributes["TypeId"].Value]++;
-                                totalIssueCounter++;
-                                if (issue.Attributes["TypeId"].Value.Equals("NonLocalizedString"))
-                                {
-                                    containsNonLocalizedStrings = true;
-                                }
                             }
+                            issueCounter[issue.Attributes["TypeId"].Value]++;
+                            totalIssueCounter++;
                         }
                     }  
             }
+
+            // L10N inspection
+            XmlNodeList L10NProjects = xmlDocL10N.GetElementsByTagName("Project");
+            Console.WriteLine("Inspecting for unmarked or non-localized strings");
+            foreach (XmlNode project in L10NProjects)
+            {
+                Console.WriteLine("Project: " + project.Attributes["Name"].Value);
+                XmlNodeList issues = project.ChildNodes;
+                
+                foreach (XmlNode issue in issues)
+                {
+                    // Will only add to dictionary if the type is rated as a WARNING or and ERROR.
+                    if (issue.Attributes["TypeId"].Value.Equals(NON_LOCALIZED_STRING))
+                    {
+                        if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(issue.Attributes["File"].Value))
+                        {
+                            concatIssues[issue.Attributes["TypeId"].Value].Add(issue.Attributes["File"].Value);
+                        }
+                        issueCounter[NON_LOCALIZED_STRING]++;
+                        totalIssueCounter++;
+                        containsNonLocalizedStrings = true;
+                    }
+                }
+            }
+
+            // prints out all issues & files containing issues
             foreach (var val in concatIssues)
             {
                 Console.WriteLine(issueCounter[val.Key] + " " + val.Key + " " + severities[val.Key] + "/s in file/s:");
@@ -83,13 +119,14 @@ namespace OutputParser
             }
             Console.WriteLine("This tool will fail the build if there are more than 33 issues or any NonLocalizedStrings.");
             Console.WriteLine("Total issues in solution: {0}", totalIssueCounter);
-            if (totalIssueCounter > 33 || containsNonLocalizedStrings)
+
+            if (totalIssueCounter > MAX_ISSUES_ALLOWED || containsNonLocalizedStrings)
             {
                 Console.WriteLine("\r\n InspectCode Failed.");
                 return EXIT_ERROR;
             }
-                Console.WriteLine("\r\n InspectCode Passed.");
-                return EXIT_SUCCESS;
+            Console.WriteLine("\r\n InspectCode Passed.");
+            return EXIT_SUCCESS;
         }
     }
 }
