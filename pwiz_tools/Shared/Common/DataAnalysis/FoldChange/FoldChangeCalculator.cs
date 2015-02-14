@@ -56,7 +56,9 @@ namespace pwiz.Common.DataAnalysis.FoldChange
                     if (!foundNull)
                     {
                         foundNull = true;
+                        // ReSharper disable ExpressionIsAlwaysNull
                         result.Add(item);
+                        // ReSharper restore ExpressionIsAlwaysNull
                     }
                 } 
                 else if (hashSet.Add(item))

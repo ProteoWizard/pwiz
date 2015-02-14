@@ -20518,6 +20518,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change Document Settings.
+        /// </summary>
+        public static string SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Update {0} calculator.
         /// </summary>
         public static string SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator {

@@ -158,4 +158,19 @@
   <data name="FoldChangeForm_GetTitle_New_Group_Comparison" xml:space="preserve">
     <value>New Group Comparison</value>
   </data>
+  <data name="NormalizationMethod_NONE_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians" xml:space="preserve">
+    <value>Equalize Medians</value>
+  </data>
+  <data name="NormalizationMethod_QUANTILE_Quantile" xml:space="preserve">
+    <value>Quantile</value>
+  </data>
+  <data name="NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards" xml:space="preserve">
+    <value>Ratio to Global Standards</value>
+  </data>
+  <data name="NormalizationMethod_FromName_Ratio_to__0_" xml:space="preserve">
+    <value>Ratio to {0}</value>
+  </data>
 </root>

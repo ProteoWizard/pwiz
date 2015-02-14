@@ -25,10 +25,11 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         private const string ratio_prefix = "ratio_to_"; // Not L10N
         private readonly Func<string> _getLabelFunc;
-        private string _name;
+        private readonly string _name;
         private NormalizationMethod(string name, Func<string> getLabelFunc)
         {
             _getLabelFunc = getLabelFunc;
+            _name = name;
         }
 
         public override string ToString()
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 string isotopeLabelTypeName = name.Substring(ratio_prefix.Length);
                 var isotopeLabelType = new IsotopeLabelType(isotopeLabelTypeName, 0);
-                return new NormalizationMethod(name, () => string.Format("Ratio to {0}", isotopeLabelType.Title))
+                return new NormalizationMethod(name, () => string.Format(GroupComparisonStrings.NormalizationMethod_FromName_Ratio_to__0_, isotopeLabelType.Title))
                 {
                     IsotopeLabelTypeName = isotopeLabelType.Name
                 };
@@ -71,10 +72,12 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public string IsotopeLabelTypeName { get; private set; }
 
-        public static readonly NormalizationMethod NONE = new NormalizationMethod("none", ()=>"None");
-        public static readonly NormalizationMethod EQUALIZE_MEDIANS = new NormalizationMethod("equalize_medians", ()=>"Equalize Medians");
-        public static readonly NormalizationMethod QUANTILE = new NormalizationMethod("quantile", ()=>"Quantile");
-        public static readonly NormalizationMethod GLOBAL_STANDARDS = new NormalizationMethod("global_standards", ()=>"Ratio to Global Standards");
+        // ReSharper disable NonLocalizedString
+        public static readonly NormalizationMethod NONE = new NormalizationMethod("none", ()=>GroupComparisonStrings.NormalizationMethod_NONE_None);
+        public static readonly NormalizationMethod EQUALIZE_MEDIANS = new NormalizationMethod("equalize_medians", ()=>GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians);
+        public static readonly NormalizationMethod QUANTILE = new NormalizationMethod("quantile", ()=>GroupComparisonStrings.NormalizationMethod_QUANTILE_Quantile);
+        public static readonly NormalizationMethod GLOBAL_STANDARDS = new NormalizationMethod("global_standards", ()=>GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards);
+        // ReSharper restore NonLocalizedString
 
         public static NormalizationMethod GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
         {
@@ -110,7 +113,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static IList<NormalizationMethod> ListNormalizationMethods(SrmDocument document)
         {
-            var result = new List<NormalizationMethod>()
+            var result = new List<NormalizationMethod>
             {
                 NONE
             };

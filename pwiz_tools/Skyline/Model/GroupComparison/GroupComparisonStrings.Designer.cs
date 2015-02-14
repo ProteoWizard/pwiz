@@ -197,6 +197,51 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Equalize Medians.
+        /// </summary>
+        internal static string NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to {0}.
+        /// </summary>
+        internal static string NormalizationMethod_FromName_Ratio_to__0_ {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_FromName_Ratio_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Global Standards.
+        /// </summary>
+        internal static string NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        internal static string NormalizationMethod_NONE_None {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_NONE_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantile.
+        /// </summary>
+        internal static string NormalizationMethod_QUANTILE_Quantile {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_QUANTILE_Quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Averaging.
         /// </summary>
         internal static string SummarizationMethod_AVERAGING_Averaging {

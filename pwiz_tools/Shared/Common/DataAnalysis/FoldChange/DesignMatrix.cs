@@ -17,15 +17,12 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Matrices;
 
 namespace pwiz.Common.DataAnalysis.FoldChange

@@ -2641,7 +2641,7 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ModifyDocument("Change Document Settings",
+                    ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 dlg.GetDataSettings(doc.Settings.DataSettings))));

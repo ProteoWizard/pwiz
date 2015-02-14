@@ -485,7 +485,9 @@ namespace pwiz.Common.DataBinding
             {
                 var constructor = columnTypeAttribute.ColumnType.GetConstructor(new Type[0]);
                 Debug.Assert(null != constructor);
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 return constructor != null ? (DataGridViewColumn) constructor.Invoke(new object[0]) : null;
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
             }
             catch (Exception exception)
             {

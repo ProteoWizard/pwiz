@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace pwiz.Common.DataAnalysis
 {
     public sealed class LinearFitResult
