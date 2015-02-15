@@ -73,16 +73,16 @@ namespace pwiz.Skyline.Model
             var reportOrViewSpecList = ReportSharing.DeserializeReportList(memoryStream);
             if (reportOrViewSpecList.Count == 0)
             {
-                throw new ArgumentException("No report definition found");
+                throw new ArgumentException("No report definition found"); // Not L10N
             }
             if (reportOrViewSpecList.Count > 1)
             {
-                throw new ArgumentException("Too many report definitions");
+                throw new ArgumentException("Too many report definitions"); // Not L10N
             }
             var reportOrViewSpec = reportOrViewSpecList.First();
             if (null == reportOrViewSpec.ViewSpec)
             {
-                throw new ArgumentException("The report definition uses the old format.");
+                throw new ArgumentException("The report definition uses the old format."); // Not L10N
             }
             return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpec, Program.MainWindow);
         }

@@ -43,7 +43,10 @@ namespace pwiz.Skyline.Model.Databinding
             if (Equals(document, Document))
             {
                 var result = new ReplicateSummaries(document);
-                _allTotalAreas.CopyTo(result._allTotalAreas, 0);
+                lock (_allTotalAreas)
+                {
+                    _allTotalAreas.CopyTo(result._allTotalAreas, 0);
+                }
                 return result;
             }
             return new ReplicateSummaries(document);
