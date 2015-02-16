@@ -490,6 +490,11 @@ namespace pwiz.Skyline.Model.Databinding
             return new RowSourceInfo(rows, GetDefaultViewInfo(ColumnDescriptor.RootColumn(DataSchema, typeof(T))));
         }
 
+        public void SetRowSources(IList<RowSourceInfo> rowSources)
+        {
+            RowSources = rowSources;
+        }
+
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
             yield return MakeRowSource(dataSchema, "Proteins", new Proteins(dataSchema));

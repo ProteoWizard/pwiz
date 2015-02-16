@@ -1357,6 +1357,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        internal static string ReplicateCount {
+            get {
+                return ResourceManager.GetString("ReplicateCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate Index.
         /// </summary>
         internal static string ReplicateIndex {

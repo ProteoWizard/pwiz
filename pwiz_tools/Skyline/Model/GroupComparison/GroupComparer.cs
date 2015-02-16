@@ -84,20 +84,55 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public bool IsValid { get; private set; }
 
-        public GroupComparisonResult CalculateFoldChange(PeptideGroupDocNode protein, PeptideDocNode peptide, List<RunAbundance> runAbundances)
+        public IList<IsotopeLabelType> ListLabelTypes(PeptideGroupDocNode protein, PeptideDocNode peptideDocNode)
+        {
+            var labelTypes = new HashSet<IsotopeLabelType>();
+            var peptides = peptideDocNode == null ? protein.Peptides : new[] {peptideDocNode};
+            foreach (var peptide in peptides)
+            {
+                foreach (var precursor in peptide.TransitionGroups)
+                {
+                    if (Equals(ComparisonDef.NormalizationMethod.IsotopeLabelTypeName,
+                        precursor.TransitionGroup.LabelType.Name))
+                    {
+                        continue;
+                    }
+                    labelTypes.Add(precursor.TransitionGroup.LabelType);
+                }
+            }
+            var result = labelTypes.ToArray();
+            Array.Sort(result);
+            return result;
+        }
+
+        public List<GroupComparisonResult> CalculateFoldChanges(PeptideGroupDocNode protein, PeptideDocNode peptide)
+        {
+            var result = new List<GroupComparisonResult>();
+            foreach (var labelType in ListLabelTypes(protein, peptide))
+            {
+                var groupComparisonResult = CalculateFoldChange(protein, peptide, labelType, null);
+                if (null != groupComparisonResult)
+                {
+                    result.Add(groupComparisonResult);
+                }
+            }
+            return result;
+        }
+
+        public GroupComparisonResult CalculateFoldChange(PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType isotopeLabelType, List<RunAbundance> runAbundances)
         {
             if (Equals(ComparisonDef.SummarizationMethod, SummarizationMethod.REGRESSION))
             {
-                return CalculateFoldChangeUsingRegression(protein, peptide, runAbundances);
+                return CalculateFoldChangeUsingRegression(protein, peptide, isotopeLabelType, runAbundances);
             }
-            return CalculateFoldChangeByAveragingTechnicalReplicates(protein, peptide, runAbundances);
+            return CalculateFoldChangeByAveragingTechnicalReplicates(protein, peptide, isotopeLabelType, runAbundances);
         }
 
         private GroupComparisonResult CalculateFoldChangeUsingRegression(
-            PeptideGroupDocNode protein, PeptideDocNode peptide, List<RunAbundance> runAbundances)
+            PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType labelType, List<RunAbundance> runAbundances)
         {
             var detailRows = new List<DataRowDetails>();
-            GetDataRows(protein, peptide, detailRows);
+            GetDataRows(protein, peptide, labelType, detailRows);
             if (detailRows.Count == 0)
             {
                 return null;
@@ -145,13 +180,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 runQuantificationDataSet.SubjectControls);
 
             var foldChangeResult = DesignMatrix.GetDesignMatrix(quantifiedDataSet, false).PerformLinearFit(_qrFactorizationCache).First();
-            return new GroupComparisonResult(protein, peptide, foldChangeResult);
+            return new GroupComparisonResult(protein, peptide, labelType, quantifiedRuns.Count, foldChangeResult);
         }
 
-        private GroupComparisonResult CalculateFoldChangeByAveragingTechnicalReplicates(PeptideGroupDocNode protein, PeptideDocNode peptide, List<RunAbundance> runAbundances)
+        private GroupComparisonResult CalculateFoldChangeByAveragingTechnicalReplicates(PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType labelType, List<RunAbundance> runAbundances)
         {
             var detailRows = new List<DataRowDetails>();
-            GetDataRows(protein, peptide, detailRows);
+            GetDataRows(protein, peptide, labelType, detailRows);
             if (detailRows.Count == 0)
             {
                 return null;
@@ -193,13 +228,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 //            var statsXValues = new Util.Statistics(summarizedRows.Select(row => row.Control ? 0.0 : 1));
 //            var slope = statsAbundances.Slope(statsXValues);
             
-            return new GroupComparisonResult(protein, peptide, foldChangeResult);
+            return new GroupComparisonResult(protein, peptide, labelType, summarizedRows.Count, foldChangeResult);
         }
 
         private IList<RunAbundance> SummarizeDataRowsByAveraging(IList<DataRowDetails> dataRows)
         {
             var result = new List<RunAbundance>();
-            foreach (var grouping in dataRows.ToLookup(row => row.ReplicateIndex))
+            foreach (var grouping in RemoveIncompleteReplicates(dataRows))
             {
                 var log2Abundance = Math.Log(grouping.Sum(row => row.Intensity) / grouping.Sum(row=>row.Denominator), 2.0);
                 result.Add(new RunAbundance
@@ -213,7 +248,16 @@ namespace pwiz.Skyline.Model.GroupComparison
             return result;
         }
 
-        private void GetDataRows(PeptideGroupDocNode protein, PeptideDocNode selectedPeptide, IList<DataRowDetails> foldChangeDetails)
+        private IEnumerable<IGrouping<int, DataRowDetails>> RemoveIncompleteReplicates(IList<DataRowDetails> dataRows)
+        {
+            var rowsByReplicateIndex = dataRows.ToLookup(row => row.ReplicateIndex);
+            var allIdentityPaths = new HashSet<IdentityPath>();
+            allIdentityPaths.UnionWith(dataRows.Select(row=>row.IdentityPath));
+            return rowsByReplicateIndex.Where(
+                grouping => allIdentityPaths.SetEquals(grouping.Select(row => row.IdentityPath)));
+        }
+
+        private void GetDataRows(PeptideGroupDocNode protein, PeptideDocNode selectedPeptide, IsotopeLabelType labelType, IList<DataRowDetails> foldChangeDetails)
         {
             foreach (var replicateEntry in _replicateIndexes)
             {
@@ -223,6 +267,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                         peptide, replicateEntry.Key, ComparisonDef.NormalizationMethod.IsotopeLabelTypeName);
                     foreach (var precursor in peptide.TransitionGroups)
                     {
+                        if (!Equals(precursor.TransitionGroup.LabelType, labelType))
+                        {
+                            continue;
+                        }
                         if (!string.IsNullOrEmpty(ComparisonDef.NormalizationMethod.IsotopeLabelTypeName))
                         {
                             if (Equals(ComparisonDef.NormalizationMethod.IsotopeLabelTypeName,
@@ -262,6 +310,56 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return;
             }
+            var chromInfo = GetTransitionChromInfo(transition, replicateEntry);
+            if (null == chromInfo || chromInfo.IsEmpty)
+            {
+                return;
+            }
+            double normalizedArea = chromInfo.Area;
+            double denominator = 1.0;
+
+            if (null != peptideStandards)
+            {
+                TransitionChromInfo chromInfoStandard;
+                if (!peptideStandards.TryGetValue(transition.EquivalentKey, out chromInfoStandard))
+                {
+                    return;
+                }
+                else
+                {
+                    denominator = chromInfoStandard.Area;
+                }
+            }
+            else
+            {
+                if (chromInfo.IsTruncated.GetValueOrDefault())
+                {
+                    return;
+                }
+                if (Equals(ComparisonDef.NormalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
+                {
+                    denominator = SrmDocument.Settings.CalcGlobalStandardArea(replicateEntry.Key, chromInfo.FileId);
+                }
+            }
+            foldChangeDetails.Add(new DataRowDetails
+            {
+                IdentityPath = identityPath,
+                BioReplicate = replicateEntry.Value.BioReplicate,
+                Control = replicateEntry.Value.IsControl,
+                ReplicateIndex = replicateEntry.Key,
+                Intensity = normalizedArea,
+                Denominator = denominator,
+            });
+        }
+
+        private TransitionChromInfo GetTransitionChromInfo(TransitionDocNode transitionDocNode,
+            KeyValuePair<int, ReplicateDetails> replicateEntry)
+        {
+            var chromInfos = transitionDocNode.Results[replicateEntry.Key];
+            if (null == chromInfos)
+            {
+                return null;
+            }
             foreach (var chromInfo in chromInfos)
             {
                 if (0 != chromInfo.OptimizationStep)
@@ -272,36 +370,23 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     continue;
                 }
-                double normalizedArea = chromInfo.Area;
-                double denominator = 1.0;
-                if (Equals(ComparisonDef.NormalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
-                {
-                    denominator = SrmDocument.Settings.CalcGlobalStandardArea(replicateEntry.Key, chromInfo.FileId);
-                }
-                else if (null != peptideStandards)
-                {
-                    TransitionChromInfo chromInfoStandard;
-                    if (!peptideStandards.TryGetValue(transition.EquivalentKey, out chromInfoStandard))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        denominator = chromInfoStandard.Area;
-                    }
-                }
-                foldChangeDetails.Add(new DataRowDetails
-                {
-                    IdentityPath = identityPath,
-                    BioReplicate = replicateEntry.Value.BioReplicate,
-                    Control = replicateEntry.Value.IsControl,
-                    ReplicateIndex = replicateEntry.Key,
-                    Intensity = normalizedArea,
-                    Denominator = denominator,
-                });
-                break;
+                return chromInfo;
             }
-            
+            return null;
+        }
+
+        private bool IsTruncated(TransitionGroupDocNode transitionGroupDocNode,
+            KeyValuePair<int, ReplicateDetails> replicateEntry)
+        {
+            foreach (var transition in transitionGroupDocNode.Transitions)
+            {
+                var chromInfo = GetTransitionChromInfo(transition, replicateEntry);
+                if (null != chromInfo && chromInfo.IsTruncated.GetValueOrDefault())
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private Dictionary<TransitionLossEquivalentKey, TransitionChromInfo> GetTransitionsForLabel(

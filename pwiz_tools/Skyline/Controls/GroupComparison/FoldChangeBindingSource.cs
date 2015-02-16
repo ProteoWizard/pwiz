@@ -57,9 +57,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _skylineDataSchema = new SkylineDataSchema(GroupComparisonModel.DocumentContainer,
                     SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                var viewInfo =
-                    SkylineViewContext.GetDefaultViewInfo(ColumnDescriptor.RootColumn(_skylineDataSchema,
-                        typeof(FoldChangeRow)));
+                var viewInfo = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), GetDefaultViewSpec(new FoldChangeRow[0]));
                 var rowSourceInfo = new RowSourceInfo(typeof(FoldChangeRow), new FoldChangeRow[0], new[] { viewInfo });
                 _skylineViewContext = new SkylineViewContext(_skylineDataSchema, new[] { rowSourceInfo });
                 _container = new Container();
@@ -107,12 +105,62 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         peptide = new Model.Databinding.Entities.Peptide(_skylineDataSchema,
                             new IdentityPath(protein.IdentityPath, resultRow.Peptide.Id));
                     }
-                    rows.Add(new FoldChangeRow(protein, peptide,
+                    rows.Add(new FoldChangeRow(protein, peptide, resultRow.LabelType, resultRow.ReplicateCount,
                         new FoldChangeResult(groupComparisonDef.ConfidenceLevel, 
                             adjustedPValues[iRow], resultRow.LinearFitResult)));
                 }
             }
+            var defaultViewSpec = GetDefaultViewSpec(rows);
+            if (!Equals(defaultViewSpec, _skylineViewContext.BuiltInViews.First()))
+            {
+                var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec);
+                _skylineViewContext.SetRowSources(new []{new RowSourceInfo(
+                    rows, viewInfo)});
+                if (null != _bindingListSource.ViewSpec && _bindingListSource.ViewSpec.Name == defaultViewSpec.Name &&
+                    !_bindingListSource.ViewSpec.Equals(defaultViewSpec))
+                {
+                    _bindingListSource.SetView(viewInfo, rows);
+                }
+            }
             _bindingListSource.RowSource = rows;
+        }
+
+        private ViewSpec GetDefaultViewSpec(IList<FoldChangeRow> foldChangeRows)
+        {
+            bool showPeptide; 
+            bool showLabelType;
+            if (foldChangeRows.Any())
+            {
+                showPeptide = foldChangeRows.Any(row => null != row.Peptide);
+                showLabelType = foldChangeRows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
+            }
+            else
+            {
+                showPeptide = !GroupComparisonModel.GroupComparisonDef.PerProtein;
+                showLabelType = false;
+            }
+            // ReSharper disable NonLocalizedString
+            var columns = new List<PropertyPath>
+            {
+                PropertyPath.Root.Property("Protein")
+            };
+            if (showPeptide)
+            {
+                columns.Add(PropertyPath.Root.Property("Peptide"));
+            }
+            if (showLabelType)
+            {
+                columns.Add(PropertyPath.Root.Property("IsotopeLabelType"));
+            }
+            columns.Add(PropertyPath.Root.Property("FoldChangeResult"));
+            columns.Add(PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"));
+            // ReSharper restore NonLocalizedString
+
+            var viewSpec = new ViewSpec()
+                .SetName(AbstractViewContext.DefaultViewName)
+                .SetRowType(typeof (FoldChangeRow))
+                .SetColumns(columns.Select(col => new ColumnSpec(col)));
+            return viewSpec;
         }
 
         public void Release()
@@ -136,14 +184,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class FoldChangeRow
         {
-            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, FoldChangeResult foldChangeResult)
+            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType, int replicateCount, FoldChangeResult foldChangeResult)
             {
                 Protein = protein;
                 Peptide = peptide;
+                IsotopeLabelType = labelType;
+                ReplicateCount = replicateCount;
                 FoldChangeResult = foldChangeResult;
             }
             public Protein Protein { get; private set; }
             public Model.Databinding.Entities.Peptide Peptide { get; private set; }
+            public IsotopeLabelType IsotopeLabelType { get; private set; }
+            public int ReplicateCount { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
         }
 

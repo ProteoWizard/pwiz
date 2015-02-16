@@ -276,6 +276,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
+            if (null == e.Label)
+            {
+                _inLabelEdit = false;
+                return;
+            }
             var columns = ColumnSpecs.ToArray();
             if (string.IsNullOrEmpty(e.Label))
             {

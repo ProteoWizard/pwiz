@@ -549,6 +549,9 @@
   <data name="Replicate">
     <value>Replicate</value>
   </data>
+  <data name="ReplicateCount">
+    <value>Replicate Count</value>
+  </data>
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
   </data>

@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _percentComplete = 0;
                 GroupComparer groupComparer = _groupComparer;
                 var cancellationToken = _cancellationTokenSource.Token;
-                Task.Factory.StartNew(() =>
+                AddErrorHandler(Task.Factory.StartNew(() =>
                 {
                     var results = ComputeComparisonResults(groupComparer, srmDocument, cancellationToken);
                     lock (_lock)
@@ -241,8 +241,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                             _percentComplete = 100;
                         }
                     }
-                }, _cancellationTokenSource.Token);
+                }, _cancellationTokenSource.Token));
             }
+        }
+
+        private Task AddErrorHandler(Task task)
+        {
+            return task.ContinueWith(t => Program.ReportException(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private void FireModelChanged()
@@ -288,11 +293,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     foreach (var peptide in peptides)
                     {
-                        var result = groupComparer.CalculateFoldChange(peptideGroup, peptide, null);
-                        if (null != result)
-                        {
-                            results.Add(result);
-                        }
+                        results.AddRange(groupComparer.CalculateFoldChanges(peptideGroup, peptide));
                     }
                 }
             }

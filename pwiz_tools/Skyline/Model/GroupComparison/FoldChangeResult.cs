@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             ConfidenceLevel = confidenceLevel;
             LinearFit = linearFitResult;
             AdjustedPValue = adjustedPValue;
+            
         }
 
         [Format(Formats.CV)]
