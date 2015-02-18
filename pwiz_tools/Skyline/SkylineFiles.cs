@@ -2489,7 +2489,7 @@ namespace pwiz.Skyline
                 servers.Add(newServer);
             }
 
-            using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))
+            using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName))
             {
                 publishDocumentDlg.PanoramaPublishClient = publishClient;
                 if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)

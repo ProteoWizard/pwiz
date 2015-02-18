@@ -8204,4 +8204,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings" xml:space="preserve">
     <value>Change Document Settings</value>
   </data>
+  <data name="PublishDocumentDlg_ServerSupportsSkydVersion_" xml:space="preserve">
+    <value>The selected server does not support version {0} of the skyd file format. 
+Please contact the Panorama server administrator to upgrade the server.</value>
+  </data>
 </root>

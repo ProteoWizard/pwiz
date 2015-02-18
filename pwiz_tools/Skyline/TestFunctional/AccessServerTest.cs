@@ -21,6 +21,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
@@ -36,6 +37,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestAccessServer()
         {
+            TestFilesZip = @"TestFunctional\AccessServerTest.zip";
             RunFunctionalTest();
         }
 
@@ -110,29 +112,66 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky")));
 
-            CheckPublishFailure(VALID_PANORAMA_SERVER);
-            CheckPublishFailure(NO_WRITE_TARGETED);
-            CheckPublishFailure(WRITE_NO_TARGETED);
+            CheckPublishFailure(VALID_PANORAMA_SERVER, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder);
+            CheckPublishFailure(NO_WRITE_TARGETED,
+                Resources
+                    .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
+            CheckPublishFailure(WRITE_NO_TARGETED,
+                Resources
+                    .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
             CheckPublishSuccess(WRITE_TARGETED);
+
+            // Document has no chromatograms, should be published regardless of skyd version supported by server -- Success
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("no_chromatograms.sky")));
+            WaitForDocumentLoaded();
+            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
+            CheckPublishSuccess(WRITE_TARGETED);
+
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
+            WaitForDocumentLoaded();
+            // Server supports a version lower than the chromatogram cache in this document -- Fail
+            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
+            CheckPublishFailure(WRITE_TARGETED, string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, "9"));
+
+            // Server supports the version of the chromatogram cache in this document -- Success
+            ((TestPanoramaPublishClient) _testPublishClient).ServerSkydVersion = "9";
+            CheckPublishSuccess(WRITE_TARGETED);
+
+            // Document should be published even if an invalid version is returned by the server -- Success 
+            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "NINE";
+            CheckPublishSuccess(WRITE_TARGETED);
+           
         }
 
         public void CheckPublishSuccess(string nodeSelection)
         {
-            RunDlg<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient),
-                    publishDocumentDlg =>
-                    {
-                        publishDocumentDlg.SelectItem(nodeSelection);
-                        publishDocumentDlg.OkDialog();
-                    });
+            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+            WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
+            RunUI(() =>
+            {
+                publishDocumentDlg.SelectItem(nodeSelection);
+                Assert.AreEqual(nodeSelection, publishDocumentDlg.GetSelectedNodeText());
+            });
+
+            OkDialog(publishDocumentDlg, publishDocumentDlg.OkDialog);
         }
 
-        public void CheckPublishFailure(string nodeSelection)
+        public void CheckPublishFailure(string nodeSelection, string failureMessage)
         {
-            var publishDocument = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
-            WaitForCondition(60 * 1000, () => publishDocument.IsLoaded);
-            RunUI(() => publishDocument.SelectItem(nodeSelection));
-            RunDlg<MessageDlg>(publishDocument.OkDialog, messageDlg => messageDlg.OkDialog());
-            OkDialog(publishDocument, publishDocument.CancelButton.PerformClick);
+            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+            WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
+            RunUI(() =>
+            {
+                publishDocumentDlg.SelectItem(nodeSelection);
+                Assert.AreEqual(nodeSelection, publishDocumentDlg.GetSelectedNodeText());
+            });
+
+            RunDlg<MessageDlg>(publishDocumentDlg.OkDialog, messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, failureMessage);
+                messageDlg.OkDialog();
+            });
+            OkDialog(publishDocumentDlg, publishDocumentDlg.CancelButton.PerformClick);
         }
 
         public void CheckServerInfoFailure(int serverCount)
@@ -213,6 +252,15 @@ namespace pwiz.SkylineTestFunctional
 
         private class TestPanoramaPublishClient : IPanoramaPublishClient
         {
+            string _serverSkydVersion = ChromatogramCache.FORMAT_VERSION_CACHE.ToString();
+
+            public string ServerSkydVersion
+            {
+                private get { return _serverSkydVersion; }
+                set { _serverSkydVersion = value; }
+            }
+
+
             public JToken GetInfoForFolders(Server server)
             {
                 JObject testFolders = new JObject();
@@ -230,7 +278,18 @@ namespace pwiz.SkylineTestFunctional
                 JObject obj = new JObject();
                 obj["name"] = name;
                 obj["userPermissions"] = write ? 3 : 1;
-                obj["children"] = new JArray();
+                if (!write || !targeted)
+                {
+                    // Create a writable subfolder if this folder is not writable, i.e. it is
+                    // not a targetedMS folder or the user does not have write permissions in this folder.
+                    // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
+                    obj["children"] = new JArray(CreateFolder("Subfolder", true, true));    
+                }
+                else
+                {
+                    obj["children"] = new JArray();    
+                }
+                
                 obj["folderType"] = targeted ? "Targeted MS" : "Collaboration";
                 obj["activeModules"] = targeted
                     ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
@@ -240,6 +299,13 @@ namespace pwiz.SkylineTestFunctional
 
             public void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker)
             {                
+            }
+
+            public JObject SupportedVersionsJson(Server server)
+            {
+                var obj = new JObject();
+                obj["SKYD_version"] = ServerSkydVersion;
+                return obj;
             }
         }
     }

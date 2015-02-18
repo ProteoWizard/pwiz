@@ -59,6 +59,11 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsTimeNormalArea { get; private set; }
 
+        public int? CacheVersion
+        {
+            get { return _cacheFinal != null ? _cacheFinal.Version : (int?) null; }
+        }
+
         public bool IsLoaded
         {
             get

@@ -40,6 +40,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class PublishDocumentDlg : FormEx
     {
+        private readonly IDocumentUIContainer _docContainer;
         private readonly SettingsList<Server> _panoramaServers;
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
@@ -55,11 +56,13 @@ namespace pwiz.Skyline.FileUI
             folder
          }
         
-        public PublishDocumentDlg(SettingsList<Server> servers, string fileName)
+        public PublishDocumentDlg(IDocumentUIContainer docContainer, SettingsList<Server> servers, string fileName)
         {
             IsLoaded = false;
             InitializeComponent();
             Icon = Resources.Skyline;
+
+            _docContainer = docContainer;
 
             _panoramaServers = servers;
             tbFilePath.Text = GetTimeStampedFileName(fileName);
@@ -268,8 +271,10 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            if(treeViewFolders.SelectedNode == null)
+            if (treeViewFolders.SelectedNode == null || treeViewFolders.SelectedNode.Level == 0)
             {
+                // Prompt the user to select a folder if no node is selected or only the top-level node
+                // (the server name) is selected.
                 MessageDlg.Show(this, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder);
                 return;
             }
@@ -285,7 +290,58 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
                 return;
             }
+
+            if (!ServerSupportsSkydVersion(folderInfo))
+            {
+                return;
+            }
+
             DialogResult = DialogResult.OK;
+        }
+
+        private bool ServerSupportsSkydVersion(FolderInformation folderInfo)
+        {
+            var settings = _docContainer.DocumentUI.Settings;
+            Assume.IsTrue(_docContainer.DocumentUI.IsLoaded);
+            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+
+            if (cacheVersion == null)
+            {
+                // The document may not have any chromatogram data.
+                return true;
+            }
+
+            var serverVersionsJson = PanoramaPublishClient.SupportedVersionsJson(folderInfo.Server);
+            if (serverVersionsJson == null)
+            {
+                // There was an error getting the server-supported skyd version for some reason.
+                // Perhaps this is an older server that did not understand the request, or
+                // the returned JSON was malformed. Let the document upload continue.
+                return true;
+            }
+
+            int? serverVersion = null;
+            JToken serverSkydVersion;
+            if (serverVersionsJson.TryGetValue("SKYD_version", out serverSkydVersion)) // Not L10N
+            {
+                int version;
+                if(int.TryParse(serverSkydVersion.Value<string>(), out version))
+                {
+                    serverVersion = version;   
+                }
+            }
+
+            if (serverVersion.HasValue && cacheVersion.Value > serverVersion.Value)
+            {
+                MessageDlg.Show(this,
+                    string.Format(
+                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_,
+                        cacheVersion.Value)
+                    );
+                return false;
+            }
+
+            return true;
         }
 
         public void UploadSharedZipFile(Control parent)
@@ -387,6 +443,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public string GetSelectedNodeText()
+        {
+            return treeViewFolders.SelectedNode != null ? treeViewFolders.SelectedNode.Text : string.Empty;
+        }
+
         private void treeViewFolders_DoubleClick(object sender, EventArgs e)
         {
             OkDialog();
@@ -402,6 +463,7 @@ namespace pwiz.Skyline.FileUI
     {
         JToken GetInfoForFolders(Server server);
         void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker);
+        JObject SupportedVersionsJson(Server server);
     }
 
     class WebPanoramaPublishClient : IPanoramaPublishClient
@@ -541,6 +603,38 @@ namespace pwiz.Skyline.FileUI
                     complete = string.Equals(status, "COMPLETE"); // Not L10N
                 }
             }
+        }
+
+        public JObject SupportedVersionsJson(Server server)
+        {
+            var uri = Call(server.URI, "targetedms", null, "getMaxSupportedVersions"); // Not L10N
+
+            string supportedVersionsJson;
+
+            using (var webClient = new WebClient())
+            {
+                webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
+                
+                try
+                {
+                    supportedVersionsJson = webClient.DownloadString(uri);
+                }
+                catch (WebException)
+                {
+                    // An exception will be thrown if the response code is not 200 (Success).
+                    // We may be communicating with an older server that does not understand the request.
+                    return null;
+                }
+            }
+            try
+            {
+                return JObject.Parse(supportedVersionsJson);
+            }
+            catch (Exception)
+            { 
+                // If there was an error in parsing the JSON.
+                return null;
+            } 
         }
 
         private class NonStreamBufferingWebClient: WebClient

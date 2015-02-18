@@ -271,6 +271,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AccessServerTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
