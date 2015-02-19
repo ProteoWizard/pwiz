@@ -215,6 +215,8 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
+                   Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
+                   Equals(type, ExportInstrumentType.THERMO_FUSION) ||
                    Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                    Equals(type, ExportInstrumentType.THERMO_LTQ) ||
                    Equals(type, ExportInstrumentType.THERMO_Q_EXACTIVE) ||
@@ -238,6 +240,7 @@ namespace pwiz.Skyline.FileUI
                 return Equals(type, ExportInstrumentType.SHIMADZU) ||
                        Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                        Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
+                       Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||

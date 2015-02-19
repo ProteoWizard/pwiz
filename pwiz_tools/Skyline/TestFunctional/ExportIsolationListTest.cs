@@ -128,6 +128,22 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", 45.79, 47.79, nce, "LVNELTEFAK (light)"),
                 FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", 38.9, 40.90, nce, "IKNLQS[+80.0]LDPSH (light)"));
 
+            // Export Thermo Fusion unscheduled Targeted list.
+            ExportIsolationList(
+                "FusionUnscheduledTargeted.csv",
+                ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
+                ThermoFusionMassListExporter.GetHeader(_fieldSeparator),
+                FieldSeparate(582.318971, 2, string.Empty, string.Empty, nce),
+                FieldSeparate(444.55002, 3, string.Empty, string.Empty, nce));
+
+            // Export Thermo Fusion scheduled Targeted list.
+            ExportIsolationList(
+                "FusionScheduledTargeted.csv",
+                ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
+                ThermoFusionMassListExporter.GetHeader(_fieldSeparator),
+                FieldSeparate(582.318971, 2, 45.79, 47.79, nce),
+                FieldSeparate(444.55002, 3, 38.90, 40.90, nce));
+
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);
             CheckMassAnalyzer(ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanMassAnalyzerType.orbitrap);

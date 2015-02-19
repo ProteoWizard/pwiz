@@ -2045,6 +2045,15 @@
     </EmbeddedResource>
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <Content Include="Method\Thermo\BuildThermoMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Thermo\Thermo.TNG.MethodXMLFactory.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\HomeIcon.bmp" />
     <Content Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />

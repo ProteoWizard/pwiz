@@ -165,7 +165,9 @@ namespace pwiz.Skyline.Model
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
         public const string THERMO_TSQ = "Thermo TSQ";
+        public const string THERMO_ENDURA = "Thermo Endura";
         public const string THERMO_QUANTIVA = "Thermo Quantiva";
+        public const string THERMO_FUSION = "Thermo Fusion";
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
         public const string WATERS = "Waters";
@@ -187,6 +189,8 @@ namespace pwiz.Skyline.Model
                 BRUKER_TOF,
                 THERMO_TSQ,
                 THERMO_LTQ,
+                THERMO_QUANTIVA,
+                THERMO_FUSION,
                 WATERS_XEVO,
                 WATERS_QUATTRO_PREMIER,
             };
@@ -205,7 +209,8 @@ namespace pwiz.Skyline.Model
         public static readonly string[] ISOLATION_LIST_TYPES =
             {
                 AGILENT_TOF,
-                THERMO_Q_EXACTIVE
+                THERMO_Q_EXACTIVE,
+                THERMO_FUSION
             };
 
         private readonly static Dictionary<string, string> METHOD_EXTENSIONS;
@@ -220,6 +225,8 @@ namespace pwiz.Skyline.Model
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {THERMO_TSQ, EXT_THERMO},
                                        {THERMO_LTQ, EXT_THERMO},
+                                       {THERMO_QUANTIVA, EXT_THERMO},
+                                       {THERMO_FUSION, EXT_THERMO},
                                        {WATERS_XEVO, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
@@ -247,6 +254,7 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, THERMO_LTQ) ||
                    Equals(type, THERMO_Q_EXACTIVE) ||
+                   Equals(type, THERMO_FUSION) ||
                    Equals(type, AGILENT_TOF) ||
                    Equals(type, BRUKER_TOF) ||
                    Equals(type, ABI_TOF);
@@ -379,7 +387,15 @@ namespace pwiz.Skyline.Model
                     else
                         return ExportThermoMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_QUANTIVA:
-                    return ExportThermoQuantivaCsv(doc, path);
+                    if (type == ExportFileType.List)
+                        return ExportThermoQuantivaCsv(doc, path);
+                    else
+                        return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
+                case ExportInstrumentType.THERMO_FUSION:
+                    if (type == ExportFileType.IsolationList)
+                        return ExportThermoFusionIsolationList(doc, path, template);
+                    else
+                        return ExportThermoFusionMethod(doc, path, template);
                 case ExportInstrumentType.SHIMADZU:
                     return ExportShimadzuCsv(doc, path);
                 case ExportInstrumentType.BRUKER:
@@ -541,6 +557,37 @@ namespace pwiz.Skyline.Model
             exporter.FullScans = FullScans;
             exporter.RunLength = RunLength;
 
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportThermoQuantivaMethod(SrmDocument document, string fileName, string templateName, string instrumentType)
+        {
+            var exporter = InitExporter(new ThermoQuantivaMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, instrumentType, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportThermoFusionMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoFusionMethodExporter(document));
+
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoFusionIsolationListExporter(document));
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -785,7 +832,7 @@ namespace pwiz.Skyline.Model
     public class ThermoQuantivaMassListExporter : ThermoMassListExporter
     {
         // Hack to workaround Quantiva limitation
-        protected readonly Dictionary<string, int> CompoundCounts = new Dictionary<string, int>();
+        protected readonly Dictionary<string, int> _compoundCounts = new Dictionary<string, int>();
         protected const int MAX_COMPOUND_NAME = 10;
 
         public ThermoQuantivaMassListExporter(SrmDocument document)
@@ -838,13 +885,13 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             string compound = GetCompound(nodePep);
-            if (!CompoundCounts.ContainsKey(compound))
+            if (!_compoundCounts.ContainsKey(compound))
             {
-                CompoundCounts[compound] = 0;
+                _compoundCounts[compound] = 0;
             }
             else
             {
-                int compoundStep = (++CompoundCounts[compound]) / MAX_COMPOUND_NAME + 1;
+                int compoundStep = (++_compoundCounts[compound]) / MAX_COMPOUND_NAME + 1;
                 if (compoundStep > 1)
                     compound += compoundStep;
             }
@@ -1377,6 +1424,53 @@ namespace pwiz.Skyline.Model
                 argv.Add("-1"); // Not L10N
             MethodExporter.ExportMethod(EXE_BUILD_LTQ_METHOD, argv,
                 fileName, templateName, MemoryOutput, progressMonitor);
+        }
+    }
+
+    public class ThermoQuantivaMethodExporter : ThermoQuantivaMassListExporter
+    {
+        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod"; // Not L10N
+
+        public ThermoQuantivaMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, string instrumentType, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            var argv = new List<string>();
+            if (instrumentType.Equals(ExportInstrumentType.THERMO_ENDURA))
+            {
+                argv.Add("-e"); // Not L10N
+            }
+            else if (instrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA))
+            {
+                argv.Add("-q"); // Not L10N
+            }
+            MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
+        }
+    }
+
+    public class ThermoFusionMethodExporter : ThermoFusionMassListExporter
+    {
+        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod"; // Not L10N
+
+        public ThermoFusionMethodExporter(SrmDocument document)
+            : base(document)
+        {
+            IsolationList = true;
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            var argv = new List<string> {"-f"}; // Not L10N
+            MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
 
@@ -2436,6 +2530,94 @@ namespace pwiz.Skyline.Model
                 nodeTranGroup.TransitionGroup.LabelType);
 
             Write(writer, precursorMz, string.Empty, string.Empty, z, (nodeTranGroup.TransitionGroup.PrecursorCharge > 0) ? "Positive" : "Negative", start, end, collisionEnergy, comment); // Not L10N
+        }
+    }
+
+    public class ThermoFusionMassListExporter : ThermoMassListExporter
+    {
+        public const double NARROW_NCE = 27.0;
+        public const double WIDE_NCE = 30.0;
+
+        public ThermoFusionMassListExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        // Write values separated by the field separator, and a line separator at the end.
+        private void Write(TextWriter writer, params string[] vals)
+        {
+            writer.WriteLine(string.Join(FieldSeparator.ToString(CultureInfo.InvariantCulture), vals));
+        }
+
+        public static string GetHeader(char fieldSeparator)
+        {
+            return "m/z,z,t start (min),t end (min),CID Collision Energy (%)".Replace(',', fieldSeparator); // Not L10N
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.WriteLine(GetHeader(FieldSeparator));
+        }
+
+        protected override void WriteTransition(TextWriter writer,
+                                                PeptideGroupDocNode nodePepGroup,
+                                                PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+
+            string start = string.Empty;
+            string end = string.Empty;
+            if (MethodType == ExportMethodType.Scheduled)
+            {
+                var prediction = Document.Settings.PeptideSettings.Prediction;
+                double windowRT;
+                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                // Start Time and End Time
+                if (predictedRT.HasValue)
+                {
+                    start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT / 2) ?? 0).ToString(CultureInfo);
+                    end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
+                }
+            }
+
+            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
+            // Note that this is normalized CE (not absolute)
+            var fullScan = Document.Settings.TransitionSettings.FullScan;
+            bool wideWindowDia = false;
+            if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme != null)
+            {
+                // Suggested by Thermo to use 27 for normal isolation ranges and 30 for wider windows
+                var scheme = fullScan.IsolationScheme;
+                if (!scheme.FromResults && !scheme.IsAllIons)
+                {
+                    wideWindowDia = scheme.PrespecifiedIsolationWindows.Average(
+                        iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
+                }
+            }
+            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
+
+            Write(writer, precursorMz, z, start, end, collisionEnergy);
+        }
+    }
+
+    public class ThermoFusionIsolationListExporter : ThermoFusionMassListExporter
+    {
+        public ThermoFusionIsolationListExporter(SrmDocument document)
+            : base(document)
+        {
+            IsolationList = true;
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+            Export(fileName);
         }
     }
 
