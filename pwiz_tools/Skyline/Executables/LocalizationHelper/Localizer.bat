@@ -28,7 +28,7 @@ if not exist %LocalAPPDATA%/JetBrains/commandline9.0/InspectCode.exe (
 
 %LocalAPPDATA%\JetBrains\commandline8.2\inspectcode.exe /p=%1\pwiz_tools\Skyline\Executables\LocalizationHelper\empty.sln.DotSettings /plugin=%1\pwiz_tools\Skyline\Executables\LocalizationHelper\Localizer\plugins\LocalizationHelper.dll /o="%2\InspectCodeOutput1.xml" /no-buildin-settings /properties=%3 %1\pwiz_tools\Skyline\Skyline.sln
 
-%LocalAPPDATA%\JetBrains\commandline9.0\inspectcode.exe /profile=%1\pwiz_tools\Skyline\Skyline.sln.DotSettings /o="%2\InspectCodeOutput2.xml" /no-buildin-settings /properties=%3 %1\pwiz_tools\Skyline\Skyline.sln
+%LocalAPPDATA%\JetBrains\commandline9.0\inspectcode.exe /profile=%1\pwiz_tools\Skyline\Skyline.sln.DotSettings /no-swea /o="%2\InspectCodeOutput2.xml" /no-buildin-settings /properties=%3 %1\pwiz_tools\Skyline\Skyline.sln
 
 %1\pwiz_tools\Skyline\Executables\LocalizationHelper\OutputParser.exe %2\InspectCodeOutput1.xml %2\InspectCodeOutput2.xml 
 if ERRORLEVEL 1 exit /b 1

@@ -19,13 +19,13 @@
 
 using JetBrains.ReSharper.Psi;
 // ReSharper disable PossibleNullReferenceException
-using JetBrains.ReSharper.Daemon.Stages;
 using JetBrains.ReSharper.Daemon.Stages.Dispatcher;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
+using JetBrains.ReSharper.Feature.Services.Daemon;
 // ReSharper disable NonLocalizedString
-namespace LocalizationHelper
+namespace YuvalBoss.L10N
 {
     [ElementProblemAnalyzer(new[] { typeof(ICSharpLiteralExpression) }, HighlightingTypes = new[] { typeof(LocalizeStringSuggestion) })]
     public class LocalizeStringDaemonStageProcess : ElementProblemAnalyzer<ICSharpLiteralExpression>
@@ -52,7 +52,7 @@ namespace LocalizationHelper
             var extension = splitter[splitter.Length - 1];
             if (extension == "resx")
                 return false;
-            else if (fileName == "AssemblyInfo.cs") 
+            else if (fileName == "AssemblyInfo.cs")
                 return false;
             while (!(declarationNode is IAttribute))
             {

@@ -17,21 +17,21 @@
  * limitations under the License.
  */
 
-using JetBrains.ReSharper.Daemon;
-using JetBrains.ReSharper.Daemon.CSharp.Errors;
+using JetBrains.ReSharper.Feature.Services.CSharp.Daemon;
+using JetBrains.ReSharper.Feature.Services.Daemon;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
-using LocalizationHelper;
+using YuvalBoss.L10N;
 
 [assembly: RegisterConfigurableSeverity(LocalizeStringSuggestion.SeverityId,
   null,
   HighlightingGroupIds.BestPractice,
-  "Non Localized String", 
+  "Non Localized String",
   "All strings must be marked with either '// Not L10N' or localized to a resx file.",
   Severity.WARNING,
   false)]
 
-namespace LocalizationHelper
+namespace YuvalBoss.L10N
 {
     [ConfigurableSeverityHighlightingAttribute(SeverityId, CSharpLanguage.Name, OverlapResolve = OverlapResolveKind.WARNING)]
     public class LocalizeStringSuggestion : CSharpHighlightingBase, IHighlighting

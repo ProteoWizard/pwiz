@@ -76,6 +76,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_build
     {
         IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+
+        echo Building Crawdad in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/../Shared/Crawdad/CrawdadSolution.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Crawdad/obj/$(PLATFORM) /t:Crawdad /nologo /verbosity:minimal        
+
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
@@ -102,6 +106,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Running Code inspections
+        echo $(SKYLINE_PATH)\Executables\LocalizationHelper\Localizer.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
         $(SKYLINE_PATH)\Executables\LocalizationHelper\Localizer.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
     }
 
@@ -213,6 +218,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@msvc-dotnet-requirement
             <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <conditional>@build-location
+            <dependency>Skyline.exe
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)

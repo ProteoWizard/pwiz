@@ -17,14 +17,19 @@
  * limitations under the License.
  */
 
-using System.Windows.Forms;
 using JetBrains.ActionManagement;
 using JetBrains.Application.DataContext;
+using JetBrains.ReSharper.Feature.Services.Menu;
+using JetBrains.UI.ActionsRevised;
+using JetBrains.UI.ActionSystem.Actions;
+using JetBrains.UI.MenuGroups;
+using JetBrains.Util;
 
-namespace LocalizationHelper
+namespace YuvalBoss.L10N
 {
-    [ActionHandler("LocalizationHelper.About")]
-    public class AboutAction : IActionHandler
+    [Action("About L10N", Id = 10802)]
+    public class AboutAction : IExecutableAction, IInsertAfter<HelpMenu, ShowHelpAction>
+
     {
         public bool Update(IDataContext context, ActionPresentation presentation, DelegateUpdate nextUpdate)
         {
@@ -34,13 +39,11 @@ namespace LocalizationHelper
 
         public void Execute(IDataContext context, DelegateExecute nextExecute)
         {
-            MessageBox.Show(
+            MessageBox.ShowMessageBox(
               "Localization Helper\nYuval\n\nHelps Localize",
               "About Localization Helper",
-              MessageBoxButtons.OK,
-              MessageBoxIcon.Information);
-        
+              MbButton.MB_OK,
+              MbIcon.MB_ICONASTERISK);
         }
-
     }
-}
+} 

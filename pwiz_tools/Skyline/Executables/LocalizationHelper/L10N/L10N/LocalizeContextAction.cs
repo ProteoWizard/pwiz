@@ -19,15 +19,16 @@
 
 using System;
 using JetBrains.Application.Progress;
+using JetBrains.DocumentManagers.Transactions;
 using JetBrains.ProjectModel;
-using JetBrains.ReSharper.Feature.Services.Bulbs;
-using JetBrains.ReSharper.Intentions.Extensibility;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.TextControl;
 using JetBrains.Util;
 using JetBrains.DocumentModel;
+using JetBrains.ReSharper.Feature.Services.ContextActions;
+using JetBrains.ReSharper.Feature.Services.QuickFixes;
 
-namespace LocalizationHelper
+namespace YuvalBoss.L10N
 {
     /// <summary>
     /// This context action marks unlocalized strings as // Not L10N
