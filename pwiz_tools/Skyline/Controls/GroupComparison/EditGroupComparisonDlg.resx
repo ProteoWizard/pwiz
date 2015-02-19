@@ -126,13 +126,13 @@
     <value>12, 9</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>35, 13</value>
+    <value>38, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Name</value>
+    <value>&amp;Name:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -154,7 +154,7 @@
     <value>12, 25</value>
   </data>
   <data name="tbxName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>278, 20</value>
+    <value>259, 20</value>
   </data>
   <data name="tbxName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -175,7 +175,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnPreview.Location" type="System.Drawing.Point, System.Drawing">
-    <value>298, 23</value>
+    <value>279, 23</value>
   </data>
   <data name="btnPreview.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -202,13 +202,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboIdentityAnnotation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 200</value>
+    <value>12, 233</value>
   </data>
   <data name="comboIdentityAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>359, 21</value>
+    <value>340, 21</value>
   </data>
   <data name="comboIdentityAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.Name" xml:space="preserve">
     <value>comboIdentityAnnotation</value>
@@ -226,16 +226,16 @@
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 184</value>
+    <value>12, 217</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 13</value>
+    <value>212, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>9</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Identity Annotation (for technical replicates)</value>
+    <value>I&amp;dentity annotation (for technical replicates):</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -268,13 +268,13 @@
     <value>Relative to internal standard</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 242</value>
+    <value>12, 285</value>
   </data>
   <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>359, 21</value>
+    <value>340, 21</value>
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>12</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
@@ -292,13 +292,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboCaseValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 158</value>
+    <value>12, 181</value>
   </data>
   <data name="comboCaseValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>359, 21</value>
+    <value>340, 21</value>
   </data>
   <data name="comboCaseValue.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;comboCaseValue.Name" xml:space="preserve">
     <value>comboCaseValue</value>
@@ -319,16 +319,16 @@
     <value>True</value>
   </data>
   <data name="lblCompareAgainst.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 142</value>
+    <value>12, 165</value>
   </data>
   <data name="lblCompareAgainst.Size" type="System.Drawing.Size, System.Drawing">
-    <value>127, 13</value>
+    <value>130, 13</value>
   </data>
   <data name="lblCompareAgainst.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>7</value>
   </data>
   <data name="lblCompareAgainst.Text" xml:space="preserve">
-    <value>Value to compare against</value>
+    <value>&amp;Value to compare against:</value>
   </data>
   <data name="&gt;&gt;lblCompareAgainst.Name" xml:space="preserve">
     <value>lblCompareAgainst</value>
@@ -349,16 +349,16 @@
     <value>True</value>
   </data>
   <data name="lblControlValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 100</value>
+    <value>12, 113</value>
   </data>
   <data name="lblControlValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>99, 13</value>
+    <value>102, 13</value>
   </data>
   <data name="lblControlValue.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>5</value>
   </data>
   <data name="lblControlValue.Text" xml:space="preserve">
-    <value>Control group value</value>
+    <value>C&amp;ontrol group value:</value>
   </data>
   <data name="&gt;&gt;lblControlValue.Name" xml:space="preserve">
     <value>lblControlValue</value>
@@ -379,16 +379,16 @@
     <value>True</value>
   </data>
   <data name="lblControlAnnotation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 58</value>
+    <value>12, 61</value>
   </data>
   <data name="lblControlAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>123, 13</value>
+    <value>126, 13</value>
   </data>
   <data name="lblControlAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>3</value>
   </data>
   <data name="lblControlAnnotation.Text" xml:space="preserve">
-    <value>Control group annotation</value>
+    <value>&amp;Control group annotation:</value>
   </data>
   <data name="&gt;&gt;lblControlAnnotation.Name" xml:space="preserve">
     <value>lblControlAnnotation</value>
@@ -406,13 +406,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboControlValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 116</value>
+    <value>12, 129</value>
   </data>
   <data name="comboControlValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>359, 21</value>
+    <value>340, 21</value>
   </data>
   <data name="comboControlValue.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;comboControlValue.Name" xml:space="preserve">
     <value>comboControlValue</value>
@@ -430,13 +430,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboControlAnnotation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 74</value>
+    <value>12, 77</value>
   </data>
   <data name="comboControlAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 21</value>
+    <value>342, 21</value>
   </data>
   <data name="comboControlAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;comboControlAnnotation.Name" xml:space="preserve">
     <value>comboControlAnnotation</value>
@@ -454,16 +454,16 @@
     <value>True</value>
   </data>
   <data name="lblNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 226</value>
+    <value>12, 269</value>
   </data>
   <data name="lblNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 13</value>
+    <value>111, 13</value>
   </data>
   <data name="lblNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
+    <value>11</value>
   </data>
   <data name="lblNormalizationMethod.Text" xml:space="preserve">
-    <value>Normalization Method</value>
+    <value>Nor&amp;malization method:</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.Name" xml:space="preserve">
     <value>lblNormalizationMethod</value>
@@ -484,13 +484,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>296, 374</value>
+    <value>277, 437</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>18</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -514,13 +514,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>215, 374</value>
+    <value>196, 437</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
+    <value>17</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
     <value>OK</value>
@@ -538,13 +538,13 @@
     <value>5</value>
   </data>
   <data name="tbxConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 282</value>
+    <value>12, 337</value>
   </data>
   <data name="tbxConfidenceLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 20</value>
   </data>
   <data name="tbxConfidenceLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
+    <value>14</value>
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.Name" xml:space="preserve">
     <value>tbxConfidenceLevel</value>
@@ -565,16 +565,16 @@
     <value>NoControl</value>
   </data>
   <data name="lblConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 266</value>
+    <value>12, 321</value>
   </data>
   <data name="lblConfidenceLevel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 13</value>
+    <value>89, 13</value>
   </data>
   <data name="lblConfidenceLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>13</value>
   </data>
   <data name="lblConfidenceLevel.Text" xml:space="preserve">
-    <value>Confidence Level</value>
+    <value>Confid&amp;ence level:</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.Name" xml:space="preserve">
     <value>lblConfidenceLevel</value>
@@ -592,13 +592,13 @@
     <value>True</value>
   </data>
   <data name="lblPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>108, 329</value>
+    <value>108, 340</value>
   </data>
   <data name="lblPercent.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
   </data>
   <data name="lblPercent.TabIndex" type="System.Int32, mscorlib">
-    <value>29</value>
+    <value>16</value>
   </data>
   <data name="lblPercent.Text" xml:space="preserve">
     <value>%</value>
@@ -631,13 +631,13 @@
     <value>0</value>
   </data>
   <data name="groupBoxScope.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 311</value>
+    <value>12, 375</value>
   </data>
   <data name="groupBoxScope.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 47</value>
+    <value>342, 47</value>
   </data>
   <data name="groupBoxScope.TabIndex" type="System.Int32, mscorlib">
-    <value>30</value>
+    <value>15</value>
   </data>
   <data name="groupBoxScope.Text" xml:space="preserve">
     <value>Scope</value>
@@ -685,7 +685,7 @@
     <value>3, 16</value>
   </data>
   <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>355, 28</value>
+    <value>336, 28</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -715,7 +715,7 @@
     <value>0</value>
   </data>
   <data name="radioScopePeptide.Text" xml:space="preserve">
-    <value>Peptide</value>
+    <value>&amp;Peptide</value>
   </data>
   <data name="&gt;&gt;radioScopePeptide.Name" xml:space="preserve">
     <value>radioScopePeptide</value>
@@ -742,7 +742,7 @@
     <value>1</value>
   </data>
   <data name="radioScopeProtein.Text" xml:space="preserve">
-    <value>Protein</value>
+    <value>Pro&amp;tein</value>
   </data>
   <data name="&gt;&gt;radioScopeProtein.Name" xml:space="preserve">
     <value>radioScopeProtein</value>
@@ -763,7 +763,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>385, 409</value>
+    <value>366, 472</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

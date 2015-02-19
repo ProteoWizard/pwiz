@@ -121,14 +121,86 @@
   <data name="groupBoxScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="&gt;&gt;radioScopePeptide.Name" xml:space="preserve">
+    <value>radioScopePeptide</value>
+  </data>
+  <data name="&gt;&gt;radioScopePeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioScopePeptide.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;radioScopePeptide.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;radioScopeProtein.Name" xml:space="preserve">
+    <value>radioScopeProtein</value>
+  </data>
+  <data name="&gt;&gt;radioScopeProtein.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioScopeProtein.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;radioScopeProtein.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="flowLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 16</value>
+  </data>
+  <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>336, 28</value>
+  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
+    <value>groupBoxScope</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="groupBoxScope.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 323</value>
+  </data>
+  <data name="groupBoxScope.Size" type="System.Drawing.Size, System.Drawing">
+    <value>342, 47</value>
+  </data>
+  <data name="groupBoxScope.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="groupBoxScope.Text" xml:space="preserve">
+    <value>&amp;Scope</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Name" xml:space="preserve">
+    <value>groupBoxScope</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="radioScopePeptide.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="radioScopePeptide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioScopePeptide.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
@@ -139,7 +211,7 @@
     <value>0</value>
   </data>
   <data name="radioScopePeptide.Text" xml:space="preserve">
-    <value>Peptide</value>
+    <value>&amp;Peptide</value>
   </data>
   <data name="&gt;&gt;radioScopePeptide.Name" xml:space="preserve">
     <value>radioScopePeptide</value>
@@ -169,7 +241,7 @@
     <value>1</value>
   </data>
   <data name="radioScopeProtein.Text" xml:space="preserve">
-    <value>Protein</value>
+    <value>Pro&amp;tein</value>
   </data>
   <data name="&gt;&gt;radioScopeProtein.Name" xml:space="preserve">
     <value>radioScopeProtein</value>
@@ -183,54 +255,6 @@
   <data name="&gt;&gt;radioScopeProtein.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="flowLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
-  </data>
-  <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>357, 28</value>
-  </data>
-  <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
-    <value>groupBoxScope</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="groupBoxScope.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 262</value>
-  </data>
-  <data name="groupBoxScope.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 47</value>
-  </data>
-  <data name="groupBoxScope.TabIndex" type="System.Int32, mscorlib">
-    <value>44</value>
-  </data>
-  <data name="groupBoxScope.Text" xml:space="preserve">
-    <value>Scope</value>
-  </data>
-  <data name="&gt;&gt;groupBoxScope.Name" xml:space="preserve">
-    <value>groupBoxScope</value>
-  </data>
-  <data name="&gt;&gt;groupBoxScope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxScope.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBoxScope.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="lblPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -238,7 +262,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>111, 280</value>
+    <value>108, 288</value>
   </data>
   <data name="lblPercent.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -262,13 +286,13 @@
     <value>1</value>
   </data>
   <data name="tbxConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 233</value>
+    <value>12, 285</value>
   </data>
   <data name="tbxConfidenceLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>90, 20</value>
   </data>
   <data name="tbxConfidenceLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>42</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.Name" xml:space="preserve">
     <value>tbxConfidenceLevel</value>
@@ -289,16 +313,16 @@
     <value>NoControl</value>
   </data>
   <data name="lblConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 217</value>
+    <value>12, 269</value>
   </data>
   <data name="lblConfidenceLevel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 13</value>
+    <value>89, 13</value>
   </data>
   <data name="lblConfidenceLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>41</value>
+    <value>10</value>
   </data>
   <data name="lblConfidenceLevel.Text" xml:space="preserve">
-    <value>Confidence Level</value>
+    <value>Confid&amp;ence level:</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.Name" xml:space="preserve">
     <value>lblConfidenceLevel</value>
@@ -319,16 +343,16 @@
     <value>NoControl</value>
   </data>
   <data name="lblNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 177</value>
+    <value>12, 217</value>
   </data>
   <data name="lblNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 13</value>
+    <value>111, 13</value>
   </data>
   <data name="lblNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>40</value>
+    <value>8</value>
   </data>
   <data name="lblNormalizationMethod.Text" xml:space="preserve">
-    <value>Normalization Method</value>
+    <value>Nor&amp;malization method:</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.Name" xml:space="preserve">
     <value>lblNormalizationMethod</value>
@@ -346,13 +370,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboIdentityAnnotation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 151</value>
+    <value>12, 181</value>
   </data>
   <data name="comboIdentityAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 21</value>
+    <value>342, 21</value>
   </data>
   <data name="comboIdentityAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>39</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.Name" xml:space="preserve">
     <value>comboIdentityAnnotation</value>
@@ -373,16 +397,16 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 135</value>
+    <value>12, 165</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 13</value>
+    <value>212, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>38</value>
+    <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Identity Annotation (for technical replicates)</value>
+    <value>I&amp;dentity annotation (for technical replicates):</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -415,13 +439,13 @@
     <value>Relative to internal standard</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 193</value>
+    <value>12, 233</value>
   </data>
   <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 21</value>
+    <value>342, 21</value>
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>37</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
@@ -439,13 +463,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboCaseValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 109</value>
+    <value>12, 129</value>
   </data>
   <data name="comboCaseValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 21</value>
+    <value>342, 21</value>
   </data>
   <data name="comboCaseValue.TabIndex" type="System.Int32, mscorlib">
-    <value>36</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;comboCaseValue.Name" xml:space="preserve">
     <value>comboCaseValue</value>
@@ -469,16 +493,16 @@
     <value>NoControl</value>
   </data>
   <data name="lblCompareAgainst.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 93</value>
+    <value>12, 113</value>
   </data>
   <data name="lblCompareAgainst.Size" type="System.Drawing.Size, System.Drawing">
-    <value>127, 13</value>
+    <value>130, 13</value>
   </data>
   <data name="lblCompareAgainst.TabIndex" type="System.Int32, mscorlib">
-    <value>35</value>
+    <value>4</value>
   </data>
   <data name="lblCompareAgainst.Text" xml:space="preserve">
-    <value>Value to compare against</value>
+    <value>&amp;Value to compare against:</value>
   </data>
   <data name="&gt;&gt;lblCompareAgainst.Name" xml:space="preserve">
     <value>lblCompareAgainst</value>
@@ -502,16 +526,16 @@
     <value>NoControl</value>
   </data>
   <data name="lblControlValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 51</value>
+    <value>12, 62</value>
   </data>
   <data name="lblControlValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>99, 13</value>
+    <value>102, 13</value>
   </data>
   <data name="lblControlValue.TabIndex" type="System.Int32, mscorlib">
-    <value>34</value>
+    <value>2</value>
   </data>
   <data name="lblControlValue.Text" xml:space="preserve">
-    <value>Control group value</value>
+    <value>C&amp;ontrol group value:</value>
   </data>
   <data name="&gt;&gt;lblControlValue.Name" xml:space="preserve">
     <value>lblControlValue</value>
@@ -538,13 +562,13 @@
     <value>12, 9</value>
   </data>
   <data name="lblControlAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>123, 13</value>
+    <value>126, 13</value>
   </data>
   <data name="lblControlAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>33</value>
+    <value>0</value>
   </data>
   <data name="lblControlAnnotation.Text" xml:space="preserve">
-    <value>Control group annotation</value>
+    <value>&amp;Control group annotation:</value>
   </data>
   <data name="&gt;&gt;lblControlAnnotation.Name" xml:space="preserve">
     <value>lblControlAnnotation</value>
@@ -562,13 +586,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboControlValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 67</value>
+    <value>12, 77</value>
   </data>
   <data name="comboControlValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>361, 21</value>
+    <value>342, 21</value>
   </data>
   <data name="comboControlValue.TabIndex" type="System.Int32, mscorlib">
-    <value>32</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboControlValue.Name" xml:space="preserve">
     <value>comboControlValue</value>
@@ -586,13 +610,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="comboControlAnnotation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 25</value>
+    <value>12, 25</value>
   </data>
   <data name="comboControlAnnotation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 21</value>
+    <value>342, 21</value>
   </data>
   <data name="comboControlAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>31</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboControlAnnotation.Name" xml:space="preserve">
     <value>comboControlAnnotation</value>
@@ -613,7 +637,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>403, 332</value>
+    <value>366, 385</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
