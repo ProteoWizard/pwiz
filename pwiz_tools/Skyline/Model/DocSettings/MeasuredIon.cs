@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MAX_MIN_FRAGMENT_LENGTH = 10;
 
         public const double MIN_REPORTER_MASS = 5;
-        public const double MAX_REPORTER_MASS = 500;
+        public const double MAX_REPORTER_MASS = 5000;
 
         private SettingsCustomIon SettingsCustomIon { get; set; }
 
