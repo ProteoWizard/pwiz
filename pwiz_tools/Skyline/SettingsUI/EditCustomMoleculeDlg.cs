@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -214,7 +215,15 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (!string.IsNullOrEmpty(_formulaBox.Formula))
             {
-                ResultCustomIon = new DocNodeCustomIon(formula, textName.Text);
+                try
+                {
+                    ResultCustomIon = new DocNodeCustomIon(formula, textName.Text);
+                }
+                catch (InvalidDataException x)
+                {
+                    _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
+                    return;
+                }
             }
             else
             {

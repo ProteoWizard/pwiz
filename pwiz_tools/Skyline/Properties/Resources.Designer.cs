@@ -14643,6 +14643,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid drift time high energy offset value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid drift time value {0}.
         /// </summary>
         public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_ {
@@ -14679,6 +14688,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit Collision Energy.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Drift Time (msec).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Drift Time High Energy Offset (msec).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Retention Time.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Retention_Time {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Retention_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule List Name.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Molecule_List_Name {
@@ -14707,29 +14752,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor CE.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Precursor_CE {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_CE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Precursor Charge.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Precursor_Charge {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Charge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Precursor Drift Time (msec).
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_", resourceCulture);
             }
         }
         
@@ -14761,29 +14788,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor RT.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Precursor_RT {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_RT", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Product Charge.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Product_Charge {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Charge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Product Drift Time (msec).
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_", resourceCulture);
             }
         }
         
@@ -15228,6 +15237,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Peptide", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Direct editing of this value is only supported for small molecules..
+        /// </summary>
+        public static string Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_ {
+            get {
+                return ResourceManager.GetString("Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_fo" +
+                        "r_small_molecules_", resourceCulture);
             }
         }
         
@@ -18836,6 +18855,96 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Peptides {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Precursors {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Proteins {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicates.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Replicates {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string SkylineViewContext_GetDocumentGridRowSources_Transitions {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mixed Transition List.
+        /// </summary>
+        public static string SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Transition List.
+        /// </summary>
+        public static string SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Transition List.
+        /// </summary>
+        public static string SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure loading {0}..
+        /// </summary>
+        public static string SkylineViewContext_ImportViews_Failure_loading__0__ {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_ImportViews_Failure_loading__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No views were found in that file..
+        /// </summary>
+        public static string SkylineViewContext_ImportViews_No_views_were_found_in_that_file_ {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_ImportViews_No_views_were_found_in_that_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accept peptides.
         /// </summary>
         public static string SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides {
@@ -18860,24 +18969,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_alrea" +
                         "dy_being_used_as_an_iRT_standard_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add Custom Molecule.
-        /// </summary>
-        public static string SkylineWindow_AddMolecule_Add_Custom_Molecule {
-            get {
-                return ResourceManager.GetString("SkylineWindow_AddMolecule_Add_Custom_Molecule", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add custom molecule {0}.
-        /// </summary>
-        public static string SkylineWindow_AddMolecule_Add_custom_molecule__0_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_AddMolecule_Add_custom_molecule__0_", resourceCulture);
             }
         }
         
@@ -18924,6 +19015,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for" +
                         "_your_instrument_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Small Molecule.
+        /// </summary>
+        public static string SkylineWindow_AddSmallMolecule_Add_Small_Molecule {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AddSmallMolecule_Add_Small_Molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add small molecule {0}.
+        /// </summary>
+        public static string SkylineWindow_AddSmallMolecule_Add_small_molecule__0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AddSmallMolecule_Add_small_molecule__0_", resourceCulture);
             }
         }
         
@@ -20528,11 +20637,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Change Document Settings.
+        ///   Looks up a localized string similar to Change document settings.
         /// </summary>
-        public static string SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings {
+        public static string SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings", resourceCulture);
             }
         }
         

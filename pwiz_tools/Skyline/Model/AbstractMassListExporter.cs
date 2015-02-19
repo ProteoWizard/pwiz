@@ -688,12 +688,19 @@ namespace pwiz.Skyline.Model
                                             TransitionDocNode nodeTran,
                                             int step)
         {
-            // If no optimizing
-            if (OptimizeType == null)
+            // If explicit CE, then no optimizing. Just return zero CE for anything but central transition
+            var explicitCE = nodeGroup.ExplicitValues.CollisionEnergy;
+            if (explicitCE.HasValue && step != 0)
+                return 0;   // No optimizing of explicit CE values
+
+            if (OptimizeType == null || explicitCE.HasValue)
             {
                 double? optimizedCE = Document.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTran);
                 if (optimizedCE.HasValue)
                     return optimizedCE.Value;
+
+                // Should have returned the explicit value
+                Assume.IsFalse(explicitCE.HasValue);
             }
 
             // If exporting optimization methods, or optimization data should be ignored,

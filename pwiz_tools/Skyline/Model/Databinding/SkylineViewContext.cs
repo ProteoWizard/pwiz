@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
@@ -35,8 +36,6 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-// ReSharper disable NonLocalizedString
-//TODO: Disabled strings so build will pass, Nick will be localizing this file.
 namespace pwiz.Skyline.Model.Databinding
 {
     public class SkylineViewContext : AbstractViewContext
@@ -147,7 +146,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             catch (Exception x)
             {
-                Trace.TraceWarning("Error exporting to file: {0}", x);
+                Trace.TraceWarning("Error exporting to file: {0}", x); // Not L10N
                 MessageDlg.Show(owner,
                     string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message));
                 return false;
@@ -177,6 +176,80 @@ namespace pwiz.Skyline.Model.Databinding
             return true;
         }
 
+
+        // Most of these strings are internal values, not user facing
+        // ReSharper disable NonLocalizedString
+        private static string GetColXml(string colName)
+        {
+            return string.Format("<column name='{0}'/>", colName);
+        }
+        /// <summary>
+        /// Generate a report specification suitable to the current document that
+        /// recreates the content in the Edit|Insert|TransitionList window
+        /// </summary>
+        private static ViewSpec GetTransitionListReportSpec(SkylineDataSchema dataSchema)
+        {
+            bool docHasCustomIons = dataSchema.Document.CustomIonCount != 0;
+            bool docHasProteins = dataSchema.Document.PeptideCount != 0 ||
+                                  dataSchema.Document.MoleculeCount == 0; // Empty doc is assumed proteomic
+            // Different report content and name for different document types
+            string name;
+            if (docHasCustomIons && docHasProteins)
+                name = Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List;
+            else if (docHasCustomIons)
+                name = Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List;
+            else
+                name = Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List;
+            var xml = String.Format(
+                "<ReportSpecList> <report name='{0}' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>", name);
+            xml += GetColXml("Precursor.Peptide.Protein.Name");
+            if (docHasProteins)
+                xml += GetColXml("Precursor.Peptide.ModifiedSequence");
+            if (docHasCustomIons)
+            {
+                xml += GetColXml("Precursor.Peptide.IonName");
+                xml += GetColXml("Precursor.Peptide.IonFormula");
+            }
+            xml += GetColXml("Precursor.Mz");
+            xml += GetColXml("Precursor.Charge");
+            xml += GetColXml("Precursor.CollisionEnergy");
+            if (docHasCustomIons)
+            {
+                xml += GetColXml("Precursor.ExplicitCollisionEnergy");
+                xml += GetColXml("Precursor.Peptide.ExplicitRetentionTime");
+                // Note: not including drift time info by default
+            }
+            xml += GetColXml("ProductMz");
+            xml += GetColXml("ProductCharge");
+            if (docHasProteins)
+                xml += GetColXml("FragmentIon");
+            if (docHasCustomIons)
+                xml += GetColXml("ProductIonFormula");
+            if (docHasProteins)
+            {
+                xml += GetColXml("FragmentIonType");
+                xml += GetColXml("FragmentIonOrdinal");
+                xml += GetColXml("CleavageAa");
+                xml += GetColXml("LossNeutralMass");
+                xml += GetColXml("Losses");
+            }
+            if (docHasProteins)
+            {
+                xml += GetColXml("LibraryRank");
+                xml += GetColXml("LibraryIntensity");
+                xml += GetColXml("IsotopeDistIndex");
+                xml += GetColXml("IsotopeDistRank");
+                xml += GetColXml("IsotopeDistProportion");
+                xml += GetColXml("FullScanFilterWidth");
+                xml += GetColXml("IsDecoy");
+                xml += GetColXml("ProductDecoyMzShift");
+            }
+            xml += "  </report> </ReportSpecList>";
+            var viewSpec =
+                ReportSharing.DeserializeReportList(new MemoryStream(Encoding.UTF8.GetBytes(xml)))[0].ViewSpec;
+            return viewSpec;
+        }
+
         public override IEnumerable<ViewSpec> CustomViews
         {
             get
@@ -193,6 +266,10 @@ namespace pwiz.Skyline.Model.Databinding
                         viewSpecs.Add(convertedView);
                     }
                 }
+                // Add the appropriate "Transition List" report if it's not already in the settings
+                var spec = GetTransitionListReportSpec((SkylineDataSchema) DataSchema);
+                if (viewSpecs.All(viewSpec => viewSpec.Name != spec.Name))
+                    viewSpecs.Add(spec);
                 return viewSpecs;
             }
         }
@@ -276,9 +353,21 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 var columnsToRemove = new HashSet<PropertyPath>();
                 bool addRoot = false;
+                bool docHasCustomIons = ((SkylineDataSchema)columnDescriptor.DataSchema).Document.CustomIonCount != 0;
+                bool docHasOnlyCustomIons = docHasCustomIons && ((SkylineDataSchema)columnDescriptor.DataSchema).Document.PeptideCount == 0;
+                
                 if (columnDescriptor.PropertyType == typeof(Protein))
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
+                    if (docHasOnlyCustomIons)
+                    {
+                        // Peptide-oriented fields that make no sense in a small molecule context
+                        columnsToRemove.Add(PropertyPath.Root.Property("Accession"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("PreferredName"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("Gene"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("Species"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
+                    }
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Peptide))
@@ -286,14 +375,55 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NextAa"));
+                    if (docHasOnlyCustomIons)
+                    {
+                        // Peptide-oriented fields that make no sense in a small molecule context
+                        columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("BeginPos"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("EndPos"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("MissedCleavages"));
+                    }
+                    if (!docHasCustomIons)
+                    {
+                        columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTime"));
+                    }
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Precursor))
                 {
+                    if (docHasOnlyCustomIons)
+                    {
+                        columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
+                    }
+                    if (!docHasCustomIons)
+                    {
+                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                    }
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
                 {
+                    if (docHasOnlyCustomIons)
+                    {
+                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));  // Not interesting - always "custom"
+                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIon")); // Not interesting - only one product per precursor for small molecules
+                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal")); // Doesn't mean anything for non-peptides
+                        columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa")); // Doesn't mean anything for non-peptides
+                        columnsToRemove.Add(PropertyPath.Root.Property("LossNeutralMass")); // Doesn't mean anything for non-peptides
+                        columnsToRemove.Add(PropertyPath.Root.Property("Losses")); // Doesn't mean anything for non-peptides
+                        columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy")); // Doesn't mean anything for non-peptides
+                        columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift")); // Doesn't mean anything for non-peptides
+                    }
+                    if (!docHasCustomIons)
+                    {
+                        // Stuff that only applies to small molecules
+                        columnsToRemove.Add(PropertyPath.Root.Property("ProductIonFormula"));
+                    }
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Replicate))
@@ -331,6 +461,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return PropertyPath.Root.Property("Results").LookupAllItems();
         }
+        // ReSharper restore NonLocalizedString
 
 
         public static bool IsNumeric(Type type)
@@ -393,13 +524,13 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 catch (Exception x)
                 {
-                    new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(string.Format("Failure loading {0}.", importDialog.FileName),
+                    new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(string.Format(Resources.SkylineViewContext_ImportViews_Failure_loading__0__, importDialog.FileName),
                                                                  importDialog.FileName, x.InnerException);
                     return;
                 }
                 if (views.Length == 0)
                 {
-                    ShowMessageBox(owner, "No views were found in that file.", MessageBoxButtons.OK);
+                    ShowMessageBox(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_, MessageBoxButtons.OK);
                     return;
                 }
                 var currentViews = CustomViews.ToList();
@@ -497,11 +628,11 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
-            yield return MakeRowSource(dataSchema, "Proteins", new Proteins(dataSchema));
-            yield return MakeRowSource(dataSchema, "Peptides", new Peptides(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, "Precursors", new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, "Transitions", new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, "Replicates", new ReplicateList(dataSchema));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins, new Proteins(dataSchema));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides, new Peptides(dataSchema, new[] { IdentityPath.ROOT }));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, new ReplicateList(dataSchema));
             yield return new RowSourceInfo(typeof(SkylineDocument), new SkylineDocument[0], new ViewInfo[0]);
         }
 

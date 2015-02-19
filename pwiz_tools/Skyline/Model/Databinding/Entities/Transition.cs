@@ -64,6 +64,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return MakeChromInfoResultsMap(DocNode.Results, file => new TransitionResult(this, file));
         }
 
+        private bool IsCustomTransition()
+        {
+            return DocNode.Transition.IsCustomAndEditable()  // As opposed to just IsCustom(), which might be a reporter ion on a peptide node
+                   || (DocNode.Transition.IsPrecursor() && DocNode.Transition.IsCustom()); // Watch for precursor transitions too
+        }
+
         protected override TransitionDocNode CreateEmptyNode()
         {
             return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null); // Not L10N
@@ -101,6 +107,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return fragmentIon;
             }
         }
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string ProductIonFormula
+        {
+            get
+            {
+                return IsCustomTransition()
+                ? (DocNode.Transition.CustomIon.Formula ?? string.Empty)
+                : null;
+            }
+        }
         public IonType FragmentIonType
         {
             get { return DocNode.Transition.IonType; }
@@ -115,13 +131,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.Transition.Ordinal;
             }
         }
-        public char CleavageAa { get { return DocNode.Transition.AA; }}
+        public char CleavageAa
+        {
+            get
+            {
+                return IsCustomTransition()
+                    ? '\0' // Not L10N
+                    :  DocNode.Transition.AA;
+            }
+        }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public double LossNeutralMass { get { return DocNode.LostMass; } }
-
+        public double? LossNeutralMass
+        {
+            get
+            {
+                if (IsCustomTransition())
+                    return  null;
+                return DocNode.LostMass;
+            }
+        }
         public string Losses
         {
-            get { return DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : null; } // Not L10N
+            get
+            {
+                return IsCustomTransition()
+                    ? null
+                    : (DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : string.Empty);  // Not L10N
+            }
         }
         [InvariantDisplayName("TransitionNote")]
         public string Note

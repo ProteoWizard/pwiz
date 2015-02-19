@@ -126,6 +126,7 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestDocumentWithOneLabel()
         {
+            TestSmallMolecules = false; // Mixed molecule docs create different report columns
             var assembly = typeof(ReportSpecConverterTest).Assembly;
             XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
             // ReSharper disable once AssignNullToNotNullAttribute
@@ -137,6 +138,7 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestPivotIsotopeLabel()
         {
+            TestSmallMolecules = false; // Mixed molecule docs create different report columns
             var assembly = typeof(ReportSpecConverterTest).Assembly;
             XmlSerializer documentSerializer = new XmlSerializer(typeof(SrmDocument));
             // ReSharper disable once AssignNullToNotNullAttribute

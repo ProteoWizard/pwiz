@@ -535,7 +535,17 @@ namespace pwiz.Skyline.Model
 
             if (IsCustom())
             {
-                return CustomIon.ToString();
+                var text = CustomIon.ToString();
+                // Was there enough information to generate a string more distinctive that just "Ion"?
+                if (String.IsNullOrEmpty(CustomIon.Name) && 
+                    String.IsNullOrEmpty(CustomIon.Formula))
+                {
+                    // No, add mz and charge to whatever generic text was used to describe it
+                    var mz = BioMassCalc.CalculateIonMz(CustomIon.MonoisotopicMass, Charge);
+                    return string.Format("{0} {1:F04}{2}",  // Not L10N
+                        text, mz, GetChargeIndicator(Charge));
+                }
+                return text;
             }
             return string.Format("{0} - {1}{2}{3}{4}", // Not L10N
                                  AA,

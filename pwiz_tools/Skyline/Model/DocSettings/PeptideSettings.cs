@@ -323,6 +323,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // If peptide has an explicitly set RT, use that
             if (nodePep.ExplicitRetentionTime.HasValue && MeasuredRTWindow.HasValue)
             {
+                // TODO: Explicit RT windows also
                 windowRT = MeasuredRTWindow.Value;
                 return nodePep.ExplicitRetentionTime;
             }

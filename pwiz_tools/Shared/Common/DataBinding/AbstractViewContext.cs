@@ -526,6 +526,10 @@ namespace pwiz.Common.DataBinding
                 }
             }
             column.DefaultCellStyle.FormatProvider = DataSchema.DataSchemaLocalizer.FormatProvider;
+            if (propertyDescriptor.IsReadOnly)
+            {
+                column.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245); // Lighter than Color.LightGray, which is still pretty dark actually
+            }
             return column;
         }
 

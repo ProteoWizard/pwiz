@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
@@ -26,6 +27,7 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -66,6 +68,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private IDictionary<ResultKey, PrecursorResult> MakeResults()
         {
             return MakeChromInfoResultsMap(DocNode.Results, file => new PrecursorResult(this, file));
+        }
+
+        private bool IsCustomMolecule()
+        {
+            return !Peptide.DocNode.IsProteomic;
+        }
+
+        private void ThrowIfNotCustomMolecule()
+        {
+            if (!IsCustomMolecule())
+                throw new InvalidDataException(Resources.Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_);
         }
 
         protected override TransitionGroupDocNode CreateEmptyNode()
@@ -116,6 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
+                // Note this is the predicited CE, explicit CE has its own display column
                 return SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy
                                   .GetCollisionEnergy(Charge, GetRegressionMz());
             }
@@ -146,6 +160,55 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return SrmDocument.Settings.GetPrecursorCalc(
                     DocNode.TransitionGroup.LabelType, peptideDocNode.ExplicitMods)
                                   .GetModifiedSequence(peptideDocNode.Peptide.Sequence, true);
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? ExplicitCollisionEnergy
+        {
+            get
+            {
+                return !Peptide.DocNode.IsProteomic 
+                ? DocNode.ExplicitValues.CollisionEnergy 
+                : null;
+            }
+            set
+            {
+                ThrowIfNotCustomMolecule();  // Only settable for custom ions
+                var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value);
+                ChangeDocNode(DocNode.ChangeExplicitValues(values));
+            }
+        }
+
+        public double? ExplicitDriftTimeMsec
+        {
+            get
+            {
+                return !Peptide.DocNode.IsProteomic
+                    ? DocNode.ExplicitValues.DriftTimeMsec
+                    : null;
+            }
+            set
+            {
+                ThrowIfNotCustomMolecule(); // Only settable for custom ions
+                var values = DocNode.ExplicitValues.ChangeDriftTime(value);
+                ChangeDocNode(DocNode.ChangeExplicitValues(values));
+            }
+        }
+
+        public double? ExplicitDriftTimeHighEnergyOffsetMsec
+        {
+            get
+            {
+                return !Peptide.DocNode.IsProteomic
+                    ? DocNode.ExplicitValues.DriftTimeHighEnergyOffsetMsec
+                    : null;
+            }
+            set
+            {
+                ThrowIfNotCustomMolecule(); // Only settable for custom ions
+                var values = DocNode.ExplicitValues.ChangeDriftTimeHighEnergyOffsetMsec(value);
+                ChangeDocNode(DocNode.ChangeExplicitValues(values));
             }
         }
 

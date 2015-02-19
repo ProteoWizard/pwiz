@@ -2212,7 +2212,8 @@ namespace pwiz.Skyline
             setStandardTypeContextMenuItem.Visible = (HasSelectedTargetPeptides() && enabled);
             // Custom molecule support
             var nodePepGroupTree = SequenceTree.SelectedNode as PeptideGroupTreeNode;
-            addMoleculeContextMenuItem.Visible = enabled && nodePepGroupTree != null;
+            addMoleculeContextMenuItem.Visible = enabled && nodePepGroupTree != null && 
+                (nodePepGroupTree.DocNode.IsEmpty || nodePepGroupTree.DocNode.IsNonProteomic);
 
             var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
@@ -2641,7 +2642,7 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings,
+                    ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 dlg.GetDataSettings(doc.Settings.DataSettings))));
@@ -3220,7 +3221,8 @@ namespace pwiz.Skyline
                             if (countGroups > 0)
                             {
                                 oldPeptideGroupDocNode = (PeptideGroupDocNode)document.Children[countGroups - 1];
-                                if (!oldPeptideGroupDocNode.IsPeptideList)
+                                if (oldPeptideGroupDocNode.IsNonProteomic || // Don't add a peptide to a small molecule list
+                                    !oldPeptideGroupDocNode.IsPeptideList)   // Only add peptides to peptide lists, not proteins
                                     oldPeptideGroupDocNode = null;
                             }
 
@@ -4257,12 +4259,12 @@ namespace pwiz.Skyline
 
                 var pepGroupPath = nodePepGroupTree.Path;
                 var existingIons = nodePepGroup.SmallMolecules.Select(child => child.Peptide.CustomIon);
-                using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_AddMolecule_Add_Custom_Molecule, existingIons,
+                using (var dlg = new EditCustomMoleculeDlg(Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule, existingIons,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings.TransitionSettings, 1, true, null, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_AddMolecule_Add_custom_molecule__0_, dlg.ResultCustomIon.DisplayName), doc =>
+                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_, dlg.ResultCustomIon.DisplayName), doc =>
                         {
                             var peptide = new Peptide(dlg.ResultCustomIon);
                             var tranGroup = new TransitionGroup(peptide, dlg.Charge, IsotopeLabelType.light);

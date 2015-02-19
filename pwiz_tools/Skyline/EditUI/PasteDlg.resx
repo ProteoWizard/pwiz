@@ -691,10 +691,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnCustomMoleculeColumns.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 13</value>
+    <value>272, 11</value>
   </data>
   <data name="btnCustomMoleculeColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 25</value>
+    <value>92, 28</value>
   </data>
   <data name="btnCustomMoleculeColumns.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -733,13 +733,13 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="radioMolecule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 21</value>
+    <value>130, 21</value>
   </data>
   <data name="radioMolecule.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="radioMolecule.Text" xml:space="preserve">
-    <value>Custom &amp;molecules</value>
+    <value>Small &amp;molecules</value>
   </data>
   <data name="radioMolecule.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -785,6 +785,9 @@
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>48</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>8, 16</value>

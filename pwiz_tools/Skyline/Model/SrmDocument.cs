@@ -304,6 +304,9 @@ namespace pwiz.Skyline.Model
         public int PeptideTransitionGroupCount { get { return PeptideTransitionGroups.Count(); } } 
         public int PeptideTransitionCount { get { return PeptideTransitions.Count(); } }
 
+        // Convenience functions for ignoring proteomic nodes - that is, getting only custom ions
+        public int CustomIonCount { get { return CustomIons.Count(); } } 
+
         /// <summary>
         /// Return all <see cref="PeptideGroupDocNode"/>s of any kind
         /// </summary>
@@ -345,6 +348,17 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Molecules.Where(p => !p.Peptide.IsCustomIon);
+            }
+        }
+
+        /// <summary>
+        /// Return all <see cref="PeptideDocNode"/> that are custom ions
+        /// </summary>
+        public IEnumerable<PeptideDocNode> CustomIons
+        {
+            get
+            {
+                return Molecules.Where(p => p.Peptide.IsCustomIon);
             }
         }
 
@@ -3260,10 +3274,18 @@ namespace pwiz.Skyline.Model
         private static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
         {
-            int charge = nodeGroup.TransitionGroup.PrecursorCharge;
-            double mz = settings.GetRegressionMz(nodePep, nodeGroup);
-            double ce = nodeGroup.ExplicitValues.CollisionEnergy ?? regression.GetCollisionEnergy(charge, mz);
-            return ce + regression.StepSize * step;
+            var ce = nodeGroup.ExplicitValues.CollisionEnergy;
+            if (regression != null)
+            {
+                if (!ce.HasValue)
+                {
+                    var charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                    var mz = settings.GetRegressionMz(nodePep, nodeGroup);
+                    ce = regression.GetCollisionEnergy(charge, mz);
+                }
+                return ce.Value + regression.StepSize * step;
+            }
+            return ce ?? 0.0;
         }
 
         public double? GetOptimizedCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)

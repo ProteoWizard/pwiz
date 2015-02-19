@@ -687,4 +687,25 @@
   <data name="Value">
     <value>Value</value>
   </data>
+  <data name="IonName">
+    <value>Ion Name</value>
+  </data>
+  <data name="IonFormula">
+    <value>Ion Formula</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>Product Ion Formula</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>Explicit Collision Energy</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>Explicit Drift Time High Energy Offset Msec</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>Explicit Drift Time Msec</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>Explicit Retention Time</value>
+  </data>
 </root>

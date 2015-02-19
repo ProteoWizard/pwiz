@@ -7940,9 +7940,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PasteDlg_GetMoleculePeptideGroup_Molecule_Group__0_" xml:space="preserve">
     <value>Molecule Group {0}</value>
   </data>
-  <data name="SkylineWindow_AddMolecule_Add_custom_molecule__0_" xml:space="preserve">
-    <value>Add custom molecule {0}</value>
-  </data>
   <data name="SkylineWindow_AddMolecule_Add_custom_product_ion__0_" xml:space="preserve">
     <value>Add custom product ion {0}</value>
   </data>
@@ -7963,9 +7960,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="SkylineWindow_ModifyPeptide_Modify_Custom_Ion" xml:space="preserve">
     <value>Modify Custom Ion</value>
-  </data>
-  <data name="SkylineWindow_AddMolecule_Add_Custom_Molecule" xml:space="preserve">
-    <value>Add Custom Molecule</value>
   </data>
   <data name="Transition_Validate_A_transition_of_ion_type__0__must_have_a_custom_ion_" xml:space="preserve">
     <value>A transition of ion type {0} must have a custom ion.</value>
@@ -8114,18 +8108,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="AdlerChecksum_MakeForString_Invalid_string___0___for_checksum" xml:space="preserve">
     <value>Invalid string "{0}" for checksum</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_RT" xml:space="preserve">
-    <value>Precursor RT</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_CE" xml:space="preserve">
-    <value>Precursor CE</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_" xml:space="preserve">
-    <value>Precursor Drift Time (msec)</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_" xml:space="preserve">
-    <value>Product Drift Time (msec)</value>
-  </data>
   <data name="CustomIon_DisplayName_Ion" xml:space="preserve">
     <value>Ion</value>
   </data>
@@ -8201,11 +8183,65 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="SkylineWindow_AddGroupComparison_Add_Fold_Change" xml:space="preserve">
     <value>Add Fold Change</value>
   </data>
-  <data name="SkylineWindow_ShowDocumentSettingsDialog_Change_Document_Settings" xml:space="preserve">
-    <value>Change Document Settings</value>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_" xml:space="preserve">
+    <value>Explicit Drift Time (msec)</value>
   </data>
   <data name="PublishDocumentDlg_ServerSupportsSkydVersion_" xml:space="preserve">
     <value>The selected server does not support version {0} of the skyd file format. 
 Please contact the Panorama server administrator to upgrade the server.</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_" xml:space="preserve">
+    <value>Explicit Drift Time High Energy Offset (msec)</value>
+  </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_" xml:space="preserve">
+    <value>Invalid drift time high energy offset value {0}</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time" xml:space="preserve">
+    <value>Explicit Retention Time</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy" xml:space="preserve">
+    <value>Explicit Collision Energy</value>
+  </data>
+  <data name="SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings" xml:space="preserve">
+    <value>Change document settings</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule" xml:space="preserve">
+    <value>Add Small Molecule</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_small_molecule__0_" xml:space="preserve">
+    <value>Add small molecule {0}</value>
+  </data>
+  <data name="SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List" xml:space="preserve">
+    <value>Mixed Transition List</value>
+  </data>
+  <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
+    <value>Small Molecule Transition List</value>
+  </data>
+  <data name="SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List" xml:space="preserve">
+    <value>Peptide Transition List</value>
+  </data>
+  <data name="SkylineViewContext_ImportViews_Failure_loading__0__" xml:space="preserve">
+    <value>Failure loading {0}.</value>
+  </data>
+  <data name="SkylineViewContext_ImportViews_No_views_were_found_in_that_file_" xml:space="preserve">
+    <value>No views were found in that file.</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Proteins" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Precursors" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Transitions" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="SkylineViewContext_GetDocumentGridRowSources_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_" xml:space="preserve">
+    <value>Direct editing of this value is only supported for small molecules.</value>
   </data>
 </root>

@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
@@ -59,6 +62,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return MakeChromInfoResultsMap(DocNode.Results, file => new PeptideResult(this, file));
         }
 
+        private bool IsSmallMolecule()
+        {
+            return DocNode.Peptide.IsCustomIon;
+        }
+
+        private void ThrowIfNotSmallMolecule()
+        {
+            if (!IsSmallMolecule())
+                throw new InvalidDataException(Resources.Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_);
+        }
+
         protected override PeptideDocNode CreateEmptyNode()
         {
             return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0)); // Not L10N
@@ -73,7 +87,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("PeptideSequence")]
         public string Sequence
         {
-            get { return ToString(); } // Will show custom ion name if this isn't actually a peptide proper
+            get {   return IsSmallMolecule()
+                    ? TextUtil.EXCEL_NA
+                    : ToString(); } 
         }
 
         [InvariantDisplayName("PeptideModifiedSequence")]
@@ -81,10 +97,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.Peptide.IsCustomIon
+                return IsSmallMolecule()
                     ? TextUtil.EXCEL_NA
                     : SrmDocument.Settings.GetPrecursorCalc(IsotopeLabelType.light, DocNode.ExplicitMods)
                         .GetModifiedSequence(Sequence, true);
+            }
+        }
+
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string IonName
+        {
+            get
+            {
+                return IsSmallMolecule()
+                    ? (DocNode.Peptide.CustomIon.Name ?? String.Empty)
+                    : null;
+            }
+        }
+
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string IonFormula
+        {
+            get
+            {
+                return IsSmallMolecule()
+                    ? (DocNode.Peptide.CustomIon.Formula ?? String.Empty)
+                    : null;
             }
         }
 
@@ -155,6 +193,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? AverageMeasuredRetentionTime 
         {
             get { return DocNode.AverageMeasuredRetentionTime; }
+        }
+
+        [Format(Formats.RETENTION_TIME)]
+        public double? ExplicitRetentionTime
+        {
+            get
+            {
+                return IsSmallMolecule()
+                    ? DocNode.ExplicitRetentionTime
+                    : null;
+            }
+            set
+            {
+                ThrowIfNotSmallMolecule();  // Only settable for custom ions
+                ChangeDocNode(DocNode.ChangeExplicitRetentionTime(value));
+            }
         }
 
         [InvariantDisplayName("PeptideNote")]

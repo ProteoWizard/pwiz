@@ -564,7 +564,7 @@ namespace pwiz.Skyline.EditUI
         private const int INDEX_RETENTION_TIME = 9;
         private const int INDEX_COLLISION_ENERGY = 10;
         private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 11;
-        private const int INDEX_PRODUCT_DRIFT_TIME_MSEC = 12;
+        private const int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = 12;
 
         private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass)
         {
@@ -735,16 +735,16 @@ namespace pwiz.Skyline.EditUI
                 });
                 return null;
             }
-            double? driftTimeProductMsec = null;
-            if (double.TryParse(Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value), out dtmp))
-                driftTimeProductMsec = dtmp;
-            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value)))
+            double? driftTimeHighEnergyOffsetMsec = null;
+            if (double.TryParse(Convert.ToString(row.Cells[INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC].Value), out dtmp))
+                driftTimeHighEnergyOffsetMsec = dtmp;
+            else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC].Value)))
             {
                 ShowTransitionError(new PasteError
                 {
-                    Column = INDEX_PRODUCT_DRIFT_TIME_MSEC,
+                    Column = INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC,
                     Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_, Convert.ToString(row.Cells[INDEX_PRODUCT_DRIFT_TIME_MSEC].Value))
+                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, Convert.ToString(row.Cells[INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC].Value))
                 });
                 return null;
             }
@@ -763,22 +763,16 @@ namespace pwiz.Skyline.EditUI
             {
                 double monoMass;
                 double averageMmass;
-                double? driftTimeHighEnergyOffsetMsec = null;
                 if (driftTimePrecursorMsec.HasValue)
                 {
-                    if (driftTimeProductMsec.HasValue)
-                    {
-                        driftTimeHighEnergyOffsetMsec = driftTimeProductMsec - driftTimePrecursorMsec; // Generally expect a negative offset, that is product flies faster than precursor
-                    }
-                    else
+                    if (!driftTimeHighEnergyOffsetMsec.HasValue)
                     {
                         driftTimeHighEnergyOffsetMsec = 0;
                     }
-                } else if (driftTimeProductMsec.HasValue)
+                }
+                else
                 {
-                    // Product drift provided but not precursor - assume same
-                    driftTimePrecursorMsec = driftTimeProductMsec;
-                    driftTimeHighEnergyOffsetMsec = 0;
+                    driftTimeHighEnergyOffsetMsec = null; // Offset without a base value isn't useful
                 }
                 var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
                 var massOk = true;
@@ -884,6 +878,22 @@ namespace pwiz.Skyline.EditUI
                 }
                 Settings.Default.CustomMoleculeTransitionInsertColumnsList = active;
 
+                // We will accept a completely empty product list as meaning 
+                // "these are all precursor transitions"
+                var requireProductInfo = false;
+                for (var i = 0; i < gridViewTransitionList.RowCount - 1; i++)
+                {
+                    var row = gridViewTransitionList.Rows[i];
+                    var productMz = row.Cells[INDEX_PRODUCT_MZ].Value;
+                    var productFormula = row.Cells[INDEX_PRODUCT_FORMULA].Value;
+                    if ((productMz != null && productMz.ToString().Length > 0) ||
+                        (productFormula != null && productFormula.ToString().Length > 0))
+                    {
+                        requireProductInfo = true; // Product list is not completely empty
+                        break;
+                    }
+                }
+
                 // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
                 for(int i = 0; i < gridViewTransitionList.RowCount - 1; i ++)
                 {
@@ -891,8 +901,7 @@ namespace pwiz.Skyline.EditUI
                     var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get molecule values
                     if (precursor == null)
                         return null;
-                    var product = ReadPrecursorOrProductColumns(document, row, false); // get product values
-                    if (product == null)
+                    if (requireProductInfo && ReadPrecursorOrProductColumns(document, row, false) == null)
                     {
                         return null;
                     }
@@ -933,7 +942,7 @@ namespace pwiz.Skyline.EditUI
                                             var tranFound = false;
                                             try
                                             {
-                                                var tranNode = GetMoleculeTransition(document, row, pep.Peptide, tranGroup.TransitionGroup);
+                                                var tranNode = GetMoleculeTransition(document, row, pep.Peptide, tranGroup.TransitionGroup, requireProductInfo);
                                                 if (tranNode == null)
                                                     return null;
                                                 foreach (var tran in tranGroup.Transitions)
@@ -965,7 +974,7 @@ namespace pwiz.Skyline.EditUI
                                     }
                                     if (!tranGroupFound)
                                     {
-                                        var node = GetMoleculeTransitionGroup(document, row, pep.Peptide);
+                                        var node = GetMoleculeTransitionGroup(document, row, pep.Peptide, requireProductInfo);
                                         if (node == null)
                                             return null;
                                         document =
@@ -977,7 +986,7 @@ namespace pwiz.Skyline.EditUI
                             }
                             if (!pepFound)
                             {
-                                var node = GetMoleculePeptide(document, row, pepGroup.PeptideGroup);
+                                var node = GetMoleculePeptide(document, row, pepGroup.PeptideGroup, requireProductInfo);
                                 if (node == null)
                                     return null;
                                 document =
@@ -989,7 +998,7 @@ namespace pwiz.Skyline.EditUI
                     }
                     if (!pepGroupFound)
                     {
-                        var node = GetMoleculePeptideGroup(document, row);
+                        var node = GetMoleculePeptideGroup(document, row, requireProductInfo);
                         if (node == null)
                             return null;
                         IdentityPath first;
@@ -1177,10 +1186,10 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
-        private PeptideGroupDocNode GetMoleculePeptideGroup(SrmDocument document, DataGridViewRow row)
+        private PeptideGroupDocNode GetMoleculePeptideGroup(SrmDocument document, DataGridViewRow row, bool requireProductInfo)
         {
             var pepGroup = new PeptideGroup();
-            var pep = GetMoleculePeptide(document, row, pepGroup);
+            var pep = GetMoleculePeptide(document, row, pepGroup, requireProductInfo);
             if (pep == null)
                 return null;
             var name = Convert.ToString(row.Cells[INDEX_MOLECULE_GROUP].Value);
@@ -1190,7 +1199,7 @@ namespace pwiz.Skyline.EditUI
             return new PeptideGroupDocNode(pepGroup, metadata, new[] {pep});
         }
 
-        private PeptideDocNode GetMoleculePeptide(SrmDocument document, DataGridViewRow row, PeptideGroup group)
+        private PeptideDocNode GetMoleculePeptide(SrmDocument document, DataGridViewRow row, PeptideGroup group, bool requireProductInfo)
         {
 
             DocNodeCustomIon ion;
@@ -1216,7 +1225,7 @@ namespace pwiz.Skyline.EditUI
             try
             {
                 var pep = new Peptide(ion);
-                var tranGroup = GetMoleculeTransitionGroup(document, row, pep);
+                var tranGroup = GetMoleculeTransitionGroup(document, row, pep, requireProductInfo);
                 if (tranGroup == null)
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, moleculeInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
@@ -1233,7 +1242,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, DataGridViewRow row, Peptide pep)
+        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, DataGridViewRow row, Peptide pep, bool requireProductInfo)
         {
             var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
             if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
@@ -1249,7 +1258,7 @@ namespace pwiz.Skyline.EditUI
             var group = new TransitionGroup(pep, moleculeInfo.Charge, IsotopeLabelType.light);
             try
             {
-                var tran = GetMoleculeTransition(document, row, pep, group);
+                var tran = GetMoleculeTransition(document, row, pep, group, requireProductInfo);
                 if (tran == null)
                     return null;
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
@@ -1267,18 +1276,19 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private TransitionDocNode GetMoleculeTransition(SrmDocument document, DataGridViewRow row, Peptide pep, TransitionGroup group)
+        private TransitionDocNode GetMoleculeTransition(SrmDocument document, DataGridViewRow row, Peptide pep, TransitionGroup group, bool requireProductInfo)
         {
             var massType =
                 document.Settings.TransitionSettings.Prediction.FragmentMassType;
 
-            var molecule = ReadPrecursorOrProductColumns(document, row, false); // Re-read the product columns
-            if (molecule == null)
+            var molecule = ReadPrecursorOrProductColumns(document, row, !requireProductInfo); // Re-read the product columns, or copy precursor
+            if (requireProductInfo && molecule == null)
             {
                 return null;
             }
             DocNodeCustomIon ion = new DocNodeCustomIon(molecule.Formula, molecule.MonoMass, molecule.AverageMass, molecule.Name);
-            var ionType = ion.Equals(pep.CustomIon)
+            var ionType = (ion.MonoisotopicMass.Equals(pep.CustomIon.MonoisotopicMass) &&
+                           ion.AverageMass.Equals(pep.CustomIon.AverageMass)) // Same mass, must be a precursor transition
                 ? IonType.precursor
                 : IonType.custom;
             double mass = ion.GetMass(massType);
@@ -2081,7 +2091,7 @@ namespace pwiz.Skyline.EditUI
             public const string rtPrecursor = "PrecursorRT"; // Not L10N
             public const string cePrecursor = "PrecursorCE"; // Not L10N
             public const string dtPrecursor = "PrecursorDT"; // Not L10N
-            public const string dtProduct = "ProductDT"; // Not L10N
+            public const string dtHighEnergyOffset = "HighEnergyDTOffset"; // Not L10N
         }
         private void UpdateMoleculeType()
         {
@@ -2137,22 +2147,27 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_RT); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_CE); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Drift_Time__msec_); // Not L10N
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Drift_Time__msec_); // Not L10N
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula); 
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                var defaultColumns = new List<string>();
+                for (var col = 0; col < gridViewTransitionList.Columns.Count; col++)  // Get the list without drift time settings, as the default
+                    defaultColumns.Add(gridViewTransitionList.Columns[col].Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_);
 
-                // Now set order and visibility based on settings
-                SetSmallMoleculeColumns(Settings.Default.CustomMoleculeTransitionInsertColumnsList);
+                // Now set order and visibility based on settings, if any
+                SetSmallMoleculeColumns(Settings.Default.CustomMoleculeTransitionInsertColumnsList.Any()
+                   ? Settings.Default.CustomMoleculeTransitionInsertColumnsList
+                   : defaultColumns);
             }
 
             for (int i = 0; i < rowCount; i ++)

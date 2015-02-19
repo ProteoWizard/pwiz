@@ -66,31 +66,41 @@ namespace pwiz.Skyline.Model.Results.Scoring
             RetentionTimePrediction prediction;
             if (!context.TryGetInfo(out prediction))
             {
-                var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
-                var settings = context.Document.Settings;
-                var predictor = settings.PeptideSettings.Prediction.RetentionTime;
-                string seqModified = settings.GetSourceTextId(summaryPeakData.NodePep);
-                if (predictor != null)
+                double? explicitRT = summaryPeakData.NodePep.ExplicitRetentionTime;
+                // TODO: Explicit RT windows also
+                double? windowRT = context.Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+                if (explicitRT.HasValue && windowRT.HasValue)
                 {
-                    prediction = new RetentionTimePrediction(predictor.GetRetentionTime(seqModified, fileId),
-                        predictor.TimeWindow);
+                    prediction = new RetentionTimePrediction(explicitRT, windowRT.Value);
                 }
-
-                var fullScan = settings.TransitionSettings.FullScan;
-                if (prediction == null && fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                else
                 {
-                    var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
-                    var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
-                    if (times.Length > 0)
+                    var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
+                    var settings = context.Document.Settings;
+                    var predictor = settings.PeptideSettings.Prediction.RetentionTime;
+                    string seqModified = settings.GetSourceTextId(summaryPeakData.NodePep);
+                    if (predictor != null)
                     {
-                        var statTimes = new Statistics(times);
-                        double predictedRT = statTimes.Median();
-                        double window = statTimes.Range() + fullScan.RetentionTimeFilterLength*2;
-                        prediction = new RetentionTimePrediction(predictedRT, window);
+                        prediction = new RetentionTimePrediction(predictor.GetRetentionTime(seqModified, fileId),
+                            predictor.TimeWindow);
                     }
+
+                    var fullScan = settings.TransitionSettings.FullScan;
+                    if (prediction == null && fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                    {
+                        var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
+                        var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
+                        if (times.Length > 0)
+                        {
+                            var statTimes = new Statistics(times);
+                            double predictedRT = statTimes.Median();
+                            double window = statTimes.Range() + fullScan.RetentionTimeFilterLength * 2;
+                            prediction = new RetentionTimePrediction(predictedRT, window);
+                        }
+                    }
+                    if (prediction == null)
+                        prediction = new RetentionTimePrediction(null, 0);
                 }
-                if (prediction == null)
-                    prediction = new RetentionTimePrediction(null, 0);
                 context.AddInfo(prediction);
             }
             if (prediction == null || !prediction.Time.HasValue)

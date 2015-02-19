@@ -207,6 +207,7 @@
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
     <Compile Include="ShareSettingsTest.cs" />
+    <Compile Include="SmallMoleculesDocumentGridTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
     <Compile Include="SrmCourseScenarioTest.cs" />
     <Compile Include="StandardTypeTest.cs" />
@@ -316,6 +317,7 @@
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="ShareSettingsTest.zip" />
+    <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />
     <None Include="StandardTypeTest.zip" />
