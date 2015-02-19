@@ -53,6 +53,7 @@ forcedPusherInterval(-1)
     scoreThresholds[MSGF] = 0.01; // MSGF+ PSM q-value
     scoreThresholds[PEAKS] = 0.95;  // PEAKS confidence
     scoreThresholds[BYONIC] = 0.05;  // ByOnic PEP
+    scoreThresholds[PEPTIDE_SHAKER] = 0.95; // PeptideShaker PSM confidence
 }
 
 BlibBuilder::~BlibBuilder()
@@ -364,6 +365,7 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         scoreThresholds[MSGF] = 1 - probability_cutoff;
         scoreThresholds[PEAKS] = probability_cutoff;
         scoreThresholds[BYONIC] = 1 - probability_cutoff;
+        scoreThresholds[PEPTIDE_SHAKER] = probability_cutoff;
     } else if (switchName == 'l' && ++i < argc) {
         level_compress = atoi(argv[i]);
     } else if (switchName == 'C' && ++i < argc) {

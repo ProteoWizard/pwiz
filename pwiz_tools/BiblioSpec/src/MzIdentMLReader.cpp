@@ -94,6 +94,9 @@ bool MzIdentMLReader::parseFile(){
             scoreType = MSGF_SCORE;
             lookUpBy_ = SCAN_NUM_ID;
             break;
+        case PEPTIDESHAKER_ANALYSIS:
+            scoreType = PEPTIDE_SHAKER_CONFIDENCE;
+            break;
     }
 
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
@@ -252,36 +255,43 @@ void MzIdentMLReader::extractModifications(PeptidePtr peptide, PSM* psm){
 double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
     // look through all params to find the probability
-    vector<CVParam>::const_iterator it=item.cvParams.begin(); 
-    for(; it!=item.cvParams.end(); ++it){
+    for(vector<CVParam>::const_iterator it=item.cvParams.begin(); it!=item.cvParams.end(); ++it){
         string name = cvTermInfo((*it).cvid).name;
-        if (name == "Scaffold: Peptide Probability" // ": " in file but being
+        if (name == "PeptideShaker PSM confidence") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = PEPTIDESHAKER_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(PEPTIDE_SHAKER);
+            }
+            if (analysisType_ == PEPTIDESHAKER_ANALYSIS)
+                return boost::lexical_cast<double>(it->value) / 100.0;
+        } else if (name == "Scaffold: Peptide Probability" // ": " in file but being
             || name == "Scaffold:Peptide Probability") { // returned as ":P"
             if (analysisType_ == UNKNOWN_ANALYSIS) {
                 analysisType_ = SCAFFOLD_ANALYSIS;
                 scoreThreshold_ = getScoreThreshold(SCAFFOLD);
-            } else if (analysisType_ != SCAFFOLD_ANALYSIS)
-                Verbosity::error("Scaffold score(s) found in non-Scaffold analysis");
-            return boost::lexical_cast<double>(it->value);
+            }
+            if (analysisType_ == SCAFFOLD_ANALYSIS)
+                return boost::lexical_cast<double>(it->value);
         } else if (name == "Byonic: Peptide AbsLogProb"
                    || name == "Byonic: Peptide AbsLogProb2D") {
             if (analysisType_ == UNKNOWN_ANALYSIS) {
                 analysisType_ = BYONIC_ANALYSIS;
                 scoreThreshold_ = getScoreThreshold(BYONIC);
-            } else if (analysisType_ != BYONIC_ANALYSIS)
-                Verbosity::error("ByOnic score(s) found in non-ByOnic analysis");
-            return pow(10, -1 * boost::lexical_cast<double>(it->value));
+            }
+            if (analysisType_ == BYONIC_ANALYSIS)
+                return pow(10, -1 * boost::lexical_cast<double>(it->value));
         } else if (name == "MS-GF:QValue") {
             if (analysisType_ == UNKNOWN_ANALYSIS) {
                 analysisType_ = MSGF_ANALYSIS;
                 scoreThreshold_ = getScoreThreshold(MSGF);
-            } else if (analysisType_ != MSGF_ANALYSIS)
-                Verbosity::error("MSGF+ score(s) found in non-MSGF+ analysis");
-            return boost::lexical_cast<double>(it->value);
+            }
+            if (analysisType_ = MSGF_ANALYSIS)
+                return boost::lexical_cast<double>(it->value);
         }
     }
 
-    return 0; // shouldn't get to here, warning?
+    Verbosity::error(".mzid file contains an unsupported score type");
+    return 0;
 }
 
 bool MzIdentMLReader::passThreshold(double score)
@@ -293,6 +303,7 @@ bool MzIdentMLReader::passThreshold(double score)
             return score <= scoreThreshold_;
         // Scores where higher is better
         case SCAFFOLD_ANALYSIS:
+        case PEPTIDESHAKER_ANALYSIS:
             return score >= scoreThreshold_;
     }
     Verbosity::error("Can't determine cutoff score, unknown analysis type");

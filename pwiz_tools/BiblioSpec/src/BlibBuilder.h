@@ -74,6 +74,7 @@ enum BUILD_INPUT
     MSGF,
     PEAKS,
     BYONIC,
+    PEPTIDE_SHAKER,
 
     // Keep this last
     NUM_BUILD_INPUTS

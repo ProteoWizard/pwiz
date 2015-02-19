@@ -44,7 +44,8 @@ namespace BiblioSpec{
         enum ANALYSIS { UNKNOWN_ANALYSIS,
                         SCAFFOLD_ANALYSIS,
                         BYONIC_ANALYSIS,
-                        MSGF_ANALYSIS };
+                        MSGF_ANALYSIS,
+                        PEPTIDESHAKER_ANALYSIS };
 
         ANALYSIS analysisType_;
         pwiz::identdata::IdentDataFile* pwizReader_;

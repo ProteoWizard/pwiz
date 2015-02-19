@@ -80,6 +80,7 @@ enum PSM_SCORE_TYPE {
     MSGF_SCORE,               // pepxml files with ms-gfdb scores
     PEAKS_CONFIDENCE_SCORE,   // pepxml files with peaks confidence scores
     BYONIC_PEP,               // byonic .mzid files
+    PEPTIDE_SHAKER_CONFIDENCE,// peptideshaker .mzid files
 
     NUM_PSM_SCORE_TYPES
 };

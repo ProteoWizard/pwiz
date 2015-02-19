@@ -49,7 +49,8 @@ const char* scoreTypeNames[NUM_PSM_SCORE_TYPES] = {
     "MORPHEUS SCORE",
     "MSGF+ SCORE",
     "PEAKS CONFIDENCE SCORE",
-    "BYONIC SCORE"
+    "BYONIC SCORE",
+    "PEPTIDE SHAKER CONFIDENCE"
 };
 
 /**
