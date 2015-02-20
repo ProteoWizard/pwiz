@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -74,9 +75,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void ShowGraph()
         {
-            foreach (var form in Application.OpenForms.OfType<FoldChangeBarGraph>())
+            IEnumerable<FoldChangeBarGraph> barGraphs;
+            if (null != DockPanel)
             {
-                if (ReferenceEquals(form.FoldChangeBindingSource, FoldChangeBindingSource))
+                barGraphs = DockPanel.Contents.OfType<FoldChangeBarGraph>();
+            }
+            else
+            {
+                barGraphs = Application.OpenForms.OfType<FoldChangeBarGraph>();
+            }
+            foreach (var form in barGraphs)
+            {
+                if (SameBindingSource(form)) 
                 {
                     form.Activate();
                     return;

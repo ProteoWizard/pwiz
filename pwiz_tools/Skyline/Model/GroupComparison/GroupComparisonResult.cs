@@ -22,18 +22,14 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public class GroupComparisonResult
     {
-        public GroupComparisonResult(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, IsotopeLabelType labelType, int replicateCount, LinearFitResult linearFitResult)
+        public GroupComparisonResult(GroupComparisonSelector selector, int replicateCount, LinearFitResult linearFitResult)
         {
-            PeptideGroup = peptideGroup;
-            Peptide = peptide;
-            LabelType = labelType;
+            Selector = selector;
             LinearFitResult = linearFitResult;
             ReplicateCount = replicateCount;
         }
 
-        public PeptideGroupDocNode PeptideGroup { get; private set; }
-        public PeptideDocNode Peptide { get; private set; }
-        public IsotopeLabelType LabelType { get; private set; }
+        public GroupComparisonSelector Selector { get; private set; }
         public int ReplicateCount { get; private set; }
         public LinearFitResult LinearFitResult { get; private set; }
     }

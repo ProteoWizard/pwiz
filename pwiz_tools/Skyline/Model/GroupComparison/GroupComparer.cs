@@ -110,29 +110,32 @@ namespace pwiz.Skyline.Model.GroupComparison
             var result = new List<GroupComparisonResult>();
             foreach (var labelType in ListLabelTypes(protein, peptide))
             {
-                var groupComparisonResult = CalculateFoldChange(protein, peptide, labelType, null);
-                if (null != groupComparisonResult)
+                for (int msLevel = 1; msLevel <= 2; msLevel++)
                 {
-                    result.Add(groupComparisonResult);
+                    var groupComparisonResult = CalculateFoldChange(new GroupComparisonSelector(protein, peptide, labelType, msLevel), null);
+                    if (null != groupComparisonResult)
+                    {
+                        result.Add(groupComparisonResult);
+                    }
                 }
             }
             return result;
         }
 
-        public GroupComparisonResult CalculateFoldChange(PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType isotopeLabelType, List<RunAbundance> runAbundances)
+        public GroupComparisonResult CalculateFoldChange(GroupComparisonSelector selector, List<RunAbundance> runAbundances)
         {
             if (Equals(ComparisonDef.SummarizationMethod, SummarizationMethod.REGRESSION))
             {
-                return CalculateFoldChangeUsingRegression(protein, peptide, isotopeLabelType, runAbundances);
+                return CalculateFoldChangeUsingRegression(selector, runAbundances);
             }
-            return CalculateFoldChangeByAveragingTechnicalReplicates(protein, peptide, isotopeLabelType, runAbundances);
+            return CalculateFoldChangeByAveragingTechnicalReplicates(selector, runAbundances);
         }
 
         private GroupComparisonResult CalculateFoldChangeUsingRegression(
-            PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType labelType, List<RunAbundance> runAbundances)
+            GroupComparisonSelector selector, List<RunAbundance> runAbundances)
         {
             var detailRows = new List<DataRowDetails>();
-            GetDataRows(protein, peptide, labelType, detailRows);
+            GetDataRows(selector, detailRows);
             if (detailRows.Count == 0)
             {
                 return null;
@@ -180,13 +183,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 runQuantificationDataSet.SubjectControls);
 
             var foldChangeResult = DesignMatrix.GetDesignMatrix(quantifiedDataSet, false).PerformLinearFit(_qrFactorizationCache).First();
-            return new GroupComparisonResult(protein, peptide, labelType, quantifiedRuns.Count, foldChangeResult);
+            return new GroupComparisonResult(selector, quantifiedRuns.Count, foldChangeResult);
         }
 
-        private GroupComparisonResult CalculateFoldChangeByAveragingTechnicalReplicates(PeptideGroupDocNode protein, PeptideDocNode peptide, IsotopeLabelType labelType, List<RunAbundance> runAbundances)
+        private GroupComparisonResult CalculateFoldChangeByAveragingTechnicalReplicates(GroupComparisonSelector selector, List<RunAbundance> runAbundances)
         {
             var detailRows = new List<DataRowDetails>();
-            GetDataRows(protein, peptide, labelType, detailRows);
+            GetDataRows(selector, detailRows);
             if (detailRows.Count == 0)
             {
                 return null;
@@ -228,7 +231,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 //            var statsXValues = new Util.Statistics(summarizedRows.Select(row => row.Control ? 0.0 : 1));
 //            var slope = statsAbundances.Slope(statsXValues);
             
-            return new GroupComparisonResult(protein, peptide, labelType, summarizedRows.Count, foldChangeResult);
+            return new GroupComparisonResult(selector, summarizedRows.Count, foldChangeResult);
         }
 
         private IList<RunAbundance> SummarizeDataRowsByAveraging(IList<DataRowDetails> dataRows)
@@ -257,17 +260,17 @@ namespace pwiz.Skyline.Model.GroupComparison
                 grouping => allIdentityPaths.SetEquals(grouping.Select(row => row.IdentityPath)));
         }
 
-        private void GetDataRows(PeptideGroupDocNode protein, PeptideDocNode selectedPeptide, IsotopeLabelType labelType, IList<DataRowDetails> foldChangeDetails)
+        private void GetDataRows(GroupComparisonSelector selector, IList<DataRowDetails> foldChangeDetails)
         {
             foreach (var replicateEntry in _replicateIndexes)
             {
-                foreach (var peptide in selectedPeptide != null ? new[] {selectedPeptide} : protein.Peptides)
+                foreach (var peptide in selector.ListPeptides())
                 {
                     var transitionsToNormalizeAgainst = GetTransitionsForLabel(
                         peptide, replicateEntry.Key, ComparisonDef.NormalizationMethod.IsotopeLabelTypeName);
                     foreach (var precursor in peptide.TransitionGroups)
                     {
-                        if (!Equals(precursor.TransitionGroup.LabelType, labelType))
+                        if (!selector.IncludePrecursor(precursor))
                         {
                             continue;
                         }
@@ -281,7 +284,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                         }
                         foreach (var transition in precursor.Transitions)
                         {
-                            var identityPath = new IdentityPath(protein.Id, peptide.Id, precursor.Id, transition.Id);
+                            if (!selector.IncludeTransition(transition))
+                            {
+                                continue;
+                            }
+                            var identityPath = new IdentityPath(selector.Protein.Id, peptide.Id, precursor.Id, transition.Id);
 
                             AddDataRows(foldChangeDetails, replicateEntry, transitionsToNormalizeAgainst, identityPath,
                                 precursor, transition);

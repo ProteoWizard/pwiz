@@ -396,6 +396,9 @@
   <data name="ModifiedTime">
     <value>Modified Time</value>
   </data>
+  <data name="MsLevel">
+    <value>MS Level</value>
+  </data>
   <data name="NextAa">
     <value>Next Aa</value>
   </data>

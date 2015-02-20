@@ -142,6 +142,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return null;
         }
 
+        public bool SameBindingSource(FoldChangeForm foldChangeForm)
+        {
+            if (null != FoldChangeBindingSource && null != foldChangeForm.FoldChangeBindingSource)
+            {
+                return ReferenceEquals(FoldChangeBindingSource, foldChangeForm.FoldChangeBindingSource);
+            }
+            if (!ReferenceEquals(_documentContainer, foldChangeForm._documentContainer))
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(_groupComparisonName))
+            {
+                return false;
+            }
+            return _groupComparisonName == foldChangeForm._groupComparisonName;
+        }
+
         public static FoldChangeBindingSource FindOrCreateBindingSource(IDocumentContainer documentContainer,
             string groupComparisonName)
         {

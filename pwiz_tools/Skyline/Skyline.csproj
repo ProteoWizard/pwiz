@@ -747,6 +747,7 @@
     <Compile Include="Model\GroupComparison\GroupComparisonModel.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResults.cs" />
+    <Compile Include="Model\GroupComparison\GroupComparisonSelector.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonStrings.Designer.cs">
       <DependentUpon>GroupComparisonStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>

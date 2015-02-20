@@ -101,6 +101,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => foldChangeGrid.DataboundGridControl.RowCount == 4);
             // Show the graph window
             var foldChangeGraph = ShowDialog<FoldChangeBarGraph>(foldChangeGrid.ShowGraph);
+            WaitForConditionUI(() => foldChangeGraph.ZedGraphControl.GraphPane.CurveList.Any());
             RunUI(() =>
             {
                 Assert.AreEqual(foldChangeGrid.DataboundGridControl.RowCount, foldChangeGraph.ZedGraphControl.GraphPane.CurveList.First().Points.Count);

@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestA.MSstats.Averaging
             {
                 foreach (var peptide in protein.Peptides)
                 {
-                    var result = groupComparer.CalculateFoldChange(protein, peptide, IsotopeLabelType.light, null);
+                    var result = groupComparer.CalculateFoldChange(new GroupComparisonSelector(protein, peptide, IsotopeLabelType.light, null), null);
                     var expectedResult = expectedValues[peptide.Peptide.Sequence];
                     Assert.AreEqual(expectedResult.EstimatedValue, result.LinearFitResult.EstimatedValue,
                         (expectedResult.StandardError + result.LinearFitResult.StandardError) * 2, peptide.Peptide.Sequence);

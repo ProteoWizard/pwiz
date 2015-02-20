@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -70,6 +71,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         return doc;
                     }
                     );
+                Settings.Default.GroupComparisonDefList.Add(value);
             }
         }
 
