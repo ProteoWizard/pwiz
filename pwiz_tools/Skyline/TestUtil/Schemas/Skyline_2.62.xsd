@@ -779,6 +779,7 @@
   <xs:complexType name="general_transition_group_type">
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
+        <xs:sequence>
           <xs:element name="precursor_results" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
@@ -787,6 +788,7 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>          
+        </xs:sequence>
         <xs:attribute name="charge" type="xs:integer" use="required"/>
         <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
         <xs:attribute name="collision_energy" type="xs:double"/>
