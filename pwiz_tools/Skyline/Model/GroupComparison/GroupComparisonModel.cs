@@ -245,7 +245,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        // ReSharper disable UnusedMethodReturnValue.Local
         private Task AddErrorHandler(Task task)
+        // ReSharper restore UnusedMethodReturnValue.Local
         {
             return task.ContinueWith(t => Program.ReportException(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private Precursors _precursors;
         [OneToMany(ForeignKey = "Peptide")]
+        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
         public Precursors Precursors
         {
             get { return _precursors = _precursors ?? new Precursors(this); }
@@ -49,6 +51,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [InvariantDisplayName("PeptideResults")]
         [OneToMany(ForeignKey = "Peptide", ItemDisplayName = "PeptideResult")]
+        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
             get
@@ -78,7 +81,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0)); // Not L10N
         }
 
-        [HideWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeBindingSource.FoldChangeRow)})]
         public Protein Protein
         {
             get { return new Protein(DataSchema, IdentityPath.Parent); }

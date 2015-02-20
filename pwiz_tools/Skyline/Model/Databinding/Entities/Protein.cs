@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -33,13 +34,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private Peptides _peptides;
         [OneToMany(ForeignKey = "Protein")]
+        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
         public Peptides Peptides
         {
             get { return _peptides = _peptides ?? new Peptides(this); }
         }
 
         [OneToMany(ItemDisplayName = "ResultFile")]
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
         public IDictionary<ResultKey, ResultFile> Results
         {
             get

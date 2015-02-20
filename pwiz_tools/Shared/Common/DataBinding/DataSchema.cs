@@ -312,7 +312,7 @@ namespace pwiz.Common.DataBinding
 
             var hideWhens = columnDescriptor.GetAttributes().OfType<HideWhenAttribute>().ToArray();
             var advancedIfAncestor =
-                new HashSet<Type>(hideWhens.Select(attr => attr.AncestorOfType).Where(type => null != type));
+                new HashSet<Type>(hideWhens.SelectMany(attr => attr.AncestorsOfAnyOfTheseTypes).Where(type => null != type));
             if (advancedIfAncestor.Count > 0)
             {
                 for (ColumnDescriptor ancestor = columnDescriptor.Parent; ancestor != null; ancestor = ancestor.Parent)

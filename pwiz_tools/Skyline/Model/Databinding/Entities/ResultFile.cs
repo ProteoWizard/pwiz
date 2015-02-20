@@ -43,8 +43,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public ChromFileInfo ChromFileInfo { get { return _chromFileInfo.Value; } }
         [Browsable(false)]
         public int OptimizationStep { get; private set; }
-        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
-        [HideWhen(AncestorOfType = typeof(Replicate))]
+        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(Replicate)})]
         public Replicate Replicate { get; private set; }
         public string FileName {
             get { return ChromFileInfo.FilePath.GetFileName(); }
