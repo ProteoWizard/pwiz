@@ -314,51 +314,54 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            // Verify small molecule handling in Document Grid
-            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
-            DocumentGridForm documentGrid = WaitForOpenForm<DocumentGridForm>();
-            RunUI(() => documentGrid.ChooseView("Transitions"));
-            WaitForCondition(() => (documentGrid.RowCount == 32));  // Let it initialize
+            if (IsEnableLiveReports)
+            {
+                // Verify small molecule handling in Document Grid
+                RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+                DocumentGridForm documentGrid = WaitForOpenForm<DocumentGridForm>();
+                RunUI(() => documentGrid.ChooseView("Transitions"));
+                WaitForCondition(() => (documentGrid.RowCount == 32));  // Let it initialize
 
-            // Simulate user editing the transition in the document grid
-            const string noteText = "let's see some ID";
-            var colNote = documentGrid.FindColumn(PropertyPath.Parse("Note"));
-            RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colNote.Index].Value = noteText);
-            WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitions.Any() &&
-              SkylineWindow.Document.MoleculeTransitions.First().Note.Equals(noteText)));
+                // Simulate user editing the transition in the document grid
+                const string noteText = "let's see some ID";
+                var colNote = documentGrid.FindColumn(PropertyPath.Parse("Note"));
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colNote.Index].Value = noteText);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitions.Any() &&
+                  SkylineWindow.Document.MoleculeTransitions.First().Note.Equals(noteText)));
 
-            // Simulate user editing the peptide in the document grid
-            RunUI(() => documentGrid.ChooseView("Peptides"));
-            WaitForCondition(() => (documentGrid.RowCount == 8));  // Let it initialize
-            const double explicitRT = 123.45;
-            var colRT = documentGrid.FindColumn(PropertyPath.Parse("ExplicitRetentionTime"));
-            RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colRT.Index].Value = explicitRT);
-            WaitForCondition(() => (SkylineWindow.Document.Molecules.Any() &&
-              SkylineWindow.Document.Molecules.First().ExplicitRetentionTime.Equals(explicitRT)));
+                // Simulate user editing the peptide in the document grid
+                RunUI(() => documentGrid.ChooseView("Peptides"));
+                WaitForCondition(() => (documentGrid.RowCount == 8));  // Let it initialize
+                const double explicitRT = 123.45;
+                var colRT = documentGrid.FindColumn(PropertyPath.Parse("ExplicitRetentionTime"));
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colRT.Index].Value = explicitRT);
+                WaitForCondition(() => (SkylineWindow.Document.Molecules.Any() &&
+                  SkylineWindow.Document.Molecules.First().ExplicitRetentionTime.Equals(explicitRT)));
 
-            // Simulate user editing the precursor in the document grid
-            RunUI(() => documentGrid.ChooseView("Precursors"));
-            WaitForCondition(() => (documentGrid.RowCount == 16));  // Let it initialize
-            const double explicitCE = 123.45;
-            var colCE = documentGrid.FindColumn(PropertyPath.Parse("ExplicitCollisionEnergy"));
-            RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE);
-            WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-              SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionEnergy.Equals(explicitCE)));
+                // Simulate user editing the precursor in the document grid
+                RunUI(() => documentGrid.ChooseView("Precursors"));
+                WaitForCondition(() => (documentGrid.RowCount == 16));  // Let it initialize
+                const double explicitCE = 123.45;
+                var colCE = documentGrid.FindColumn(PropertyPath.Parse("ExplicitCollisionEnergy"));
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionEnergy.Equals(explicitCE)));
 
-            const double explicitDT = 23.465;
-            var colDT = documentGrid.FindColumn(PropertyPath.Parse("ExplicitDriftTimeMsec"));
-            RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDT.Index].Value = explicitDT);
-            WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-              SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeMsec.Equals(explicitDT)));
+                const double explicitDT = 23.465;
+                var colDT = documentGrid.FindColumn(PropertyPath.Parse("ExplicitDriftTimeMsec"));
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDT.Index].Value = explicitDT);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeMsec.Equals(explicitDT)));
 
-            const double explicitDTOffset = -3.4657;
-            var colDTOffset = documentGrid.FindColumn(PropertyPath.Parse("ExplicitDriftTimeHighEnergyOffsetMsec"));
-            RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDTOffset.Index].Value = explicitDTOffset);
-            WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-              SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeHighEnergyOffsetMsec.Equals(explicitDTOffset)));
+                const double explicitDTOffset = -3.4657;
+                var colDTOffset = documentGrid.FindColumn(PropertyPath.Parse("ExplicitDriftTimeHighEnergyOffsetMsec"));
+                RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDTOffset.Index].Value = explicitDTOffset);
+                WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeHighEnergyOffsetMsec.Equals(explicitDTOffset)));
 
-            // And clean up after ourselves
-            RunUI(() => documentGrid.Close());
+                // And clean up after ourselves
+                RunUI(() => documentGrid.Close());
+            }
             RunUI(() => SkylineWindow.NewDocument(true));
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }

@@ -3854,8 +3854,11 @@ namespace pwiz.Skyline
                 else
                 {
                     _documentGridForm = _documentGridForm ?? CreateDocumentGrid();
-                    var rectFloat = GetFloatingRectangleForNewWindow();
-                    _documentGridForm.Show(dockPanel, rectFloat);
+                    if (_documentGridForm != null)
+                    {
+                        var rectFloat = GetFloatingRectangleForNewWindow();
+                        _documentGridForm.Show(dockPanel, rectFloat);
+                    }
                 }
             }
             else
@@ -3870,7 +3873,7 @@ namespace pwiz.Skyline
 
         private DocumentGridForm CreateDocumentGrid()
         {
-            Debug.Assert(null == _documentGridForm);
+            Assume.IsNull(_documentGridForm);
             if (!Settings.Default.EnableLiveReports)
             {
                 return null;
