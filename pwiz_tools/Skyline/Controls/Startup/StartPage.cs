@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Controls.Startup
                     FilePath = filePath,
                     Width = recentFilesPanel.Width - 20,
                     Top = distanceFromTop,
-                    EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath))
+                    EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath, this))
                 };
                 toolTip.SetToolTip(recentFileControl, filePath);
                 foreach (Control control in recentFileControl.Controls)
@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = Resources.SkylineStartup_SkylineStartup_Blank_Document,
                     Icon = Resources.WizardBlankDocument,
-                    EventAction = ()=>DoAction(skylineWindow=>{}),
+                    EventAction = ()=> DoAction(skylineWindow=> true),
                     BackColor = _darkHoverColor,
                 },
                 new ActionBoxControl
@@ -505,7 +505,10 @@ namespace pwiz.Skyline.Controls.Startup
             if (window == null)
             {
                 MainWindow = new SkylineWindow();
-                action(MainWindow);
+                if (!action(MainWindow))
+                {
+                    return;
+                }
             }
             DialogResult = DialogResult.OK;
         }

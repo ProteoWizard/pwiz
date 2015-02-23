@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         private ILongWaitBroker WaitBroker { get; set; }
         private double Progress { get; set; }
-        public void DoStartupAction(SkylineWindow skylineWindow)
+        public bool DoStartupAction(SkylineWindow skylineWindow)
         {
             if (skylineWindow.Visible)
             {
@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 skylineWindow.Shown += (sender, eventArgs) => LongWaitDlgAction(skylineWindow);
             }
+            return true;
         }
 
         private string getTempPath()

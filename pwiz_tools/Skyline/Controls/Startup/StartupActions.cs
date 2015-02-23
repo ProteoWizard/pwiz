@@ -23,7 +23,7 @@ using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Controls.Startup
 {
-    public delegate void StartupAction(SkylineWindow skylineWindow);
+    public delegate bool StartupAction(SkylineWindow skylineWindow);
 
     public class ActionImport
     {
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Controls.Startup
         }
 
 
-        public void DoStartupAction(SkylineWindow skylineWindow)
+        public bool DoStartupAction(SkylineWindow skylineWindow)
         {
             if (skylineWindow.Visible)
             {
@@ -55,6 +55,7 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 skylineWindow.Shown += (sender, eventArgs) => OpenSkylineStartupSettingsUI(skylineWindow);
             }
+            return true;
         }
 
         private void OpenSkylineStartupSettingsUI(SkylineWindow skylineWindow)
@@ -103,9 +104,9 @@ namespace pwiz.Skyline.Controls.Startup
 
         public string FilePath { get; private set; }
 
-        public void DoStartupAction(SkylineWindow skylineWindow)
+        public bool DoStartupAction(SkylineWindow skylineWindow)
         {
-            skylineWindow.LoadFile(FilePath);
+            return skylineWindow.LoadFile(FilePath);
         }
     }
 }

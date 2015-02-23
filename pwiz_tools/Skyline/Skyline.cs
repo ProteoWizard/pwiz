@@ -257,7 +257,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool LoadFile(string file)
+        public bool LoadFile(string file, FormEx parentWindow = null)
         {
             Uri uri = new Uri(file);
             if (!uri.IsFile)
@@ -278,7 +278,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                return OpenFile(pathOpen);
+                return OpenFile(pathOpen, parentWindow);
             }
         }
 

@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestFunctional
                 startPage.SelectedTab = StartPage.TABS.Tutorial;
 
                 Assert.IsTrue(AllBoxPanelsExist(startPage));
-                startPage.DoAction(skylineWindow=>{});
+                startPage.DoAction(skylineWindow=>true);
             });
             WaitForOpenForm<SkylineWindow>();
         }
@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.DoAction(skylineWindow => { }));
+            RunUI(() => startPage.DoAction(skylineWindow => true));
             WaitForOpenForm<SkylineWindow>();
         }
     }
@@ -290,7 +290,7 @@ namespace pwiz.SkylineTestFunctional
             var pathChooser = ShowDialog<PathChooserDlg>(()=>startPage
                 .TestTutorialAction(ActionTutorial.TutorialType.absolute_quantifiaction));
             OkDialog(pathChooser, pathChooser.Dispose);
-            RunUI(() => startPage.DoAction(skylineWindow => { }));
+            RunUI(() => startPage.DoAction(skylineWindow => true));
             WaitForOpenForm<SkylineWindow>();
         }
     }

@@ -247,38 +247,34 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool OpenFile(string path)
+        public bool OpenFile(string path, FormEx parentWindow = null)
         {
             Exception exception = null;
             SrmDocument document = null;
 
-            using (var reader = new StreamReaderWithProgress(path))
+            try
             {
-                using (var longWaitDlg = new LongWaitDlg(this))
+                using (var reader = new StreamReaderWithProgress(path))
                 {
-                    reader.WaitBroker = longWaitDlg;
-                    longWaitDlg.Text = Resources.SkylineWindow_OpenFile_Loading___;
-                    longWaitDlg.Message = Path.GetFileName(path);
-                    longWaitDlg.PerformWork(this, 800, () =>
+                    using (var longWaitDlg = new LongWaitDlg(this))
                     {
-                        try
+                        reader.WaitBroker = longWaitDlg;
+                        longWaitDlg.Text = Resources.SkylineWindow_OpenFile_Loading___;
+                        longWaitDlg.Message = Path.GetFileName(path);
+                        longWaitDlg.PerformWork(parentWindow ?? this, 500, () =>
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            document = null;
-                        }
-                        catch (Exception x)
-                        {
-                            exception = x;
-                        }
-                    });
+                        });
 
-                    if (longWaitDlg.IsCanceled)
-                        document = null;
+                        if (longWaitDlg.IsCanceled)
+                            document = null;
+                    }
                 }
+            }
+            catch (Exception x)
+            {
+                exception = x;
             }
 
             if (exception == null)
@@ -322,7 +318,7 @@ namespace pwiz.Skyline
 
             if (exception != null)
             {
-                new MessageBoxHelper(this).ShowXmlParsingError(
+                new MessageBoxHelper(parentWindow ?? this).ShowXmlParsingError(
                     string.Format(Resources.SkylineWindow_OpenFile_Failure_opening__0__, path), path, exception);
                 return false;
             }
