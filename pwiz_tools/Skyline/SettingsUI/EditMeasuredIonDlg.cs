@@ -45,8 +45,8 @@ namespace pwiz.Skyline.SettingsUI
 
             _formulaBox =
                 new FormulaBox(Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
-                    Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
-                    Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
+                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_,
+                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_)
                 {
                     Location = new Point(textFragment.Left, radioReporter.Top + 30),
                     Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
@@ -104,10 +104,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 _formulaBox.Formula = _measuredIon.CustomIon.Formula;
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
+                _formulaBox.Charge = _measuredIon.Charge;
             }
             else
             {
                 _formulaBox.Formula = string.Empty;
+                _formulaBox.Charge = _measuredIon.Charge;
                 _formulaBox.MonoMass = _measuredIon.CustomIon.MonoisotopicMass;
                 _formulaBox.AverageMass = _measuredIon.CustomIon.AverageMass;
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
@@ -158,12 +160,9 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        private MeasuredIon ValidateCustomIon(string name)
+        private int? ValidateCharge()
         {
             var helper = new MessageBoxHelper(this);
-            string formula = _formulaBox.Formula.ToString(LocalizationHelper.CurrentCulture);
-            double? monoMass = null;
-            double? avgMass = null;
             int charge;
             const int min = Transition.MIN_PRODUCT_CHARGE;
             const int max = Transition.MAX_PRODUCT_CHARGE;
@@ -171,24 +170,28 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return null;
             }
+            _formulaBox.Charge = charge;
+            return charge;
+        }
+
+        private MeasuredIon ValidateCustomIon(string name)
+        {
+            var helper = new MessageBoxHelper(this);
+            string formula = _formulaBox.Formula.ToString(LocalizationHelper.CurrentCulture);
+            var charge = ValidateCharge();
+            if (!charge.HasValue)
+            {
+                return null;
+            }
+            double monoMass;
+            double avgMass;
             if (!string.IsNullOrEmpty(formula))
             {
+                // Mass is specified by chemical formula
                 try
                 {
-                    double massMono = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
-                    double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
-                    if (MeasuredIon.MIN_REPORTER_MASS > massMono || MeasuredIon.MIN_REPORTER_MASS > massAverage)
-                    {
-                        _formulaBox.ShowTextBoxErrorMonoMass(helper, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
-                                                                         MeasuredIon.MAX_REPORTER_MASS));
-                        return null;
-                    }
-                    if (massMono > MeasuredIon.MAX_REPORTER_MASS || massAverage > MeasuredIon.MAX_REPORTER_MASS)
-                    {
-                        _formulaBox.ShowTextBoxErrorAverageMass(helper, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
-                                                                           MeasuredIon.MAX_REPORTER_MASS));
-                        return null;
-                    }
+                    monoMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
+                    avgMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
                 }
                 catch (ArgumentException x)
                 {
@@ -199,21 +202,37 @@ namespace pwiz.Skyline.SettingsUI
             else if (_formulaBox.MonoMass != null ||
                      _formulaBox.AverageMass != null)
             {
+                // Mass is specified by combination of mz and charge
                 formula = null;
-                double mass;
-                if (!_formulaBox.ValidateMonoText(helper,MeasuredIon.MIN_REPORTER_MASS,MeasuredIon.MAX_REPORTER_MASS,out mass))
+                if (!_formulaBox.ValidateMonoText(helper))
                     return null;
-                monoMass = mass;
-                if (!_formulaBox.ValidateAverageText(helper,MeasuredIon.MIN_REPORTER_MASS,MeasuredIon.MAX_REPORTER_MASS,out mass))
+                if (!_formulaBox.ValidateAverageText(helper))
                     return null;
-                avgMass = mass;
+                _formulaBox.Charge = charge; // This provokes calculation of mass from displayed mz values
+                monoMass = _formulaBox.MonoMass.Value; 
+                avgMass = _formulaBox.AverageMass.Value;
             }
             else
             {
+                // User hasn't fully specified either way
                 _formulaBox.ShowTextBoxErrorFormula(helper,
                     Resources.EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
+                return null;
             }
-            return new MeasuredIon(name, formula, monoMass, avgMass, charge);
+            if (MeasuredIon.MIN_REPORTER_MASS > monoMass || MeasuredIon.MIN_REPORTER_MASS > avgMass)
+            {
+                _formulaBox.ShowTextBoxErrorMonoMass(helper, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
+                                                                 MeasuredIon.MAX_REPORTER_MASS));
+                return null;
+            }
+            if (monoMass > MeasuredIon.MAX_REPORTER_MASS || avgMass > MeasuredIon.MAX_REPORTER_MASS)
+            {
+                _formulaBox.ShowTextBoxErrorAverageMass(helper, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
+                                                                   MeasuredIon.MAX_REPORTER_MASS));
+                return null;
+            }
+
+            return new MeasuredIon(name, formula, monoMass, avgMass, charge.Value);
         }
 
         private static bool ValidateAATextBox(MessageBoxHelper helper, TextBox control, bool allowEmpty, out string aaText)
@@ -258,6 +277,16 @@ namespace pwiz.Skyline.SettingsUI
         private void radioFragment_CheckedChanged(object sender, EventArgs e)
         {
             UpdateIonType();
+        }
+
+        private void textCharge_TextChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(textCharge.Text))
+                return; // Don't complain about empty field, user may be mid-edit
+            var charge = ValidateCharge();
+            if (!charge.HasValue)
+                return;
+            Charge = charge.Value;
         }
 
         private void UpdateIonType()

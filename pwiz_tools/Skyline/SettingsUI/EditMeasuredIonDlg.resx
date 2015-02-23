@@ -490,7 +490,7 @@
     <value>20</value>
   </data>
   <data name="labelCharge.Text" xml:space="preserve">
-    <value>C&amp;harge</value>
+    <value>C&amp;harge:</value>
   </data>
   <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
     <value>labelCharge</value>

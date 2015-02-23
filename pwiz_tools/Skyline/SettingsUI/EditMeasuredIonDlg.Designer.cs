@@ -142,6 +142,7 @@
             // 
             resources.ApplyResources(this.textCharge, "textCharge");
             this.textCharge.Name = "textCharge";
+            this.textCharge.TextChanged += new System.EventHandler(this.textCharge_TextChanged);
             // 
             // EditMeasuredIonDlg
             // 

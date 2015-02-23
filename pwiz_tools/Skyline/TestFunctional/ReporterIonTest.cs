@@ -68,6 +68,23 @@ namespace pwiz.SkylineTestFunctional
                 editMeasuredIon.MonoIsotopicMass = 21;
             });
             OkDialog(editMeasuredIon, editMeasuredIon.OkDialog);
+            // Now update the charge, verifying that this changes the mass but not the mz
+            var editMeasuredIon2 = ShowDialog<EditMeasuredIonDlg>(editMeasuredIonList.EditItem);
+            RunUI(() =>
+            {
+                editMeasuredIon2.Charge = 3;
+            });
+            OkDialog(editMeasuredIon2, editMeasuredIon2.OkDialog);
+            var editMeasuredIon3 = ShowDialog<EditMeasuredIonDlg>(editMeasuredIonList.EditItem);
+            RunUI(() =>
+            {
+                double averageMass = editMeasuredIon3.AverageMass;
+                double monoMass = editMeasuredIon3.MonoIsotopicMass;
+                Assert.AreEqual(30, averageMass, 1e-5);
+                Assert.AreEqual(31.49999, monoMass, 1e-5);
+            });
+            OkDialog(editMeasuredIon3, editMeasuredIon3.OkDialog);
+
             OkDialog(editMeasuredIonList, editMeasuredIonList.OkDialog);
             OkDialog(tranSettings, tranSettings.OkDialog);
         }
@@ -92,15 +109,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 editMeasuredIon1.SwitchToCustom();
                 editMeasuredIon1.TextName = "Water";
-                editMeasuredIon1.Charge = -1;  // Negative charge states are valid for small molecule only, not for reporter ions
                 editMeasuredIon1.Formula = "H2O";
             });
-            RunDlg<MessageDlg>(editMeasuredIon1.OkDialog, dlg =>
-            {
-                // Trying to exit the dialog should cause a warning about charge
-                AssertEx.AreComparableStrings(String.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, String.Empty, 1), dlg.Message);
-                dlg.OkDialog(); // Dismiss the warning
-            });
+            var errorDlg = ShowDialog<MessageDlg>(() => editMeasuredIon1.Charge = -1); // Negative charge states are valid for small molecule only, not for reporter ions
+            AssertEx.AreComparableStrings(String.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, String.Empty, 1), errorDlg.Message);
+            RunUI(() => errorDlg.OkDialog()); // Dismiss the warning
             RunUI(() =>
             {
                 editMeasuredIon1.Charge = 1;
