@@ -4928,7 +4928,7 @@
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>ファイルをキャンセル</value>
   </data>
-  <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__" xml:space="preserve">
+  <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time" xml:space="preserve">
     <value>保持時間（分）</value>
   </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">

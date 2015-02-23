@@ -1365,11 +1365,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retention Time (min.).
+        ///   Looks up a localized string similar to Retention Time.
         /// </summary>
-        public static string AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__ {
+        public static string AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time {
             get {
-                return ResourceManager.GetString("AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__", resourceCulture);
+                return ResourceManager.GetString("AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time", resourceCulture);
             }
         }
         
@@ -14657,7 +14657,8 @@ namespace pwiz.Skyline.Properties {
         /// </summary>
         public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_ {
             get {
-                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_", resourceCulture);
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_valu" +
+                        "e__0_", resourceCulture);
             }
         }
         

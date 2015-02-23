@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphPane.Chart.Border.IsVisible = false;
             _graphPane.Border.IsVisible = false;
 
-            _graphPane.XAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__;
+            _graphPane.XAxis.Title.Text = Resources.AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time;
             _graphPane.XAxis.MinorTic.IsOpposite = false;
             _graphPane.XAxis.MajorTic.IsOpposite = false;
             _graphPane.XAxis.Scale.Min = 0.0;

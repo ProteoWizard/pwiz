@@ -4940,8 +4940,8 @@ Are you sure you want to continue?</value>
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>Cancel file</value>
   </data>
-  <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time__min__" xml:space="preserve">
-    <value>Retention Time (min.)</value>
+  <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Retention_Time" xml:space="preserve">
+    <value>Retention Time</value>
   </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
     <value>Intensity</value>
