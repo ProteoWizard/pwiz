@@ -74,6 +74,11 @@ namespace SkylineNightly
         /// </summary>
         public void Run()
         {
+            // Locate relevant directories.
+            var nightlyDir = GetNightlyDir();
+            var skylineTesterDir = Path.Combine(nightlyDir, "SkylineTester");
+            var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
+
             // Kill any other instance of SkylineNightly.
             foreach (var process in Process.GetProcessesByName("skylinenightly"))
             {
@@ -81,12 +86,22 @@ namespace SkylineNightly
                     process.Kill();
             }
 
-            _startTime = DateTime.Now;
+            // Kill processes started within the nightly directory.
+            foreach (var process in Process.GetProcesses())
+            {
+                try
+                {
+                    if (process.Modules[0].FileName.StartsWith(nightlyDir) &&
+                        process.Id != Process.GetCurrentProcess().Id)
+                        process.Kill();
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+            }
 
-            // Locate relevant directories.
-            var nightlyDir = GetNightlyDir();
-            var skylineTesterDir = Path.Combine(nightlyDir, "SkylineTester");
-            var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
+            _startTime = DateTime.Now;
 
             // Create log file.
             if (!Directory.Exists(_logDir))
@@ -435,11 +450,6 @@ window.onload = submitForm;
 
         private void Delete(string fileOrDir)
         {
-            KillProcess("testrunner", fileOrDir);
-            KillProcess("skylinetester", fileOrDir);
-            KillProcess("skyline", fileOrDir);
-            KillProcess("skyline-daily", fileOrDir);
-
             for (int i = 0; i < 5; i++)
             {
                 try
@@ -455,22 +465,6 @@ window.onload = submitForm;
                     if (i == 4)
                         throw;
                     Thread.Sleep(1000);
-                }
-            }
-        }
-
-        private void KillProcess(string processName, string directory)
-        {
-            foreach (var process in Process.GetProcessesByName(processName))
-            {
-                try
-                {
-                    if (process.Modules[0].FileName.StartsWith(directory))
-                        process.Kill();
-                }
-                // ReSharper disable once EmptyGeneralCatchClause
-                catch (Exception)
-                {
                 }
             }
         }
