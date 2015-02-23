@@ -4913,6 +4913,12 @@ Are you sure you want to continue?</value>
   <data name="MoleculeList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MoleculeList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="EmptyList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EmptyList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PeptideList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="TransitionGroupLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

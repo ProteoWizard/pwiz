@@ -111,6 +111,8 @@ namespace pwiz.Skyline.Controls
             fragment_lib_decoy,
             molecule,
             molecule_list,
+            peptide_list,
+            empty_list,
         }
 
         public enum StateImageId
@@ -159,6 +161,8 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.FragmentLibDecoy);
             ImageList.Images.Add(Resources.Molecule);
             ImageList.Images.Add(Resources.MoleculeList);
+            ImageList.Images.Add(Resources.PeptideList);
+            ImageList.Images.Add(Resources.EmptyList);
 
             StateImageList = new ImageList();
             StateImageList.Images.Add(Resources.Peak);

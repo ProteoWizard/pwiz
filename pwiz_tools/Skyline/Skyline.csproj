@@ -2055,6 +2055,7 @@
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\EmptyList.bmp" />
     <Content Include="Resources\HomeIcon.bmp" />
     <Content Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
@@ -2080,6 +2081,7 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearch.png" />
     <EmbeddedResource Include="Resources\Molecule.bmp" />
     <EmbeddedResource Include="Resources\MoleculeList.bmp" />
+    <EmbeddedResource Include="Resources\PeptideList.bmp" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
