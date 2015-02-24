@@ -874,7 +874,7 @@ namespace pwiz.Skyline
                         })
                     {
                         writer.TransitionCount = document.MoleculeTransitionCount;
-                        longWaitDlg.PerformWork(this, 0, () =>
+                        longWaitDlg.PerformWork(this, 800, () =>
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             ser.Serialize(writer, document);
