@@ -17,13 +17,18 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -125,6 +130,35 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(insertTransitionListDlg.DialogResult == DialogResult.OK, "Third call to PastDlg.OkDialog did not succeed");
             });
             WaitForClosedForm(insertTransitionListDlg);
+
+            // Test modification matching
+            IList<TypedModifications> heavyMod = new[]
+            {
+                new TypedModifications(IsotopeLabelType.heavy, new List<StaticMod>
+                {
+                    new StaticMod("Label:13C(6)15N(4)", "R", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null)
+                })
+            };
+            SrmDocument document = SkylineWindow.Document;
+            RunUI(() =>
+            {
+                SkylineWindow.ModifyDocument("Add modification", doc =>
+                    doc.ChangeSettings(doc.Settings.ChangePeptideModifications(mods => new PeptideModifications(mods.StaticModifications, heavyMod))));
+                SkylineWindow.Document.Settings.UpdateDefaultModifications(true);
+            });
+            WaitForDocumentChange(document);
+
+            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            SetClipboardTextUI("LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02");
+            RunUI(() =>
+            {
+                pasteDlg.IsMolecule = false;
+                pasteDlg.PasteTransitions();
+                pasteDlg.ValidateCells();
+                Assert.AreEqual(Resources.PasteDlg_ShowNoErrors_No_errors, pasteDlg.ErrorText);
+                pasteDlg.CancelDialog();
+            });
+            WaitForClosedForm(pasteDlg);
         }
 
         private static void PastePeptides(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter, 

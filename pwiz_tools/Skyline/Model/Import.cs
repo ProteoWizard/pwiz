@@ -291,15 +291,18 @@ namespace pwiz.Skyline.Model
             string line;
             MassListRowReader rowReader;
             List<string> lines = new List<string>();
+            while ((line = reader.ReadLine()) != null)
+            {
+                lines.Add(line);
+            }
             if (indices != null)
             {
-                rowReader = new GeneralRowReader(FormatProvider, Separator, indices, Settings);
+                rowReader = new GeneralRowReader(FormatProvider, Separator, indices, Settings, lines);
             }
             else
             {
                 // Check first line for validity
-                line = reader.ReadLine();
-                if (line == null)
+                if ((line = lines.FirstOrDefault()) == null)
                     throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
                 string[] fields = line.ParseDsvFields(Separator);
                 string[] headers = fields.All(field => GetColumnType(field.Trim(), FormatProvider) != typeof (double))
@@ -313,27 +316,20 @@ namespace pwiz.Skyline.Model
                 var decoyNames = new[] { "decoy" }; // Not L10N
                 if (headers != null)
                 {
+                    lines.RemoveAt(0);
                     decoyColumn = headers.IndexOf(col => decoyNames.Contains(col.ToLowerInvariant()));
                     irtColumn = headers.IndexOf(col => irtNames.Contains(col.ToLowerInvariant()));
-                    libraryColumn = headers.IndexOf(col => libraryNames.Contains(col.ToLowerInvariant()));  
-                    line = reader.ReadLine();
+                    libraryColumn = headers.IndexOf(col => libraryNames.Contains(col.ToLowerInvariant()));
+                    line = lines.FirstOrDefault();
                     fields = line != null ? line.ParseDsvFields(Separator) : new string[0];
                 }
                 if (fields.Length < 3)
                     throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
-                lines.Add(line);
 
                 // If no numeric columns in the first row
                 rowReader = ExPeptideRowReader.Create(lines, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
                 if (rowReader == null)
                 {
-                    for (int i = 1; i < INSPECT_LINES; i++)
-                    {
-                        line = reader.ReadLine();
-                        if (line == null)
-                            break;
-                        lines.Add(line);
-                    }
                     rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
                     if (rowReader == null && headers == null)
                     {
@@ -354,12 +350,12 @@ namespace pwiz.Skyline.Model
             List<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
             PeptideGroupBuilder seqBuilder = null;
 
-            // Process cached lines and then remaining lines
+            // Process lines
             long lineIndex = 0;
-            while ((line = (lineIndex < lines.Count ? lines[(int)lineIndex] : reader.ReadLine())) != null)
+            foreach (string row in lines)
             {
                 lineIndex++;
-                var errorInfo = rowReader.NextRow(line, lineIndex);
+                var errorInfo = rowReader.NextRow(row, lineIndex);
                 if (errorInfo != null)
                 {
                     errorList.Add(errorInfo);
@@ -479,7 +475,8 @@ namespace pwiz.Skyline.Model
             protected MassListRowReader(IFormatProvider provider,
                                         char separator,
                                         ColumnIndices indices,
-                                        SrmSettings settings)
+                                        SrmSettings settings,
+                                        IEnumerable<string> sequences)
             {
                 FormatProvider = provider;
                 Separator = separator;
@@ -493,10 +490,20 @@ namespace pwiz.Skyline.Model
                                            .ChangeTransitionFullScan(fullscan => fullscan.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null))
                                            .ChangeTransitionFilter(filter => filter.ChangePrecursorCharges(Enumerable.Range(TransitionGroup.MIN_PRECURSOR_CHARGE, 
                                                                                                                             TransitionGroup.MAX_PRECURSOR_CHARGE).ToArray()));
-                ModMatcher.CreateMatches(settingsMatcher,
-                                         new List<string>(),
-                                         Properties.Settings.Default.StaticModList,
-                                         Properties.Settings.Default.HeavyModList);
+                try
+                {
+                    ModMatcher.CreateMatches(settingsMatcher,
+                                             sequences ?? new string[0],
+                                             Properties.Settings.Default.StaticModList,
+                                             Properties.Settings.Default.HeavyModList);
+                }
+                catch (FormatException)
+                {
+                    ModMatcher.CreateMatches(settingsMatcher,
+                                             new string[0],
+                                             Properties.Settings.Default.StaticModList,
+                                             Properties.Settings.Default.HeavyModList);
+                }
                 NodeDictionary = new Dictionary<string, PeptideDocNode>();
             }
 
@@ -587,8 +594,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (!NodeDictionary.TryGetValue(modifiedSequence, out nodeForModPep))
                     {
-                        TransitionGroupDocNode nodeGroupMatched;
-                        nodeForModPep = ModMatcher.CreateDocNodeFromSettings(modifiedSequence, null, SrmSettingsDiff.ALL, out nodeGroupMatched);
+                        nodeForModPep = ModMatcher.GetModifiedNode(modifiedSequence, null);
                         NodeDictionary.Add(modifiedSequence, nodeForModPep);
                     }
                     info.ModifiedSequence = nodeForModPep == null ? null : nodeForModPep.RawTextId;
@@ -890,8 +896,9 @@ namespace pwiz.Skyline.Model
             public GeneralRowReader(IFormatProvider provider,
                                      char separator,
                                      ColumnIndices indices,
-                                     SrmSettings settings)
-                : base(provider, separator, indices, settings)
+                                     SrmSettings settings,
+                                     IEnumerable<string> lines)
+                : base(provider, separator, indices, settings, GetSequencesFromLines(lines, separator, indices))
             {
             }
 
@@ -981,7 +988,7 @@ namespace pwiz.Skyline.Model
 
                 var indices = new ColumnIndices(iProtein, iSequence, iPrecursor, iProduct, iLabelType, iDecoy, iirt, iLibrary);
 
-                return new GeneralRowReader(provider, separator, indices, settings);
+                return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
 
             private static int FindSequence(string[] fields, int start, out string sequence)
@@ -1138,6 +1145,11 @@ namespace pwiz.Skyline.Model
                 else
                     dict.Add(key, 1);
             }
+
+            private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices)
+            {
+                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvFields(separator)[indices.PeptideColumn]));
+            }
         }
 
         private class ExPeptideRowReader : MassListRowReader
@@ -1149,8 +1161,9 @@ namespace pwiz.Skyline.Model
                                        char separator,
                                        ColumnIndices indices,
                                        Regex exPeptideRegex,
-                                       SrmSettings settings)
-                : base(provider, separator, indices, settings)
+                                       SrmSettings settings,
+                                       IEnumerable<string> lines)
+                : base(provider, separator, indices, settings, GetSequencesFromLines(lines, separator, indices, exPeptideRegex))
             {
                 ExPeptideRegex = exPeptideRegex;
             }
@@ -1230,7 +1243,7 @@ namespace pwiz.Skyline.Model
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
                 var indices = new ColumnIndices(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iDecoy, iirt, iLibrary);
-                return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings);
+                return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines);
             }
 
             private static int FindExPeptide(string[] fields, Regex exPeptideRegex, SrmSettings settings,
@@ -1279,6 +1292,11 @@ namespace pwiz.Skyline.Model
                 var modSettings = settings.PeptideSettings.Modifications;
                 var typedMods = modSettings.GetModificationsByName(pepExMatch.Groups[3].Value);
                 return (typedMods != null ? typedMods.LabelType : IsotopeLabelType.light);
+            }
+
+            private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices, Regex exPeptideRegex)
+            {
+                return lines.Select(line => GetModifiedSequence(exPeptideRegex.Match(line.ParseDsvFields(separator)[indices.PeptideColumn])));
             }
         }
 
