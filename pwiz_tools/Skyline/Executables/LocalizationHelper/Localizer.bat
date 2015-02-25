@@ -2,6 +2,10 @@ cd
 echo %1
 dir C:\Windows\system32\config\systemprofile\AppData\Local/JetBrains/commandline8.2/
 dir C:\Windows\system32\config\systemprofile\AppData\Local/JetBrains/commandline9.0/
+dir C:\Windows\system32\config\systemprofile\AppData\Local/JetBrains/
+dir C:\Windows\system32\config\systemprofile\AppData\Local/
+dir C:\Windows\system32\config\systemprofile\AppData\
+dir C:\Windows\system32\config\systemprofile\
 if not exist C:\Windows\system32\config\systemprofile\AppData\Local/JetBrains/commandline8.2/(
   Echo "Debug 1"
 )
