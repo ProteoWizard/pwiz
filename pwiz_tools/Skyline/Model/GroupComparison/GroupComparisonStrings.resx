@@ -173,4 +173,24 @@
   <data name="NormalizationMethod_FromName_Ratio_to__0_" xml:space="preserve">
     <value>Ratio to {0}</value>
   </data>
+  <data name="GroupComparisonViewContext_Delete_No_rows_are_selected" xml:space="preserve">
+    <value>No rows are selected.</value>
+  </data>
+  <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_" xml:space="preserve">
+    <value>Are you sure you want to delete the peptide {0}?</value>
+  </data>
+  <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_protein__0_" xml:space="preserve">
+    <value>Are you sure you want to delete the protein {0}?</value>
+  </data>
+  <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__peptides" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} peptides?</value>
+    <comment>Example: Are you sure you want to delete these 7 peptides?</comment>
+  </data>
+  <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__proteins" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} proteins?</value>
+    <comment>Example: Are you sure you want to delete these 7 proteins?</comment>
+  </data>
+  <data name="GroupComparisonViewContext_Delete_Delete_items" xml:space="preserve">
+    <value>Delete items</value>
+  </data>
 </root>

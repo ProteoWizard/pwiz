@@ -49,7 +49,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 databoundGridControl.BindingListSource = FoldChangeBindingSource.GetBindingListSource();
                 toolStripButtonChangeSettings.Visible =
                     !string.IsNullOrEmpty(FoldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
+                FoldChangeBindingSource.ViewContext.BoundDataGridView = DataboundGridControl.DataGridView;
             }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            if (null != FoldChangeBindingSource)
+            {
+                FoldChangeBindingSource.ViewContext.BoundDataGridView = null;
+            }
+            base.OnHandleDestroyed(e);
         }
 
         public static FoldChangeGrid ShowFoldChangeGrid(DockPanel dockPanel, Rectangle rcFloating, IDocumentContainer documentContainer,

@@ -408,6 +408,7 @@
     <Compile Include="Controls\GroupComparison\GroupComparisonSettingsForm.Designer.cs">
       <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\GroupComparison\GroupComparisonViewContext.cs" />
     <Compile Include="Controls\ImmediateWindow.cs">
       <SubType>Form</SubType>
     </Compile>

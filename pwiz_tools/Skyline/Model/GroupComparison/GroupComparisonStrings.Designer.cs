@@ -179,6 +179,64 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the peptide {0}?.
+        /// </summary>
+        internal static string GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_ {
+            get {
+                return ResourceManager.GetString("GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the protein {0}?.
+        /// </summary>
+        internal static string GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_protein__0_ {
+            get {
+                return ResourceManager.GetString("GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_protein__0_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} peptides?.
+        /// </summary>
+        internal static string GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__peptides {
+            get {
+                return ResourceManager.GetString("GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__pepti" +
+                        "des", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} proteins?.
+        /// </summary>
+        internal static string GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__proteins {
+            get {
+                return ResourceManager.GetString("GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__prote" +
+                        "ins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete items.
+        /// </summary>
+        internal static string GroupComparisonViewContext_Delete_Delete_items {
+            get {
+                return ResourceManager.GetString("GroupComparisonViewContext_Delete_Delete_items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No rows are selected..
+        /// </summary>
+        internal static string GroupComparisonViewContext_Delete_No_rows_are_selected {
+            get {
+                return ResourceManager.GetString("GroupComparisonViewContext_Delete_No_rows_are_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Group Comparision.
         /// </summary>
         internal static string GroupComparisonWindow_timer_Tick_Group_Comparision {

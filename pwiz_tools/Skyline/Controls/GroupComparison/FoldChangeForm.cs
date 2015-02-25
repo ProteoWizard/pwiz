@@ -120,7 +120,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + '|' + Uri.EscapeDataString(FoldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
+
+            return base.GetPersistentString() + '|' + Uri.EscapeDataString(_groupComparisonName);
         }
 
         public static T FindForm<T>(IDocumentContainer documentContainer, string groupComparisonName) 

@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                var status = longWaitDlg.PerformWork(owner == null ? null : owner.TopLevelControl, 5000, job);
+                var status = longWaitDlg.PerformWork(owner == null ? null : owner.TopLevelControl, 1000, job);
                 return status.IsComplete;
             }
         }
@@ -267,10 +267,13 @@ namespace pwiz.Skyline.Model.Databinding
                         viewSpecs.Add(convertedView);
                     }
                 }
-                // Add the appropriate "Transition List" report if it's not already in the settings
-                var spec = GetTransitionListReportSpec((SkylineDataSchema) DataSchema);
-                if (viewSpecs.All(viewSpec => viewSpec.Name != spec.Name))
-                    viewSpecs.Add(spec);
+                if (RowSources.Any(rowSource => rowSource.RowType == typeof (Entities.Transition)))
+                {
+                    // Add the appropriate "Transition List" report if it's not already in the settings
+                    var spec = GetTransitionListReportSpec((SkylineDataSchema)DataSchema);
+                    if (viewSpecs.All(viewSpec => viewSpec.Name != spec.Name))
+                        viewSpecs.Add(spec);
+                }
                 return viewSpecs;
             }
         }

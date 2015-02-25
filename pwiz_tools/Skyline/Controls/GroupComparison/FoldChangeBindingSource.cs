@@ -39,7 +39,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private TaskScheduler _taskScheduler;
         private BindingListSource _bindingListSource;
         private SkylineDataSchema _skylineDataSchema;
-        private SkylineViewContext _skylineViewContext;
 
 
         public FoldChangeBindingSource(GroupComparisonModel groupComparisonModel)
@@ -50,6 +49,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         public GroupComparisonModel GroupComparisonModel { get; private set; }
+        public GroupComparisonViewContext ViewContext { get; private set; }
 
         public void AddRef()
         {
@@ -59,10 +59,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     SkylineDataSchema.GetLocalizedSchemaLocalizer());
                 var viewInfo = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), GetDefaultViewSpec(new FoldChangeRow[0]));
                 var rowSourceInfo = new RowSourceInfo(typeof(FoldChangeRow), new FoldChangeRow[0], new[] { viewInfo });
-                _skylineViewContext = new SkylineViewContext(_skylineDataSchema, new[] { rowSourceInfo });
+                ViewContext = new GroupComparisonViewContext(_skylineDataSchema, new[]{rowSourceInfo});
                 _container = new Container();
                 _bindingListSource = new BindingListSource(_container);
-                _bindingListSource.SetViewContext(_skylineViewContext, viewInfo);
+                _bindingListSource.SetViewContext(ViewContext, viewInfo);
                 GroupComparisonModel.ModelChanged += GroupComparisonModelOnModelChanged;
                 GroupComparisonModelOnModelChanged(GroupComparisonModel, new EventArgs());
             }
@@ -112,10 +112,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
             }
             var defaultViewSpec = GetDefaultViewSpec(rows);
-            if (!Equals(defaultViewSpec, _skylineViewContext.BuiltInViews.First()))
+            if (!Equals(defaultViewSpec, ViewContext.BuiltInViews.First()))
             {
                 var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec);
-                _skylineViewContext.SetRowSources(new []{new RowSourceInfo(
+                ViewContext.SetRowSources(new []{new RowSourceInfo(
                     rows, viewInfo)});
                 if (null != _bindingListSource.ViewSpec && _bindingListSource.ViewSpec.Name == defaultViewSpec.Name &&
                     !_bindingListSource.ViewSpec.Equals(defaultViewSpec))
