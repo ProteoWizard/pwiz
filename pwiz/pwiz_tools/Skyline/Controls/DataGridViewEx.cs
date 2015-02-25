@@ -103,5 +103,13 @@ namespace pwiz.Skyline.Controls
                 skylineWindow.ClipboardControlLostFocus(this);
             }
         }
+
+        /// <summary>
+        /// Testing method: Sends Ctrl-V to this control.
+        /// </summary>
+        public void SendPaste()
+        {
+            OnKeyDown(new KeyEventArgs(Keys.V | Keys.Control));
+        }
     }
 }

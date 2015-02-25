@@ -183,6 +183,12 @@ namespace pwiz.Skyline.ToolsUI
             return _tools.Select(tool => new ToolStoreItem(tool));
         }
 
+        public void SelectTool(string toolName)
+        {
+            int toolIndex = _tools.IndexOf(tool => Equals(tool.Name, toolName));
+            listBoxTools.SelectedIndex = toolIndex;
+        }
+
         #endregion
     }
 

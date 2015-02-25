@@ -170,6 +170,11 @@ namespace pwiz.SkylineTestUtil
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathSelect);
         }
 
+        protected static void ActivateReplicate(string name)
+        {
+            RunUI(() => SkylineWindow.ActivateReplicate(name));
+        }
+
         /// <summary>
         /// Sets the clipboard text, failing with a useful message if the
         /// SetText() method throws an exception, invoking the UI thread first.
@@ -198,7 +203,6 @@ namespace pwiz.SkylineTestUtil
                 Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failed to set text to the clipboard.")); // Not L10N
             }
         }
-
 
         protected static void SetExcelFileClipboardText(string filePath, string page, int columns, bool hasHeader)
         {

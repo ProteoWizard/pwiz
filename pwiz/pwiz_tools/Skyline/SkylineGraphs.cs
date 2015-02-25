@@ -2524,13 +2524,27 @@ namespace pwiz.Skyline
                     {
                         // Avoid just setting focus back to the chromatogram graph
                         // that just lost activation and reactivating it.
-                        if (focusStart is GraphChromatogram)
+                        if (IsChromatogramGraph(focusStart))
                             dockPanel.ActivePane.Focus();
                         else
                             focusStart.Focus();
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns true if a control is or belongs to a <see cref="GraphChromatogram"/>.
+        /// </summary>
+        private static bool IsChromatogramGraph(Control control)
+        {
+            while (control != null)
+            {
+                if (control is GraphChromatogram)
+                    return true;
+                control = control.Parent;
+            }
+            return false;
         }
 
         public MsDataFileUri SelectedScanFile { get; set; }

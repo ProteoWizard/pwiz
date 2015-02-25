@@ -46,10 +46,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)
         {
-            var propertyDescriptor =
-                BindingListSource.GetItemProperties(null)
-                    .OfType<ColumnPropertyDescriptor>()
-                    .FirstOrDefault(colPd => Equals(propertyPath, colPd.PropertyPath));
+            // Expression split to two lines for debugging.
+            var columnPropertyDescriptors = BindingListSource.GetItemProperties(null).OfType<ColumnPropertyDescriptor>();
+            var propertyDescriptor = columnPropertyDescriptors.FirstOrDefault(colPd =>
+                Equals(propertyPath, colPd.PropertyPath));
             if (null == propertyDescriptor)
             {
                 return null;
