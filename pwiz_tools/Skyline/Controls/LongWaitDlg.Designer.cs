@@ -28,10 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LongWaitDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.labelMessage = new System.Windows.Forms.Label();
+            this.timerUpdate = new System.Windows.Forms.Timer(this.components);
+            this.timerClose = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // btnCancel
@@ -51,6 +54,16 @@
             // 
             resources.ApplyResources(this.labelMessage, "labelMessage");
             this.labelMessage.Name = "labelMessage";
+            // 
+            // timerUpdate
+            // 
+            this.timerUpdate.Enabled = true;
+            this.timerUpdate.Interval = 700;
+            this.timerUpdate.Tick += new System.EventHandler(this.timerUpdate_Tick);
+            // 
+            // timerClose
+            // 
+            this.timerClose.Tick += new System.EventHandler(this.timerClose_Tick);
             // 
             // LongWaitDlg
             // 
@@ -75,5 +88,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label labelMessage;
+        private System.Windows.Forms.Timer timerUpdate;
+        private System.Windows.Forms.Timer timerClose;
     }
 }

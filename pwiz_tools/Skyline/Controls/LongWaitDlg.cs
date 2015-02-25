@@ -37,6 +37,17 @@ namespace pwiz.Skyline.Controls
         private bool _clickedCancel;
         private int _progressValue = -1;
         private string _message;
+        private int _tickCount;
+        private DateTime _startTime;
+
+        private IAsyncResult _result;
+
+        // these members should only be accessed in a block which locks on _lock
+        #region synchronized members
+        private readonly object _lock = new object();
+        private bool _finished;
+        private bool _windowShown;
+        #endregion
 
         /// <summary>
         /// For operations where a change in the active document should
@@ -109,58 +120,28 @@ namespace pwiz.Skyline.Controls
 
         public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
         {
+            _startTime = DateTime.Now;
             _parentForm = parent;
             try
             {
                 Action<Action<ILongWaitBroker>> runner = RunWork;
-                var result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
+                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
 
-                // Allow application to update itself.
-                Application.DoEvents();
                 // Wait as long as the caller wants before showing the progress
                 // animation to the user.
-                result.AsyncWaitHandle.WaitOne(delayMillis);
+                _result.AsyncWaitHandle.WaitOne(delayMillis);
+
                 // Return without notifying the user, if the operation completed
                 // before the wait expired.
-                if (result.IsCompleted)
+                if (_result.IsCompleted)
                     return;
-                // Center on parent.
-                if (parent != null)
-                {
-                    StartPosition = FormStartPosition.Manual;
-                    Top = (parent.Top + parent.Bottom) / 2 - Height / 2;
-                    Left = (parent.Left + parent.Right) / 2 - Width / 2;
-                }
 
                 progressBar.Value = Math.Max(0, _progressValue);
                 if (_message != null)
                     labelMessage.Text = _message;
 
-                Show(parent);
-                int progress = 0;
-                do
-                {
-                    Application.DoEvents();
-                    progress = (progress + 10) % 110;
-                    progressBar.Value = (_progressValue != -1 ? _progressValue : progress);
-                    if (_message != null && !Equals(_message, labelMessage.Text))
-                        labelMessage.Text = _message + (_clickedCancel ? _cancelMessage : string.Empty);
-
-                    result.AsyncWaitHandle.WaitOne(700);
-                }
-                while (!result.IsCompleted);
-
-                if (!_clickedCancel)
-                {
-                    // Show complete status before returning.
-                    progressBar.Value = 100;
-                    labelMessage.Text = _message;
-                    for (int i = 0; i < 10; i++)
-                    {
-                        Application.DoEvents();
-                        Thread.Sleep(100);
-                    }
-                }
+                _tickCount = 0;
+                ShowDialog(parent);
             }
             finally
             {
@@ -169,8 +150,17 @@ namespace pwiz.Skyline.Controls
                 // Get rid of this window before leaving this function
                 Dispose();
 
+                if (IsCanceled && null != x)
+                {
+                    if (x is OperationCanceledException || x.InnerException is OperationCanceledException)
+                    {
+                        x = null;
+                    }
+                }
+
                 if (x != null)
                 {
+                    
                     // TODO: Clean this up.  The thrown exception needs to be preserved to preserve
                     //       the original stack trace from which it was thrown.  In some cases,
                     //       its type must also be preserved, because existing code handles certain
@@ -188,6 +178,38 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        /// <summary>
+        /// When this dialog is shown, it is necessary to check whether the background job has completed.
+        /// If it has, then this dialog needs to be closed right now.
+        /// If the background job has not yet completed, then this dialog will be closed by the finally
+        /// block in <see cref="RunWork"/>.
+        /// </summary>
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            lock (_lock)
+            {
+                if (_finished)
+                {
+                    Close();
+                }
+                else
+                {
+                    _windowShown = true;
+                }
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            lock (_lock)
+            {
+                _windowShown = false;
+            }
+            base.OnFormClosing(e);
+        }
+
+
         private void RunWork(Action<ILongWaitBroker> performWork)
         {
             try
@@ -200,6 +222,38 @@ namespace pwiz.Skyline.Controls
             {
                 _exception = x;
             }
+            finally
+            {
+                lock (_lock)
+                {
+                    _finished = true;
+                    if (_windowShown)
+                    {
+                        BeginInvoke(new Action(FinishDialog));
+                    }
+                }
+            }
+        }
+
+        private void FinishDialog()
+        {
+            if (!_clickedCancel)
+            {
+                var runningTime = DateTime.Now.Subtract(_startTime);
+                // Show complete status before returning.
+                progressBar.Value = _progressValue = 100;
+                labelMessage.Text = _message;
+                // Display the final complete status for one second, or 10% of the time the job ran for,
+                // whichever is shorter
+                int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
+                if (finalDelayTime > 0)
+                {
+                    timerClose.Interval = finalDelayTime;
+                    timerClose.Enabled = true;
+                    return;
+                }
+            }
+            Close();
         }
 
         public bool IsCanceled
@@ -211,6 +265,26 @@ namespace pwiz.Skyline.Controls
         {
             labelMessage.Text += _cancelMessage;
             _clickedCancel = true;
+        }
+
+        private void timerUpdate_Tick(object sender, EventArgs e)
+        {
+            _tickCount++;
+            if (_progressValue == -1)
+            {
+                progressBar.Value = (_tickCount * 10) % 110;
+            }
+            else
+            {
+                progressBar.Value = _progressValue;
+            }
+            if (_message != null && !Equals(_message, labelMessage.Text))
+                labelMessage.Text = _message + (_clickedCancel ? _cancelMessage : string.Empty);
+        }
+
+        private void timerClose_Tick(object sender, EventArgs e)
+        {
+            Close();
         }
 
         private sealed class IndefiniteWaitBroker
@@ -227,5 +301,6 @@ namespace pwiz.Skyline.Controls
                 _performWork();
             }
         }
+
     }
 }
