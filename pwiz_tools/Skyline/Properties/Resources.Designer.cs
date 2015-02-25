@@ -14690,6 +14690,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid retention time window value {0}.
+        /// </summary>
+        public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No errors.
         /// </summary>
         public static string PasteDlg_ShowNoErrors_No_errors {
@@ -14731,6 +14740,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Explicit_Retention_Time {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Retention_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Retention Time Window.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window", resourceCulture);
             }
         }
         
@@ -15248,6 +15266,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Peptide", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit retention time window requires an explicit retention time value..
+        /// </summary>
+        public static string Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_ {
+            get {
+                return ResourceManager.GetString("Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_ex" +
+                        "plicit_retention_time_value_", resourceCulture);
             }
         }
         

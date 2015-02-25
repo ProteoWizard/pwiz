@@ -562,9 +562,10 @@ namespace pwiz.Skyline.EditUI
         private const int INDEX_MOLECULE_CHARGE = 7;
         private const int INDEX_PRODUCT_CHARGE = 8;
         private const int INDEX_RETENTION_TIME = 9;
-        private const int INDEX_COLLISION_ENERGY = 10;
-        private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 11;
-        private const int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = 12;
+        private const int INDEX_RETENTION_TIME_WINDOW = 10;
+        private const int INDEX_COLLISION_ENERGY = 11;
+        private const int INDEX_MOLECULE_DRIFT_TIME_MSEC = 12;
+        private const int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = 13;
 
         private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, double mz, int? charge, out double monoMass, out double averageMass)
         {
@@ -628,9 +629,10 @@ namespace pwiz.Skyline.EditUI
             public int Charge { get; private set; }
             public double MonoMass { get; private set; }
             public double AverageMass { get; private set; }
-            public double? ExplicitRetentionTime { get; private set; }
+            public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; }
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
-            public MoleculeInfo(string name, string formula, int charge, double mz, double monoMass, double averageMass, double? explicitRetentionTime,
+            public MoleculeInfo(string name, string formula, int charge, double mz, double monoMass, double averageMass,
+                ExplicitRetentionTimeInfo explicitRetentionTime,
                 ExplicitTransitionGroupValues explicitTransitionGroupValues)
             {
                 Name = name;
@@ -695,6 +697,7 @@ namespace pwiz.Skyline.EditUI
             double dtmp;
             double? collisionEnergy = null;
             double? retentionTime = null;
+            double? retentionTimeWindow = null;
             if (getPrecursorColumns)
             {
                 if (double.TryParse(Convert.ToString(row.Cells[INDEX_COLLISION_ENERGY].Value), out dtmp))
@@ -718,6 +721,30 @@ namespace pwiz.Skyline.EditUI
                         Column = INDEX_RETENTION_TIME,
                         Line = row.Index,
                         Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_, Convert.ToString(row.Cells[INDEX_RETENTION_TIME].Value))
+                    });
+                    return null;
+                }
+                if (double.TryParse(Convert.ToString(row.Cells[INDEX_RETENTION_TIME_WINDOW].Value), out dtmp))
+                {
+                    retentionTimeWindow = dtmp;
+                    if (!retentionTime.HasValue)
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_RETENTION_TIME_WINDOW,
+                            Line = row.Index,
+                            Message = Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_
+                        });
+                        return null;
+                    }
+                }
+                else if (!String.IsNullOrEmpty(Convert.ToString(row.Cells[INDEX_RETENTION_TIME_WINDOW].Value)))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_RETENTION_TIME_WINDOW,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_, Convert.ToString(row.Cells[INDEX_RETENTION_TIME_WINDOW].Value))
                     });
                     return null;
                 }
@@ -774,6 +801,9 @@ namespace pwiz.Skyline.EditUI
                 {
                     driftTimeHighEnergyOffsetMsec = null; // Offset without a base value isn't useful
                 }
+                var retentionTimeInfo = retentionTime.HasValue
+                    ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
+                    : null;
                 var explicitTransitionGroupValues = new ExplicitTransitionGroupValues(collisionEnergy, driftTimePrecursorMsec, driftTimeHighEnergyOffsetMsec);
                 var massOk = true;
                 string massErrMsg = null;
@@ -806,7 +836,7 @@ namespace pwiz.Skyline.EditUI
                                 if (charge.HasValue)
                                 {
                                     row.Cells[indexCharge].Value = charge.Value;
-                                    return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                                    return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTimeInfo, explicitTransitionGroupValues);
                                 }
                                 errMessage = String.Format(getPrecursorColumns
                                     ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
@@ -820,7 +850,7 @@ namespace pwiz.Skyline.EditUI
                             massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
                             row.Cells[indexMz].Value = mz;
                             if (massOk)
-                                return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                                return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTimeInfo, explicitTransitionGroupValues);
                         }
                     }
                     catch (InvalidDataException x)
@@ -836,7 +866,7 @@ namespace pwiz.Skyline.EditUI
                     massOk = monoMass < CustomIon.MAX_MASS && averageMmass < CustomIon.MAX_MASS;
                     errColumn = indexMz;
                     if (massOk)
-                        return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTime, explicitTransitionGroupValues);
+                        return new MoleculeInfo(name, formula, charge.Value, mz, monoMass, averageMmass, retentionTimeInfo, explicitTransitionGroupValues);
                 }
                 if (!massOk)
                 {
@@ -2089,6 +2119,7 @@ namespace pwiz.Skyline.EditUI
             public const string chargePrecursor = "PrecursorCharge"; // Not L10N
             public const string chargeProduct = "ProductCharge"; // Not L10N
             public const string rtPrecursor = "PrecursorRT"; // Not L10N
+            public const string rtWindowPrecursor = "PrecursorRTWindow"; // Not L10N
             public const string cePrecursor = "PrecursorCE"; // Not L10N
             public const string dtPrecursor = "PrecursorDT"; // Not L10N
             public const string dtHighEnergyOffset = "HighEnergyDTOffset"; // Not L10N
@@ -2157,6 +2188,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
                 var defaultColumns = new List<string>();
                 for (var col = 0; col < gridViewTransitionList.Columns.Count; col++)  // Get the list without drift time settings, as the default

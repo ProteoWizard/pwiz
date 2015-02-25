@@ -321,11 +321,12 @@ namespace pwiz.Skyline.Model.DocSettings
                                             out double windowRT)
         {
             // If peptide has an explicitly set RT, use that
-            if (nodePep.ExplicitRetentionTime.HasValue && MeasuredRTWindow.HasValue)
+            if (nodePep.ExplicitRetentionTime != null  && 
+                (MeasuredRTWindow.HasValue || nodePep.ExplicitRetentionTime.RetentionTimeWindow.HasValue))
             {
-                // TODO: Explicit RT windows also
-                windowRT = MeasuredRTWindow.Value;
-                return nodePep.ExplicitRetentionTime;
+                // If peptide has an explicitly set RT window, use that, or the global setting
+                windowRT = nodePep.ExplicitRetentionTime.RetentionTimeWindow ?? MeasuredRTWindow.Value;
+                return nodePep.ExplicitRetentionTime.RetentionTime;
             }
             // Safe defaults
             double? predictedRT = null;
@@ -520,7 +521,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!resultsAvailable)
             {
                 // Actually we *can* still schedule if everything has an explicit RT
-                if (!document.Molecules.All(p => p.ExplicitRetentionTime.HasValue))
+                if (document.Molecules.Any(p => p.ExplicitRetentionTime == null))
                     return false;
             }
             // Otherwise, if every precursor has enough result information

@@ -578,6 +578,7 @@
         <xs:attribute name="avg_measured_retention_time" type="xs:double"/>
         <xs:attribute name="standard_type" type="xs:string"/>
         <xs:attribute name="explicit_retention_time" type="xs:double"/>  <!-- optional RT override value from transition list import -->
+        <xs:attribute name="explicit_retention_time_window" type="xs:double"/>  <!-- optional RT override value from transition list import -->
       </xs:extension>
     </xs:complexContent>      
   </xs:complexType>
@@ -795,6 +796,7 @@
         <xs:attribute name="declustering_potential" type="xs:double"/>
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <xs:attribute name="explicit_collision_energy" type="xs:double"/>
+        <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
       </xs:extension>

@@ -50,12 +50,12 @@ namespace pwiz.Skyline.Model
             return string.Empty;
         }
 
-        public PeptideDocNode(Peptide id, ExplicitMods mods = null, double? explicitRetentionTime = null)
+        public PeptideDocNode(Peptide id, ExplicitMods mods = null, ExplicitRetentionTimeInfo explicitRetentionTime = null)
             : this(id, null, mods, null, null, null, explicitRetentionTime, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
 
-        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey, double? explicitRetentionTime,
+        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey, ExplicitRetentionTimeInfo explicitRetentionTime,
             TransitionGroupDocNode[] children, bool autoManageChildren)
             : this(id, settings, mods, sourceKey, null, null, explicitRetentionTime, Annotations.EMPTY, null, children, autoManageChildren)
         {
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model
                               ModifiedSequenceMods sourceKey,
                               string standardType,
                               int? rank,
-                              double? explicitRetentionTime,
+                              ExplicitRetentionTimeInfo explicitRetentionTimeInfo,
                               Annotations annotations,
                               Results<PeptideChromInfo> results,
                               TransitionGroupDocNode[] children,
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model
             SourceKey = sourceKey;
             GlobalStandardType = standardType;
             Rank = rank;
-            ExplicitRetentionTime = explicitRetentionTime;
+            ExplicitRetentionTime = explicitRetentionTimeInfo;
             Results = results;
             BestResult = CalcBestResult();
 
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model
 
         public ModifiedSequenceMods SourceKey { get; private set; }
 
-        public double? ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
+        public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
         public string GlobalStandardType { get; private set; }
 
@@ -468,13 +468,21 @@ namespace pwiz.Skyline.Model
                                                  });
         }
 
-        public PeptideDocNode ChangeExplicitRetentionTime(double? prop)
+        public PeptideDocNode ChangeExplicitRetentionTime(ExplicitRetentionTimeInfo prop)
         {
             return ChangeProp(ImClone(this), im => im.ExplicitRetentionTime = prop);
         }
 
+        public PeptideDocNode ChangeExplicitRetentionTime(double? prop)
+        {
+            double? oldwindow = null;
+            if (ExplicitRetentionTime != null)
+                oldwindow = ExplicitRetentionTime.RetentionTimeWindow;
+            return ChangeProp(ImClone(this), im => im.ExplicitRetentionTime = prop.HasValue ? new ExplicitRetentionTimeInfo(prop.Value, oldwindow) : null);
+        }
+
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
-        public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, DocNodeCustomIon customIon, int charge, double? explicitRetentionTime, ExplicitTransitionGroupValues explicitTransitionGroupValues)
+        public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, DocNodeCustomIon customIon, int charge, ExplicitRetentionTimeInfo explicitRetentionTime, ExplicitTransitionGroupValues explicitTransitionGroupValues)
         {
             Assume.IsTrue(TransitionGroupCount == 1);  // We support just one transition group per custom molecule
             TransitionGroupDocNode nodeGroup = TransitionGroups.First();
@@ -1570,7 +1578,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
                 result = (result*397) ^ (SourceKey != null ? SourceKey.GetHashCode() : 0);
                 result = (result*397) ^ (Rank.HasValue ? Rank.Value : 0);
-                result = (result*397) ^ (ExplicitRetentionTime.HasValue ? ExplicitRetentionTime.Value.GetHashCode() : 0);
+                result = (result*397) ^ (ExplicitRetentionTime != null ? ExplicitRetentionTime.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 result = (result*397) ^ BestResult;
                 return result;
@@ -1597,5 +1605,42 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode NodePep { get; private set; }
         public TransitionGroupDocNode NodeGroup { get; private set; }
+    }
+
+    public class ExplicitRetentionTimeInfo
+    {
+        public ExplicitRetentionTimeInfo(double retentionTime, double? retentionTimeWindow)
+        {
+            RetentionTime = retentionTime;
+            RetentionTimeWindow = retentionTimeWindow;
+        }
+
+        public double RetentionTime { get; private set; }
+        public double? RetentionTimeWindow { get; private set; }
+
+        public bool Equals(ExplicitRetentionTimeInfo other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.RetentionTime, RetentionTime) &&
+                Equals(other.RetentionTimeWindow, RetentionTimeWindow);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as ExplicitRetentionTimeInfo);
+        }
+
+
+        public override int GetHashCode()
+        {
+            int result = RetentionTime.GetHashCode() ;
+            if (RetentionTimeWindow.HasValue)
+                result = (result*397) ^ RetentionTimeWindow.Value.GetHashCode() ;
+            return result;
+        }
+
     }
 }

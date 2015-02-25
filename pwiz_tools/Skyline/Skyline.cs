@@ -1794,7 +1794,7 @@ namespace pwiz.Skyline
                                     // If we didn't change the custom ion's formula and/or mass, the ID should be unchanged and we can just change any needed transition info.
                                     // But if custom ion has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.
-                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomIon, dlg.Charge, dlg.RetentionTime, dlg.ResultExplicitTransitionGroupValues);
+                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomIon, dlg.Charge, dlg.ResultRetentionTimeInfo, dlg.ResultExplicitTransitionGroupValues);
                                     if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
                                     {
                                         var newdoc = (SrmDocument)doc.Insert(nodePepTree.Path, newNode);
@@ -4271,7 +4271,7 @@ namespace pwiz.Skyline
                             var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
                                 doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, new TransitionDocNode[0], true);
                             var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
-                                dlg.RetentionTime, new[] { tranGroupDocNode }, true);
+                                dlg.ResultRetentionTimeInfo, new[] { tranGroupDocNode }, true);
                             return (SrmDocument) doc.Add(pepGroupPath, nodePepNew);
                         });
                     }

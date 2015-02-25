@@ -30,14 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditCustomMoleculeDlg));
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.textCharge = new System.Windows.Forms.TextBox();
-            this.labelCharge = new System.Windows.Forms.Label();
-            this.textName = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.labelCollisionEnergy = new System.Windows.Forms.Label();
-            this.textCollisionEnergy = new System.Windows.Forms.TextBox();
             this.groupBoxOptionalValues = new System.Windows.Forms.GroupBox();
             this.textDriftTimeMsec = new System.Windows.Forms.TextBox();
             this.labelDriftTimeMsec = new System.Windows.Forms.Label();
@@ -45,7 +40,14 @@
             this.labelDriftTimeHighEnergyOffsetMsec = new System.Windows.Forms.Label();
             this.textRetentionTime = new System.Windows.Forms.TextBox();
             this.labelRetentionTime = new System.Windows.Forms.Label();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.textRetentionTimeWindow = new System.Windows.Forms.TextBox();
+            this.labelRetentionTimeWindow = new System.Windows.Forms.Label();
+            this.labelCollisionEnergy = new System.Windows.Forms.Label();
+            this.textCollisionEnergy = new System.Windows.Forms.TextBox();
+            this.textCharge = new System.Windows.Forms.TextBox();
+            this.labelCharge = new System.Windows.Forms.Label();
+            this.textName = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBoxOptionalValues.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,38 +65,6 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // textCharge
-            // 
-            resources.ApplyResources(this.textCharge, "textCharge");
-            this.textCharge.Name = "textCharge";
-            this.textCharge.TextChanged += new System.EventHandler(this.textCharge_TextChanged);
-            // 
-            // labelCharge
-            // 
-            resources.ApplyResources(this.labelCharge, "labelCharge");
-            this.labelCharge.Name = "labelCharge";
-            // 
-            // textName
-            // 
-            resources.ApplyResources(this.textName, "textName");
-            this.textName.Name = "textName";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // labelCollisionEnergy
-            // 
-            resources.ApplyResources(this.labelCollisionEnergy, "labelCollisionEnergy");
-            this.labelCollisionEnergy.Name = "labelCollisionEnergy";
-            // 
-            // textCollisionEnergy
-            // 
-            resources.ApplyResources(this.textCollisionEnergy, "textCollisionEnergy");
-            this.textCollisionEnergy.Name = "textCollisionEnergy";
-            this.toolTip1.SetToolTip(this.textCollisionEnergy, resources.GetString("textCollisionEnergy.ToolTip"));
-            // 
             // groupBoxOptionalValues
             // 
             this.groupBoxOptionalValues.Controls.Add(this.textDriftTimeMsec);
@@ -103,6 +73,8 @@
             this.groupBoxOptionalValues.Controls.Add(this.labelDriftTimeHighEnergyOffsetMsec);
             this.groupBoxOptionalValues.Controls.Add(this.textRetentionTime);
             this.groupBoxOptionalValues.Controls.Add(this.labelRetentionTime);
+            this.groupBoxOptionalValues.Controls.Add(this.textRetentionTimeWindow);
+            this.groupBoxOptionalValues.Controls.Add(this.labelRetentionTimeWindow);
             this.groupBoxOptionalValues.Controls.Add(this.labelCollisionEnergy);
             this.groupBoxOptionalValues.Controls.Add(this.textCollisionEnergy);
             resources.ApplyResources(this.groupBoxOptionalValues, "groupBoxOptionalValues");
@@ -142,6 +114,49 @@
             resources.ApplyResources(this.labelRetentionTime, "labelRetentionTime");
             this.labelRetentionTime.Name = "labelRetentionTime";
             // 
+            // textRetentionTimeWindow
+            // 
+            resources.ApplyResources(this.textRetentionTimeWindow, "textRetentionTimeWindow");
+            this.textRetentionTimeWindow.Name = "textRetentionTimeWindow";
+            this.toolTip1.SetToolTip(this.textRetentionTimeWindow, resources.GetString("textRetentionTimeWindow.ToolTip"));
+            // 
+            // labelRetentionTimeWindow
+            // 
+            resources.ApplyResources(this.labelRetentionTimeWindow, "labelRetentionTimeWindow");
+            this.labelRetentionTimeWindow.Name = "labelRetentionTimeWindow";
+            // 
+            // labelCollisionEnergy
+            // 
+            resources.ApplyResources(this.labelCollisionEnergy, "labelCollisionEnergy");
+            this.labelCollisionEnergy.Name = "labelCollisionEnergy";
+            // 
+            // textCollisionEnergy
+            // 
+            resources.ApplyResources(this.textCollisionEnergy, "textCollisionEnergy");
+            this.textCollisionEnergy.Name = "textCollisionEnergy";
+            this.toolTip1.SetToolTip(this.textCollisionEnergy, resources.GetString("textCollisionEnergy.ToolTip"));
+            // 
+            // textCharge
+            // 
+            resources.ApplyResources(this.textCharge, "textCharge");
+            this.textCharge.Name = "textCharge";
+            this.textCharge.TextChanged += new System.EventHandler(this.textCharge_TextChanged);
+            // 
+            // labelCharge
+            // 
+            resources.ApplyResources(this.labelCharge, "labelCharge");
+            this.labelCharge.Name = "labelCharge";
+            // 
+            // textName
+            // 
+            resources.ApplyResources(this.textName, "textName");
+            this.textName.Name = "textName";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // EditCustomMoleculeDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -179,6 +194,8 @@
         private System.Windows.Forms.GroupBox groupBoxOptionalValues;
         private System.Windows.Forms.TextBox textRetentionTime;
         private System.Windows.Forms.Label labelRetentionTime;
+        private System.Windows.Forms.TextBox textRetentionTimeWindow;
+        private System.Windows.Forms.Label labelRetentionTimeWindow;
         private System.Windows.Forms.TextBox textDriftTimeMsec;
         private System.Windows.Forms.Label labelDriftTimeMsec;
         private System.Windows.Forms.TextBox textDriftTimeHighEnergyOffsetMsec;

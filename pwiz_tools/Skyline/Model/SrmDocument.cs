@@ -1545,6 +1545,7 @@ namespace pwiz.Skyline.Model
             public const string rt_calculator_score = "rt_calculator_score";
             public const string predicted_retention_time = "predicted_retention_time";
             public const string explicit_retention_time = "explicit_retention_time";
+            public const string explicit_retention_time_window = "explicit_retention_time_window";
             public const string explicit_drift_time_msec = "explicit_drift_time_msec";
             public const string explicit_drift_time_high_energy_offset_msec = "explicit_drift_time_high_energy_offset_msec";
             public const string avg_measured_retention_time = "avg_measured_retention_time";
@@ -1948,7 +1949,11 @@ namespace pwiz.Skyline.Model
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
             string standardType = reader.GetAttribute(ATTR.standard_type);
-            double? importedRetentionTime = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
+            double? importedRetentionTimeValue = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
+            double? importedRetentionTimeWindow = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
+            var importedRetentionTime = importedRetentionTimeValue.HasValue
+                ? new ExplicitRetentionTimeInfo(importedRetentionTimeValue.Value, importedRetentionTimeWindow)
+                : null;
             var annotations = Annotations.EMPTY;
             ExplicitMods mods = null, lookupMods = null;
             Results<PeptideChromInfo> results = null;
@@ -2847,8 +2852,11 @@ namespace pwiz.Skyline.Model
             var isCustomIon = peptide.IsCustomIon;
 
             writer.WriteStartElement(isCustomIon ? EL.molecule : EL.peptide);
-            writer.WriteAttributeNullable(ATTR.explicit_retention_time, node.ExplicitRetentionTime);
-
+            if (node.ExplicitRetentionTime != null)
+            {
+                writer.WriteAttribute(ATTR.explicit_retention_time, node.ExplicitRetentionTime.RetentionTime);
+                writer.WriteAttributeNullable(ATTR.explicit_retention_time_window, node.ExplicitRetentionTime.RetentionTimeWindow);
+            }
             double? scoreCalc = null;
 
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);

@@ -81,20 +81,33 @@ namespace pwiz.SkylineTestFunctional
             const double testDT = 123.45;
             const double testOffsetDT = -.45;
             const double testRT = 234.56;
+            const double testRTWindow = 4.56;
             const double testCE = 345.67;
             RunUI(() =>
             {
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
                 editMoleculeDlgA.DriftTimeMsec = testDT;
                 editMoleculeDlgA.DriftTimeHighEnergyOffsetMsec = testOffsetDT;
-                editMoleculeDlgA.RetentionTime = testRT;
+                editMoleculeDlgA.RetentionTimeWindow = testRTWindow;
                 editMoleculeDlgA.CollisionEnergy = testCE;
             });
+            // Retention time window with no retention time should cause an error
+            RunDlg<MessageDlg>(editMoleculeDlgA.OkDialog, dlg =>
+            {
+                AssertEx.AreComparableStrings(
+                    Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_,
+                    dlg.Message);
+                dlg.OkDialog(); // Dismiss the warning
+            });
+            // Set retention time, and this should be OK
+            RunUI(() => editMoleculeDlgA.RetentionTime = testRT);
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var doc = WaitForDocumentChange(docA);
             Assert.IsTrue(doc.Molecules.ElementAt(0).EqualsId(docA.Molecules.ElementAt(0))); // No Id change
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
             Assert.AreEqual(testCE, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy.Value);
+            Assert.AreEqual(testRT, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
+            Assert.AreEqual(testRTWindow, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
             Assert.IsFalse(docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy.HasValue);
 
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
@@ -241,7 +254,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that RT and CE overrides work
             Assert.AreEqual(testCE, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy.Value);
-            Assert.AreEqual(testRT, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.Value);
+            Assert.AreEqual(testRT, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
+            Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value);
 
             // Verify that the explicitly set drift time overides any calculations
             double windowDT;

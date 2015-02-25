@@ -66,9 +66,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             RetentionTimePrediction prediction;
             if (!context.TryGetInfo(out prediction))
             {
-                double? explicitRT = summaryPeakData.NodePep.ExplicitRetentionTime;
-                // TODO: Explicit RT windows also
-                double? windowRT = context.Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+                double? explicitRT = null;
+                double? windowRT = null;
+                if (summaryPeakData.NodePep.ExplicitRetentionTime != null)
+                {
+                    explicitRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTime;
+                    windowRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTimeWindow ?? context.Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+                }
                 if (explicitRT.HasValue && windowRT.HasValue)
                 {
                     prediction = new RetentionTimePrediction(explicitRT, windowRT.Value);

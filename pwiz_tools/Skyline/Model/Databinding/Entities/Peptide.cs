@@ -203,14 +203,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IsSmallMolecule()
-                    ? DocNode.ExplicitRetentionTime
-                    : null;
+                if (IsSmallMolecule() && DocNode.ExplicitRetentionTime != null)
+                   return DocNode.ExplicitRetentionTime.RetentionTime;
+                return null;
             }
             set
             {
                 ThrowIfNotSmallMolecule();  // Only settable for custom ions
-                ChangeDocNode(DocNode.ChangeExplicitRetentionTime(value));
+                if (value.HasValue)
+                    ChangeDocNode(DocNode.ChangeExplicitRetentionTime(value));
+                else
+                    ChangeDocNode(DocNode.ChangeExplicitRetentionTime((ExplicitRetentionTimeInfo)null));
+            }
+        }
+
+        [Format(Formats.RETENTION_TIME)]
+        public double? ExplicitRetentionTimeWindow
+        {
+            get
+            {
+                if (IsSmallMolecule() && DocNode.ExplicitRetentionTime != null)
+                    return DocNode.ExplicitRetentionTime.RetentionTimeWindow;
+                return null;
+            }
+            set
+            {
+                ThrowIfNotSmallMolecule();  // Only settable for custom ions
+                if (DocNode.ExplicitRetentionTime == null)
+                {
+                    // Can't set window without retention time
+                    if (value.HasValue)
+                        throw new InvalidDataException(Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_);
+                }
+                else
+                {
+                    ChangeDocNode(DocNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(DocNode.ExplicitRetentionTime.RetentionTime, value)));
+                }
             }
         }
 

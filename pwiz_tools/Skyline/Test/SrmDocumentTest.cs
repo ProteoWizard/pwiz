@@ -94,7 +94,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomIon);
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
-            Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime);
+            Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
+            Assert.AreEqual(4.56, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
             Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeMsec);
             Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
@@ -725,7 +726,7 @@ namespace pwiz.SkylineTest
                 "  </settings_summary>\n" +
                 "  <peptide_list label_name=\"Molecule Group\" websearch_status=\"X\" auto_manage_children=\"false\">\n" +
                 "    <note>we call this a peptide_list but it is really a generalized molecule list</note>\n" +
-                "    <molecule explicit_retention_time=\"3.45\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
+                "    <molecule explicit_retention_time=\"3.45\" explicit_retention_time_window=\"4.56\" mass_average=\"60\" mass_monoisotopic=\"60\" custom_ion_name=\"molecule\">\n" +
                 "      <note>this molecule was specified by mass only</note>\n" +
                 "      <precursor charge=\"1\" precursor_mz=\"59.9994514200905\" auto_manage_children=\"false\" explicit_collision_energy=\"4.704984\" explicit_drift_time_msec=\"2.34\" explicit_drift_time_high_energy_offset_msec=\"-0.12\">\n" +
                 "        <note>this precursor has explicit values set</note>\n" +

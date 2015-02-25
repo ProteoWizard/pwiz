@@ -41,7 +41,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly TransitionSettings _settings;
 
         public EditCustomMoleculeDlg(String title, IEnumerable<CustomIon> existing, int minCharge, int maxCharge, 
-            TransitionSettings settings, int defaultCharge, bool isPrecursor, ExplicitTransitionGroupValues explicitAttributes, double? explicitRetentionTime)
+            TransitionSettings settings, int defaultCharge, bool isPrecursor, ExplicitTransitionGroupValues explicitAttributes, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
             Text = title;
             _existing = existing;
@@ -64,7 +64,16 @@ namespace pwiz.Skyline.SettingsUI
             _formulaBox.TabIndex = 2;
             textCharge.Visible = labelCharge.Visible = true;
             Charge = defaultCharge;
-            RetentionTime = explicitRetentionTime;
+            if (explicitRetentionTime == null)
+            {
+                RetentionTime = null;
+                RetentionTimeWindow = null;
+            }
+            else
+            {
+                RetentionTime = explicitRetentionTime.RetentionTime;
+                RetentionTimeWindow = explicitRetentionTime.RetentionTimeWindow;
+            }
             if (!isPrecursor)
             {
                 groupBoxOptionalValues.Visible = false;
@@ -98,6 +107,29 @@ namespace pwiz.Skyline.SettingsUI
                 CollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
                 DriftTimeMsec = resultExplicitTransitionGroupValues.DriftTimeMsec;
                 DriftTimeHighEnergyOffsetMsec = resultExplicitTransitionGroupValues.DriftTimeHighEnergyOffsetMsec;
+            }
+        }
+
+        public ExplicitRetentionTimeInfo ResultRetentionTimeInfo
+        {
+            get
+            {
+                return RetentionTime.HasValue
+                    ? new ExplicitRetentionTimeInfo(RetentionTime.Value, RetentionTimeWindow)
+                    : null;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    RetentionTime = value.RetentionTime;
+                    RetentionTimeWindow = value.RetentionTimeWindow; 
+                }
+                else
+                {
+                    RetentionTime = null;
+                    RetentionTimeWindow = null; 
+                }
             }
         }
 
@@ -151,6 +183,12 @@ namespace pwiz.Skyline.SettingsUI
             set { textRetentionTime.Text = EmptyForNullOrNonPositive(value); }
         }
 
+        public double? RetentionTimeWindow
+        {
+            get { return NullForEmpty(textRetentionTimeWindow.Text); }
+            set { textRetentionTimeWindow.Text = EmptyForNullOrNonPositive(value); }
+        }
+
         public double? DriftTimeMsec
         {
             get { return NullForEmpty(textDriftTimeMsec.Text); }
@@ -181,6 +219,12 @@ namespace pwiz.Skyline.SettingsUI
             int charge;
             if (!helper.ValidateSignedNumberTextBox(textCharge, _minCharge, _maxCharge, out charge))
                 return;
+            if (RetentionTimeWindow.HasValue && !RetentionTime.HasValue)
+            {
+                helper.ShowTextBoxError(textRetentionTimeWindow,
+                    Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_);
+                return;
+            }
             Charge = charge; // Note: order matters here, this settor indirectly updates _formulaBox.MonoMass when formula is empty
             if (string.IsNullOrEmpty(_formulaBox.Formula))
             {

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -179,6 +182,324 @@
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="textDriftTimeMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textDriftTimeMsec.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 147</value>
+  </data>
+  <data name="textDriftTimeMsec.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textDriftTimeMsec.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="textDriftTimeMsec.ToolTip" xml:space="preserve">
+    <value>Overrides any predicted drift time value</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeMsec.Name" xml:space="preserve">
+    <value>textDriftTimeMsec</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeMsec.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeMsec.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeMsec.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelDriftTimeMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelDriftTimeMsec.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDriftTimeMsec.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelDriftTimeMsec.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 127</value>
+  </data>
+  <data name="labelDriftTimeMsec.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 17</value>
+  </data>
+  <data name="labelDriftTimeMsec.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelDriftTimeMsec.Text" xml:space="preserve">
+    <value>&amp;Drift time (msec):</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeMsec.Name" xml:space="preserve">
+    <value>labelDriftTimeMsec</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeMsec.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeMsec.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeMsec.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textDriftTimeHighEnergyOffsetMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textDriftTimeHighEnergyOffsetMsec.Location" type="System.Drawing.Point, System.Drawing">
+    <value>164, 147</value>
+  </data>
+  <data name="textDriftTimeHighEnergyOffsetMsec.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textDriftTimeHighEnergyOffsetMsec.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="textDriftTimeHighEnergyOffsetMsec.ToolTip" xml:space="preserve">
+    <value>A small (usually negative) value applied to product ions to compensate for slightly faster flight due to kinetic energy added in post-drift fragmentation</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Name" xml:space="preserve">
+    <value>textDriftTimeHighEnergyOffsetMsec</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.Location" type="System.Drawing.Point, System.Drawing">
+    <value>161, 127</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.Size" type="System.Drawing.Size, System.Drawing">
+    <value>203, 17</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelDriftTimeHighEnergyOffsetMsec.Text" xml:space="preserve">
+    <value>High energy drift &amp;offset (msec):</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.Name" xml:space="preserve">
+    <value>labelDriftTimeHighEnergyOffsetMsec</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="textRetentionTime.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 47</value>
+  </data>
+  <data name="textRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textRetentionTime.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textRetentionTime.ToolTip" xml:space="preserve">
+    <value>Overrides any predicted retention time value</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
+    <value>textRetentionTime</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelRetentionTime.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelRetentionTime.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelRetentionTime.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 27</value>
+  </data>
+  <data name="labelRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 17</value>
+  </data>
+  <data name="labelRetentionTime.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelRetentionTime.Text" xml:space="preserve">
+    <value>&amp;Retention time:</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.Name" xml:space="preserve">
+    <value>labelRetentionTime</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="textRetentionTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>164, 47</value>
+  </data>
+  <data name="textRetentionTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textRetentionTimeWindow.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="textRetentionTimeWindow.ToolTip" xml:space="preserve">
+    <value>This value is only useful when there is an explicit retention time value.</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.Name" xml:space="preserve">
+    <value>textRetentionTimeWindow</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="labelRetentionTimeWindow.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelRetentionTimeWindow.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelRetentionTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>161, 27</value>
+  </data>
+  <data name="labelRetentionTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 17</value>
+  </data>
+  <data name="labelRetentionTimeWindow.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelRetentionTimeWindow.Text" xml:space="preserve">
+    <value>Retention time &amp;window:</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.Name" xml:space="preserve">
+    <value>labelRetentionTimeWindow</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="labelCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCollisionEnergy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 77</value>
+  </data>
+  <data name="labelCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 17</value>
+  </data>
+  <data name="labelCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelCollisionEnergy.Text" xml:space="preserve">
+    <value>Collision &amp;energy:</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.Name" xml:space="preserve">
+    <value>labelCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="textCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 97</value>
+  </data>
+  <data name="textCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
+    <value>Overrides any predicted or library collision energy value</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
+    <value>textCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="groupBoxOptionalValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 250</value>
+  </data>
+  <data name="groupBoxOptionalValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>356, 186</value>
+  </data>
+  <data name="groupBoxOptionalValues.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="groupBoxOptionalValues.Text" xml:space="preserve">
+    <value>Explicit values (optional)</value>
+  </data>
+  <data name="&gt;&gt;groupBoxOptionalValues.Name" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;groupBoxOptionalValues.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxOptionalValues.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxOptionalValues.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="textCharge.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 210</value>
@@ -282,266 +603,14 @@
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="labelCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>161, 35</value>
-  </data>
-  <data name="labelCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>108, 17</value>
-  </data>
-  <data name="labelCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="labelCollisionEnergy.Text" xml:space="preserve">
-    <value>Collision &amp;energy</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Name" xml:space="preserve">
-    <value>labelCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="textCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>164, 52</value>
-  </data>
-  <data name="textCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted or library collision energy value</value>
-  </data>
-  <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
-    <value>textCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;textCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCollisionEnergy.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="textDriftTimeMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textDriftTimeMsec.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 104</value>
-  </data>
-  <data name="textDriftTimeMsec.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textDriftTimeMsec.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="textDriftTimeMsec.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted drift time value</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeMsec.Name" xml:space="preserve">
-    <value>textDriftTimeMsec</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeMsec.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeMsec.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeMsec.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="labelDriftTimeMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelDriftTimeMsec.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDriftTimeMsec.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 84</value>
-  </data>
-  <data name="labelDriftTimeMsec.Size" type="System.Drawing.Size, System.Drawing">
-    <value>111, 17</value>
-  </data>
-  <data name="labelDriftTimeMsec.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="labelDriftTimeMsec.Text" xml:space="preserve">
-    <value>&amp;Drift time (msec)</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeMsec.Name" xml:space="preserve">
-    <value>labelDriftTimeMsec</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeMsec.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeMsec.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeMsec.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="textDriftTimeHighEnergyOffsetMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textDriftTimeHighEnergyOffsetMsec.Location" type="System.Drawing.Point, System.Drawing">
-    <value>164, 104</value>
-  </data>
-  <data name="textDriftTimeHighEnergyOffsetMsec.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textDriftTimeHighEnergyOffsetMsec.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="textDriftTimeHighEnergyOffsetMsec.ToolTip" xml:space="preserve">
-    <value>A small (usually negative) value applied to product ions to compensate for slightly faster flight due to kinetic energy added in post-drift fragmentation</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Name" xml:space="preserve">
-    <value>textDriftTimeHighEnergyOffsetMsec</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="labelDriftTimeHighEnergyOffsetMsec.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelDriftTimeHighEnergyOffsetMsec.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDriftTimeHighEnergyOffsetMsec.Location" type="System.Drawing.Point, System.Drawing">
-    <value>161, 84</value>
-  </data>
-  <data name="labelDriftTimeHighEnergyOffsetMsec.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 17</value>
-  </data>
-  <data name="labelDriftTimeHighEnergyOffsetMsec.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="labelDriftTimeHighEnergyOffsetMsec.Text" xml:space="preserve">
-    <value>High energy drift &amp;offset (msec)</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.Name" xml:space="preserve">
-    <value>labelDriftTimeHighEnergyOffsetMsec</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelDriftTimeHighEnergyOffsetMsec.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="textRetentionTime.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 52</value>
-  </data>
-  <data name="textRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textRetentionTime.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="textRetentionTime.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted retention time value</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
-    <value>textRetentionTime</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="labelRetentionTime.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelRetentionTime.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 35</value>
-  </data>
-  <data name="labelRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>99, 17</value>
-  </data>
-  <data name="labelRetentionTime.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="labelRetentionTime.Text" xml:space="preserve">
-    <value>&amp;Retention time</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.Name" xml:space="preserve">
-    <value>labelRetentionTime</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="groupBoxOptionalValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 250</value>
-  </data>
-  <data name="groupBoxOptionalValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>356, 143</value>
-  </data>
-  <data name="groupBoxOptionalValues.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="groupBoxOptionalValues.Text" xml:space="preserve">
-    <value>Optional Values</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Name" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>383, 405</value>
+    <value>383, 448</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

@@ -711,4 +711,7 @@
   <data name="ExplicitRetentionTime">
     <value>Explicit Retention Time</value>
   </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>Explicit Retention Time Window</value>
+  </data>
 </root>

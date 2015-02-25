@@ -217,6 +217,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 xml += GetColXml("Precursor.ExplicitCollisionEnergy");
                 xml += GetColXml("Precursor.Peptide.ExplicitRetentionTime");
+                xml += GetColXml("Precursor.Peptide.ExplicitRetentionTimeWindow");
                 // Note: not including drift time info by default
             }
             xml += GetColXml("ProductMz");
@@ -388,6 +389,7 @@ namespace pwiz.Skyline.Model.Databinding
                         columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
                         columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
                         columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTime"));
+                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTimeWindow"));
                     }
                     addRoot = true;
                 }

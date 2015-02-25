@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
@@ -52,60 +51,62 @@ namespace pwiz.SkylineTestFunctional
         private void TestMixedDoc()
         {
             // Try a mixed document
-            DataGridViewColumn colProductIonFormula;
-            DataGridViewColumn colFragmentIon;
-            var documentGrid = GetDocumentGridAndColumns("mixed.sky",
+            const string mixedSky = "mixed.sky";
+            CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List,
-                49, 26, out colProductIonFormula, out colFragmentIon);
-            RunUI(() =>
-            {
-                var productIonFormula = documentGrid.DataGridView.Rows[0].Cells[colProductIonFormula.Index].Value.ToString();
-                Assert.AreEqual(productIonFormula, "C19H33");
-                var frag = documentGrid.DataGridView.Rows[1].Cells[colFragmentIon.Index].Value.ToString();
-                Assert.AreEqual("y", frag);
-                documentGrid.Close();
-            });
+                49, 27, "C19H33", "custom");
+
+            CheckDocumentGridAndColumns(mixedSky,
+                Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
+                4, 21);
+
+            CheckDocumentGridAndColumns(mixedSky,
+                Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+                2, 16);
+
         }
 
         private void TestSmallMoleculeOnlyDoc()
         {
             // Try a small-molecule-only document
-            DataGridViewColumn colProductIonFormula;
-            DataGridViewColumn colFragmentIon;
-            var documentGrid = GetDocumentGridAndColumns("small_molecule.sky", 
+            const string smallMoleculeSky = "small_molecule.sky";
+            CheckDocumentGridAndColumns(smallMoleculeSky, 
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                1, 11, out colProductIonFormula, out colFragmentIon);
-            Assert.IsNull(colFragmentIon);
-            RunUI(() =>
-            {
-                var productIonFormula = documentGrid.DataGridView.Rows[0].Cells[colProductIonFormula.Index].Value.ToString();
-                Assert.AreEqual(productIonFormula, "C19H33");
-                documentGrid.Close();
-            });
+                1, 12, "C19H33");
+
+            CheckDocumentGridAndColumns(smallMoleculeSky,
+                Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
+                1, 19);
+
+            CheckDocumentGridAndColumns(smallMoleculeSky,
+                Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+                1, 12);
+
         }
 
         private void TestPeptideOnlyDoc()
         {
             // Try a peptide-only document
-            DataGridViewColumn colProductIonFormula;
-            DataGridViewColumn colFragmentIon;
-            var documentGrid = GetDocumentGridAndColumns("peptide.sky",
+            const string peptideSky = "peptide.sky";
+            CheckDocumentGridAndColumns(peptideSky,
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List,
-                48, 21, out colProductIonFormula, out colFragmentIon);
-            Assert.IsNull(colProductIonFormula);
-            RunUI(() =>
-            {
-                var frag = documentGrid.DataGridView.Rows[0].Cells[colFragmentIon.Index].Value.ToString();
-                Assert.AreEqual("y", frag);
-                documentGrid.Close();
-            });
+                48, 21, null, "y");
+
+            CheckDocumentGridAndColumns(peptideSky,
+                            Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
+                            3, 18);
+
+            CheckDocumentGridAndColumns(peptideSky,
+                            Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+                            1, 12);
+
         }
 
-        private DocumentGridForm GetDocumentGridAndColumns(string docName, 
+        private void CheckDocumentGridAndColumns(string docName,
             string viewName,
             int rowCount, int colCount,  // Expected row and column count for document grid
-            out DataGridViewColumn colProductIonFormula, 
-            out DataGridViewColumn colFragmentIon)
+            string expectedProductIonFormula = null,
+            string expectedFragmentIon = null)
         {
             var oldDoc = SkylineWindow.Document;
             OpenDocument(docName);
@@ -115,9 +116,24 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => documentGrid.ChooseView(viewName));
             WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
             WaitForCondition(() => (documentGrid.ColumnCount == colCount)); // Let it initialize
-            colProductIonFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductIonFormula"));
-            colFragmentIon = documentGrid.FindColumn(PropertyPath.Parse("FragmentIonType"));
-            return documentGrid;
+
+            var colProductIonFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductIonFormula"));
+            var colFragmentIon = documentGrid.FindColumn(PropertyPath.Parse("FragmentIonType"));
+            if (expectedProductIonFormula == null)
+                Assert.IsNull(colProductIonFormula);
+            else RunUI(() =>
+            {
+                var formula = documentGrid.DataGridView.Rows[0].Cells[colProductIonFormula.Index].Value.ToString();
+                Assert.AreEqual(expectedProductIonFormula, formula);
+            });
+            if (expectedFragmentIon == null)
+                Assert.IsNull(colFragmentIon);
+            else RunUI(() =>
+            {
+                var frag = documentGrid.DataGridView.Rows[0].Cells[colFragmentIon.Index].Value.ToString();
+                Assert.AreEqual(expectedFragmentIon, frag);
+            });
+            RunUI(() => documentGrid.Close());
         }
 
     }  

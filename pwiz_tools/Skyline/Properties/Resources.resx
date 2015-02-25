@@ -8180,6 +8180,9 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_" xml:space="preserve">
     <value>Invalid retention time value {0}</value>
   </data>
+  <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_" xml:space="preserve">
+    <value>Invalid retention time window value {0}</value>
+  </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_" xml:space="preserve">
     <value>Invalid drift time value {0}</value>
   </data>
@@ -8204,6 +8207,9 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time" xml:space="preserve">
     <value>Explicit Retention Time</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window" xml:space="preserve">
+    <value>Explicit Retention Time Window</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy" xml:space="preserve">
     <value>Explicit Collision Energy</value>
@@ -8249,5 +8255,8 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="Peptide_ThrowIfNotSmallMolecule_Direct_editing_of_this_value_is_only_supported_for_small_molecules_" xml:space="preserve">
     <value>Direct editing of this value is only supported for small molecules.</value>
+  </data>
+  <data name="Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_" xml:space="preserve">
+    <value>Explicit retention time window requires an explicit retention time value.</value>
   </data>
 </root>
