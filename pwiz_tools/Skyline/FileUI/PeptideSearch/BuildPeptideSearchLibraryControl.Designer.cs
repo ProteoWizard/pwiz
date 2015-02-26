@@ -32,6 +32,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.textCutoff = new System.Windows.Forms.TextBox();
+            this.grpWorkflow = new System.Windows.Forms.GroupBox();
+            this.radioDIA = new System.Windows.Forms.RadioButton();
+            this.radioPRM = new System.Windows.Forms.RadioButton();
+            this.radioDDA = new System.Windows.Forms.RadioButton();
             this.cbFilterForDocumentPeptides = new System.Windows.Forms.CheckBox();
             this.btnRemFile = new System.Windows.Forms.Button();
             this.listSearchFiles = new System.Windows.Forms.ListBox();
@@ -41,6 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer.Panel1.SuspendLayout();
             this.peptideSearchSplitContainer.Panel2.SuspendLayout();
             this.peptideSearchSplitContainer.SuspendLayout();
+            this.grpWorkflow.SuspendLayout();
             this.SuspendLayout();
             // 
             // peptideSearchSplitContainer
@@ -56,6 +61,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // peptideSearchSplitContainer.Panel2
             // 
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.grpWorkflow);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbFilterForDocumentPeptides);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.btnRemFile);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.listSearchFiles);
@@ -71,6 +77,35 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.textCutoff, "textCutoff");
             this.textCutoff.Name = "textCutoff";
+            // 
+            // grpWorkflow
+            // 
+            resources.ApplyResources(this.grpWorkflow, "grpWorkflow");
+            this.grpWorkflow.Controls.Add(this.radioDIA);
+            this.grpWorkflow.Controls.Add(this.radioPRM);
+            this.grpWorkflow.Controls.Add(this.radioDDA);
+            this.grpWorkflow.Name = "grpWorkflow";
+            this.grpWorkflow.TabStop = false;
+            // 
+            // radioDIA
+            // 
+            resources.ApplyResources(this.radioDIA, "radioDIA");
+            this.radioDIA.Name = "radioDIA";
+            this.radioDIA.UseVisualStyleBackColor = true;
+            // 
+            // radioPRM
+            // 
+            resources.ApplyResources(this.radioPRM, "radioPRM");
+            this.radioPRM.Name = "radioPRM";
+            this.radioPRM.UseVisualStyleBackColor = true;
+            // 
+            // radioDDA
+            // 
+            resources.ApplyResources(this.radioDDA, "radioDDA");
+            this.radioDDA.Checked = true;
+            this.radioDDA.Name = "radioDDA";
+            this.radioDDA.TabStop = true;
+            this.radioDDA.UseVisualStyleBackColor = true;
             // 
             // cbFilterForDocumentPeptides
             // 
@@ -117,6 +152,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.peptideSearchSplitContainer)).EndInit();
             this.peptideSearchSplitContainer.ResumeLayout(false);
+            this.grpWorkflow.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -131,6 +167,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button btnAddFile;
         private System.Windows.Forms.CheckBox cbFilterForDocumentPeptides;
+        private System.Windows.Forms.GroupBox grpWorkflow;
+        private System.Windows.Forms.RadioButton radioDDA;
+        private System.Windows.Forms.RadioButton radioDIA;
+        private System.Windows.Forms.RadioButton radioPRM;
 
     }
 }

@@ -19,6 +19,7 @@
 
 using System.Windows.Forms;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Controls.Startup
@@ -29,7 +30,9 @@ namespace pwiz.Skyline.Controls.Startup
     {
         public enum DataType
         {
-            peptide_search,
+            peptide_search_dda,
+            peptide_search_prm,
+            peptide_search_dia,
             fasta,
             transition_list,
             proteins,
@@ -60,12 +63,25 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void OpenSkylineStartupSettingsUI(SkylineWindow skylineWindow)
         {
-            if (ImportType == DataType.peptide_search)
+            ImportPeptideSearchDlg.Workflow? importPeptideSearchType = null;
+            switch (ImportType)
+            {
+                case DataType.peptide_search_dda:
+                    importPeptideSearchType = ImportPeptideSearchDlg.Workflow.dda;
+                    break;
+                case DataType.peptide_search_prm:
+                    importPeptideSearchType = ImportPeptideSearchDlg.Workflow.prm;
+                    break;
+                case DataType.peptide_search_dia:
+                    importPeptideSearchType = ImportPeptideSearchDlg.Workflow.dia;
+                    break;
+            }
+            if (importPeptideSearchType.HasValue)
             {
                 if (FilePath != null)
                     skylineWindow.LoadFile(FilePath);
                 skylineWindow.ResetDefaultSettings();
-                skylineWindow.ShowImportPeptideSearchDlg();
+                skylineWindow.ShowImportPeptideSearchDlg(importPeptideSearchType.Value);
                 return;
             }
 

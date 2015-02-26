@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
             // Cancel out of wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.ClickCancelButton();
             });
 
@@ -208,7 +208,7 @@ namespace pwiz.SkylineTestFunctional
             // Click next
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.ms1_full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.ClickNextButton();
             });
             WaitForDocumentChange(doc);

@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -863,29 +864,27 @@ namespace pwiz.Skyline.SettingsUI
             label.Text = labelText;
         }
 
-        public void ModifyOptionsForImportPeptideSearchWizard()
+        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
         {
-            // Set up precursor charges input.
-            textPrecursorCharges.Text =
-                SkylineWindow.Document.Settings.TransitionSettings.Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
-            int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
-            lblPrecursorCharges.Top = groupBoxMS1.Top;
-            textPrecursorCharges.Top -= precursorChargesTopDifference;
-            textPrecursorCharges.Visible = true;
-            lblPrecursorCharges.Visible = true;
-
-            // Reduce and reposition MS1 filtering groupbox.
+            // Reduce MS1 filtering groupbox
             int precursorChargesShift = groupBoxMS2.Top - groupBoxMS1.Bottom;
             labelEnrichments.Hide();
             comboEnrichments.Hide();
             groupBoxMS1.Height = textPrecursorIsotopeFilter.Bottom + groupBoxMS1.Height - comboEnrichments.Bottom;
-            groupBoxMS1.Top = textPrecursorCharges.Bottom + precursorChargesShift;
 
-            // Hide MS/MS filtering groupbox entirely.
-            groupBoxMS2.Hide();
+            if (workflow == ImportPeptideSearchDlg.Workflow.dda)
+            {
+                // Set up precursor charges input
+                textPrecursorCharges.Text = SkylineWindow.Document.Settings.TransitionSettings.Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
+                int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
+                lblPrecursorCharges.Top = groupBoxMS1.Top;
+                textPrecursorCharges.Top -= precursorChargesTopDifference;
+                textPrecursorCharges.Show();
+                lblPrecursorCharges.Show();
 
-            // Reduce and reposition Retention time filtering groupbox.
-            groupBoxRetentionTimeToKeep.Top = groupBoxMS1.Bottom + precursorChargesShift;
+                // Reposition MS1 filtering groupbox
+                groupBoxMS1.Top = textPrecursorCharges.Bottom + precursorChargesShift;
+            }
 
             int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
             int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
@@ -897,6 +896,32 @@ namespace pwiz.Skyline.SettingsUI
             // Select defaults
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
             radioTimeAroundMs2Ids.Checked = true;
+
+            int nextGroupBoxTop = groupBoxMS1.Bottom + precursorChargesShift;
+            if (workflow != ImportPeptideSearchDlg.Workflow.dda)
+            {
+                groupBoxMS2.Top = nextGroupBoxTop;
+                groupBoxRetentionTimeToKeep.Top = groupBoxMS2.Bottom + precursorChargesShift;
+
+                AcquisitionMethod = (workflow == ImportPeptideSearchDlg.Workflow.dia)
+                    ? FullScanAcquisitionMethod.DIA
+                    : FullScanAcquisitionMethod.Targeted;
+
+                ProductMassAnalyzer = PrecursorMassAnalyzer;
+
+                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1)
+                {
+                    comboIsolationScheme.SelectedIndex = 1;
+                }
+            }
+            else
+            {
+                // Hide MS/MS filtering groupbox entirely.
+                groupBoxMS2.Hide();
+
+                // Reduce and reposition Retention time filtering groupbox.
+                groupBoxRetentionTimeToKeep.Top = nextGroupBoxTop;
+            }
         }
 
         private void radioTimeAroundMs2Ids_CheckedChanged(object sender, EventArgs e)

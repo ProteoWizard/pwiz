@@ -44,19 +44,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             spectra_page,
             chromatograms_page,
             match_modifications_page,
-            ms1_full_scan_settings_page,
+            transition_settings_page,
+            full_scan_settings_page,
             import_fasta_page
         }
+
+        public enum Workflow
+        {
+            dda,
+            prm,
+            dia
+        };
 
         public class SpectraPage : IFormView { }
         public class ChromatogramsPage : IFormView { }
         public class MatchModsPage : IFormView { }
+        public class TransitionSettingsPage : IFormView { }
         public class Ms1FullScanPage : IFormView { }
         public class FastaPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new SpectraPage(), new ChromatogramsPage(), new MatchModsPage(), new Ms1FullScanPage(), new FastaPage()
+            new SpectraPage(), new ChromatogramsPage(), new MatchModsPage(), new TransitionSettingsPage(), new Ms1FullScanPage(), new FastaPage()
         };
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
@@ -74,61 +83,61 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Create and add wizard pages
             BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(SkylineWindow, libraryManager)
-                                     {
-                                         Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                                         Location = new Point(2, 50)
-                                     };
+            {
+                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Location = new Point(2, 50)
+            };
             BuildPepSearchLibControl.InputFilesChanged += BuildPepSearchLibForm_OnInputFilesChanged;
             buildSearchSpecLibPage.Controls.Add(BuildPepSearchLibControl);
 
             ImportFastaControl = new ImportFastaControl(SkylineWindow)
-                                      {
-                                          Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                                          Location = new Point(2, 60)
-                                      };
+            {
+                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Location = new Point(2, 60)
+            };
             importFastaPage.Controls.Add(ImportFastaControl);
 
             MatchModificationsControl = new MatchModificationsControl(SkylineWindow)
-                                            {
-                                                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                                                Location = new Point(2, 60)
-                                            };
+            {
+                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Location = new Point(2, 60)
+            };
             matchModificationsPage.Controls.Add(MatchModificationsControl);
 
+            TransitionSettingsControl = new TransitionSettingsControl(SkylineWindow)
+            {
+                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Location = new Point(18, 60)
+            };
+            transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
+
             FullScanSettingsControl = new FullScanSettingsControl(SkylineWindow)
-                                           {
-                                               Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                                               Location = new Point(18, 50)
-                                           };
-            FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard();
+            {
+                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Location = new Point(18, 50)
+            };
             ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
 
             ImportResultsControl = new ImportResultsControl(SkylineWindow)
-                                        {
-                                            Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                                            Location = new Point(2, 60)
-                                        };
-            ImportResultsControl.ResultsFilesChanged += ImportResultsControl_OnResultsFilesChanged;
-            getChromatogramsPage.Controls.Add(ImportResultsControl);
+            {
+                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Location = new Point(2, 60)
+            };
+            getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
 
             _pagesToSkip = new HashSet<Pages>();
+        }
 
-            if (SkylineWindow.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabledMsMs)
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType)
+            : this(skylineWindow, libraryManager)
+        {
+            BuildPepSearchLibControl.ForceWorkflow(workflowType);
+
+            if (workflowType == Workflow.dda)
             {
-                MessageDlg.Show(skylineWindow, Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_);
-                using (TransitionSettingsUI ts = new TransitionSettingsUI(SkylineWindow) { TabControlSel = TransitionSettingsUI.TABS.FullScan })
-                {
-                    switch (ts.ShowDialog(SkylineWindow))
-                    {
-                        case DialogResult.OK:
-                            // At this point the dialog does everything by itself.
-                            _pagesToSkip.Add(Pages.ms1_full_scan_settings_page);
-                            break;
-                        default:
-                            Load += (obj, e) => CloseWizard(DialogResult.Cancel);
-                            return;
-                    }
-                }
+                int shortHeight = MinimumSize.Height - 110;
+                MinimumSize = new Size(MinimumSize.Width, shortHeight);
+                Height = shortHeight;
             }
         }
 
@@ -138,11 +147,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public BuildPeptideSearchLibraryControl BuildPepSearchLibControl { get; private set; }
         public ImportFastaControl ImportFastaControl { get; private set; }
+        public TransitionSettingsControl TransitionSettingsControl { get; private set; }
         public FullScanSettingsControl FullScanSettingsControl { get; private set; }
-        public ImportResultsControl ImportResultsControl { get; private set; }
+        public IImportResultsControl ImportResultsControl { get; private set; }
         public MatchModificationsControl MatchModificationsControl { get; private set; }
 
         private Library DocLib { get { return BuildPepSearchLibControl.DocLib; } }
+        public Workflow WorkflowType { get { return BuildPepSearchLibControl.WorkflowType; } }
 
         private bool FastaOptional { get { return !BuildPepSearchLibControl.FilterForDocumentPeptides && SkylineWindow.Document.PeptideCount > 0; } }
         private Pages LastPage
@@ -222,7 +233,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_;
 
                         // The next page is going to be the chromatograms page.
-                        ImportResultsControl.InitializeChromatogramsPage(DocLib);
+                        var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
+
+                        if (WorkflowType != Workflow.dia)
+                        {
+                            oldImportResultsControl.InitializeChromatogramsPage(DocLib);
+
+                            if (WorkflowType == Workflow.dda)
+                            {
+                                _pagesToSkip.Add(Pages.transition_settings_page);
+                            }
+                        }
+                        else
+                        {
+                            // DIA workflow, replace old ImportResultsControl
+                            ImportResultsControl = new ImportResultsDIAControl(SkylineWindow)
+                            {
+                                Anchor = oldImportResultsControl.Anchor,
+                                Location = oldImportResultsControl.Location
+                            };
+                            getChromatogramsPage.Controls.Remove(oldImportResultsControl);
+                            getChromatogramsPage.Controls.Add((Control)ImportResultsControl);
+                        }
+                        ImportResultsControl.ResultsFilesChanged += ImportResultsControl_OnResultsFilesChanged;
+
+                        // Set up full scan settings page
+                        TransitionSettingsControl.Initialize(WorkflowType);
+                        FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType);
 
                         if (!MatchModificationsControl.Initialize(DocLib))
                             _pagesToSkip.Add(Pages.match_modifications_page);
@@ -233,14 +270,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 case Pages.chromatograms_page:
                     {
-                        if (!BuildPepSearchLibControl.VerifyRetentionTimes(ImportResultsControl.FoundResultsFilesPaths))
+                        if (!BuildPepSearchLibControl.VerifyRetentionTimes(ImportResultsControl.FoundResultsFiles.Select(f => f.Path)))
                         {
                             MessageDlg.Show(this, TextUtil.LineSeparate(Resources.ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_,
                                 Resources.ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_));
                             CloseWizard(DialogResult.Cancel);
                         }
 
-                        if (ImportResultsControl.MissingResultsFiles.Count > 0)
+                        if (ImportResultsControl.ResultsFilesMissing)
                         {
                             if (MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
                                 Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
@@ -251,7 +288,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         if (ImportResultsControl.FoundResultsFiles.Count > 1)
                         {
-                            string prefix = ImportResultsDlg.GetCommonPrefix(ImportResultsControl.FoundResultsFilesNames);
+                            string prefix = ImportResultsDlg.GetCommonPrefix(ImportResultsControl.FoundResultsFiles.Select(f => f.Name));
                             if (prefix.Length >= ImportResultsDlg.MIN_COMMON_PREFIX_LENGTH)
                             {
                                 using (var dlgName = new ImportResultsNameDlg(prefix))
@@ -264,12 +301,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     else if (result == DialogResult.Yes)
                                     {
                                         // Rename all the replicates to remove the specified prefix.
-                                        for (int i = 0; i < ImportResultsControl.FoundResultsFiles.Count; ++i)
-                                        {
-                                            var namedSet = ImportResultsControl.FoundResultsFiles[i];
-                                            ImportResultsControl.FoundResultsFiles[i] = new KeyValuePair<string, string[]>(
-                                                namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
-                                        }
+                                        ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
+                                            new FoundResultsFile(f.Name.Substring(dlgName.Prefix.Length), f.Path)).ToList();
                                     }
                                 }
                             }
@@ -287,7 +320,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     break;
 
-                case Pages.ms1_full_scan_settings_page:
+                case Pages.transition_settings_page:
+                    // Try to accept changes to transition settings
+                    if (!UpdateTransitionSettings())
+                    {
+                        return;
+                    }
+                    break;
+
+                case Pages.full_scan_settings_page:
                     // Try to accept changes to MS1 full-scan settings
                     if (!UpdateFullScanSettings())
                     {
@@ -303,25 +344,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         WizardFinish();
                     }
-
                     return;
             }
 
             Pages newPage = CurrentPage + 1;
 
-            // Initialize modifications page or skip if no modifications.
-            if (newPage == Pages.match_modifications_page && _pagesToSkip.Contains(Pages.match_modifications_page))
+            while (_pagesToSkip.Contains(newPage))
             {
                 ++newPage;
             }
-            if (newPage == Pages.ms1_full_scan_settings_page && _pagesToSkip.Contains(Pages.ms1_full_scan_settings_page))
-            {
-                // If the user has already set up full-scan settings, then just continue, since
-                // they may have any kind of settings, like PRM or DIA
-                ++newPage;
-            }
+
             // Skip import FASTA if user filters for document peptides
-            if (newPage == Pages.import_fasta_page && _pagesToSkip.Contains(Pages.import_fasta_page))
+            if (newPage > Pages.import_fasta_page)
             {
                 WizardFinish();
                 return;
@@ -332,6 +366,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 btnNext.Text = Resources.ImportPeptideSearchDlg_NextPage_Finish;
             }
+        }
+
+        private bool UpdateTransitionSettings()
+        {
+            TransitionSettings newTransitionSettings = TransitionSettingsControl.GetTransitionSettings(this);
+            if (newTransitionSettings == null)
+                return false;
+
+            // Only update, if anything changed
+            Helpers.AssignIfEquals(ref newTransitionSettings, TransitionSettings);
+            return Equals(newTransitionSettings, TransitionSettings) || SkylineWindow.ChangeSettings(SkylineWindow.DocumentUI.Settings.ChangeTransitionSettings(newTransitionSettings), true);
         }
 
         private bool UpdateFullScanSettings()
@@ -362,18 +407,34 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-
-
-            int[] precursorCharges;
-            if (!helper.ValidateNumberListTextBox(FullScanSettingsControl.PrecursorChargesTextBox, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
-                return false;
-            precursorCharges = precursorCharges.Distinct().ToArray();
-            var filter = TransitionSettings.Filter.ChangePrecursorCharges(precursorCharges);
-            if (!filter.IonTypes.Contains(IonType.precursor))
+            TransitionFilter filter = TransitionSettings.Filter;
+            if (FullScanSettingsControl.PrecursorChargesTextBox.Visible)
+            {
+                int[] precursorCharges;
+                if (!helper.ValidateNumberListTextBox(FullScanSettingsControl.PrecursorChargesTextBox, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
+                    return false;
+                precursorCharges = precursorCharges.Distinct().ToArray();
+                filter = TransitionSettings.Filter.ChangePrecursorCharges(precursorCharges);
+            }
+            if (WorkflowType == Workflow.dda && !filter.IonTypes.Contains(IonType.precursor))
                 filter = filter.ChangeIonTypes(new[] {IonType.precursor});
             if (!filter.AutoSelect)
                 filter = filter.ChangeAutoSelect(true);
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
+
+            if (FullScanSettingsControl.IsDIA() && filter.ExclusionUseDIAWindow)
+            {
+                if (FullScanSettingsControl.IsolationScheme.IsAllIons)
+                {
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precusor_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_);
+                    return false;
+                }
+                if (FullScanSettingsControl.IsolationScheme.FromResults)
+                {
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolation_scheme_with_prespecified_windows_);
+                    return false;
+                }
+            }
 
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
@@ -405,7 +466,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             return true;
-
         }
 
         private void ShowEarlyFinish(bool show)
@@ -416,7 +476,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void WizardFinish()
         {
             // Import results only on "finish"
-            ImportResultsControl.GetPeptideSearchChromatograms();
+            SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
+                doc =>
+                {
+                    KeyValuePair<string, MsDataFileUri[]>[] namedResults =
+                        ImportResultsControl.FoundResultsFiles.Select(
+                            kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] {new MsDataFilePath(kvp.Path)}))
+                            .ToArray();
+                    return SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE);
+                });
             CloseWizard(DialogResult.OK);
         }
 

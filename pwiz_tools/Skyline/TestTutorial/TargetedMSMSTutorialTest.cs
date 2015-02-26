@@ -329,12 +329,8 @@ namespace pwiz.SkylineTestTutorial
 
             //p. 12 Import Full-Scan Data
             // Launch import peptide search wizard
-            var fullScanWarningDlg = ShowDialog<MessageDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
-            Assert.AreEqual(Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_,
-                            fullScanWarningDlg.Message);
-
-            var fullScanSettingsDlg = ShowDialog<TransitionSettingsUI>(fullScanWarningDlg.OkDialog);
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(fullScanSettingsDlg.OkDialog);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm);
 
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page", 15);
 
@@ -384,8 +380,24 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(importResultsNameDlg.YesDialog);
 
-            // Modificatios and full-scan settings are already set up, so those
-            // pages should get skipped.
+            // Modifications are already set up, so that page should get skipped.
+
+            // We're on the "Configure Transition Settings" page of the wizard.
+            // We've already set up these settings, so just click next.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            // We're on the "Configure Full-Scan Settings" page of the wizard.
+            // We've already set up these settings, so just click next.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
 
             // Add FASTA also skipped because filter for document peptides was chosen.
 

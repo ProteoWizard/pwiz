@@ -10875,6 +10875,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Browse for Results Files.
+        /// </summary>
+        public static string ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files {
+            get {
+                return ResourceManager.GetString("ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The current document does not appear to have enough transitions to require multiple injections.
         ///Are you sure you want to continue?.
         /// </summary>
@@ -18712,6 +18721,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to save to the temporary file {0}.
+        /// </summary>
+        public static string ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_ {
+            get {
+                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the" +
+                        "_temporary_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The transition count {0} exceeds the maximum allowed for this instrument type.
+        /// </summary>
+        public static string ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type {
+            get {
+                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_" +
+                        "the_maximum_allowed_for_this_instrument_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected response {0} from Shimadzu method converter.
+        /// </summary>
+        public static string ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter {
+            get {
+                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shim" +
+                        "adzu_method_converter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Index is out of range.
         /// </summary>
         public static string SizedSet_Add_SizedSet_index_value_is_out_of_range {
@@ -21875,6 +21914,46 @@ namespace pwiz.Skyline.Properties {
         public static string StartPage_getBoxPanels_targetedmsms {
             get {
                 return ResourceManager.GetString("StartPage_getBoxPanels_targetedmsms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import DIA+DDA Peptide Search.
+        /// </summary>
+        public static string StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import PRM Peptide Search.
+        /// </summary>
+        public static string StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the Skyline Import Peptide Search wizard to build a spectral library from peptide search results on DIA data, and then import the raw data to quantify peptides using Skyline MS1 Filtering..
+        /// </summary>
+        public static string StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DIA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_ {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_bui" +
+                        "ld_a_spectral_library_from_peptide_search_results_on_DIA_data__and_then_import_t" +
+                        "he_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the Skyline Import Peptide Search wizard to build a spectral library from peptide search results on PRM data, and then import the raw data to quantify peptides using Skyline MS1 Filtering..
+        /// </summary>
+        public static string StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_PRM_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_ {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_bui" +
+                        "ld_a_spectral_library_from_peptide_search_results_on_PRM_data__and_then_import_t" +
+                        "he_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_", resourceCulture);
             }
         }
         
@@ -25203,9 +25282,29 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap WizardPeptideSearch {
+        public static System.Drawing.Bitmap WizardPeptideSearchDDA {
             get {
-                object obj = ResourceManager.GetObject("WizardPeptideSearch", resourceCulture);
+                object obj = ResourceManager.GetObject("WizardPeptideSearchDDA", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardPeptideSearchDIA {
+            get {
+                object obj = ResourceManager.GetObject("WizardPeptideSearchDIA", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardPeptideSearchPRM {
+            get {
+                object obj = ResourceManager.GetObject("WizardPeptideSearchPRM", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

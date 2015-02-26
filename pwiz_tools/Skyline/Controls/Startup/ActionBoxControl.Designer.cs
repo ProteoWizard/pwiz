@@ -83,7 +83,7 @@
             this.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Name = "ActionBoxControl";
             this.Padding = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            this.Size = new System.Drawing.Size(180, 182);
+            this.Size = new System.Drawing.Size(182, 182);
             this.Click += new System.EventHandler(this.ControlClick);
             this.MouseEnter += new System.EventHandler(this.ControlMouseEnter);
             this.MouseLeave += new System.EventHandler(this.ControlMouseLeave);

@@ -51,11 +51,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.buildSpectralLibraryTitlePanel = new System.Windows.Forms.Panel();
             this.label14 = new System.Windows.Forms.Label();
             this.getChromatogramsPage = new System.Windows.Forms.TabPage();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.extractChromatogramsTitlePanel = new System.Windows.Forms.Panel();
             this.label20 = new System.Windows.Forms.Label();
             this.matchModificationsPage = new System.Windows.Forms.TabPage();
             this.addModsTitlePanel = new System.Windows.Forms.Panel();
             this.label16 = new System.Windows.Forms.Label();
+            this.transitionSettingsUiPage = new System.Windows.Forms.TabPage();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
             this.ms1FullScanSettingsPage = new System.Windows.Forms.TabPage();
             this.ms1FullScanSettingsTitlePanel = new System.Windows.Forms.Panel();
             this.label19 = new System.Windows.Forms.Label();
@@ -66,9 +69,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
             this.getChromatogramsPage.SuspendLayout();
-            this.panel1.SuspendLayout();
+            this.extractChromatogramsTitlePanel.SuspendLayout();
             this.matchModificationsPage.SuspendLayout();
             this.addModsTitlePanel.SuspendLayout();
+            this.transitionSettingsUiPage.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.ms1FullScanSettingsPage.SuspendLayout();
             this.ms1FullScanSettingsTitlePanel.SuspendLayout();
             this.importFastaPage.SuspendLayout();
@@ -209,6 +214,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPagesImportPeptideSearch.Controls.Add(this.buildSearchSpecLibPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.getChromatogramsPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.matchModificationsPage);
+            this.wizardPagesImportPeptideSearch.Controls.Add(this.transitionSettingsUiPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.ms1FullScanSettingsPage);
             this.wizardPagesImportPeptideSearch.Controls.Add(this.importFastaPage);
             this.wizardPagesImportPeptideSearch.Name = "wizardPagesImportPeptideSearch";
@@ -239,18 +245,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // getChromatogramsPage
             // 
             this.getChromatogramsPage.BackColor = System.Drawing.Color.Transparent;
-            this.getChromatogramsPage.Controls.Add(this.panel1);
+            this.getChromatogramsPage.Controls.Add(this.extractChromatogramsTitlePanel);
             resources.ApplyResources(this.getChromatogramsPage, "getChromatogramsPage");
             this.getChromatogramsPage.Name = "getChromatogramsPage";
             this.getChromatogramsPage.UseVisualStyleBackColor = true;
             // 
-            // panel1
+            // extractChromatogramsTitlePanel
             // 
-            this.panel1.BackColor = System.Drawing.Color.GhostWhite;
-            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.panel1.Controls.Add(this.label20);
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.Name = "panel1";
+            this.extractChromatogramsTitlePanel.BackColor = System.Drawing.Color.GhostWhite;
+            this.extractChromatogramsTitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.extractChromatogramsTitlePanel.Controls.Add(this.label20);
+            resources.ApplyResources(this.extractChromatogramsTitlePanel, "extractChromatogramsTitlePanel");
+            this.extractChromatogramsTitlePanel.Name = "extractChromatogramsTitlePanel";
             // 
             // label20
             // 
@@ -278,6 +284,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.label16, "label16");
             this.label16.ForeColor = System.Drawing.SystemColors.ControlText;
             this.label16.Name = "label16";
+            // 
+            // transitionSettingsUiPage
+            // 
+            this.transitionSettingsUiPage.Controls.Add(this.panel1);
+            resources.ApplyResources(this.transitionSettingsUiPage, "transitionSettingsUiPage");
+            this.transitionSettingsUiPage.Name = "transitionSettingsUiPage";
+            this.transitionSettingsUiPage.UseVisualStyleBackColor = true;
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.GhostWhite;
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panel1.Controls.Add(this.label1);
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Name = "panel1";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label1.Name = "label1";
             // 
             // ms1FullScanSettingsPage
             // 
@@ -339,11 +366,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.buildSpectralLibraryTitlePanel.ResumeLayout(false);
             this.buildSpectralLibraryTitlePanel.PerformLayout();
             this.getChromatogramsPage.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.extractChromatogramsTitlePanel.ResumeLayout(false);
+            this.extractChromatogramsTitlePanel.PerformLayout();
             this.matchModificationsPage.ResumeLayout(false);
             this.addModsTitlePanel.ResumeLayout(false);
             this.addModsTitlePanel.PerformLayout();
+            this.transitionSettingsUiPage.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ms1FullScanSettingsPage.ResumeLayout(false);
             this.ms1FullScanSettingsTitlePanel.ResumeLayout(false);
             this.ms1FullScanSettingsTitlePanel.PerformLayout();
@@ -382,11 +412,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Label lblFasta;
         private System.Windows.Forms.Panel ms1FullScanSettingsTitlePanel;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel extractChromatogramsTitlePanel;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Button btnEarlyFinish;
         private System.Windows.Forms.Panel buildSpectralLibraryTitlePanel;
         private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.TabPage transitionSettingsUiPage;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label label1;
 
     }
 }

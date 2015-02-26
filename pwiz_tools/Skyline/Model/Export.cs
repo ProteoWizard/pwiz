@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -37,7 +38,6 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Shimadzu.LabSolutions.MethodConverter;
 
-// ReSharper disable NonLocalizedString
 namespace pwiz.Skyline.Model
 {
 // ReSharper disable InconsistentNaming
@@ -1106,8 +1106,8 @@ namespace pwiz.Skyline.Model
 
     public class ShimadzuNativeMassListExporter : ShimadzuMassListExporter
     {
-        public const string EXT_SHIMADZU_TRANSITION_LIST = ".txt";
-        public const string EXE_BUILD_TSQ_METHOD = @"Method\Thermo\BuildTSQEZMethod"; // Not L10N
+        public const string EXT_SHIMADZU_TRANSITION_LIST = ".txt"; // Not L10N
+//        public const string EXE_BUILD_TSQ_METHOD = @"Method\Thermo\BuildTSQEZMethod"; // Not L10N
 
         public ShimadzuNativeMassListExporter(SrmDocument document)
             : base(document)
@@ -1137,13 +1137,13 @@ namespace pwiz.Skyline.Model
                     switch (result)
                     {
                         case ConverterResult.CannotOpenOutputFile:
-                            throw new IOException(string.Format("Failure attempting to save to the temporary file {0}", fs.SafeName));
+                            throw new IOException(string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_, fs.SafeName));
                         case ConverterResult.MaxTransitionError:
-                            throw new ArgumentException(string.Format("The transition count {0} exceeds the maximum allowed for this instrument type", tranList.Split('\n').Length));
+                            throw new ArgumentException(string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type, tranList.Split('\n').Length));
                         case ConverterResult.InputCannotBeParsed:
                         case ConverterResult.InputIsEmpty:
                         case ConverterResult.InvalidParameter:
-                            Assume.Fail(string.Format("Unexpected response {0} from Shimadzu method converter", result));   // Not L10N
+                            Assume.Fail(string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter, result));
                             break;
                     }
                     fs.Commit();
@@ -1244,7 +1244,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write("Qual Ratio 5"); // Not L10N
             writer.Write(FieldSeparator);
-            writer.Write("GUID (Dont fill this Column)");
+            writer.Write("GUID (Dont fill this Column)"); // Not L10N
 
             writer.WriteLine();
         }
@@ -1268,7 +1268,7 @@ namespace pwiz.Skyline.Model
             double rtWindow;
             double? rt = Document.Settings.PeptideSettings.Prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out rtWindow);
-            writer.Write(rt.HasValue ? rt.ToString() : "");
+            writer.Write(rt.HasValue ? rt.ToString() : string.Empty);
             writer.Write(FieldSeparator);
             // Retention Time Window
             writer.Write(rtWindow);
@@ -1288,16 +1288,16 @@ namespace pwiz.Skyline.Model
             }
             writer.Write(FieldSeparator);
             // Scan Type
-            writer.Write("MRM");
+            writer.Write("MRM"); // Not L10N
             writer.Write(FieldSeparator);
             // Polarity
-            writer.Write("Positive");
+            writer.Write("Positive"); // Not L10N
             writer.Write(FieldSeparator);
             // Scan Time (ms)
-            writer.Write("100");
+            writer.Write("100"); // Not L10N
             writer.Write(FieldSeparator);
             // Separation Method
-            writer.Write("LCMS");
+            writer.Write("LCMS"); // Not L10N
             writer.Write(FieldSeparator);
             // Source
             writer.Write(FieldSeparator);
@@ -1331,7 +1331,7 @@ namespace pwiz.Skyline.Model
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             // Dwell Time
-            writer.Write(DwellTime.HasValue ? DwellTime.ToString() : "");
+            writer.Write(DwellTime.HasValue ? DwellTime.ToString() : string.Empty);
             writer.Write(FieldSeparator);
             // Is Quantifier
             writer.Write(1);
@@ -1903,7 +1903,9 @@ namespace pwiz.Skyline.Model
         private void EnsureAnalyst(IProgressMonitor progressMonitor)
         {
             string analystPath = AdvApi.GetPathFromProgId("Analyst.MassSpecMethod.1"); // Not L10N
-            string analystDir = (analystPath != null ? Path.GetDirectoryName(analystPath) : null);
+            string analystDir = null;
+            if (analystPath != null)
+                analystDir = Path.GetDirectoryName(analystPath);
 
             if (analystDir == null)
             {

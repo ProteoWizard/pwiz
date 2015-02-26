@@ -3293,7 +3293,7 @@ Are you sure you want to continue?</value>
   <data name="PeptideDocNodeToString__0__rank__1__" xml:space="preserve">
     <value>{0} (rank {1})</value>
   </data>
-    <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
+  <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
     <value>Results found in document with no replicates.</value>
   </data>
   <data name="AddIrtCalculatorDlgOkDialogThe_file__0__does_not_exist" xml:space="preserve">
@@ -7564,7 +7564,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="WizardPeptideIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="WizardPeptideSearch" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="WizardPeptideSearchDDA" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideSearch.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WizardTransitionIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -8081,13 +8081,13 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold" xml:space="preserve">
     <value>0.05 significance threshold</value>
   </data>
-    <data name="LossInclusionExtension_LOCALIZED_VALUES_Matching_Library" xml:space="preserve">
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Matching_Library" xml:space="preserve">
     <value>Matching Library</value>
   </data>
-    <data name="LossInclusionExtension_LOCALIZED_VALUES_Never" xml:space="preserve">
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Never" xml:space="preserve">
     <value>Never</value>
   </data>
-    <data name="LossInclusionExtension_LOCALIZED_VALUES_Always" xml:space="preserve">
+  <data name="LossInclusionExtension_LOCALIZED_VALUES_Always" xml:space="preserve">
     <value>Always</value>
   </data>
   <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_" xml:space="preserve">
@@ -8099,7 +8099,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions" xml:space="preserve">
     <value>Mismatched transitions</value>
   </data>
-    <data name="SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__" xml:space="preserve">
+  <data name="SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__" xml:space="preserve">
     <value>The document format version {0} is newer than the version {1} supported by {2}.</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Product_Name" xml:space="preserve">
@@ -8258,5 +8258,35 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_" xml:space="preserve">
     <value>Explicit retention time window requires an explicit retention time value.</value>
+  </data>
+  <data name="StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search" xml:space="preserve">
+    <value>Import PRM Peptide Search</value>
+  </data>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
+    <value>Import DIA+DDA Peptide Search</value>
+  </data>
+  <data name="ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files" xml:space="preserve">
+    <value>Browse for Results Files</value>
+  </data>
+  <data name="StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DIA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_" xml:space="preserve">
+    <value>Use the Skyline Import Peptide Search wizard to build a spectral library from peptide search results on DIA data, and then import the raw data to quantify peptides using Skyline MS1 Filtering.</value>
+  </data>
+  <data name="StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_PRM_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_" xml:space="preserve">
+    <value>Use the Skyline Import Peptide Search wizard to build a spectral library from peptide search results on PRM data, and then import the raw data to quantify peptides using Skyline MS1 Filtering.</value>
+  </data>
+  <data name="WizardPeptideSearchDIA" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardPeptideSearchDIA.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardPeptideSearchPRM" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardPeptideSearchPRM.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+    <data name="ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_" xml:space="preserve">
+    <value>Failure attempting to save to the temporary file {0}</value>
+  </data>
+    <data name="ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type" xml:space="preserve">
+    <value>The transition count {0} exceeds the maximum allowed for this instrument type</value>
+  </data>
+    <data name="ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter" xml:space="preserve">
+    <value>Unexpected response {0} from Shimadzu method converter</value>
   </data>
 </root>

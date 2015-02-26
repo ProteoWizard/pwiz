@@ -73,6 +73,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public Library DocLib { get; private set; }
         private LibrarySpec DocLibrarySpec { get; set; }
 
+        public ImportPeptideSearchDlg.Workflow WorkflowType
+        {
+            get
+            {
+                if (radioPRM.Checked)
+                    return ImportPeptideSearchDlg.Workflow.prm;
+                if (radioDIA.Checked)
+                    return ImportPeptideSearchDlg.Workflow.dia;
+                return ImportPeptideSearchDlg.Workflow.dda;
+            }
+            set
+            {
+                switch (value)
+                {
+                    case ImportPeptideSearchDlg.Workflow.prm:
+                        radioPRM.Checked = true;
+                        break;
+                    case ImportPeptideSearchDlg.Workflow.dia:
+                        radioDIA.Checked = true;
+                        break;
+                    default:
+                        radioDDA.Checked = true;
+                        break;
+                }
+            }
+        }
+
         public bool FilterForDocumentPeptides
         {
             get { return cbFilterForDocumentPeptides.Checked; }
@@ -311,7 +338,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 stream.CloseStream();
         }
 
-        public bool VerifyRetentionTimes(List<string> resultsFiles)
+        public bool VerifyRetentionTimes(IEnumerable<string> resultsFiles)
         {
             foreach (var resultsFile in resultsFiles)
             {
@@ -326,6 +353,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             return true;
+        }
+
+        public void ForceWorkflow(ImportPeptideSearchDlg.Workflow workflowType)
+        {
+            WorkflowType = workflowType;
+            grpWorkflow.Hide();
+            int offset = grpWorkflow.Height + (cbFilterForDocumentPeptides.Top - listSearchFiles.Bottom);
+            listSearchFiles.Height += offset;
+            cbFilterForDocumentPeptides.Top += offset;
         }
 
         public class InputFilesChangedEventArgs : EventArgs

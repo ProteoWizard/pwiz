@@ -483,7 +483,7 @@
       <Value Profile="(Default)">20</Value>
     </Setting>
     <Setting Name="StartPageSize" Type="System.Drawing.Size" Scope="User">
-      <Value Profile="(Default)">678, 648</Value>
+      <Value Profile="(Default)">872, 648</Value>
     </Setting>
     <Setting Name="StartPageLocation" Type="System.Drawing.Point" Scope="User">
       <Value Profile="(Default)">0, 0</Value>

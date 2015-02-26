@@ -259,7 +259,7 @@ namespace pwiz.SkylineTestFunctional
             Directory.CreateDirectory(TestContext.TestDir);
 
             var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.TestImportAction(ActionImport.DataType.peptide_search,
+            RunUI(() => startPage.TestImportAction(ActionImport.DataType.peptide_search_dda,
                 TestFilesDir.GetTestPath("StartPageTest.sky")));
             WaitForOpenForm<SkylineWindow>();
             var peptideSearchDlg = WaitForOpenForm<ImportPeptideSearchDlg>();
@@ -316,7 +316,7 @@ namespace pwiz.SkylineTestFunctional
             var startPage = ShowDialog<StartPage>(skylineWindow.OpenStartPage);
             RunUI(() => Assert.AreEqual(startPage.SelectedTab, StartPage.TABS.Wizard));
             var peptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() =>
-                startPage.TestImportAction(ActionImport.DataType.peptide_search,
+                startPage.TestImportAction(ActionImport.DataType.peptide_search_dda,
                     TestFilesDir.GetTestPath("StartPageTest.sky")));
             OkDialog(peptideSearchDlg, peptideSearchDlg.CancelDialog);
             RunUI(() => SkylineWindow.SaveDocument());

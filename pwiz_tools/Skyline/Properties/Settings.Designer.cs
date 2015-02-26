@@ -1950,7 +1950,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("678, 648")]
+        [global::System.Configuration.DefaultSettingValueAttribute("872, 648")]
         public global::System.Drawing.Size StartPageSize {
             get {
                 return ((global::System.Drawing.Size)(this["StartPageSize"]));

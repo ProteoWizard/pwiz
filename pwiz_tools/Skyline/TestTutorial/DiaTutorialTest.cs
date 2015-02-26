@@ -27,9 +27,9 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -142,123 +142,129 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ExportMethodDlg>("Export Isolation List form", 9);
             OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(GetTestPath("DIA_tutorial_isolation_list.csv")));
 
-            // Build spectral library
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI());
-            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library);
-            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form", 11);
-            RunUI(() =>
-            {
-                buildLibraryDlg.LibraryName = "Dia_Tutorial_Library"; // Not L10N
-                buildLibraryDlg.LibraryAuthority = "proteome.gs.washington.edu"; // Not L10N
-                buildLibraryDlg.LibraryPath = GetTestPath("Dia_Tutorial_Library.blib");
-                buildLibraryDlg.OkWizardPage();
-            });
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 13);
-            RunUI(() =>
-            {
-                var ddaFiles = new[]
-                {
-                    "interact-20130311_DDA_Pit01.pep.xml", // Not L10N
-                };
-                var ddaFilesFull = ddaFiles.Select(GetTestPath);
-                buildLibraryDlg.AddInputFiles(ddaFilesFull);
-            });
-            if (IsFullImportMode)
-            {
-                RunUI(buildLibraryDlg.OkWizardPage);
-
-                WaitForConditionUI(() => peptideSettings.AvailableLibraries.Length > 0);
-                RunUI(() =>
-                {
-                    peptideSettings.PickedLibraries = peptideSettings.AvailableLibraries;
-                    Assert.AreEqual(peptideSettings.PickedLibraries.Length, 1);
-                    Assert.AreEqual(peptideSettings.PickedLibraries[0], "Dia_Tutorial_Library"); // Not L10N
-                });
-                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings form", 14);
-                OkDialog(peptideSettings, peptideSettings.OkDialog);
-                WaitForConditionUI(() => SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded);
-                RunUI(() =>
-                {
-                    SkylineWindow.SaveDocument(GetTestPath(DIA_SETUP_CHECKPOINT));
-                    SkylineWindow.SaveDocument(GetTestPath(DIA_START_CHECKPOINT));
-                });
-            }
-            else
-            {
-                OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
-                OkDialog(peptideSettings, peptideSettings.OkDialog);
-                RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_SETUP_CHECKPOINT)));
-                var peptideSettingsLib = ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI());
-
-                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 14);
-                OkDialog(peptideSettingsLib, peptideSettingsLib.OkDialog);
-            }
-            WaitForDocumentLoaded();
+            // Adjust modifications and filter
+            var newPeptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => newPeptideSettings.AutoSelectMatchingPeptides = true);
+            OkDialog(newPeptideSettings, newPeptideSettings.OkDialog);
 
             // Set up chromatogram retention time restriction
             var newTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => newTransitionSettings.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 5.0));
             PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Retention time filtering options", 16);
+
+            // Adjust library transition ranking
+            RunUI(() =>
+            {
+                newTransitionSettings.SelectedTab = TransitionSettingsUI.TABS.Library;
+                newTransitionSettings.UseLibraryPick = true;
+                newTransitionSettings.Filtered = true;
+            });
+            PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 22);
             OkDialog(newTransitionSettings, newTransitionSettings.OkDialog);
+            PauseForScreenShot<SequenceTreeForm>("Targets pane with precursors and best 5 transitions only", 23);
 
-            // Adjust modifications and filter
-            var newPeptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
-            {
-                newPeptideSettings.AutoSelectMatchingPeptides = true;
-                newPeptideSettings.SelectedTab = PeptideSettingsUI.TABS.Modifications;
-            });
-            var editModificationsDlg = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(newPeptideSettings.EditStaticMods);
-            var addModificationDlg = ShowDialog<EditStaticModDlg>(editModificationsDlg.AddItem);
-            const string carbamidoMod = StaticModList.DEFAULT_NAME;
-            RunUI(() => addModificationDlg.SetModification(carbamidoMod)); // Not L10N
-            PauseForScreenShot<EditStaticModDlg>("Add fixed modification", 17);
-            OkDialog(addModificationDlg, addModificationDlg.OkDialog);
-            OkDialog(editModificationsDlg, editModificationsDlg.OkDialog);
-            RunUI(() =>
-            {
-                newPeptideSettings.PickedStaticMods = new[] {carbamidoMod};
-            });
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", 18);
-            OkDialog(newPeptideSettings, newPeptideSettings.OkDialog);
+            // Build spectral library using Import Peptide Search
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT)));
 
-            var filterTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            // "Build Spectral Library" page
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() => SkylineWindow.ShowImportPeptideSearchDlg());
             RunUI(() =>
             {
-                filterTransitionSettings.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                filterTransitionSettings.PrecursorCharges = "1, 2, 3, 4"; // Not L10N
-                filterTransitionSettings.ProductCharges = "1, 2"; // Not L10N
-                filterTransitionSettings.FragmentTypes = "y, b, p"; // Not L10N
-                filterTransitionSettings.SetAutoSelect = true;
-                filterTransitionSettings.SetDIAExclusionWindow = true;
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
-            PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 19);
-            OkDialog(filterTransitionSettings, filterTransitionSettings.OkDialog);
+            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 10);
 
-            // Import .fasta file with 30 peptides
+            const string prefixKeep = "DIA_Pit0";
+            if (IsFullImportMode)
+            {
+                SrmDocument doc = SkylineWindow.Document;
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+                doc = WaitForDocumentChange(doc);
+
+                // "Extract Chromatograms" page
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                    importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles =
+                        _importFiles.Select(f => new FoundResultsFile(f, GetTestPath(f + ExtensionTestContext.ExtThermoRaw))).ToList();
+                });
+                var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+                RunUI(() =>
+                {
+                    string prefix = importResultsNameDlg.Prefix;
+                    Assert.IsTrue(prefix.EndsWith(prefixKeep));
+                    importResultsNameDlg.Prefix = prefix.Substring(0, prefix.Length - prefixKeep.Length);
+                    importResultsNameDlg.YesDialog();
+                });
+                WaitForClosedForm(importResultsNameDlg);
+
+                // "Add Modifications" page
+                RunUI(() =>
+                {
+                    const string modCarbamidomethyl = "Carbamidomethyl (C)";
+                    const string modOxidation = "Oxidation (M)";
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                    // Define expected matched/unmatched modifications
+                    var expectedMatched = new[] {modCarbamidomethyl, modOxidation};
+                    // Verify matched/unmatched modifications
+                    AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
+                    Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
+                    importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = new[] { modCarbamidomethyl };
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+                WaitForDocumentChange(doc);
+                
+                // "Configure Transition Settings" page
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                    importPeptideSearchDlg.TransitionSettingsControl.PrecursorCharges = new[] {1, 2, 3, 4};
+                    importPeptideSearchDlg.TransitionSettingsControl.IonCharges = new[] {1, 2};
+                    importPeptideSearchDlg.TransitionSettingsControl.IonTypes = new[] { IonType.y, IonType.b, IonType.precursor };
+                    importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
+                    importPeptideSearchDlg.TransitionSettingsControl.IonCount = 5;
+                    importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.05;
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+
+                // "Configure Full-Scan Settings" page
+                RunUI(() =>
+                {
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+
+                // "Import FASTA" page
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("pituitary_database.fasta"));
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+
+                WaitForClosedForm(importPeptideSearchDlg);
+                WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 10 minutes
+
+                RunUI(() =>
+                {
+                    SkylineWindow.SaveDocument(GetTestPath(DIA_IMPORTED_CHECKPOINT));
+                    SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT));
+                });
+            }
+            else
+            {
+                OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.CancelDialog);
+                RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_IMPORTED_CHECKPOINT)));
+            }
+            WaitForDocumentLoaded();
+            WaitForGraphs();
+
             RunUI(() =>
             {
-                SkylineWindow.ImportFastaFile(GetTestPath("pituitary_database.fasta"));
                 SkylineWindow.ExpandPrecursors();
                 SkylineWindow.Size = new Size(750, 788);
             });
-            RestoreViewOnScreen(21);
-            PauseForScreenShot<SequenceTreeForm>("Targets pane with large transition lists", 21);
-
-            // Adjust library transition ranking
-            var libraryTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() =>
-            {
-                libraryTransitionSettings.SelectedTab = TransitionSettingsUI.TABS.Library;
-                libraryTransitionSettings.UseLibraryPick = true;
-                libraryTransitionSettings.IonCount = 5;
-                libraryTransitionSettings.Filtered = true;
-                libraryTransitionSettings.IonMatchTolerance = 0.05;
-            });
-            PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 22);
-            OkDialog(libraryTransitionSettings, libraryTransitionSettings.OkDialog);
-            PauseForScreenShot<SequenceTreeForm>("Targets pane with precursors and best 5 transitions only", 23);
 
             // Generate decoys
 //            var decoysDlg = ShowDialog<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg);
@@ -271,51 +277,6 @@ namespace pwiz.SkylineTestTutorial
 //            OkDialog(decoysDlg, decoysDlg.OkDialog);
 //            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.PrevNode.Nodes[6]);
 //            PauseForScreenShot<SequenceTreeForm>("Targets pane with decoys added", 25);
-
-            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT)));
-
-            // Import mass spec data
-            const string prefixKeep = "DIA_Pit0";
-            if (IsFullImportMode)
-            {
-                // Import the raw data
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-                RunUI(() =>
-                {
-                    importResultsDlg.RadioAddNewChecked = true;
-                    var path = new KeyValuePair<string, MsDataFileUri[]>[2];
-                    for (int i = 0; i < 2; ++i)
-                    {
-                        path[i] = new KeyValuePair<string, MsDataFileUri[]>(_importFiles[i],
-                                                new[] { MsDataFileUri.Parse(GetTestPath(_importFiles[i] + ExtensionTestContext.ExtThermoRaw)) });
-                    }
-
-                    importResultsDlg.NamedPathSets = path;
-                });
-                var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-                PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix", 24);
-                RunUI(() =>
-                {
-                    string prefix = importResultsNameDlg.Prefix;
-                    Assert.IsTrue(prefix.EndsWith(prefixKeep));
-                    importResultsNameDlg.Prefix = prefix.Substring(0, prefix.Length - prefixKeep.Length);
-                    importResultsNameDlg.YesDialog();
-                });
-                WaitForClosedForm(importResultsNameDlg);
-                WaitForClosedForm(importResultsDlg);
-                WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 10 minutes
-                RunUI(() =>
-                {
-                    SkylineWindow.SaveDocument(GetTestPath(DIA_IMPORTED_CHECKPOINT));
-                    SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT));
-                });
-            }
-            else
-            {
-                RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_IMPORTED_CHECKPOINT)));
-            }
-            WaitForDocumentLoaded();
-            WaitForGraphs();
 
             RunUI(() =>
             {

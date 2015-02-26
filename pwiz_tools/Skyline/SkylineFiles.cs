@@ -2396,20 +2396,27 @@ namespace pwiz.Skyline
             ShowImportPeptideSearchDlg();
         }
 
-        public void ShowImportPeptideSearchDlg()
+        public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
             if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;
             }
 
-            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager))
+            using (var dlg = !workflowType.HasValue
+                   ? new ImportPeptideSearchDlg(this, _libraryManager)
+                   : new ImportPeptideSearchDlg(this, _libraryManager, workflowType.Value))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     // Nothing to do; the dialog does all the work.
                 }
             }
+        }
+
+        public void ShowImportPeptideSearchDlg()
+        {
+            ShowImportPeptideSearchDlg(null);
         }
 
         private bool CheckDocumentExists(String errorMsg)

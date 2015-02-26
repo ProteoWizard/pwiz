@@ -39,14 +39,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily2-64/</InstallUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>7073</ApplicationRevision>
-    <ApplicationVersion>2.6.1.7073</ApplicationVersion>
+    <ApplicationRevision>7171</ApplicationRevision>
+    <ApplicationVersion>2.6.1.7171</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -620,6 +620,13 @@
     <Compile Include="FileUI\MProphetFeaturesDlg.Designer.cs">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\IImportResultsControl.cs" />
+    <Compile Include="FileUI\PeptideSearch\ImportResultsDIAControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ImportResultsDIAControl.Designer.cs">
+      <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -649,6 +656,12 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\ImportResultsControl.Designer.cs">
       <DependentUpon>ImportResultsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\TransitionSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\TransitionSettingsControl.Designer.cs">
+      <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PublishDocumentDlg.cs">
       <SubType>Form</SubType>
@@ -1610,6 +1623,12 @@
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.resx">
+      <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.resx">
+      <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -2083,6 +2102,8 @@
     <EmbeddedResource Include="Resources\Molecule.bmp" />
     <EmbeddedResource Include="Resources\MoleculeList.bmp" />
     <EmbeddedResource Include="Resources\PeptideList.bmp" />
+    <None Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
+    <None Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

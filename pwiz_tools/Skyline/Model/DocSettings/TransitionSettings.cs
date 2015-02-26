@@ -825,7 +825,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attributes
             writer.WriteAttributeString(ATTR.precursor_charges, PrecursorCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
             writer.WriteAttributeString(ATTR.product_charges, ProductCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
-            writer.WriteAttributeString(ATTR.fragment_types, ToStringIonTypes(false));
+            writer.WriteAttributeString(ATTR.fragment_types, ToStringIonTypes(IonTypes, false));
             writer.WriteAttributeString(ATTR.fragment_range_first, FragmentRangeFirstName);
             writer.WriteAttributeString(ATTR.fragment_range_last, FragmentRangeLastName);
             writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
@@ -836,12 +836,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private const string PRECURSOR_ION_CHAR = "p"; // Not L10N
 
-        public string ToStringIonTypes(bool spaces)
+        public static string ToStringIonTypes(IList<IonType> ionTypes, bool spaces)
         {
             string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
             if (spaces)
                 sep += TextUtil.SEPARATOR_SPACE;
-            return IonTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
+            return ionTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
         }
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
