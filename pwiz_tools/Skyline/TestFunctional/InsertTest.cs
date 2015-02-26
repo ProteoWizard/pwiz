@@ -149,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChange(document);
 
             var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            SetClipboardTextUI("LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02");
+            SetClipboardTextUI("LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
             RunUI(() =>
             {
                 pasteDlg.IsMolecule = false;
