@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Model
 
             private bool IsHeavyTypeAllowed(IsotopeLabelType labelType)
             {
-                return Settings.GetPrecursorCalc(labelType, null) != null;
+                return Settings.TryGetPrecursorCalc(labelType, null) != null;
             }
 
             public TransitionImportErrorInfo NextRow(string line, long lineNum)
@@ -807,7 +807,7 @@ namespace pwiz.Skyline.Model
                 foreach (PeptideDocNode nodePep in Peptide.CreateAllDocNodes(settings, sequence))
                 {
                     var mods = nodePep.ExplicitMods;
-                    var calc = settings.GetPrecursorCalc(labelType, mods);
+                    var calc = settings.TryGetPrecursorCalc(labelType, mods);
                     if (calc == null)
                         continue;
 
@@ -967,7 +967,7 @@ namespace pwiz.Skyline.Model
                         var peptideMods = settings.PeptideSettings.Modifications;
                         foreach (var typeMods in peptideMods.GetHeavyModifications())
                         {
-                            if (settings.GetPrecursorCalc(typeMods.LabelType, null) != null)
+                            if (settings.TryGetPrecursorCalc(typeMods.LabelType, null) != null)
                             {
                                 iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence, iDecoy,
                                                            tolerance, provider, settings, out transitionExps);

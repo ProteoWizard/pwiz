@@ -617,10 +617,10 @@ namespace pwiz.Skyline.Model
             string seq = TransitionGroup.Peptide.Sequence;
             int charge = TransitionGroup.PrecursorCharge;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
-            var calc = settings.GetPrecursorCalc(labelType, mods);
+            IPrecursorMassCalc calc = null;
             double mass = TransitionGroup.Peptide.IsCustomIon
                 ? TransitionGroup.Peptide.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType)
-                : calc.GetPrecursorMass(seq);
+                : (calc = settings.GetPrecursorCalc(labelType, mods)).GetPrecursorMass(seq);
             double mz = ( TransitionGroup.Peptide.IsCustomIon ? BioMassCalc.CalculateIonMz(mass, charge) : SequenceMassCalc.GetMZ(mass, charge) ) +
                 SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
             if (TransitionGroup.DecoyMassShift.HasValue)
@@ -631,6 +631,8 @@ namespace pwiz.Skyline.Model
             if (fullScan.IsHighResPrecursor)
             {
                 MassDistribution massDist;
+                if (calc == null)
+                    calc = settings.GetPrecursorCalc(labelType, mods);
                 if (!TransitionGroup.IsCustomIon)
                 {
                     massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);

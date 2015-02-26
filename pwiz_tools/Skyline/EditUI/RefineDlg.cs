@@ -256,11 +256,11 @@ namespace pwiz.Skyline.EditUI
 
         private bool CanAddLabelType(IsotopeLabelType labelType)
         {
-            if (_settings.GetPrecursorCalc(labelType, null) != null)
+            if (_settings.TryGetPrecursorCalc(labelType, null) != null)
                 return true;
 
             return _document.Molecules.Any(nodePep =>
-                _settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods) != null);
+                _settings.TryGetPrecursorCalc(labelType, nodePep.ExplicitMods) != null);
         }
 
         private void btnOK_Click(object sender, EventArgs e)

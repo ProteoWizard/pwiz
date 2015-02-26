@@ -464,9 +464,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             var predictTran = docInfo.Settings.TransitionSettings.Prediction;
 
-            var calcPre = docInfo.Settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePeptide.ExplicitMods);
             string seq = nodeGroup.TransitionGroup.Peptide.TextId; // Returns Sequence for peptides, custom ion name for small molecules
-            string seqModified = nodeGroup.TransitionGroup.Peptide.IsCustomIon ? TextUtil.EXCEL_NA : calcPre.GetModifiedSequence(seq, true);
+            string seqModified = nodeGroup.TransitionGroup.Peptide.IsCustomIon 
+                ? TextUtil.EXCEL_NA 
+                : docInfo.Settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePeptide.ExplicitMods).GetModifiedSequence(seq, true);
 
             TransitionGroup tranGroup = nodeGroup.TransitionGroup;
             IsotopeLabelType labelType = tranGroup.LabelType;

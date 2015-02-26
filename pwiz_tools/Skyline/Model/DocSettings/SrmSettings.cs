@@ -225,14 +225,31 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (labelType.IsLight)
                 return true;
-            return GetPrecursorCalc(labelType, mods) != null;
+            return TryGetPrecursorCalc(labelType, mods) != null;
         }
 
         public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
         {
+            var precursorCalc =  TryGetPrecursorCalc(labelType, mods);
+            if (precursorCalc == null)
+            {
+                // Try to track down this exception:
+                // https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
+                throw new InvalidDataException(
+                    String.Format("unable to locate precursor calculator for isotope label type {0} and mods {1}", // Not L10N
+                        labelType == null ? "(null)" : labelType.ToString(), // Not L10N
+                        mods == null ? "(null)" : mods.ToString())); // Not L10N
+            }
+            return precursorCalc;
+        }
+
+        public IPrecursorMassCalc TryGetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
+        {
             var massCalcBase = GetBaseCalc(labelType, mods, _precursorMassCalcs);
             if (massCalcBase != null)
             {
+                if (mods == null)
+                    return null;
                 // If this type is not explicitly modified, then it must be
                 // heavy with explicit light modifications.
                 if (!mods.IsModified(labelType))

@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model
                 // should be added with another matching isotope label type.
                 var explicitMods = nodePep.ExplicitMods;
                 if (IsLabelTypeRequired(nodePep, nodeGroup, listGroups) &&
-                        document.Settings.GetPrecursorCalc(RefineLabelType, explicitMods) != null)
+                        document.Settings.TryGetPrecursorCalc(RefineLabelType, explicitMods) != null)
                 {
                     // CONSIDER: This is a lot like some code in PeptideDocNode.ChangeSettings
                     Debug.Assert(RefineLabelType != null);  // Keep ReSharper from warning

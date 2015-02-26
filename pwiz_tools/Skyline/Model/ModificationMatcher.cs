@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model
             string seqSimplified = SimplifyUnimodSequence(seq);
             var seqLight = FastaSequence.StripModifications(seqSimplified, FastaSequence.RGX_HEAVY);
             var seqHeavy = FastaSequence.StripModifications(seqSimplified, FastaSequence.RGX_LIGHT);
-            var calcLight = Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods);
+            var calcLight = Settings.TryGetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods);
             foreach (TransitionGroupDocNode nodeGroupChild in nodePep.Children)
             {
                 nodeGroup = nodeGroupChild;
@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var calc = Settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePep.ExplicitMods);
+                    var calc = Settings.TryGetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePep.ExplicitMods);
                     if (calc != null && EqualsModifications(seqHeavy, calc, calcLight))
                         return true;
                 }

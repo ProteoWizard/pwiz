@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Model
             foreach(TransitionGroupDocNode nodeGroupChild in nodePepMod.Children)
             {
                 nodeGroup = nodeGroupChild;
-                var calc = Settings.GetPrecursorCalc(nodeGroupChild.TransitionGroup.LabelType, nodePepMod.ExplicitMods);
+                var calc = Settings.TryGetPrecursorCalc(nodeGroupChild.TransitionGroup.LabelType, nodePepMod.ExplicitMods);
                 if (calc == null)
                     return false;
                 string modSequence = calc.GetModifiedSequence(nodePepMod.Peptide.Sequence, false);

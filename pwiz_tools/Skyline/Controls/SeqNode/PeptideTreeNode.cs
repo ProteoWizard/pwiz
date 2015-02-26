@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static TextSequence CreateTypeTextSequence(PeptideDocNode nodePep, SrmSettings settings,
             IsotopeLabelType labelType, ModFontHolder fonts)
         {
-            var calc = settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods);
+            var calc = settings.TryGetPrecursorCalc(labelType, nodePep.ExplicitMods);
             if (calc == null)
                 return null;
 
@@ -707,7 +707,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 // of this type.
                 if (!nodePep.HasChildType(labelType))
                     continue;
-                var calc = settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods);
+                var calc = settings.TryGetPrecursorCalc(labelType, nodePep.ExplicitMods);
                 if (calc == null)
                     continue;
 
