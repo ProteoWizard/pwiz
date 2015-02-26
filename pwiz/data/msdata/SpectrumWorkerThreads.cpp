@@ -90,16 +90,35 @@ class SpectrumWorkerThreads::Impl
 
         // if the task is already finished and has binary data if getBinaryData is true, return it as-is
         Task& task = tasks_[index];
-        if (task.result && (!getBinaryData || task.hasBinaryData))
+        if (task.result && (!getBinaryData || task.getBinaryData))
             return task.result;
 
         // otherwise, add this task and the numThreads following tasks to the queue (skipping the tasks that are already processed or being worked on)
         for (size_t i = index; taskQueue_.size() < numThreads_ && i < tasks_.size(); ++i)
         {
-            if (tasks_[i].processed())
+            Task& task = tasks_[i];
+
+            // if the task result is already ready
+            if (task.result)
+            {
+                // if it has binary data and getBinaryData is true, the task need not be queued
+                if (task.getBinaryData || !getBinaryData)
+                    continue;
+
+                // otherwise the current result is cleared
+                task.result.reset();
+            }
+            // if the task is already being worked on and the existing task will get binary data or binary data isn't being requested, the task need not be requeued
+            else if (task.worker != NULL && (task.getBinaryData || !getBinaryData))
                 continue;
 
-            taskQueue_.push_back(make_pair(i, getBinaryData));
+            // if the task is already queued, set its getBinaryData variable to the logical OR of the current task and the current spectrum request
+            if (!task.isQueued)
+            {
+                taskQueue_.push_back(i);
+                task.isQueued = true;
+            }
+            task.getBinaryData |= getBinaryData;
         }
 
         // wait for the result to be set
@@ -129,14 +148,12 @@ class SpectrumWorkerThreads::Impl
     // each spectrum in the list is a task
     struct Task
     {
-        Task() : worker(NULL), hasBinaryData(false) {}
-
-        /// returns true iff the task is already done or a worker already owns it
-        bool processed() const { return worker != NULL || result; }
+        Task() : worker(NULL), getBinaryData(false), isQueued(false) {}
 
         TaskWorker* worker; // the thread currently working on this task
         SpectrumPtr result; // the spectrum produced by this task
-        bool hasBinaryData;
+        bool getBinaryData;
+        bool isQueued; // true if the task is currently in the taskQueue
     };
 
     friend struct TaskWorker;
@@ -151,9 +168,11 @@ class SpectrumWorkerThreads::Impl
         // loop until the main thread kills the worker threads; the condition_variable::wait() call is an interruption point
         try
         {
+            boost::unique_lock<boost::mutex> taskLock(instance->taskMutex_, boost::defer_lock);
+
             while (true)
             {
-                boost::unique_lock<boost::mutex> taskLock(instance->taskMutex_);
+                taskLock.lock();
 
                 // wait for a new spectrum to be queued (while the task queue is either empty or the task at the end of the queue already has a worker assigned)
                 while (instance->taskQueue_.empty())
@@ -164,23 +183,29 @@ class SpectrumWorkerThreads::Impl
                 taskQueue.pop_front();
 
                 // set worker pointer on the Task
-                size_t task = queuedTask.first;
-                bool getBinaryData = queuedTask.second;
-                tasks[task].worker = worker;
-
+                size_t taskIndex = queuedTask;
+                Task& task = tasks[taskIndex];
+                bool getBinaryData = task.getBinaryData;
+                task.worker = worker;
+                task.isQueued = false;
+                //cout << taskIndex << " " << task.worker << " " << getBinaryData << endl;
                 // unlock taskLock
                 taskLock.unlock();
 
                 // get the spectrum
-                SpectrumPtr result = instance->sl_.spectrum(task, getBinaryData);
+                SpectrumPtr result = instance->sl_.spectrum(taskIndex, getBinaryData);
 
                 // lock the taskLock
                 taskLock.lock();
 
                 // set the result on the Task, and set its worker to empty
-                tasks[task].result = result;
-                tasks[task].hasBinaryData = getBinaryData;
-                tasks[task].worker = NULL;
+                // if not getting binary data, check if another thread already finished this task which did get binary data
+                if (getBinaryData || !task.getBinaryData)
+                {
+                    task.result = result;
+                    task.getBinaryData = getBinaryData;
+                }
+                task.worker = NULL;
 
                 // notify the main thread that a task has finished
                 instance->taskFinishedCondition_.notify_one();
@@ -188,18 +213,20 @@ class SpectrumWorkerThreads::Impl
                 // add the task to the MRU; if doing so will push an old task off the MRU, then reset the oldest (LRU) task;
                 // to know whether an old task was pushed off, keep a copy of the LRU item before adding the task
                 boost::optional<size_t> lruToReset;
-                if (taskMRU.size() + 1 == taskMRU.max_size())
+                if (taskMRU.size() == taskMRU.max_size())
                 {
-                    if (taskMRU.lru() == task)
-                        throw runtime_error("a task on the MRU list is being repeated; its result should have been available and the task should not have been queued");
                     lruToReset = taskMRU.lru();
                 }
 
-                taskMRU.insert(task);
+                taskMRU.insert(taskIndex);
 
-                // if the MRU list's LRU is different now, it means the LRU was popped and needs to be reset
-                if (lruToReset.is_initialized() && lruToReset.get() != taskMRU.lru())
+                // if the MRU list's LRU is different now, it means the LRU was popped and needs to be reset; if the popped LRU is the current task, don't reset it
+                if (lruToReset.is_initialized() && lruToReset.get() != taskMRU.lru() && lruToReset.get() != taskIndex)
+                {
                     tasks[lruToReset.get()].result.reset();
+                }
+
+                taskLock.unlock();
             }
         }
         catch (boost::thread_interrupted&)
@@ -223,9 +250,9 @@ class SpectrumWorkerThreads::Impl
 
     const size_t maxProcessedTaskCount_;
     vector<Task> tasks_;
-    typedef deque<pair<size_t, bool> > TaskQueue;
+    typedef deque<size_t> TaskQueue;
     TaskQueue taskQueue_;
-    mru_list<size_t> taskMRU_; // responsible for resetting old tasks; shared_ptr is used to avoid calling the dtor on insertion
+    mru_list<size_t> taskMRU_;
     boost::mutex taskMutex_;
     boost::condition_variable taskQueuedCondition_, taskFinishedCondition_;
 
