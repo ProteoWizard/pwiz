@@ -151,19 +151,19 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search,
-                    Icon = Resources.WizardPeptideSearchPRM,
-                    EventAction = () => Import(ActionImport.DataType.peptide_search_prm),
-                    Description =
-                        Resources.StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_PRM_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_
-                },
-                new ActionBoxControl
-                {
                     Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search,
                     Icon = Resources.WizardPeptideSearchDIA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dia),
                     Description =
                         Resources.StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DIA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_
+                },
+                new ActionBoxControl
+                {
+                    Caption = Resources.StartPage_PopulateWizardPanel_Import_PRM_Peptide_Search,
+                    Icon = Resources.WizardPeptideSearchPRM,
+                    EventAction = () => Import(ActionImport.DataType.peptide_search_prm),
+                    Description =
+                        Resources.StartPage_PopulateWizardPanel_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_PRM_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_
                 },
                 new ActionBoxControl
                 {

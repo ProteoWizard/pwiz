@@ -202,7 +202,7 @@
     <value>NoControl</value>
   </data>
   <data name="radioDIA.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 65</value>
+    <value>6, 42</value>
   </data>
   <data name="radioDIA.Size" type="System.Drawing.Size, System.Drawing">
     <value>253, 17</value>
@@ -232,7 +232,7 @@
     <value>NoControl</value>
   </data>
   <data name="radioPRM.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 42</value>
+    <value>6, 65</value>
   </data>
   <data name="radioPRM.Size" type="System.Drawing.Size, System.Drawing">
     <value>253, 17</value>
