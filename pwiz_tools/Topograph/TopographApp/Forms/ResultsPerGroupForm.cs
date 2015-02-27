@@ -334,6 +334,7 @@ namespace pwiz.Topograph.ui.Forms
             var viewContext = new TopographViewContext(Workspace, typeof (DisplayRow), displayRows,
                 GetDefaultViewSpec(halfLifeCalculator.ByProtein));
             bindingSource1.SetViewContext(viewContext, viewInfo);
+            bindingSource1.RowSource = displayRows;
             dataGridViewSummary.Rows.Clear();
             SetSummary("Tracer %", displayRows.Select(dr=>dr.Results).SelectMany(r=>r.Values
                 .Select(cohortResult=>cohortResult.GetResultData().TracerPercentByArea)));

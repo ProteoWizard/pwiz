@@ -97,8 +97,9 @@ namespace pwiz.Topograph.ui.Forms
             {
                 viewInfo = new ViewInfo(ColumnDescriptor.RootColumn(bindingSource1.ViewInfo.DataSchema, typeof(ResultRow)), 
                     GetDefaultViewSpec(calculator.ByProtein));
+                bindingSource1.SetViewContext(GetViewContext(rows), viewInfo);
             }
-            bindingSource1.SetViewContext(GetViewContext(rows), viewInfo);
+            bindingSource1.RowSource = rows;
         }
 
         /// <summary>
