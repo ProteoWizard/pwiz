@@ -44,7 +44,8 @@ namespace pwiz.Topograph.Model
 
         public PeptideFileAnalysisData.PeakSet ToPeakSetData()
         {
-            var peaks = ImmutableList.ValueOf(_peaks.Values.Select(peak=>peak.ToPeakData()));
+            var peaks = ImmutableList.ValueOf(PeptideFileAnalysis.TurnoverCalculator
+                .ListTracerFormulas().Select(formula => _peaks[formula].ToPeakData()));
             return new PeptideFileAnalysisData.PeakSet
                        {
                            DeconvolutionScore = DeconvolutionScore,
