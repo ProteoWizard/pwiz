@@ -508,7 +508,16 @@ namespace pwiz.Skyline.Controls.SeqNode
                     {
                         nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
                         if (nodePep != null)
-                            chosen = peptidesChosen.Contains(nodePep);
+                        {
+                            bool chosenNew = peptidesChosen.Contains(nodePep);
+                            // Need a new font tag, if the chosen state is changing
+                            if (chosenNew != chosen)
+                            {
+                                sb.Append("</font>"); // Not L10N
+                                inPeptide = false;
+                            }
+                            chosen = chosenNew;
+                        }
                     }
                     if (nodePep != null && i >= nodePep.Peptide.Begin)
                     {
@@ -523,11 +532,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     else if (inPeptide)
                     {
                         sb.Append("</font>"); // Not L10N
+                        inPeptide = false;
                     }
                 }
                 sb.Append(aa[i]);
             }
-            sb.Append("</font>"); // Not L10N
+            if (inPeptide)
+                sb.Append("</font>"); // Not L10N
             
 
             data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                

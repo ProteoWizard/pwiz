@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -108,18 +109,33 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(SkylineWindow.CopyMenuItemEnabled(), "Copy menu should not be enabled");
                 Assert.IsTrue(SkylineWindow.PasteMenuItemEnabled());
 
+                // Test FASTA sequence copy HTML formatting
+                sequenceTree.SelectedNode = sequenceTree.Nodes[0];
+                SkylineWindow.Copy();
+                string clipboardHtml = GetClipboardHtml();
+                Assert.AreEqual(4, Regex.Matches(clipboardHtml, "<font style=\"font-weight: bold").Count);
+                Assert.AreEqual(4, Regex.Matches(clipboardHtml, "</font>").Count);
+                Assert.AreEqual(1, Regex.Matches(clipboardHtml, "color: blue").Count);
+
+                sequenceTree.SelectedNode = sequenceTree.Nodes[1];
+                SkylineWindow.Copy();
+                clipboardHtml = GetClipboardHtml();
+                Assert.AreEqual(19, Regex.Matches(clipboardHtml, "<font style=\"font-weight: bold").Count);
+                Assert.AreEqual(19, Regex.Matches(clipboardHtml, "</font>").Count);
+                Assert.AreEqual(2, Regex.Matches(clipboardHtml, "color: blue").Count);
+
+                sequenceTree.SelectedNode = sequenceTree.Nodes[2];
+                SkylineWindow.Copy();
+                clipboardHtml = GetClipboardHtml();
+                Assert.AreEqual(18, Regex.Matches(clipboardHtml, "<font style=\"font-weight: bold").Count);
+                Assert.AreEqual(18, Regex.Matches(clipboardHtml, "</font>").Count);
+                Assert.AreEqual(2, Regex.Matches(clipboardHtml, "color: blue").Count);
+
                 // Test clipboard HTML contains formatting for modified peptides.
                 sequenceTree.SelectedNode = sequenceTree.Nodes[3].Nodes[0];
                 SkylineWindow.Copy();
-                try
-                {
-                    string clipboardHtml = GetClipboardHtml();
-                    Assert.IsTrue(clipboardHtml.Contains("font") && clipboardHtml.Contains("color"));
-                }
-                catch (ExternalException)
-                {
-                    Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
-                }
+                clipboardHtml = GetClipboardHtml();
+                Assert.IsTrue(clipboardHtml.Contains("font") && clipboardHtml.Contains("color"));
             });
 
             // Paste a protein list
@@ -260,26 +276,34 @@ namespace pwiz.SkylineTestFunctional
             htmlSb.AppendLine();
             textSb.AppendLine();
 
-            string clipboardText = null;
-            string clipboardHtml = null;
+            Assert.AreEqual(textSb.ToString(), GetClipboardText());
+            Assert.AreEqual(htmlSb.ToString(), new HtmlFragment(GetClipboardHtml()).Fragment);
+        }
 
+        private static string GetClipboardHtml()
+        {
             try
             {
-                clipboardText = ClipboardEx.GetText();
-                clipboardHtml = GetClipboardHtml();
+                return (string)ClipboardEx.GetData(DataFormats.Html);
             }
             catch (ExternalException)
             {
                 Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
             }
-
-            Assert.AreEqual(textSb.ToString(), clipboardText);
-            Assert.AreEqual(htmlSb.ToString(), new HtmlFragment(clipboardHtml).Fragment);
+            return null;
         }
 
-        private static string GetClipboardHtml()
+        private static string GetClipboardText()
         {
-            return (string)ClipboardEx.GetData(DataFormats.Html);
+            try
+            {
+                return ClipboardEx.GetText();
+            }
+            catch (ExternalException)
+            {
+                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
+            }
+            return null;
         }
 
         private static void AppendText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)
