@@ -24,7 +24,7 @@
 
 #include "quameter.h"
 #include "quameterVersion.hpp"
-#include <boost/lockfree/fifo.hpp>
+#include "boost/lockfree/queue.hpp"
 #include <boost/foreach_field.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/range/algorithm/lower_bound.hpp>
@@ -38,7 +38,7 @@ namespace quameter
 {
     RunTimeConfig*                  g_rtConfig;
 	boost::mutex                    msdMutex;
-    boost::lockfree::fifo<size_t>   metricsTasks;
+    boost::lockfree::queue<size_t>   metricsTasks;
     vector<QuameterInput>           allSources;
 
     void simulateGaussianPeak(double peakStart, double peakEnd,
@@ -100,7 +100,7 @@ namespace quameter
                 << "; time: " << window.preRT << ")";
 		    c.id = "Raw SIC for " + oss.str();
             c.set(MS_SIC_chromatogram);
-		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
+		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
 
             // interpolated raw
             /*{
@@ -115,7 +115,7 @@ namespace quameter
                     << "; time: " << window.preRT << ")";
 		        c.id = "Raw interpolated SIC for " + oss.str();
                 c.set(MS_SIC_chromatogram);
-		        c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
+		        c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
             }*/
 
             CrawdadPeakFinder crawdadPeakFinder;
@@ -136,7 +136,7 @@ namespace quameter
             if (tmp.size() != newRT.size())
                 cerr << "Warning: smoothed intensities vector has different size than MS1RT: " << tmp.size() << " vs. " << newRT.size() << endl;
             else
-                c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_counts);
+                c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_detector_counts);
 
             float baselineIntensity = crawdadPeakFinder.getBaselineIntensity();
             double scaleForMS2Score = baselineIntensity;
@@ -147,7 +147,7 @@ namespace quameter
 	            Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
 	            c2.index = chromatogramListSimple->size()-1;
 	            c2.id = "Crawdad peaks for " + oss.str();
-                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                 BOOST_FOREACH(const Peak& peak, window.peaks)
                 {
@@ -172,7 +172,7 @@ namespace quameter
 	            Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
 	            c2.index = chromatogramListSimple->size()-1;
 	            c2.id = "Best Crawdad peak for " + oss.str();
-                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                 const Peak& peak = *window.bestPeak;
                 simulateGaussianPeak(peak.startTime, peak.endTime,
@@ -191,7 +191,7 @@ namespace quameter
 	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
 	                c2.index = chromatogramListSimple->size()-1;
 	                c2.id = "NIST peak for " + oss.str();
-                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                     const Peak& peak = itr->second;
                     simulateGaussianPeak(peak.startTime, peak.endTime,
@@ -208,7 +208,7 @@ namespace quameter
 	            Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
 	            ms2Chromatogram.index = chromatogramListSimple->size()-1;
 	            ms2Chromatogram.id = "Identified MS2s for " + oss.str();
-		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 vector<double>& ms2Times = ms2Chromatogram.getTimeArray()->data;
                 vector<double>& ms2Intensities = ms2Chromatogram.getIntensityArray()->data;
                 double epsilon = 1e-14;
@@ -251,7 +251,7 @@ namespace quameter
 	            Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
 	            ms2Chromatogram.index = chromatogramListSimple->size()-1;
 	            ms2Chromatogram.id = "Interpolated MS2s for " + oss.str();
-		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 vector<double>& ms2InterpolatedTimes = ms2Chromatogram.getTimeArray()->data;
                 vector<double>& ms2InterpolatedIntensities = ms2Chromatogram.getIntensityArray()->data;
                 double sampleRate = minDiff / 10;
@@ -273,7 +273,7 @@ namespace quameter
             ostringstream oss;
             oss << "precursor m/z: " << info.mzWindow << "; time: " << info.scanTimeWindow;
 		    c.id = "Raw SIC for " + oss.str();
-		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
+		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
 
 
             // for idfree metrics, show peaks
@@ -297,7 +297,7 @@ namespace quameter
                 if (tmp.size() != newRT.size())
                     cerr << "Warning: smoothed intensities vector has different size than MS1RT: " << tmp.size() << " vs. " << newRT.size() << endl;
                 else
-                    c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_counts);
+                    c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_detector_counts);
 
                 float baselineIntensity = crawdadPeakFinder.getBaselineIntensity();
                 double scaleForMS2Score = baselineIntensity;
@@ -308,7 +308,7 @@ namespace quameter
 	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
 	                c2.index = chromatogramListSimple->size()-1;
 	                c2.id = "Crawdad peaks for " + oss.str();
-                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                     BOOST_FOREACH(const Peak& peak, window.peaks)
                     {
@@ -333,7 +333,7 @@ namespace quameter
 	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
 	                c2.index = chromatogramListSimple->size()-1;
 	                c2.id = "Best Crawdad peak for " + oss.str();
-                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                     const Peak& peak = *window.bestPeak;
                     simulateGaussianPeak(peak.startTime, peak.endTime,
@@ -544,7 +544,7 @@ namespace quameter
         }
 
         for(size_t taskID=0; taskID < allSources.size(); ++taskID)
-            metricsTasks.enqueue(taskID);
+            metricsTasks.push(taskID);
 
         g_numWorkers = min((int) allSources.size(), g_numWorkers);
         boost::thread_group workerThreadGroup;
@@ -565,7 +565,7 @@ namespace quameter
             
             while(true)
             {
-                if(!metricsTasks.dequeue(&metricsTask))
+                if(!metricsTasks.pop(metricsTask))
                     break;
                 const QuameterInput &metricsInput = allSources[metricsTask];
                 switch(metricsInput.type)

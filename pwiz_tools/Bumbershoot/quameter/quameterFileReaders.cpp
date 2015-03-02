@@ -446,11 +446,11 @@ void ScanRankerReader::extractData()
             scanInfo.precursorMZ = precMZ;
             scanInfo.precursorMass = precMass;
             scanInfo.charge = charge;
-            precursorInfos.insert(make_pair<string,ScanRankerMS2PrecInfo>(nativeID,scanInfo));
-            bestTagScores.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,bestTagScore));
-            tagMzRanges.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,tagMzRange));
-            scanRankerScores.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,srScore));
-            bestTagTics.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,bestTagTIC));
+            precursorInfos.insert(make_pair(nativeID, scanInfo));
+            bestTagScores.insert(make_pair(scanInfo, bestTagScore));
+            tagMzRanges.insert(make_pair(scanInfo, tagMzRange));
+            scanRankerScores.insert(make_pair(scanInfo, srScore));
+            bestTagTics.insert(make_pair(scanInfo, bestTagTIC));
         }
 
     }while(getline(reader,input));

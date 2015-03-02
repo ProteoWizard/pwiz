@@ -51,7 +51,7 @@
 #                           Default: <PREFIX>
 #
 
-constant BOOST_VERSION : 1 43 0 ;
+constant BOOST_VERSION : 1 56 0 ;
 
 local default_libraries_path = "./freicore/libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
@@ -95,7 +95,7 @@ import feature ;
 import path ;
 
 
-project bumbershoot
+project quameter
 	: requirements
       <include>.
       <include>$(PWIZ_SOURCE)
@@ -116,7 +116,7 @@ project bumbershoot
       <toolset>msvc:<define>WIN32                     # windows
       <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
       <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
-      <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
+      <toolset>msvc,<toolset-msvc:version>10.0:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
       <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
       <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
       <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
@@ -131,11 +131,14 @@ project bumbershoot
       <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
-      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+      <toolset>msvc,<toolset-msvc:version>10.0:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
 
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
-      <toolset>gcc:<cxxflags>-Wno-uninitialized   
+      <toolset>gcc:<cxxflags>-Wno-uninitialized
+
+      # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
+      <toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
 
       # special Cygwin gcc-3.4.4 hack
       # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
@@ -155,6 +158,11 @@ project bumbershoot
 
       # use of boost::thread requires multithreaded runtime
       <threading>multi
+
+      # change boost debug assertions to exceptions by force including Exception.hpp
+      <variant>debug,<toolset>msvc:<cxxflags>/FIpwiz/utility/misc/Exception.hpp
+      <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+      <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
   : build-dir $(BUILD_PATH)
   : default-build
@@ -453,3 +461,6 @@ tar.create $(application-name:L)-src.tar.bz2
 
 import testing ;
 #unit-test InterpolatorTest : InterpolatorTest.cpp spline.cpp ;
+
+#exe SpectrumInterpolator : SpectrumInterpolator.cpp spline.cpp : 
+#      <library>freicore ;
