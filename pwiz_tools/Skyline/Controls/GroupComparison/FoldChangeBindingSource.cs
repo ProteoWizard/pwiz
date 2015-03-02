@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void GroupComparisonModelOnModelChanged(object sender, EventArgs eventArgs)
         {
-            if (null != _bindingListSource)
+            if (null != _bindingListSource && 0 < _referenceCount)
             {
                 Task.Factory.StartNew(() =>
                 {

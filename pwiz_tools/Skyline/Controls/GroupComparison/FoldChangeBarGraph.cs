@@ -21,9 +21,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -34,6 +38,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
     {
         private BindingListSource _bindingListSource;
         private AxisLabelScaler _axisLabelScaler;
+        private CurveItem _barGraph;
+        private FoldChangeBindingSource.FoldChangeRow[] _rows;
+        private SkylineWindow _skylineWindow;
         public FoldChangeBarGraph()
         {
             InitializeComponent();
@@ -61,8 +68,31 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _bindingListSource = FoldChangeBindingSource.GetBindingListSource();
                 _bindingListSource.ListChanged += BindingListSourceOnListChanged;
+                if (_skylineWindow == null)
+                {
+                    _skylineWindow = ((SkylineDataSchema) _bindingListSource.ViewInfo.DataSchema).SkylineWindow;
+                    if (_skylineWindow != null)
+                    {
+                        _skylineWindow.SequenceTree.AfterSelect += SequenceTreeOnAfterSelect;
+                    }
+                }
                 UpdateGraph();
             }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            if (_skylineWindow != null)
+            {
+                _skylineWindow.SequenceTree.AfterSelect -= SequenceTreeOnAfterSelect;
+                _skylineWindow = null;
+            }
+            base.OnHandleDestroyed(e);
+        }
+
+        private void SequenceTreeOnAfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
+        {
+            UpdateGraph();
         }
 
         private void UpdateGraph()
@@ -73,6 +103,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             zedGraphControl.GraphPane.GraphObjList.Clear();
             zedGraphControl.GraphPane.CurveList.Clear();
+            _barGraph = null;
+            _rows = null;
             var points = new PointPairList();
             var groupComparisonModel = FoldChangeBindingSource.GroupComparisonModel;
             var groupComparisonDef = groupComparisonModel.GroupComparisonDef;
@@ -82,36 +114,67 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 sequences.Add(new Tuple<string, bool>(nodePep.RawTextId, nodePep.IsProteomic));
             var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
             var textLabels = new List<string>();
-
-            foreach (var rowItem in _bindingListSource.OfType<RowItem>())
+            var rows = _bindingListSource.OfType<RowItem>()
+                .Select(rowItem => rowItem.Value)
+                .OfType<FoldChangeBindingSource.FoldChangeRow>()
+                .ToArray();
+            bool showLabelType = rows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
+            bool showMsLevel = rows.Select(row => row.MsLevel).Distinct().Count() > 1;
+            foreach (var row in rows)
             {
-                var row = rowItem.Value as FoldChangeBindingSource.FoldChangeRow;
-                if (null == row)
-                {
-                    continue;
-                }
                 var foldChangeResult = row.FoldChangeResult;
-                var point = MeanErrorBarItem.MakePointPair(points.Count, foldChangeResult.Log2FoldChange,
-                    Math.Log(foldChangeResult.MaxFoldChange / foldChangeResult.FoldChange, 2.0));
+                double error = Math.Log(foldChangeResult.MaxFoldChange/foldChangeResult.FoldChange, 2.0);
+                var point = MeanErrorBarItem.MakePointPair(points.Count, foldChangeResult.Log2FoldChange, error);
                 points.Add(point);
+                string label;
                 if (null != row.Peptide)
                 {
-                    string label = uniquePrefixGenerator.GetUniquePrefix(row.Peptide.GetDocNode().RawTextId, row.Peptide.GetDocNode().IsProteomic);
-                    textLabels.Add(label);
+                    label = uniquePrefixGenerator.GetUniquePrefix(row.Peptide.GetDocNode().RawTextId, row.Peptide.GetDocNode().IsProteomic);
                 }
                 else
                 {
-                    textLabels.Add(row.Protein.Name);
+                    label = row.Protein.Name;
+                }
+                if (showMsLevel && row.MsLevel.HasValue)
+                {
+                    label += " MS" + row.MsLevel; // Not L10N;
+                }
+                if (showLabelType && row.IsotopeLabelType != null)
+                {
+                    label += " (" + row.IsotopeLabelType.Title + ")"; // Not L10N
+                }
+                textLabels.Add(label);
+                if (IsSelected(row))
+                {
+                    double y, height;
+                    if (foldChangeResult.Log2FoldChange >= 0)
+                    {
+                        y = foldChangeResult.Log2FoldChange + error;
+                        height = y;
+                    }
+                    else
+                    {
+                        y = 0;
+                        height = error - foldChangeResult.Log2FoldChange;
+                    }
+                    zedGraphControl.GraphPane.GraphObjList.Add(new BoxObj(point.X + .5, y, .99, height)
+                    {
+                        ZOrder = ZOrder.E_BehindCurves,
+                        IsClippedToChartRect = true
+                    });
                 }
             }
             zedGraphControl.GraphPane.XAxis.Title.Text = groupComparisonDef.PerProtein ? GroupComparisonStrings.FoldChangeBarGraph_UpdateGraph_Protein : GroupComparisonStrings.FoldChangeBarGraph_UpdateGraph_Peptide;
             zedGraphControl.GraphPane.YAxis.Title.Text = GroupComparisonStrings.FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change;
-            zedGraphControl.GraphPane.CurveList.Add(new MeanErrorBarItem(null, points, Color.Black, Color.Blue));
+            var barGraph = new MeanErrorBarItem(null, points, Color.Black, Color.Blue);
+            zedGraphControl.GraphPane.CurveList.Add(barGraph);
             zedGraphControl.GraphPane.XAxis.Type = AxisType.Text;
             zedGraphControl.GraphPane.XAxis.Scale.TextLabels = textLabels.ToArray();
             _axisLabelScaler.ScaleAxisLabels();
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.Invalidate();
+            _barGraph = barGraph;
+            _rows = rows;
         }
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
@@ -127,6 +190,85 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _axisLabelScaler.ScaleAxisLabels();
             }
+        }
+
+        private bool zedGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var foldChangeRow = FoldChangeRowFromPoint(e.Location);
+            if (null == foldChangeRow)
+            {
+                return false;
+            }
+            sender.Cursor = Cursors.Hand;
+            return true;
+        }
+
+        private bool zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var foldChangeRow = FoldChangeRowFromPoint(e.Location);
+            if (null == foldChangeRow)
+            {
+                return false;
+            }
+            if (null != foldChangeRow.Peptide)
+            {
+                foldChangeRow.Peptide.LinkValueOnClick(sender, new EventArgs());
+            }
+            else if (null != foldChangeRow.Protein)
+            {
+                foldChangeRow.Protein.LinkValueOnClick(sender, new EventArgs());
+            }
+            else
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private FoldChangeBindingSource.FoldChangeRow FoldChangeRowFromPoint(PointF pt)
+        {
+            if (null == _barGraph || null == _rows)
+            {
+                return null;
+            }
+            CurveItem nearestCurve;
+            int iNearest;
+            if (!zedGraphControl.GraphPane.FindNearestPoint(pt, _barGraph, out nearestCurve, out iNearest))
+            {
+                return null;
+            }
+            if (iNearest < 0 || iNearest >= _rows.Length)
+            {
+                return null;
+            }
+            return _rows[iNearest];
+        }
+
+        private bool IsSelected(FoldChangeBindingSource.FoldChangeRow row)
+        {
+            if (null == _skylineWindow)
+            {
+                return false;
+            }
+            if (row.Peptide != null)
+            {
+                return IsPathSelected(_skylineWindow.SelectedPath, row.Peptide.IdentityPath);
+            }
+            return IsPathSelected(_skylineWindow.SelectedPath, row.Protein.IdentityPath);
+        }
+
+        private bool IsPathSelected(IdentityPath selectedPath, IdentityPath identityPath)
+        {
+            if (selectedPath.Depth < identityPath.Depth)
+            {
+                return false;
+            }
+            return Equals(selectedPath.GetPathTo(identityPath.Depth), identityPath);
+        }
+
+        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
     }
 }
