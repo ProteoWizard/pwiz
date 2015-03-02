@@ -419,7 +419,6 @@ This $(application-name) source tree uses a subset of the full Boost tarball.
   $(ROOT_PATH)/clean.sh
   $(ROOT_PATH)/LICENSE
 
-  $(ROOT_PATH)/boost
   $(LIBRARIES_PATH)/boost-build
   $(LIBRARIES_PATH)/boost_aux
   $(LIBRARIES_PATH)/libsvm-3.0
