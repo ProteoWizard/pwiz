@@ -36,9 +36,10 @@ namespace freicore
 {
 namespace quameter
 {
+    typedef boost::lockfree::queue<size_t, boost::lockfree::capacity<1> > BoostLockFreeQueue;
     RunTimeConfig*                  g_rtConfig;
 	boost::mutex                    msdMutex;
-    boost::lockfree::queue<size_t>   metricsTasks;
+    BoostLockFreeQueue              metricsTasks;
     vector<QuameterInput>           allSources;
 
     void simulateGaussianPeak(double peakStart, double peakEnd,
