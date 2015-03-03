@@ -456,7 +456,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg3.IsMolecule = true;
                 pasteDlg3.SetSmallMoleculeColumns(columnOrder.ToList());
             });
-            WaitForConditionUI(() => pasteDlg3.GetVisibleColumnCount() == columnOrder.ToList().Count+1);
+            WaitForConditionUI(() => pasteDlg3.GetVisibleColumnCount() == columnOrder.ToList().Count);
             const string matching =
                 "Schmidt\tlager\tbubbles\t150\t150\t\t\t3\t3" + "\n" +
                 "Schmidt\tlager\tfoam\t159\t159\t\t\t3\t3";
