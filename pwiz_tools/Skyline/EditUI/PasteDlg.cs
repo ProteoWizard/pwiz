@@ -2253,6 +2253,11 @@ namespace pwiz.Skyline.EditUI
                 }
             }
         }
+
+        public int GetVisibleColumnCount()
+        {
+            return gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.Visible);
+        }
     }
 
     public enum PasteFormat
