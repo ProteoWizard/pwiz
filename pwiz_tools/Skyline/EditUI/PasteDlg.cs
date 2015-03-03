@@ -2254,9 +2254,10 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public int GetVisibleColumnCount()
+        public int GetUsableColumnCount()
         {
-            return gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.Visible);
+            return gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.Visible) -
+                   gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.ReadOnly);
         }
     }
 

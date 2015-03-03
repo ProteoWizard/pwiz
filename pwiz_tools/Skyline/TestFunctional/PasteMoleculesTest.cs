@@ -57,7 +57,11 @@ namespace pwiz.SkylineTestFunctional
                 if (columnOrder != null)
                 {
                     pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
-                    WaitForConditionUI(() => pasteDlg.GetVisibleColumnCount() == columnOrder.ToList().Count);                    
+                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);                    
+                }
+                else
+                {
+                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == Settings.Default.CustomMoleculeTransitionInsertColumnsList.Count);                    
                 }
             });
             SetClipboardTextUI(clipText);
@@ -269,7 +273,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg2.IsMolecule = true;
                 pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList());
             });
-            WaitForConditionUI(() => pasteDlg2.GetVisibleColumnCount()==columnOrder.ToList().Count);
+            WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount()==columnOrder.ToList().Count);
 
             // Bad charge states mid-list were handled ungracefully due to lookahead in figuring out transition groups
             const int badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
@@ -291,7 +295,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg.IsMolecule = true;
                 pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
             });
-            WaitForConditionUI(() => pasteDlg.GetVisibleColumnCount() == columnOrder.ToList().Count);
+            WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
 
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
             RunUI(pasteDlg.PasteTransitions);
@@ -414,7 +418,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg2.IsMolecule = true;
                 pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList());
             });
-            WaitForConditionUI(() => pasteDlg2.GetVisibleColumnCount() == columnOrder.ToList().Count);
+            WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string inconsistent =
                 "Oly\tlager\tbubbles\t452\t\t\t\t1\t" + "\n" +
                 "Oly\tlager\tfoam\t234\t163\t\t\t1\t1";
@@ -434,7 +438,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg.IsMolecule = true;
                 pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
             });
-            WaitForConditionUI(() => pasteDlg.GetVisibleColumnCount() == columnOrder.ToList().Count);
+            WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string implied =
                 "Oly\tlager\tbubbles\t452\t\t\t\t1\t" + "\n" +
                 "Oly\tlager\tfoam\t234\t\t\t\t1\t";
@@ -456,7 +460,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg3.IsMolecule = true;
                 pasteDlg3.SetSmallMoleculeColumns(columnOrder.ToList());
             });
-            WaitForConditionUI(() => pasteDlg3.GetVisibleColumnCount() == columnOrder.ToList().Count);
+            WaitForConditionUI(() => pasteDlg3.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string matching =
                 "Schmidt\tlager\tbubbles\t150\t150\t\t\t3\t3" + "\n" +
                 "Schmidt\tlager\tfoam\t159\t159\t\t\t3\t3";
