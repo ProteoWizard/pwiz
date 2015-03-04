@@ -41,7 +41,6 @@ namespace pwiz.Skyline.Model.Results
             new List<ChromKeyAndCollector>();
         private List<string> _scanIdList =
             new List<string>();
-        private int? _scanIndexCurrent;
 
         private readonly bool _isProcessedScans;
         private readonly bool _isSingleMzMatch;
@@ -276,10 +275,6 @@ namespace pwiz.Skyline.Model.Results
 
                 for (int i = 0; i < lenSpectra; i = lookaheadContext.NextIndex(i))
                 {
-                    
-//                    _scanIndexCurrent = i;    // SKYD 8 indexing
-                    _scanIndexCurrent = null;
-
                     // Update progress indicator
                     int currentPercent = i*BUILD_PERCENT/lenSpectra;
                     if (currentPercent > statusPercent)
@@ -428,9 +423,13 @@ namespace pwiz.Skyline.Model.Results
 
         private int GetScanIdIndex(string id)
         {
-            if (_scanIndexCurrent.HasValue)
-                return _scanIndexCurrent.Value;
-
+            if (_scanIdList.Count > 0)
+            {
+                if (id == _scanIdList[_scanIdList.Count - 1])
+                {
+                    return _scanIdList.Count - 1;
+                }
+            }
             int nextIndex = _scanIdList.Count;
             _scanIdList.Add(id);
             return nextIndex;
