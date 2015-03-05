@@ -384,6 +384,10 @@ namespace SkylineNightly
         /// </summary>
         private static void PostToLink(string link, string postData)
         {
+//            var client = new WebClient { Encoding = Encoding.UTF8 };
+//            string reply = client.UploadString(link, postData);
+//            Console.WriteLine(reply);
+
             string javaScript = string.Format(
 @"<script type=""text/javascript"">
 function submitForm()
@@ -402,7 +406,7 @@ window.onload = submitForm;
             Process.Start(filePath);
 
             // Allow time for browser to load file.
-            Thread.Sleep(3000);
+            Thread.Sleep(30000);
             File.Delete(filePath);
         }
 
