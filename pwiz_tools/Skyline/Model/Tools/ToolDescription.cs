@@ -268,8 +268,7 @@ namespace pwiz.Skyline.Model.Tools
             foreach (AnnotationDef annotationDef in Annotations)
             {
                 AnnotationDef existingAnnotation;
-                if (!Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation) ||
-                    !EquivalentAnnotations(existingAnnotation, annotationDef))
+                if (!Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation))
                 {
                     missingAnnotations.Add(annotationDef.GetKey());
                 }
