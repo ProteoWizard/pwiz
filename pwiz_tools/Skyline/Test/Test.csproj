@@ -124,6 +124,7 @@
     <Compile Include="InternetAccessTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PropertySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="RandomTest.cs" />
     <Compile Include="Reporting\DocumentViewTransformerTest.cs" />

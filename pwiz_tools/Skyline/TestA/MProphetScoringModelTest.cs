@@ -167,7 +167,7 @@ namespace pwiz.SkylineTestA
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc"" weight=""7.77""/>
                 </mprophet_peak_scoring_model>";
-            AssertEx.Serialization<MProphetPeakScoringModel>(testRoundTrip, AssertEx.Cloned);
+            AssertEx.Serialization<MProphetPeakScoringModel>(testRoundTrip, AssertEx.Cloned, false); // Not part of a Skyline document, don't check against schema
 
             // No peak calculators.
             const string testNoCalculators = @"
@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestA
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedCoElutionCalc"" weight=""5.55""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimePredictionCalc"" weight=""7.77""/>
                 </legacy_peak_scoring_model>";
-            AssertEx.Serialization<LegacyScoringModel>(testRoundTrip, AssertEx.Cloned);
+            AssertEx.Serialization<LegacyScoringModel>(testRoundTrip, AssertEx.Cloned, false); // Not part of a Skyline document, don't check against schema
 
             // No peak calculators.
             const string testNoCalculators = @"

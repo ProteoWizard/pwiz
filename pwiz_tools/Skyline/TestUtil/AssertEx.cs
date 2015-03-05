@@ -109,16 +109,16 @@ namespace pwiz.SkylineTestUtil
             }            
         }
 
-        public static void Serialization<TObj>(string s, Action<TObj, TObj> validate)
+        public static void Serialization<TObj>(string s, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
-            Serializable(Deserialize<TObj>(s), validate);
+            Serializable(Deserialize<TObj>(s), validate, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
         }
 
-        public static void DeserializeNoError<TObj>(string s, bool roundTrip = true)
+        public static void DeserializeNoError<TObj>(string s, bool roundTrip = true, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
             where TObj : class
         {
-            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error);
+            DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error, null, checkAgainstSkylineSchema, expectedSkylineSchemaType);
         }
 
         public static void DeserializeError<TObj>(string s, string expectedExceptionText = null)
@@ -139,7 +139,7 @@ namespace pwiz.SkylineTestUtil
             error, no_error, roundtrip
         }
 
-        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, string expectedExceptionText = null)
+        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, string expectedExceptionText = null, bool checkAgainstSkylineSchema = true, string expectedSkylineSchemaType = null)
             where TEx : Exception
             where TObj : class
         {
@@ -160,7 +160,7 @@ namespace pwiz.SkylineTestUtil
                     }
 
                     if (deserializeType == DeserializeType.roundtrip)
-                        Serializable(obj, Cloned);
+                        Serializable(obj, Cloned, checkAgainstSkylineSchema, expectedSkylineSchemaType);
                 }
                 catch (InvalidOperationException x)
                 {
@@ -199,29 +199,28 @@ namespace pwiz.SkylineTestUtil
             Serializable(doc, DocumentCloned);
         }
 
-        public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate)
+        public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
-            Serializable(target, 1, validate);
+            Serializable(target, 1, validate, checkAgainstSkylineSchema, expectedTypeInSkylineSchema);
         }
 
-        public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate)
+        public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
             where TObj : class
         {
             string expected = null;
             for (int i = 0; i < roundTrips; i++)
                 validate(target, RoundTrip(target, ref expected));
 
-            // Validate documents against current schema
-            var doc = target as SrmDocument;
-            if (null != doc)
-                ValidatesAgainstSchema(doc);
+            // Validate documents or document fragments against current schema
+            if (checkAgainstSkylineSchema)
+                ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
         }
 
         /// <summary>
-        /// Checks validity of a document against the current schema
+        /// Checks validity of a document or document fragment against the current schema
         /// </summary>
-        public static void ValidatesAgainstSchema(SrmDocument doc)
+        public static void ValidatesAgainstSchema(Object obj, string expectedTypeInSkylineSchema = null)
         {
             var sb = new StringBuilder();
             using (var sw = new StringWriter(sb))
@@ -231,14 +230,49 @@ namespace pwiz.SkylineTestUtil
                     writer.Formatting = Formatting.Indented;
                     try
                     {
-                        var ser = new XmlSerializer(typeof(SrmDocument));
-                        ser.Serialize(writer, doc);
+                        var ser = new XmlSerializer(obj.GetType());
+                        ser.Serialize(writer, obj);
                         var xmlText = sb.ToString();
                         var assembly = Assembly.GetAssembly(typeof(AssertEx));
-                        var schemaFile = assembly.GetManifestResourceStream(
-                            typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION));   // Not L10N
-                        Assert.IsNotNull(schemaFile);
-                        using (var schemaReader = new XmlTextReader(schemaFile))
+                        var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
+                        var schemaStream = assembly.GetManifestResourceStream(xsdName);
+                        Assert.IsNotNull(schemaStream);
+                        var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
+                        string targetXML = null;
+                        if (!(obj is SrmDocument))
+                        {
+                            // XSD validation takes place from the root, so make the object's type a root element for test purposes.
+                            // Inspired by http://stackoverflow.com/questions/715626/validating-xml-nodes-not-the-entire-document
+                            var elementName = xmlText.Split('<')[2].Split(' ')[0];
+                            var xd = new XmlDocument();
+                            xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
+                            var nodes = xd.GetElementsByTagName("xs:element");
+                            for (var i = 0; i < nodes.Count; i++)
+                            {
+                                var xmlAttributeCollection = nodes[i].Attributes;
+                                if (xmlAttributeCollection != null &&
+                                    elementName.Equals(xmlAttributeCollection.GetNamedItem("name").Value) &&
+                                    (expectedTypeInSkylineSchema == null || expectedTypeInSkylineSchema.Equals(xmlAttributeCollection.GetNamedItem("type").Value)))
+                                {
+                                    // Insert this XML as a root element at the end of the schema
+                                    xmlAttributeCollection.RemoveNamedItem("minOccurs"); // Useful only in the full sequence context
+                                    xmlAttributeCollection.RemoveNamedItem("maxOccurs");
+                                    var xml = nodes[i].OuterXml;
+                                    if (!xml.Equals(targetXML))
+                                    {
+                                        // Don't enter a redundant definition
+                                        targetXML = xml;
+                                        var lines = schemaText.Split('\n');
+                                        schemaText = String.Join("\n", lines.Take(lines.Count() - 2));
+                                        schemaText += xml;
+                                        schemaText += lines[lines.Count() - 2];
+                                        schemaText += lines[lines.Count() - 1];
+                                    }
+                                }
+                            }
+                        }
+
+                        using (var schemaReader = new XmlTextReader(new MemoryStream(Encoding.UTF8.GetBytes(schemaText))))
                         {
                             var schema = XmlSchema.Read(schemaReader, ValidationCallBack);
                             var readerSettings = new XmlReaderSettings

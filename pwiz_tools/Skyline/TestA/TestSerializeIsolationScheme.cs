@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestA
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
 
             // Test round trip serialization
-            AssertEx.Serialization<IsolationSchemeList>(ISOLATION_SCHEME_LIST, CheckSettingsList);
+            AssertEx.Serialization<IsolationSchemeList>(ISOLATION_SCHEME_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
 
             // Valid first
             AssertEx.DeserializeNoError<IsolationScheme>(

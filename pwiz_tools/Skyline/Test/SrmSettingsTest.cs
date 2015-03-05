@@ -28,7 +28,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using SequenceTerminus = pwiz.Skyline.Model.SequenceTerminus;
@@ -183,13 +182,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SettingsSerializeListsTest()
         {
-            AssertEx.Serialization<EnzymeList>(SETTINGS_ENZYME_LIST, CheckSettingsList);
-            AssertEx.Serialization<StaticModList>(SETTINGS_STATIC_MOD_LIST, CheckSettingsList);
-            AssertEx.Serialization<HeavyModList>(SETTINGS_HEAVY_MOD_LIST, CheckSettingsList);
-            AssertEx.Serialization<PeptideExcludeList>(SETTINGS_EXCLUSIONS_LIST, CheckSettingsList);
-            AssertEx.Serialization<CollisionEnergyList>(SETTINGS_CE_LIST, CheckSettingsList);
-            AssertEx.Serialization<DeclusterPotentialList>(SETTINGS_DP_LIST, CheckSettingsList);
-            AssertEx.Serialization<RetentionTimeList>(SETTINGS_RT_LIST, CheckSettingsList);
+            AssertEx.Serialization<EnzymeList>(SETTINGS_ENZYME_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<StaticModList>(SETTINGS_STATIC_MOD_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<HeavyModList>(SETTINGS_HEAVY_MOD_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<PeptideExcludeList>(SETTINGS_EXCLUSIONS_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<CollisionEnergyList>(SETTINGS_CE_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<DeclusterPotentialList>(SETTINGS_DP_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<RetentionTimeList>(SETTINGS_RT_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
         }
 
         private const string SETTINGS_ENZYME_LIST =
@@ -464,21 +463,23 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SerializeStaticModTest()
         {
+            const string structuralModificationType = "structural_modification_type";
+            const string isotopeModificationType = "isotope_modification_type";
             // Valid first
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"R\" terminus=\"C\" formula=\"C2H3ON15PS\" />");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" terminus=\"N\" formula=\"-ON4\" />");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"P\" formula=\"C23 - O N P14\" />");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"R\" terminus=\"C\" formula=\"C2H3ON15PS\" />", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" terminus=\"N\" formula=\"-ON4\" />", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"P\" formula=\"C23 - O N P14\" />", true, true, isotopeModificationType);
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"P\" massdiff_monoisotopic=\"5\"\n" +
-                    " massdiff_average=\"5.1\" />");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Oxidation\" aminoacid=\"M, D\" formula=\"O\" variable=\"true\"/>");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" formula=\"C23N\" />");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"15N\" label_15N=\"true\" />");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Heavy K\" aminoacid=\"K\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Aqua\" aminoacid=\"K, R\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss1\" aminoacid=\"T, S\" formula=\"HPO3\"><fragment_loss formula=\"HP3O4\"/></static_modification>");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss3\" aminoacid=\"T, S\" formula=\"HPO3\" explicit_decl=\"true\"><fragment_loss formula=\"HP3O4\"/><fragment_loss formula=\"H2O\"/><fragment_loss formula=\"NH3\"/></static_modification>");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\"><potential_loss formula=\"NH3\"/></static_modification>");
-            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"LossInclusion\" aminoacid=\"T, S\" formula=\"HPO3\"><potential_loss formula=\"HP3O4\" inclusion=\"Always\"/><potential_loss formula=\"HP2O3\" inclusion=\"Library\"/><potential_loss formula=\"HP1O2\" inclusion=\"Never\"/></static_modification>");
+                    " massdiff_average=\"5.1\" />", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Oxidation\" aminoacid=\"M, D\" formula=\"O\" variable=\"true\"/>", true, true, structuralModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" formula=\"C23N\" />", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"15N\" label_15N=\"true\" />", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Heavy K\" aminoacid=\"K\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Aqua\" aminoacid=\"K, R\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss1\" aminoacid=\"T, S\" formula=\"HPO3\"><fragment_loss formula=\"HP3O4\"/></static_modification>", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss3\" aminoacid=\"T, S\" formula=\"HPO3\" explicit_decl=\"true\"><fragment_loss formula=\"HP3O4\"/><fragment_loss formula=\"H2O\"/><fragment_loss formula=\"NH3\"/></static_modification>", true, true, isotopeModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\"><potential_loss formula=\"NH3\"/></static_modification>", true, true, structuralModificationType);
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"LossInclusion\" aminoacid=\"T, S\" formula=\"HPO3\"><potential_loss formula=\"HP3O4\" inclusion=\"Always\"/><potential_loss formula=\"HP2O3\" inclusion=\"Library\"/><potential_loss formula=\"HP1O2\" inclusion=\"Never\"/></static_modification>", true, true, structuralModificationType);
 
             // Missing parameters
             AssertEx.DeserializeError<StaticMod>("<static_modification />");
@@ -1005,32 +1006,6 @@ namespace pwiz.SkylineTest
                 var distEnriched = enrichments.IsotopeAbundances[symDist.Key];
                 AssertEx.AreEqualDeep(distDefault.ToArray(), distEnriched.ToArray());
             }
-        }
-
-        /// <summary>
-        /// Test error handling in XML deserialization of <see cref="Server"/>.
-        /// </summary>
-        [TestMethod]
-        public void SerializeServerTest()
-        {
-            const string validPanoramaServer = "http://128.208.10.133:8070/";
-            // Valid first
-            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" />");
-            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" " +
-                                                "username=\"\" password=\"\" />");
-            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" " +
-                                                "username=\"testuser3@panorama.org\" " +
-                                                "password=\"testuser3\" />");
-
-            // Failures
-            AssertEx.DeserializeError<Server>("<server />");
-            // A server url should always be provided.
-            AssertEx.DeserializeError<Server>("<server " +
-                                                "username=\"testuser3@panorama.org\" " +
-                                                "password=\"testuser3\" />");
-            // Bad URL
-            AssertEx.DeserializeError<Server>("<server uri=\"w ww.google.com\" />");
-            AssertEx.DeserializeError<Server>("<server uri=\"http://\" />");
         }
 
         /// <summary>

@@ -177,7 +177,7 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
-          <xs:attribute name="start" type="xs:positiveInteger" use="required"/>
+          <xs:attribute name="start" type="xs:integer" use="required"/>
           <xs:attribute name="min_length" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="max_length" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="auto_select" type="xs:boolean"/>
@@ -1234,6 +1234,10 @@
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="cut" type="xs:string"/>
     <xs:attribute name="no_cut" type="xs:string"/>
+    <xs:attribute name="cut_c" type="xs:string"/>
+    <xs:attribute name="no_cut_c" type="xs:string"/>
+    <xs:attribute name="cut_n" type="xs:string"/>
+    <xs:attribute name="no_cut_n" type="xs:string"/>
     <xs:attribute name="sense" type="terminus_type"/>
   </xs:complexType>
   <xs:complexType name="lib_spec_type">
