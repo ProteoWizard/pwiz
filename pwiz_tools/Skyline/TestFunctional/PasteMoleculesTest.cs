@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteMoleculesTest : AbstractFunctionalTest
     {
-        [TestMethod]
+ //       [TestMethod]
         public void TestPasteMolecules()
         {
             TestFilesZip = @"TestFunctional\PasteMoleculeTest.zip";
