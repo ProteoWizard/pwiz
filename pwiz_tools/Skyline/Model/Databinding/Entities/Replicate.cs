@@ -31,6 +31,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.replicate)]
     public class Replicate : SkylineObject, ILinkValue, IComparable
     {
+        private static readonly ChromatogramSet EMPTY_CHROMATOGRAM_SET = (ChromatogramSet) new ChromatogramSet(
+            XmlNamedElement.NAME_INTERNAL, new MsDataFileUri[0]).ChangeName(string.Empty);
         private readonly CachedValue<ChromatogramSet> _chromatogramSet;
         public Replicate(SkylineDataSchema dataSchema, int replicateIndex) : base(dataSchema)
         {
@@ -72,7 +74,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var results = SrmDocument.Settings.MeasuredResults;
             if (results == null || results.Chromatograms.Count <= ReplicateIndex)
             {
-                return null;
+                return EMPTY_CHROMATOGRAM_SET;
             }
             return results.Chromatograms[ReplicateIndex];
         }

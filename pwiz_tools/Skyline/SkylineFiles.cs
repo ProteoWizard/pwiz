@@ -2289,20 +2289,20 @@ namespace pwiz.Skyline
                         if (dlg.IsRemoveAllLibraryRuns)
                         {
                             doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib =>
+                            {
+                                var libSpecs = new List<LibrarySpec>(lib.LibrarySpecs);
+                                var libs = new List<Library>(lib.Libraries);
+                                for (int i = 0; i < libSpecs.Count; i++)
                                 {
-                                    var libSpecs = new List<LibrarySpec>(lib.LibrarySpecs);
-                                    var libs = new List<Library>(lib.Libraries);
-                                    for (int i = 0; i < libSpecs.Count; i++)
+                                    if (libSpecs[i].IsDocumentLibrary)
                                     {
-                                        if (libSpecs[i].IsDocumentLibrary)
-                                        {
-                                            libSpecs.RemoveAt(i);
-                                            libs.RemoveAt(i);
-                                        }
+                                        libSpecs.RemoveAt(i);
+                                        libs.RemoveAt(i);
                                     }
-                                    return lib.ChangeDocumentLibrary(false)
-                                              .ChangeLibraries(libSpecs.ToArray(), libs.ToArray());
-                                }));
+                                }
+                                return lib.ChangeDocumentLibrary(false)
+                                    .ChangeLibraries(libSpecs.ToArray(), libs.ToArray());
+                            }));
                         }
                         else if (dlg.LibraryRunsRemovedList.Count > 0)
                         {
@@ -2320,7 +2320,7 @@ namespace pwiz.Skyline
                                 }
                             }
                         }
- 
+
                         var results = doc.Settings.MeasuredResults;
                         if (results == null)
                             return doc;
@@ -2337,14 +2337,21 @@ namespace pwiz.Skyline
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)
                     {
-                        string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
-                        FileEx.SafeDelete(docLibPath);
+                        try
+                        {
+                            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+                            FileEx.SafeDelete(docLibPath);
 
-                        string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-                        FileEx.SafeDelete(redundantDocLibPath);
+                            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+                            FileEx.SafeDelete(redundantDocLibPath);
 
-                        string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
-                        FileEx.SafeDelete(docLibCachePath);
+                            string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
+                            FileEx.SafeDelete(docLibCachePath);
+                        }
+                        catch (FileEx.DeleteException deleteException)
+                        {
+                            MessageDlg.Show(this, deleteException.Message);
+                        }
                     }
                 }
             }
