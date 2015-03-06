@@ -43,7 +43,7 @@ if exist "%JETBRAINS_HOME%\commandline9.0\" (
     Echo "InspectCode command line package v9.0 already installed, good."
  ) ELSE (
  	Echo "Installing ReSharper Command Line Tools v9.0."
-    %1\scripts\misc\wget http://skyline.gs.washington.edu\downloads\ReSharperCommandLineTools01Update1.zip
+    %1\scripts\misc\wget http://skyline.gs.washington.edu/downloads/ReSharperCommandLineTools01Update1.zip
     move %1\ReSharperCommandLineTools01Update1.zip "%JETBRAINS_HOME%\"
 	%1\libraries\7za.exe x  "%JETBRAINS_HOME%\ReSharperCommandLineTools01Update1.zip" -o"%JETBRAINS_HOME%\commandline9.0\"
 )
