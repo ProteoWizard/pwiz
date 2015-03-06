@@ -455,6 +455,12 @@ namespace pwiz.SkylineTest
             // Valid first
             AssertEx.DeserializeNoError<PeptideModifications>("<peptide_modifications><static_modifications/></peptide_modifications>");
             AssertEx.DeserializeNoError<PeptideModifications>("<peptide_modifications/>");
+
+            var mods = AssertEx.Deserialize<PeptideModifications>("<peptide_modifications internal_standard=\"none\"><static_modifications/><heavy_modifications/></peptide_modifications>");
+            Assert.AreEqual(0, mods.InternalStandardTypes.Count);
+            mods = AssertEx.Deserialize<PeptideModifications>("<peptide_modifications internal_standard=\"light\"></peptide_modifications>");
+            Assert.AreEqual(1, mods.InternalStandardTypes.Count);
+            Assert.AreEqual("light", mods.InternalStandardTypes[0].Name);
         }
 
         /// <summary>

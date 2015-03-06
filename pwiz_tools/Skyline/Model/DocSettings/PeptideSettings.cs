@@ -1478,7 +1478,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadStartElement();
 
                 if (internalStandardName != null)
-                    internalStandardNames.Add(internalStandardName);
+                {
+                    if (internalStandardName == IsotopeLabelType.NONE_NAME)
+                        internalStandardTypes = new IsotopeLabelType[0];
+                    else
+                        internalStandardNames.Add(internalStandardName);
+                }
                 else
                 {
                     while (reader.IsStartElement(EL.internal_standard))
@@ -1531,7 +1536,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     SetInternalStandardType(labelType, internalStandardNames, internalStandardTypes);
 
                     // If no internal standard type was given, use the first heavy type.
-                    if (internalStandardNames.Count == 0)
+                    if (internalStandardNames.Count == 0 && internalStandardTypes.Length != 0)
                     {
                         internalStandardNames.Add(labelType.Name);
                         internalStandardTypes = new[] {labelType};
@@ -1570,6 +1575,10 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attibutes
             writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods);
             writer.WriteAttribute(ATTR.max_neutral_losses, MaxNeutralLosses);
+            if (InternalStandardTypes.Count == 0)
+            {
+                writer.WriteAttribute(ATTR.internal_standard, IsotopeLabelType.NONE_NAME);
+            }
             if (InternalStandardTypes.Count == 1)
             {
                 var internalStandardType = InternalStandardTypes[0];
