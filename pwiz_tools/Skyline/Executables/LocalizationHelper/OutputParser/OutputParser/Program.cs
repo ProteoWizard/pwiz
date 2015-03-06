@@ -30,7 +30,7 @@ namespace OutputParser
         {
             const int EXIT_SUCCESS = 0;
             const int EXIT_ERROR = 1;
-            const int MAX_ISSUES_ALLOWED = 0; // should be changed to permit more or less issues allowed before build fails
+            const int MAX_ISSUES_ALLOWED = 4; // should be changed to permit more or less issues allowed before build fails
             string NON_LOCALIZED_STRING = "NonLocalizedString"; // Exact name of the error that R# will throw for missing L10Ns
 
             bool containsNonLocalizedStrings = false;
@@ -117,8 +117,9 @@ namespace OutputParser
                 }
                 Console.WriteLine(string.Empty);
             }
-            Console.WriteLine("This tool will fail the build if there are more than 33 issues or any NonLocalizedStrings.");
-            Console.WriteLine("Total issues in solution: {0}", totalIssueCounter);
+            Console.WriteLine("This tool will fail the build if there are more than {0} issues or any NonLocalizedStrings.", MAX_ISSUES_ALLOWED);
+            Console.WriteLine("(You can adjust this threshold by changing the value of MAX_ISSUES_ALLOWED in pwiz_tools\\Skyline\\Executables\\LocalizationHelper\\OutputParser\\OutputParser\\Program.cs, and rebuilding with bjam.)");
+            Console.WriteLine("Total issues in solution is currently: {0}", totalIssueCounter);
 
             if (totalIssueCounter > MAX_ISSUES_ALLOWED || containsNonLocalizedStrings)
             {

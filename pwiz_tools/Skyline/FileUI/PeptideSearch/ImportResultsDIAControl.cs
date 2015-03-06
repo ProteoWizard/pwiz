@@ -39,7 +39,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             _foundResultsFiles = new BindingList<FoundResultsFile>();
             listResultsFiles.DataSource = _foundResultsFiles;
-            listResultsFiles.DisplayMember = "Name";
+            listResultsFiles.DisplayMember = "Name"; // Not L10N
         }
 
         private BindingList<FoundResultsFile> _foundResultsFiles;

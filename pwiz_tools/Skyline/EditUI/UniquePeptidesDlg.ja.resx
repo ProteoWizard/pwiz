@@ -137,9 +137,6 @@
   <data name="dataGridView1.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -2</value>
   </data>
-  <data name="dataGridView1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="dataGridView1.Size" type="System.Drawing.Size, System.Drawing">
     <value>940, 406</value>
   </data>
@@ -189,9 +186,6 @@
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
     <value>713, 601</value>
   </data>
-  <data name="btnOK.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 28</value>
   </data>
@@ -218,9 +212,6 @@
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>821, 601</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 28</value>
@@ -252,9 +243,6 @@
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 426</value>
   </data>
-  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 17</value>
   </data>
@@ -282,9 +270,6 @@
   <data name="tbxProteinName.Location" type="System.Drawing.Point, System.Drawing">
     <value>123, 423</value>
   </data>
-  <data name="tbxProteinName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="tbxProteinName.Size" type="System.Drawing.Size, System.Drawing">
     <value>797, 22</value>
   </data>
@@ -300,16 +285,11 @@
   <data name=">>tbxProteinName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tbxProteinName.ZOrder" xml:space="preserve">
-  </data>
   <data name="tbxProteinDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
   <data name="tbxProteinDescription.Location" type="System.Drawing.Point, System.Drawing">
     <value>123, 482</value>
-  </data>
-  <data name="tbxProteinDescription.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="tbxProteinDescription.Size" type="System.Drawing.Size, System.Drawing">
     <value>797, 22</value>
@@ -337,9 +317,6 @@
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 486</value>
-  </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>83, 17</value>
@@ -371,9 +348,6 @@
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 523</value>
   </data>
-  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 17</value>
   </data>
@@ -401,9 +375,6 @@
   <data name="richTextBoxSequence.Location" type="System.Drawing.Point, System.Drawing">
     <value>123, 519</value>
   </data>
-  <data name="richTextBoxSequence.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="richTextBoxSequence.Size" type="System.Drawing.Size, System.Drawing">
     <value>797, 73</value>
   </data>
@@ -430,9 +401,6 @@
   </data>
   <data name="tbxProteinDetails.Location" type="System.Drawing.Point, System.Drawing">
     <value>123, 453</value>
-  </data>
-  <data name="tbxProteinDetails.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="tbxProteinDetails.Size" type="System.Drawing.Size, System.Drawing">
     <value>797, 22</value>
@@ -464,9 +432,6 @@
   <data name="labelProteinDetails.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 456</value>
   </data>
-  <data name="labelProteinDetails.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="labelProteinDetails.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 17</value>
   </data>
@@ -496,9 +461,6 @@
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>937, 644</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
