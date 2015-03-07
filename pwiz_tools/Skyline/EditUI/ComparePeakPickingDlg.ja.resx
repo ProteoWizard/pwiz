@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,37 +117,37 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>586, 454</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -168,16 +168,16 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name=">>btnOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="dataGridViewScoreDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -195,16 +195,16 @@
   <data name="zedGraphRoc.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>zedGraphRoc.Name" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphRoc.Name" xml:space="preserve">
     <value>zedGraphRoc</value>
   </data>
-  <data name=">>zedGraphRoc.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.370, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  <data name="&gt;&gt;zedGraphRoc.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.19979, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
-  <data name=">>zedGraphRoc.Parent" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphRoc.Parent" xml:space="preserve">
     <value>tabROC</value>
   </data>
-  <data name=">>zedGraphRoc.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphRoc.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="tabROC.Location" type="System.Drawing.Point, System.Drawing">
@@ -222,16 +222,16 @@
   <data name="tabROC.Text" xml:space="preserve">
     <value>ROCプロット</value>
   </data>
-  <data name=">>tabROC.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabROC.Name" xml:space="preserve">
     <value>tabROC</value>
   </data>
-  <data name=">>tabROC.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabROC.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabROC.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabROC.Parent" xml:space="preserve">
     <value>dataGridViewScoreDetails</value>
   </data>
-  <data name=">>tabROC.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabROC.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="zedGraphQq.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -246,16 +246,16 @@
   <data name="zedGraphQq.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>zedGraphQq.Name" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphQq.Name" xml:space="preserve">
     <value>zedGraphQq</value>
   </data>
-  <data name=">>zedGraphQq.Type" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphQq.Type" xml:space="preserve">
     <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.370, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
-  <data name=">>zedGraphQq.Parent" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphQq.Parent" xml:space="preserve">
     <value>tabQq</value>
   </data>
-  <data name=">>zedGraphQq.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;zedGraphQq.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="tabQq.Location" type="System.Drawing.Point, System.Drawing">
@@ -273,16 +273,16 @@
   <data name="tabQq.Text" xml:space="preserve">
     <value>Q-qプロット</value>
   </data>
-  <data name=">>tabQq.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabQq.Name" xml:space="preserve">
     <value>tabQq</value>
   </data>
-  <data name=">>tabQq.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabQq.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabQq.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabQq.Parent" xml:space="preserve">
     <value>dataGridViewScoreDetails</value>
   </data>
-  <data name=">>tabQq.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabQq.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -300,16 +300,16 @@
   <data name="label2.Text" xml:space="preserve">
     <value>次の結果を表示：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabDetails</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="comboBoxDetails.Location" type="System.Drawing.Point, System.Drawing">
@@ -321,16 +321,16 @@
   <data name="comboBoxDetails.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>comboBoxDetails.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxDetails.Name" xml:space="preserve">
     <value>comboBoxDetails</value>
   </data>
-  <data name=">>comboBoxDetails.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxDetails.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboBoxDetails.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxDetails.Parent" xml:space="preserve">
     <value>tabDetails</value>
   </data>
-  <data name=">>comboBoxDetails.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxDetails.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="dataGridViewScore.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -402,16 +402,16 @@
   <data name="dataGridViewScore.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>dataGridViewScore.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScore.Name" xml:space="preserve">
     <value>dataGridViewScore</value>
   </data>
-  <data name=">>dataGridViewScore.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="&gt;&gt;dataGridViewScore.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name=">>dataGridViewScore.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScore.Parent" xml:space="preserve">
     <value>tabDetails</value>
   </data>
-  <data name=">>dataGridViewScore.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScore.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tabDetails.Location" type="System.Drawing.Point, System.Drawing">
@@ -426,16 +426,16 @@
   <data name="tabDetails.Text" xml:space="preserve">
     <value>スコア詳細</value>
   </data>
-  <data name=">>tabDetails.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabDetails.Name" xml:space="preserve">
     <value>tabDetails</value>
   </data>
-  <data name=">>tabDetails.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabDetails.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabDetails.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabDetails.Parent" xml:space="preserve">
     <value>dataGridViewScoreDetails</value>
   </data>
-  <data name=">>tabDetails.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabDetails.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="checkBoxConflicts.AutoSize" type="System.Boolean, mscorlib">
@@ -453,16 +453,16 @@
   <data name="checkBoxConflicts.Text" xml:space="preserve">
     <value>不一致のみ表示</value>
   </data>
-  <data name=">>checkBoxConflicts.Name" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxConflicts.Name" xml:space="preserve">
     <value>checkBoxConflicts</value>
   </data>
-  <data name=">>checkBoxConflicts.Type" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxConflicts.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>checkBoxConflicts.Parent" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxConflicts.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>checkBoxConflicts.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxConflicts.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="comboBoxCompare2.Location" type="System.Drawing.Point, System.Drawing">
@@ -474,16 +474,16 @@
   <data name="comboBoxCompare2.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name=">>comboBoxCompare2.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare2.Name" xml:space="preserve">
     <value>comboBoxCompare2</value>
   </data>
-  <data name=">>comboBoxCompare2.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboBoxCompare2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare2.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>comboBoxCompare2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="comboBoxCompare1.Location" type="System.Drawing.Point, System.Drawing">
@@ -495,16 +495,16 @@
   <data name="comboBoxCompare1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>comboBoxCompare1.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare1.Name" xml:space="preserve">
     <value>comboBoxCompare1</value>
   </data>
-  <data name=">>comboBoxCompare1.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboBoxCompare1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare1.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>comboBoxCompare1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxCompare1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -522,16 +522,16 @@
   <data name="label4.Text" xml:space="preserve">
     <value>次を伴う：</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -549,16 +549,16 @@
   <data name="label3.Text" xml:space="preserve">
     <value>比較：</value>
   </data>
-  <data name=">>label3.Name" xml:space="preserve">
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name=">>label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="dataGridViewScoreComparison.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -654,16 +654,16 @@
   <data name="dataGridViewScoreComparison.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>dataGridViewScoreComparison.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreComparison.Name" xml:space="preserve">
     <value>dataGridViewScoreComparison</value>
   </data>
-  <data name=">>dataGridViewScoreComparison.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="&gt;&gt;dataGridViewScoreComparison.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name=">>dataGridViewScoreComparison.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreComparison.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>dataGridViewScoreComparison.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreComparison.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
@@ -678,16 +678,16 @@
   <data name="tabPage1.Text" xml:space="preserve">
     <value>スコア比較</value>
   </data>
-  <data name=">>tabPage1.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name=">>tabPage1.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabPage1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
     <value>dataGridViewScoreDetails</value>
   </data>
-  <data name=">>tabPage1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="dataGridViewScoreDetails.Location" type="System.Drawing.Point, System.Drawing">
@@ -699,16 +699,16 @@
   <data name="dataGridViewScoreDetails.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name=">>dataGridViewScoreDetails.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreDetails.Name" xml:space="preserve">
     <value>dataGridViewScoreDetails</value>
   </data>
-  <data name=">>dataGridViewScoreDetails.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreDetails.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewScoreDetails.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreDetails.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>dataGridViewScoreDetails.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewScoreDetails.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="buttonAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -729,16 +729,16 @@
   <data name="buttonAdd.Text" xml:space="preserve">
     <value>追加(&amp;A)...</value>
   </data>
-  <data name=">>buttonAdd.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonAdd.Name" xml:space="preserve">
     <value>buttonAdd</value>
   </data>
-  <data name=">>buttonAdd.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonAdd.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonAdd.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonAdd.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonAdd.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonAdd.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="buttonEdit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -759,16 +759,16 @@
   <data name="buttonEdit.Text" xml:space="preserve">
     <value>リストを編集(&amp;E)...</value>
   </data>
-  <data name=">>buttonEdit.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonEdit.Name" xml:space="preserve">
     <value>buttonEdit</value>
   </data>
-  <data name=">>buttonEdit.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonEdit.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonEdit.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonEdit.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonEdit.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonEdit.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="checkedListCompare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -783,16 +783,16 @@
   <data name="checkedListCompare.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>checkedListCompare.Name" xml:space="preserve">
+  <data name="&gt;&gt;checkedListCompare.Name" xml:space="preserve">
     <value>checkedListCompare</value>
   </data>
-  <data name=">>checkedListCompare.Type" xml:space="preserve">
+  <data name="&gt;&gt;checkedListCompare.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>checkedListCompare.Parent" xml:space="preserve">
+  <data name="&gt;&gt;checkedListCompare.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>checkedListCompare.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;checkedListCompare.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -810,16 +810,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>対比較用モデルおよびファイル(&amp;M)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1262,154 +1262,154 @@
   <data name="$this.Text" xml:space="preserve">
     <value>ピーク選択を比較</value>
   </data>
-  <data name=">>File.Name" xml:space="preserve">
+  <data name="&gt;&gt;File.Name" xml:space="preserve">
     <value>File</value>
   </data>
-  <data name=">>File.Type" xml:space="preserve">
+  <data name="&gt;&gt;File.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Sequence.Name" xml:space="preserve">
+  <data name="&gt;&gt;Sequence.Name" xml:space="preserve">
     <value>Sequence</value>
   </data>
-  <data name=">>Sequence.Type" xml:space="preserve">
+  <data name="&gt;&gt;Sequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Charge.Name" xml:space="preserve">
+  <data name="&gt;&gt;Charge.Name" xml:space="preserve">
     <value>Charge</value>
   </data>
-  <data name=">>Charge.Type" xml:space="preserve">
+  <data name="&gt;&gt;Charge.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>PeakMatch.Name" xml:space="preserve">
+  <data name="&gt;&gt;PeakMatch.Name" xml:space="preserve">
     <value>PeakMatch</value>
   </data>
-  <data name=">>PeakMatch.Type" xml:space="preserve">
+  <data name="&gt;&gt;PeakMatch.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Score.Name" xml:space="preserve">
+  <data name="&gt;&gt;Score.Name" xml:space="preserve">
     <value>Score</value>
   </data>
-  <data name=">>Score.Type" xml:space="preserve">
+  <data name="&gt;&gt;Score.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>PickedApex.Name" xml:space="preserve">
+  <data name="&gt;&gt;PickedApex.Name" xml:space="preserve">
     <value>PickedApex</value>
   </data>
-  <data name=">>PickedApex.Type" xml:space="preserve">
+  <data name="&gt;&gt;PickedApex.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>qValue.Name" xml:space="preserve">
+  <data name="&gt;&gt;qValue.Name" xml:space="preserve">
     <value>qValue</value>
   </data>
-  <data name=">>qValue.Type" xml:space="preserve">
+  <data name="&gt;&gt;qValue.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>TrueStart.Name" xml:space="preserve">
+  <data name="&gt;&gt;TrueStart.Name" xml:space="preserve">
     <value>TrueStart</value>
   </data>
-  <data name=">>TrueStart.Type" xml:space="preserve">
+  <data name="&gt;&gt;TrueStart.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>TrueEnd.Name" xml:space="preserve">
+  <data name="&gt;&gt;TrueEnd.Name" xml:space="preserve">
     <value>TrueEnd</value>
   </data>
-  <data name=">>TrueEnd.Type" xml:space="preserve">
+  <data name="&gt;&gt;TrueEnd.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>bindingSourceScore.Name" xml:space="preserve">
+  <data name="&gt;&gt;bindingSourceScore.Name" xml:space="preserve">
     <value>bindingSourceScore</value>
   </data>
-  <data name=">>bindingSourceScore.Type" xml:space="preserve">
+  <data name="&gt;&gt;bindingSourceScore.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>bindingSourceScoreCompare.Name" xml:space="preserve">
+  <data name="&gt;&gt;bindingSourceScoreCompare.Name" xml:space="preserve">
     <value>bindingSourceScoreCompare</value>
   </data>
-  <data name=">>bindingSourceScoreCompare.Type" xml:space="preserve">
+  <data name="&gt;&gt;bindingSourceScoreCompare.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn1.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn2.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn2</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn3.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn3</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn3.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>PeakMatch1.Name" xml:space="preserve">
+  <data name="&gt;&gt;PeakMatch1.Name" xml:space="preserve">
     <value>PeakMatch1</value>
   </data>
-  <data name=">>PeakMatch1.Type" xml:space="preserve">
+  <data name="&gt;&gt;PeakMatch1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>PeakMatch2.Name" xml:space="preserve">
+  <data name="&gt;&gt;PeakMatch2.Name" xml:space="preserve">
     <value>PeakMatch2</value>
   </data>
-  <data name=">>PeakMatch2.Type" xml:space="preserve">
+  <data name="&gt;&gt;PeakMatch2.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Score1.Name" xml:space="preserve">
+  <data name="&gt;&gt;Score1.Name" xml:space="preserve">
     <value>Score1</value>
   </data>
-  <data name=">>Score1.Type" xml:space="preserve">
+  <data name="&gt;&gt;Score1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Score2.Name" xml:space="preserve">
+  <data name="&gt;&gt;Score2.Name" xml:space="preserve">
     <value>Score2</value>
   </data>
-  <data name=">>Score2.Type" xml:space="preserve">
+  <data name="&gt;&gt;Score2.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>QValue1.Name" xml:space="preserve">
+  <data name="&gt;&gt;QValue1.Name" xml:space="preserve">
     <value>QValue1</value>
   </data>
-  <data name=">>QValue1.Type" xml:space="preserve">
+  <data name="&gt;&gt;QValue1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>QValue2.Name" xml:space="preserve">
+  <data name="&gt;&gt;QValue2.Name" xml:space="preserve">
     <value>QValue2</value>
   </data>
-  <data name=">>QValue2.Type" xml:space="preserve">
+  <data name="&gt;&gt;QValue2.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>leftApex.Name" xml:space="preserve">
+  <data name="&gt;&gt;leftApex.Name" xml:space="preserve">
     <value>leftApex</value>
   </data>
-  <data name=">>leftApex.Type" xml:space="preserve">
+  <data name="&gt;&gt;leftApex.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>rightApex.Name" xml:space="preserve">
+  <data name="&gt;&gt;rightApex.Name" xml:space="preserve">
     <value>rightApex</value>
   </data>
-  <data name=">>rightApex.Type" xml:space="preserve">
+  <data name="&gt;&gt;rightApex.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>startTrue.Name" xml:space="preserve">
+  <data name="&gt;&gt;startTrue.Name" xml:space="preserve">
     <value>startTrue</value>
   </data>
-  <data name=">>startTrue.Type" xml:space="preserve">
+  <data name="&gt;&gt;startTrue.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>endTrue.Name" xml:space="preserve">
+  <data name="&gt;&gt;endTrue.Name" xml:space="preserve">
     <value>endTrue</value>
   </data>
-  <data name=">>endTrue.Type" xml:space="preserve">
+  <data name="&gt;&gt;endTrue.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ComparePeakPickingDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

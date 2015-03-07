@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,34 +117,34 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>390, 12</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name=">>btnOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -162,16 +162,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -189,16 +189,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>メモ(&amp;N)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textNote.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -216,16 +216,16 @@
   <data name="textNote.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>textNote.Name" xml:space="preserve">
+  <data name="&gt;&gt;textNote.Name" xml:space="preserve">
     <value>textNote</value>
   </data>
-  <data name=">>textNote.Type" xml:space="preserve">
+  <data name="&gt;&gt;textNote.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textNote.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textNote.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>textNote.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textNote.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="dataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -252,16 +252,16 @@
   <data name="dataGridView1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name=">>dataGridView1.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.Name" xml:space="preserve">
     <value>dataGridView1</value>
   </data>
-  <data name=">>dataGridView1.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridView1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
-  <data name=">>dataGridView1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -285,16 +285,16 @@
   <data name="btnClearAll.Text" xml:space="preserve">
     <value>すべてクリア</value>
   </data>
-  <data name=">>btnClearAll.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnClearAll.Name" xml:space="preserve">
     <value>btnClearAll</value>
   </data>
-  <data name=">>btnClearAll.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnClearAll.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnClearAll.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnClearAll.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>btnClearAll.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnClearAll.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -534,28 +534,28 @@
   <data name="toolStrip1.Text" xml:space="preserve">
     <value>toolStrip1</value>
   </data>
-  <data name=">>toolStrip1.Name" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
   </data>
-  <data name=">>toolStrip1.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>toolStrip1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>toolStrip1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name=">>splitContainer1.Panel1.Name" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
-  <data name=">>splitContainer1.Panel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>splitContainer1.Panel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
     <value>splitContainer1</value>
   </data>
-  <data name=">>splitContainer1.Panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -573,28 +573,28 @@
   <data name="label2.Text" xml:space="preserve">
     <value>注釈：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name=">>splitContainer1.Panel2.Name" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
-  <data name=">>splitContainer1.Panel2.Type" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>splitContainer1.Panel2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
     <value>splitContainer1</value>
   </data>
-  <data name=">>splitContainer1.Panel2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
@@ -606,16 +606,16 @@
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name=">>splitContainer1.Name" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
   </data>
-  <data name=">>splitContainer1.Type" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>splitContainer1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>splitContainer1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -633,82 +633,82 @@
   <data name="$this.Text" xml:space="preserve">
     <value>メモを編集</value>
   </data>
-  <data name=">>btnOrangeRed.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOrangeRed.Name" xml:space="preserve">
     <value>btnOrangeRed</value>
   </data>
-  <data name=">>btnOrangeRed.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOrangeRed.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnRed.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnRed.Name" xml:space="preserve">
     <value>btnRed</value>
   </data>
-  <data name=">>btnRed.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnRed.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOrange.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOrange.Name" xml:space="preserve">
     <value>btnOrange</value>
   </data>
-  <data name=">>btnOrange.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOrange.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnYellow.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnYellow.Name" xml:space="preserve">
     <value>btnYellow</value>
   </data>
-  <data name=">>btnYellow.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnYellow.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnLightGreen.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnLightGreen.Name" xml:space="preserve">
     <value>btnLightGreen</value>
   </data>
-  <data name=">>btnLightGreen.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnLightGreen.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnGreen.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnGreen.Name" xml:space="preserve">
     <value>btnGreen</value>
   </data>
-  <data name=">>btnGreen.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnGreen.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnLightBlue.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnLightBlue.Name" xml:space="preserve">
     <value>btnLightBlue</value>
   </data>
-  <data name=">>btnLightBlue.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnLightBlue.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnBlue.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnBlue.Name" xml:space="preserve">
     <value>btnBlue</value>
   </data>
-  <data name=">>btnBlue.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnBlue.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnBlack.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnBlack.Name" xml:space="preserve">
     <value>btnBlack</value>
   </data>
-  <data name=">>btnBlack.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnBlack.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnPurple.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnPurple.Name" xml:space="preserve">
     <value>btnPurple</value>
   </data>
-  <data name=">>btnPurple.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnPurple.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>colName.Name" xml:space="preserve">
+  <data name="&gt;&gt;colName.Name" xml:space="preserve">
     <value>colName</value>
   </data>
-  <data name=">>colName.Type" xml:space="preserve">
+  <data name="&gt;&gt;colName.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>colValue.Name" xml:space="preserve">
+  <data name="&gt;&gt;colValue.Name" xml:space="preserve">
     <value>colValue</value>
   </data>
-  <data name=">>colValue.Type" xml:space="preserve">
+  <data name="&gt;&gt;colValue.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditNoteDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,37 +117,37 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>250, 13</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>21</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name=">>btnOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>22</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -168,16 +168,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>21</value>
   </data>
   <data name="comboWindowType.Location" type="System.Drawing.Point, System.Drawing">
@@ -189,16 +189,16 @@
   <data name="comboWindowType.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
   </data>
-  <data name=">>comboWindowType.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboWindowType.Name" xml:space="preserve">
     <value>comboWindowType</value>
   </data>
-  <data name=">>comboWindowType.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboWindowType.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboWindowType.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboWindowType.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboWindowType.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboWindowType.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelWindowType.AutoSize" type="System.Boolean, mscorlib">
@@ -219,16 +219,16 @@
   <data name="labelWindowType.Text" xml:space="preserve">
     <value>ウィンドウタイプ(&amp;W)：</value>
   </data>
-  <data name=">>labelWindowType.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowType.Name" xml:space="preserve">
     <value>labelWindowType</value>
   </data>
-  <data name=">>labelWindowType.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowType.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelWindowType.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowType.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelWindowType.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowType.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="textWindowsPerScan.Enabled" type="System.Boolean, mscorlib">
@@ -243,16 +243,16 @@
   <data name="textWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
-  <data name=">>textWindowsPerScan.Name" xml:space="preserve">
+  <data name="&gt;&gt;textWindowsPerScan.Name" xml:space="preserve">
     <value>textWindowsPerScan</value>
   </data>
-  <data name=">>textWindowsPerScan.Type" xml:space="preserve">
+  <data name="&gt;&gt;textWindowsPerScan.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textWindowsPerScan.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textWindowsPerScan.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textWindowsPerScan.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textWindowsPerScan.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="labelWindowsPerScan.AutoSize" type="System.Boolean, mscorlib">
@@ -276,16 +276,16 @@
   <data name="labelWindowsPerScan.Text" xml:space="preserve">
     <value>スキャン毎のウィンドウ数(&amp;D)：</value>
   </data>
-  <data name=">>labelWindowsPerScan.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowsPerScan.Name" xml:space="preserve">
     <value>labelWindowsPerScan</value>
   </data>
-  <data name=">>labelWindowsPerScan.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowsPerScan.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelWindowsPerScan.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowsPerScan.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelWindowsPerScan.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowsPerScan.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="labelWindowCount.AutoSize" type="System.Boolean, mscorlib">
@@ -303,16 +303,16 @@
   <data name="labelWindowCount.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name=">>labelWindowCount.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowCount.Name" xml:space="preserve">
     <value>labelWindowCount</value>
   </data>
-  <data name=">>labelWindowCount.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowCount.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelWindowCount.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowCount.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelWindowCount.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelWindowCount.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="cbGenerateMethodTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -336,16 +336,16 @@
   <data name="cbGenerateMethodTarget.Text" xml:space="preserve">
     <value>ターゲットを生成(&amp;T)</value>
   </data>
-  <data name=">>cbGenerateMethodTarget.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbGenerateMethodTarget.Name" xml:space="preserve">
     <value>cbGenerateMethodTarget</value>
   </data>
-  <data name=">>cbGenerateMethodTarget.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbGenerateMethodTarget.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbGenerateMethodTarget.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbGenerateMethodTarget.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>cbGenerateMethodTarget.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbGenerateMethodTarget.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="cbOptimizeWindowPlacement.AutoSize" type="System.Boolean, mscorlib">
@@ -366,16 +366,16 @@
   <data name="cbOptimizeWindowPlacement.Text" xml:space="preserve">
     <value>ウィンドウ位置の最適化(&amp;P)</value>
   </data>
-  <data name=">>cbOptimizeWindowPlacement.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbOptimizeWindowPlacement.Name" xml:space="preserve">
     <value>cbOptimizeWindowPlacement</value>
   </data>
-  <data name=">>cbOptimizeWindowPlacement.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbOptimizeWindowPlacement.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbOptimizeWindowPlacement.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbOptimizeWindowPlacement.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>cbOptimizeWindowPlacement.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbOptimizeWindowPlacement.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
@@ -396,16 +396,16 @@
   <data name="label8.Text" xml:space="preserve">
     <value>デコンボリューション(&amp;D)：</value>
   </data>
-  <data name=">>label8.Name" xml:space="preserve">
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
-  <data name=">>label8.Type" xml:space="preserve">
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label8.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label8.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="textMarginRight.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -420,16 +420,16 @@
   <data name="textMarginRight.TabIndex" type="System.Int32, mscorlib">
     <value>18</value>
   </data>
-  <data name=">>textMarginRight.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMarginRight.Name" xml:space="preserve">
     <value>textMarginRight</value>
   </data>
-  <data name=">>textMarginRight.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMarginRight.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMarginRight.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMarginRight.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textMarginRight.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMarginRight.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="textMarginLeft.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -444,16 +444,16 @@
   <data name="textMarginLeft.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
-  <data name=">>textMarginLeft.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMarginLeft.Name" xml:space="preserve">
     <value>textMarginLeft</value>
   </data>
-  <data name=">>textMarginLeft.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMarginLeft.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMarginLeft.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMarginLeft.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textMarginLeft.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMarginLeft.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -477,16 +477,16 @@
   <data name="label5.Text" xml:space="preserve">
     <value>マージン幅(&amp;G)：</value>
   </data>
-  <data name=">>label5.Name" xml:space="preserve">
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name=">>label5.Type" xml:space="preserve">
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label5.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label5.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -510,16 +510,16 @@
   <data name="label4.Text" xml:space="preserve">
     <value>マージン(&amp;M)：</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="comboMargins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -534,16 +534,16 @@
   <data name="comboMargins.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name=">>comboMargins.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboMargins.Name" xml:space="preserve">
     <value>comboMargins</value>
   </data>
-  <data name=">>comboMargins.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboMargins.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboMargins.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboMargins.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboMargins.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboMargins.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
   <data name="textWidth.Location" type="System.Drawing.Point, System.Drawing">
@@ -555,16 +555,16 @@
   <data name="textWidth.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name=">>textWidth.Name" xml:space="preserve">
+  <data name="&gt;&gt;textWidth.Name" xml:space="preserve">
     <value>textWidth</value>
   </data>
-  <data name=">>textWidth.Type" xml:space="preserve">
+  <data name="&gt;&gt;textWidth.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textWidth.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textWidth.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textWidth.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textWidth.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -585,16 +585,16 @@
   <data name="label3.Text" xml:space="preserve">
     <value>ウィンドウ幅(&amp;W)：</value>
   </data>
-  <data name=">>label3.Name" xml:space="preserve">
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name=">>label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="textEnd.Location" type="System.Drawing.Point, System.Drawing">
@@ -606,16 +606,16 @@
   <data name="textEnd.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name=">>textEnd.Name" xml:space="preserve">
+  <data name="&gt;&gt;textEnd.Name" xml:space="preserve">
     <value>textEnd</value>
   </data>
-  <data name=">>textEnd.Type" xml:space="preserve">
+  <data name="&gt;&gt;textEnd.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textEnd.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textEnd.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textEnd.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textEnd.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -636,16 +636,16 @@
   <data name="label2.Text" xml:space="preserve">
     <value>m/zの終了(&amp;E)：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>18</value>
   </data>
   <data name="textStart.Location" type="System.Drawing.Point, System.Drawing">
@@ -657,16 +657,16 @@
   <data name="textStart.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>textStart.Name" xml:space="preserve">
+  <data name="&gt;&gt;textStart.Name" xml:space="preserve">
     <value>textStart</value>
   </data>
-  <data name=">>textStart.Type" xml:space="preserve">
+  <data name="&gt;&gt;textStart.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textStart.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textStart.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textStart.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textStart.ZOrder" xml:space="preserve">
     <value>19</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -687,16 +687,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>m/zの開始(&amp;S)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>20</value>
   </data>
   <data name="comboDeconv.Location" type="System.Drawing.Point, System.Drawing">
@@ -708,16 +708,16 @@
   <data name="comboDeconv.TabIndex" type="System.Int32, mscorlib">
     <value>26</value>
   </data>
-  <data name=">>comboDeconv.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboDeconv.Name" xml:space="preserve">
     <value>comboDeconv</value>
   </data>
-  <data name=">>comboDeconv.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboDeconv.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboDeconv.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboDeconv.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboDeconv.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboDeconv.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -735,16 +735,16 @@
   <data name="label6.Text" xml:space="preserve">
     <value>ウィンドウ数(&amp;W)：</value>
   </data>
-  <data name=">>label6.Name" xml:space="preserve">
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name=">>label6.Type" xml:space="preserve">
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label6.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label6.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1190,10 +1190,10 @@
   <data name="$this.Text" xml:space="preserve">
     <value>単離スキームを計算</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CalculateIsolationSchemeDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

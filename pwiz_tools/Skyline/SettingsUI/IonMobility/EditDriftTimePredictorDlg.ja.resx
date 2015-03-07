@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -120,7 +120,7 @@
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>279, 17</value>
   </metadata>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="gridRegression.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
@@ -130,7 +130,7 @@
   <data name="Charge.HeaderText" xml:space="preserve">
     <value>電荷</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Charge.Width" type="System.Int32, mscorlib">
     <value>60</value>
   </data>
@@ -149,7 +149,7 @@
   <data name="Intercept.HeaderText" xml:space="preserve">
     <value>切片</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="gridRegression.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 387</value>
   </data>
@@ -166,16 +166,16 @@ D = 勾配* C +切片
 
 の各プリカーサー電荷状態には異なる勾配と切片値が必要です。 プリカーサー伝家状態がこのリストにない場合は、その電荷状態に対しクロマトグラム抽出でドリフト時間情報を使用することはできません。 これは、クロマトグラムがドリフト時間フィルタリングなしですべてのドリフトビンにわたり抽出されるためです。</value>
   </data>
-  <data name=">>gridRegression.Name" xml:space="preserve">
+  <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
   </data>
-  <data name=">>gridRegression.Type" xml:space="preserve">
+  <data name="&gt;&gt;gridRegression.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>gridRegression.Parent" xml:space="preserve">
+  <data name="&gt;&gt;gridRegression.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>gridRegression.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;gridRegression.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="comboLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -196,16 +196,16 @@ D = 勾配* C +切片
   <data name="comboLibrary.ToolTip" xml:space="preserve">
     <value>衝突断面積値または特定のペプチドや電荷状態に対する測定ドリフト時間の保存された表を選択（または作成）します。</value>
   </data>
-  <data name=">>comboLibrary.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboLibrary.Name" xml:space="preserve">
     <value>comboLibrary</value>
   </data>
-  <data name=">>comboLibrary.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboLibrary.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboLibrary.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboLibrary.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboLibrary.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboLibrary.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
@@ -224,16 +224,16 @@ W = 2T/R
 
    </value>
   </data>
-  <data name=">>textResolvingPower.Name" xml:space="preserve">
+  <data name="&gt;&gt;textResolvingPower.Name" xml:space="preserve">
     <value>textResolvingPower</value>
   </data>
-  <data name=">>textResolvingPower.Type" xml:space="preserve">
+  <data name="&gt;&gt;textResolvingPower.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textResolvingPower.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textResolvingPower.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textResolvingPower.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textResolvingPower.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -251,16 +251,16 @@ W = 2T/R
   <data name="textName.ToolTip" xml:space="preserve">
     <value>ペプチド設定形式でこの予測の表示に使用する名前</value>
   </data>
-  <data name=">>textName.Name" xml:space="preserve">
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name=">>textName.Type" xml:space="preserve">
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textName.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textName.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="gridMeasuredDriftTimes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -299,16 +299,16 @@ W = 2T/R
   <data name="gridMeasuredDriftTimes.ToolTip" xml:space="preserve">
     <value>観測されたドリフト時間が優先的に使用されます。 欠落した値は、提供されたイオン移動度ライブラリがある場合、そこから取得されます。</value>
   </data>
-  <data name=">>gridMeasuredDriftTimes.Name" xml:space="preserve">
+  <data name="&gt;&gt;gridMeasuredDriftTimes.Name" xml:space="preserve">
     <value>gridMeasuredDriftTimes</value>
   </data>
-  <data name=">>gridMeasuredDriftTimes.Type" xml:space="preserve">
+  <data name="&gt;&gt;gridMeasuredDriftTimes.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>gridMeasuredDriftTimes.Parent" xml:space="preserve">
+  <data name="&gt;&gt;gridMeasuredDriftTimes.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>gridMeasuredDriftTimes.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;gridMeasuredDriftTimes.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="bindingChargeRegressionLines.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -332,16 +332,16 @@ W = 2T/R
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name=">>btnOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -362,16 +362,16 @@ W = 2T/R
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="labelConversionParameters.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -395,16 +395,16 @@ W = 2T/R
   <data name="labelConversionParameters.Text" xml:space="preserve">
     <value>変換パラメータ(&amp;C)：</value>
   </data>
-  <data name=">>labelConversionParameters.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelConversionParameters.Name" xml:space="preserve">
     <value>labelConversionParameters</value>
   </data>
-  <data name=">>labelConversionParameters.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelConversionParameters.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelConversionParameters.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelConversionParameters.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelConversionParameters.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelConversionParameters.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelIonMobilityLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -428,16 +428,16 @@ W = 2T/R
   <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
     <value>イオン移動度ライブラリ(&amp;I)：</value>
   </data>
-  <data name=">>labelIonMobilityLibrary.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelIonMobilityLibrary.Name" xml:space="preserve">
     <value>labelIonMobilityLibrary</value>
   </data>
-  <data name=">>labelIonMobilityLibrary.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelIonMobilityLibrary.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelIonMobilityLibrary.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelIonMobilityLibrary.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelIonMobilityLibrary.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelIonMobilityLibrary.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -458,16 +458,16 @@ W = 2T/R
   <data name="label3.Text" xml:space="preserve">
     <value>分解能(&amp;P)：</value>
   </data>
-  <data name=">>label3.Name" xml:space="preserve">
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name=">>label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -488,16 +488,16 @@ W = 2T/R
   <data name="label4.Text" xml:space="preserve">
     <value>名前(&amp;N)：</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -518,16 +518,16 @@ W = 2T/R
   <data name="label2.Text" xml:space="preserve">
     <value>測定ドリフト時間(&amp;M)：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -545,58 +545,58 @@ W = 2T/R
   <data name="$this.Text" xml:space="preserve">
     <value>ドリフト時間予測を編集</value>
   </data>
-  <data name=">>helpTip.Name" xml:space="preserve">
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name=">>helpTip.Type" xml:space="preserve">
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Charge.Name" xml:space="preserve">
+  <data name="&gt;&gt;Charge.Name" xml:space="preserve">
     <value>Charge</value>
   </data>
-  <data name=">>Charge.Type" xml:space="preserve">
+  <data name="&gt;&gt;Charge.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Slope.Name" xml:space="preserve">
+  <data name="&gt;&gt;Slope.Name" xml:space="preserve">
     <value>Slope</value>
   </data>
-  <data name=">>Slope.Type" xml:space="preserve">
+  <data name="&gt;&gt;Slope.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>Intercept.Name" xml:space="preserve">
+  <data name="&gt;&gt;Intercept.Name" xml:space="preserve">
     <value>Intercept</value>
   </data>
-  <data name=">>Intercept.Type" xml:space="preserve">
+  <data name="&gt;&gt;Intercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>MeasuredDriftTimeSequence.Name" xml:space="preserve">
+  <data name="&gt;&gt;MeasuredDriftTimeSequence.Name" xml:space="preserve">
     <value>MeasuredDriftTimeSequence</value>
   </data>
-  <data name=">>MeasuredDriftTimeSequence.Type" xml:space="preserve">
+  <data name="&gt;&gt;MeasuredDriftTimeSequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>MeasuredDriftTimeCharge.Name" xml:space="preserve">
+  <data name="&gt;&gt;MeasuredDriftTimeCharge.Name" xml:space="preserve">
     <value>MeasuredDriftTimeCharge</value>
   </data>
-  <data name=">>MeasuredDriftTimeCharge.Type" xml:space="preserve">
+  <data name="&gt;&gt;MeasuredDriftTimeCharge.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>MeasuredDriftTimeMsec.Name" xml:space="preserve">
+  <data name="&gt;&gt;MeasuredDriftTimeMsec.Name" xml:space="preserve">
     <value>MeasuredDriftTimeMsec</value>
   </data>
-  <data name=">>MeasuredDriftTimeMsec.Type" xml:space="preserve">
+  <data name="&gt;&gt;MeasuredDriftTimeMsec.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>bindingChargeRegressionLines.Name" xml:space="preserve">
+  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
     <value>bindingChargeRegressionLines</value>
   </data>
-  <data name=">>bindingChargeRegressionLines.Type" xml:space="preserve">
+  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditDriftTimePredictorDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

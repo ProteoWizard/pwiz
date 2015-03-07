@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 22</value>
   </data>
@@ -127,7 +127,7 @@
   <data name="comboSpectrum.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 23</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -137,20 +137,20 @@
   <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
     <value>473, 361</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>graphControl.Name" xml:space="preserve">
+  <data name="&gt;&gt;graphControl.Name" xml:space="preserve">
     <value>graphControl</value>
   </data>
-  <data name=">>graphControl.Type" xml:space="preserve">
+  <data name="&gt;&gt;graphControl.Type" xml:space="preserve">
     <value>pwiz.MSGraph.MSGraphControl, MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9</value>
   </data>
-  <data name=">>graphControl.Parent" xml:space="preserve">
+  <data name="&gt;&gt;graphControl.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name=">>graphControl.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -270,16 +270,16 @@
   <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>toolBar.Name" xml:space="preserve">
+  <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
     <value>toolBar</value>
   </data>
-  <data name=">>toolBar.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>toolBar.Parent" xml:space="preserve">
+  <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name=">>toolBar.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;toolBar.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="GraphPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -294,16 +294,16 @@
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name=">>GraphPanel.Name" xml:space="preserve">
+  <data name="&gt;&gt;GraphPanel.Name" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name=">>GraphPanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;GraphPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>GraphPanel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;GraphPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>GraphPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -321,76 +321,76 @@
   <data name="$this.TabText" xml:space="preserve">
     <value>フルスキャン</value>
   </data>
-  <data name=">>toolStripLabel1.Name" xml:space="preserve">
+  <data name="&gt;&gt;toolStripLabel1.Name" xml:space="preserve">
     <value>toolStripLabel1</value>
   </data>
-  <data name=">>toolStripLabel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolStripLabel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboSpectrum.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboSpectrum.Name" xml:space="preserve">
     <value>comboSpectrum</value>
   </data>
-  <data name=">>comboSpectrum.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboSpectrum.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>toolStripLabel2.Name" xml:space="preserve">
+  <data name="&gt;&gt;toolStripLabel2.Name" xml:space="preserve">
     <value>toolStripLabel2</value>
   </data>
-  <data name=">>toolStripLabel2.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolStripLabel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboBoxScanType.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxScanType.Name" xml:space="preserve">
     <value>comboBoxScanType</value>
   </data>
-  <data name=">>comboBoxScanType.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxScanType.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>rightButton.Name" xml:space="preserve">
+  <data name="&gt;&gt;rightButton.Name" xml:space="preserve">
     <value>rightButton</value>
   </data>
-  <data name=">>rightButton.Type" xml:space="preserve">
+  <data name="&gt;&gt;rightButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>leftButton.Name" xml:space="preserve">
+  <data name="&gt;&gt;leftButton.Name" xml:space="preserve">
     <value>leftButton</value>
   </data>
-  <data name=">>leftButton.Type" xml:space="preserve">
+  <data name="&gt;&gt;leftButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>magnifyBtn.Name" xml:space="preserve">
+  <data name="&gt;&gt;magnifyBtn.Name" xml:space="preserve">
     <value>magnifyBtn</value>
   </data>
-  <data name=">>magnifyBtn.Type" xml:space="preserve">
+  <data name="&gt;&gt;magnifyBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>spectrumBtn.Name" xml:space="preserve">
+  <data name="&gt;&gt;spectrumBtn.Name" xml:space="preserve">
     <value>spectrumBtn</value>
   </data>
-  <data name=">>spectrumBtn.Type" xml:space="preserve">
+  <data name="&gt;&gt;spectrumBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>filterBtn.Name" xml:space="preserve">
+  <data name="&gt;&gt;filterBtn.Name" xml:space="preserve">
     <value>filterBtn</value>
   </data>
-  <data name=">>filterBtn.Type" xml:space="preserve">
+  <data name="&gt;&gt;filterBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblScanId.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblScanId.Name" xml:space="preserve">
     <value>lblScanId</value>
   </data>
-  <data name=">>lblScanId.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblScanId.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnIsolationWindow.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnIsolationWindow.Name" xml:space="preserve">
     <value>btnIsolationWindow</value>
   </data>
-  <data name=">>btnIsolationWindow.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnIsolationWindow.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>GraphFullScan</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

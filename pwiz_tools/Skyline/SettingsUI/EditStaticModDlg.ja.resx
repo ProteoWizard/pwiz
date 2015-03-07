@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,31 +117,31 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 29</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>238, 20</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>textName.Name" xml:space="preserve">
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name=">>textName.Type" xml:space="preserve">
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textName.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textName.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>18</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -159,16 +159,16 @@
   <data name="label4.Text" xml:space="preserve">
     <value>名前(&amp;N)：</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>19</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -186,16 +186,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>20</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -213,16 +213,16 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name=">>btnOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>21</value>
   </data>
   <data name="labelAA.AutoSize" type="System.Boolean, mscorlib">
@@ -240,16 +240,16 @@
   <data name="labelAA.Text" xml:space="preserve">
     <value>アミノ酸(&amp;A)：</value>
   </data>
-  <data name=">>labelAA.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelAA.Name" xml:space="preserve">
     <value>labelAA</value>
   </data>
-  <data name=">>labelAA.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelAA.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelAA.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelAA.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelAA.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelAA.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="comboAA.Location" type="System.Drawing.Point, System.Drawing">
@@ -261,16 +261,16 @@
   <data name="comboAA.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name=">>comboAA.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboAA.Name" xml:space="preserve">
     <value>comboAA</value>
   </data>
-  <data name=">>comboAA.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboAA.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboAA.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboAA.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboAA.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboAA.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="comboTerm.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -285,16 +285,16 @@
   <data name="comboTerm.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name=">>comboTerm.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboTerm.Name" xml:space="preserve">
     <value>comboTerm</value>
   </data>
-  <data name=">>comboTerm.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboTerm.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboTerm.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboTerm.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboTerm.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboTerm.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="label6.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -315,16 +315,16 @@
   <data name="label6.Text" xml:space="preserve">
     <value>末端(&amp;T)：</value>
   </data>
-  <data name=">>label6.Name" xml:space="preserve">
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name=">>label6.Type" xml:space="preserve">
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label6.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label6.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="cb2H.AutoSize" type="System.Boolean, mscorlib">
@@ -342,16 +342,16 @@
   <data name="cb2H.Text" xml:space="preserve">
     <value>2H</value>
   </data>
-  <data name=">>cb2H.Name" xml:space="preserve">
+  <data name="&gt;&gt;cb2H.Name" xml:space="preserve">
     <value>cb2H</value>
   </data>
-  <data name=">>cb2H.Type" xml:space="preserve">
+  <data name="&gt;&gt;cb2H.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cb2H.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cb2H.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
-  <data name=">>cb2H.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cb2H.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="cb18O.AutoSize" type="System.Boolean, mscorlib">
@@ -369,16 +369,16 @@
   <data name="cb18O.Text" xml:space="preserve">
     <value>18O</value>
   </data>
-  <data name=">>cb18O.Name" xml:space="preserve">
+  <data name="&gt;&gt;cb18O.Name" xml:space="preserve">
     <value>cb18O</value>
   </data>
-  <data name=">>cb18O.Type" xml:space="preserve">
+  <data name="&gt;&gt;cb18O.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cb18O.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cb18O.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
-  <data name=">>cb18O.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cb18O.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="cb15N.AutoSize" type="System.Boolean, mscorlib">
@@ -396,16 +396,16 @@
   <data name="cb15N.Text" xml:space="preserve">
     <value>15N</value>
   </data>
-  <data name=">>cb15N.Name" xml:space="preserve">
+  <data name="&gt;&gt;cb15N.Name" xml:space="preserve">
     <value>cb15N</value>
   </data>
-  <data name=">>cb15N.Type" xml:space="preserve">
+  <data name="&gt;&gt;cb15N.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cb15N.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cb15N.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
-  <data name=">>cb15N.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cb15N.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="cb13C.AutoSize" type="System.Boolean, mscorlib">
@@ -423,16 +423,16 @@
   <data name="cb13C.Text" xml:space="preserve">
     <value>13C</value>
   </data>
-  <data name=">>cb13C.Name" xml:space="preserve">
+  <data name="&gt;&gt;cb13C.Name" xml:space="preserve">
     <value>cb13C</value>
   </data>
-  <data name=">>cb13C.Type" xml:space="preserve">
+  <data name="&gt;&gt;cb13C.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cb13C.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cb13C.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
-  <data name=">>cb13C.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cb13C.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="panelAtoms.Location" type="System.Drawing.Point, System.Drawing">
@@ -444,16 +444,16 @@
   <data name="panelAtoms.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name=">>panelAtoms.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelAtoms.Name" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
-  <data name=">>panelAtoms.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelAtoms.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelAtoms.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelAtoms.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelAtoms.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelAtoms.ZOrder" xml:space="preserve">
     <value>23</value>
   </data>
   <data name="cbChemicalFormula.AutoSize" type="System.Boolean, mscorlib">
@@ -474,16 +474,16 @@
   <data name="cbChemicalFormula.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name=">>cbChemicalFormula.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbChemicalFormula.Name" xml:space="preserve">
     <value>cbChemicalFormula</value>
   </data>
-  <data name=">>cbChemicalFormula.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbChemicalFormula.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbChemicalFormula.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbChemicalFormula.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>cbChemicalFormula.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbChemicalFormula.ZOrder" xml:space="preserve">
     <value>22</value>
   </data>
   <data name="btnLoss.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -501,16 +501,16 @@
   <data name="btnLoss.Text" xml:space="preserve">
     <value>ロス(&amp;L) &lt;&lt;</value>
   </data>
-  <data name=">>btnLoss.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnLoss.Name" xml:space="preserve">
     <value>btnLoss</value>
   </data>
-  <data name=">>btnLoss.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnLoss.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnLoss.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnLoss.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnLoss.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnLoss.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="comboRelativeRT.Location" type="System.Drawing.Point, System.Drawing">
@@ -522,16 +522,16 @@
   <data name="comboRelativeRT.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
-  <data name=">>comboRelativeRT.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboRelativeRT.Name" xml:space="preserve">
     <value>comboRelativeRT</value>
   </data>
-  <data name=">>comboRelativeRT.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboRelativeRT.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboRelativeRT.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboRelativeRT.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboRelativeRT.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboRelativeRT.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="labelRelativeRT.AutoSize" type="System.Boolean, mscorlib">
@@ -549,16 +549,16 @@
   <data name="labelRelativeRT.Text" xml:space="preserve">
     <value>相対保持時間：</value>
   </data>
-  <data name=">>labelRelativeRT.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelRelativeRT.Name" xml:space="preserve">
     <value>labelRelativeRT</value>
   </data>
-  <data name=">>labelRelativeRT.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelRelativeRT.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelRelativeRT.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelRelativeRT.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelRelativeRT.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelRelativeRT.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="cbVariableMod.AutoSize" type="System.Boolean, mscorlib">
@@ -576,16 +576,16 @@
   <data name="cbVariableMod.Text" xml:space="preserve">
     <value>変数</value>
   </data>
-  <data name=">>cbVariableMod.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbVariableMod.Name" xml:space="preserve">
     <value>cbVariableMod</value>
   </data>
-  <data name=">>cbVariableMod.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbVariableMod.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbVariableMod.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbVariableMod.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>cbVariableMod.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbVariableMod.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="listNeutralLosses.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -600,16 +600,16 @@
   <data name="listNeutralLosses.TabIndex" type="System.Int32, mscorlib">
     <value>25</value>
   </data>
-  <data name=">>listNeutralLosses.Name" xml:space="preserve">
+  <data name="&gt;&gt;listNeutralLosses.Name" xml:space="preserve">
     <value>listNeutralLosses</value>
   </data>
-  <data name=">>listNeutralLosses.Type" xml:space="preserve">
+  <data name="&gt;&gt;listNeutralLosses.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>listNeutralLosses.Parent" xml:space="preserve">
+  <data name="&gt;&gt;listNeutralLosses.Parent" xml:space="preserve">
     <value>panelLoss</value>
   </data>
-  <data name=">>listNeutralLosses.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;listNeutralLosses.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="labelLoss.AutoSize" type="System.Boolean, mscorlib">
@@ -627,16 +627,16 @@
   <data name="labelLoss.Text" xml:space="preserve">
     <value>ニュートラルロス(&amp;U)：</value>
   </data>
-  <data name=">>labelLoss.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelLoss.Name" xml:space="preserve">
     <value>labelLoss</value>
   </data>
-  <data name=">>labelLoss.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelLoss.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelLoss.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelLoss.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelLoss.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelLoss.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <metadata name="toolBarLosses.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -687,16 +687,16 @@
   <data name="toolBarLosses.TabIndex" type="System.Int32, mscorlib">
     <value>26</value>
   </data>
-  <data name=">>toolBarLosses.Name" xml:space="preserve">
+  <data name="&gt;&gt;toolBarLosses.Name" xml:space="preserve">
     <value>toolBarLosses</value>
   </data>
-  <data name=">>toolBarLosses.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolBarLosses.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>toolBarLosses.Parent" xml:space="preserve">
+  <data name="&gt;&gt;toolBarLosses.Parent" xml:space="preserve">
     <value>panelLoss</value>
   </data>
-  <data name=">>toolBarLosses.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;toolBarLosses.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelLoss.Location" type="System.Drawing.Point, System.Drawing">
@@ -708,16 +708,16 @@
   <data name="panelLoss.TabIndex" type="System.Int32, mscorlib">
     <value>27</value>
   </data>
-  <data name=">>panelLoss.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelLoss.Name" xml:space="preserve">
     <value>panelLoss</value>
   </data>
-  <data name=">>panelLoss.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelLoss.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelLoss.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelLoss.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelLoss.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelLoss.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="comboMod.IntegralHeight" type="System.Boolean, mscorlib">
@@ -735,16 +735,16 @@
   <data name="comboMod.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>comboMod.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboMod.Name" xml:space="preserve">
     <value>comboMod</value>
   </data>
-  <data name=">>comboMod.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboMod.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboMod.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboMod.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>comboMod.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboMod.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -762,28 +762,28 @@
   <data name="$this.Text" xml:space="preserve">
     <value>構造修飾を編集</value>
   </data>
-  <data name=">>tbbAddLoss.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbbAddLoss.Name" xml:space="preserve">
     <value>tbbAddLoss</value>
   </data>
-  <data name=">>tbbAddLoss.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbbAddLoss.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbbEditLoss.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbbEditLoss.Name" xml:space="preserve">
     <value>tbbEditLoss</value>
   </data>
-  <data name=">>tbbEditLoss.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbbEditLoss.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbbDeleteLoss.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbbDeleteLoss.Name" xml:space="preserve">
     <value>tbbDeleteLoss</value>
   </data>
-  <data name=">>tbbDeleteLoss.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbbDeleteLoss.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditStaticModDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
