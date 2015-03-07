@@ -189,6 +189,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (null != _axisLabelScaler)
             {
                 _axisLabelScaler.ScaleAxisLabels();
+                zedGraphControl.AxisChange();
             }
         }
 
