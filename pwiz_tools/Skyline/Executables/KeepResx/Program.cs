@@ -16,22 +16,14 @@ namespace KeepResx
             @"topograph\*",
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",
-            @"skyline\executables\localizationhelper\localizationhelper\properties\resources.resx",
-            @"skyline\executables\skylinepeptidecolorgenerator\mainwindow.resx",
-            @"skyline\executables\skylinepeptidecolorgenerator\properties\resources.resx",
-            @"skyline\executables\tools\exampleargcollector\argcollector\testargcollector\exampletoolui.resx",
-            @"skyline\executables\tools\exampleargcollector\argcollector\testargcollector\properties\resources.resx",
-            @"skyline\executables\tools\exampleargcollector\argcollector\testargcollector\properties\resources.resx",
+            @"skyline\executables\localizationhelper\*",
+            @"skyline\executables\skylinepeptidecolorgenerator\*",
+            @"skyline\executables\tools\exampleargcollector\*",
+            @"skyline\executables\tools\exampleinteractivetool\*",
             @"skyline\controls\startup\tutoriallinkresources.resx",
-            @"skyline\skylinetester\aboutwindow.resx",
-            @"skyline\skylinetester\createzipinstallerwindow.resx",
-            @"skyline\skylinetester\deletewindow.resx",
-            @"skyline\skylinetester\findwindow.resx",
-            @"skyline\skylinetester\memorychartwindow.resx",
-            @"skyline\skylinetester\nightlylogswindow.resx",
-            @"skyline\skylinetester\skylinetesterwindow.resx",
-            @"skyline\skylinetester\properties\resources.resx",
-            @"skyline\testutil\pauseandcontinueform.resx"
+            @"skyline\skylinenightly\*",
+            @"skyline\skylinetester\*",
+            @"skyline\testutil\*"
         };
 
         private const string ExtResx = ".resx";
