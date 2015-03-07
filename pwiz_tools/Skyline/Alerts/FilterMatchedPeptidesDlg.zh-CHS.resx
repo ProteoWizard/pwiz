@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,11 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioNoDuplicates.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioNoDuplicates.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 26</value>
   </data>
@@ -134,16 +134,16 @@
   <data name="radioNoDuplicates.Text" xml:space="preserve">
     <value>请勿添加</value>
   </data>
-  <data name=">>radioNoDuplicates.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioNoDuplicates.Name" xml:space="preserve">
     <value>radioNoDuplicates</value>
   </data>
-  <data name=">>radioNoDuplicates.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioNoDuplicates.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioNoDuplicates.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioNoDuplicates.Parent" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
-  <data name=">>radioNoDuplicates.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioNoDuplicates.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="radioFirstOccurence.AutoSize" type="System.Boolean, mscorlib">
@@ -161,16 +161,16 @@
   <data name="radioFirstOccurence.Text" xml:space="preserve">
     <value>仅添加到首个匹配的蛋白质中</value>
   </data>
-  <data name=">>radioFirstOccurence.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioFirstOccurence.Name" xml:space="preserve">
     <value>radioFirstOccurence</value>
   </data>
-  <data name=">>radioFirstOccurence.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioFirstOccurence.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioFirstOccurence.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioFirstOccurence.Parent" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
-  <data name=">>radioFirstOccurence.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioFirstOccurence.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="radioAddToAll.AutoSize" type="System.Boolean, mscorlib">
@@ -188,16 +188,16 @@
   <data name="radioAddToAll.Text" xml:space="preserve">
     <value>添加到所有匹配的蛋白质中</value>
   </data>
-  <data name=">>radioAddToAll.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioAddToAll.Name" xml:space="preserve">
     <value>radioAddToAll</value>
   </data>
-  <data name=">>radioAddToAll.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioAddToAll.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioAddToAll.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioAddToAll.Parent" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
-  <data name=">>radioAddToAll.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioAddToAll.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="radioFilterUnmatched.AutoSize" type="System.Boolean, mscorlib">
@@ -215,16 +215,16 @@
   <data name="radioFilterUnmatched.Text" xml:space="preserve">
     <value>请勿添加</value>
   </data>
-  <data name=">>radioFilterUnmatched.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioFilterUnmatched.Name" xml:space="preserve">
     <value>radioFilterUnmatched</value>
   </data>
-  <data name=">>radioFilterUnmatched.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioFilterUnmatched.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioFilterUnmatched.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioFilterUnmatched.Parent" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
-  <data name=">>radioFilterUnmatched.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioFilterUnmatched.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="radioAddUnmatched.AutoSize" type="System.Boolean, mscorlib">
@@ -242,19 +242,19 @@
   <data name="radioAddUnmatched.Text" xml:space="preserve">
     <value>添加到肽列表</value>
   </data>
-  <data name=">>radioAddUnmatched.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioAddUnmatched.Name" xml:space="preserve">
     <value>radioAddUnmatched</value>
   </data>
-  <data name=">>radioAddUnmatched.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioAddUnmatched.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioAddUnmatched.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioAddUnmatched.Parent" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
-  <data name=">>radioAddUnmatched.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioAddUnmatched.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="msgUnmatchedPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -270,16 +270,16 @@
   <data name="msgUnmatchedPeptides.Text" xml:space="preserve">
     <value>消息占位符 2</value>
   </data>
-  <data name=">>msgUnmatchedPeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;msgUnmatchedPeptides.Name" xml:space="preserve">
     <value>msgUnmatchedPeptides</value>
   </data>
-  <data name=">>msgUnmatchedPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;msgUnmatchedPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>msgUnmatchedPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;msgUnmatchedPeptides.Parent" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
-  <data name=">>msgUnmatchedPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;msgUnmatchedPeptides.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="msgDuplicatePeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -297,16 +297,16 @@
   <data name="msgDuplicatePeptides.Text" xml:space="preserve">
     <value>消息占位符 1</value>
   </data>
-  <data name=">>msgDuplicatePeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;msgDuplicatePeptides.Name" xml:space="preserve">
     <value>msgDuplicatePeptides</value>
   </data>
-  <data name=">>msgDuplicatePeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;msgDuplicatePeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>msgDuplicatePeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;msgDuplicatePeptides.Parent" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
-  <data name=">>msgDuplicatePeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;msgDuplicatePeptides.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="msgFilteredPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -324,16 +324,16 @@
   <data name="msgFilteredPeptides.Text" xml:space="preserve">
     <value>消息占位符 3</value>
   </data>
-  <data name=">>msgFilteredPeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;msgFilteredPeptides.Name" xml:space="preserve">
     <value>msgFilteredPeptides</value>
   </data>
-  <data name=">>msgFilteredPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;msgFilteredPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>msgFilteredPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;msgFilteredPeptides.Parent" xml:space="preserve">
     <value>panelFiltered</value>
   </data>
-  <data name=">>msgFilteredPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;msgFilteredPeptides.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="radioKeepFiltered.AutoSize" type="System.Boolean, mscorlib">
@@ -351,16 +351,16 @@
   <data name="radioKeepFiltered.Text" xml:space="preserve">
     <value>包含所有肽</value>
   </data>
-  <data name=">>radioKeepFiltered.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioKeepFiltered.Name" xml:space="preserve">
     <value>radioKeepFiltered</value>
   </data>
-  <data name=">>radioKeepFiltered.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioKeepFiltered.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioKeepFiltered.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioKeepFiltered.Parent" xml:space="preserve">
     <value>panelFiltered</value>
   </data>
-  <data name=">>radioKeepFiltered.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioKeepFiltered.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="radioDoNotAddFiltered.AutoSize" type="System.Boolean, mscorlib">
@@ -378,16 +378,16 @@
   <data name="radioDoNotAddFiltered.Text" xml:space="preserve">
     <value>请勿添加</value>
   </data>
-  <data name=">>radioDoNotAddFiltered.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioDoNotAddFiltered.Name" xml:space="preserve">
     <value>radioDoNotAddFiltered</value>
   </data>
-  <data name=">>radioDoNotAddFiltered.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioDoNotAddFiltered.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioDoNotAddFiltered.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioDoNotAddFiltered.Parent" xml:space="preserve">
     <value>panelFiltered</value>
   </data>
-  <data name=">>radioDoNotAddFiltered.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioDoNotAddFiltered.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -405,16 +405,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -432,16 +432,16 @@
   <data name="btnOK.Text" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name=">>btnOK.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name=">>btnOK.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOK.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOK.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="panelMultiple.Location" type="System.Drawing.Point, System.Drawing">
@@ -453,16 +453,16 @@
   <data name="panelMultiple.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>panelMultiple.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelMultiple.Name" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
-  <data name=">>panelMultiple.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelMultiple.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelMultiple.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelMultiple.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelMultiple.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelMultiple.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="panelUnmatched.Location" type="System.Drawing.Point, System.Drawing">
@@ -474,16 +474,16 @@
   <data name="panelUnmatched.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>panelUnmatched.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelUnmatched.Name" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
-  <data name=">>panelUnmatched.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelUnmatched.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelUnmatched.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelUnmatched.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelUnmatched.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelUnmatched.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="panelFiltered.Location" type="System.Drawing.Point, System.Drawing">
@@ -495,16 +495,16 @@
   <data name="panelFiltered.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>panelFiltered.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelFiltered.Name" xml:space="preserve">
     <value>panelFiltered</value>
   </data>
-  <data name=">>panelFiltered.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelFiltered.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelFiltered.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelFiltered.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelFiltered.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelFiltered.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -522,16 +522,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>请指定如何对下列各项进行处理：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -549,10 +549,10 @@
   <data name="$this.Text" xml:space="preserve">
     <value>筛选肽</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FilterMatchedPeptidesDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

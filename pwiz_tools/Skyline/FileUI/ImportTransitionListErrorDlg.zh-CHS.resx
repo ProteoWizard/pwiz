@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -120,7 +120,7 @@
   <metadata name="bindingSourceGrid.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewErrors.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -136,7 +136,7 @@
   <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
     <value>行</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewTextBoxColumn2.Width" type="System.Int32, mscorlib">
     <value>50</value>
   </data>
@@ -149,7 +149,7 @@
   <data name="dataGridViewTextBoxColumn3.Width" type="System.Int32, mscorlib">
     <value>50</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="dataGridViewErrors.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 34</value>
   </data>
@@ -159,16 +159,16 @@
   <data name="dataGridViewErrors.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>dataGridViewErrors.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewErrors.Name" xml:space="preserve">
     <value>dataGridViewErrors</value>
   </data>
-  <data name=">>dataGridViewErrors.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewErrors.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name=">>dataGridViewErrors.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewErrors.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>dataGridViewErrors.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewErrors.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="buttonOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -189,16 +189,16 @@
   <data name="buttonOk.Text" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name=">>buttonOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonOk.Name" xml:space="preserve">
     <value>buttonOk</value>
   </data>
-  <data name=">>buttonOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonOk.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="buttonCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -216,16 +216,16 @@
   <data name="buttonCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>buttonCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonCancel.Name" xml:space="preserve">
     <value>buttonCancel</value>
   </data>
-  <data name=">>buttonCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonCancel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelErrors.Location" type="System.Drawing.Point, System.Drawing">
@@ -240,16 +240,16 @@
   <data name="labelErrors.Text" xml:space="preserve">
     <value>错误</value>
   </data>
-  <data name=">>labelErrors.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelErrors.Name" xml:space="preserve">
     <value>labelErrors</value>
   </data>
-  <data name=">>labelErrors.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelErrors.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelErrors.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelErrors.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelErrors.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelErrors.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -695,34 +695,34 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Skyline</value>
   </data>
-  <data name=">>bindingSourceGrid.Name" xml:space="preserve">
+  <data name="&gt;&gt;bindingSourceGrid.Name" xml:space="preserve">
     <value>bindingSourceGrid</value>
   </data>
-  <data name=">>bindingSourceGrid.Type" xml:space="preserve">
+  <data name="&gt;&gt;bindingSourceGrid.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn1.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn2.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn2</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn3.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn3</value>
   </data>
-  <data name=">>dataGridViewTextBoxColumn3.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportTransitionListErrorDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

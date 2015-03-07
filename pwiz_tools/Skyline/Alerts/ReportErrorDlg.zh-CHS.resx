@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,34 +117,34 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>483, 427</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>82, 24</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>不报告</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="tbMessage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -160,18 +160,18 @@
     <value>1</value>
   </data>
   <data name="tbMessage.Text" xml:space="preserve">
-    <value/>
+    <value />
   </data>
-  <data name=">>tbMessage.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbMessage.Name" xml:space="preserve">
     <value>tbMessage</value>
   </data>
-  <data name=">>tbMessage.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbMessage.Type" xml:space="preserve">
     <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbMessage.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbMessage.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tbMessage.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tbMessage.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="lblCommentBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -192,16 +192,16 @@
   <data name="lblCommentBox.Text" xml:space="preserve">
     <value>请描述问题是如何发生的（可选）：</value>
   </data>
-  <data name=">>lblCommentBox.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblCommentBox.Name" xml:space="preserve">
     <value>lblCommentBox</value>
   </data>
-  <data name=">>lblCommentBox.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblCommentBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblCommentBox.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblCommentBox.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblCommentBox.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblCommentBox.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="lblError.AutoSize" type="System.Boolean, mscorlib">
@@ -222,16 +222,16 @@
   <data name="lblError.Text" xml:space="preserve">
     <value>消息：</value>
   </data>
-  <data name=">>lblError.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblError.Name" xml:space="preserve">
     <value>lblError</value>
   </data>
-  <data name=">>lblError.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblError.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblError.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblError.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblError.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblError.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="lblReportError.AutoSize" type="System.Boolean, mscorlib">
@@ -253,16 +253,16 @@
     <value>发生意外错误。您应该保存自己的工作
 并重启 Skyline。报告错误，以帮助改进 Skyline。</value>
   </data>
-  <data name=">>lblReportError.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblReportError.Name" xml:space="preserve">
     <value>lblReportError</value>
   </data>
-  <data name=">>lblReportError.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblReportError.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblReportError.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblReportError.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblReportError.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblReportError.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -283,16 +283,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>源代码位置：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="tbSourceCodeLocation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -313,16 +313,16 @@
   <data name="tbSourceCodeLocation.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
-  <data name=">>tbSourceCodeLocation.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbSourceCodeLocation.Name" xml:space="preserve">
     <value>tbSourceCodeLocation</value>
   </data>
-  <data name=">>tbSourceCodeLocation.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbSourceCodeLocation.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbSourceCodeLocation.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbSourceCodeLocation.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tbSourceCodeLocation.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tbSourceCodeLocation.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="btnClipboard.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -340,16 +340,16 @@
   <data name="btnClipboard.Text" xml:space="preserve">
     <value>复制到剪切板</value>
   </data>
-  <data name=">>btnClipboard.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnClipboard.Name" xml:space="preserve">
     <value>btnClipboard</value>
   </data>
-  <data name=">>btnClipboard.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnClipboard.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnClipboard.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnClipboard.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnClipboard.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnClipboard.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="lblEmail.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -370,16 +370,16 @@
   <data name="lblEmail.Text" xml:space="preserve">
     <value>电子邮件地址（可选）：</value>
   </data>
-  <data name=">>lblEmail.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblEmail.Name" xml:space="preserve">
     <value>lblEmail</value>
   </data>
-  <data name=">>lblEmail.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblEmail.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblEmail.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblEmail.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblEmail.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblEmail.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="tbEmail.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -394,16 +394,16 @@
   <data name="tbEmail.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name=">>tbEmail.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbEmail.Name" xml:space="preserve">
     <value>tbEmail</value>
   </data>
-  <data name=">>tbEmail.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbEmail.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbEmail.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbEmail.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tbEmail.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tbEmail.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tbErrorDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -429,16 +429,16 @@
 2
 </value>
   </data>
-  <data name=">>tbErrorDescription.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbErrorDescription.Name" xml:space="preserve">
     <value>tbErrorDescription</value>
   </data>
-  <data name=">>tbErrorDescription.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbErrorDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbErrorDescription.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbErrorDescription.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tbErrorDescription.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tbErrorDescription.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -456,16 +456,16 @@
   <data name="btnOK.Text" xml:space="preserve">
     <value>报告</value>
   </data>
-  <data name=">>btnOK.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name=">>btnOK.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOK.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOK.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -483,10 +483,10 @@
   <data name="$this.Text" xml:space="preserve">
     <value>意外错误</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ReportErrorDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

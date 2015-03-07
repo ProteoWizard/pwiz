@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -120,18 +120,18 @@
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>189, 17</value>
   </metadata>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="flowLayoutPanelWizard.AutoScroll" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="flowLayoutPanelWizard.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
   </data>
   <data name="flowLayoutPanelWizard.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="flowLayoutPanelWizard.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
@@ -141,16 +141,16 @@
   <data name="flowLayoutPanelWizard.TabIndex" type="System.Int32, mscorlib">
     <value>57</value>
   </data>
-  <data name=">>flowLayoutPanelWizard.Name" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelWizard.Name" xml:space="preserve">
     <value>flowLayoutPanelWizard</value>
   </data>
-  <data name=">>flowLayoutPanelWizard.Type" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelWizard.Type" xml:space="preserve">
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>flowLayoutPanelWizard.Parent" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelWizard.Parent" xml:space="preserve">
     <value>wizardTabPage</value>
   </data>
-  <data name=">>flowLayoutPanelWizard.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelWizard.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="wizardTabPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -168,16 +168,16 @@
   <data name="wizardTabPage.Text" xml:space="preserve">
     <value>开始</value>
   </data>
-  <data name=">>wizardTabPage.Name" xml:space="preserve">
+  <data name="&gt;&gt;wizardTabPage.Name" xml:space="preserve">
     <value>wizardTabPage</value>
   </data>
-  <data name=">>wizardTabPage.Type" xml:space="preserve">
+  <data name="&gt;&gt;wizardTabPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>wizardTabPage.Parent" xml:space="preserve">
+  <data name="&gt;&gt;wizardTabPage.Parent" xml:space="preserve">
     <value>tabControlMain</value>
   </data>
-  <data name=">>wizardTabPage.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;wizardTabPage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="flowLayoutPanelTutorials.AutoScroll" type="System.Boolean, mscorlib">
@@ -198,16 +198,16 @@
   <data name="flowLayoutPanelTutorials.TabIndex" type="System.Int32, mscorlib">
     <value>58</value>
   </data>
-  <data name=">>flowLayoutPanelTutorials.Name" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelTutorials.Name" xml:space="preserve">
     <value>flowLayoutPanelTutorials</value>
   </data>
-  <data name=">>flowLayoutPanelTutorials.Type" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelTutorials.Type" xml:space="preserve">
     <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>flowLayoutPanelTutorials.Parent" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelTutorials.Parent" xml:space="preserve">
     <value>tutorialsTabPage</value>
   </data>
-  <data name=">>flowLayoutPanelTutorials.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;flowLayoutPanelTutorials.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="tutorialsTabPage.Location" type="System.Drawing.Point, System.Drawing">
@@ -225,16 +225,16 @@
   <data name="tutorialsTabPage.Text" xml:space="preserve">
     <value>教程</value>
   </data>
-  <data name=">>tutorialsTabPage.Name" xml:space="preserve">
+  <data name="&gt;&gt;tutorialsTabPage.Name" xml:space="preserve">
     <value>tutorialsTabPage</value>
   </data>
-  <data name=">>tutorialsTabPage.Type" xml:space="preserve">
+  <data name="&gt;&gt;tutorialsTabPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tutorialsTabPage.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tutorialsTabPage.Parent" xml:space="preserve">
     <value>tabControlMain</value>
   </data>
-  <data name=">>tutorialsTabPage.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tutorialsTabPage.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="tabControlMain.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -249,16 +249,16 @@
   <data name="tabControlMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>tabControlMain.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabControlMain.Name" xml:space="preserve">
     <value>tabControlMain</value>
   </data>
-  <data name=">>tabControlMain.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabControlMain.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tabControlMain.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabControlMain.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="skyline.AutoSize" type="System.Boolean, mscorlib">
@@ -282,16 +282,16 @@
   <data name="skyline.Text" xml:space="preserve">
     <value>Skyline</value>
   </data>
-  <data name=">>skyline.Name" xml:space="preserve">
+  <data name="&gt;&gt;skyline.Name" xml:space="preserve">
     <value>skyline</value>
   </data>
-  <data name=">>skyline.Type" xml:space="preserve">
+  <data name="&gt;&gt;skyline.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>skyline.Parent" xml:space="preserve">
+  <data name="&gt;&gt;skyline.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
-  <data name=">>skyline.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;skyline.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="lblRecent.AutoSize" type="System.Boolean, mscorlib">
@@ -315,16 +315,16 @@
   <data name="lblRecent.Text" xml:space="preserve">
     <value>最近的</value>
   </data>
-  <data name=">>lblRecent.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblRecent.Name" xml:space="preserve">
     <value>lblRecent</value>
   </data>
-  <data name=">>lblRecent.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblRecent.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblRecent.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblRecent.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
-  <data name=">>lblRecent.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblRecent.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="recentFilesPanel.AutoScroll" type="System.Boolean, mscorlib">
@@ -342,16 +342,16 @@
   <data name="recentFilesPanel.TabIndex" type="System.Int32, mscorlib">
     <value>51</value>
   </data>
-  <data name=">>recentFilesPanel.Name" xml:space="preserve">
+  <data name="&gt;&gt;recentFilesPanel.Name" xml:space="preserve">
     <value>recentFilesPanel</value>
   </data>
-  <data name=">>recentFilesPanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;recentFilesPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>recentFilesPanel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;recentFilesPanel.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
-  <data name=">>recentFilesPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;recentFilesPanel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="checkBoxShowStartup.AutoSize" type="System.Boolean, mscorlib">
@@ -375,16 +375,16 @@
   <data name="checkBoxShowStartup.Text" xml:space="preserve">
     <value>在启动时显示开始页面</value>
   </data>
-  <data name=">>checkBoxShowStartup.Name" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxShowStartup.Name" xml:space="preserve">
     <value>checkBoxShowStartup</value>
   </data>
-  <data name=">>checkBoxShowStartup.Type" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxShowStartup.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>checkBoxShowStartup.Parent" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxShowStartup.Parent" xml:space="preserve">
     <value>leftBottomPanel</value>
   </data>
-  <data name=">>checkBoxShowStartup.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;checkBoxShowStartup.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="openFileIcon.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
@@ -399,16 +399,16 @@
   <data name="openFileIcon.TabIndex" type="System.Int32, mscorlib">
     <value>53</value>
   </data>
-  <data name=">>openFileIcon.Name" xml:space="preserve">
+  <data name="&gt;&gt;openFileIcon.Name" xml:space="preserve">
     <value>openFileIcon</value>
   </data>
-  <data name=">>openFileIcon.Type" xml:space="preserve">
+  <data name="&gt;&gt;openFileIcon.Type" xml:space="preserve">
     <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>openFileIcon.Parent" xml:space="preserve">
+  <data name="&gt;&gt;openFileIcon.Parent" xml:space="preserve">
     <value>openFilePanel</value>
   </data>
-  <data name=">>openFileIcon.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;openFileIcon.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="openFileLabel.AutoSize" type="System.Boolean, mscorlib">
@@ -432,16 +432,16 @@
   <data name="openFileLabel.Text" xml:space="preserve">
     <value>打开文件</value>
   </data>
-  <data name=">>openFileLabel.Name" xml:space="preserve">
+  <data name="&gt;&gt;openFileLabel.Name" xml:space="preserve">
     <value>openFileLabel</value>
   </data>
-  <data name=">>openFileLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;openFileLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>openFileLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;openFileLabel.Parent" xml:space="preserve">
     <value>openFilePanel</value>
   </data>
-  <data name=">>openFileLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;openFileLabel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="openFilePanel.Location" type="System.Drawing.Point, System.Drawing">
@@ -453,16 +453,16 @@
   <data name="openFilePanel.TabIndex" type="System.Int32, mscorlib">
     <value>55</value>
   </data>
-  <data name=">>openFilePanel.Name" xml:space="preserve">
+  <data name="&gt;&gt;openFilePanel.Name" xml:space="preserve">
     <value>openFilePanel</value>
   </data>
-  <data name=">>openFilePanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;openFilePanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>openFilePanel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;openFilePanel.Parent" xml:space="preserve">
     <value>leftBottomPanel</value>
   </data>
-  <data name=">>openFilePanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;openFilePanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="leftBottomPanel.Location" type="System.Drawing.Point, System.Drawing">
@@ -477,16 +477,16 @@
   <data name="leftBottomPanel.TabIndex" type="System.Int32, mscorlib">
     <value>57</value>
   </data>
-  <data name=">>leftBottomPanel.Name" xml:space="preserve">
+  <data name="&gt;&gt;leftBottomPanel.Name" xml:space="preserve">
     <value>leftBottomPanel</value>
   </data>
-  <data name=">>leftBottomPanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;leftBottomPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>leftBottomPanel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;leftBottomPanel.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
-  <data name=">>leftBottomPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;leftBottomPanel.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="leftPanel.Location" type="System.Drawing.Point, System.Drawing">
@@ -501,16 +501,16 @@
   <data name="leftPanel.TabIndex" type="System.Int32, mscorlib">
     <value>52</value>
   </data>
-  <data name=">>leftPanel.Name" xml:space="preserve">
+  <data name="&gt;&gt;leftPanel.Name" xml:space="preserve">
     <value>leftPanel</value>
   </data>
-  <data name=">>leftPanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;leftPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>leftPanel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;leftPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>leftPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;leftPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -528,16 +528,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>开始页面</value>
   </data>
-  <data name=">>toolTip.Name" xml:space="preserve">
+  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
     <value>toolTip</value>
   </data>
-  <data name=">>toolTip.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>StartPage</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

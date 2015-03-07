@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,52 +117,52 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>247, 20</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>288, 12</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnOk.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>linkNIST.Parent" xml:space="preserve">
+  <data name="&gt;&gt;linkNIST.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>linkNIST.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;linkNIST.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textName.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditLibraryDlg</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="linkGPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name=">>linkPeptideAtlas.Type" xml:space="preserve">
+  <data name="&gt;&gt;linkPeptideAtlas.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
-  <data name=">>linkPeptideAtlas.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;linkPeptideAtlas.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="linkGPM.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -171,10 +171,10 @@
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>textName.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name=">>linkGPM.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;linkGPM.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -186,7 +186,7 @@
   <data name="linkPeptideAtlas.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>66, 13</value>
   </data>
-  <data name=">>textPath.Name" xml:space="preserve">
+  <data name="&gt;&gt;textPath.Name" xml:space="preserve">
     <value>textPath</value>
   </data>
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
@@ -201,7 +201,7 @@
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name=">>linkPeptideAtlas.Parent" xml:space="preserve">
+  <data name="&gt;&gt;linkPeptideAtlas.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
@@ -222,25 +222,25 @@
   <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnBrowse.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>linkNIST.Type" xml:space="preserve">
+  <data name="&gt;&gt;linkNIST.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
     <value>浏览(&amp;B)…</value>
   </data>
-  <data name=">>btnOk.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -252,40 +252,40 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>linkNIST.Name" xml:space="preserve">
+  <data name="&gt;&gt;linkNIST.Name" xml:space="preserve">
     <value>linkNIST</value>
   </data>
-  <data name=">>textPath.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>labelSpecLibLinks.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelSpecLibLinks.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
     <value>名称(&amp;N)：</value>
   </data>
-  <data name=">>linkGPM.Type" xml:space="preserve">
+  <data name="&gt;&gt;linkGPM.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOk.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnBrowse.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
   </data>
   <data name="labelSpecLibLinks.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>12, 131</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>linkGPM.Name" xml:space="preserve">
+  <data name="&gt;&gt;linkGPM.Name" xml:space="preserve">
     <value>linkGPM</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -297,43 +297,43 @@
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name=">>btnBrowse.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnBrowse.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="labelSpecLibLinks.Text" xml:space="preserve">
     <value>谱图库链接：</value>
   </data>
-  <data name=">>labelSpecLibLinks.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelSpecLibLinks.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name=">>btnOk.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="linkPeptideAtlas.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name=">>textName.Type" xml:space="preserve">
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="linkGPM.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
   <data name="labelSpecLibLinks.AutoSize" type="System.Boolean, mscorlib">
@@ -357,7 +357,7 @@
   <data name="$this.Text" xml:space="preserve">
     <value>编辑库</value>
   </data>
-  <data name=">>textPath.Type" xml:space="preserve">
+  <data name="&gt;&gt;textPath.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
@@ -366,7 +366,7 @@
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name=">>textName.Name" xml:space="preserve">
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -378,13 +378,13 @@
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>38, 13</value>
   </data>
-  <data name=">>linkPeptideAtlas.Name" xml:space="preserve">
+  <data name="&gt;&gt;linkPeptideAtlas.Name" xml:space="preserve">
     <value>linkPeptideAtlas</value>
   </data>
   <data name="linkPeptideAtlas.Text" xml:space="preserve">
     <value>PeptideAtlas</value>
   </data>
-  <data name=">>labelSpecLibLinks.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelSpecLibLinks.Name" xml:space="preserve">
     <value>labelSpecLibLinks</value>
   </data>
   <data name="textPath.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -408,19 +408,19 @@
   <data name="linkGPM.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>31, 13</value>
   </data>
-  <data name=">>textPath.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelSpecLibLinks.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelSpecLibLinks.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>linkGPM.Parent" xml:space="preserve">
+  <data name="&gt;&gt;linkGPM.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>12, 12</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

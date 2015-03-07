@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,11 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="pictureBoxTool.Location" type="System.Drawing.Point, System.Drawing">
     <value>176, 18</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="pictureBoxTool.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
   </data>
@@ -131,20 +131,20 @@
   <data name="pictureBoxTool.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
     <value>Zoom</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="pictureBoxTool.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>pictureBoxTool.Name" xml:space="preserve">
+  <data name="&gt;&gt;pictureBoxTool.Name" xml:space="preserve">
     <value>pictureBoxTool</value>
   </data>
-  <data name=">>pictureBoxTool.Type" xml:space="preserve">
+  <data name="&gt;&gt;pictureBoxTool.Type" xml:space="preserve">
     <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>pictureBoxTool.Parent" xml:space="preserve">
+  <data name="&gt;&gt;pictureBoxTool.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>pictureBoxTool.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;pictureBoxTool.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="labelAuthors.AutoSize" type="System.Boolean, mscorlib">
@@ -165,16 +165,16 @@
   <data name="labelAuthors.Text" xml:space="preserve">
     <value>作者：</value>
   </data>
-  <data name=">>labelAuthors.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelAuthors.Name" xml:space="preserve">
     <value>labelAuthors</value>
   </data>
-  <data name=">>labelAuthors.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelAuthors.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelAuthors.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelAuthors.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelAuthors.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelAuthors.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
   <data name="labelProvider.AutoSize" type="System.Boolean, mscorlib">
@@ -195,16 +195,16 @@
   <data name="labelProvider.Text" xml:space="preserve">
     <value>更多信息：</value>
   </data>
-  <data name=">>labelProvider.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelProvider.Name" xml:space="preserve">
     <value>labelProvider</value>
   </data>
-  <data name=">>labelProvider.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelProvider.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelProvider.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelProvider.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelProvider.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelProvider.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
   <data name="labelDescription.AutoSize" type="System.Boolean, mscorlib">
@@ -225,16 +225,16 @@
   <data name="labelDescription.Text" xml:space="preserve">
     <value>描述：</value>
   </data>
-  <data name=">>labelDescription.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelDescription.Name" xml:space="preserve">
     <value>labelDescription</value>
   </data>
-  <data name=">>labelDescription.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelDescription.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelDescription.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelDescription.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelDescription.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="textBoxDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -258,16 +258,16 @@
   <data name="textBoxDescription.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
-  <data name=">>textBoxDescription.Name" xml:space="preserve">
+  <data name="&gt;&gt;textBoxDescription.Name" xml:space="preserve">
     <value>textBoxDescription</value>
   </data>
-  <data name=">>textBoxDescription.Type" xml:space="preserve">
+  <data name="&gt;&gt;textBoxDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textBoxDescription.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textBoxDescription.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textBoxDescription.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxDescription.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="listBoxTools.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -288,16 +288,16 @@
   <data name="listBoxTools.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>listBoxTools.Name" xml:space="preserve">
+  <data name="&gt;&gt;listBoxTools.Name" xml:space="preserve">
     <value>listBoxTools</value>
   </data>
-  <data name=">>listBoxTools.Type" xml:space="preserve">
+  <data name="&gt;&gt;listBoxTools.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>listBoxTools.Parent" xml:space="preserve">
+  <data name="&gt;&gt;listBoxTools.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>listBoxTools.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;listBoxTools.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="buttonExit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -318,16 +318,16 @@
   <data name="buttonExit.Text" xml:space="preserve">
     <value>关闭(&amp;C)</value>
   </data>
-  <data name=">>buttonExit.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonExit.Name" xml:space="preserve">
     <value>buttonExit</value>
   </data>
-  <data name=">>buttonExit.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonExit.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonExit.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonExit.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonExit.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonExit.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="buttonInstallUpdate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -348,16 +348,16 @@
   <data name="buttonInstallUpdate.Text" xml:space="preserve">
     <value>安装(&amp;N)</value>
   </data>
-  <data name=">>buttonInstallUpdate.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonInstallUpdate.Name" xml:space="preserve">
     <value>buttonInstallUpdate</value>
   </data>
-  <data name=">>buttonInstallUpdate.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonInstallUpdate.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonInstallUpdate.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonInstallUpdate.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonInstallUpdate.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonInstallUpdate.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="labelStatus.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -381,16 +381,16 @@
   <data name="labelStatus.Text" xml:space="preserve">
     <value>状态：</value>
   </data>
-  <data name=">>labelStatus.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelStatus.Name" xml:space="preserve">
     <value>labelStatus</value>
   </data>
-  <data name=">>labelStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelStatus.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelStatus.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelStatus.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelStatus.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelStatus.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="textBoxAuthors.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -408,16 +408,16 @@
   <data name="textBoxAuthors.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name=">>textBoxAuthors.Name" xml:space="preserve">
+  <data name="&gt;&gt;textBoxAuthors.Name" xml:space="preserve">
     <value>textBoxAuthors</value>
   </data>
-  <data name=">>textBoxAuthors.Type" xml:space="preserve">
+  <data name="&gt;&gt;textBoxAuthors.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textBoxAuthors.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textBoxAuthors.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textBoxAuthors.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxAuthors.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="linkLabelProvider.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -441,16 +441,16 @@
   <data name="linkLabelProvider.Text" xml:space="preserve">
     <value>www.provider.com</value>
   </data>
-  <data name=">>linkLabelProvider.Name" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelProvider.Name" xml:space="preserve">
     <value>linkLabelProvider</value>
   </data>
-  <data name=">>linkLabelProvider.Type" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelProvider.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>linkLabelProvider.Parent" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelProvider.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>linkLabelProvider.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelProvider.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textBoxStatus.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -468,16 +468,16 @@
   <data name="textBoxStatus.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name=">>textBoxStatus.Name" xml:space="preserve">
+  <data name="&gt;&gt;textBoxStatus.Name" xml:space="preserve">
     <value>textBoxStatus</value>
   </data>
-  <data name=">>textBoxStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;textBoxStatus.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textBoxStatus.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textBoxStatus.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textBoxStatus.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxStatus.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="textBoxOrganization.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -495,16 +495,16 @@
   <data name="textBoxOrganization.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>textBoxOrganization.Name" xml:space="preserve">
+  <data name="&gt;&gt;textBoxOrganization.Name" xml:space="preserve">
     <value>textBoxOrganization</value>
   </data>
-  <data name=">>textBoxOrganization.Type" xml:space="preserve">
+  <data name="&gt;&gt;textBoxOrganization.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textBoxOrganization.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textBoxOrganization.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textBoxOrganization.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxOrganization.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="labelOrganization.AutoSize" type="System.Boolean, mscorlib">
@@ -528,16 +528,16 @@
   <data name="labelOrganization.Text" xml:space="preserve">
     <value>组织：</value>
   </data>
-  <data name=">>labelOrganization.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelOrganization.Name" xml:space="preserve">
     <value>labelOrganization</value>
   </data>
-  <data name=">>labelOrganization.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelOrganization.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelOrganization.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelOrganization.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelOrganization.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelOrganization.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textBoxLanguages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -555,16 +555,16 @@
   <data name="textBoxLanguages.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name=">>textBoxLanguages.Name" xml:space="preserve">
+  <data name="&gt;&gt;textBoxLanguages.Name" xml:space="preserve">
     <value>textBoxLanguages</value>
   </data>
-  <data name=">>textBoxLanguages.Type" xml:space="preserve">
+  <data name="&gt;&gt;textBoxLanguages.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textBoxLanguages.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textBoxLanguages.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textBoxLanguages.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxLanguages.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelLanguages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -591,16 +591,16 @@
   <data name="labelLanguages.Text" xml:space="preserve">
     <value>语言：</value>
   </data>
-  <data name=">>labelLanguages.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelLanguages.Name" xml:space="preserve">
     <value>labelLanguages</value>
   </data>
-  <data name=">>labelLanguages.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelLanguages.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelLanguages.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelLanguages.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelLanguages.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelLanguages.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="buttonToolStore.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -621,16 +621,16 @@
   <data name="buttonToolStore.Text" xml:space="preserve">
     <value>工具商店(&amp;T)…</value>
   </data>
-  <data name=">>buttonToolStore.Name" xml:space="preserve">
+  <data name="&gt;&gt;buttonToolStore.Name" xml:space="preserve">
     <value>buttonToolStore</value>
   </data>
-  <data name=">>buttonToolStore.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonToolStore.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>buttonToolStore.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonToolStore.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>buttonToolStore.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonToolStore.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -651,10 +651,10 @@
   <data name="$this.Text" xml:space="preserve">
     <value>从工具商店安装</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolStoreDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

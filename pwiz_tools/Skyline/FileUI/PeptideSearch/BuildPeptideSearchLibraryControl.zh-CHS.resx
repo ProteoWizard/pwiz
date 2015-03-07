@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,15 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="peptideSearchSplitContainer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="peptideSearchSplitContainer.IsSplitterFixed" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="peptideSearchSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 2</value>
   </data>
@@ -147,16 +147,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>截止分数(&amp;C)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel1</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
@@ -168,28 +168,28 @@
   <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>textCutoff.Name" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
   </data>
-  <data name=">>textCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel1</value>
   </data>
-  <data name=">>textCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel1.Name" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.Name" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel1</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -207,16 +207,16 @@
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
     <value>文档肽筛选器(&amp;F)</value>
   </data>
-  <data name=">>cbFilterForDocumentPeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
   </data>
-  <data name=">>cbFilterForDocumentPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbFilterForDocumentPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
-  <data name=">>cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnRemFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -237,16 +237,16 @@
   <data name="btnRemFile.Text" xml:space="preserve">
     <value>删除文件(&amp;R)</value>
   </data>
-  <data name=">>btnRemFile.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnRemFile.Name" xml:space="preserve">
     <value>btnRemFile</value>
   </data>
-  <data name=">>btnRemFile.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnRemFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnRemFile.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnRemFile.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
-  <data name=">>btnRemFile.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnRemFile.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="listSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -261,16 +261,16 @@
   <data name="listSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>listSearchFiles.Name" xml:space="preserve">
+  <data name="&gt;&gt;listSearchFiles.Name" xml:space="preserve">
     <value>listSearchFiles</value>
   </data>
-  <data name=">>listSearchFiles.Type" xml:space="preserve">
+  <data name="&gt;&gt;listSearchFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>listSearchFiles.Parent" xml:space="preserve">
+  <data name="&gt;&gt;listSearchFiles.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
-  <data name=">>listSearchFiles.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;listSearchFiles.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
@@ -288,16 +288,16 @@
   <data name="label7.Text" xml:space="preserve">
     <value>搜索文件(&amp;S)：</value>
   </data>
-  <data name=">>label7.Name" xml:space="preserve">
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
   </data>
-  <data name=">>label7.Type" xml:space="preserve">
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label7.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
-  <data name=">>label7.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -315,28 +315,28 @@
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>添加文件(&amp;A)…</value>
   </data>
-  <data name=">>btnAddFile.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>
   </data>
-  <data name=">>btnAddFile.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnAddFile.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
-  <data name=">>btnAddFile.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel2.Name" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.Name" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel2.Type" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.Parent" xml:space="preserve">
     <value>peptideSearchSplitContainer</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Panel2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="peptideSearchSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
@@ -348,16 +348,16 @@
   <data name="peptideSearchSplitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Name" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Name" xml:space="preserve">
     <value>peptideSearchSplitContainer</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Type" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.Parent" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>peptideSearchSplitContainer.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;peptideSearchSplitContainer.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -369,10 +369,10 @@
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 315</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>BuildPeptideSearchLibraryControl</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

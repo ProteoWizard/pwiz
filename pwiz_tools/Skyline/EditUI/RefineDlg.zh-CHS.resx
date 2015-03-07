@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,15 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbAutoTransitions.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cbAutoTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 379</value>
   </data>
@@ -138,16 +138,16 @@
   <data name="cbAutoTransitions.Text" xml:space="preserve">
     <value>离子对(&amp;N)</value>
   </data>
-  <data name=">>cbAutoTransitions.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoTransitions.Name" xml:space="preserve">
     <value>cbAutoTransitions</value>
   </data>
-  <data name=">>cbAutoTransitions.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoTransitions.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbAutoTransitions.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoTransitions.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>cbAutoTransitions.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoTransitions.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="cbAutoPrecursors.AutoSize" type="System.Boolean, mscorlib">
@@ -165,16 +165,16 @@
   <data name="cbAutoPrecursors.Text" xml:space="preserve">
     <value>母离子(&amp;E)</value>
   </data>
-  <data name=">>cbAutoPrecursors.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPrecursors.Name" xml:space="preserve">
     <value>cbAutoPrecursors</value>
   </data>
-  <data name=">>cbAutoPrecursors.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPrecursors.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbAutoPrecursors.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPrecursors.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>cbAutoPrecursors.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPrecursors.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="cbAutoPeptides.AutoSize" type="System.Boolean, mscorlib">
@@ -192,16 +192,16 @@
   <data name="cbAutoPeptides.Text" xml:space="preserve">
     <value>肽(&amp;P)</value>
   </data>
-  <data name=">>cbAutoPeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPeptides.Name" xml:space="preserve">
     <value>cbAutoPeptides</value>
   </data>
-  <data name=">>cbAutoPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbAutoPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPeptides.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>cbAutoPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbAutoPeptides.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
@@ -219,16 +219,16 @@
   <data name="label7.Text" xml:space="preserve">
     <value>自动选择全部(&amp;S)：</value>
   </data>
-  <data name=">>label7.Name" xml:space="preserve">
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
   </data>
-  <data name=">>label7.Type" xml:space="preserve">
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label7.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>label7.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="cbAdd.AutoSize" type="System.Boolean, mscorlib">
@@ -246,16 +246,16 @@
   <data name="cbAdd.Text" xml:space="preserve">
     <value>添加(&amp;A)</value>
   </data>
-  <data name=">>cbAdd.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbAdd.Name" xml:space="preserve">
     <value>cbAdd</value>
   </data>
-  <data name=">>cbAdd.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbAdd.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbAdd.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbAdd.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>cbAdd.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbAdd.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="labelLabelType.AutoSize" type="System.Boolean, mscorlib">
@@ -273,16 +273,16 @@
   <data name="labelLabelType.Text" xml:space="preserve">
     <value>删除标记类型(&amp;B)：</value>
   </data>
-  <data name=">>labelLabelType.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelLabelType.Name" xml:space="preserve">
     <value>labelLabelType</value>
   </data>
-  <data name=">>labelLabelType.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelLabelType.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelLabelType.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelLabelType.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>labelLabelType.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelLabelType.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="comboRefineLabelType.Location" type="System.Drawing.Point, System.Drawing">
@@ -294,16 +294,16 @@
   <data name="comboRefineLabelType.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
-  <data name=">>comboRefineLabelType.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboRefineLabelType.Name" xml:space="preserve">
     <value>comboRefineLabelType</value>
   </data>
-  <data name=">>comboRefineLabelType.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboRefineLabelType.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboRefineLabelType.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboRefineLabelType.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>comboRefineLabelType.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboRefineLabelType.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.AutoSize" type="System.Boolean, mscorlib">
@@ -328,16 +328,16 @@
     <value>所有重复的肽段都将被删除，仅保留
 第一次出现的任何肽段。</value>
   </data>
-  <data name=">>cbRemoveRepeatedPeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveRepeatedPeptides.Name" xml:space="preserve">
     <value>cbRemoveRepeatedPeptides</value>
   </data>
-  <data name=">>cbRemoveRepeatedPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveRepeatedPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbRemoveRepeatedPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveRepeatedPeptides.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>cbRemoveRepeatedPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveRepeatedPeptides.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.AutoSize" type="System.Boolean, mscorlib">
@@ -359,16 +359,16 @@
     <value>文档内不是独一无二的所有肽段
 都将被删除。</value>
   </data>
-  <data name=">>cbRemoveDuplicatePeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveDuplicatePeptides.Name" xml:space="preserve">
     <value>cbRemoveDuplicatePeptides</value>
   </data>
-  <data name=">>cbRemoveDuplicatePeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveDuplicatePeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbRemoveDuplicatePeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveDuplicatePeptides.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>cbRemoveDuplicatePeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbRemoveDuplicatePeptides.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="textMinTransitions.Location" type="System.Drawing.Point, System.Drawing">
@@ -384,16 +384,16 @@
     <value>离子对少于此数目的母离子将
 被从文档中删除。</value>
   </data>
-  <data name=">>textMinTransitions.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMinTransitions.Name" xml:space="preserve">
     <value>textMinTransitions</value>
   </data>
-  <data name=">>textMinTransitions.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMinTransitions.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMinTransitions.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMinTransitions.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>textMinTransitions.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMinTransitions.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -411,16 +411,16 @@
   <data name="label2.Text" xml:space="preserve">
     <value>每个母离子的最少离子对数(&amp;T)：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="textMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
@@ -436,16 +436,16 @@
     <value>肽少于此数目的蛋白质将
 被从文档中删除。</value>
   </data>
-  <data name=">>textMinPeptides.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeptides.Name" xml:space="preserve">
     <value>textMinPeptides</value>
   </data>
-  <data name=">>textMinPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeptides.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMinPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeptides.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>textMinPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeptides.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -463,16 +463,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>每个蛋白质的最少肽段数(&amp;M)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="tabDocument.Location" type="System.Drawing.Point, System.Drawing">
@@ -490,16 +490,16 @@
   <data name="tabDocument.Text" xml:space="preserve">
     <value>文档</value>
   </data>
-  <data name=">>tabDocument.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabDocument.Name" xml:space="preserve">
     <value>tabDocument</value>
   </data>
-  <data name=">>tabDocument.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabDocument.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabDocument.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabDocument.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name=">>tabDocument.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabDocument.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="textMaxPepPeakRank.Location" type="System.Drawing.Point, System.Drawing">
@@ -516,16 +516,16 @@
 大于此数目的所有离子对都将被
 从文档中删除。</value>
   </data>
-  <data name=">>textMaxPepPeakRank.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPepPeakRank.Name" xml:space="preserve">
     <value>textMaxPepPeakRank</value>
   </data>
-  <data name=">>textMaxPepPeakRank.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPepPeakRank.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMaxPepPeakRank.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPepPeakRank.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>textMaxPepPeakRank.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPepPeakRank.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
@@ -543,16 +543,16 @@
   <data name="label8.Text" xml:space="preserve">
     <value>最大肽段峰值排名(&amp;K)：</value>
   </data>
-  <data name=">>label8.Name" xml:space="preserve">
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
-  <data name=">>label8.Type" xml:space="preserve">
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label8.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>label8.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -570,16 +570,16 @@
   <data name="label4.Text" xml:space="preserve">
     <value>重复测定内含物(&amp;C)：</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="comboReplicateUse.Items" xml:space="preserve">
@@ -602,16 +602,16 @@
 全部 - 重复测定值按平均数计算，用于技术重复测定
 最佳 - 只有最佳重复测定才能用于每个肽，用于分馏</value>
   </data>
-  <data name=">>comboReplicateUse.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboReplicateUse.Name" xml:space="preserve">
     <value>comboReplicateUse</value>
   </data>
-  <data name=">>comboReplicateUse.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboReplicateUse.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboReplicateUse.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboReplicateUse.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>comboReplicateUse.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboReplicateUse.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="cbPreferLarger.AutoSize" type="System.Boolean, mscorlib">
@@ -637,16 +637,16 @@
 只能产生极少的较大锋面积时引起调整，
 以选择较大的子离子。</value>
   </data>
-  <data name=">>cbPreferLarger.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbPreferLarger.Name" xml:space="preserve">
     <value>cbPreferLarger</value>
   </data>
-  <data name=">>cbPreferLarger.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbPreferLarger.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbPreferLarger.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbPreferLarger.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>cbPreferLarger.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbPreferLarger.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textMaxPeakRank.Location" type="System.Drawing.Point, System.Drawing">
@@ -663,16 +663,16 @@
 大于此数目的所有离子对都将被
 从文档中删除。</value>
   </data>
-  <data name=">>textMaxPeakRank.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakRank.Name" xml:space="preserve">
     <value>textMaxPeakRank</value>
   </data>
-  <data name=">>textMaxPeakRank.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakRank.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMaxPeakRank.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakRank.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>textMaxPeakRank.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakRank.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="labelMaxPeakRank.AutoSize" type="System.Boolean, mscorlib">
@@ -690,16 +690,16 @@
   <data name="labelMaxPeakRank.Text" xml:space="preserve">
     <value>最大离子对峰值排名(&amp;T)：</value>
   </data>
-  <data name=">>labelMaxPeakRank.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelMaxPeakRank.Name" xml:space="preserve">
     <value>labelMaxPeakRank</value>
   </data>
-  <data name=">>labelMaxPeakRank.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelMaxPeakRank.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelMaxPeakRank.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelMaxPeakRank.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>labelMaxPeakRank.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelMaxPeakRank.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="textMaxPeakFoundRatio.Location" type="System.Drawing.Point, System.Drawing">
@@ -719,16 +719,16 @@
 橙色 &gt;= 0.5
 红色 &lt; 0.5</value>
   </data>
-  <data name=">>textMaxPeakFoundRatio.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakFoundRatio.Name" xml:space="preserve">
     <value>textMaxPeakFoundRatio</value>
   </data>
-  <data name=">>textMaxPeakFoundRatio.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakFoundRatio.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMaxPeakFoundRatio.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakFoundRatio.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>textMaxPeakFoundRatio.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMaxPeakFoundRatio.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -746,16 +746,16 @@
   <data name="label6.Text" xml:space="preserve">
     <value>最大峰值检出比(&amp;X)：</value>
   </data>
-  <data name=">>label6.Name" xml:space="preserve">
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name=">>label6.Type" xml:space="preserve">
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label6.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>label6.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="radioRemoveMissing.AutoSize" type="System.Boolean, mscorlib">
@@ -777,16 +777,16 @@
     <value>没有测量结果的所有元素都将
 被从文档中删除。</value>
   </data>
-  <data name=">>radioRemoveMissing.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioRemoveMissing.Name" xml:space="preserve">
     <value>radioRemoveMissing</value>
   </data>
-  <data name=">>radioRemoveMissing.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioRemoveMissing.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioRemoveMissing.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioRemoveMissing.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>radioRemoveMissing.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioRemoveMissing.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="radioIgnoreMissing.AutoSize" type="System.Boolean, mscorlib">
@@ -808,16 +808,16 @@
     <value>针对没有测量结果的元素将不采取
 任何行动。</value>
   </data>
-  <data name=">>radioIgnoreMissing.Name" xml:space="preserve">
+  <data name="&gt;&gt;radioIgnoreMissing.Name" xml:space="preserve">
     <value>radioIgnoreMissing</value>
   </data>
-  <data name=">>radioIgnoreMissing.Type" xml:space="preserve">
+  <data name="&gt;&gt;radioIgnoreMissing.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>radioIgnoreMissing.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioIgnoreMissing.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>radioIgnoreMissing.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;radioIgnoreMissing.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="textMinPeakFoundRatio.Location" type="System.Drawing.Point, System.Drawing">
@@ -837,16 +837,16 @@
 橙色 &gt;= 0.5
 红色 &lt; 0.5</value>
   </data>
-  <data name=">>textMinPeakFoundRatio.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeakFoundRatio.Name" xml:space="preserve">
     <value>textMinPeakFoundRatio</value>
   </data>
-  <data name=">>textMinPeakFoundRatio.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeakFoundRatio.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMinPeakFoundRatio.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeakFoundRatio.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>textMinPeakFoundRatio.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMinPeakFoundRatio.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -864,16 +864,16 @@
   <data name="label5.Text" xml:space="preserve">
     <value>最小峰值检出比(&amp;M)：</value>
   </data>
-  <data name=">>label5.Name" xml:space="preserve">
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name=">>label5.Type" xml:space="preserve">
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label5.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>label5.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="textMinIdotProduct.Enabled" type="System.Boolean, mscorlib">
@@ -893,16 +893,16 @@
 峰面积小于此阈值的所有前体都将
 被从文档中删除。</value>
   </data>
-  <data name=">>textMinIdotProduct.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMinIdotProduct.Name" xml:space="preserve">
     <value>textMinIdotProduct</value>
   </data>
-  <data name=">>textMinIdotProduct.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMinIdotProduct.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMinIdotProduct.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMinIdotProduct.Parent" xml:space="preserve">
     <value>groupLibCorr</value>
   </data>
-  <data name=">>textMinIdotProduct.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMinIdotProduct.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="labelMinIdotProduct.AutoSize" type="System.Boolean, mscorlib">
@@ -923,16 +923,16 @@
   <data name="labelMinIdotProduct.Text" xml:space="preserve">
     <value>最小同位素分布点积：</value>
   </data>
-  <data name=">>labelMinIdotProduct.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIdotProduct.Name" xml:space="preserve">
     <value>labelMinIdotProduct</value>
   </data>
-  <data name=">>labelMinIdotProduct.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIdotProduct.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelMinIdotProduct.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIdotProduct.Parent" xml:space="preserve">
     <value>groupLibCorr</value>
   </data>
-  <data name=">>labelMinIdotProduct.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIdotProduct.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="textMinDotProduct.Enabled" type="System.Boolean, mscorlib">
@@ -952,16 +952,16 @@
 小于此阈值的所有前体都将
 被从文档中删除。</value>
   </data>
-  <data name=">>textMinDotProduct.Name" xml:space="preserve">
+  <data name="&gt;&gt;textMinDotProduct.Name" xml:space="preserve">
     <value>textMinDotProduct</value>
   </data>
-  <data name=">>textMinDotProduct.Type" xml:space="preserve">
+  <data name="&gt;&gt;textMinDotProduct.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textMinDotProduct.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textMinDotProduct.Parent" xml:space="preserve">
     <value>groupLibCorr</value>
   </data>
-  <data name=">>textMinDotProduct.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textMinDotProduct.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelMinDotProduct.AutoSize" type="System.Boolean, mscorlib">
@@ -982,16 +982,16 @@
   <data name="labelMinDotProduct.Text" xml:space="preserve">
     <value>最小点积：</value>
   </data>
-  <data name=">>labelMinDotProduct.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelMinDotProduct.Name" xml:space="preserve">
     <value>labelMinDotProduct</value>
   </data>
-  <data name=">>labelMinDotProduct.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelMinDotProduct.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelMinDotProduct.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelMinDotProduct.Parent" xml:space="preserve">
     <value>groupLibCorr</value>
   </data>
-  <data name=">>labelMinDotProduct.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelMinDotProduct.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="groupLibCorr.Enabled" type="System.Boolean, mscorlib">
@@ -1009,16 +1009,16 @@
   <data name="groupLibCorr.Text" xml:space="preserve">
     <value>预期的相对亮度关联(&amp;E)：</value>
   </data>
-  <data name=">>groupLibCorr.Name" xml:space="preserve">
+  <data name="&gt;&gt;groupLibCorr.Name" xml:space="preserve">
     <value>groupLibCorr</value>
   </data>
-  <data name=">>groupLibCorr.Type" xml:space="preserve">
+  <data name="&gt;&gt;groupLibCorr.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>groupLibCorr.Parent" xml:space="preserve">
+  <data name="&gt;&gt;groupLibCorr.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>groupLibCorr.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;groupLibCorr.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="textRTRegressionThreshold.Location" type="System.Drawing.Point, System.Drawing">
@@ -1036,16 +1036,16 @@
 线性回归残差目标值
 超过此阈值。</value>
   </data>
-  <data name=">>textRTRegressionThreshold.Name" xml:space="preserve">
+  <data name="&gt;&gt;textRTRegressionThreshold.Name" xml:space="preserve">
     <value>textRTRegressionThreshold</value>
   </data>
-  <data name=">>textRTRegressionThreshold.Type" xml:space="preserve">
+  <data name="&gt;&gt;textRTRegressionThreshold.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textRTRegressionThreshold.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textRTRegressionThreshold.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name=">>textRTRegressionThreshold.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textRTRegressionThreshold.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -1063,16 +1063,16 @@
   <data name="label3.Text" xml:space="preserve">
     <value>针对线性回归的目标 r 值：</value>
   </data>
-  <data name=">>label3.Name" xml:space="preserve">
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name=">>label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
@@ -1087,16 +1087,16 @@
   <data name="groupBox1.Text" xml:space="preserve">
     <value>保留时间异常值(&amp;O)：</value>
   </data>
-  <data name=">>groupBox1.Name" xml:space="preserve">
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
   </data>
-  <data name=">>groupBox1.Type" xml:space="preserve">
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>groupBox1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>groupBox1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
   <data name="tabResults.Location" type="System.Drawing.Point, System.Drawing">
@@ -1114,16 +1114,16 @@
   <data name="tabResults.Text" xml:space="preserve">
     <value>结果</value>
   </data>
-  <data name=">>tabResults.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabResults.Name" xml:space="preserve">
     <value>tabResults</value>
   </data>
-  <data name=">>tabResults.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabResults.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabResults.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabResults.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name=">>tabResults.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabResults.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
@@ -1135,16 +1135,16 @@
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>tabControl1.Name" xml:space="preserve">
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name=">>tabControl1.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tabControl1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tabControl1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -1162,16 +1162,16 @@
   <data name="btnOK.Text" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name=">>btnOK.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name=">>btnOK.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOK.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOK.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -1189,16 +1189,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1216,16 +1216,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>调整</value>
   </data>
-  <data name=">>helpTip.Name" xml:space="preserve">
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name=">>helpTip.Type" xml:space="preserve">
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>RefineDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

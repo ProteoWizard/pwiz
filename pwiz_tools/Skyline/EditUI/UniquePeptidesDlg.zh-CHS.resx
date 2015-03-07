@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -133,27 +133,27 @@
   <data name="PeptideColumn.HeaderText" xml:space="preserve">
     <value>肽段</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="dataGridView1.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -2</value>
   </data>
   <data name="dataGridView1.Size" type="System.Drawing.Size, System.Drawing">
     <value>940, 406</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridView1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>dataGridView1.Name" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.Name" xml:space="preserve">
     <value>dataGridView1</value>
   </data>
-  <data name=">>dataGridView1.Type" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>dataGridView1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>dataGridView1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -174,10 +174,10 @@
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 52</value>
   </data>
-  <data name=">>contextMenuStrip1.Name" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
   </data>
-  <data name=">>contextMenuStrip1.Type" xml:space="preserve">
+  <data name="&gt;&gt;contextMenuStrip1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -195,16 +195,16 @@
   <data name="btnOK.Text" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name=">>btnOK.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name=">>btnOK.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOK.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOK.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -222,16 +222,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -252,16 +252,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>蛋白质名称(&amp;P)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="tbxProteinName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -276,13 +276,13 @@
   <data name="tbxProteinName.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name=">>tbxProteinName.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinName.Name" xml:space="preserve">
     <value>tbxProteinName</value>
   </data>
-  <data name=">>tbxProteinName.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbxProteinName.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="tbxProteinDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -297,16 +297,16 @@
   <data name="tbxProteinDescription.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name=">>tbxProteinDescription.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDescription.Name" xml:space="preserve">
     <value>tbxProteinDescription</value>
   </data>
-  <data name=">>tbxProteinDescription.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbxProteinDescription.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDescription.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>tbxProteinDescription.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDescription.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="label2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -327,16 +327,16 @@
   <data name="label2.Text" xml:space="preserve">
     <value>描述(&amp;D)：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="label3.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -357,16 +357,16 @@
   <data name="label3.Text" xml:space="preserve">
     <value>序列(&amp;S)：</value>
   </data>
-  <data name=">>label3.Name" xml:space="preserve">
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name=">>label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="richTextBoxSequence.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -382,18 +382,18 @@
     <value>6</value>
   </data>
   <data name="richTextBoxSequence.Text" xml:space="preserve">
-    <value/>
+    <value />
   </data>
-  <data name=">>richTextBoxSequence.Name" xml:space="preserve">
+  <data name="&gt;&gt;richTextBoxSequence.Name" xml:space="preserve">
     <value>richTextBoxSequence</value>
   </data>
-  <data name=">>richTextBoxSequence.Type" xml:space="preserve">
+  <data name="&gt;&gt;richTextBoxSequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>richTextBoxSequence.Parent" xml:space="preserve">
+  <data name="&gt;&gt;richTextBoxSequence.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>richTextBoxSequence.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;richTextBoxSequence.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="tbxProteinDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -408,13 +408,13 @@
   <data name="tbxProteinDetails.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name=">>tbxProteinDetails.Name" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDetails.Name" xml:space="preserve">
     <value>tbxProteinDetails</value>
   </data>
-  <data name=">>tbxProteinDetails.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDetails.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>tbxProteinDetails.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tbxProteinDetails.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name=">>tbxProteinDetails.ZOrder" xml:space="preserve">
@@ -441,16 +441,16 @@
   <data name="labelProteinDetails.Text" xml:space="preserve">
     <value>细节(&amp;E)：</value>
   </data>
-  <data name=">>labelProteinDetails.Name" xml:space="preserve">
+  <data name="&gt;&gt;labelProteinDetails.Name" xml:space="preserve">
     <value>labelProteinDetails</value>
   </data>
-  <data name=">>labelProteinDetails.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelProteinDetails.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>labelProteinDetails.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelProteinDetails.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>labelProteinDetails.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelProteinDetails.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -468,34 +468,34 @@
   <data name="$this.Text" xml:space="preserve">
     <value>序列特异的肽段</value>
   </data>
-  <data name=">>PeptideIncludedColumn.Name" xml:space="preserve">
+  <data name="&gt;&gt;PeptideIncludedColumn.Name" xml:space="preserve">
     <value>PeptideIncludedColumn</value>
   </data>
-  <data name=">>PeptideIncludedColumn.Type" xml:space="preserve">
+  <data name="&gt;&gt;PeptideIncludedColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>PeptideColumn.Name" xml:space="preserve">
+  <data name="&gt;&gt;PeptideColumn.Name" xml:space="preserve">
     <value>PeptideColumn</value>
   </data>
-  <data name=">>PeptideColumn.Type" xml:space="preserve">
+  <data name="&gt;&gt;PeptideColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>includeToolStripMenuItem.Name" xml:space="preserve">
+  <data name="&gt;&gt;includeToolStripMenuItem.Name" xml:space="preserve">
     <value>includeToolStripMenuItem</value>
   </data>
-  <data name=">>includeToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;includeToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>excludeToolStripMenuItem.Name" xml:space="preserve">
+  <data name="&gt;&gt;excludeToolStripMenuItem.Name" xml:space="preserve">
     <value>excludeToolStripMenuItem</value>
   </data>
-  <data name=">>excludeToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;excludeToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>UniquePeptidesDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

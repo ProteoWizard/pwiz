@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,14 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 23</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>267, 20</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -134,16 +134,16 @@
   <data name="textName.ToolTip" xml:space="preserve">
     <value>Skyline 将用来指代此库的名称</value>
   </data>
-  <data name=">>textName.Name" xml:space="preserve">
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
   </data>
-  <data name=">>textName.Type" xml:space="preserve">
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textName.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>textName.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
@@ -161,19 +161,19 @@
   <data name="label4.Text" xml:space="preserve">
     <value>名称(&amp;N)：</value>
   </data>
-  <data name=">>label4.Name" xml:space="preserve">
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name=">>label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>label4.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -189,16 +189,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -216,16 +216,16 @@
   <data name="btnNext.Text" xml:space="preserve">
     <value>下一个(&amp;N) &gt;</value>
   </data>
-  <data name=">>btnNext.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
   </data>
-  <data name=">>btnNext.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnNext.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnNext.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
@@ -243,16 +243,16 @@
   <data name="label2.Text" xml:space="preserve">
     <value>输出路径(&amp;O)：</value>
   </data>
-  <data name=">>label2.Name" xml:space="preserve">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name=">>label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="textPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -271,16 +271,16 @@
     <value>最终的非冗余库将在磁盘上的位置
 创建。</value>
   </data>
-  <data name=">>textPath.Name" xml:space="preserve">
+  <data name="&gt;&gt;textPath.Name" xml:space="preserve">
     <value>textPath</value>
   </data>
-  <data name=">>textPath.Type" xml:space="preserve">
+  <data name="&gt;&gt;textPath.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textPath.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>textPath.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
   <data name="comboAction.Enabled" type="System.Boolean, mscorlib">
@@ -306,16 +306,16 @@
 已保存了冗余库数据的副本，
 则可附加到当前库。</value>
   </data>
-  <data name=">>comboAction.Name" xml:space="preserve">
+  <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
     <value>comboAction</value>
   </data>
-  <data name=">>comboAction.Type" xml:space="preserve">
+  <data name="&gt;&gt;comboAction.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>comboAction.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>comboAction.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -333,16 +333,16 @@
   <data name="label1.Text" xml:space="preserve">
     <value>动作(&amp;A)：</value>
   </data>
-  <data name=">>label1.Name" xml:space="preserve">
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name=">>label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -360,16 +360,16 @@
   <data name="label3.Text" xml:space="preserve">
     <value>实验室机构(&amp;U)（例如 proteome.gs.washington.edu）：</value>
   </data>
-  <data name=">>label3.Name" xml:space="preserve">
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name=">>label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="textAuthority.Location" type="System.Drawing.Point, System.Drawing">
@@ -390,16 +390,16 @@
 proteome.gs.washington.edu
 tabb.vanderbilt.edu</value>
   </data>
-  <data name=">>textAuthority.Name" xml:space="preserve">
+  <data name="&gt;&gt;textAuthority.Name" xml:space="preserve">
     <value>textAuthority</value>
   </data>
-  <data name=">>textAuthority.Type" xml:space="preserve">
+  <data name="&gt;&gt;textAuthority.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textAuthority.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textAuthority.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>textAuthority.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textAuthority.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="textID.Location" type="System.Drawing.Point, System.Drawing">
@@ -421,16 +421,16 @@ Worm
 HumanMouse
 Yeast_20090902</value>
   </data>
-  <data name=">>textID.Name" xml:space="preserve">
+  <data name="&gt;&gt;textID.Name" xml:space="preserve">
     <value>textID</value>
   </data>
-  <data name=">>textID.Type" xml:space="preserve">
+  <data name="&gt;&gt;textID.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textID.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textID.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>textID.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textID.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -448,16 +448,16 @@ Yeast_20090902</value>
   <data name="label5.Text" xml:space="preserve">
     <value>库 ID(&amp;I)：</value>
   </data>
-  <data name=">>label5.Name" xml:space="preserve">
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name=">>label5.Type" xml:space="preserve">
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label5.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>label5.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="cbKeepRedundant.AutoSize" type="System.Boolean, mscorlib">
@@ -479,16 +479,16 @@ Yeast_20090902</value>
     <value>选中并保留冗余库的副本，您可以在
 将来对该冗余库添加更多的谱图。</value>
   </data>
-  <data name=">>cbKeepRedundant.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
     <value>cbKeepRedundant</value>
   </data>
-  <data name=">>cbKeepRedundant.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbKeepRedundant.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbKeepRedundant.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>cbKeepRedundant.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
@@ -509,16 +509,16 @@ Yeast_20090902</value>
 对于 Mascot 而言，这是 1 - 最大的期待值。
 对于 SEQUEST SQT 而言，这是 1 - 最大的 FDR。</value>
   </data>
-  <data name=">>textCutoff.Name" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
   </data>
-  <data name=">>textCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>textCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
@@ -536,16 +536,16 @@ Yeast_20090902</value>
   <data name="label6.Text" xml:space="preserve">
     <value>截止分数(&amp;C)：</value>
   </data>
-  <data name=">>label6.Name" xml:space="preserve">
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name=">>label6.Type" xml:space="preserve">
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label6.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>label6.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -566,16 +566,16 @@ Yeast_20090902</value>
   <data name="cbFilter.Text" xml:space="preserve">
     <value>文档肽筛选器</value>
   </data>
-  <data name=">>cbFilter.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
   </data>
-  <data name=">>cbFilter.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbFilter.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>cbFilter.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -593,16 +593,16 @@ Yeast_20090902</value>
   <data name="btnBrowse.Text" xml:space="preserve">
     <value>浏览(&amp;B)…</value>
   </data>
-  <data name=">>btnBrowse.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
   </data>
-  <data name=">>btnBrowse.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnBrowse.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>btnBrowse.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
@@ -614,16 +614,16 @@ Yeast_20090902</value>
   <data name="panelProperties.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name=">>panelProperties.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelProperties.Name" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name=">>panelProperties.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelProperties.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelProperties.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelProperties.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelProperties.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -644,16 +644,16 @@ Yeast_20090902</value>
   <data name="btnAddPaths.Text" xml:space="preserve">
     <value>添加路径(&amp;P)…</value>
   </data>
-  <data name=">>btnAddPaths.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
     <value>btnAddPaths</value>
   </data>
-  <data name=">>btnAddPaths.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnAddPaths.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnAddPaths.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnAddPaths.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>btnAddPaths.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnAddPaths.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="cbSelect.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -677,16 +677,16 @@ Yeast_20090902</value>
   <data name="cbSelect.Text" xml:space="preserve">
     <value>全选/取消全选(&amp;S)</value>
   </data>
-  <data name=">>cbSelect.Name" xml:space="preserve">
+  <data name="&gt;&gt;cbSelect.Name" xml:space="preserve">
     <value>cbSelect</value>
   </data>
-  <data name=">>cbSelect.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbSelect.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>cbSelect.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbSelect.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>cbSelect.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbSelect.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
@@ -704,16 +704,16 @@ Yeast_20090902</value>
   <data name="label7.Text" xml:space="preserve">
     <value>输入文件(&amp;I)：</value>
   </data>
-  <data name=">>label7.Name" xml:space="preserve">
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
   </data>
-  <data name=">>label7.Type" xml:space="preserve">
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>label7.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>label7.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -735,16 +735,16 @@ Yeast_20090902</value>
     <value>添加在根目录下查找到的所有可接受的谱图文件。
 您可以取消选中您不希望添加到库中的文件。</value>
   </data>
-  <data name=">>btnAddDirectory.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
     <value>btnAddDirectory</value>
   </data>
-  <data name=">>btnAddDirectory.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnAddDirectory.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnAddDirectory.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnAddDirectory.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>btnAddDirectory.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnAddDirectory.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -765,16 +765,16 @@ Yeast_20090902</value>
   <data name="btnAddFile.ToolTip" xml:space="preserve">
     <value>从单一目录中添加一个或多个文件。</value>
   </data>
-  <data name=">>btnAddFile.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>
   </data>
-  <data name=">>btnAddFile.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnAddFile.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>btnAddFile.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="listInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -794,16 +794,16 @@ Yeast_20090902</value>
 将被添加到冗余库，然后再从该冗余库中
 建立最终的非冗余库。</value>
   </data>
-  <data name=">>listInputFiles.Name" xml:space="preserve">
+  <data name="&gt;&gt;listInputFiles.Name" xml:space="preserve">
     <value>listInputFiles</value>
   </data>
-  <data name=">>listInputFiles.Type" xml:space="preserve">
+  <data name="&gt;&gt;listInputFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>listInputFiles.Parent" xml:space="preserve">
+  <data name="&gt;&gt;listInputFiles.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>listInputFiles.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;listInputFiles.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="panelFiles.Location" type="System.Drawing.Point, System.Drawing">
@@ -818,16 +818,16 @@ Yeast_20090902</value>
   <data name="panelFiles.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name=">>panelFiles.Name" xml:space="preserve">
+  <data name="&gt;&gt;panelFiles.Name" xml:space="preserve">
     <value>panelFiles</value>
   </data>
-  <data name=">>panelFiles.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>panelFiles.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelFiles.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>panelFiles.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelFiles.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -848,16 +848,16 @@ Yeast_20090902</value>
   <data name="btnPrevious.Text" xml:space="preserve">
     <value>&lt; 下一个(&amp;P)</value>
   </data>
-  <data name=">>btnPrevious.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnPrevious.Name" xml:space="preserve">
     <value>btnPrevious</value>
   </data>
-  <data name=">>btnPrevious.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnPrevious.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnPrevious.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnPrevious.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnPrevious.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnPrevious.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -875,16 +875,16 @@ Yeast_20090902</value>
   <data name="$this.Text" xml:space="preserve">
     <value>建立库</value>
   </data>
-  <data name=">>helpTip.Name" xml:space="preserve">
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name=">>helpTip.Type" xml:space="preserve">
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>BuildLibraryDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

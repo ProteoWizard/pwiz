@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,15 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblServerUrl.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblServerUrl.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblServerUrl.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 124</value>
   </data>
@@ -138,16 +138,16 @@
   <data name="lblServerUrl.Text" xml:space="preserve">
     <value>服务器 URL(&amp;S)</value>
   </data>
-  <data name=">>lblServerUrl.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblServerUrl.Name" xml:space="preserve">
     <value>lblServerUrl</value>
   </data>
-  <data name=">>lblServerUrl.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblServerUrl.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblServerUrl.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblServerUrl.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblServerUrl.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblServerUrl.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -168,16 +168,16 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name=">>btnCancel.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name=">>btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -198,16 +198,16 @@
   <data name="btnOK.Text" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name=">>btnOK.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name=">>btnOK.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnOK.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnOK.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="textServerURL.Location" type="System.Drawing.Point, System.Drawing">
@@ -225,16 +225,16 @@
   <data name="textServerURL.Text" xml:space="preserve">
     <value>https://chorusproject.org</value>
   </data>
-  <data name=">>textServerURL.Name" xml:space="preserve">
+  <data name="&gt;&gt;textServerURL.Name" xml:space="preserve">
     <value>textServerURL</value>
   </data>
-  <data name=">>textServerURL.Type" xml:space="preserve">
+  <data name="&gt;&gt;textServerURL.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textServerURL.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textServerURL.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textServerURL.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
@@ -249,16 +249,16 @@
   <data name="textPassword.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name=">>textPassword.Name" xml:space="preserve">
+  <data name="&gt;&gt;textPassword.Name" xml:space="preserve">
     <value>textPassword</value>
   </data>
-  <data name=">>textPassword.Type" xml:space="preserve">
+  <data name="&gt;&gt;textPassword.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textPassword.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textPassword.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
@@ -279,16 +279,16 @@
   <data name="lblPassword.Text" xml:space="preserve">
     <value>密码(&amp;P)：</value>
   </data>
-  <data name=">>lblPassword.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblPassword.Name" xml:space="preserve">
     <value>lblPassword</value>
   </data>
-  <data name=">>lblPassword.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblPassword.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblPassword.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblPassword.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblPassword.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
@@ -309,16 +309,16 @@
   <data name="lblUsername.Text" xml:space="preserve">
     <value>用户名(&amp;U)：</value>
   </data>
-  <data name=">>lblUsername.Name" xml:space="preserve">
+  <data name="&gt;&gt;lblUsername.Name" xml:space="preserve">
     <value>lblUsername</value>
   </data>
-  <data name=">>lblUsername.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblUsername.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>lblUsername.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblUsername.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>lblUsername.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
   <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
@@ -330,16 +330,16 @@
   <data name="textUsername.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name=">>textUsername.Name" xml:space="preserve">
+  <data name="&gt;&gt;textUsername.Name" xml:space="preserve">
     <value>textUsername</value>
   </data>
-  <data name=">>textUsername.Type" xml:space="preserve">
+  <data name="&gt;&gt;textUsername.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>textUsername.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textUsername.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>textUsername.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
   <data name="btnTest.Location" type="System.Drawing.Point, System.Drawing">
@@ -354,16 +354,16 @@
   <data name="btnTest.Text" xml:space="preserve">
     <value>测试</value>
   </data>
-  <data name=">>btnTest.Name" xml:space="preserve">
+  <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
   </data>
-  <data name=">>btnTest.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnTest.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name=">>btnTest.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnTest.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name=">>btnTest.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnTest.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -381,10 +381,10 @@
   <data name="$this.Text" xml:space="preserve">
     <value>指定统一账户</value>
   </data>
-  <data name=">>$this.Name" xml:space="preserve">
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditChorusAccountDlg</value>
   </data>
-  <data name=">>$this.Type" xml:space="preserve">
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
