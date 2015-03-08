@@ -92,16 +92,16 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                if (DocNode.IsEmpty)
+                if (DocNode.IsProtein)
+                    return (int) SequenceTree.ImageId.protein; 
+                else if (DocNode.IsEmpty)
                     return (int)SequenceTree.ImageId.empty_list;
                 else if (DocNode.IsNonProteomic)
                     return (int)SequenceTree.ImageId.molecule_list;
-                else if (DocNode.IsPeptideList)
-                    return (int)SequenceTree.ImageId.peptide_list;
                 else if (DocNode.IsDecoy)
                     return (int) SequenceTree.ImageId.protein_decoy;
                 else
-                    return (int) SequenceTree.ImageId.protein; 
+                    return (int)SequenceTree.ImageId.peptide_list;
             }
         }
 

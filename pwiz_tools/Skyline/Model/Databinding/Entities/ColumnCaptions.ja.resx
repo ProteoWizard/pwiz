@@ -120,6 +120,9 @@
   <data name="AcquiredTime">
     <value>取得時間</value>
   </data>
+  <data name="AdjustedPValue">
+    <value>調整されたP-値</value>
+  </data>
   <data name="Area">
     <value>面積</value>
   </data>
@@ -152,6 +155,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>衝突エネルギー</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>信頼度レベル</value>
   </data>
   <data name="CountTruncated">
     <value>切断数</value>
@@ -198,11 +204,17 @@
   <data name="DecoyMzShift">
     <value>デコイMzシフト</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>自由度</value>
+  </data>
   <data name="EndPos">
     <value>Posを終了</value>
   </data>
   <data name="EndTime">
     <value>終了時間</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>推定値</value>
   </data>
   <data name="FileIndex">
     <value>ファイルインデックス</value>
@@ -212,6 +224,12 @@
   </data>
   <data name="Files">
     <value>ファイル</value>
+  </data>
+  <data name="FoldChange">
+    <value>倍率変化</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>倍率変化結果</value>
   </data>
   <data name="FragmentIon">
     <value>断片イオン</value>
@@ -282,6 +300,12 @@
   <data name="LibraryType">
     <value>ライブラリタイプ</value>
   </data>
+  <data name="LinearFit">
+    <value>線形適合</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>ログ2倍率変化</value>
+  </data>
   <data name="Losses">
     <value>ロス</value>
   </data>
@@ -299,6 +323,9 @@
   </data>
   <data name="MaxEndTime">
     <value>最大終了時間</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>最大倍率変化</value>
   </data>
   <data name="MaxFwhm">
     <value>最大Fwhm</value>
@@ -351,6 +378,9 @@
   <data name="MinBestRetentionTime">
     <value>最小最良保持時間</value>
   </data>
+  <data name="MinFoldChange">
+    <value>最小倍率変化</value>
+  </data>
   <data name="MinRetentionTime">
     <value>最小保持時間</value>
   </data>
@@ -365,6 +395,9 @@
   </data>
   <data name="ModifiedTime">
     <value>修飾時間</value>
+  </data>
+  <data name="MsLevel">
+    <value>MSレベル</value>
   </data>
   <data name="NextAa">
     <value>次のAa</value>
@@ -384,6 +417,9 @@
   <data name="Peptide">
     <value>ペプチド</value>
   </data>
+  <data name="PeptideDocumentLocation">
+    <value>ペプチドドキュメント場所</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>ペプチド修飾シークエンス</value>
   </data>
@@ -395,6 +431,9 @@
   </data>
   <data name="PeptideResult">
     <value>ペプチド結果</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>ペプチド結果ドキュメント場所</value>
   </data>
   <data name="PeptideResults">
     <value>ペプチド結果</value>
@@ -492,6 +531,9 @@
   <data name="ProteinSpecies">
     <value>タンパク質種</value>
   </data>
+  <data name="PValue">
+    <value>P-値</value>
+  </data>
   <data name="Range">
     <value>範囲</value>
   </data>
@@ -509,6 +551,9 @@
   </data>
   <data name="Replicate">
     <value>繰り返し測定</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>繰り返し測定数</value>
   </data>
   <data name="ReplicateIndex">
     <value>繰り返し測定インデックス</value>
@@ -536,6 +581,9 @@
   </data>
   <data name="SampleName">
     <value>試料名</value>
+  </data>
+  <data name="StandardError">
+    <value>標準エラー</value>
   </data>
   <data name="StandardType">
     <value>標準タイプ</value>
@@ -630,6 +678,9 @@
   <data name="Truncated">
     <value>切断</value>
   </data>
+  <data name="TValue">
+    <value>T-値</value>
+  </data>
   <data name="UserSetPeak">
     <value>ユーザーセットピーク</value>
   </data>
@@ -638,5 +689,29 @@
   </data>
   <data name="Value">
     <value>値</value>
+  </data>
+  <data name="IonName">
+    <value>イオン名</value>
+  </data>
+  <data name="IonFormula">
+    <value>イオン公式</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>プロダクトイオン公式</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>明示的衝突エネルギー</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>明示的ドリフト時間高エネルギーオフセットミリ秒</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>明示的ドリフト時間ミリ秒</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>明示的保持時間</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>明示的保持時間ウィンドウ</value>
   </data>
 </root>

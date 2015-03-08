@@ -123,10 +123,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="linkProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 247</value>
+    <value>14, 201</value>
   </data>
   <data name="linkProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 17</value>
+    <value>131, 13</value>
   </data>
   <data name="linkProteome.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -146,14 +146,15 @@
   <data name="&gt;&gt;linkProteome.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>579, 375</value>
+    <value>434, 305</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -174,10 +175,10 @@
     <value>7</value>
   </data>
   <data name="pictureSkylineIcon.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 15</value>
+    <value>15, 12</value>
   </data>
   <data name="pictureSkylineIcon.Size" type="System.Drawing.Size, System.Drawing">
-    <value>189, 229</value>
+    <value>142, 186</value>
   </data>
   <data name="pictureSkylineIcon.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
     <value>StretchImage</value>
@@ -204,10 +205,10 @@
     <value>Microsoft Sans Serif, 12pt, style=Bold</value>
   </data>
   <data name="labelSoftwareVersion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>216, 15</value>
+    <value>162, 12</value>
   </data>
   <data name="labelSoftwareVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 25</value>
+    <value>66, 20</value>
   </data>
   <data name="labelSoftwareVersion.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -231,7 +232,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>217, 207</value>
+    <value>163, 168</value>
   </data>
   <data name="textBox1.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -240,7 +241,7 @@
     <value>Vertical</value>
   </data>
   <data name="textBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>460, 137</value>
+    <value>346, 112</value>
   </data>
   <data name="textBox1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -248,8 +249,7 @@
   <data name="textBox1.Text" xml:space="preserve">
     <value>AB Sciex
 WIFFファイルリーダーライブラリ
-Copyright © 2010 by AB Sciex LLC.
-著作権所有。
+Copyright © 2010 by AB Sciex LLC.著作権所有。
 http://www.absciex.com/
 
 Agilent Technologies
@@ -299,8 +299,7 @@ http://proteowizard.sourceforge.net
 
 Shimadzu Corporation
 Shimadzu's ファイルコンバータソフトウェア
-Copyright © 2014 by Shimadzu Coporation
-著作権所有。
+Copyright © 2014 by Shimadzu Coporation 著作権所有。
 http://www.shimadzu.com
 
 SQLite
@@ -313,15 +312,13 @@ http://sqlite.phxsoftware.com
 
 Thermo Fisher Scientific
 MSFileReaderファイル読み出しツール
-Copyright © 2009 by Thermo Fisher Scientific, Inc.
-著作権所有。
+Copyright © 2009 by Thermo Fisher Scientific, Inc. 著作権所有。
 http://www.thermo.com
 
 Waters Technologies Corporation
 メソッドエクスポートライブラリ
 ウォーターズローデータアクセスコンポーネント
-Copyright © 2010 by Waters Corporation.
-著作権所有。
+Copyright © 2010 by Waters Corporation.著作権所有。
 http://www.waters.com
 
 ZedGraph
@@ -348,10 +345,10 @@ http://www.zlib.net</value>
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>217, 188</value>
+    <value>163, 153</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 17</value>
+    <value>151, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -372,10 +369,10 @@ http://www.zlib.net</value>
     <value>3</value>
   </data>
   <data name="pictureProteoWizardIcon.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 295</value>
+    <value>15, 240</value>
   </data>
   <data name="pictureProteoWizardIcon.Size" type="System.Drawing.Size, System.Drawing">
-    <value>189, 89</value>
+    <value>142, 72</value>
   </data>
   <data name="pictureProteoWizardIcon.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
     <value>StretchImage</value>
@@ -399,10 +396,10 @@ http://www.zlib.net</value>
     <value>True</value>
   </data>
   <data name="linkProteoWizard.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 388</value>
+    <value>14, 315</value>
   </data>
   <data name="linkProteoWizard.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 17</value>
+    <value>144, 13</value>
   </data>
   <data name="linkProteoWizard.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -426,10 +423,10 @@ http://www.zlib.net</value>
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>221, 367</value>
+    <value>166, 298</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 17</value>
+    <value>136, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -453,19 +450,19 @@ http://www.zlib.net</value>
     <value>True</value>
   </data>
   <data name="linkLabel1.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
-    <value>170, 7</value>
+    <value>245, 15</value>
   </data>
   <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>219, 44</value>
+    <value>164, 36</value>
   </data>
   <data name="linkLabel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 108</value>
+    <value>351, 92</value>
   </data>
   <data name="linkLabel1.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2014 University of Washington, 著作権所有
+    <value>Copyright © 2008-2015 University of Washington, 著作権所有
 
 MacCoss Lab, Department of Genome Sciences, UW
 
@@ -489,10 +486,10 @@ Skylineウェブサイトをご覧ください。</value>
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>8, 16</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>695, 423</value>
+    <value>521, 344</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

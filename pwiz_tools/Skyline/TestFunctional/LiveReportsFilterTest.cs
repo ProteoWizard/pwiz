@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
                 
             });
             DocumentGridForm documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(()=>documentGrid.ChooseView("Precursors"));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
             var modifications = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
             var isotopeLabel = modifications.InternalStandardTypes.First(
                     label => label.Name == "heavy 15N");
@@ -90,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             );
-            RunUI(()=>documentGrid.ChooseView("Precursors"));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
             WaitForConditionUI(() => documentGrid.IsComplete);
             Assert.AreEqual(12 + (TestSmallMolecules ? 1 : 0), documentGrid.RowCount);
             var quickFilterForm = ShowDialog<QuickFilterForm>(() =>

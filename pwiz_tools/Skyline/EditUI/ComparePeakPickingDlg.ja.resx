@@ -126,14 +126,14 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>586, 454</value>
+    <value>783, 600</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -157,13 +157,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>504, 454</value>
+    <value>701, 600</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -183,14 +183,131 @@
   <data name="dataGridViewScoreDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="checkBoxIDLabels.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxIDLabels.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxIDLabels.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 24</value>
+  </data>
+  <data name="checkBoxIDLabels.Size" type="System.Drawing.Size, System.Drawing">
+    <value>133, 17</value>
+  </data>
+  <data name="checkBoxIDLabels.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="checkBoxIDLabels.Text" xml:space="preserve">
+    <value>0.05 FPで#IDを表示</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
+    <value>checkBoxIDLabels</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="checkBoxXRange.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxXRange.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxXRange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 6</value>
+  </data>
+  <data name="checkBoxXRange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 17</value>
+  </data>
+  <data name="checkBoxXRange.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="checkBoxXRange.Text" xml:space="preserve">
+    <value>0.05 FPのX範囲にフォーカス</value>
+  </data>
+  <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
+    <value>checkBoxXRange</value>
+  </data>
+  <data name="&gt;&gt;checkBoxXRange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxXRange.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;checkBoxXRange.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>456, 2</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>67, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>Y軸目盛り：</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboBoxYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="comboBoxYAxis.Location" type="System.Drawing.Point, System.Drawing">
+    <value>454, 19</value>
+  </data>
+  <data name="comboBoxYAxis.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 21</value>
+  </data>
+  <data name="comboBoxYAxis.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.Name" xml:space="preserve">
+    <value>comboBoxYAxis</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="zedGraphRoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="zedGraphRoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
+    <value>0, 34</value>
   </data>
   <data name="zedGraphRoc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 413</value>
+    <value>634, 522</value>
   </data>
   <data name="zedGraphRoc.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -205,7 +322,7 @@
     <value>tabROC</value>
   </data>
   <data name="&gt;&gt;zedGraphRoc.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>4</value>
   </data>
   <data name="tabROC.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -214,7 +331,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabROC.Size" type="System.Drawing.Size, System.Drawing">
-    <value>435, 410</value>
+    <value>632, 556</value>
   </data>
   <data name="tabROC.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -234,14 +351,41 @@
   <data name="&gt;&gt;tabROC.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="checkBoxExpectedFp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxExpectedFp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="checkBoxExpectedFp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>159, 17</value>
+  </data>
+  <data name="checkBoxExpectedFp.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="checkBoxExpectedFp.Text" xml:space="preserve">
+    <value>0.05 予測FP行を表示</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
+    <value>checkBoxExpectedFp</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.Parent" xml:space="preserve">
+    <value>tabQq</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="zedGraphQq.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="zedGraphQq.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
+    <value>-1, 31</value>
   </data>
   <data name="zedGraphQq.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 413</value>
+    <value>634, 527</value>
   </data>
   <data name="zedGraphQq.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -250,13 +394,13 @@
     <value>zedGraphQq</value>
   </data>
   <data name="&gt;&gt;zedGraphQq.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.370, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.19979, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphQq.Parent" xml:space="preserve">
     <value>tabQq</value>
   </data>
   <data name="&gt;&gt;zedGraphQq.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabQq.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -265,7 +409,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabQq.Size" type="System.Drawing.Size, System.Drawing">
-    <value>435, 410</value>
+    <value>632, 556</value>
   </data>
   <data name="tabQq.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -287,6 +431,9 @@
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 4</value>
@@ -397,7 +544,7 @@
     <value>0, 48</value>
   </data>
   <data name="dataGridViewScore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>432, 362</value>
+    <value>629, 508</value>
   </data>
   <data name="dataGridViewScore.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -418,7 +565,7 @@
     <value>4, 22</value>
   </data>
   <data name="tabDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>435, 410</value>
+    <value>632, 556</value>
   </data>
   <data name="tabDetails.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -440,6 +587,9 @@
   </data>
   <data name="checkBoxConflicts.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="checkBoxConflicts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="checkBoxConflicts.Location" type="System.Drawing.Point, System.Drawing">
     <value>309, 20</value>
@@ -510,6 +660,9 @@
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
     <value>157, 2</value>
   </data>
@@ -536,6 +689,9 @@
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 3</value>
@@ -649,7 +805,7 @@
     <value>1, 45</value>
   </data>
   <data name="dataGridViewScoreComparison.Size" type="System.Drawing.Size, System.Drawing">
-    <value>432, 362</value>
+    <value>629, 508</value>
   </data>
   <data name="dataGridViewScoreComparison.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -670,7 +826,7 @@
     <value>4, 22</value>
   </data>
   <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>435, 410</value>
+    <value>632, 556</value>
   </data>
   <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -690,14 +846,200 @@
   <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="buttonApply.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonApply.Location" type="System.Drawing.Point, System.Drawing">
+    <value>131, 15</value>
+  </data>
+  <data name="buttonApply.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="buttonApply.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="buttonApply.Text" xml:space="preserve">
+    <value>適用(&amp;A)</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.Name" xml:space="preserve">
+    <value>buttonApply</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label7.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 1</value>
+  </data>
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>Q値のカットオフ：</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textBoxFilesQCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 17</value>
+  </data>
+  <data name="textBoxFilesQCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>104, 20</value>
+  </data>
+  <data name="textBoxFilesQCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.Name" xml:space="preserve">
+    <value>textBoxFilesQCutoff</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label6.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>451, 0</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>67, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>Y軸目盛り：</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="comboBoxFilesYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="comboBoxFilesYAxis.Location" type="System.Drawing.Point, System.Drawing">
+    <value>454, 17</value>
+  </data>
+  <data name="comboBoxFilesYAxis.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 21</value>
+  </data>
+  <data name="comboBoxFilesYAxis.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;comboBoxFilesYAxis.Name" xml:space="preserve">
+    <value>comboBoxFilesYAxis</value>
+  </data>
+  <data name="&gt;&gt;comboBoxFilesYAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxFilesYAxis.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;comboBoxFilesYAxis.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="zedGraphFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, 32</value>
+  </data>
+  <data name="zedGraphFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>634, 522</value>
+  </data>
+  <data name="zedGraphFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;zedGraphFiles.Name" xml:space="preserve">
+    <value>zedGraphFiles</value>
+  </data>
+  <data name="&gt;&gt;zedGraphFiles.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.19979, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphFiles.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;zedGraphFiles.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>632, 556</value>
+  </data>
+  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabPage2.Text" xml:space="preserve">
+    <value>比較を実行</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="dataGridViewScoreDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>224, 12</value>
+    <value>218, 12</value>
   </data>
   <data name="dataGridViewScoreDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>443, 436</value>
+    <value>640, 582</value>
   </data>
   <data name="dataGridViewScoreDetails.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;dataGridViewScoreDetails.Name" xml:space="preserve">
     <value>dataGridViewScoreDetails</value>
@@ -718,13 +1060,13 @@
     <value>NoControl</value>
   </data>
   <data name="buttonAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 421</value>
+    <value>12, 567</value>
   </data>
   <data name="buttonAdd.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 23</value>
   </data>
   <data name="buttonAdd.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="buttonAdd.Text" xml:space="preserve">
     <value>追加(&amp;A)...</value>
@@ -748,13 +1090,13 @@
     <value>NoControl</value>
   </data>
   <data name="buttonEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>95, 421</value>
+    <value>95, 567</value>
   </data>
   <data name="buttonEdit.Size" type="System.Drawing.Size, System.Drawing">
     <value>84, 23</value>
   </data>
   <data name="buttonEdit.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="buttonEdit.Text" xml:space="preserve">
     <value>リストを編集(&amp;E)...</value>
@@ -778,10 +1120,10 @@
     <value>12, 28</value>
   </data>
   <data name="checkedListCompare.Size" type="System.Drawing.Size, System.Drawing">
-    <value>195, 379</value>
+    <value>195, 514</value>
   </data>
   <data name="checkedListCompare.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;checkedListCompare.Name" xml:space="preserve">
     <value>checkedListCompare</value>
@@ -798,6 +1140,9 @@
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 12</value>
   </data>
@@ -805,7 +1150,7 @@
     <value>142, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>対比較用モデルおよびファイル(&amp;M)：</value>
@@ -826,7 +1171,7 @@
     <value>True</value>
   </metadata>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>673, 489</value>
+    <value>870, 635</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -1322,12 +1667,6 @@
   <data name="&gt;&gt;bindingSourceScore.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;bindingSourceScoreCompare.Name" xml:space="preserve">
-    <value>bindingSourceScoreCompare</value>
-  </data>
-  <data name="&gt;&gt;bindingSourceScoreCompare.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
   </data>
@@ -1406,10 +1745,16 @@
   <data name="&gt;&gt;endTrue.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;bindingSourceScoreCompare.Name" xml:space="preserve">
+    <value>bindingSourceScoreCompare</value>
+  </data>
+  <data name="&gt;&gt;bindingSourceScoreCompare.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ComparePeakPickingDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -129,7 +129,7 @@
     <value>12, 27</value>
   </data>
   <data name="listView1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>269, 277</value>
+    <value>256, 277</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="listView1.TabIndex" type="System.Int32, mscorlib">
@@ -157,7 +157,7 @@
     <value>6, 83</value>
   </data>
   <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnEdit.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -187,7 +187,7 @@
     <value>6, 112</value>
   </data>
   <data name="btnRemove.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnRemove.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -247,7 +247,7 @@
     <value>6, 219</value>
   </data>
   <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnShare.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -277,7 +277,7 @@
     <value>6, 248</value>
   </data>
   <data name="btnImport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnImport.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -304,7 +304,7 @@
     <value>6, 25</value>
   </data>
   <data name="btnAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -328,7 +328,7 @@
     <value>6, 54</value>
   </data>
   <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnCopy.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -358,7 +358,7 @@
     <value>3, 13</value>
   </data>
   <data name="btnUp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnUp.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -382,7 +382,7 @@
     <value>3, 42</value>
   </data>
   <data name="btnDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>85, 23</value>
   </data>
   <data name="btnDown.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -415,7 +415,7 @@
     <value>0, 10, 0, 10</value>
   </data>
   <data name="panelUpDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>81, 78</value>
+    <value>91, 78</value>
   </data>
   <data name="panelUpDown.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -439,13 +439,13 @@
     <value>TopDown</value>
   </data>
   <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 0</value>
+    <value>274, 0</value>
   </data>
   <data name="flowLayoutPanel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 22, 6, 3</value>
   </data>
   <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 310</value>
+    <value>100, 310</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -574,6 +574,6 @@
     <value>ManageViewsForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

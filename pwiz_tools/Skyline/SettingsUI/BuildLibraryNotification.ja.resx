@@ -207,7 +207,7 @@
     <value>0, 0</value>
   </data>
   <data name="LibraryNameLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>128, 16</value>
+    <value>118, 16</value>
   </data>
   <data name="LibraryNameLabel.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -258,10 +258,10 @@
     <value>2</value>
   </data>
   <data name="TextPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 32</value>
+    <value>24, 32</value>
   </data>
   <data name="TextPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 53</value>
+    <value>119, 53</value>
   </data>
   <data name="TextPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>

@@ -163,7 +163,7 @@
     <value>0, 0</value>
   </data>
   <data name="listViewColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>403, 301</value>
+    <value>411, 301</value>
   </data>
   <data name="listViewColumns.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -214,10 +214,10 @@
     <value>下</value>
   </data>
   <data name="toolStripColumns.Location" type="System.Drawing.Point, System.Drawing">
-    <value>403, 0</value>
+    <value>411, 0</value>
   </data>
   <data name="toolStripColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 301</value>
+    <value>24, 301</value>
   </data>
   <data name="toolStripColumns.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>

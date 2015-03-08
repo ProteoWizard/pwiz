@@ -243,13 +243,13 @@
     <value>無効な文字</value>
   </data>
   <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
-    <value>ロケーション{1}: {2}での解析エラー{0} </value>
+    <value>ロケーション{1}：{2}での解析エラー{0}</value>
   </data>
   <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
     <value>列は読み取り専用です</value>
   </data>
   <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
-    <value>タイプ{0}:{1}の除外構成列</value>
+    <value>タイプ{0}：{1}の除外構成列</value>
   </data>
   <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
     <value>値の更新中に不明なエラーが発生しました。</value>
@@ -324,5 +324,20 @@
   </data>
   <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
     <value>から開始しない</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_No_other_filter" xml:space="preserve">
+    <value>別のフィルタなし</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
+    <value>{0}の行を表示...</value>
+  </data>
+  <data name="AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__" xml:space="preserve">
+    <value>クリップボードにデータをコピーする際にエラーがありました： </value>
+  </data>
+  <data name="AbstractViewContext_Export_There_was_an_error_writing_to_the_file__" xml:space="preserve">
+    <value>ファイルを書き込む際にエラーがありました： </value>
+  </data>
+  <data name="NavBar_NavBar_Waiting_for_data___" xml:space="preserve">
+    <value>データに書き込み中...</value>
   </data>
 </root>

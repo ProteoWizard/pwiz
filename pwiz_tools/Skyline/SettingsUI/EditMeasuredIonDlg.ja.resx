@@ -144,7 +144,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>23</value>
+    <value>15</value>
   </data>
   <data name="textFragment.Location" type="System.Drawing.Point, System.Drawing">
     <value>33, 114</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textFragment.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>13</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -192,7 +192,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>22</value>
+    <value>14</value>
   </data>
   <data name="textRestrict.Location" type="System.Drawing.Point, System.Drawing">
     <value>148, 114</value>
@@ -213,7 +213,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRestrict.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>12</value>
   </data>
   <data name="comboDirection.Items" xml:space="preserve">
     <value>C末端</value>
@@ -240,7 +240,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboDirection.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>11</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -267,7 +267,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>10</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -295,7 +295,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>9</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -322,7 +322,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>8</value>
   </data>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -346,7 +346,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>6</value>
   </data>
   <data name="labelName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -373,7 +373,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelName.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>7</value>
   </data>
   <data name="radioFragment.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -400,7 +400,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioFragment.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>5</value>
   </data>
   <data name="radioReporter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -414,6 +414,9 @@
   <data name="radioReporter.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
+  <data name="radioReporter.Text" xml:space="preserve">
+    <value>カスタムプロダクトイオン(&amp;C)</value>
+  </data>
   <data name="&gt;&gt;radioReporter.Name" xml:space="preserve">
     <value>radioReporter</value>
   </data>
@@ -424,7 +427,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioReporter.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>4</value>
   </data>
   <data name="textMinAas.Location" type="System.Drawing.Point, System.Drawing">
     <value>148, 169</value>
@@ -445,7 +448,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textMinAas.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -472,11 +475,8 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>3</value>
   </data>
-  <metadata name="contextFormula.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="labelCharge.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -484,13 +484,13 @@
     <value>30, 356</value>
   </data>
   <data name="labelCharge.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 13</value>
+    <value>41, 13</value>
   </data>
   <data name="labelCharge.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
   </data>
   <data name="labelCharge.Text" xml:space="preserve">
-    <value>電荷(&amp;H)</value>
+    <value>電荷(&amp;H)：</value>
   </data>
   <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
     <value>labelCharge</value>
@@ -502,10 +502,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelCharge.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="textCharge.Location" type="System.Drawing.Point, System.Drawing">
-    <value>33, 372</value>
+    <value>32, 371</value>
   </data>
   <data name="textCharge.Size" type="System.Drawing.Size, System.Drawing">
     <value>87, 20</value>
@@ -523,7 +523,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textCharge.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -544,6 +544,6 @@
     <value>EditMeasuredIonDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

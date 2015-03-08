@@ -136,7 +136,7 @@
     <value>Both</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 182</value>
+    <value>282, 292</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -217,7 +217,7 @@
     <value>0</value>
   </data>
   <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 277</value>
+    <value>14, 387</value>
   </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
     <value>282, 35</value>
@@ -280,7 +280,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTAレコードは「&gt;」で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
+    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -427,7 +427,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 315</value>
+    <value>381, 425</value>
   </data>
   <data name="&gt;&gt;helpTipFasta.Name" xml:space="preserve">
     <value>helpTipFasta</value>

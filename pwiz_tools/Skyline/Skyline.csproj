@@ -29,7 +29,7 @@
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily2-64\</PublishUrl>
+    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -40,13 +40,14 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>7171</ApplicationRevision>
-    <ApplicationVersion>2.6.1.7171</ApplicationVersion>
+    <ApplicationRevision>7236</ApplicationRevision>
+    <ApplicationVersion>3.0.9.7236</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1522,14 +1523,27 @@
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
+      <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeBarGraph.ja.resx">
+      <DependentUpon>FoldChangeBarGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeBarGraph.resx">
       <DependentUpon>FoldChangeBarGraph.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeForm.ja.resx">
+      <DependentUpon>FoldChangeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeForm.resx">
       <DependentUpon>FoldChangeForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.ja.resx">
+      <DependentUpon>FoldChangeGrid.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.resx">
       <DependentUpon>FoldChangeGrid.cs</DependentUpon>
@@ -1540,6 +1554,9 @@
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.zh-CHS.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.ja.resx">
+      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.resx">
       <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
@@ -1623,8 +1640,14 @@
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.ja.resx">
+      <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.ja.resx">
+      <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
@@ -2049,6 +2072,7 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.ja.resx" />
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>GroupComparisonStrings.Designer.cs</LastGenOutput>
@@ -2130,6 +2154,9 @@
     <EmbeddedResource Include="SettingsUI\AddPathsDlg.zh-CHS.resx">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.ja.resx">
+      <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.resx">
       <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2175,6 +2202,9 @@
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DocumentSettingsDlg.ja.resx">
+      <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DocumentSettingsDlg.resx">
       <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2183,6 +2213,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.zh-CHS.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.ja.resx">
+      <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
@@ -2201,6 +2234,9 @@
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.zh-CHS.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FormulaBox.ja.resx">
+      <DependentUpon>FormulaBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.ja.resx">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>

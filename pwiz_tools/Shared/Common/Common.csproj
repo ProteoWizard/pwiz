@@ -311,6 +311,9 @@
       <DependentUpon>NavBar.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.ja.resx">
+      <DependentUpon>QuickFilterForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.resx">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>
     </EmbeddedResource>

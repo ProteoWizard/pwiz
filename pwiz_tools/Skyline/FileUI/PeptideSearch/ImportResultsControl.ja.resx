@@ -163,7 +163,7 @@
     <value>19, 26</value>
   </data>
   <data name="listResultsFilesFound.Size" type="System.Drawing.Size, System.Drawing">
-    <value>340, 108</value>
+    <value>340, 160</value>
   </data>
   <data name="listResultsFilesFound.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -196,7 +196,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="browseToResultsFileButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 96</value>
+    <value>19, 148</value>
   </data>
   <data name="browseToResultsFileButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 23</value>
@@ -250,7 +250,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="findResultsFilesButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>113, 96</value>
+    <value>113, 148</value>
   </data>
   <data name="findResultsFilesButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>88, 23</value>
@@ -280,7 +280,7 @@
     <value>19, 21</value>
   </data>
   <data name="listResultsFilesMissing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>340, 69</value>
+    <value>340, 121</value>
   </data>
   <data name="listResultsFilesMissing.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -310,10 +310,10 @@
     <value>1</value>
   </data>
   <data name="resultsSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 274</value>
+    <value>381, 384</value>
   </data>
   <data name="resultsSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
-    <value>145</value>
+    <value>203</value>
   </data>
   <data name="resultsSplitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -337,7 +337,7 @@
     <value>True</value>
   </data>
   <data name="cbExcludeSourceFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 287</value>
+    <value>21, 397</value>
   </data>
   <data name="cbExcludeSourceFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>166, 17</value>
@@ -370,7 +370,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 315</value>
+    <value>381, 425</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsControl</value>

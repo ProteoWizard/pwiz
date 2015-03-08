@@ -72,6 +72,7 @@ namespace pwiz.Skyline.Model
             get { return AnnotationDef.AnnotationTarget.protein; }
         }
 
+        public bool IsProtein { get { return PeptideGroup is FastaSequence; } }
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 

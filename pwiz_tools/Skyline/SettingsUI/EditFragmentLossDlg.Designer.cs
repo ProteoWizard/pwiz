@@ -67,8 +67,8 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.comboIncludeLoss);
-
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -77,6 +77,7 @@
             this.Name = "EditFragmentLossDlg";
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

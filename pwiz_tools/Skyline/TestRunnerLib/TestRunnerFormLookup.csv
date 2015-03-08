@@ -71,7 +71,7 @@ FilterMatchedPeptidesDlg,TestInsert
 FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
 FoldChangeGrid,TestGroupComparison
-FoldChangeBarGraph,TextGroupComparison
+FoldChangeBarGraph,TestGroupComparison
 GenerateDecoysDlg,TestPeakPickingTutorial
 GraphChromatogram,TestCustomReportsTutorial
 GraphFullScan,TestFullScanGraph

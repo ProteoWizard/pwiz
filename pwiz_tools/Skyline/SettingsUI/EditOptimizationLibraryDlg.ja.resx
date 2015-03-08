@@ -441,20 +441,35 @@
   <data name="columnSequence.HeaderText" xml:space="preserve">
     <value>修飾シークエンス</value>
   </data>
-  <metadata name="columnCharge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="columnProductIon.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnCharge.HeaderText" xml:space="preserve">
-    <value>電荷状態</value>
+  <data name="columnProductIon.HeaderText" xml:space="preserve">
+    <value>プロダクトイオン</value>
   </data>
-  <metadata name="columnProductMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="columnValue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="columnValue.HeaderText" xml:space="preserve">
     <value>値</value>
+  </data>
+  <metadata name="columnCharge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnCharge.HeaderText" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="columnCharge.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <metadata name="columnProductCharge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnProductCharge.HeaderText" xml:space="preserve">
+    <value>プロダクト電荷</value>
+  </data>
+  <data name="columnProductCharge.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <metadata name="bindingSourceLibrary.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -472,7 +487,7 @@
     <value>gridViewLibrary</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
     <value>$this</value>
@@ -522,24 +537,6 @@
   <data name="$this.Text" xml:space="preserve">
     <value>最適化ライブラリを編集</value>
   </data>
-  <data name="&gt;&gt;columnSequence.Name" xml:space="preserve">
-    <value>columnSequence</value>
-  </data>
-  <data name="&gt;&gt;columnSequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnCharge.Name" xml:space="preserve">
-    <value>columnCharge</value>
-  </data>
-  <data name="&gt;&gt;columnCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnValue.Name" xml:space="preserve">
-    <value>columnValue</value>
-  </data>
-  <data name="&gt;&gt;columnValue.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>
   </data>
@@ -558,10 +555,40 @@
   <data name="&gt;&gt;addFromFileMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;columnSequence.Name" xml:space="preserve">
+    <value>columnSequence</value>
+  </data>
+  <data name="&gt;&gt;columnSequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnProductIon.Name" xml:space="preserve">
+    <value>columnProductIon</value>
+  </data>
+  <data name="&gt;&gt;columnProductIon.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnValue.Name" xml:space="preserve">
+    <value>columnValue</value>
+  </data>
+  <data name="&gt;&gt;columnValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnCharge.Name" xml:space="preserve">
+    <value>columnCharge</value>
+  </data>
+  <data name="&gt;&gt;columnCharge.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnProductCharge.Name" xml:space="preserve">
+    <value>columnProductCharge</value>
+  </data>
+  <data name="&gt;&gt;columnProductCharge.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditOptimizationLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

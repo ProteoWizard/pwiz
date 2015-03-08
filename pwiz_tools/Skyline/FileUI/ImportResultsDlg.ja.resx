@@ -268,7 +268,7 @@
     <value>True</value>
   </data>
   <data name="radioCreateMultipleMulti.Text" xml:space="preserve">
-    <value>ディレクトリにマルチインジェクション繰り返し測定を追加(&amp;M)</value>
+    <value>ディレクトリのマルチインジェクション繰り返し測定を追加(&amp;M)</value>
   </data>
   <data name="&gt;&gt;cbShowAllChromatograms.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -304,7 +304,7 @@
     <value>$this</value>
   </data>
   <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
-    <value>任意数の複数回注入複製をディレクトリに下記のように整理して追加します。
+    <value>ディレクトリ内で以下のように整理されている任意数のマルチインジェクション繰り返し測定を追加： 
     &lt;root&gt;\
         replicate1\
             *.RAW
@@ -312,8 +312,7 @@
             *.wiff
         replicate3\
             *.mzML
-ルートディレクトリを選択すると、各サブディレクトリに
-新規の繰り返し測定が作成されます。</value>
+ルートディレクトリを選択し、新しい繰り返し測定がそれぞれのサブディレクトリに作成されます。</value>
   </data>
   <data name="comboOptimizing.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 21</value>

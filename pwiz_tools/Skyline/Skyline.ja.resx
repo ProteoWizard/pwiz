@@ -166,6 +166,18 @@
   <data name="pickChildrenContextMenuItem.Text" xml:space="preserve">
     <value>子の選択</value>
   </data>
+  <data name="addMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 22</value>
+  </data>
+  <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
+    <value>小分子を追加...</value>
+  </data>
+  <data name="addTransitionMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 22</value>
+  </data>
+  <data name="addTransitionMoleculeContextMenuItem.Text" xml:space="preserve">
+    <value>トランジションを追加...</value>
+  </data>
   <data name="removePeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>169, 22</value>
   </data>
@@ -173,25 +185,25 @@
     <value>ピークを削除</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="noStandardContextMenuItem.Text" xml:space="preserve">
     <value>なし</value>
   </data>
   <data name="normStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="normStandardContextMenuItem.Text" xml:space="preserve">
     <value>正規化</value>
   </data>
   <data name="qcStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
     <value>QC</value>
   </data>
   <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
@@ -258,7 +270,7 @@
     <value>繰り返し測定</value>
   </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>170, 286</value>
+    <value>170, 308</value>
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>
@@ -1072,7 +1084,7 @@
     <value>-1, 0</value>
   </data>
   <data name="dockPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>736, 443</value>
+    <value>736, 439</value>
   </data>
   <data name="dockPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1096,7 +1108,7 @@
     <value>0, 49</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 442</value>
+    <value>734, 438</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1117,7 +1129,7 @@
     <value>334, 17</value>
   </metadata>
   <data name="statusGeneral.Size" type="System.Drawing.Size, System.Drawing">
-    <value>379, 18</value>
+    <value>379, 22</value>
   </data>
   <data name="statusGeneral.Text" xml:space="preserve">
     <value>準備完了</value>
@@ -1126,7 +1138,7 @@
     <value>MiddleLeft</value>
   </data>
   <data name="statusProgress.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
+    <value>100, 21</value>
   </data>
   <data name="statusProgress.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1135,7 +1147,7 @@
     <value>Magenta</value>
   </data>
   <data name="buttonShowAllChromatograms.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 21</value>
+    <value>21, 25</value>
   </data>
   <data name="buttonShowAllChromatograms.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1144,7 +1156,7 @@
     <value>False</value>
   </data>
   <data name="statusSequences.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 18</value>
+    <value>75, 22</value>
   </data>
   <data name="statusSequences.Text" xml:space="preserve">
     <value>0 prot</value>
@@ -1156,7 +1168,7 @@
     <value>False</value>
   </data>
   <data name="statusPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>85, 18</value>
+    <value>85, 22</value>
   </data>
   <data name="statusPeptides.Text" xml:space="preserve">
     <value>0 pep</value>
@@ -1168,7 +1180,7 @@
     <value>False</value>
   </data>
   <data name="statusPrecursors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>85, 18</value>
+    <value>85, 22</value>
   </data>
   <data name="statusPrecursors.Text" xml:space="preserve">
     <value>0 prec</value>
@@ -1180,7 +1192,7 @@
     <value>False</value>
   </data>
   <data name="statusIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 18</value>
+    <value>95, 22</value>
   </data>
   <data name="statusIons.Text" xml:space="preserve">
     <value>0 tran</value>
@@ -1189,10 +1201,10 @@
     <value>MiddleRight</value>
   </data>
   <data name="statusStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 491</value>
+    <value>0, 487</value>
   </data>
   <data name="statusStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 23</value>
+    <value>734, 27</value>
   </data>
   <data name="statusStrip.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1339,7 +1351,7 @@
     <value>Fuchsia</value>
   </data>
   <data name="startPageMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
     <value>開始(&amp;R)...</value>
@@ -1351,7 +1363,7 @@
     <value>Ctrl+N</value>
   </data>
   <data name="newMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="newMenuItem.Text" xml:space="preserve">
     <value>新規(&amp;N)</value>
@@ -1363,10 +1375,19 @@
     <value>Ctrl+O</value>
   </data>
   <data name="openMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="openMenuItem.Text" xml:space="preserve">
     <value>開く(&amp;O)...</value>
+  </data>
+  <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 22</value>
+  </data>
+  <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
+    <value>含有フォルダを開く</value>
+  </data>
+  <data name="toolStripSeparator53.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 6</value>
   </data>
   <data name="saveMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1375,19 +1396,19 @@
     <value>Ctrl+S</value>
   </data>
   <data name="saveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="saveMenuItem.Text" xml:space="preserve">
     <value>保存(&amp;S)</value>
   </data>
   <data name="saveAsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="saveAsMenuItem.Text" xml:space="preserve">
     <value>名前を付けて保存(&amp;A)...</value>
   </data>
   <data name="shareDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="shareDocumentMenuItem.Text" xml:space="preserve">
     <value>共有(&amp;H)...</value>
@@ -1396,13 +1417,13 @@
     <value>Fuchsia</value>
   </data>
   <data name="publishMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="publishMenuItem.Text" xml:space="preserve">
     <value>Panoramaに公開(&amp;P)...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>194, 6</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1447,7 +1468,7 @@
     <value>ドキュメント(&amp;D)...</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="importToolStripMenuItem.Text" xml:space="preserve">
     <value>インポート(&amp;I)</value>
@@ -1510,22 +1531,22 @@
     <value>コーラスリクエスト...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="exportToolStripMenuItem.Text" xml:space="preserve">
     <value>エクスポート(&amp;E)</value>
   </data>
   <data name="mruBeforeToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>194, 6</value>
   </data>
   <data name="mruAfterToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>194, 6</value>
   </data>
   <data name="mruAfterToolStripSeparator.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="exitMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>197, 22</value>
   </data>
   <data name="exitMenuItem.Text" xml:space="preserve">
     <value>終了(&amp;X)</value>
@@ -2022,6 +2043,24 @@
   <data name="arrangeTiledMenuItem.Text" xml:space="preserve">
     <value>タイル(&amp;T)</value>
   </data>
+  <data name="arrangeColumnMenuItem.ShowShortcutKeys" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="arrangeColumnMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="arrangeColumnMenuItem.Text" xml:space="preserve">
+    <value>列(&amp;C)</value>
+  </data>
+  <data name="arrangeRowMenuItem.ShowShortcutKeys" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="arrangeRowMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="arrangeRowMenuItem.Text" xml:space="preserve">
+    <value>行(&amp;R)</value>
+  </data>
   <data name="arrangedTabbedMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+T</value>
   </data>
@@ -2451,6 +2490,18 @@
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
     <value>ピーク領域(&amp;K)</value>
   </data>
+  <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 22</value>
+  </data>
+  <data name="addGroupComparisonMenuItem.Text" xml:space="preserve">
+    <value>追加...</value>
+  </data>
+  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
+    <value>グループ比較</value>
+  </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -2491,58 +2542,64 @@
     <value>ビュー(&amp;V)</value>
   </data>
   <data name="toolStripSeparatorSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 6</value>
+    <value>181, 6</value>
   </data>
   <data name="toolStripSeparatorSettings.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="saveCurrentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="saveCurrentMenuItem.Text" xml:space="preserve">
     <value>現在の設定を保存(&amp;S)...</value>
   </data>
   <data name="editSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="editSettingsMenuItem.Text" xml:space="preserve">
     <value>リストを編集(&amp;E)...</value>
   </data>
   <data name="toolStripSeparator31.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 6</value>
+    <value>181, 6</value>
   </data>
   <data name="shareSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="shareSettingsMenuItem.Text" xml:space="preserve">
     <value>共有(&amp;A)...</value>
   </data>
   <data name="importSettingsMenuItem1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="importSettingsMenuItem1.Text" xml:space="preserve">
     <value>インポート(&amp;I)...</value>
   </data>
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 6</value>
+    <value>181, 6</value>
   </data>
   <data name="peptideSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="peptideSettingsMenuItem.Text" xml:space="preserve">
     <value>ぺプチド設定(&amp;P)...</value>
   </data>
   <data name="transitionSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="transitionSettingsMenuItem.Text" xml:space="preserve">
     <value>トランジションの設定(&amp;T)...</value>
   </data>
+  <data name="documentSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>184, 22</value>
+  </data>
+  <data name="documentSettingsMenuItem.Text" xml:space="preserve">
+    <value>ドキュメント設定(&amp;D)...</value>
+  </data>
   <data name="toolStripSeparator37.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 6</value>
+    <value>181, 6</value>
   </data>
   <data name="integrateAllMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 22</value>
+    <value>184, 22</value>
   </data>
   <data name="integrateAllMenuItem.Text" xml:space="preserve">
     <value>すべて統合(&amp;N)</value>
@@ -2725,6 +2782,18 @@
     <value>pickChildrenContextMenuItem</value>
   </data>
   <data name="&gt;&gt;pickChildrenContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addMoleculeContextMenuItem.Name" xml:space="preserve">
+    <value>addMoleculeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addMoleculeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addTransitionMoleculeContextMenuItem.Name" xml:space="preserve">
+    <value>addTransitionMoleculeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addTransitionMoleculeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;removePeakContextMenuItem.Name" xml:space="preserve">
@@ -3765,6 +3834,18 @@
   <data name="&gt;&gt;openMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;openContainingFolderMenuItem.Name" xml:space="preserve">
+    <value>openContainingFolderMenuItem</value>
+  </data>
+  <data name="&gt;&gt;openContainingFolderMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator53.Name" xml:space="preserve">
+    <value>toolStripSeparator53</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator53.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;saveMenuItem.Name" xml:space="preserve">
     <value>saveMenuItem</value>
   </data>
@@ -4371,6 +4452,18 @@
   <data name="&gt;&gt;arrangeTiledMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;arrangeColumnMenuItem.Name" xml:space="preserve">
+    <value>arrangeColumnMenuItem</value>
+  </data>
+  <data name="&gt;&gt;arrangeColumnMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;arrangeRowMenuItem.Name" xml:space="preserve">
+    <value>arrangeRowMenuItem</value>
+  </data>
+  <data name="&gt;&gt;arrangeRowMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;arrangedTabbedMenuItem.Name" xml:space="preserve">
     <value>arrangedTabbedMenuItem</value>
   </data>
@@ -4713,6 +4806,18 @@
   <data name="&gt;&gt;areaPeptideComparisonMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;groupComparisonsMenuItem.Name" xml:space="preserve">
+    <value>groupComparisonsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupComparisonsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addGroupComparisonMenuItem.Name" xml:space="preserve">
+    <value>addGroupComparisonMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addGroupComparisonMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
     <value>resultsGridMenuItem</value>
   </data>
@@ -4801,6 +4906,12 @@
     <value>transitionSettingsMenuItem</value>
   </data>
   <data name="&gt;&gt;transitionSettingsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;documentSettingsMenuItem.Name" xml:space="preserve">
+    <value>documentSettingsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;documentSettingsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator37.Name" xml:space="preserve">
@@ -4927,6 +5038,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
