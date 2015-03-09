@@ -249,7 +249,8 @@
   <data name="textBox1.Text" xml:space="preserve">
     <value>AB Sciex
 WIFFファイルリーダーライブラリ
-Copyright © 2010 by AB Sciex LLC.著作権所有。
+Copyright © 2010 by AB Sciex LLC.
+著作権所有。
 http://www.absciex.com/
 
 Agilent Technologies
@@ -262,7 +263,8 @@ http://proteome.gs.washington.edu/software/bibliospec
 
 Bruker
 CompassXtractデータリーダーライブラリ
-Copyright © 2011 by Bruker Daltonik GmbH.著作権所有。
+Copyright © 2011 by Bruker Daltonik GmbH.
+著作権所有。
 http://www.bruker.com/
 
 Crawdad
@@ -299,7 +301,8 @@ http://proteowizard.sourceforge.net
 
 Shimadzu Corporation
 Shimadzu's ファイルコンバータソフトウェア
-Copyright © 2014 by Shimadzu Coporation 著作権所有。
+Copyright © 2014 by Shimadzu Coporation
+著作権所有。
 http://www.shimadzu.com
 
 SQLite
@@ -312,13 +315,15 @@ http://sqlite.phxsoftware.com
 
 Thermo Fisher Scientific
 MSFileReaderファイル読み出しツール
-Copyright © 2009 by Thermo Fisher Scientific, Inc. 著作権所有。
+Copyright © 2009 by Thermo Fisher Scientific, Inc.
+著作権所有。
 http://www.thermo.com
 
 Waters Technologies Corporation
 メソッドエクスポートライブラリ
 ウォーターズローデータアクセスコンポーネント
-Copyright © 2010 by Waters Corporation.著作権所有。
+Copyright © 2010 by Waters Corporation.
+著作権所有。
 http://www.waters.com
 
 ZedGraph
