@@ -415,7 +415,7 @@
     <value>13</value>
   </data>
   <data name="btnCreate.Text" xml:space="preserve">
-    <value>创建(&amp;C)...</value>
+    <value>创建(&amp;C)…</value>
   </data>
   <data name="&gt;&gt;btnCreate.Name" xml:space="preserve">
     <value>btnCreate</value>

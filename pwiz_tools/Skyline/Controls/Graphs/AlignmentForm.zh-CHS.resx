@@ -358,7 +358,7 @@
     <value>35, 22</value>
   </data>
   <data name="bindingNavigatorCountItem.Text" xml:space="preserve">
-    <value>{0} 个新的</value>
+    <value>{0}的</value>
   </data>
   <data name="bindingNavigatorCountItem.ToolTipText" xml:space="preserve">
     <value>条目总数</value>

@@ -392,7 +392,7 @@
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
     <value>线性方程用于从其质荷比中
-针对每个母离子预测最优去簇电压 （CE）。同位素标记的
+针对每个母离子预测最优碰撞能量 （CE）。同位素标记的
 肽段使用针对未标记形式预测的 CE。</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">

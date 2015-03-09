@@ -310,7 +310,7 @@
     <value>2</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>最大 CV 值(&amp;C) ：</value>
+    <value>最大 CV 值(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
