@@ -163,7 +163,7 @@
     <value>训练模型(&amp;T)</value>
   </data>
   <data name="btnTrainModel.ToolTip" xml:space="preserve">
-    <value>在此文档中点击使用目前已导入的肽的结果数据，
+    <value>在此文档中点击使用目前已导入肽段的结果数据，
 并用线性回归计算方程式</value>
   </data>
   <data name="&gt;&gt;btnTrainModel.Name" xml:space="preserve">
@@ -194,7 +194,7 @@
     <value>True</value>
   </metadata>
   <data name="PeakCalculatorName.HeaderText" xml:space="preserve">
-    <value>分数名称</value>
+    <value>得分名称</value>
   </data>
   <data name="PeakCalculatorName.MinimumWidth" type="System.Int32, mscorlib">
     <value>120</value>

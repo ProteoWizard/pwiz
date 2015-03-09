@@ -243,46 +243,46 @@
     <value>无效字符</value>
   </data>
   <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
-    <value>在位置{1}解析{0}出错：{2}</value>
+    <value>在位置{1}: {2}解析{0}时出错</value>
   </data>
   <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
     <value>本列为只读模式</value>
   </data>
   <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
-    <value>构造列类型{0}异常：{1}</value>
+    <value>构建类型{0}:{1}列异常</value>
   </data>
   <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
-    <value>更新值出现未知错误。</value>
+    <value>更新数值时出现未知错误。</value>
   </data>
   <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
-    <value>更新值出错：
+    <value>更新数值出错：
 {0}</value>
   </data>
   <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
-    <value>写下一行 </value>
+    <value>写入行 </value>
     <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
 </comment>
   </data>
   <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
-    <value>写下 {0} 行</value>
+    <value>写入 {0} 行</value>
   </data>
   <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
-    <value>执行查询</value>
+    <value>查询执行中</value>
   </data>
   <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
-    <value>写下 {1} 行中的 {0}</value>
+    <value>写入 {0}/{1}行</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
     <value>您是否确定想要删除视图“{0}”？</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
-    <value>您是否确定想要删除视图{0}？</value>
+    <value>您是否确定想要删除这些{0}视图？</value>
   </data>
   <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
     <value>（从{0}过滤）</value>
   </data>
   <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
-    <value>{0} 的 {1}</value>
+    <value>{0}/{1}</value>
     <comment>Example : 1 of 10
 </comment>
   </data>
@@ -296,10 +296,10 @@
     <value>不等于</value>
   </data>
   <data name="FilterOperations_Is_Blank" xml:space="preserve">
-    <value>为空</value>
+    <value>为空白</value>
   </data>
   <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
-    <value>不为空</value>
+    <value>不为空白</value>
   </data>
   <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
     <value>大于</value>
@@ -324,5 +324,20 @@
   </data>
   <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
     <value>不开始于</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_No_other_filter" xml:space="preserve">
+    <value>无其他过滤器</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
+    <value>显示行{0}…</value>
+  </data>
+  <data name="AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__" xml:space="preserve">
+    <value>剪切板数据复制出现错误： </value>
+  </data>
+  <data name="AbstractViewContext_Export_There_was_an_error_writing_to_the_file__" xml:space="preserve">
+    <value>写入文件出现错误： </value>
+  </data>
+  <data name="NavBar_NavBar_Waiting_for_data___" xml:space="preserve">
+    <value>等待数据…</value>
   </data>
 </root>

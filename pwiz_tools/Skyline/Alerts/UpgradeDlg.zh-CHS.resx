@@ -163,7 +163,7 @@
     <value>5</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>鉴于许可的内含性：</value>
+    <value>由于包含用于以下的许可：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

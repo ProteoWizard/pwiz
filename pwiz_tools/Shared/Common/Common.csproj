@@ -317,6 +317,9 @@
     <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.resx">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.zh-CHS.resx">
+      <DependentUpon>QuickFilterForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>
     </EmbeddedResource>

@@ -172,7 +172,7 @@
     <value>5</value>
   </data>
   <data name="radioAverage.Text" xml:space="preserve">
-    <value>平均分配新值和现有值</value>
+    <value>平均新值和现有值</value>
   </data>
   <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
     <value>radioAverage</value>
@@ -238,7 +238,7 @@
     <value>3</value>
   </data>
   <data name="radioSkip.Text" xml:space="preserve">
-    <value>保留现有值</value>
+    <value>离开现有值</value>
   </data>
   <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
     <value>radioSkip</value>
@@ -301,7 +301,7 @@
     <value>0</value>
   </data>
   <data name="labelExisting.Text" xml:space="preserve">
-    <value>库中已经有 {0} 个最优化具有值：</value>
+    <value>库中已经有 {0} 个最优化：</value>
   </data>
   <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>

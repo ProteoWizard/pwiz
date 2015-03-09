@@ -274,7 +274,7 @@
     <value>4</value>
   </data>
   <data name="btnAccession.Text" xml:space="preserve">
-    <value>添加</value>
+    <value>编号</value>
   </data>
   <data name="&gt;&gt;btnAccession.Name" xml:space="preserve">
     <value>btnAccession</value>

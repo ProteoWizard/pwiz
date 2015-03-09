@@ -304,8 +304,7 @@
     <value>$this</value>
   </data>
   <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
-    <value>添加任意数量的多次注射重复测定
-并在目录中编组为：
+    <value>添加任意数量的多次注射重复测定并在目录中编组为：
     &lt;root&gt;\
         replicate1\
             *.RAW
@@ -313,8 +312,7 @@
             *.wiff
         replicate3\
             *.mzML
-选择根目录，且系统会为其每个子目录
-创建新的重复测定，</value>
+选择根目录，且系统会为其每个子目录创建新的重复测定。</value>
   </data>
   <data name="comboOptimizing.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 21</value>
@@ -423,7 +421,7 @@
     <value>True</value>
   </data>
   <data name="radioCreateNew.ToolTip" xml:space="preserve">
-    <value>添加一个带有任意注射数量和特定名称的
+    <value>添加一个带有任意数量注射和特定名称的
 新重复测定。</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">

@@ -268,7 +268,7 @@
     <value>3</value>
   </data>
   <data name="lblChorusAccounts.Text" xml:space="preserve">
-    <value>统一账户：</value>
+    <value>Chorus账户：</value>
   </data>
   <data name="&gt;&gt;lblChorusAccounts.Name" xml:space="preserve">
     <value>lblChorusAccounts</value>
@@ -325,7 +325,7 @@
     <value>3</value>
   </data>
   <data name="tabChorus.Text" xml:space="preserve">
-    <value>统一</value>
+    <value>Chorus</value>
   </data>
   <data name="&gt;&gt;tabChorus.Name" xml:space="preserve">
     <value>tabChorus</value>

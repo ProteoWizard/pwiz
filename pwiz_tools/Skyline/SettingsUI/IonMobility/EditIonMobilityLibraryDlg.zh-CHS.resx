@@ -214,7 +214,7 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="textDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>294, 22</value>
+    <value>429, 22</value>
   </data>
   <data name="textDatabase.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -262,7 +262,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>353, 16</value>
+    <value>488, 16</value>
   </data>
   <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -292,7 +292,7 @@
     <value>Top, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>353, 53</value>
+    <value>488, 53</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -322,7 +322,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnImportFromLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>353, 541</value>
+    <value>488, 541</value>
   </data>
   <data name="btnImportFromLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -373,7 +373,7 @@
     <value>8</value>
   </data>
   <data name="labelNumPeptides.Text" xml:space="preserve">
-    <value>0 肽</value>
+    <value>0 肽段</value>
   </data>
   <data name="&gt;&gt;labelNumPeptides.Name" xml:space="preserve">
     <value>labelNumPeptides</value>
@@ -490,7 +490,7 @@
     <value>True</value>
   </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
-    <value>经修饰的序列</value>
+    <value>修饰序列</value>
   </data>
   <data name="columnLibrarySequence.Width" type="System.Int32, mscorlib">
     <value>260</value>
@@ -504,6 +504,15 @@
   <data name="columnLibraryCollisionalCrossSection.Width" type="System.Int32, mscorlib">
     <value>135</value>
   </data>
+  <metadata name="columnHighEnergyDriftTimeOffsetMsec.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnHighEnergyDriftTimeOffsetMsec.HeaderText" xml:space="preserve">
+    <value>高能漂移时间偏置（毫秒）</value>
+  </data>
+  <data name="columnHighEnergyDriftTimeOffsetMsec.Width" type="System.Int32, mscorlib">
+    <value>135</value>
+  </data>
   <data name="gridViewMeasuredPeptides.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 210</value>
   </data>
@@ -511,7 +520,7 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewMeasuredPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 323</value>
+    <value>573, 323</value>
   </data>
   <data name="gridViewMeasuredPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -547,7 +556,7 @@
     <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>469, 585</value>
+    <value>604, 585</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -591,6 +600,18 @@
   <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolTipImportBtn.Name" xml:space="preserve">
+    <value>toolTipImportBtn</value>
+  </data>
+  <data name="&gt;&gt;toolTipImportBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Name" xml:space="preserve">
+    <value>toolTipMeasuredPeptidesGrid</value>
+  </data>
+  <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnLibrarySequence.Name" xml:space="preserve">
     <value>columnLibrarySequence</value>
   </data>
@@ -603,17 +624,11 @@
   <data name="&gt;&gt;columnLibraryCollisionalCrossSection.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolTipImportBtn.Name" xml:space="preserve">
-    <value>toolTipImportBtn</value>
+  <data name="&gt;&gt;columnHighEnergyDriftTimeOffsetMsec.Name" xml:space="preserve">
+    <value>columnHighEnergyDriftTimeOffsetMsec</value>
   </data>
-  <data name="&gt;&gt;toolTipImportBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Name" xml:space="preserve">
-    <value>toolTipMeasuredPeptidesGrid</value>
-  </data>
-  <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;columnHighEnergyDriftTimeOffsetMsec.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditIonMobilityLibraryDlg</value>

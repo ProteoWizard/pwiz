@@ -466,7 +466,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>加载色谱图…</value>
+    <value>色谱图加载中…</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AllChromatogramsGraph</value>

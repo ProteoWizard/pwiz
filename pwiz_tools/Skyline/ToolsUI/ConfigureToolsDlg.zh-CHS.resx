@@ -185,7 +185,7 @@
     <value>ImageBeforeText</value>
   </data>
   <data name="btnInitialDirectoryMacros.ToolTip" xml:space="preserve">
-    <value>此份列表包含受支持的初始目录宏命令。这些命令将 
+    <value>这是份包含支持的初始目录宏命令的列表。这些命令将 
 在您运行工具时用适当的值进行替换。
 </value>
   </data>
@@ -225,7 +225,7 @@
     <value>ImageBeforeText</value>
   </data>
   <data name="btnArguments.ToolTip" xml:space="preserve">
-    <value>此份列表包含受支持的参数宏命令。这些命令将
+    <value>这是份包含支持的参数宏命令的列表。这些命令将
 在您运行工具时用适当的值进行替换。</value>
   </data>
   <data name="&gt;&gt;btnArguments.Name" xml:space="preserve">
@@ -372,7 +372,7 @@
   <data name="textCommand.ToolTip" xml:space="preserve">
     <value>输入您希望启动的文件路径或 URL，
 或者选择浏览以导航至文件。
-您可以启动的文件类型包括 .exe、.bat、.com、.cmd 和 .pif
+您可以启动的文件类型包括 .exe、.bat、.com、.cmd 和 .pif。
 为运行正常，所有 URL 必须以 http: 或 https: 开头。</value>
   </data>
   <data name="&gt;&gt;textCommand.Name" xml:space="preserve">

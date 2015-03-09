@@ -268,8 +268,8 @@
     <value>3</value>
   </data>
   <data name="textPath.ToolTip" xml:space="preserve">
-    <value>最终的非冗余库将在磁盘上的位置
-创建。</value>
+    <value>最终的非冗余库在磁盘上的位置
+将被创建。</value>
   </data>
   <data name="&gt;&gt;textPath.Name" xml:space="preserve">
     <value>textPath</value>
@@ -304,7 +304,7 @@
   <data name="comboAction.ToolTip" xml:space="preserve">
     <value>选择创建新库，或者如果您之前
 已保存了冗余库数据的副本，
-则可附加到当前库。</value>
+则可添加到现有库。</value>
   </data>
   <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
     <value>comboAction</value>
@@ -358,7 +358,7 @@
     <value>11</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>实验室机构(&amp;U)（例如 proteome.gs.washington.edu）：</value>
+    <value>实验室机构（例如 proteome.gs.washington.edu）(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -382,8 +382,8 @@
     <value>12</value>
   </data>
   <data name="textAuthority.ToolTip" xml:space="preserve">
-    <value>该值在唯一鉴定此库的 LSID 中
-使用。它应该是其他实验室无法使用的，
+    <value>该值在将被用在唯一确认此库的
+LSID中。它应该是其他实验室无法使用的，
 如实验室网络服务器的 DNS 名称。或者它至少
 应该像一个名称。例如：
 
@@ -412,8 +412,8 @@ tabb.vanderbilt.edu</value>
     <value>13</value>
   </data>
   <data name="textID.ToolTip" xml:space="preserve">
-    <value>该值在唯一鉴定此库的 LSID 中
-使用。它应被选定作为所有库
+    <value>该值在将被用在唯一确认此库的
+LSID中。它应该选用在所有库
 （在您所选择的实验室机构中所创建）中唯一的
 值。例如：
 
@@ -501,9 +501,9 @@ Yeast_20090902</value>
     <value>9</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>在 1.0 - 0 的分数范围内，1.0 分最有可能是正确的，
-此类分数用于在结果（将被包含在库里）中
-提供截止分数。
+    <value>分数将分布在1.0 - 0 范围内，1.0 分是最有可能正确的，
+该分数将为图谱提供一个截止，
+所有超过截止的图谱将被收纳到库里。
 
 对于 TPP pepXML 而言，这是最小的 PeptideProphet 概率。
 对于 Mascot 而言，这是 1 - 最大的期待值。
@@ -534,7 +534,7 @@ Yeast_20090902</value>
     <value>8</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>截止分数(&amp;C)：</value>
+    <value>截止得分(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -790,8 +790,8 @@ Yeast_20090902</value>
     <value>1</value>
   </data>
   <data name="listInputFiles.ToolTip" xml:space="preserve">
-    <value>所有已选中且符合截止分数的文件中的谱图
-将被添加到冗余库，然后再从该冗余库中
+    <value>所有已选中文件中的符合截止分数的谱图
+将被添加到冗余库，然后基于该冗余库
 建立最终的非冗余库。</value>
   </data>
   <data name="&gt;&gt;listInputFiles.Name" xml:space="preserve">

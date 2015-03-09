@@ -187,8 +187,8 @@
     <value>0</value>
   </data>
   <data name="instructionLabel.Text" xml:space="preserve">
-    <value>您的项目创建后，如果您已注册了一个
-用户账户，则请在下方输入用户账户的
+    <value>一旦您的项目被创建，并且您已注册了一个
+用户账户，请在下方为您的用户帐户输入
 电子邮件和密码。</value>
   </data>
   <data name="&gt;&gt;instructionLabel.Name" xml:space="preserve">
@@ -219,7 +219,7 @@
     <value>0</value>
   </data>
   <data name="lblProjectInfo.Text" xml:space="preserve">
-    <value>URL(&amp;U)（例如 https://panoramaweb.org/）：</value>
+    <value>URL（例如 https://panoramaweb.org/）(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;lblProjectInfo.Name" xml:space="preserve">
     <value>lblProjectInfo</value>

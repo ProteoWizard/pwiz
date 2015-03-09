@@ -234,7 +234,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>斜度</value>
+    <value>斜率</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>80</value>
@@ -258,10 +258,10 @@
     <value>3</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>利用分类中的方程式，用斜度和截距值从
-母离子质荷比中计算经预测的最优碰撞能量：
+    <value>斜率和截距值被用来从
+母离子质荷比中计算预测的最优碰撞能量，借助以下形式的等式：
 
-碰撞能量 = 斜度 * 母离子质荷比 + 截距
+碰撞能量 = 斜率 * 母离子质荷比 + 截距
 
 允许使用适用于多个母离子电荷态的方程式。如果母离子
 电荷态未出现在此列表中，则应采用最接近的匹配项。</value>
@@ -369,7 +369,7 @@
     <value>使用结果(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-    <value>在此文档中点击使用目前已导入的肽的最优化结果数据，
+    <value>在此文档中点击使用目前已导入肽段的最优化结果数据，
 并用线性回归计算方程式</value>
   </data>
   <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
@@ -395,9 +395,9 @@
   </data>
   <data name="textStepCount.ToolTip" xml:space="preserve">
     <value>在碰撞能量最优化方法（经预测的最优碰撞能量已采用该方法进行测量）
-中使用的值的数量，以及预测值两侧的
-该值的数量分别用步长分隔
-碰撞能量伏特</value>
+中使用的碰撞能量值的数量，
+以及在预测值两侧的该值的数量，
+分别用步长碰撞能量伏特进行分割</value>
   </data>
   <data name="&gt;&gt;textStepCount.Name" xml:space="preserve">
     <value>textStepCount</value>
@@ -450,8 +450,8 @@
   <data name="textStepSize.ToolTip" xml:space="preserve">
     <value>在碰撞能量最优化方法（经预测的最优碰撞能量已采用该方法进行测量）
 中使用的电压区间，以及预测值两侧的
-该值的数量分别用步长分隔
-碰撞能量伏特</value>
+以及在预测值两侧的该值的数量，
+分别用步长碰撞能量伏特进行分割</value>
   </data>
   <data name="&gt;&gt;textStepSize.Name" xml:space="preserve">
     <value>textStepSize</value>
@@ -505,7 +505,7 @@
     <value>显示图形(&amp;S)…</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-    <value>在此文档中显示目前已导入的肽的最优化结果数据的
+    <value>在此文档中显示目前已导入最优化结果数据的肽段的
 线性回归图</value>
   </data>
   <data name="&gt;&gt;btnShowGraph.Name" xml:space="preserve">

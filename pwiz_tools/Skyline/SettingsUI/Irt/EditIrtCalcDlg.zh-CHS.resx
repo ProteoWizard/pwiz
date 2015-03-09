@@ -415,7 +415,7 @@
     <value>8</value>
   </data>
   <data name="labelNumPeptides.Text" xml:space="preserve">
-    <value>0 肽</value>
+    <value>0 肽段</value>
   </data>
   <data name="&gt;&gt;labelNumPeptides.Name" xml:space="preserve">
     <value>labelNumPeptides</value>
@@ -502,7 +502,7 @@
     <value>0</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
-    <value>肽…</value>
+    <value>肽段…</value>
   </data>
   <data name="btnPeptides.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -532,7 +532,7 @@
     <value>True</value>
   </metadata>
   <data name="columnStandardSequence.HeaderText" xml:space="preserve">
-    <value>经修饰的序列</value>
+    <value>修饰序列</value>
   </data>
   <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -577,7 +577,7 @@
     <value>True</value>
   </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
-    <value>经修饰的序列</value>
+    <value>修饰序列</value>
   </data>
   <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

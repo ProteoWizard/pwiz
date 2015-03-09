@@ -350,7 +350,7 @@
     <value>调整</value>
   </data>
   <data name="radioBtnRefine.ToolTip" xml:space="preserve">
-    <value>测量范围广泛的离子对，
+    <value>测量大范围的离子对，
 以确定肽段目标的最优离子对。</value>
   </data>
   <data name="&gt;&gt;radioBtnRefine.Name" xml:space="preserve">
@@ -381,7 +381,7 @@
     <value>定量</value>
   </data>
   <data name="radioBtnQuant.ToolTip" xml:space="preserve">
-    <value>测量已经调整的离子对，强制合并全部，
+    <value>测量已调整的离子对，强制整合全部
 以改进方差。</value>
   </data>
   <data name="&gt;&gt;radioBtnQuant.Name" xml:space="preserve">
@@ -409,7 +409,7 @@
     <value>2</value>
   </data>
   <data name="labelIntegrateAll.Text" xml:space="preserve">
-    <value>合并全部：离开</value>
+    <value>整合全部：关闭</value>
   </data>
   <data name="&gt;&gt;labelIntegrateAll.Name" xml:space="preserve">
     <value>labelIntegrateAll</value>

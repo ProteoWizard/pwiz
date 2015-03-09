@@ -244,7 +244,7 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>斜度(&amp;S)：</value>
+    <value>斜率(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -268,10 +268,10 @@
     <value>3</value>
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
-    <value>利用分类中的方程式，用斜度从
-计算得出的肽分数中计算经预测的保留时间：
+    <value>斜率被用于从计算得到的肽段分数中计算预测保留时间，
+借助以下形式的等式：
 
-保留时间 = 斜度 * 分数 + 截距</value>
+保留时间 = 斜率 * 分数 + 截距</value>
   </data>
   <data name="&gt;&gt;textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
@@ -322,10 +322,10 @@
     <value>5</value>
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
-    <value>利用分类中的方程式，用 Y-截距从
-计算得出的肽分数中计算经预测的保留时间：
+    <value>Y-截距被用于从计算得到的肽段分数中计算预测保留时间，
+借助以下形式的等式：
 
-保留时间 = 斜度 * 分数 + 截距
+保留时间 = 斜率 * 分数 + 截距
 </value>
   </data>
   <data name="&gt;&gt;textIntercept.Name" xml:space="preserve">
@@ -357,7 +357,7 @@
   </data>
   <data name="btnCalculate.ToolTip" xml:space="preserve">
     <value>显示/隐藏用于利用线性回归计算方程式的
-肽值</value>
+肽段值</value>
   </data>
   <data name="&gt;&gt;btnCalculate.Name" xml:space="preserve">
     <value>btnCalculate</value>
@@ -414,10 +414,10 @@
     <value>13</value>
   </data>
   <data name="labelRValue.Text" xml:space="preserve">
-    <value>（0 个肽，R = 0.0）</value>
+    <value>（0 肽段，R = 0.0）</value>
   </data>
   <data name="labelRValue.ToolTip" xml:space="preserve">
-    <value>肽的数量目前用于利用线性回归计算方程式，
+    <value>目前被用于利用线性回归计算方程式的肽段数量，
 R 代表回归。</value>
   </data>
   <data name="&gt;&gt;labelRValue.Name" xml:space="preserve">
@@ -469,9 +469,9 @@ R 代表回归。</value>
     <value>7</value>
   </data>
   <data name="textTimeWindow.ToolTip" xml:space="preserve">
-    <value>在经预测的保留时间前后的数分钟内，时间窗口
+    <value>以分钟表示，在预测保留时间前后的时间窗口
 用于显示预测的保留时间并对
-未来的肽测量进行排程。对于利用回归计算的方程式，
+未来的肽段测量进行预定。对于利用回归计算的方程式，
 该值默认为残值标准偏差的两倍，
 范围包含 95% 的回归值。</value>
   </data>
@@ -585,7 +585,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>使用结果(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-    <value>在此文档中点击使用目前已导入的肽的结果数据，
+    <value>在此文档中点击使用目前已导入肽段的结果数据，
 并用线性回归计算方程式</value>
   </data>
   <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
@@ -616,7 +616,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>显示图形(&amp;G)…</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-    <value>在此文档中显示目前已导入的肽的最优化结果数据的
+    <value>在此文档中显示目前已导入最优化结果数据的肽段的
 线性回归图</value>
   </data>
   <data name="&gt;&gt;btnShowGraph.Name" xml:space="preserve">
@@ -638,7 +638,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>True</value>
   </metadata>
   <data name="Sequence.HeaderText" xml:space="preserve">
-    <value>经修饰的序列</value>
+    <value>修饰序列</value>
   </data>
   <data name="Sequence.MinimumWidth" type="System.Int32, mscorlib">
     <value>120</value>
@@ -668,7 +668,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>14</value>
   </data>
   <data name="gridPeptides.ToolTip" xml:space="preserve">
-    <value>肽及其经测量的保留时间用于利用线性回归
+    <value>肽段及其测量保留时间被用于利用线性回归
 计算方程式</value>
   </data>
   <data name="&gt;&gt;gridPeptides.Name" xml:space="preserve">
@@ -699,8 +699,8 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>自动计算回归(&amp;O)</value>
   </data>
   <data name="cbAutoCalc.ToolTip" xml:space="preserve">
-    <value>检查并让 Skyline 基于以下条件为预测器计算斜度和截距：
-按照每个导入的文件的分数对保留时间
+    <value>检查并让Skyline基于以下条件为预测器计算斜率和截距：
+按照每个导入文件的分数对保留时间
 分别进行回归分析</value>
   </data>
   <data name="&gt;&gt;cbAutoCalc.Name" xml:space="preserve">

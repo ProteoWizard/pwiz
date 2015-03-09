@@ -280,7 +280,7 @@
     <value>0</value>
   </data>
   <data name="PeptideCount.Text" xml:space="preserve">
-    <value>肽</value>
+    <value>肽段</value>
   </data>
   <data name="&gt;&gt;PeptideCount.Name" xml:space="preserve">
     <value>PeptideCount</value>
@@ -1132,7 +1132,7 @@
     <value>193, 22</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>观察的质荷比值</value>
+    <value>观察到的质荷比值</value>
   </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>

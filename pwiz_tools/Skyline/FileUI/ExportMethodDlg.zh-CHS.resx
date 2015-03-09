@@ -169,8 +169,8 @@
     <value>每个蛋白质一个方法(&amp;O)</value>
   </data>
   <data name="radioProtein.ToolTip" xml:space="preserve">
-    <value>蛋白质范围内的分割方法。如果该文件并非仅供参考，
-确保您的仪器能够处理每个文件中的离子对数量。</value>
+    <value>根据蛋白质范围分割方法。如果该文件并非仅供参考，
+确保您的仪器能够处理每个文件中包含的离子对数量。</value>
   </data>
   <data name="&gt;&gt;radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>
@@ -224,7 +224,7 @@
     <value>7</value>
   </data>
   <data name="textMaxTransitions.ToolTip" xml:space="preserve">
-    <value>如果肽或蛋白质范围不允许有最大数量，
+    <value>如果肽段或蛋白质范围不允许有最大数量，
 则所创建的每个文件最多只能包含这些数量的离子对，但可能会更少一些。</value>
   </data>
   <data name="&gt;&gt;textMaxTransitions.Name" xml:space="preserve">
@@ -607,9 +607,9 @@
     <value>忽视蛋白质(&amp;R)</value>
   </data>
   <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
-    <value>如果被选，肽将在文件中进行分配，不会考虑蛋白质范围。
-否则，如果蛋白质所包含的离子对数
-超过最大限制，那么相同蛋白质中的肽只会分离。</value>
+    <value>如果被选，肽段将在文件中进行分配，不会考虑蛋白质范围。
+ 否则，如果蛋白质所包含的离子对数超过最大限制，
+那么同一蛋白质中的肽段会被分割。</value>
   </data>
   <data name="&gt;&gt;cbIgnoreProteins.Name" xml:space="preserve">
     <value>cbIgnoreProteins</value>
@@ -639,8 +639,8 @@
     <value>添加能量梯度(&amp;A)</value>
   </data>
   <data name="cbEnergyRamp.ToolTip" xml:space="preserve">
-    <value>Thermo TSQ 软件的某些版本要求具有
-添加触发器和参考栏</value>
+    <value>某些版本的 Thermo TSQ 软件要求
+添加能量变化列</value>
   </data>
   <data name="&gt;&gt;cbEnergyRamp.Name" xml:space="preserve">
     <value>cbEnergyRamp</value>
@@ -670,8 +670,8 @@
     <value>添加触发器和参考(&amp;N)</value>
   </data>
   <data name="cbTriggerRefColumns.ToolTip" xml:space="preserve">
-    <value>Thermo TSQ 软件的某些版本要求具有
-添加触发器和参考栏</value>
+    <value>某些版本的 Thermo TSQ 软件要求
+添加能量变化列</value>
   </data>
   <data name="&gt;&gt;cbTriggerRefColumns.Name" xml:space="preserve">
     <value>cbTriggerRefColumns</value>
@@ -701,8 +701,8 @@
     <value>创建 MultiQuant 方法(&amp;Q)</value>
   </data>
   <data name="cbExportMultiQuant.ToolTip" xml:space="preserve">
-    <value>将兼容 MultiQuant 的分析方法导出到相同的目录中，
-基名取为 Analyst 采集方法。</value>
+    <value>将 MultiQuant 兼容的分析方法导出到相同的目录中，
+基本名称与 Analyst 采集方法相同。</value>
   </data>
   <data name="&gt;&gt;cbExportMultiQuant.Name" xml:space="preserve">
     <value>cbExportMultiQuant</value>
@@ -714,6 +714,39 @@
     <value>panelAbSciexTOF</value>
   </data>
   <data name="&gt;&gt;cbExportMultiQuant.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbUseStartAndEndRts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseStartAndEndRts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbUseStartAndEndRts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 6</value>
+  </data>
+  <data name="cbUseStartAndEndRts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 17</value>
+  </data>
+  <data name="cbUseStartAndEndRts.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbUseStartAndEndRts.Text" xml:space="preserve">
+    <value>使用开始和结束 RT(&amp;R)</value>
+  </data>
+  <data name="cbUseStartAndEndRts.ToolTip" xml:space="preserve">
+    <value>导出一个开始和结束时间，而非保留时间和窗口。</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Name" xml:space="preserve">
+    <value>cbUseStartAndEndRts</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Parent" xml:space="preserve">
+    <value>panelThermoRt</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
@@ -965,6 +998,30 @@
   <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="panelThermoRt.Location" type="System.Drawing.Point, System.Drawing">
+    <value>148, 214</value>
+  </data>
+  <data name="panelThermoRt.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 28</value>
+  </data>
+  <data name="panelThermoRt.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="panelThermoRt.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Name" xml:space="preserve">
+    <value>panelThermoRt</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
+    <value>25</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -990,6 +1047,6 @@
     <value>ExportMethodDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

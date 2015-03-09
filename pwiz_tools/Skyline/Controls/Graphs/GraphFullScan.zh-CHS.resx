@@ -166,7 +166,7 @@
     <value>MS/MS</value>
   </data>
   <data name="comboBoxScanType.Items1" xml:space="preserve">
-    <value>Sim</value>
+    <value>单离子监视</value>
   </data>
   <data name="comboBoxScanType.Items2" xml:space="preserve">
     <value>MS1</value>
@@ -202,7 +202,7 @@
     <value>23, 22</value>
   </data>
   <data name="magnifyBtn.ToolTipText" xml:space="preserve">
-    <value>变焦至选择</value>
+    <value>缩放至选择</value>
   </data>
   <data name="spectrumBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -211,7 +211,7 @@
     <value>23, 22</value>
   </data>
   <data name="spectrumBtn.ToolTipText" xml:space="preserve">
-    <value>显示 2D 谱图</value>
+    <value>显示二维谱图</value>
   </data>
   <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -220,7 +220,7 @@
     <value>23, 22</value>
   </data>
   <data name="filterBtn.ToolTipText" xml:space="preserve">
-    <value>过滤器漂移时间</value>
+    <value>过滤漂移时间</value>
   </data>
   <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
     <value>13, 22</value>

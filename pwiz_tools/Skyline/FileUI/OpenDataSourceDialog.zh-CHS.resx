@@ -138,7 +138,7 @@
     <value>大小</value>
   </data>
   <data name="DateModified.Text" xml:space="preserve">
-    <value>修改的日期</value>
+    <value>修改日期</value>
   </data>
   <data name="DateModified.Width" type="System.Int32, mscorlib">
     <value>120</value>
@@ -1456,7 +1456,7 @@
     <value>0</value>
   </data>
   <data name="chorusButton.Text" xml:space="preserve">
-    <value>统一项目</value>
+    <value>Chorus项目</value>
   </data>
   <data name="chorusButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>

@@ -187,8 +187,8 @@
     <value>13</value>
   </data>
   <data name="comboStandardType.ToolTip" xml:space="preserve">
-    <value>用于内部标准的类型，或是
-峰面积比之分母。</value>
+    <value>用做内部标准的类型，或是
+峰面积比的分母。</value>
   </data>
   <data name="&gt;&gt;comboStandardType.Name" xml:space="preserve">
     <value>comboStandardType</value>
@@ -212,8 +212,8 @@
     <value>8</value>
   </data>
   <data name="comboLabelType.ToolTip" xml:space="preserve">
-    <value>同位素修饰被选定的
-当前活跃的同位素标签类型。</value>
+    <value>针对选定同位素修饰的
+当前活跃同位素标签类型。</value>
   </data>
   <data name="&gt;&gt;comboLabelType.Name" xml:space="preserve">
     <value>comboLabelType</value>
@@ -237,9 +237,9 @@
     <value>10</value>
   </data>
   <data name="listHeavyMods.ToolTip" xml:space="preserve">
-    <value>适用于任何重形式肽的修饰，
-通常是对分子同位素构成的修饰，
-它不会对结构产生影响。</value>
+    <value>适用于任何重标形式肽段的修饰，
+通常是对分子同位素构成产生影响，
+不会对结构产生影响。</value>
   </data>
   <data name="&gt;&gt;listHeavyMods.Name" xml:space="preserve">
     <value>listHeavyMods</value>
@@ -263,9 +263,9 @@
     <value>1</value>
   </data>
   <data name="listStaticMods.ToolTip" xml:space="preserve">
-    <value>适用于轻形式肽的修饰
-通常是那些因肽分子结构变化
-而产生的修饰。</value>
+    <value>适用于轻标肽段的修饰，
+通常是由那些因肽段分子结构变化
+而造成。</value>
   </data>
   <data name="&gt;&gt;listStaticMods.Name" xml:space="preserve">
     <value>listStaticMods</value>
@@ -289,8 +289,8 @@
     <value>14</value>
   </data>
   <data name="listStandardTypes.ToolTip" xml:space="preserve">
-    <value>用于内部标准的类型，或者用于计算
-其他类型的峰面积比之分母。</value>
+    <value>用做内部标准的类型，或是用于计算
+其他类型峰面积比的分母。</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Name" xml:space="preserve">
     <value>listStandardTypes</value>
@@ -314,8 +314,8 @@
     <value>4</value>
   </data>
   <data name="textMaxVariableMods.ToolTip" xml:space="preserve">
-    <value>允许出现的最大可变修饰数
-变量修饰最大数目。</value>
+    <value>在任何肽段上允许出现的
+最大可变修饰数目。</value>
   </data>
   <data name="&gt;&gt;textMaxVariableMods.Name" xml:space="preserve">
     <value>textMaxVariableMods</value>
@@ -339,8 +339,8 @@
     <value>6</value>
   </data>
   <data name="textMaxNeutralLosses.ToolTip" xml:space="preserve">
-    <value>允许出现的中性丢失活动最大数
-中性丢失事件的最大数目。</value>
+    <value>在任何肽段上允许出现的最大
+中性丢失活动数目。</value>
   </data>
   <data name="&gt;&gt;textMaxNeutralLosses.Name" xml:space="preserve">
     <value>textMaxNeutralLosses</value>
@@ -364,7 +364,7 @@
     <value>3</value>
   </data>
   <data name="comboMissedCleavages.ToolTip" xml:space="preserve">
-    <value>当考虑到蛋白质酶解时，肽段中允许的最大遗漏的酶解位点数
+    <value>当考虑到蛋白质酶解时，肽段中允许的
 最大遗漏的酶解位点数。</value>
   </data>
   <data name="&gt;&gt;comboMissedCleavages.Name" xml:space="preserve">
@@ -390,7 +390,7 @@
   </data>
   <data name="comboEnzyme.ToolTip" xml:space="preserve">
     <value>在注入质谱仪前用于将蛋白质
-消化成肽的蛋白酶
+消化成肽段的蛋白酶
 </value>
   </data>
   <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
@@ -415,7 +415,7 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>指定全部可能的蛋白质的 FASTA 序列信息，
+    <value>处理过的 FASTA 序列信息指定了全部蛋白质，
 这些蛋白质可能存在于用来注入质谱仪的
 样品基质中。</value>
   </data>
@@ -441,8 +441,8 @@
     <value>5</value>
   </data>
   <data name="textMeasureRTWindow.ToolTip" xml:space="preserve">
-    <value>用于计划未来肽测量之
-围绕已测量的峰中心的分钟时间窗口（即，（开始 + 结束）/2）</value>
+    <value>用于计划未来肽段测量，围绕已测量峰中心的以分钟表示的时间窗口
+（如，（开始 + 结束）/2）</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.Name" xml:space="preserve">
     <value>textMeasureRTWindow</value>
@@ -472,8 +472,8 @@
     <value>在出现时使用实际检测到的保留时间(&amp;U)</value>
   </data>
   <data name="cbUseMeasuredRT.ToolTip" xml:space="preserve">
-    <value>如果核选，那么先前实际检测到的保留时间将用于
-预测计划未来肽测量的保留时间。</value>
+    <value>如果选中，那么先前实际检测到的保留时间将用于
+预测未来肽段测量预定的保留时间。</value>
   </data>
   <data name="&gt;&gt;cbUseMeasuredRT.Name" xml:space="preserve">
     <value>cbUseMeasuredRT</value>
@@ -497,7 +497,7 @@
     <value>1</value>
   </data>
   <data name="comboRetentionTime.ToolTip" xml:space="preserve">
-    <value>指定可用于从肽特定的疏水性分数
+    <value>指定可用于从肽段特定疏水性分数
 预测保留时间的线性方程。</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.Name" xml:space="preserve">
@@ -528,9 +528,9 @@
     <value>自动选择所有匹配的肽(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>如果被选，那么肽将借助指定的过滤器和库设置
-从蛋白质中被自动选择。否则，所有肽
-选择都必须由文档编辑完成。</value>
+    <value>如果选中，那么肽段将借助指定的过滤器和库设置
+过滤器以及库设置自动为肽段选择。否则，所有肽
+选择都必须由手动文档编辑完成。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -554,8 +554,8 @@
     <value>7</value>
   </data>
   <data name="textExcludeAAs.ToolTip" xml:space="preserve">
-    <value>在每个蛋白质中排除于此氨基酸位置前
-开始的所有肽</value>
+    <value>在每个蛋白质中排除所有在此氨基酸位置前
+开始的肽段</value>
   </data>
   <data name="&gt;&gt;textExcludeAAs.Name" xml:space="preserve">
     <value>textExcludeAAs</value>
@@ -661,8 +661,8 @@
     <value>3</value>
   </data>
   <data name="textMaxLength.ToolTip" xml:space="preserve">
-    <value>匹配此过滤器的肽所允许的氨基酸
-最小数目</value>
+    <value>匹配此过滤器的肽段所允许的最大氨基
+酸数目</value>
   </data>
   <data name="&gt;&gt;textMaxLength.Name" xml:space="preserve">
     <value>textMaxLength</value>
@@ -686,8 +686,8 @@
     <value>1</value>
   </data>
   <data name="textMinLength.ToolTip" xml:space="preserve">
-    <value>匹配此过滤的肽所允许的氨基酸
-最小数目</value>
+    <value>匹配此过滤器的肽段所允许的最小氨基
+酸数目</value>
   </data>
   <data name="&gt;&gt;textMinLength.Name" xml:space="preserve">
     <value>textMinLength</value>
@@ -741,8 +741,8 @@
     <value>构建(&amp;B)…</value>
   </data>
   <data name="btnBuildLibrary.ToolTip" xml:space="preserve">
-    <value>从来自不同肽搜索引擎获得的肽搜索结果来
-构建 MS/MS 谱图库。</value>
+    <value>从来自不同肽段搜索引擎获得的肽段搜索结果来构建
+MS/MS谱图库。</value>
   </data>
   <data name="&gt;&gt;btnBuildLibrary.Name" xml:space="preserve">
     <value>btnBuildLibrary</value>
@@ -766,9 +766,9 @@
     <value>3</value>
   </data>
   <data name="comboRank.ToolTip" xml:space="preserve">
-    <value>指定与库中的每个谱图相关的、可
-用于排名匹配的肽的值。并非所有的库格式都提供
-相同的排名值。</value>
+    <value>指定与库中每个谱图相关的、可
+用于匹配肽段排名的值。并非所有的库格式都提供
+相同的值用于排名。</value>
   </data>
   <data name="&gt;&gt;comboRank.Name" xml:space="preserve">
     <value>comboRank</value>
@@ -828,11 +828,11 @@
     <value>1</value>
   </data>
   <data name="comboMatching.ToolTip" xml:space="preserve">
-    <value>指明肽选择策略：
-库 - 仅拣选匹配库谱图的肽
-过滤器 - 忽略用于拣选的库内容并使用过滤器标签上的设置来代替
-库和过滤器 - 拣选同时匹配库谱图和过滤器的肽
-库和过滤器 - 拣选仅匹配库谱图或过滤器的肽</value>
+    <value>指定肽段挑选策略：
+库 - 仅挑选匹配库谱图的肽段
+过滤器 -忽略用于挑选的库内容并使用过滤器标签上的设置来代替
+库和过滤器 - 挑选同时匹配库谱图和过滤器的肽段
+库或过滤器 - 挑选匹配库谱图或过滤器的肽段</value>
   </data>
   <data name="&gt;&gt;comboMatching.Name" xml:space="preserve">
     <value>comboMatching</value>
@@ -862,8 +862,8 @@
     <value>限制每个蛋白质的肽段(&amp;L)</value>
   </data>
   <data name="cbLimitPeptides.ToolTip" xml:space="preserve">
-    <value>如果被选，那么只有特定数目的最高等级肽才能
-针对每个蛋白质获得拣选。</value>
+    <value>如果选中，那么每个蛋白质将只选择特定数
+目排名最高的肽段。</value>
   </data>
   <data name="&gt;&gt;cbLimitPeptides.Name" xml:space="preserve">
     <value>cbLimitPeptides</value>
@@ -914,14 +914,14 @@
     <value>1</value>
   </data>
   <data name="listLibraries.ToolTip" xml:space="preserve">
-    <value>与当前文档中的肽和离子对
-相匹配的 MS/MS 谱图库集。这些库可用于
-排名并拣选文档中的肽和离子对。
+    <value>MS/MS 谱图库集与当前文档中的
+肽段和离子对相匹配。这些库可用于
+在文档中排名并拣选肽段和离子对。
 
 库谱图按其在列表中出现的顺序自动匹配，
-其中光谱最先匹配，然后同位素
-标记图谱按标记类型在修饰标签中列出的
-顺序匹配。</value>
+其中轻标图谱最先匹配，然后同位素
+标记图谱按在修饰标签中列出的
+标记类型顺序匹配。</value>
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
@@ -969,7 +969,7 @@
     <value>4</value>
   </data>
   <data name="comboPeakScoringModel.ToolTip" xml:space="preserve">
-    <value>指定可用于从肽特定的疏水性分数
+    <value>指定可用于从肽段特定疏水性分数
 预测保留时间的线性方程。</value>
   </data>
   <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
@@ -1045,8 +1045,8 @@
     <value>12</value>
   </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>确定谱图库中的漂移时间匹配公差（漂移时间以毫秒为单位测量）： 
-对于漂移时间“T”的分辨力“R”来说，中心在 T 的漂移时间匹配窗口宽度
+    <value>确定谱图库中漂移时间的匹配容忍度（漂移时间以毫秒为单位测量）： 
+对于在漂移时间“T”的分辨力“R”来说，中心在 T的漂移时间匹配窗口宽度
 “W”= 2T/R</value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
@@ -1518,7 +1518,7 @@
     <value>6</value>
   </data>
   <data name="labelPeptides.Text" xml:space="preserve">
-    <value>肽</value>
+    <value>肽段</value>
   </data>
   <data name="&gt;&gt;labelPeptides.Name" xml:space="preserve">
     <value>labelPeptides</value>

@@ -286,7 +286,7 @@
     <value>4</value>
   </data>
   <data name="btnShare.Text" xml:space="preserve">
-    <value>分享(&amp;S)…</value>
+    <value>共享(&amp;S)…</value>
   </data>
   <data name="&gt;&gt;btnShare.Name" xml:space="preserve">
     <value>btnShare</value>

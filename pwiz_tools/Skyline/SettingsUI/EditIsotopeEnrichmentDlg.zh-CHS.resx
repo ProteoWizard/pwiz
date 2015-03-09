@@ -262,8 +262,8 @@
     <value>3</value>
   </data>
   <data name="gridEnrichments.ToolTip" xml:space="preserve">
-    <value>稳定的同位素标记原子的
-同位素标记原子(APE)</value>
+    <value>稳定同位素标记原子的
+原子富集比例(APE)</value>
   </data>
   <data name="&gt;&gt;gridEnrichments.Name" xml:space="preserve">
     <value>gridEnrichments</value>
@@ -290,9 +290,9 @@
     <value>14</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>当下列稳定的同位素标记原子
-在使用时稳定的同位素标记原子
-输入富集百分比(&amp;E)：</value>
+    <value>当下列稳定同位素标记原子
+被用于修饰时，
+请输入富集百分比(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

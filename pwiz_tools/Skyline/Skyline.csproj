@@ -1523,10 +1523,14 @@
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\EditGroupComparisonDlg.zh-CHS.resx" />
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.resx">
+      <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.zh-CHS.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeBarGraph.ja.resx">
@@ -1535,12 +1539,18 @@
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeBarGraph.resx">
       <DependentUpon>FoldChangeBarGraph.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeBarGraph.zh-CHS.resx">
+      <DependentUpon>FoldChangeBarGraph.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeForm.ja.resx">
       <DependentUpon>FoldChangeForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeForm.resx">
       <DependentUpon>FoldChangeForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeForm.zh-CHS.resx">
+      <DependentUpon>FoldChangeForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.ja.resx">
       <DependentUpon>FoldChangeGrid.cs</DependentUpon>
@@ -1555,10 +1565,16 @@
       <DependentUpon>GraphFullScan.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.zh-CHS.resx">
+      <DependentUpon>FoldChangeGrid.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.ja.resx">
       <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.resx">
+      <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonSettingsForm.zh-CHS.resx">
       <DependentUpon>GroupComparisonSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
@@ -1646,10 +1662,16 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.zh-CHS.resx">
+      <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.ja.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.resx">
+      <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.zh-CHS.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
@@ -2078,6 +2100,7 @@
       <LastGenOutput>GroupComparisonStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -2160,6 +2183,9 @@
     <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.resx">
       <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddRetentionTimePredictorDlg.zh-CHS.resx">
+      <DependentUpon>AddRetentionTimePredictorDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.ja.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2208,6 +2234,9 @@
     <EmbeddedResource Include="SettingsUI\DocumentSettingsDlg.resx">
       <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DocumentSettingsDlg.zh-CHS.resx">
+      <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.ja.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2220,6 +2249,9 @@
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.zh-CHS.resx">
+      <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditDPDlg.ja.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
@@ -2236,6 +2268,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FormulaBox.ja.resx">
+      <DependentUpon>FormulaBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FormulaBox.zh-CHS.resx">
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.ja.resx">

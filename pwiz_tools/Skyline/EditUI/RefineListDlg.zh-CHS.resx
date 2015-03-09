@@ -280,7 +280,7 @@
     <value>2</value>
   </data>
   <data name="cbMatchModified.Text" xml:space="preserve">
-    <value>匹配经修饰的序列(&amp;M)</value>
+    <value>匹配修饰序列(&amp;M)</value>
   </data>
   <data name="&gt;&gt;cbMatchModified.Name" xml:space="preserve">
     <value>cbMatchModified</value>
@@ -307,7 +307,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>接受肽</value>
+    <value>接受肽段</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>RefineListDlg</value>

@@ -235,7 +235,7 @@
     <value>True</value>
   </metadata>
   <data name="colSlope.HeaderText" xml:space="preserve">
-    <value>斜度</value>
+    <value>斜率</value>
   </data>
   <metadata name="colIntercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -352,7 +352,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorAddNewItem.Text" xml:space="preserve">
-    <value>添加</value>
+    <value>添加新条目</value>
   </data>
   <data name="bindingNavigatorCountItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 22</value>
@@ -361,7 +361,7 @@
     <value>{0} 个新的</value>
   </data>
   <data name="bindingNavigatorCountItem.ToolTipText" xml:space="preserve">
-    <value>项目总数</value>
+    <value>条目总数</value>
   </data>
   <data name="bindingNavigatorDeleteItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -402,7 +402,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorMoveFirstItem.Text" xml:space="preserve">
-    <value>移动至首位</value>
+    <value>移动第一个</value>
   </data>
   <data name="bindingNavigatorMovePreviousItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

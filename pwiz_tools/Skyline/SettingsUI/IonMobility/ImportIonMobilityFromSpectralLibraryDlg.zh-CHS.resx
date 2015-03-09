@@ -196,7 +196,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>导入肽段碰撞横截面值来源：</value>
+    <value>导入肽段碰撞横截面值来自：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -427,7 +427,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>斜度</value>
+    <value>斜率</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>90</value>
@@ -457,13 +457,14 @@
     <value>17, 17</value>
   </metadata>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>斜度和截距值用于从以毫秒为单位的带电肽段之观察漂移时间“D”来计算碰撞横截面“C”，借助以下形式的等式：
+    <value>斜率和截距值用于从以毫秒为单位的带电肽段之观察漂移时间“D”来计算碰撞横截面“C”，借助以下形式的等式：
 
-C = （D - 截距） / 斜度
+C = （D - 截距） / 斜率
 
-每个电荷态都需要不同的斜度和截距值。 如果电荷态没有在此列表中表示出来，那么没有针对该电荷的观察漂移时间信息将被转化为碰撞横截面。 
+每个电荷态都需要不同的斜率和截距值。 如果电荷态没有在此列表中表示出来，那么没有针对该电荷的观察漂移时间信息将被转化为碰撞横截面。 
 
-如果谱图库包含实际碰撞横截面数据而非观察漂移时间值，那么电荷-斜度-截距值就不再为导入所需。</value>
+
+如果谱图库包含实际碰撞横截面数据而非观察漂移时间值，那么电荷-斜率-截距值就不再需要导入。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>

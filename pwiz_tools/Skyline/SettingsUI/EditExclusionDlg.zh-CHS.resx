@@ -288,7 +288,7 @@
     <value>氨基酸序列(&amp;A)</value>
   </data>
   <data name="radioSequence.ToolTip" xml:space="preserve">
-    <value>不管是否修饰，都应匹配氨基酸正序序列，
+    <value>不管是否修饰，只匹配氨基酸无修饰序列，
 如 PEPMICER。</value>
   </data>
   <data name="&gt;&gt;radioSequence.Name" xml:space="preserve">
@@ -319,7 +319,7 @@
     <value>稍微修饰的肽序列(&amp;L)</value>
   </data>
   <data name="radioModSequence.ToolTip" xml:space="preserve">
-    <value>匹配稍微修饰的肽序列，
+    <value>匹配稍微修饰的肽段序列，
 如PEPM[+12]IC[+58]ER</value>
   </data>
   <data name="&gt;&gt;radioModSequence.Name" xml:space="preserve">

@@ -244,7 +244,7 @@
     <value>9, 9</value>
   </data>
   <data name="lblReportError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 36</value>
+    <value>422, 36</value>
   </data>
   <data name="lblReportError.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>

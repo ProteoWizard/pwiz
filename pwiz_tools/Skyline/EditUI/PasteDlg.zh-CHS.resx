@@ -123,9 +123,12 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
+    <value>4, 21</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="tbxFasta.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxFasta.MaxLength" type="System.Int32, mscorlib">
     <value>2147483647</value>
   </data>
@@ -133,7 +136,7 @@
     <value>True</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 384</value>
+    <value>1057, 475</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -154,13 +157,16 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnInsert.Location" type="System.Drawing.Point, System.Drawing">
-    <value>637, 9</value>
+    <value>849, 11</value>
+  </data>
+  <data name="btnInsert.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnInsert.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="btnInsert.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="btnInsert.Text" xml:space="preserve">
     <value>插入(&amp;I)</value>
@@ -175,19 +181,22 @@
     <value>panelButtons</value>
   </data>
   <data name="&gt;&gt;btnInsert.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>718, 9</value>
+    <value>957, 11</value>
+  </data>
+  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消(&amp;C)</value>
@@ -202,19 +211,22 @@
     <value>panelButtons</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="btnValidate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnValidate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>538, 9</value>
+    <value>717, 11</value>
+  </data>
+  <data name="btnValidate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnValidate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 23</value>
+    <value>124, 28</value>
   </data>
   <data name="btnValidate.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="btnValidate.Text" xml:space="preserve">
     <value>检查错误(&amp;E)</value>
@@ -229,7 +241,7 @@
     <value>panelButtons</value>
   </data>
   <data name="&gt;&gt;btnValidate.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -238,10 +250,13 @@
     <value>Top</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>482, 13</value>
+    <value>640, 17</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -262,13 +277,16 @@
     <value>1</value>
   </data>
   <data name="tabPageFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageFasta.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageFasta.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 500</value>
   </data>
   <data name="tabPageFasta.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -300,11 +318,17 @@
   <data name="colProteinDescription.HeaderText" xml:space="preserve">
     <value>描述</value>
   </data>
+  <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinSequence.HeaderText" xml:space="preserve">
+    <value>序列</value>
+  </data>
   <metadata name="colProteinAccession.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colProteinAccession.HeaderText" xml:space="preserve">
-    <value>添加</value>
+    <value>编号</value>
   </data>
   <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -322,22 +346,19 @@
     <value>True</value>
   </metadata>
   <data name="colProteinSpecies.HeaderText" xml:space="preserve">
-    <value>种类</value>
-  </data>
-  <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colProteinSequence.HeaderText" xml:space="preserve">
-    <value>序列</value>
+    <value>物种</value>
   </data>
   <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="gridViewProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="gridViewProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
+    <value>1057, 492</value>
   </data>
   <data name="gridViewProteins.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -355,13 +376,16 @@
     <value>0</value>
   </data>
   <data name="tabPageProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageProteinList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageProteinList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 500</value>
   </data>
   <data name="tabPageProteinList.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -403,10 +427,13 @@
     <value>Fill</value>
   </data>
   <data name="gridViewPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="gridViewPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
+    <value>1057, 492</value>
   </data>
   <data name="gridViewPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -424,19 +451,22 @@
     <value>0</value>
   </data>
   <data name="tabPagePeptideList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPagePeptideList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPagePeptideList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPagePeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 500</value>
   </data>
   <data name="tabPagePeptideList.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="tabPagePeptideList.Text" xml:space="preserve">
-    <value>肽列表</value>
+    <value>肽段列表</value>
   </data>
   <data name="&gt;&gt;tabPagePeptideList.Name" xml:space="preserve">
     <value>tabPagePeptideList</value>
@@ -484,10 +514,13 @@
     <value>Fill</value>
   </data>
   <data name="gridViewTransitionList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="gridViewTransitionList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewTransitionList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
+    <value>1057, 492</value>
   </data>
   <data name="gridViewTransitionList.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -505,13 +538,16 @@
     <value>0</value>
   </data>
   <data name="tabPageTransitionList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageTransitionList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageTransitionList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageTransitionList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 500</value>
   </data>
   <data name="tabPageTransitionList.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -535,10 +571,13 @@
     <value>Fill</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 45</value>
+    <value>0, 55</value>
+  </data>
+  <data name="tabControl1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 429</value>
+    <value>1073, 529</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -555,17 +594,53 @@
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="radioPeptide.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 15</value>
+  </data>
+  <data name="radioPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
+  <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 21</value>
+  </data>
+  <data name="radioPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="radioPeptide.Text" xml:space="preserve">
+    <value>肽段(&amp;P)</value>
+  </data>
+  <data name="radioPeptide.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.Name" xml:space="preserve">
+    <value>radioPeptide</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="tbxError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="tbxError.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="tbxError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="tbxError.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="tbxError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 45</value>
+    <value>1073, 55</value>
   </data>
   <data name="tbxError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -588,8 +663,11 @@
   <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="panelError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 45</value>
+    <value>1073, 55</value>
   </data>
   <data name="panelError.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -609,14 +687,86 @@
   <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="btnCustomMoleculeColumns.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCustomMoleculeColumns.Location" type="System.Drawing.Point, System.Drawing">
+    <value>272, 11</value>
+  </data>
+  <data name="btnCustomMoleculeColumns.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 28</value>
+  </data>
+  <data name="btnCustomMoleculeColumns.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnCustomMoleculeColumns.Text" xml:space="preserve">
+    <value>列(&amp;U)...</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="btnCustomMoleculeColumns.ToolTip" xml:space="preserve">
+    <value>选择显示列。 列可通过拖拽进行重新排序。</value>
+  </data>
+  <data name="&gt;&gt;btnCustomMoleculeColumns.Name" xml:space="preserve">
+    <value>btnCustomMoleculeColumns</value>
+  </data>
+  <data name="&gt;&gt;btnCustomMoleculeColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCustomMoleculeColumns.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;btnCustomMoleculeColumns.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioMolecule.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioMolecule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioMolecule.Location" type="System.Drawing.Point, System.Drawing">
+    <value>133, 15</value>
+  </data>
+  <data name="radioMolecule.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
+  <data name="radioMolecule.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 21</value>
+  </data>
+  <data name="radioMolecule.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="radioMolecule.Text" xml:space="preserve">
+    <value>小分子(&amp;M)</value>
+  </data>
+  <data name="radioMolecule.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.Name" xml:space="preserve">
+    <value>radioMolecule</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Bottom</value>
   </data>
   <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 474</value>
+    <value>0, 584</value>
+  </data>
+  <data name="panelButtons.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 44</value>
+    <value>1073, 54</value>
   </data>
   <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -636,11 +786,17 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>48</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>805, 518</value>
+    <value>1073, 638</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -658,6 +814,12 @@
     <value>colProteinDescription</value>
   </data>
   <data name="&gt;&gt;colProteinDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinSequence.Name" xml:space="preserve">
+    <value>colProteinSequence</value>
+  </data>
+  <data name="&gt;&gt;colProteinSequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colProteinAccession.Name" xml:space="preserve">
@@ -682,12 +844,6 @@
     <value>colProteinSpecies</value>
   </data>
   <data name="&gt;&gt;colProteinSpecies.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colProteinSequence.Name" xml:space="preserve">
-    <value>colProteinSequence</value>
-  </data>
-  <data name="&gt;&gt;colProteinSequence.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colPeptideSequence.Name" xml:space="preserve">
@@ -738,10 +894,16 @@
   <data name="&gt;&gt;colTransitionProteinDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PasteDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

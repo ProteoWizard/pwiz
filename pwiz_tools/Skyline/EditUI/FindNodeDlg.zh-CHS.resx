@@ -220,7 +220,7 @@
     <value>293, 34</value>
   </data>
   <data name="cbCaseSensitive.Text" xml:space="preserve">
-    <value>区分大小写</value>
+    <value>匹配大小写</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>

@@ -120,6 +120,9 @@
   <data name="AcquiredTime">
     <value>采集时间</value>
   </data>
+  <data name="AdjustedPValue">
+    <value>已调整的 P 值</value>
+  </data>
   <data name="Area">
     <value>面积</value>
   </data>
@@ -153,44 +156,47 @@
   <data name="CollisionEnergy">
     <value>碰撞能量</value>
   </data>
+  <data name="ConfidenceLevel">
+    <value>置信级</value>
+  </data>
   <data name="CountTruncated">
     <value>截尾计数</value>
   </data>
   <data name="Cv">
-    <value>Cv</value>
+    <value>变异系数</value>
   </data>
   <data name="CvArea">
-    <value>Cv 面积</value>
+    <value>峰面积的变异系数</value>
   </data>
   <data name="CvAreaNormalized">
-    <value>归一化的 Cv 面积</value>
+    <value>归一化峰面积的变异系数</value>
   </data>
   <data name="CvAreaRatio">
-    <value>Cv 面积比</value>
+    <value>面积比的变异系数</value>
   </data>
   <data name="CvBestRetentionTime">
-    <value>Cv 最佳保留时间</value>
+    <value>最佳保留时间的变异系数</value>
   </data>
   <data name="CvFwhm">
-    <value>CV 半峰宽</value>
+    <value>半峰宽的变异系数</value>
   </data>
   <data name="CvMaxFwhm">
-    <value>Cv 最大半峰宽</value>
+    <value>最大半峰宽的变异系数</value>
   </data>
   <data name="CvMaxHeight">
-    <value>Cv 最大高度</value>
+    <value>最大高度的变异系数</value>
   </data>
   <data name="CvRetentionTime">
-    <value>Cv 保留时间</value>
+    <value>保留时间的变异系数</value>
   </data>
   <data name="CvTotalArea">
-    <value>Cv 总面积</value>
+    <value>总面积的变异系数</value>
   </data>
   <data name="CvTotalAreaNormalized">
-    <value>归一化的 Cv 总面积</value>
+    <value>归一化总面积的变异系数</value>
   </data>
   <data name="CvTotalAreaRatio">
-    <value>Cv 总面积比</value>
+    <value>总面积比的变异系数</value>
   </data>
   <data name="DeclusteringPotential">
     <value>去簇电压</value>
@@ -198,11 +204,17 @@
   <data name="DecoyMzShift">
     <value>诱饵 Mz 偏移</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>自由度</value>
+  </data>
   <data name="EndPos">
     <value>结束 Pos</value>
   </data>
   <data name="EndTime">
     <value>结束时间</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>预估值</value>
   </data>
   <data name="FileIndex">
     <value>文件索引</value>
@@ -212,6 +224,12 @@
   </data>
   <data name="Files">
     <value>文件</value>
+  </data>
+  <data name="FoldChange">
+    <value>文件夹更改</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>文件夹更改结果</value>
   </data>
   <data name="FragmentIon">
     <value>片段离子</value>
@@ -238,7 +256,7 @@
     <value>已确认的</value>
   </data>
   <data name="IsDecoy">
-    <value>同位素诱饵</value>
+    <value>是诱饵</value>
   </data>
   <data name="IsotopeDistIndex">
     <value>同位素分布指数</value>
@@ -262,7 +280,7 @@
     <value>库点积</value>
   </data>
   <data name="LibraryIntensity">
-    <value>库亮度</value>
+    <value>库强度</value>
   </data>
   <data name="LibraryName">
     <value>库名称</value>
@@ -282,6 +300,12 @@
   <data name="LibraryType">
     <value>库类型</value>
   </data>
+  <data name="LinearFit">
+    <value>线性拟合</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>记录 2 文件夹更改</value>
+  </data>
   <data name="Losses">
     <value>丢失</value>
   </data>
@@ -295,19 +319,22 @@
     <value>最大</value>
   </data>
   <data name="MaxBestRetentionTime">
-    <value>最长最佳保留时间</value>
+    <value>最佳保留时间最大值</value>
   </data>
   <data name="MaxEndTime">
-    <value>最长结束时间</value>
+    <value>结束时间最大值</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>文件夹更改最大值</value>
   </data>
   <data name="MaxFwhm">
-    <value>最大半峰宽</value>
+    <value>半峰宽最大值</value>
   </data>
   <data name="MaxHeight">
-    <value>最大高度</value>
+    <value>高度最大值</value>
   </data>
   <data name="MaxRetentionTime">
-    <value>最长保留时间</value>
+    <value>保留时间最大值</value>
   </data>
   <data name="Mean">
     <value>平均</value>
@@ -349,13 +376,16 @@
     <value>最小</value>
   </data>
   <data name="MinBestRetentionTime">
-    <value>最短最佳保留时间</value>
+    <value>最佳保留时间最小值</value>
+  </data>
+  <data name="MinFoldChange">
+    <value>文件夹更改最小值</value>
   </data>
   <data name="MinRetentionTime">
-    <value>最短保留时间</value>
+    <value>保留时间最小值</value>
   </data>
   <data name="MinStartTime">
-    <value>最短启动时间</value>
+    <value>启动时间最小值</value>
   </data>
   <data name="MissedCleavages">
     <value>遗漏的酶解位点数</value>
@@ -365,6 +395,9 @@
   </data>
   <data name="ModifiedTime">
     <value>修饰时间</value>
+  </data>
+  <data name="MsLevel">
+    <value>MS 级别</value>
   </data>
   <data name="NextAa">
     <value>下一个 Aa</value>
@@ -376,13 +409,16 @@
     <value>最优去簇电压</value>
   </data>
   <data name="OptStep">
-    <value>最优步</value>
+    <value>最优步骤</value>
   </data>
   <data name="PeakRank">
-    <value>峰值排名</value>
+    <value>峰排名</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
+  </data>
+  <data name="PeptideDocumentLocation">
+    <value>肽段文档位置</value>
   </data>
   <data name="PeptideModifiedSequence">
     <value>肽段经修饰的序列</value>
@@ -396,14 +432,17 @@
   <data name="PeptideResult">
     <value>肽段结果</value>
   </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>肽段结果文档位置</value>
+  </data>
   <data name="PeptideResults">
     <value>肽段结果</value>
   </data>
   <data name="PeptideRetentionTime">
-    <value>肽保留时间</value>
+    <value>肽段保留时间</value>
   </data>
   <data name="Peptides">
-    <value>肽</value>
+    <value>肽段</value>
   </data>
   <data name="PeptideSequence">
     <value>肽段序列</value>
@@ -415,7 +454,7 @@
     <value>母离子电荷</value>
   </data>
   <data name="PrecursorMz">
-    <value>母离子 Mz</value>
+    <value>母离子质荷比</value>
   </data>
   <data name="PrecursorNeutralMass">
     <value>母离子中性质量</value>
@@ -454,10 +493,10 @@
     <value>子离子电荷</value>
   </data>
   <data name="ProductDecoyMzShift">
-    <value>子离子诱饵 Mz 偏移</value>
+    <value>子离子诱饵质荷比偏移</value>
   </data>
   <data name="ProductMz">
-    <value>子离子 Mz</value>
+    <value>子离子质荷比</value>
   </data>
   <data name="ProductNeutralMass">
     <value>子离子中性质量</value>
@@ -466,7 +505,7 @@
     <value>蛋白质</value>
   </data>
   <data name="ProteinAccession">
-    <value>蛋白质增加</value>
+    <value>蛋白质编号</value>
   </data>
   <data name="ProteinDescription">
     <value>蛋白质描述</value>
@@ -490,7 +529,10 @@
     <value>蛋白质序列</value>
   </data>
   <data name="ProteinSpecies">
-    <value>蛋白质种类</value>
+    <value>蛋白质物种</value>
+  </data>
+  <data name="PValue">
+    <value>P 值</value>
   </data>
   <data name="Range">
     <value>范围</value>
@@ -509,6 +551,9 @@
   </data>
   <data name="Replicate">
     <value>重复测定</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>重复测定计数</value>
   </data>
   <data name="ReplicateIndex">
     <value>重复测定指数</value>
@@ -537,6 +582,9 @@
   <data name="SampleName">
     <value>样品名称</value>
   </data>
+  <data name="StandardError">
+    <value>标准错误</value>
+  </data>
   <data name="StandardType">
     <value>标准类型</value>
   </data>
@@ -547,46 +595,46 @@
     <value>标准偏差</value>
   </data>
   <data name="StdevArea">
-    <value>标准偏差面积</value>
+    <value>面积标准偏差</value>
   </data>
   <data name="StdevAreaNormalized">
-    <value>归一化的标准偏差面积</value>
+    <value>归一化的面积标准偏差</value>
   </data>
   <data name="StdevAreaRatio">
-    <value>标准偏差面积比</value>
+    <value>面积比标准偏差</value>
   </data>
   <data name="StdevBestRetentionTime">
-    <value>标准偏差最佳保留时间</value>
+    <value>最佳保留时间标准偏差</value>
   </data>
   <data name="StdevFwhm">
-    <value>标准偏差半峰宽</value>
+    <value>半峰全宽标准偏差</value>
   </data>
   <data name="StdevMaxFwhm">
-    <value>标准偏差最大半峰宽</value>
+    <value>最大半峰全宽标准偏差</value>
   </data>
   <data name="StdevMaxHeight">
-    <value>标准偏差最大高度</value>
+    <value>最大高度标准偏差</value>
   </data>
   <data name="StdevRetentionTime">
-    <value>标准偏差保留时间</value>
+    <value>保留时间标准偏差</value>
   </data>
   <data name="StdevTotalArea">
-    <value>标准偏差总面积</value>
+    <value>总面积标准偏差</value>
   </data>
   <data name="StdevTotalAreaNormalized">
-    <value>归一化的标准偏差总面积</value>
+    <value>归一化的总面积标准偏差</value>
   </data>
   <data name="StdevTotalAreaRatio">
-    <value>标准偏差总面积比</value>
+    <value>总面积比标准偏差</value>
   </data>
   <data name="TotalArea">
     <value>总面积</value>
   </data>
   <data name="TotalAreaFragment">
-    <value>总面积片段</value>
+    <value>片段总面积</value>
   </data>
   <data name="TotalAreaMs1">
-    <value>总面积 MS1</value>
+    <value>MS1 总面积</value>
   </data>
   <data name="TotalAreaNormalized">
     <value>归一化的总面积</value>
@@ -598,16 +646,16 @@
     <value>总体背景</value>
   </data>
   <data name="TotalBackgroundFragment">
-    <value>总体背景片段</value>
+    <value>片段总体背景</value>
   </data>
   <data name="TotalBackgroundMs1">
-    <value>总体背景 MS1</value>
+    <value>MS1 总体背景</value>
   </data>
   <data name="Transition">
     <value>离子对</value>
   </data>
   <data name="TransitionIsDecoy">
-    <value>离子对同位素诱饵</value>
+    <value>离子对是诱饵</value>
   </data>
   <data name="TransitionNote">
     <value>离子对注释</value>
@@ -630,13 +678,40 @@
   <data name="Truncated">
     <value>截短的</value>
   </data>
+  <data name="TValue">
+    <value>T 值</value>
+  </data>
   <data name="UserSetPeak">
-    <value>用户设定峰值</value>
+    <value>用户设定峰</value>
   </data>
   <data name="UserSetTotal">
     <value>用户设定总数</value>
   </data>
   <data name="Value">
     <value>值</value>
+  </data>
+  <data name="IonName">
+    <value>离子名称</value>
+  </data>
+  <data name="IonFormula">
+    <value>离子公式</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>子离子公式</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>明确碰撞能量</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>明确漂移时间高能偏置毫秒</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>明确的漂移时间毫秒</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>明确保留时间</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>明确保留时间窗口</value>
   </data>
 </root>

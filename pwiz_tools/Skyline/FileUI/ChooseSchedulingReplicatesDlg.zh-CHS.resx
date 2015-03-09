@@ -194,7 +194,7 @@
   </data>
   <data name="labelInstructions.Text" xml:space="preserve">
     <value>选择预测保留时间所使用的重复测定。
-色谱图将在预测的保留时间的 {0} 分钟内从扫描中提取。</value>
+色谱图将从预测保留时间 {0} 分钟内的扫描中提取。</value>
   </data>
   <data name="&gt;&gt;labelInstructions.Name" xml:space="preserve">
     <value>labelInstructions</value>

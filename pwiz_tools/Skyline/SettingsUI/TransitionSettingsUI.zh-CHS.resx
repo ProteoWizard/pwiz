@@ -277,8 +277,8 @@
     <value>17, 17</value>
   </metadata>
   <data name="comboOptimizeType.ToolTip" xml:space="preserve">
-    <value>指明是针对全部每个母离子的所有离子对完成最优化
-还是分别针对每个离子对完成最优化</value>
+    <value>指定最优化是针对每个母离子的所有离子对
+还是分别针对每个离子对进行</value>
   </data>
   <data name="comboOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -311,9 +311,9 @@
     <value>在最优化值存在时使用该值(&amp;U)</value>
   </data>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
-    <value>如果被选，任何已测量的 CE 或 DP 最优化值将
+    <value>如果选中，任何已测量的 CE 或 DP 最优化值将
 用于选择在方法和离子对列表中导出的
-值。生成最大总峰面积的值将被
+值。产生最大总峰面积的值将被
 选择。</value>
   </data>
   <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
@@ -339,8 +339,8 @@
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
     <value>线性方程用于从其质核比中
-针对每个母离子预测最优去簇电压 （CE）。同位素标记的肽段
-针对未标记的分类使用预测的 DP。（仅限 AB 仪器）</value>
+针对每个母离子预测最优去簇电压 （DP）。同位素标记的肽段
+使用针对未标记形式预测的 DP。（仅限 AB 仪器）</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
@@ -391,9 +391,9 @@
     <value>5</value>
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>线性方程用于从其质核比中
+    <value>线性方程用于从其质荷比中
 针对每个母离子预测最优去簇电压 （CE）。同位素标记的
-肽段针对未标记的分类使用预测的 CE。</value>
+肽段使用针对未标记形式预测的 CE。</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
     <value>comboCollisionEnergy</value>
@@ -450,8 +450,8 @@
     <value>3</value>
   </data>
   <data name="comboIonMass.ToolTip" xml:space="preserve">
-    <value>分子质量计算策略（单一同位素或平均）
-用于计算所有子离子质量</value>
+    <value>用于计算所有母离子质量的分子质量计算策略
+（单一同位素或平均）</value>
   </data>
   <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
     <value>comboIonMass</value>
@@ -508,8 +508,8 @@
     <value>1</value>
   </data>
   <data name="comboPrecursorMass.ToolTip" xml:space="preserve">
-    <value>分子质量计算策略（单一同位素或平均）
-用于计算所有母离子质量</value>
+    <value>用于计算所有母离子质量的分子质量计算策略
+（单一同位素或平均）</value>
   </data>
   <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
     <value>comboPrecursorMass</value>
@@ -587,8 +587,8 @@
     <value>5</value>
   </data>
   <data name="textIonTypes.ToolTip" xml:space="preserve">
-    <value>一列分隔子离子类型的逗号（a、b、c、x、y、z 和 p 用于母离子）用于
-计算电位子离子</value>
+    <value>一列以逗号分隔用于计算可能子离子的子离子类型
+（a、b、c、x、y、z 和 p 用于母离子）</value>
   </data>
   <data name="&gt;&gt;textIonTypes.Name" xml:space="preserve">
     <value>textIonTypes</value>
@@ -645,9 +645,9 @@
     <value>自动选择所有匹配的离子对(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>如果被选，那么离子对将针对使用
-从蛋白质中被自动选择。否则，所有离子对
-选择都必须由文档编辑完成。</value>
+    <value>如果选中，那么离子对将根据指定的
+过滤器以及库设置自动为肽段选择。否则，所有离子对
+选择都必须由手动文档编辑完成。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -677,7 +677,7 @@
     <value>10</value>
   </data>
   <data name="cbExclusionUseDIAWindow.Text" xml:space="preserve">
-    <value>针对排除使用 DIA 母离子窗口(&amp;U)</value>
+    <value>使用 DIA 母离子窗口进行排除(&amp;U)</value>
   </data>
   <data name="cbExclusionUseDIAWindow.ToolTip" xml:space="preserve">
     <value>如选中，则母离子排除窗口从全扫描设置中获得，而非围绕母离子质荷比对称。推荐 DIA/SWATH 数据使用。</value>
@@ -734,9 +734,9 @@
     <value>8</value>
   </data>
   <data name="textExclusionWindow.ToolTip" xml:space="preserve">
-    <value>有关母离子质荷比的质荷比窗口，其中的离子对
+    <value>围绕母离子质荷比的质荷比窗口，在其中的离子对
 被排除或是空白。20 的窗口将排除母离子质荷比
-任何面上 10 以内的所有离子对。</value>
+任意一边 10 以内的所有离子对。</value>
   </data>
   <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
     <value>textExclusionWindow</value>
@@ -841,8 +841,8 @@
     <value>5</value>
   </data>
   <data name="listAlwaysAdd.ToolTip" xml:space="preserve">
-    <value>在可用时将要测量的特殊子离子集，即使在
-过滤的范围之外</value>
+    <value>即使在过滤的范围之外，在存在
+时仍要测量的特殊子离子集</value>
   </data>
   <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
     <value>listAlwaysAdd</value>
@@ -917,7 +917,7 @@
     <value>3</value>
   </data>
   <data name="comboRangeTo.ToolTip" xml:space="preserve">
-    <value>针对已过滤的子离子范围的终点</value>
+    <value>针对子离子过滤范围的终点</value>
   </data>
   <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
     <value>comboRangeTo</value>
@@ -992,8 +992,8 @@
     <value>3</value>
   </data>
   <data name="textIonCharges.ToolTip" xml:space="preserve">
-    <value>一列以逗号分隔的电荷状态用于计算
-子离子质荷比</value>
+    <value>一列以逗号分隔用于计算
+子离子质荷比的电荷状态</value>
   </data>
   <data name="&gt;&gt;textIonCharges.Name" xml:space="preserve">
     <value>textIonCharges</value>
@@ -1017,8 +1017,8 @@
     <value>1</value>
   </data>
   <data name="textPrecursorCharges.ToolTip" xml:space="preserve">
-    <value>一列以逗号分隔的电荷状态用于计算
-母离子质荷比</value>
+    <value>一列以逗号分隔用于计算
+母离子质荷比的电荷状态</value>
   </data>
   <data name="&gt;&gt;textPrecursorCharges.Name" xml:space="preserve">
     <value>textPrecursorCharges</value>
@@ -1156,10 +1156,10 @@
     <value>从已过滤的子离子和类型以及过滤的子离子(&amp;U)</value>
   </data>
   <data name="radioAllAndFiltered.ToolTip" xml:space="preserve">
-    <value>从过滤器标签到 
-MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型，但
-还有添加匹配完全过滤的所有子离子，如果这些子离子
-未在库中被发现</value>
+    <value>从过滤器标签中仅应用离
+子电荷和类型来选择用于排名的 MS/MS 峰匹配离子，
+但也添加匹配完整过滤器的所有子离子，
+如果这些子离子未在库中被发现</value>
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
     <value>radioAllAndFiltered</value>
@@ -1189,8 +1189,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型，�
     <value>从已过滤的子离子(&amp;D)</value>
   </data>
   <data name="radioFiltered.ToolTip" xml:space="preserve">
-    <value>从过滤器标签到 MS/MS
-峰值匹配离子针对排名的选择应用参数</value>
+    <value>从过滤器标签中应用参数来选择用于排名的 MS/MS
+峰匹配离子</value>
   </data>
   <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
     <value>radioFiltered</value>
@@ -1220,8 +1220,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型，�
     <value>从已过滤的离子电荷和类型(&amp;C)</value>
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
-    <value>从过滤器标签到 
-MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</value>
+    <value>从过滤器标签中仅应用离
+择用于排名的 MS/MS 峰匹配离子</value>
   </data>
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
     <value>radioAll</value>
@@ -1299,8 +1299,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>1</value>
   </data>
   <data name="textIonCount.ToolTip" xml:space="preserve">
-    <value>通过库谱图峰值强度排序针对每个母离子
-峰值亮度排名</value>
+    <value>通过库谱图峰强度排名来为每个母离子
+挑选离子对</value>
   </data>
   <data name="&gt;&gt;textIonCount.Name" xml:space="preserve">
     <value>textIonCount</value>
@@ -1345,8 +1345,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>1</value>
   </data>
   <data name="textTolerance.ToolTip" xml:space="preserve">
-    <value>在将预测的子离子质荷比值与测量的 MS/MS 谱图库
-峰值质荷比值匹配时所允许的最大增量</value>
+    <value>用于匹配预测子离子质荷比值与实测MS/MS谱图库
+峰质荷比值时所允许的最大增量（仅适用于 SRM 和靶向 MS/MS 数据。）</value>
   </data>
   <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
     <value>textTolerance</value>
@@ -1376,8 +1376,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>如果库谱图可用，则选择其最强的离子(&amp;S)</value>
   </data>
   <data name="cbLibraryPick.ToolTip" xml:space="preserve">
-    <value>如果被选，那么无论何时当肽段与库谱图匹配时，
-离子对过滤都将以 MS/MS 谱图库峰值为基础。</value>
+    <value>如果选中，那么无论何时当肽段与库谱图匹配时，
+离子对过滤器都将基于 MS/MS 谱图库峰。</value>
   </data>
   <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
     <value>cbLibraryPick</value>
@@ -1455,8 +1455,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>20</value>
   </data>
   <data name="textMaxInclusions.ToolTip" xml:space="preserve">
-    <value>多倍投影测图扫描期间由目标
-仪器测量的包含窗口的最大数目。</value>
+    <value>多通道扫描期间由目标
+仪器测量的包含窗口最大数目。</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
@@ -1615,8 +1615,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>17</value>
   </data>
   <data name="textMaxTime.ToolTip" xml:space="preserve">
-    <value>色谱图内允许的最大时间，无论其
-获得方式为何。 设置它可以节省可用于
+    <value>色谱允许的最大时间，无论其
+获得方式为何。 设置它可以节省用于
 梯度不重要部分的内存和磁盘空间。</value>
   </data>
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
@@ -1641,8 +1641,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>13</value>
   </data>
   <data name="textMinTime.ToolTip" xml:space="preserve">
-    <value>色谱图内允许的最大时间，无论其
-获得方式为何。 设置它可以节省可用于
+    <value>色谱允许的最小时间，无论其
+获得方式为何。 设置它可以节省用于
 梯度不重要部分的内存和磁盘空间。</value>
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
@@ -1751,7 +1751,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>3</value>
   </data>
   <data name="cbDynamicMinimum.Text" xml:space="preserve">
-    <value>动态最少子离子质荷比(&amp;D)</value>
+    <value>动态最小子离子质荷比(&amp;D)</value>
   </data>
   <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
     <value>如果被选，子离子的最小质荷比值
@@ -1781,7 +1781,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
   </data>
   <data name="textMaxTrans.ToolTip" xml:space="preserve">
     <value>如果没有最大数目适用，单一注射或空白中的目标
-仪器可测量的最大离子对总数为</value>
+仪器可测量的最大离子对总数</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
@@ -1832,8 +1832,8 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>8</value>
   </data>
   <data name="textMzMatchTolerance.ToolTip" xml:space="preserve">
-    <value>用于将仪器方法离子对质荷比值与
-预测的离子对质荷比值匹配的最大增量
+    <value>用于匹配仪器方法离子对质荷比值与
+预测离子对质荷比值的最大增量
 （仅适用于 SRM 和定向 MS/MS 数据。）</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
@@ -1939,7 +1939,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>5</value>
   </data>
   <data name="textMaxMz.ToolTip" xml:space="preserve">
-    <value>目标仪器的最大可测量质荷比</value>
+    <value>靶向仪器的最大可测量质荷比</value>
   </data>
   <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
     <value>textMaxMz</value>
@@ -1963,7 +1963,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>1</value>
   </data>
   <data name="textMinMz.ToolTip" xml:space="preserve">
-    <value>目标仪器的最小可测量质荷比</value>
+    <value>靶向仪器的最小可测量质荷比</value>
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>

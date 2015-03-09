@@ -210,9 +210,9 @@
     <value>7</value>
   </data>
   <data name="textRestrict.ToolTip" xml:space="preserve">
-    <value>当氨基酸残基（无分隔符）
-邻近剪切氨基酸残基时，
-氨基酸残基列表抑制剪切</value>
+    <value>当以下氨基酸残基（无分隔符）
+临近剪切氨基酸残基时
+将抑制剪切发生</value>
   </data>
   <data name="&gt;&gt;textRestrict.Name" xml:space="preserve">
     <value>textRestrict</value>
@@ -233,7 +233,7 @@
     <value>N-末端</value>
   </data>
   <data name="comboDirection.Items2" xml:space="preserve">
-    <value>两个</value>
+    <value>两个都</value>
   </data>
   <data name="comboDirection.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 87</value>
@@ -248,8 +248,8 @@
     <value>17, 17</value>
   </metadata>
   <data name="comboDirection.ToolTip" xml:space="preserve">
-    <value>剪切氨基酸残基的末端（N- 或 C- 或二者皆有）
-发生剪切</value>
+    <value>剪切发生处氨基酸残基的末端
+（N- 或 C- 或二者皆有）</value>
   </data>
   <data name="&gt;&gt;comboDirection.Name" xml:space="preserve">
     <value>comboDirection</value>
@@ -399,9 +399,9 @@
     <value>11</value>
   </data>
   <data name="textRestrictN.ToolTip" xml:space="preserve">
-    <value>当氨基酸残基（无分隔符）
-位于 N-末端剪切氨基酸残基之前时，
-氨基酸残基列表抑制剪切</value>
+    <value>当以下氨基酸残基（无分隔符）
+位于剪切氨基酸残基N-末端时
+将抑制剪切发生</value>
   </data>
   <data name="&gt;&gt;textRestrictN.Name" xml:space="preserve">
     <value>textRestrictN</value>
@@ -425,8 +425,8 @@
     <value>9</value>
   </data>
   <data name="textCleavageN.ToolTip" xml:space="preserve">
-    <value>氨基酸残基（无分隔符）字符串 N-末端
-发生剪切</value>
+    <value>剪切发生处N-末端的氨基酸残基（无分隔符）
+字符串</value>
   </data>
   <data name="&gt;&gt;textCleavageN.Name" xml:space="preserve">
     <value>textCleavageN</value>

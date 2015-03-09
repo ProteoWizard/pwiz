@@ -160,8 +160,8 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>为符合您当前的筛选条件，此操作已经添加了 {0} 个无肽蛋白质。
-您希望在显示文档前删除所有空蛋白质吗？</value>
+    <value>此操作添加了{0}个没有符合您当前筛选条件肽段的蛋白质。
+您希望在显示文档前删除所有空的蛋白质吗？</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>

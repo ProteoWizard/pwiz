@@ -190,7 +190,7 @@
     <value>7</value>
   </data>
   <data name="cbAutoPeptides.Text" xml:space="preserve">
-    <value>肽(&amp;P)</value>
+    <value>肽段(&amp;P)</value>
   </data>
   <data name="&gt;&gt;cbAutoPeptides.Name" xml:space="preserve">
     <value>cbAutoPeptides</value>
@@ -381,7 +381,7 @@
     <value>5</value>
   </data>
   <data name="textMinTransitions.ToolTip" xml:space="preserve">
-    <value>离子对少于此数目的母离子将
+    <value>含有少于此数目离子对的母离子将
 被从文档中删除。</value>
   </data>
   <data name="&gt;&gt;textMinTransitions.Name" xml:space="preserve">
@@ -433,7 +433,7 @@
     <value>1</value>
   </data>
   <data name="textMinPeptides.ToolTip" xml:space="preserve">
-    <value>肽少于此数目的蛋白质将
+    <value>含有少于此数目肽段的蛋白质将
 被从文档中删除。</value>
   </data>
   <data name="&gt;&gt;textMinPeptides.Name" xml:space="preserve">
@@ -512,8 +512,8 @@
     <value>5</value>
   </data>
   <data name="textMaxPepPeakRank.ToolTip" xml:space="preserve">
-    <value>平均面积峰值排名
-大于此数目的所有离子对都将被
+    <value>所有平均峰面积值排名
+大于此数目的离子对将被
 从文档中删除。</value>
   </data>
   <data name="&gt;&gt;textMaxPepPeakRank.Name" xml:space="preserve">
@@ -599,8 +599,8 @@
   </data>
   <data name="comboReplicateUse.ToolTip" xml:space="preserve">
     <value>确定重复测定结果用于调整：
-全部 - 重复测定值按平均数计算，用于技术重复测定
-最佳 - 只有最佳重复测定才能用于每个肽，用于分馏</value>
+全部 - 所有重复测定值取平均，用于技术重复测定
+最佳 - 只有最佳测定值被用于每个肽，用于分级组分</value>
   </data>
   <data name="&gt;&gt;comboReplicateUse.Name" xml:space="preserve">
     <value>comboReplicateUse</value>
@@ -633,9 +633,9 @@
     <value>倾向较大的子离子(&amp;P)</value>
   </data>
   <data name="cbPreferLarger.ToolTip" xml:space="preserve">
-    <value>在较小的、选择性弱的离子
-只能产生极少的较大锋面积时引起调整，
-以选择较大的子离子。</value>
+    <value>在较小的、选择性较差的子离子
+只能增加极少的峰面积时，
+会引起调整以选择较大的子离子。</value>
   </data>
   <data name="&gt;&gt;cbPreferLarger.Name" xml:space="preserve">
     <value>cbPreferLarger</value>
@@ -659,8 +659,8 @@
     <value>7</value>
   </data>
   <data name="textMaxPeakRank.ToolTip" xml:space="preserve">
-    <value>平均面积峰值排名
-大于此数目的所有离子对都将被
+    <value>所有平均峰面积值排名
+大于此数目的离子对将被
 从文档中删除。</value>
   </data>
   <data name="&gt;&gt;textMaxPeakRank.Name" xml:space="preserve">
@@ -712,7 +712,7 @@
     <value>3</value>
   </data>
   <data name="textMaxPeakFoundRatio.ToolTip" xml:space="preserve">
-    <value>峰值检出比大于此数目的所有元素
+    <value>所有峰值检出比大于此数目的元素
 都将被从文档中删除：
 
 绿色 = 1.0
@@ -774,7 +774,7 @@
     <value>删除缺失结果的节点(&amp;R)</value>
   </data>
   <data name="radioRemoveMissing.ToolTip" xml:space="preserve">
-    <value>没有测量结果的所有元素都将
+    <value>所有没有测量结果的元素都将
 被从文档中删除。</value>
   </data>
   <data name="&gt;&gt;radioRemoveMissing.Name" xml:space="preserve">
@@ -805,7 +805,7 @@
     <value>忽视节点缺失结果(&amp;N)</value>
   </data>
   <data name="radioIgnoreMissing.ToolTip" xml:space="preserve">
-    <value>针对没有测量结果的元素将不采取
+    <value>对没有测量结果的元素将不采取
 任何行动。</value>
   </data>
   <data name="&gt;&gt;radioIgnoreMissing.Name" xml:space="preserve">
@@ -830,7 +830,7 @@
     <value>1</value>
   </data>
   <data name="textMinPeakFoundRatio.ToolTip" xml:space="preserve">
-    <value>峰值检出比小于此数目的所有元素
+    <value>所有峰值检出比大于此数目的元素
 都将被从文档中删除：
 
 绿色 = 1.0
@@ -889,8 +889,8 @@
     <value>3</value>
   </data>
   <data name="textMinIdotProduct.ToolTip" xml:space="preserve">
-    <value>对预期同位素分布点积的 MS1 母离子
-峰面积小于此阈值的所有前体都将
+    <value>所有对预期同位素峰分布点积的 MS1 母离子
+峰面积小于此阈值的母离子都将
 被从文档中删除。</value>
   </data>
   <data name="&gt;&gt;textMinIdotProduct.Name" xml:space="preserve">
@@ -948,9 +948,9 @@
     <value>1</value>
   </data>
   <data name="textMinDotProduct.ToolTip" xml:space="preserve">
-    <value>对库谱图点积的子离子峰面积
-小于此阈值的所有前体都将
-被从文档中删除。</value>
+    <value>所有对库谱图点积的子离子峰面积
+小于此阈值的母离子都将被
+从文档中删除。</value>
   </data>
   <data name="&gt;&gt;textMinDotProduct.Name" xml:space="preserve">
     <value>textMinDotProduct</value>
