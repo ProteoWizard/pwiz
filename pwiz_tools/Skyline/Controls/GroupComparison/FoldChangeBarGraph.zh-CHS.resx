@@ -153,9 +153,6 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>418, 377</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FoldChangeBarGraph</value>
   </data>
