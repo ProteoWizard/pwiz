@@ -268,7 +268,7 @@
     <value>保留时间亮度阈值</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ShowRTThresholdDlg</value>
+    <value>ChromatogramRTThresholdDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
