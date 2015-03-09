@@ -391,7 +391,7 @@
     <value>遗漏的酶解位点数</value>
   </data>
   <data name="ModifiedSequence">
-    <value>经修饰的序列</value>
+    <value>修饰序列</value>
   </data>
   <data name="ModifiedTime">
     <value>修饰时间</value>
@@ -421,7 +421,7 @@
     <value>肽段文档位置</value>
   </data>
   <data name="PeptideModifiedSequence">
-    <value>肽段经修饰的序列</value>
+    <value>肽段修饰序列</value>
   </data>
   <data name="PeptideNote">
     <value>肽段注释</value>
