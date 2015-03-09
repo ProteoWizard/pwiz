@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AcquiredTime">
+    <value>采集时间</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>已调整的 P 值</value>
+  </data>
+  <data name="Area">
+    <value>面积</value>
+  </data>
+  <data name="AreaNormalized">
+    <value>归一化的面积</value>
+  </data>
+  <data name="AreaRatio">
+    <value>面积比</value>
+  </data>
+  <data name="AverageMassErrorPPM">
+    <value>平均质量误差 PPM</value>
+  </data>
+  <data name="AverageMeasuredRetentionTime">
+    <value>平均检测到的保留时间</value>
+  </data>
+  <data name="Background">
+    <value>背景</value>
+  </data>
+  <data name="BeginPos">
+    <value>开始 Pos</value>
+  </data>
+  <data name="BestReplicate">
+    <value>最佳重复测定</value>
+  </data>
+  <data name="BestRetentionTime">
+    <value>最佳保留时间</value>
+  </data>
+  <data name="CleavageAa">
+    <value>剪切 Aa</value>
+  </data>
+  <data name="CollisionEnergy">
+    <value>碰撞能量</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>置信级</value>
+  </data>
+  <data name="CountTruncated">
+    <value>截尾计数</value>
+  </data>
+  <data name="Cv">
+    <value>变异系数</value>
+  </data>
+  <data name="CvArea">
+    <value>峰面积的变异系数</value>
+  </data>
+  <data name="CvAreaNormalized">
+    <value>归一化峰面积的变异系数</value>
+  </data>
+  <data name="CvAreaRatio">
+    <value>面积比的变异系数</value>
+  </data>
+  <data name="CvBestRetentionTime">
+    <value>最佳保留时间的变异系数</value>
+  </data>
+  <data name="CvFwhm">
+    <value>半峰宽的变异系数</value>
+  </data>
+  <data name="CvMaxFwhm">
+    <value>最大半峰宽的变异系数</value>
+  </data>
+  <data name="CvMaxHeight">
+    <value>最大高度的变异系数</value>
+  </data>
+  <data name="CvRetentionTime">
+    <value>保留时间的变异系数</value>
+  </data>
+  <data name="CvTotalArea">
+    <value>总面积的变异系数</value>
+  </data>
+  <data name="CvTotalAreaNormalized">
+    <value>归一化总面积的变异系数</value>
+  </data>
+  <data name="CvTotalAreaRatio">
+    <value>总面积比的变异系数</value>
+  </data>
+  <data name="DeclusteringPotential">
+    <value>去簇电压</value>
+  </data>
+  <data name="DecoyMzShift">
+    <value>诱饵 Mz 偏移</value>
+  </data>
+  <data name="DegreesOfFreedom">
+    <value>自由度</value>
+  </data>
+  <data name="EndPos">
+    <value>结束 Pos</value>
+  </data>
+  <data name="EndTime">
+    <value>结束时间</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>预估值</value>
+  </data>
+  <data name="FileIndex">
+    <value>文件索引</value>
+  </data>
+  <data name="FileName">
+    <value>文件名称</value>
+  </data>
+  <data name="Files">
+    <value>文件</value>
+  </data>
+  <data name="FoldChange">
+    <value>文件夹更改</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>文件夹更改结果</value>
+  </data>
+  <data name="FragmentIon">
+    <value>片段离子</value>
+  </data>
+  <data name="FragmentIonOrdinal">
+    <value>片段离子序数</value>
+  </data>
+  <data name="FragmentIonType">
+    <value>片段离子类型</value>
+  </data>
+  <data name="FullScanFilterWidth">
+    <value>全扫描过滤器宽度</value>
+  </data>
+  <data name="Fwhm">
+    <value>半峰宽</value>
+  </data>
+  <data name="FwhmDegenerate">
+    <value>半峰宽退化</value>
+  </data>
+  <data name="Height">
+    <value>高度</value>
+  </data>
+  <data name="Identified">
+    <value>已确认的</value>
+  </data>
+  <data name="IsDecoy">
+    <value>是诱饵</value>
+  </data>
+  <data name="IsotopeDistIndex">
+    <value>同位素分布指数</value>
+  </data>
+  <data name="IsotopeDistProportion">
+    <value>同位素分布比例</value>
+  </data>
+  <data name="IsotopeDistRank">
+    <value>同位素分布排名</value>
+  </data>
+  <data name="IsotopeDotProduct">
+    <value>同位素点积值</value>
+  </data>
+  <data name="IsotopeLabelType">
+    <value>同位素标记类型</value>
+  </data>
+  <data name="Key">
+    <value>关键</value>
+  </data>
+  <data name="LibraryDotProduct">
+    <value>库点积</value>
+  </data>
+  <data name="LibraryIntensity">
+    <value>库强度</value>
+  </data>
+  <data name="LibraryName">
+    <value>库名称</value>
+  </data>
+  <data name="LibraryRank">
+    <value>库排名</value>
+  </data>
+  <data name="LibraryScore1">
+    <value>库分数 1</value>
+  </data>
+  <data name="LibraryScore2">
+    <value>库分数 2</value>
+  </data>
+  <data name="LibraryScore3">
+    <value>库分数 3</value>
+  </data>
+  <data name="LibraryType">
+    <value>库类型</value>
+  </data>
+  <data name="LinearFit">
+    <value>线性拟合</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>记录 2 文件夹更改</value>
+  </data>
+  <data name="Losses">
+    <value>丢失</value>
+  </data>
+  <data name="LossNeutralMass">
+    <value>丢失中性质量</value>
+  </data>
+  <data name="MassErrorPPM">
+    <value>质量误差 PPM</value>
+  </data>
+  <data name="Max">
+    <value>最大</value>
+  </data>
+  <data name="MaxBestRetentionTime">
+    <value>最佳保留时间最大值</value>
+  </data>
+  <data name="MaxEndTime">
+    <value>结束时间最大值</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>文件夹更改最大值</value>
+  </data>
+  <data name="MaxFwhm">
+    <value>半峰宽最大值</value>
+  </data>
+  <data name="MaxHeight">
+    <value>高度最大值</value>
+  </data>
+  <data name="MaxRetentionTime">
+    <value>保留时间最大值</value>
+  </data>
+  <data name="Mean">
+    <value>平均</value>
+  </data>
+  <data name="MeanArea">
+    <value>平均面积</value>
+  </data>
+  <data name="MeanAreaNormalized">
+    <value>归一化的平均面积</value>
+  </data>
+  <data name="MeanAreaRatio">
+    <value>平均面积比</value>
+  </data>
+  <data name="MeanBestRetentionTime">
+    <value>平均最佳保留时间</value>
+  </data>
+  <data name="MeanFwhm">
+    <value>平均半峰宽</value>
+  </data>
+  <data name="MeanMaxFwhm">
+    <value>平均最大半峰宽</value>
+  </data>
+  <data name="MeanMaxHeight">
+    <value>平均最大高度</value>
+  </data>
+  <data name="MeanRetentionTime">
+    <value>平均保留时间</value>
+  </data>
+  <data name="MeanTotalArea">
+    <value>平均总面积</value>
+  </data>
+  <data name="MeanTotalAreaNormalized">
+    <value>归一化的平均总面积</value>
+  </data>
+  <data name="MeanTotalAreaRatio">
+    <value>平均总面积比</value>
+  </data>
+  <data name="Min">
+    <value>最小</value>
+  </data>
+  <data name="MinBestRetentionTime">
+    <value>最佳保留时间最小值</value>
+  </data>
+  <data name="MinFoldChange">
+    <value>文件夹更改最小值</value>
+  </data>
+  <data name="MinRetentionTime">
+    <value>保留时间最小值</value>
+  </data>
+  <data name="MinStartTime">
+    <value>启动时间最小值</value>
+  </data>
+  <data name="MissedCleavages">
+    <value>遗漏的酶解位点数</value>
+  </data>
+  <data name="ModifiedSequence">
+    <value>修饰序列</value>
+  </data>
+  <data name="ModifiedTime">
+    <value>修饰时间</value>
+  </data>
+  <data name="MsLevel">
+    <value>MS 级别</value>
+  </data>
+  <data name="NextAa">
+    <value>下一个 Aa</value>
+  </data>
+  <data name="OptCollisionEnergy">
+    <value>最优碰撞能量</value>
+  </data>
+  <data name="OptDeclusteringPotential">
+    <value>最优去簇电压</value>
+  </data>
+  <data name="OptStep">
+    <value>最优步骤</value>
+  </data>
+  <data name="PeakRank">
+    <value>峰排名</value>
+  </data>
+  <data name="Peptide">
+    <value>肽段</value>
+  </data>
+  <data name="PeptideDocumentLocation">
+    <value>肽段文档位置</value>
+  </data>
+  <data name="PeptideModifiedSequence">
+    <value>肽段修饰序列</value>
+  </data>
+  <data name="PeptideNote">
+    <value>肽段注释</value>
+  </data>
+  <data name="PeptidePeakFoundRatio">
+    <value>肽峰值检出比</value>
+  </data>
+  <data name="PeptideResult">
+    <value>肽段结果</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>肽段结果文档位置</value>
+  </data>
+  <data name="PeptideResults">
+    <value>肽段结果</value>
+  </data>
+  <data name="PeptideRetentionTime">
+    <value>肽段保留时间</value>
+  </data>
+  <data name="Peptides">
+    <value>肽段</value>
+  </data>
+  <data name="PeptideSequence">
+    <value>肽段序列</value>
+  </data>
+  <data name="Precursor">
+    <value>母离子</value>
+  </data>
+  <data name="PrecursorCharge">
+    <value>母离子电荷</value>
+  </data>
+  <data name="PrecursorMz">
+    <value>母离子质荷比</value>
+  </data>
+  <data name="PrecursorNeutralMass">
+    <value>母离子中性质量</value>
+  </data>
+  <data name="PrecursorNote">
+    <value>母离子注释</value>
+  </data>
+  <data name="PrecursorPeakFoundRatio">
+    <value>母离子峰值检出比</value>
+  </data>
+  <data name="PrecursorReplicateNote">
+    <value>母离子重复测定注释</value>
+  </data>
+  <data name="PrecursorResult">
+    <value>母离子结果</value>
+  </data>
+  <data name="PrecursorResults">
+    <value>母离子结果</value>
+  </data>
+  <data name="PrecursorResultsSummary">
+    <value>母离子结果摘要</value>
+  </data>
+  <data name="Precursors">
+    <value>母离子</value>
+  </data>
+  <data name="PredictedResultRetentionTime">
+    <value>预测结果保留时间</value>
+  </data>
+  <data name="PredictedRetentionTime">
+    <value>预测保留时间</value>
+  </data>
+  <data name="PreviousAa">
+    <value>上一个 Aa</value>
+  </data>
+  <data name="ProductCharge">
+    <value>子离子电荷</value>
+  </data>
+  <data name="ProductDecoyMzShift">
+    <value>子离子诱饵质荷比偏移</value>
+  </data>
+  <data name="ProductMz">
+    <value>子离子质荷比</value>
+  </data>
+  <data name="ProductNeutralMass">
+    <value>子离子中性质量</value>
+  </data>
+  <data name="Protein">
+    <value>蛋白质</value>
+  </data>
+  <data name="ProteinAccession">
+    <value>蛋白质编号</value>
+  </data>
+  <data name="ProteinDescription">
+    <value>蛋白质描述</value>
+  </data>
+  <data name="ProteinGene">
+    <value>蛋白质基因</value>
+  </data>
+  <data name="ProteinName">
+    <value>蛋白质名称</value>
+  </data>
+  <data name="ProteinNote">
+    <value>蛋白质注释</value>
+  </data>
+  <data name="ProteinPreferredName">
+    <value>蛋白质首选名称</value>
+  </data>
+  <data name="Proteins">
+    <value>蛋白质</value>
+  </data>
+  <data name="ProteinSequence">
+    <value>蛋白质序列</value>
+  </data>
+  <data name="ProteinSpecies">
+    <value>蛋白质物种</value>
+  </data>
+  <data name="PValue">
+    <value>P 值</value>
+  </data>
+  <data name="Range">
+    <value>范围</value>
+  </data>
+  <data name="RangeBestRetentionTime">
+    <value>范围最佳保留时间</value>
+  </data>
+  <data name="RangeRetentionTime">
+    <value>范围保留时间</value>
+  </data>
+  <data name="RatioDotProduct">
+    <value>比率点积</value>
+  </data>
+  <data name="RatioToStandard">
+    <value>相对于标准品比率</value>
+  </data>
+  <data name="Replicate">
+    <value>重复测定</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>重复测定计数</value>
+  </data>
+  <data name="ReplicateIndex">
+    <value>重复测定指数</value>
+  </data>
+  <data name="ReplicateName">
+    <value>重复测定名称</value>
+  </data>
+  <data name="ReplicatePath">
+    <value>重复测定路径</value>
+  </data>
+  <data name="Replicates">
+    <value>重复测定</value>
+  </data>
+  <data name="ResultFile">
+    <value>结果文件</value>
+  </data>
+  <data name="Results">
+    <value>结果</value>
+  </data>
+  <data name="RetentionTime">
+    <value>保留时间</value>
+  </data>
+  <data name="RetentionTimeCalculatorScore">
+    <value>保留时间计算器分数</value>
+  </data>
+  <data name="SampleName">
+    <value>样品名称</value>
+  </data>
+  <data name="StandardError">
+    <value>标准错误</value>
+  </data>
+  <data name="StandardType">
+    <value>标准类型</value>
+  </data>
+  <data name="StartTime">
+    <value>启动时间</value>
+  </data>
+  <data name="Stdev">
+    <value>标准偏差</value>
+  </data>
+  <data name="StdevArea">
+    <value>面积标准偏差</value>
+  </data>
+  <data name="StdevAreaNormalized">
+    <value>归一化的面积标准偏差</value>
+  </data>
+  <data name="StdevAreaRatio">
+    <value>面积比标准偏差</value>
+  </data>
+  <data name="StdevBestRetentionTime">
+    <value>最佳保留时间标准偏差</value>
+  </data>
+  <data name="StdevFwhm">
+    <value>半峰全宽标准偏差</value>
+  </data>
+  <data name="StdevMaxFwhm">
+    <value>最大半峰全宽标准偏差</value>
+  </data>
+  <data name="StdevMaxHeight">
+    <value>最大高度标准偏差</value>
+  </data>
+  <data name="StdevRetentionTime">
+    <value>保留时间标准偏差</value>
+  </data>
+  <data name="StdevTotalArea">
+    <value>总面积标准偏差</value>
+  </data>
+  <data name="StdevTotalAreaNormalized">
+    <value>归一化的总面积标准偏差</value>
+  </data>
+  <data name="StdevTotalAreaRatio">
+    <value>总面积比标准偏差</value>
+  </data>
+  <data name="TotalArea">
+    <value>总面积</value>
+  </data>
+  <data name="TotalAreaFragment">
+    <value>片段总面积</value>
+  </data>
+  <data name="TotalAreaMs1">
+    <value>MS1 总面积</value>
+  </data>
+  <data name="TotalAreaNormalized">
+    <value>归一化的总面积</value>
+  </data>
+  <data name="TotalAreaRatio">
+    <value>总面积比</value>
+  </data>
+  <data name="TotalBackground">
+    <value>总体背景</value>
+  </data>
+  <data name="TotalBackgroundFragment">
+    <value>片段总体背景</value>
+  </data>
+  <data name="TotalBackgroundMs1">
+    <value>MS1 总体背景</value>
+  </data>
+  <data name="Transition">
+    <value>离子对</value>
+  </data>
+  <data name="TransitionIsDecoy">
+    <value>离子对是诱饵</value>
+  </data>
+  <data name="TransitionNote">
+    <value>离子对注释</value>
+  </data>
+  <data name="TransitionReplicateNote">
+    <value>离子对重复测定注释</value>
+  </data>
+  <data name="TransitionResult">
+    <value>离子对结果</value>
+  </data>
+  <data name="TransitionResults">
+    <value>离子对结果</value>
+  </data>
+  <data name="TransitionResultsSummary">
+    <value>离子对结果摘要</value>
+  </data>
+  <data name="Transitions">
+    <value>离子对</value>
+  </data>
+  <data name="Truncated">
+    <value>截短的</value>
+  </data>
+  <data name="TValue">
+    <value>T 值</value>
+  </data>
+  <data name="UserSetPeak">
+    <value>用户设定峰</value>
+  </data>
+  <data name="UserSetTotal">
+    <value>用户设定总数</value>
+  </data>
+  <data name="Value">
+    <value>值</value>
+  </data>
+  <data name="IonName">
+    <value>离子名称</value>
+  </data>
+  <data name="IonFormula">
+    <value>离子公式</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>子离子公式</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>明确碰撞能量</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>明确漂移时间高能偏置毫秒</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>明确的漂移时间毫秒</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>明确保留时间</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>明确保留时间窗口</value>
+  </data>
+</root>

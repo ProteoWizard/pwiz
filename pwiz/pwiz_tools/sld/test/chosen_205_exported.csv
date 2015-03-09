@@ -1,0 +1,5 @@
+Bracket Type=4
+Sample Type,File Name,Path,Instrument Method,Position,Inj Vol,Sample Name,Comment,Process Method,L5 Phone,L2 Client,L4 Company,Dil Factor,ISTD Amt,L3 Laboratory,Level,Sample ID,Sample Vol,Sample Wt,L1 Study,Calibration File,
+Unknown,filename1,path1,instmeth1,pos1,1.000,sampleName1,comment1,procmeth,phone1,client1,company1,10.000,20.000,lab1,,sampleID1,30.000,40.000,study1,,
+Blank,filename2,path2,instmeth2,pos2,2.000,sampleName2,comment2,procmeth,phone2,client2,company2,11.000,21.000,lab2,,sampleID2,31.000,41.000,study2,,
+QC,filename3,path3,instmeth3,pos3,3.000,sampleName3,comment3,procmeth,phone3,client3,company3,12.000,22.000,lab3,,sampleID3,32.000,42.000,study3,,

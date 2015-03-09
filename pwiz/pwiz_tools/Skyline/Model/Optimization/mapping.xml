@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.Optimization" assembly="Skyline-daily">
+  <class name="DbVersionInfo" table="VersionInfo">
+    <id name="SchemaVersion">
+      <column name="SchemaVersion" not-null="true"/>
+      <generator class="assigned"/>
+    </id>
+  </class>
+  <class name="DbOptimization" table="OptimizationLibrary">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <property name="PeptideModSeq" index="idxPeptide" not-null="true"/>
+    <property name="Charge"/>
+    <property name="FragmentIon"/>
+    <property name="ProductCharge"/>
+    <property name="Value"/>
+    <property name="Type"/>
+  </class>
+</hibernate-mapping>

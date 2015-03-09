@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AcquiredTime">
+    <value>Acquired Time</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>Adjusted P-Value</value>
+  </data>
+  <data name="Area">
+    <value>Area</value>
+  </data>
+  <data name="AreaNormalized">
+    <value>Area Normalized</value>
+  </data>
+  <data name="AreaRatio">
+    <value>Area Ratio</value>
+  </data>
+  <data name="AverageMassErrorPPM">
+    <value>Average Mass Error PPM</value>
+  </data>
+  <data name="AverageMeasuredRetentionTime">
+    <value>Average Measured Retention Time</value>
+  </data>
+  <data name="Background">
+    <value>Background</value>
+  </data>
+  <data name="BeginPos">
+    <value>Begin Pos</value>
+  </data>
+  <data name="BestReplicate">
+    <value>Best Replicate</value>
+  </data>
+  <data name="BestRetentionTime">
+    <value>Best Retention Time</value>
+  </data>
+  <data name="CleavageAa">
+    <value>Cleavage Aa</value>
+  </data>
+  <data name="CollisionEnergy">
+    <value>Collision Energy</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>Confidence Level</value>
+  </data>
+  <data name="CountTruncated">
+    <value>Count Truncated</value>
+  </data>
+  <data name="Cv">
+    <value>Cv</value>
+  </data>
+  <data name="CvArea">
+    <value>Cv Area</value>
+  </data>
+  <data name="CvAreaNormalized">
+    <value>Cv Area Normalized</value>
+  </data>
+  <data name="CvAreaRatio">
+    <value>Cv Area Ratio</value>
+  </data>
+  <data name="CvBestRetentionTime">
+    <value>Cv Best Retention Time</value>
+  </data>
+  <data name="CvFwhm">
+    <value>Cv Fwhm</value>
+  </data>
+  <data name="CvMaxFwhm">
+    <value>Cv Max Fwhm</value>
+  </data>
+  <data name="CvMaxHeight">
+    <value>Cv Max Height</value>
+  </data>
+  <data name="CvRetentionTime">
+    <value>Cv Retention Time</value>
+  </data>
+  <data name="CvTotalArea">
+    <value>Cv Total Area</value>
+  </data>
+  <data name="CvTotalAreaNormalized">
+    <value>Cv Total Area Normalized</value>
+  </data>
+  <data name="CvTotalAreaRatio">
+    <value>Cv Total Area Ratio</value>
+  </data>
+  <data name="DeclusteringPotential">
+    <value>Declustering Potential</value>
+  </data>
+  <data name="DecoyMzShift">
+    <value>Decoy Mz Shift</value>
+  </data>
+  <data name="DegreesOfFreedom">
+    <value>Degrees Of Freedom</value>
+  </data>
+  <data name="EndPos">
+    <value>End Pos</value>
+  </data>
+  <data name="EndTime">
+    <value>End Time</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>Estimated Value</value>
+  </data>
+  <data name="FileIndex">
+    <value>File Index</value>
+  </data>
+  <data name="FileName">
+    <value>File Name</value>
+  </data>
+  <data name="Files">
+    <value>Files</value>
+  </data>
+  <data name="FoldChange">
+    <value>Fold Change</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>Fold Change Result</value>
+  </data>
+  <data name="FragmentIon">
+    <value>Fragment Ion</value>
+  </data>
+  <data name="FragmentIonOrdinal">
+    <value>Fragment Ion Ordinal</value>
+  </data>
+  <data name="FragmentIonType">
+    <value>Fragment Ion Type</value>
+  </data>
+  <data name="FullScanFilterWidth">
+    <value>Full Scan Filter Width</value>
+  </data>
+  <data name="Fwhm">
+    <value>Fwhm</value>
+  </data>
+  <data name="FwhmDegenerate">
+    <value>Fwhm Degenerate</value>
+  </data>
+  <data name="Height">
+    <value>Height</value>
+  </data>
+  <data name="Identified">
+    <value>Identified</value>
+  </data>
+  <data name="IsDecoy">
+    <value>Is Decoy</value>
+  </data>
+  <data name="IsotopeDistIndex">
+    <value>Isotope Dist Index</value>
+  </data>
+  <data name="IsotopeDistProportion">
+    <value>Isotope Dist Proportion</value>
+  </data>
+  <data name="IsotopeDistRank">
+    <value>Isotope Dist Rank</value>
+  </data>
+  <data name="IsotopeDotProduct">
+    <value>Isotope Dot Product</value>
+  </data>
+  <data name="IsotopeLabelType">
+    <value>Isotope Label Type</value>
+  </data>
+  <data name="Key">
+    <value>Key</value>
+  </data>
+  <data name="LibraryDotProduct">
+    <value>Library Dot Product</value>
+  </data>
+  <data name="LibraryIntensity">
+    <value>Library Intensity</value>
+  </data>
+  <data name="LibraryName">
+    <value>Library Name</value>
+  </data>
+  <data name="LibraryRank">
+    <value>Library Rank</value>
+  </data>
+  <data name="LibraryScore1">
+    <value>Library Score1</value>
+  </data>
+  <data name="LibraryScore2">
+    <value>Library Score2</value>
+  </data>
+  <data name="LibraryScore3">
+    <value>Library Score3</value>
+  </data>
+  <data name="LibraryType">
+    <value>Library Type</value>
+  </data>
+  <data name="LinearFit">
+    <value>Linear Fit</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>Log 2 Fold Change</value>
+  </data>
+  <data name="Losses">
+    <value>Losses</value>
+  </data>
+  <data name="LossNeutralMass">
+    <value>Loss Neutral Mass</value>
+  </data>
+  <data name="MassErrorPPM">
+    <value>Mass Error PPM</value>
+  </data>
+  <data name="Max">
+    <value>Max</value>
+  </data>
+  <data name="MaxBestRetentionTime">
+    <value>Max Best Retention Time</value>
+  </data>
+  <data name="MaxEndTime">
+    <value>Max End Time</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>Max Fold Change</value>
+  </data>
+  <data name="MaxFwhm">
+    <value>Max Fwhm</value>
+  </data>
+  <data name="MaxHeight">
+    <value>Max Height</value>
+  </data>
+  <data name="MaxRetentionTime">
+    <value>Max Retention Time</value>
+  </data>
+  <data name="Mean">
+    <value>Mean</value>
+  </data>
+  <data name="MeanArea">
+    <value>Mean Area</value>
+  </data>
+  <data name="MeanAreaNormalized">
+    <value>Mean Area Normalized</value>
+  </data>
+  <data name="MeanAreaRatio">
+    <value>Mean Area Ratio</value>
+  </data>
+  <data name="MeanBestRetentionTime">
+    <value>Mean Best Retention Time</value>
+  </data>
+  <data name="MeanFwhm">
+    <value>Mean Fwhm</value>
+  </data>
+  <data name="MeanMaxFwhm">
+    <value>Mean Max Fwhm</value>
+  </data>
+  <data name="MeanMaxHeight">
+    <value>Mean Max Height</value>
+  </data>
+  <data name="MeanRetentionTime">
+    <value>Mean Retention Time</value>
+  </data>
+  <data name="MeanTotalArea">
+    <value>Mean Total Area</value>
+  </data>
+  <data name="MeanTotalAreaNormalized">
+    <value>Mean Total Area Normalized</value>
+  </data>
+  <data name="MeanTotalAreaRatio">
+    <value>Mean Total Area Ratio</value>
+  </data>
+  <data name="Min">
+    <value>Min</value>
+  </data>
+  <data name="MinBestRetentionTime">
+    <value>Min Best Retention Time</value>
+  </data>
+  <data name="MinFoldChange">
+    <value>Min Fold Change</value>
+  </data>
+  <data name="MinRetentionTime">
+    <value>Min Retention Time</value>
+  </data>
+  <data name="MinStartTime">
+    <value>Min Start Time</value>
+  </data>
+  <data name="MissedCleavages">
+    <value>Missed Cleavages</value>
+  </data>
+  <data name="ModifiedSequence">
+    <value>Modified Sequence</value>
+  </data>
+  <data name="ModifiedTime">
+    <value>Modified Time</value>
+  </data>
+  <data name="MsLevel">
+    <value>MS Level</value>
+  </data>
+  <data name="NextAa">
+    <value>Next Aa</value>
+  </data>
+  <data name="OptCollisionEnergy">
+    <value>Opt Collision Energy</value>
+  </data>
+  <data name="OptDeclusteringPotential">
+    <value>Opt Declustering Potential</value>
+  </data>
+  <data name="OptStep">
+    <value>Opt Step</value>
+  </data>
+  <data name="PeakRank">
+    <value>Peak Rank</value>
+  </data>
+  <data name="Peptide">
+    <value>Peptide</value>
+  </data>
+  <data name="PeptideDocumentLocation">
+    <value>Peptide Document Location</value>
+  </data>
+  <data name="PeptideModifiedSequence">
+    <value>Peptide Modified Sequence</value>
+  </data>
+  <data name="PeptideNote">
+    <value>Peptide Note</value>
+  </data>
+  <data name="PeptidePeakFoundRatio">
+    <value>Peptide Peak Found Ratio</value>
+  </data>
+  <data name="PeptideResult">
+    <value>Peptide Result</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>Peptide Result Document Location</value>
+  </data>
+  <data name="PeptideResults">
+    <value>Peptide Results</value>
+  </data>
+  <data name="PeptideRetentionTime">
+    <value>Peptide Retention Time</value>
+  </data>
+  <data name="Peptides">
+    <value>Peptides</value>
+  </data>
+  <data name="PeptideSequence">
+    <value>Peptide Sequence</value>
+  </data>
+  <data name="Precursor">
+    <value>Precursor</value>
+  </data>
+  <data name="PrecursorCharge">
+    <value>Precursor Charge</value>
+  </data>
+  <data name="PrecursorMz">
+    <value>Precursor Mz</value>
+  </data>
+  <data name="PrecursorNeutralMass">
+    <value>Precursor Neutral Mass</value>
+  </data>
+  <data name="PrecursorNote">
+    <value>Precursor Note</value>
+  </data>
+  <data name="PrecursorPeakFoundRatio">
+    <value>Precursor Peak Found Ratio</value>
+  </data>
+  <data name="PrecursorReplicateNote">
+    <value>Precursor Replicate Note</value>
+  </data>
+  <data name="PrecursorResult">
+    <value>Precursor Result</value>
+  </data>
+  <data name="PrecursorResults">
+    <value>Precursor Results</value>
+  </data>
+  <data name="PrecursorResultsSummary">
+    <value>Precursor Results Summary</value>
+  </data>
+  <data name="Precursors">
+    <value>Precursors</value>
+  </data>
+  <data name="PredictedResultRetentionTime">
+    <value>Predicted Result Retention Time</value>
+  </data>
+  <data name="PredictedRetentionTime">
+    <value>Predicted Retention Time</value>
+  </data>
+  <data name="PreviousAa">
+    <value>Previous Aa</value>
+  </data>
+  <data name="ProductCharge">
+    <value>Product Charge</value>
+  </data>
+  <data name="ProductDecoyMzShift">
+    <value>Product Decoy Mz Shift</value>
+  </data>
+  <data name="ProductMz">
+    <value>Product Mz</value>
+  </data>
+  <data name="ProductNeutralMass">
+    <value>Product Neutral Mass</value>
+  </data>
+  <data name="Protein">
+    <value>Protein</value>
+  </data>
+  <data name="ProteinAccession">
+    <value>Protein Accession</value>
+  </data>
+  <data name="ProteinDescription">
+    <value>Protein Description</value>
+  </data>
+  <data name="ProteinGene">
+    <value>Protein Gene</value>
+  </data>
+  <data name="ProteinName">
+    <value>Protein Name</value>
+  </data>
+  <data name="ProteinNote">
+    <value>Protein Note</value>
+  </data>
+  <data name="ProteinPreferredName">
+    <value>Protein Preferred Name</value>
+  </data>
+  <data name="Proteins">
+    <value>Proteins</value>
+  </data>
+  <data name="ProteinSequence">
+    <value>Protein Sequence</value>
+  </data>
+  <data name="ProteinSpecies">
+    <value>Protein Species</value>
+  </data>
+  <data name="PValue">
+    <value>P-Value</value>
+  </data>
+  <data name="Range">
+    <value>Range</value>
+  </data>
+  <data name="RangeBestRetentionTime">
+    <value>Range Best Retention Time</value>
+  </data>
+  <data name="RangeRetentionTime">
+    <value>Range Retention Time</value>
+  </data>
+  <data name="RatioDotProduct">
+    <value>Ratio Dot Product</value>
+  </data>
+  <data name="RatioToStandard">
+    <value>Ratio To Standard</value>
+  </data>
+  <data name="Replicate">
+    <value>Replicate</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>Replicate Count</value>
+  </data>
+  <data name="ReplicateIndex">
+    <value>Replicate Index</value>
+  </data>
+  <data name="ReplicateName">
+    <value>Replicate Name</value>
+  </data>
+  <data name="ReplicatePath">
+    <value>Replicate Path</value>
+  </data>
+  <data name="Replicates">
+    <value>Replicates</value>
+  </data>
+  <data name="ResultFile">
+    <value>Result File</value>
+  </data>
+  <data name="Results">
+    <value>Results</value>
+  </data>
+  <data name="RetentionTime">
+    <value>Retention Time</value>
+  </data>
+  <data name="RetentionTimeCalculatorScore">
+    <value>Retention Time Calculator Score</value>
+  </data>
+  <data name="SampleName">
+    <value>Sample Name</value>
+  </data>
+  <data name="StandardError">
+    <value>Standard Error</value>
+  </data>
+  <data name="StandardType">
+    <value>Standard Type</value>
+  </data>
+  <data name="StartTime">
+    <value>Start Time</value>
+  </data>
+  <data name="Stdev">
+    <value>Stdev</value>
+  </data>
+  <data name="StdevArea">
+    <value>Stdev Area</value>
+  </data>
+  <data name="StdevAreaNormalized">
+    <value>Stdev Area Normalized</value>
+  </data>
+  <data name="StdevAreaRatio">
+    <value>Stdev Area Ratio</value>
+  </data>
+  <data name="StdevBestRetentionTime">
+    <value>Stdev Best Retention Time</value>
+  </data>
+  <data name="StdevFwhm">
+    <value>Stdev Fwhm</value>
+  </data>
+  <data name="StdevMaxFwhm">
+    <value>Stdev Max Fwhm</value>
+  </data>
+  <data name="StdevMaxHeight">
+    <value>Stdev Max Height</value>
+  </data>
+  <data name="StdevRetentionTime">
+    <value>Stdev Retention Time</value>
+  </data>
+  <data name="StdevTotalArea">
+    <value>Stdev Total Area</value>
+  </data>
+  <data name="StdevTotalAreaNormalized">
+    <value>Stdev Total Area Normalized</value>
+  </data>
+  <data name="StdevTotalAreaRatio">
+    <value>Stdev Total Area Ratio</value>
+  </data>
+  <data name="TotalArea">
+    <value>Total Area</value>
+  </data>
+  <data name="TotalAreaFragment">
+    <value>Total Area Fragment</value>
+  </data>
+  <data name="TotalAreaMs1">
+    <value>Total Area MS1</value>
+  </data>
+  <data name="TotalAreaNormalized">
+    <value>Total Area Normalized</value>
+  </data>
+  <data name="TotalAreaRatio">
+    <value>Total Area Ratio</value>
+  </data>
+  <data name="TotalBackground">
+    <value>Total Background</value>
+  </data>
+  <data name="TotalBackgroundFragment">
+    <value>Total Background Fragment</value>
+  </data>
+  <data name="TotalBackgroundMs1">
+    <value>Total Background MS1</value>
+  </data>
+  <data name="Transition">
+    <value>Transition</value>
+  </data>
+  <data name="TransitionIsDecoy">
+    <value>Transition Is Decoy</value>
+  </data>
+  <data name="TransitionNote">
+    <value>Transition Note</value>
+  </data>
+  <data name="TransitionReplicateNote">
+    <value>Transition Replicate Note</value>
+  </data>
+  <data name="TransitionResult">
+    <value>Transition Result</value>
+  </data>
+  <data name="TransitionResults">
+    <value>Transition Results</value>
+  </data>
+  <data name="TransitionResultsSummary">
+    <value>Transition Results Summary</value>
+  </data>
+  <data name="Transitions">
+    <value>Transitions</value>
+  </data>
+  <data name="Truncated">
+    <value>Truncated</value>
+  </data>
+  <data name="TValue">
+    <value>T-Value</value>
+  </data>
+  <data name="UserSetPeak">
+    <value>User Set Peak</value>
+  </data>
+  <data name="UserSetTotal">
+    <value>User Set Total</value>
+  </data>
+  <data name="Value">
+    <value>Value</value>
+  </data>
+  <data name="IonName">
+    <value>Ion Name</value>
+  </data>
+  <data name="IonFormula">
+    <value>Ion Formula</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>Product Ion Formula</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>Explicit Collision Energy</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>Explicit Drift Time High Energy Offset Msec</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>Explicit Drift Time Msec</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>Explicit Retention Time</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>Explicit Retention Time Window</value>
+  </data>
+</root>

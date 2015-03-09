@@ -1,0 +1,152 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+exe hello_msdata
+    : hello_msdata.cpp
+      ../../pwiz/data/msdata//pwiz_data_msdata_examples
+    : <include>../..
+    ;
+
+
+exe hello_ramp
+    : hello_ramp.cpp
+      ../../pwiz/data/msdata//pwiz_data_msdata
+    : <include>../.. 
+      <include>../../pwiz/data/msdata/ramp
+      <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
+    ;
+
+
+exe hello_analyzer
+    : hello_analyzer.cpp
+      ../common  
+    : <include>../..
+    ;
+
+
+exe hello_analyzer_2
+    : hello_analyzer_2.cpp
+      ../common  
+    : <include>../..
+    ;
+
+
+exe mscat
+    : mscat.cpp
+      ../common
+    : <include>../..
+    ;
+
+
+exe txt2mzml
+    : txt2mzml.cpp
+      ../../pwiz/data/msdata//pwiz_data_msdata
+      /ext/boost//filesystem
+    : <include>../..
+    ;
+
+
+exe msbenchmark
+    : msbenchmark.cpp
+      ../common
+      ../../pwiz/data/msdata/ramp
+    : <include>../..
+    ;
+
+
+alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
+explicit hello_examples ;
+
+alias example_tools : mscat txt2mzml msbenchmark ;
+explicit example_tools ;
+
+
+#
+# tool for creating example files
+#
+
+exe write_example_files
+    : write_example_files.cpp
+      ../../pwiz/data/msdata//pwiz_data_msdata_examples
+      ../common
+    : <include>../../..
+    ;
+
+
+exe write_traml_example_files
+    : write_traml_example_files.cpp
+      ../../pwiz/data/tradata//pwiz_data_tradata_examples
+    : <include>../../..
+    ;
+
+
+exe write_mzid_example_files
+    : write_mzid_example_files.cpp
+      ../../pwiz/data/identdata//pwiz_data_identdata_examples
+    : <include>../../..
+    ;
+
+
+exe write_proteome_example_files
+    : write_proteome_example_files.cpp
+      ../../pwiz/data/proteome//pwiz_data_proteome_examples
+    : <include>../../..
+    ;
+
+
+#
+# local install for testing
+#
+
+install bin 
+    : hello_msdata 
+      hello_ramp 
+      hello_analyzer 
+      hello_analyzer_2
+      mscat
+      msbenchmark
+      txt2mzml
+      write_example_files
+      write_mzid_example_files
+      write_proteome_example_files
+      write_traml_example_files
+    : <location>bin ;
+
+explicit bin ;
+
+
+import package ;
+local install-requirements = <link>static:<install-dependencies>off ;
+if [ modules.peek : NT ] {
+    install-requirements += <install-default-prefix>"C:/Program Files/ProteoWizard/bin" ;
+} else if [ modules.peek : UNIX ] {
+    install-requirements += <install-default-prefix>/usr/local ;
+}
+
+package.install install
+    : $(install-requirements) release
+    : hello_examples example_tools
+    : # no libraries
+    : # no headers
+    ;
+explicit install ;

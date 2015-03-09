@@ -1,0 +1,3 @@
+Add the following command as a post-build step to sign the target EXE:
+
+"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\signtool.exe" sign /f "$(ProjectDir)..\..\..\University of Washington (MacCoss Lab).pfx" /p Skyline! /v "$(ProjectDir)obj\x86\$(ConfigurationName)\$(TargetFileName)"

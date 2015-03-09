@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DB61BBC0-0AA6-489F-8070-18CB626CDD75}"
+	ProjectSection(SolutionItems) = preProject
+		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+		MSConvertGUI.vsmdi = MSConvertGUI.vsmdi
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSConvertGUI", "MSConvertGUI.csproj", "{AF8F8305-6C76-4C94-879F-7746B6176203}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{5D4549D3-21D3-4034-81D0-998F4202F884}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomDataSourceDialog", "CustomDataSourceDialog\CustomDataSourceDialog.csproj", "{6B7B0771-4D09-469F-AEFA-00E4FA06D017}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Debug|x64.ActiveCfg = Debug|x64
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Debug|x64.Build.0 = Debug|x64
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Debug|x86.ActiveCfg = Debug|x86
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Debug|x86.Build.0 = Debug|x86
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Release|x64.ActiveCfg = Release|x64
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Release|x64.Build.0 = Release|x64
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Release|x86.ActiveCfg = Release|x86
+		{AF8F8305-6C76-4C94-879F-7746B6176203}.Release|x86.Build.0 = Release|x86
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Debug|x64.ActiveCfg = Debug|x64
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Debug|x64.Build.0 = Debug|x64
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Debug|x86.ActiveCfg = Debug|x86
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Debug|x86.Build.0 = Debug|x86
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Release|x64.ActiveCfg = Release|x64
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Release|x64.Build.0 = Release|x64
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Release|x86.ActiveCfg = Release|x86
+		{5D4549D3-21D3-4034-81D0-998F4202F884}.Release|x86.Build.0 = Release|x86
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Debug|x64.ActiveCfg = Debug|x64
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Debug|x64.Build.0 = Debug|x64
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Debug|x86.ActiveCfg = Debug|x86
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Debug|x86.Build.0 = Debug|x86
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Release|x64.ActiveCfg = Release|x64
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Release|x64.Build.0 = Release|x64
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Release|x86.ActiveCfg = Release|x86
+		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = MSConvertGUI.vsmdi
+	EndGlobalSection
+EndGlobal

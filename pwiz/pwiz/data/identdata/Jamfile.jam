@@ -1,0 +1,186 @@
+#
+# $Id$
+#
+#
+# Original author: Robert Burke <robetr.burke@proteowizard.org>
+#
+# Copyright 2009 Spielberg Family Center for Applied Proteomics
+#   University of Southern California, Los Angeles, California  90033
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+import path tar ;
+
+project
+    : requirements
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        # hacks to allow building with <warnings>all with MSVC and boost
+        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code # (boost/numeric/ublas/lu.hpp)
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+# Add MascotReader if we're in a supported OS & platform
+import os ;
+import modules ;
+import path ;
+
+rule mascot-api-requirements ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        result += <define>PWIZ_READER_MASCOT ;
+    }
+    return $(result) [ mascot-api-usage-requirements $(properties) ] ;
+}
+
+rule mascot-api-usage-requirements ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        result += <library>$(PWIZ_ROOT_PATH)//msparser ;
+    }
+
+    return $(result) ;
+}
+
+
+lib pwiz_data_identdata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+lib pwiz_data_identdata 
+    : # sources
+        Diff.cpp
+        IdentData.cpp
+        IdentDataFile.cpp
+        Reader.cpp
+        DefaultReaderList.cpp
+        IO.cpp
+        Serializer_mzid.cpp
+        #Serializer_idpDB.cpp
+        Serializer_pepXML.cpp
+        Serializer_protXML.cpp
+        Serializer_Text.cpp
+        Pep2MzIdent.cpp
+        MascotReader.cpp
+        DelimWriter.cpp
+        DelimReader.cpp
+        References.cpp
+        KwCVMap.cpp
+    : # requirements
+        <library>pwiz_data_identdata_version
+        <library>../proteome//pwiz_data_proteome
+        <library>../common//pwiz_data_common
+        <library>../msdata//pwiz_data_msdata
+        <library>../misc//pwiz_data_misc
+        <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        #<library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3pp
+        <conditional>@mascot-api-requirements
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_data_identdata_version
+        <library>../proteome//pwiz_data_proteome
+        <library>../common//pwiz_data_common
+        <library>../msdata//pwiz_data_msdata
+        <library>../misc//pwiz_data_misc
+        <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        #<library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3pp
+        <conditional>@mascot-api-usage-requirements
+    ;
+
+
+lib pwiz_data_identdata_examples
+    :   
+    :   <source>examples.cpp # HACK: I don't know why this doesn't work in the sources section.
+        <library>pwiz_data_identdata
+    :
+    :   <library>pwiz_data_identdata
+    ;
+
+rule install-requirements ( properties * )
+{
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        local result = <source>$(msparser_path)/../config/unimod_2.xsd ; 
+        result += <source>$(msparser_path)/../config/quantitation_1.xsd ;
+        result += <source>$(msparser_path)/../config/quantitation_2.xsd ;   
+
+        if <toolset>msvc in $(properties)
+        {
+            if <runtime-debugging>on in $(properties)
+            {
+                result += <source>$(msparser_path)/lib/msparserD.dll ;
+            }
+            else
+            {
+                result += <source>$(msparser_path)/lib/msparser.dll ;
+            }
+        }
+        return $(result) ;
+    }
+}
+
+install install_pwiz_identdata
+    : : <conditional>@install-requirements
+    ;
+
+explicit install_pwiz_identdata ;
+
+#
+# testing tools
+#
+
+exe ExtendedReaderTest
+    : ExtendedReadTest.cpp
+      pwiz_data_identdata
+    : <include>../..
+    ;
+explicit ExtendedReaderTest ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+unit-test-if-exists IdentDataTest : IdentDataTest.cpp pwiz_data_identdata_examples ; 
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_identdata_examples ;
+unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_identdata ;
+unit-test-if-exists IOTest : IOTest.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_mzid_Test : Serializer_mzid_Test.cpp pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_protXML_Test : Serializer_protXML_Test.cpp pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_Text_Test : Serializer_Text_Test.cpp pwiz_data_identdata_examples ;
+unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_identdata_examples ;
+#unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_identdata ;
+#unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
+#unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
+
+run-if-exists MascotReaderTest.cpp pwiz_data_identdata 
+    : # args
+    : MascotReaderTest.data/F003081.dat MascotReaderTest.data/F02.mzid.gz # input-files
+    : # requirements
+      <conditional>@mascot-api-requirements
+    : MascotReaderTest # target 
+    : # default-build
+    ;

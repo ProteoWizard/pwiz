@@ -1,0 +1,27 @@
+libLSID	numSpecs	majorVersion	minorVersion
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mascot-distiller-1.blib	1	1	3
+id	RefSpectraID	position	mass
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	retentionTime	fileID	SpecIDinFile	score	scoreType
+1	LVNELTEFAK	582.32	2	LVNELTEFAK	-	-	1	500	0.0	0	39.512845	1	2	7.4e-05	5
+id	fileName
+1	C:/Temp/ah_20101011y_BSA_MS-MS_only_5-1.RAW
+id	scoreType
+0	UNKNOWN
+1	PERCOLATOR QVALUE
+2	PEPTIDE PROPHET SOMETHING
+3	SPECTRUM MILL
+4	IDPICKER FDR
+5	MASCOT IONS SCORE
+6	TANDEM EXPECTATION VALUE
+7	PROTEIN PILOT CONFIDENCE
+8	SCAFFOLD SOMETHING
+9	WATERS MSE PEPTIDE SCORE
+10	OMSSA EXPECTATION SCORE
+11	PROTEIN PROSPECTOR EXPECTATION SCORE
+12	SEQUEST XCORR
+13	MAXQUANT SCORE
+14	MORPHEUS SCORE
+15	MSGF+ SCORE
+16	PEAKS CONFIDENCE SCORE
+17	BYONIC SCORE
+18	PEPTIDE SHAKER CONFIDENCE

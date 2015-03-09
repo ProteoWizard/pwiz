@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.Lib.BlibData" assembly="Skyline-daily">
+  <class name="DbLibInfo" table="LibInfo">
+    <id name="LibLSID">
+      <column name="libLSID" not-null="true"/>
+      <generator class="assigned"/>
+    </id>
+    <property name="CreateTime" column="createTime" not-null="true"/>
+    <property name="NumSpecs" column="numSpecs" not-null="true"/>
+    <property name="MajorVersion" column="majorVersion" not-null="true"/>
+    <property name="MinorVersion" column="minorVersion" not-null="true"/>
+  </class>
+  <class name="DbRefSpectraRedundant" table="RefSpectra">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="assigned" />
+    </id>
+    <property name="PeptideSeq" column="peptideSeq" index="idxPeptide" not-null="true"/>
+    <property name="PeptideModSeq" column="peptideModSeq" index="idxPeptideMod" not-null="true"/>
+    <property name="PrecursorCharge" column="precursorCharge" index="idxPeptideMod" not-null="true"/>
+    <property name="PrecursorMZ" column="precursorMZ" not-null="true"/>
+    <property name="PrevAA" column="prevAA"/>
+    <property name="NextAA" column="nextAA"/>
+    <property name="Copies" column="copies" not-null="true"/>
+    <property name="NumPeaks" column="numPeaks" not-null="true"/>
+    <property name="RetentionTime" column="retentionTime"/>
+    <property name="FileId" column="fileID"/>
+    <property name="SpecIdInFile" column="SpecIDinFile"/>
+    <property name="Score" column="score"/>
+    <property name="ScoreType" column="scoreType"/>
+    <property name="IonMobilityValue" column="ionMobilityValue"/>
+    <property name="IonMobilityType" column="ionMobilityType" />
+    <property name="IonMobilityHighEnergyDriftTimeOffsetMsec" column="ionMobilityHighEnergyDriftTimeOffsetMsec"/>
+    <one-to-one name="Peaks" property-ref="RefSpectra" cascade="save-update"/>
+    <bag name="Modifications" cascade="save-update">
+      <key column="RefSpectraId"/>
+      <one-to-many class="DbModificationRedundant"/>
+    </bag>
+  </class>
+  <class name="DbModificationRedundant" table="Modifications">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <many-to-one name="RefSpectra" column="RefSpectraId"/>
+    <property name="Position" column="position" not-null="true"/>
+    <property name="Mass" column="mass" not-null="true"/>
+  </class>
+  <class name="DbRefSpectraRedundantPeaks" table="RefSpectraPeaks">
+    <id name="Id">
+      <column name="RefSpectraId" not-null="true"/>
+      <generator class="foreign">
+        <param name="property">RefSpectra</param>
+      </generator>
+    </id>
+    <one-to-one name="RefSpectra" constrained="true"/>
+    <property name="PeakMZ" column="peakMZ"/>
+    <property name="PeakIntensity" column="peakIntensity"/>
+  </class>
+  <class name="DbScoreTypes" table="ScoreTypes">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+    </id>
+    <property name="ScoreType" column="scoreType"/>
+  </class>
+  <class name="DbSpectrumSourceFiles" table="SpectrumSourceFiles">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native"/>
+    </id>
+    <property name="FileName" column="fileName"/>
+  </class>
+</hibernate-mapping>

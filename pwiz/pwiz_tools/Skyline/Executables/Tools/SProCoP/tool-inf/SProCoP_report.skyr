@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <revision index="1" />
+  <report name="SProCoP Input">
+    <table name="T1">DbPrecursorResult</table>
+    <table name="T2">DbPrecursor</table>
+    <select>
+      <column name="T1">PeptideResult.ProteinResult.ReplicateName</column>
+      <column name="T2">Peptide.ModifiedSequence</column>
+      <column name="T1">TotalArea</column>
+      <column name="T1">BestRetentionTime</column>
+      <column name="T1">MaxFwhm</column>
+      <column name="T1">MinStartTime</column>
+      <column name="T1">MaxEndTime</column>
+      <column name="T1">AverageMassErrorPPM</column>
+    </select>
+  </report>
+</ReportSpecList>

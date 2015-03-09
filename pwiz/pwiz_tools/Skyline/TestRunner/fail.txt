@@ -1,0 +1,21 @@
+TestModificationMatcher  # 6 failures (11.54%)
+# Assert.IsTrue failed. 
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Boolean condition)
+#    at pwiz.SkylineTestA.ModificationMatcherTest.TestModificationMatcher() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestA\ModificationMatcherTest.cs:line 221
+
+RefineResultsTest  # 4 failures (7.69%)
+# Assert.AreSame failed. 
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(Object expected, Object actual, String message, Object[] parameters)
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(Object expected, Object actual)
+#    at pwiz.SkylineTestA.RefineTest.RefineResultsTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestA\RefineTest.cs:line 126
+
+ConsoleMethodTest  # 1 failures (1.92%)
+# Assert.IsTrue failed. 
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Boolean condition)
+#    at pwiz.SkylineTestA.CommandLineTest.ConsoleMethodTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestA\CommandLineTest.cs:line 299
+
+
+

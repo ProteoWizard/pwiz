@@ -1,0 +1,44 @@
+<SkylineTester>
+  <tabs>tabBuild</tabs>
+  <pauseFormDelay>true</pauseFormDelay>
+  <pauseFormSeconds>0</pauseFormSeconds>
+  <pauseFormButton>false</pauseFormButton>
+  <formsLanguage>English</formsLanguage>
+  <formsTree></formsTree>
+  <pauseTutorialsDelay>true</pauseTutorialsDelay>
+  <pauseTutorialsSeconds>0</pauseTutorialsSeconds>
+  <pauseTutorialsScreenShots>false</pauseTutorialsScreenShots>
+  <tutorialsDemoMode>false</tutorialsDemoMode>
+  <tutorialsLanguage>English</tutorialsLanguage>
+  <tutorialsTree>Tutorial tests,TestAbsoluteQuantificationTutorial,TestCEOptimizationTutorial,TestCustomReportsTutorial,TestExistingExperimentsTutorial,TestGroupedStudiesTutorial,TestIrtTutorial,TestLibraryExplorerTutorial,TestMethodEditTutorial,TestMethodRefinementTutorial,TestMs1Tutorial,TestMSstatsTutorial,TestPeakPickingTutorial,TestQuasarTutorial,TestTargetedMSMSTutorial</tutorialsTree>
+  <offscreen>false</offscreen>
+  <runLoops>true</runLoops>
+  <runLoopsCount>1</runLoopsCount>
+  <runIndefinitely>false</runIndefinitely>
+  <testsEnglish>true</testsEnglish>
+  <testsChinese>false</testsChinese>
+  <testsFrench>false</testsFrench>
+  <testsJapanese>false</testsJapanese>
+  <testsTree></testsTree>
+  <runCheckedTests>true</runCheckedTests>
+  <skipCheckedTests>false</skipCheckedTests>
+  <build32>false</build32>
+  <build64>true</build64>
+  <buildTrunk>true</buildTrunk>
+  <buildBranch>false</buildBranch>
+  <branchUrl>https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME</branchUrl>
+  <nukeBuild>true</nukeBuild>
+  <updateBuild>false</updateBuild>
+  <incrementalBuild>false</incrementalBuild>
+  <startSln>false</startSln>
+  <qualityPassDefinite>true</qualityPassDefinite>
+  <qualityPassCount>1</qualityPassCount>
+  <qualityRunSchedule>false</qualityRunSchedule>
+  <qualityStartTime>6:00 PM</qualityStartTime>
+  <qualityEndTime>8:00 AM</qualityEndTime>
+  <pass0>true</pass0>
+  <pass1>true</pass1>
+  <qualityBuildType>Test default</qualityBuildType>
+  <qualityAllTests>true</qualityAllTests>
+  <qualityChooseTests>false</qualityChooseTests>
+</SkylineTester>

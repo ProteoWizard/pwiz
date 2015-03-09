@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# != 2 ]
+then
+    echo "usage: svncp relative_path1 relative_path2"
+    echo "Performs a repository copy, using paths relative to svn root."
+    echo "Example:"
+    echo "  svncp trunk/pwiz tags/pwiz_1_5_0"
+    exit 1
+fi
+
+from=https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/$1
+to=https://proteowizard.svn.sourceforge.net/svnroot/proteowizard/$2
+
+echo "from: $from"
+echo "to: $to"
+
+read -p "Ready to create tag in repository (enter to continue)..."
+
+svn copy $from $to -m "copied $from to $to"

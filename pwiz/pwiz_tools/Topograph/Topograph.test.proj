@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="MSTest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestResultsDir Condition="'$(TestResultsDir)'==''">$(SolutionDir)\TestResults</TestResultsDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <TestPassedFile Include="$(OutDir)\Topograph.passed" />
+    <TestResultsFiles Include="$(TestResultsDir)\*.trx" />
+  </ItemGroup>
+  <Target Name="MSTest">
+   
+    <MakeDir Directories="$(TestResultsDir)" />    
+    <Exec Command="&quot;$(VS120COMNTOOLS)..\IDE\mstest.exe&quot; /testcontainer:$(OutDir)$(TestProject).dll /runconfig:$(SolutionDir)\LocalTestRun_$(Platform).testrunconfig" />
+
+  </Target>
+  <Target Name="MSTest:Clean">
+
+    <ReadLinesFromFile File="%(TestResultsFiles.Identity)">
+      <Output TaskParameter="Lines" ItemName="lines"/>
+    </ReadLinesFromFile>
+    <WriteLinesToFile File="@(TestPassedFile)" Lines="@(Lines)" Overwrite="false" />
+<!--    <RemoveDir Directories="$(TestResultsDir)" /> -->
+
+  </Target>
+  <Target Name="MSTest:CleanAll">
+   
+    <RemoveDir Directories="$(TestResultsDir)" />
+
+  </Target>
+</Project>

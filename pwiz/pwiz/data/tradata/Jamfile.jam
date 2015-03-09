@@ -1,0 +1,85 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+project
+    : requirements
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
+    ;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+
+lib pwiz_data_tradata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
+lib pwiz_data_tradata 
+    :   # sources
+        TraData.cpp
+        Diff.cpp
+        References.cpp
+        IO.cpp
+        Serializer_traML.cpp
+        Reader.cpp
+        DefaultReaderList.cpp
+        TraDataFile.cpp
+    : # requirements
+        <library>pwiz_data_tradata_version
+        <library>../common//pwiz_data_common
+		<library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_data_tradata_version
+        <library>../common//pwiz_data_common
+		<library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+    ;
+
+
+lib pwiz_data_tradata_examples
+    :   examples.cpp
+    :   <library>pwiz_data_tradata
+    :
+    :	<library>pwiz_data_tradata
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+unit-test-if-exists TraDataTest : TraDataTest.cpp pwiz_data_tradata ; # TraData.cpp cv.cpp ;
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_tradata ; # Diff.cpp TraData.cpp cv.cpp ;
+unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_tradata ; # References.cpp TraData.cpp cv.cpp ;
+unit-test-if-exists IOTest : IOTest.cpp pwiz_data_tradata pwiz_data_tradata_examples ; # IO.cpp TraData.cpp Diff.cpp cv.cpp References.cpp ../minimxml ../util ;
+unit-test-if-exists Serializer_traML : Serializer_traML_Test.cpp pwiz_data_tradata pwiz_data_tradata_examples ;
+unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
+unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
+

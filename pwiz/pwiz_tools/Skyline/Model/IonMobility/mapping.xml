@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.IonMobility" assembly="Skyline-daily">
+  <class name="DbVersionInfo" table="VersionInfo">
+    <id name="SchemaVersion">
+      <column name="SchemaVersion" not-null="true"/>
+      <generator class="assigned"/>
+    </id>
+  </class>
+  <class name="DbIonMobilityPeptide" table="IonMobilityLibrary">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <property name="PeptideModSeq" index="idxPeptide" not-null="true"/>
+    <property name="CollisionalCrossSection"/>
+    <property name="HighEnergyDriftTimeOffsetMsec"/>
+  </class>
+</hibernate-mapping>

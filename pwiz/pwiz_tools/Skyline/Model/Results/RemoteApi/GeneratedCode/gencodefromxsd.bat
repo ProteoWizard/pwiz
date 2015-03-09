@@ -1,0 +1,1 @@
+xsd /namespace:pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode /classes ChromatogramRequest.xsd

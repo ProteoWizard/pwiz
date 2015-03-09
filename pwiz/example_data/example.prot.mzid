@@ -1,0 +1,2002 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<MzIdentML id="" creationDate="2012-06-08T12:29:41" version="1.1.0" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.1 ../schema/mzIdentML1.1.0.xsd" xmlns="http://psidev.info/psi/pi/mzIdentML/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cvList>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="3.25.0" uri="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+    <cv id="UNIMOD" fullName="UNIMOD" version="2012-03-09" uri="http://www.unimod.org/obo/unimod.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="12:10:2011" uri="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
+  </cvList>
+  <AnalysisSoftwareList>
+    <AnalysisSoftware id="AS_asapratio_" name="asapratio">
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1001456" name="analysis software" value="asapratio"/></SoftwareName>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="AS_peptideprophet_" name="peptideprophet">
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1001456" name="analysis software" value="peptideprophet"/></SoftwareName>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="AS_database_refresh_" name="database_refresh">
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1001456" name="analysis software" value="database_refresh"/></SoftwareName>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="AS_interact_" name="interact">
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1001456" name="analysis software" value="interact"/></SoftwareName>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="AS_Sequest" name="Sequest">
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1001208" name="Sequest" value=""/></SoftwareName>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="pwiz_3.0.3490" name="ProteoWizard MzIdentML" version="3.0.3490">
+      <ContactRole contact_ref="ORG_PWIZ">
+        <Role><cvParam cvRef="MS" accession="MS:1001267" name="software vendor" value=""/></Role>
+      </ContactRole>
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard" value=""/></SoftwareName>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="AS_proteinprophet_ Insilicos_LabKey_C++ (TPP v4.5 RAPTURE rev 1, Build 201201111631 (MinGW))" name="proteinprophet" version=" Insilicos_LabKey_C++ (TPP v4.5 RAPTURE rev 1, Build 201201111631 (MinGW))">
+      <SoftwareName><cvParam cvRef="MS" accession="MS:1001456" name="analysis software" value="proteinprophet"/></SoftwareName>
+    </AnalysisSoftware>
+  </AnalysisSoftwareList>
+  <AuditCollection>
+    <Organization id="ORG_PWIZ" name="ProteoWizard">
+      <cvParam cvRef="MS" accession="MS:1000589" name="contact email" value="support@proteowizard.org"/>
+    </Organization>
+  </AuditCollection>
+  <SequenceCollection>
+    <DBSequence id="DBSeq_IPI00395455" accession="IPI00395455" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00395455.1|TREMBL:Q15737;Q96AH3;Q9BTI2|REFSEQ_XP:XP_377464|ENSEMBL:ENSP00000262398 Tax_Id=9606 SUPT6H"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00220803" accession="IPI00220803" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00220803.1|SWISS-PROT:P49006|REFSEQ_NP:NP_075385|ENSEMBL:ENSP00000310885 Tax_Id=9606 MARCKS-like protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00397229" accession="IPI00397229" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397229.1|SWISS-PROT:P48960-2|REFSEQ_NP:NP_001775|ENSEMBL:ENSP00000242786 Tax_Id=9606 Splice isoform 2 of P48960 CD97 antigen precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00397230" accession="IPI00397230" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397230.1|SWISS-PROT:P48960-3 Tax_Id=9606 Splice isoform 3 of P48960 CD97 antigen precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00299412" accession="IPI00299412" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00299412.4|SWISS-PROT:P48960-1|REFSEQ_NP:NP_510966|ENSEMBL:ENSP00000242787 Tax_Id=9606 Splice isoform 1 of P48960 CD97 antigen precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00008530" accession="IPI00008530" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00008530.1|SWISS-PROT:P05388|REFSEQ_NP:NP_444505;NP_000993|ENSEMBL:ENSP00000339027;ENSP00000328978 Tax_Id=9606 60S acidic ribosomal protein P0"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00396373" accession="IPI00396373" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00396373.1|TREMBL:Q8NHW5|REFSEQ_XP:XP_165448|ENSEMBL:ENSP00000309759 Tax_Id=9606 BLOCK 23"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00019353" accession="IPI00019353" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00019353.1|REFSEQ_NP:NP_060708|TREMBL:Q9NP48|ENSEMBL:ENSP00000007616;ENSP00000337458 Tax_Id=9606 Putative lipid kinase"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00030363" accession="IPI00030363" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00030363.1|SWISS-PROT:P24752|REFSEQ_NP:NP_000010|ENSEMBL:ENSP00000265838 Tax_Id=9606 Acetyl-CoA acetyltransferase, mitochondrial precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00062003" accession="IPI00062003" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00062003.1|TREMBL:Q96FG8|ENSEMBL:ENSP00000299355 Tax_Id=9606 Similar to acetyl-coenzyme A acetyltransferase 1"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00007611" accession="IPI00007611" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00007611.1|SWISS-PROT:P48047|REFSEQ_NP:NP_001688|ENSEMBL:ENSP00000290299 Tax_Id=9606 ATP synthase oligomycin sensitivity conferral protein, mitochondrial precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00290583" accession="IPI00290583" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00290583.1|TREMBL:Q8TAW0|ENSEMBL:ENSP00000335121 Tax_Id=9606 Similar to integral membrane protein 3"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00384327" accession="IPI00384327" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00384327.1|TREMBL:Q86VK5|ENSEMBL:ENSP00000322730 Tax_Id=9606 ITM2C protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00016014" accession="IPI00016014" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00016014.1|SWISS-PROT:Q9NQX7|REFSEQ_NP:NP_112188|TREMBL:Q8N288;Q9BUP8|ENSEMBL:ENSP00000322100 Tax_Id=9606 Integral membrane protein 2C"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00013847" accession="IPI00013847" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00013847.1|SWISS-PROT:P31930|REFSEQ_NP:NP_003356|ENSEMBL:ENSP00000203407 Tax_Id=9606 Ubiquinol-cytochrome C reductase complex core protein I, mitochondrial precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00007940" accession="IPI00007940" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00007940.1|REFSEQ_NP:NP_006450|TREMBL:O75477|ENSEMBL:ENSP00000266059 Tax_Id=9606 KE04p"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00010845" accession="IPI00010845" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00010845.2|SWISS-PROT:O00217|REFSEQ_NP:NP_002487|ENSEMBL:ENSP00000315774 Tax_Id=9606 NADH-ubiquinone oxidoreductase 23 kDa subunit, mitochondrial precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00024145" accession="IPI00024145" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00024145.1|SWISS-PROT:P45880-1|TREMBL:Q9BWK8|ENSEMBL:ENSP00000301937 Tax_Id=9606 Splice isoform 1 of P45880 Voltage-dependent anion-selective channel protein 2"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00216024" accession="IPI00216024" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00216024.1|SWISS-PROT:P45880-2 Tax_Id=9606 Splice isoform 2 of P45880 Voltage-dependent anion-selective channel protein 2"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00216026" accession="IPI00216026" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00216026.1|SWISS-PROT:P45880-3|REFSEQ_NP:NP_003366|ENSEMBL:ENSP00000298468 Tax_Id=9606 Splice isoform 3 of P45880 Voltage-dependent anion-selective channel protein 2"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00216027" accession="IPI00216027" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00216027.1|SWISS-PROT:P45880-4 Tax_Id=9606 Splice isoform 4 of P45880 Voltage-dependent anion-selective channel protein 2"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00296259" accession="IPI00296259" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00296259.3|REFSEQ_NP:NP_872353|TREMBL:Q8N2P6;Q7Z432;Q7Z7H5|ENSEMBL:ENSP00000289577 Tax_Id=9606 putative NFkB activating protein HNLF "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00023542" accession="IPI00023542" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00023542.2|SWISS-PROT:Q9BVK6|REFSEQ_NP:NP_059980|ENSEMBL:ENSP00000330537;ENSP00000330945 Tax_Id=9606 gp25L2 protein "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00010153" accession="IPI00010153" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00010153.1|SWISS-PROT:P23131|REFSEQ_NP:NP_000969|TREMBL:Q9BTQ7;Q8N4F9 Tax_Id=9606 60S ribosomal protein L23"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00329030" accession="IPI00329030" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00329030.3|SWISS-PROT:Q86VZ6-1|REFSEQ_NP:NP_778231|ENSEMBL:ENSP00000283928 Tax_Id=9606 Splice isoform 1 of Q86VZ6 Juxtaposed with another zinc finger protein 1"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00332456" accession="IPI00332456" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00332456.1|SWISS-PROT:Q86VZ6-2 Tax_Id=9606 Splice isoform 2 of Q86VZ6 Juxtaposed with another zinc finger protein 1"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00017342" accession="IPI00017342" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00017342.1|SWISS-PROT:P35238|REFSEQ_NP:NP_001656|ENSEMBL:ENSP00000318151 Tax_Id=9606 Rho-related GTP-binding protein RhoG"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00028091" accession="IPI00028091" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00028091.1|SWISS-PROT:P32391|REFSEQ_NP:NP_005712|ENSEMBL:ENSP00000263238 Tax_Id=9606 Actin-like protein 3"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00029196" accession="IPI00029196" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00029196.2|SWISS-PROT:Q04759|REFSEQ_NP:NP_006248|ENSEMBL:ENSP00000263125 Tax_Id=9606 Protein kinase C, theta type"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00011363" accession="IPI00011363" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00011363.1|TREMBL:O94987|ENSEMBL:ENSP00000242558 Tax_Id=9606 Hypothetical protein KIAA0913"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00102427" accession="IPI00102427" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00102427.3|REFSEQ_XP:XP_034640|ENSEMBL:ENSP00000332008 Tax_Id=9606 similar to ribosomal protein L4"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00003918" accession="IPI00003918" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00003918.2|SWISS-PROT:P36578|REFSEQ_NP:NP_000959|ENSEMBL:ENSP00000311430 Tax_Id=9606 60S ribosomal protein L4"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00154608" accession="IPI00154608" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00154608.3|REFSEQ_NP:NP_076415|TREMBL:Q8TBC5;Q9H9A0;Q9BRK7|ENSEMBL:ENSP00000240727 Tax_Id=9606 Hypothetical protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00163111" accession="IPI00163111" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00163111.1|TREMBL:Q96NJ8|ENSEMBL:ENSP00000276684 Tax_Id=9606 Hypothetical protein FLJ30717"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00031612" accession="IPI00031612" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00031612.1|REFSEQ_NP:NP_115710|TREMBL:Q9BRU9|ENSEMBL:ENSP00000308332 Tax_Id=9606 Hypothetical protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00025879" accession="IPI00025879" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00025879.1|SWISS-PROT:P12882|REFSEQ_NP:NP_005954|ENSEMBL:ENSP00000226207 Tax_Id=9606 Myosin heavy chain, skeletal muscle, adult 1"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00401614" accession="IPI00401614" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00401614.1|REFSEQ_XP:XP_371558|ENSEMBL:ENSP00000332568 Tax_Id=9606 similar to FKSG30 "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00021440" accession="IPI00021440" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00021440.1|SWISS-PROT:P02571|REFSEQ_NP:NP_001605|TREMBL:Q96DE1;Q96E67;Q9UE89;Q96HG5;Q8WVW5;Q96FU6|ENSEMBL:ENSP00000331514 Tax_Id=9606 Actin, cytoplasmic 2"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00021439" accession="IPI00021439" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00021439.1|SWISS-PROT:P60709|REFSEQ_NP:NP_001092|TREMBL:Q96B34;Q9UMN3|ENSEMBL:ENSP00000158302 Tax_Id=9606 Actin, cytoplasmic 1"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00395632" accession="IPI00395632" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00395632.1|SWISS-PROT:Q9UM73|REFSEQ_NP:NP_004295|ENSEMBL:ENSP00000306717 Tax_Id=9606 ALK tyrosine kinase receptor precursor"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00013252" accession="IPI00013252" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00013252.1|REFSEQ_NP:NP_116012|TREMBL:Q8TDB4;Q9BZC3|ENSEMBL:ENSP00000260011 Tax_Id=9606 Ovary-specific acidic protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00383097" accession="IPI00383097" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00383097.1|TREMBL:Q8TF26 Tax_Id=9606 Hypothetical protein KIAA1976"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00397526" accession="IPI00397526" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397526.1|SWISS-PROT:P35580|REFSEQ_NP:NP_005955|TREMBL:Q9BWG0;Q9UMG3;Q9UE82;Q16087|ENSEMBL:ENSP00000269243 Tax_Id=9606 Myosin heavy chain, nonmuscle type B"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00376294" accession="IPI00376294" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00376294.1|REFSEQ_XP:XP_377631 Tax_Id=9606 similar to beta actin "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00008603" accession="IPI00008603" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00008603.1|SWISS-PROT:P03996|REFSEQ_NP:NP_001604|ENSEMBL:ENSP00000224784 Tax_Id=9606 Actin, aortic smooth muscle"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00025416" accession="IPI00025416" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00025416.1|SWISS-PROT:P12718|REFSEQ_NP:NP_001606|ENSEMBL:ENSP00000295137 Tax_Id=9606 Actin, gamma-enteric smooth muscle"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00021428" accession="IPI00021428" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00021428.1|SWISS-PROT:P02568|REFSEQ_NP:NP_001091|ENSEMBL:ENSP00000324452 Tax_Id=9606 Actin, alpha skeletal muscle"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00023006" accession="IPI00023006" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00023006.1|SWISS-PROT:P04270|REFSEQ_NP:NP_005150|TREMBL:Q13707|ENSEMBL:ENSP00000290378 Tax_Id=9606 Actin, alpha cardiac"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00004352" accession="IPI00004352" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00004352.1|SWISS-PROT:P46095|REFSEQ_NP:NP_005275|ENSEMBL:ENSP00000275169 Tax_Id=9606 Probable G protein-coupled receptor GPR6"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00169309" accession="IPI00169309" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00169309.1|REFSEQ_NP:NP_689566|TREMBL:Q8NHS1|ENSEMBL:ENSP00000291715 Tax_Id=9606 Similar to RIKEN cDNA 1700071E18 gene"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00173355" accession="IPI00173355" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00173355.4|REFSEQ_XP:XP_208908|ENSEMBL:ENSP00000304439 Tax_Id=9606 similar to KIAA1990 protein "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00386236" accession="IPI00386236" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00386236.1|TREMBL:Q96AA6 Tax_Id=9606 Hypothetical protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00024427" accession="IPI00024427" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00024427.2|SWISS-PROT:P55344-1 Tax_Id=9606 Splice isoform 1 of P55344 Lens fiber membrane intrinsic protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00219587" accession="IPI00219587" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00219587.1|SWISS-PROT:P55344-2|REFSEQ_NP:NP_085915|ENSEMBL:ENSP00000221973 Tax_Id=9606 Splice isoform 2 of P55344 Lens fiber membrane intrinsic protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00009345" accession="IPI00009345" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00009345.1|REFSEQ_NP:NP_073584|TREMBL:Q9H669|ENSEMBL:ENSP00000333535 Tax_Id=9606 Hypothetical protein FLJ22558"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00030466" accession="IPI00030466" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00030466.2|TREMBL:Q9HCD6|ENSEMBL:ENSP00000324863 Tax_Id=9606 Hypothetical protein KIAA1636"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00397640" accession="IPI00397640" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00397640.1|TREMBL:Q9ULS2;Q9NW88;Q9NXY9|REFSEQ_XP:XP_371074|ENSEMBL:ENSP00000307872 Tax_Id=9606 putative ankyrin-repeat containing protein "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00396964" accession="IPI00396964" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00396964.1|ENSEMBL:ENSP00000332641 Tax_Id=9606 "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00333119" accession="IPI00333119" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00333119.1|ENSEMBL:ENSP00000329489 Tax_Id=9606 "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00333381" accession="IPI00333381" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00333381.1|ENSEMBL:ENSP00000329856 Tax_Id=9606 "/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00337305" accession="IPI00337305" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00337305.1|REFSEQ_NP:NP_892018|TREMBL:Q7Z411;Q7Z410|ENSEMBL:ENSP00000313222;ENSP00000332697 Tax_Id=9606 Polyserase 1A protein"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00155134" accession="IPI00155134" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00155134.2|TREMBL:Q9UF51;Q9P271|ENSEMBL:ENSP00000280562 Tax_Id=9606 Hypothetical protein KIAA1457"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_IPI00097494" accession="IPI00097494" searchDatabase_ref="DB_1">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="IPI:IPI00097494.1|REFSEQ_NP:NP_065896|TREMBL:Q9BZ72|ENSEMBL:ENSP00000322218 Tax_Id=9606 NIR3"/>
+    </DBSequence>
+    <Peptide id="PEP_1"><PeptideSequence>DVDEAHYAYSFKYLK</PeptideSequence></Peptide>
+    <Peptide id="PEP_2">
+      <PeptideSequence>GACSDEGTAQEGK</PeptideSequence>
+      <Modification location="3" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_3">
+      <PeptideSequence>GACSDEGTAQEGK</PeptideSequence>
+      <Modification location="3" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_4">
+      <PeptideSequence>DPPAKDVMPGPRQELLCAFWK</PeptideSequence>
+      <Modification location="8" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="17" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_5">
+      <PeptideSequence>EGGGDSSASSPTEEEQEQGEIGACSDEGTAQEGK</PeptideSequence>
+      <Modification location="24" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_6">
+      <PeptideSequence>AGAIAPCEVTVPAQNTGLGPEK</PeptideSequence>
+      <Modification location="7" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_7">
+      <PeptideSequence>AACQEAQVFGNQLIPPNAQVK</PeptideSequence>
+      <Modification location="3" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_8">
+      <PeptideSequence>QAVLGAGLPISTPCTTINK</PeptideSequence>
+      <Modification location="14" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_9">
+      <PeptideSequence>GEVPCTVTSASPLEEATLSELK</PeptideSequence>
+      <Modification location="5" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_10">
+      <PeptideSequence>GEVPCTVTSASPLEEATLSELK</PeptideSequence>
+      <Modification location="5" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_11"><PeptideSequence>INVPVPQFGGGDPADIIHDFQR</PeptideSequence></Peptide>
+    <Peptide id="PEP_12">
+      <PeptideSequence>YIYDQCPAVAGYGPIEQLPDYNR</PeptideSequence>
+      <Modification location="6" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_13">
+      <PeptideSequence>IYFGSNIPNMFVDSSCALK</PeptideSequence>
+      <Modification location="10" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="16" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_14">
+      <PeptideSequence>IYFGSNIPNMFVDSSCALK</PeptideSequence>
+      <Modification location="10" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="16" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_15">
+      <PeptideSequence>LCEAICPAQAITIEAEPR</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="6" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_16">
+      <PeptideSequence>VCEDLDTSVNLAWTSGTNCTR</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="19" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_17">
+      <PeptideSequence>VCEDLDTSVNLAWTSGTNCTR</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="19" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_18">
+      <PeptideSequence>CFIEEIPDETMVIGNYR</PeptideSequence>
+      <Modification location="1" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="11" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_19">
+      <PeptideSequence>ISLGLPVGAVINCADNTGAK</PeptideSequence>
+      <Modification location="13" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_20">
+      <PeptideSequence>ISLGLPVGAVINCADNTGAK</PeptideSequence>
+      <Modification location="13" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_21">
+      <PeptideSequence>ESWTTESAISSEAILSSMCMNG</PeptideSequence>
+      <Modification location="19" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_22">
+      <PeptideSequence>TCLLICYTTNAFPK</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="6" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_23">
+      <PeptideSequence>CFIEEIPDETMVIGNYR</PeptideSequence>
+      <Modification location="1" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_24">
+      <PeptideSequence>LGYAGNTEPQFIIPSCIAIK</PeptideSequence>
+      <Modification location="16" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_25">
+      <PeptideSequence>TNTFCGTPDYIAPEILLGQK</PeptideSequence>
+      <Modification location="5" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_26">
+      <PeptideSequence>IYFGSNIPNMFVDSSCALK</PeptideSequence>
+      <Modification location="16" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_27">
+      <PeptideSequence>IYFGSNIPNMFVDSSCALK</PeptideSequence>
+      <Modification location="16" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_28">
+      <PeptideSequence>GPEPPTASVGPPGLLPGDVC</PeptideSequence>
+      <Modification location="20" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_29">
+      <PeptideSequence>YAICSALAASALPALVMSK</PeptideSequence>
+      <Modification location="4" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_30">
+      <PeptideSequence>YAICSALAASALPALVMSK</PeptideSequence>
+      <Modification location="4" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_31">
+      <PeptideSequence>ACEEAAPAGVLPELPTEAPPGDALADPPSGTT</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_32">
+      <PeptideSequence>YQILLDGTFCQ</PeptideSequence>
+      <Modification location="10" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_33">
+      <PeptideSequence>LEEEIKAKSALAHALQSSRHDCD</PeptideSequence>
+      <Modification location="22" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_34">
+      <PeptideSequence>LCYVALDFEQEMATAASSSSLEK</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_35">
+      <PeptideSequence>GGGGGGCSSGGGGGGYIGGNAASNNDPEMD</PeptideSequence>
+      <Modification location="7" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="29" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_36">
+      <PeptideSequence>EAEVVDAEESPSATVVVIKEASACP</PeptideSequence>
+      <Modification location="24" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_37">
+      <PeptideSequence>NAPALPALPPTLPPAC</PeptideSequence>
+      <Modification location="16" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_38">
+      <PeptideSequence>PANPPGVLALLDEEC</PeptideSequence>
+      <Modification location="15" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_39">
+      <PeptideSequence>LCYVALDFEQEMATAASSSSLEK</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_40">
+      <PeptideSequence>LCYITLDFEKEMATAASSSSLEK</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="12" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_41">
+      <PeptideSequence>LCYVALDFENEMATAASSSSLEK</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="12" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_42"><PeptideSequence>LLTVGFLVASFAASVSSLLAITVDRYL</PeptideSequence></Peptide>
+    <Peptide id="PEP_43">
+      <PeptideSequence>CFLLADMIMQSTD</PeptideSequence>
+      <Modification location="1" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="7" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_44">
+      <PeptideSequence>SQGCSPGVASMAQGEN</PeptideSequence>
+      <Modification location="4" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_45">
+      <PeptideSequence>QGTTVTVSSGSASAPTLFPLVSCENS</PeptideSequence>
+      <Modification location="23" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_46">
+      <PeptideSequence>VLMTFFAGIFYMC</PeptideSequence>
+      <Modification location="13" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_47">
+      <PeptideSequence>VPWEAVGLAVAAVSCS</PeptideSequence>
+      <Modification location="15" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_48">
+      <PeptideSequence>SCDELSPVSPTQGGY</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_49">
+      <PeptideSequence>TCSVLYNFSLTDR</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="442.3296215222" monoisotopicMassDelta="442.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_50">
+      <PeptideSequence>HSSSSTMLDGTGALGR</PeptideSequence>
+      <Modification location="7" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="PEP_51">
+      <PeptideSequence>LCYVALDFEQEMATAASSSSLEK</PeptideSequence>
+      <Modification location="2" residues="C" avgMassDelta="450.3296215222" monoisotopicMassDelta="450.3296215222">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+      <Modification location="12" residues="M" avgMassDelta="16.1521113938" monoisotopicMassDelta="16.1521113938">
+        <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+      </Modification>
+    </Peptide>
+    <PeptideEvidence id="IPI00395455_PEP_1" peptide_ref="PEP_1" dBSequence_ref="DBSeq_IPI00395455" pre="K" post="N" isDecoy="false"/>
+    <PeptideEvidence id="IPI00220803_PEP_2" peptide_ref="PEP_2" dBSequence_ref="DBSeq_IPI00220803" pre="L" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00220803_PEP_3" peptide_ref="PEP_3" dBSequence_ref="DBSeq_IPI00220803" pre="L" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00397229_PEP_4" peptide_ref="PEP_4" dBSequence_ref="DBSeq_IPI00397229" pre="R" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00397230_PEP_4" peptide_ref="PEP_4" dBSequence_ref="DBSeq_IPI00397230" pre="R" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00299412_PEP_4" peptide_ref="PEP_4" dBSequence_ref="DBSeq_IPI00299412" pre="R" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00220803_PEP_5" peptide_ref="PEP_5" dBSequence_ref="DBSeq_IPI00220803" pre="K" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00008530_PEP_6" peptide_ref="PEP_6" dBSequence_ref="DBSeq_IPI00008530" pre="R" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00396373_PEP_6" peptide_ref="PEP_6" dBSequence_ref="DBSeq_IPI00396373" pre="R" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00019353_PEP_7" peptide_ref="PEP_7" dBSequence_ref="DBSeq_IPI00019353" pre="R" post="K" isDecoy="false"/>
+    <PeptideEvidence id="IPI00030363_PEP_8" peptide_ref="PEP_8" dBSequence_ref="DBSeq_IPI00030363" pre="R" post="V" isDecoy="false"/>
+    <PeptideEvidence id="IPI00062003_PEP_8" peptide_ref="PEP_8" dBSequence_ref="DBSeq_IPI00062003" pre="R" post="V" isDecoy="false"/>
+    <PeptideEvidence id="IPI00007611_PEP_9" peptide_ref="PEP_9" dBSequence_ref="DBSeq_IPI00007611" pre="R" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00007611_PEP_10" peptide_ref="PEP_10" dBSequence_ref="DBSeq_IPI00007611" pre="R" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00290583_PEP_11" peptide_ref="PEP_11" dBSequence_ref="DBSeq_IPI00290583" pre="R" post="R" isDecoy="false"/>
+    <PeptideEvidence id="IPI00384327_PEP_11" peptide_ref="PEP_11" dBSequence_ref="DBSeq_IPI00384327" pre="R" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00016014_PEP_11" peptide_ref="PEP_11" dBSequence_ref="DBSeq_IPI00016014" pre="R" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00013847_PEP_12" peptide_ref="PEP_12" dBSequence_ref="DBSeq_IPI00013847" pre="K" post="L" isDecoy="false"/>
+    <PeptideEvidence id="IPI00007940_PEP_13" peptide_ref="PEP_13" dBSequence_ref="DBSeq_IPI00007940" pre="K" post="Y" isDecoy="false"/>
+    <PeptideEvidence id="IPI00007940_PEP_14" peptide_ref="PEP_14" dBSequence_ref="DBSeq_IPI00007940" pre="K" post="Y" isDecoy="false"/>
+    <PeptideEvidence id="IPI00010845_PEP_15" peptide_ref="PEP_15" dBSequence_ref="DBSeq_IPI00010845" pre="K" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00024145_PEP_16" peptide_ref="PEP_16" dBSequence_ref="DBSeq_IPI00024145" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00216024_PEP_16" peptide_ref="PEP_16" dBSequence_ref="DBSeq_IPI00216024" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00216026_PEP_16" peptide_ref="PEP_16" dBSequence_ref="DBSeq_IPI00216026" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00216027_PEP_16" peptide_ref="PEP_16" dBSequence_ref="DBSeq_IPI00216027" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00024145_PEP_17" peptide_ref="PEP_17" dBSequence_ref="DBSeq_IPI00024145" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00216024_PEP_17" peptide_ref="PEP_17" dBSequence_ref="DBSeq_IPI00216024" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00216026_PEP_17" peptide_ref="PEP_17" dBSequence_ref="DBSeq_IPI00216026" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00216027_PEP_17" peptide_ref="PEP_17" dBSequence_ref="DBSeq_IPI00216027" pre="K" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00296259_PEP_18" peptide_ref="PEP_18" dBSequence_ref="DBSeq_IPI00296259" pre="R" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00023542_PEP_18" peptide_ref="PEP_18" dBSequence_ref="DBSeq_IPI00023542" pre="K" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00010153_PEP_19" peptide_ref="PEP_19" dBSequence_ref="DBSeq_IPI00010153" pre="R" post="N" isDecoy="false"/>
+    <PeptideEvidence id="IPI00010153_PEP_20" peptide_ref="PEP_20" dBSequence_ref="DBSeq_IPI00010153" pre="R" post="N" isDecoy="false"/>
+    <PeptideEvidence id="IPI00329030_PEP_21" peptide_ref="PEP_21" dBSequence_ref="DBSeq_IPI00329030" pre="D" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00332456_PEP_21" peptide_ref="PEP_21" dBSequence_ref="DBSeq_IPI00332456" pre="D" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00017342_PEP_22" peptide_ref="PEP_22" dBSequence_ref="DBSeq_IPI00017342" pre="K" post="E" isDecoy="false"/>
+    <PeptideEvidence id="IPI00296259_PEP_23" peptide_ref="PEP_23" dBSequence_ref="DBSeq_IPI00296259" pre="R" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00023542_PEP_23" peptide_ref="PEP_23" dBSequence_ref="DBSeq_IPI00023542" pre="K" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00028091_PEP_24" peptide_ref="PEP_24" dBSequence_ref="DBSeq_IPI00028091" pre="K" post="E" isDecoy="false"/>
+    <PeptideEvidence id="IPI00029196_PEP_25" peptide_ref="PEP_25" dBSequence_ref="DBSeq_IPI00029196" pre="K" post="Y" isDecoy="false"/>
+    <PeptideEvidence id="IPI00007940_PEP_26" peptide_ref="PEP_26" dBSequence_ref="DBSeq_IPI00007940" pre="K" post="Y" isDecoy="false"/>
+    <PeptideEvidence id="IPI00007940_PEP_27" peptide_ref="PEP_27" dBSequence_ref="DBSeq_IPI00007940" pre="K" post="Y" isDecoy="false"/>
+    <PeptideEvidence id="IPI00011363_PEP_28" peptide_ref="PEP_28" dBSequence_ref="DBSeq_IPI00011363" pre="E" post="T" isDecoy="false"/>
+    <PeptideEvidence id="IPI00102427_PEP_29" peptide_ref="PEP_29" dBSequence_ref="DBSeq_IPI00102427" pre="R" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00003918_PEP_29" peptide_ref="PEP_29" dBSequence_ref="DBSeq_IPI00003918" pre="R" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00102427_PEP_30" peptide_ref="PEP_30" dBSequence_ref="DBSeq_IPI00102427" pre="R" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00003918_PEP_30" peptide_ref="PEP_30" dBSequence_ref="DBSeq_IPI00003918" pre="R" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00154608_PEP_31" peptide_ref="PEP_31" dBSequence_ref="DBSeq_IPI00154608" pre="C" post="E" isDecoy="false"/>
+    <PeptideEvidence id="IPI00163111_PEP_32" peptide_ref="PEP_32" dBSequence_ref="DBSeq_IPI00163111" pre="P" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00031612_PEP_32" peptide_ref="PEP_32" dBSequence_ref="DBSeq_IPI00031612" pre="P" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00025879_PEP_33" peptide_ref="PEP_33" dBSequence_ref="DBSeq_IPI00025879" pre="Q" post="L" isDecoy="false"/>
+    <PeptideEvidence id="IPI00401614_PEP_34" peptide_ref="PEP_34" dBSequence_ref="DBSeq_IPI00401614" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021440_PEP_34" peptide_ref="PEP_34" dBSequence_ref="DBSeq_IPI00021440" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021439_PEP_34" peptide_ref="PEP_34" dBSequence_ref="DBSeq_IPI00021439" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00395632_PEP_35" peptide_ref="PEP_35" dBSequence_ref="DBSeq_IPI00395632" pre="F" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00013252_PEP_36" peptide_ref="PEP_36" dBSequence_ref="DBSeq_IPI00013252" pre="V" post="G" isDecoy="false"/>
+    <PeptideEvidence id="IPI00383097_PEP_37" peptide_ref="PEP_37" dBSequence_ref="DBSeq_IPI00383097" pre="Q" post="P" isDecoy="false"/>
+    <PeptideEvidence id="IPI00397526_PEP_38" peptide_ref="PEP_38" dBSequence_ref="DBSeq_IPI00397526" pre="R" post="W" isDecoy="false"/>
+    <PeptideEvidence id="IPI00401614_PEP_39" peptide_ref="PEP_39" dBSequence_ref="DBSeq_IPI00401614" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021440_PEP_39" peptide_ref="PEP_39" dBSequence_ref="DBSeq_IPI00021440" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021439_PEP_39" peptide_ref="PEP_39" dBSequence_ref="DBSeq_IPI00021439" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00376294_PEP_40" peptide_ref="PEP_40" dBSequence_ref="DBSeq_IPI00376294" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00008603_PEP_41" peptide_ref="PEP_41" dBSequence_ref="DBSeq_IPI00008603" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00025416_PEP_41" peptide_ref="PEP_41" dBSequence_ref="DBSeq_IPI00025416" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021428_PEP_41" peptide_ref="PEP_41" dBSequence_ref="DBSeq_IPI00021428" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00023006_PEP_41" peptide_ref="PEP_41" dBSequence_ref="DBSeq_IPI00023006" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00004352_PEP_42" peptide_ref="PEP_42" dBSequence_ref="DBSeq_IPI00004352" pre="S" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00169309_PEP_43" peptide_ref="PEP_43" dBSequence_ref="DBSeq_IPI00169309" pre="F" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00173355_PEP_44" peptide_ref="PEP_44" dBSequence_ref="DBSeq_IPI00173355" pre="P" post="K" isDecoy="false"/>
+    <PeptideEvidence id="IPI00386236_PEP_45" peptide_ref="PEP_45" dBSequence_ref="DBSeq_IPI00386236" pre="G" post="P" isDecoy="false"/>
+    <PeptideEvidence id="IPI00024427_PEP_46" peptide_ref="PEP_46" dBSequence_ref="DBSeq_IPI00024427" pre="A" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00219587_PEP_46" peptide_ref="PEP_46" dBSequence_ref="DBSeq_IPI00219587" pre="A" post="A" isDecoy="false"/>
+    <PeptideEvidence id="IPI00009345_PEP_47" peptide_ref="PEP_47" dBSequence_ref="DBSeq_IPI00009345" pre="R" post="Q" isDecoy="false"/>
+    <PeptideEvidence id="IPI00030466_PEP_48" peptide_ref="PEP_48" dBSequence_ref="DBSeq_IPI00030466" pre="R" post="P" isDecoy="false"/>
+    <PeptideEvidence id="IPI00397640_PEP_48" peptide_ref="PEP_48" dBSequence_ref="DBSeq_IPI00397640" pre="R" post="P" isDecoy="false"/>
+    <PeptideEvidence id="IPI00396964_PEP_49" peptide_ref="PEP_49" dBSequence_ref="DBSeq_IPI00396964" pre="K" post="M" isDecoy="false"/>
+    <PeptideEvidence id="IPI00333119_PEP_49" peptide_ref="PEP_49" dBSequence_ref="DBSeq_IPI00333119" pre="K" post="M" isDecoy="false"/>
+    <PeptideEvidence id="IPI00333381_PEP_49" peptide_ref="PEP_49" dBSequence_ref="DBSeq_IPI00333381" pre="K" post="M" isDecoy="false"/>
+    <PeptideEvidence id="IPI00337305_PEP_49" peptide_ref="PEP_49" dBSequence_ref="DBSeq_IPI00337305" pre="K" post="M" isDecoy="false"/>
+    <PeptideEvidence id="IPI00155134_PEP_50" peptide_ref="PEP_50" dBSequence_ref="DBSeq_IPI00155134" pre="R" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00097494_PEP_50" peptide_ref="PEP_50" dBSequence_ref="DBSeq_IPI00097494" pre="R" post="F" isDecoy="false"/>
+    <PeptideEvidence id="IPI00401614_PEP_51" peptide_ref="PEP_51" dBSequence_ref="DBSeq_IPI00401614" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021440_PEP_51" peptide_ref="PEP_51" dBSequence_ref="DBSeq_IPI00021440" pre="K" post="S" isDecoy="false"/>
+    <PeptideEvidence id="IPI00021439_PEP_51" peptide_ref="PEP_51" dBSequence_ref="DBSeq_IPI00021439" pre="K" post="S" isDecoy="false"/>
+  </SequenceCollection>
+  <AnalysisCollection>
+    <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP" spectrumIdentificationList_ref="SIL" activityDate="2012-06-08T12:29:36">
+      <InputSpectra spectraData_ref="SD"/>
+      <SearchDatabaseRef searchDatabase_ref="DB_1"/>
+    </SpectrumIdentification>
+    <ProteinDetection id="PDP_1" name="PDP" proteinDetectionList_ref="PDL" activityDate="2012-06-08T12:29:41">
+      <InputSpectrumIdentifications spectrumIdentificationList_ref="SIL"/>
+    </ProteinDetection>
+  </AnalysisCollection>
+  <AnalysisProtocolCollection>
+    <SpectrumIdentificationProtocol id="SIP" analysisSoftware_ref="AS_Sequest">
+      <SearchType><cvParam cvRef="MS" accession="MS:1001083" name="ms-ms search" value=""/></SearchType>
+      <AdditionalSearchParams>
+        <cvParam cvRef="MS" accession="MS:1001212" name="parent mass type average" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001255" name="fragment mass type average" value=""/>
+        <userParam name="peptide_mass_tol" value="3.000"/>
+        <userParam name="fragment_ion_tol" value="0.000"/>
+        <userParam name="ion_series" value=" 0 0 0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0"/>
+        <userParam name="max_num_differential_AA_per_mod" value="4"/>
+        <userParam name="nucleotide_reading_frame" value="0"/>
+        <userParam name="num_output_lines" value="10"/>
+        <userParam name="remove_precursor_peak" value="0"/>
+        <userParam name="ion_cutoff_percentage" value="0.0"/>
+        <userParam name="match_peak_count" value="0"/>
+        <userParam name="match_peak_allowed_error" value="1"/>
+        <userParam name="match_peak_tolerance" value="1.0"/>
+        <userParam name="protein_mass_filter" value="0 0"/>
+        <userParam name="sequence_header_filter"/>
+      </AdditionalSearchParams>
+      <ModificationParams>
+        <SearchModification fixedMod="false" massDelta="8.0" residues="C">
+          <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+        </SearchModification>
+        <SearchModification fixedMod="false" massDelta="16.0" residues="M">
+          <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+        </SearchModification>
+        <SearchModification fixedMod="true" massDelta="442.2" residues="C">
+          <cvParam cvRef="MS" accession="MS:1001460" name="unknown modification" value=""/>
+        </SearchModification>
+      </ModificationParams>
+      <Enzymes independent="false">
+        <Enzyme id="ENZ_1" cTermGain="OH" nTermGain="H" minDistance="1" semiSpecific="false">
+          <SiteRegexp>(?&lt;=[KR])(?!P)</SiteRegexp>
+          <EnzymeName><cvParam cvRef="MS" accession="MS:1001251" name="Trypsin" value=""/></EnzymeName>
+        </Enzyme>
+      </Enzymes>
+      <Threshold>
+        <cvParam cvRef="MS" accession="MS:1001494" name="no threshold" value=""/>
+      </Threshold>
+    </SpectrumIdentificationProtocol>
+    <ProteinDetectionProtocol id="PDP">
+      <AnalysisParams>
+        <cvParam cvRef="MS" accession="MS:1001251" name="Trypsin" value=""/>
+      </AnalysisParams>
+    </ProteinDetectionProtocol>
+  </AnalysisProtocolCollection>
+  <DataCollection>
+    <Inputs>
+      <SearchDatabase id="DB_1" name="ipi.HUMAN.fasta.v2.31" location="c:\Inetpub\wwwroot\dbase\ipi.HUMAN.fasta.v2.31">
+        <FileFormat><cvParam cvRef="MS" accession="MS:1001348" name="FASTA format" value=""/></FileFormat>
+        <DatabaseName></DatabaseName>
+        <cvParam cvRef="MS" accession="MS:1001073" name="database type amino acid" value=""/>
+      </SearchDatabase>
+      <SpectraData id="SD" name="raft0020" location="/cygdrive/c/Inetpub/wwwroot/raft/raft0020">
+        <SpectrumIDFormat><cvParam cvRef="MS" accession="MS:1000776" name="scan number only nativeID format" value=""/></SpectrumIDFormat>
+      </SpectraData>
+    </Inputs>
+    <AnalysisData>
+      <SpectrumIdentificationList id="SIL" numSequencesSearched="0">
+        <SpectrumIdentificationResult id="SIR_0" name="raft0020.0882.0882" spectrumID="scan=882" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_1" rank="1" chargeState="3" peptide_ref="PEP_1" experimentalMassToCharge="617.137909800213" calculatedMassToCharge="617.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00395455_PEP_1"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 14"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="42"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.991"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.287"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="357.1" type="xsd:float"/>
+            <userParam name="sprank" value="235" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_1" name="raft0020.0986.0986" spectrumID="scan=986" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_2" rank="1" chargeState="2" peptide_ref="PEP_2" experimentalMassToCharge="852.55322646688" calculatedMassToCharge="852.25322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00220803_PEP_2"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 16"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="8"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.701"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.232"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="752.7" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_2" name="raft0020.0992.0992" spectrumID="scan=992" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_3" rank="1" chargeState="2" peptide_ref="PEP_3" experimentalMassToCharge="848.20322646688" calculatedMassToCharge="848.25322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00220803_PEP_3"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 15"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="9"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.670"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.226"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="798.6" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_3" name="raft0020.0976.0976" spectrumID="scan=976" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_4" rank="1" chargeState="3" peptide_ref="PEP_4" experimentalMassToCharge="956.837909800213" calculatedMassToCharge="956.00457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00397229_PEP_4"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00397230_PEP_4"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00299412_PEP_4"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 17"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="63"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.211"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.072"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="416.7" type="xsd:float"/>
+            <userParam name="sprank" value="334" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_4" name="raft0020.1004.1004" spectrumID="scan=1004" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_5" rank="1" chargeState="3" peptide_ref="PEP_5" experimentalMassToCharge="1267.271243133547" calculatedMassToCharge="1267.50457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00220803_PEP_5"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 26"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="106"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.004"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.138"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="391.1" type="xsd:float"/>
+            <userParam name="sprank" value="8" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_5" name="raft0020.1136.1136" spectrumID="scan=1136" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_6" rank="1" chargeState="2" peptide_ref="PEP_6" experimentalMassToCharge="1283.50327646688" calculatedMassToCharge="1283.80327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00008530_PEP_6"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00396373_PEP_6"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 15"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="27"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.120"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.009"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="194.2" type="xsd:float"/>
+            <userParam name="sprank" value="62" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_6" name="raft0020.1236.1236" spectrumID="scan=1236" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_7" rank="1" chargeState="2" peptide_ref="PEP_7" experimentalMassToCharge="1335.25322646688" calculatedMassToCharge="1335.35322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00019353_PEP_7"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 18"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="22"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.553"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.300"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="307.3" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_7" name="raft0020.1254.1254" spectrumID="scan=1254" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_8" rank="1" chargeState="3" peptide_ref="PEP_8" experimentalMassToCharge="776.73797646688" calculatedMassToCharge="776.471309800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00030363_PEP_8"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00062003_PEP_8"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 24"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="48"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.663"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.079"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="595.3" type="xsd:float"/>
+            <userParam name="sprank" value="32" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_8" name="raft0020.1352.1352" spectrumID="scan=1352" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_9" rank="1" chargeState="2" peptide_ref="PEP_9" experimentalMassToCharge="1357.85322646688" calculatedMassToCharge="1356.85322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007611_PEP_9"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 20"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="22"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.022"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.340"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="362.4" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_9" name="raft0020.1354.1354" spectrumID="scan=1354" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_10" rank="1" chargeState="2" peptide_ref="PEP_10" experimentalMassToCharge="1354.10322646688" calculatedMassToCharge="1352.85322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007611_PEP_10"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 14"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="28"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.956"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.051"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="227.2" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_10" name="raft0020.1364.1364" spectrumID="scan=1364" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_11" rank="1" chargeState="3" peptide_ref="PEP_11" experimentalMassToCharge="797.671243133547" calculatedMassToCharge="798.571243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00290583_PEP_11"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00384327_PEP_11"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00016014_PEP_11"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 19"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="65"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.238"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.077"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="335.5" type="xsd:float"/>
+            <userParam name="sprank" value="272" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_11" name="raft0020.1322.1322" spectrumID="scan=1322" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_12" rank="1" chargeState="3" peptide_ref="PEP_12" experimentalMassToCharge="1032.97127646688" calculatedMassToCharge="1033.037943133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00013847_PEP_12"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 32"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="56"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.428"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.333"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="772.8" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_12" name="raft0020.1380.1380" spectrumID="scan=1380" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_13" rank="1" chargeState="3" peptide_ref="PEP_13" experimentalMassToCharge="858.87127646688" calculatedMassToCharge="858.537943133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007940_PEP_13"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="50"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.562"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.107"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="233.8" type="xsd:float"/>
+            <userParam name="sprank" value="32" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_13" name="raft0020.1386.1386" spectrumID="scan=1386" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_14" rank="1" chargeState="3" peptide_ref="PEP_14" experimentalMassToCharge="856.137943133547" calculatedMassToCharge="855.87127646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007940_PEP_14"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 26"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="46"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.673"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.126"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="500.2" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_14" name="raft0020.1382.1382" spectrumID="scan=1382" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_15" rank="1" chargeState="3" peptide_ref="PEP_15" experimentalMassToCharge="939.037909800213" calculatedMassToCharge="938.571243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00010845_PEP_15"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 25"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="43"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.882"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.188"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="766.0" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_15" name="raft0020.1342.1342" spectrumID="scan=1342" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_16" rank="1" chargeState="2" peptide_ref="PEP_9" experimentalMassToCharge="1356.15322646688" calculatedMassToCharge="1356.85322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007611_PEP_9"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 15"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="27"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.676"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.092"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="210.9" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_16" name="raft0020.1366.1366" spectrumID="scan=1366" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_17" rank="1" chargeState="3" peptide_ref="PEP_16" experimentalMassToCharge="1057.471309800213" calculatedMassToCharge="1057.63797646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00024145_PEP_16"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00216024_PEP_16"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00216026_PEP_16"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00216027_PEP_16"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 20"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="60"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.298"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.015"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="502.9" type="xsd:float"/>
+            <userParam name="sprank" value="17" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_17" name="raft0020.1368.1368" spectrumID="scan=1368" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_18" rank="1" chargeState="3" peptide_ref="PEP_17" experimentalMassToCharge="1063.53797646688" calculatedMassToCharge="1062.971309800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00024145_PEP_17"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00216024_PEP_17"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00216026_PEP_17"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00216027_PEP_17"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="58"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.342"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.212"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="656.2" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_18" name="raft0020.1412.1412" spectrumID="scan=1412" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_19" rank="1" chargeState="2" peptide_ref="PEP_18" experimentalMassToCharge="1244.45322646688" calculatedMassToCharge="1244.75322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00296259_PEP_18"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00023542_PEP_18"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 16"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="16"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.175"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.105"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="358.6" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_19" name="raft0020.1420.1420" spectrumID="scan=1420" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_20" rank="1" chargeState="3" peptide_ref="PEP_19" experimentalMassToCharge="786.33797646688" calculatedMassToCharge="786.13797646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00010153_PEP_19"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 23"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="53"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.878"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.218"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="333.1" type="xsd:float"/>
+            <userParam name="sprank" value="8" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_20" name="raft0020.1418.1418" spectrumID="scan=1418" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_21" rank="1" chargeState="3" peptide_ref="PEP_20" experimentalMassToCharge="788.93797646688" calculatedMassToCharge="788.804643133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00010153_PEP_20"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="54"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.481"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.089"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="351.8" type="xsd:float"/>
+            <userParam name="sprank" value="3" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_21" name="raft0020.1414.1414" spectrumID="scan=1414" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_22" rank="1" chargeState="3" peptide_ref="PEP_18" experimentalMassToCharge="830.371243133547" calculatedMassToCharge="830.171243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00296259_PEP_18"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00023542_PEP_18"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 24"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="40"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.417"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.043"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="546.7" type="xsd:float"/>
+            <userParam name="sprank" value="10" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_22" name="raft0020.1446.1446" spectrumID="scan=1446" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_23" rank="1" chargeState="2" peptide_ref="PEP_21" experimentalMassToCharge="1389.65327646688" calculatedMassToCharge="1389.40327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00329030_PEP_21"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00332456_PEP_21"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 12"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="30"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.344"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.117"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="197.0" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_23" name="raft0020.1484.1484" spectrumID="scan=1484" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_24" rank="1" chargeState="2" peptide_ref="PEP_22" experimentalMassToCharge="1238.15327646688" calculatedMassToCharge="1237.15327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00017342_PEP_22"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 15"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="11"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.887"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.157"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="483.3" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_24" name="raft0020.1496.1496" spectrumID="scan=1496" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_25" rank="1" chargeState="2" peptide_ref="PEP_23" experimentalMassToCharge="1240.40322646688" calculatedMassToCharge="1240.75322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00296259_PEP_23"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00023542_PEP_23"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 21"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="11"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.987"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.118"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="632.5" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_25" name="raft0020.1468.1468" spectrumID="scan=1468" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_26" rank="1" chargeState="2" peptide_ref="PEP_24" experimentalMassToCharge="1289.80322646688" calculatedMassToCharge="1289.85322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00028091_PEP_24"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 11"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="27"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.043"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.046"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="190.5" type="xsd:float"/>
+            <userParam name="sprank" value="28" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_26" name="raft0020.1464.1464" spectrumID="scan=1464" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_27" rank="1" chargeState="2" peptide_ref="PEP_25" experimentalMassToCharge="1317.25322646688" calculatedMassToCharge="1316.85322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00029196_PEP_25"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 14"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="24"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.701"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.272"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="300.5" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_27" name="raft0020.1544.1544" spectrumID="scan=1544" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_28" rank="1" chargeState="3" peptide_ref="PEP_26" experimentalMassToCharge="853.07127646688" calculatedMassToCharge="853.204609800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007940_PEP_26"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 27"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="45"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.017"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.166"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="843.8" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_28" name="raft0020.1548.1548" spectrumID="scan=1548" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_29" rank="1" chargeState="3" peptide_ref="PEP_27" experimentalMassToCharge="851.337943133547" calculatedMassToCharge="850.537943133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00007940_PEP_27"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 16"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="56"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.804"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.053"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="296.9" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_29" name="raft0020.1586.1586" spectrumID="scan=1586" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_30" rank="1" chargeState="2" peptide_ref="PEP_28" experimentalMassToCharge="1152.75327646688" calculatedMassToCharge="1152.15327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00011363_PEP_28"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 15"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="23"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.879"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.019"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="226.1" type="xsd:float"/>
+            <userParam name="sprank" value="59" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_30" name="raft0020.1598.1598" spectrumID="scan=1598" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_31" rank="1" chargeState="2" peptide_ref="PEP_29" experimentalMassToCharge="1165.85322646688" calculatedMassToCharge="1166.25322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00102427_PEP_29"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00003918_PEP_29"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 18"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="18"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.990"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.234"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="724.9" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_31" name="raft0020.1600.1600" spectrumID="scan=1600" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_32" rank="1" chargeState="2" peptide_ref="PEP_30" experimentalMassToCharge="1161.65322646688" calculatedMassToCharge="1162.25322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00102427_PEP_30"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00003918_PEP_30"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 17"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="19"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.018"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.223"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="660.7" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_32" name="raft0020.1602.1602" spectrumID="scan=1602" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_33" rank="1" chargeState="2" peptide_ref="PEP_30" experimentalMassToCharge="1163.25322646688" calculatedMassToCharge="1162.25322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00102427_PEP_30"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00003918_PEP_30"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 18"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="18"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="4.042"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.342"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="779.6" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+          <SpectrumIdentificationItem id="SII_36" rank="1" chargeState="3" peptide_ref="PEP_31" experimentalMassToCharge="1163.237909800213" calculatedMassToCharge="1163.50457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00154608_PEP_31"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 23"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="101"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.791"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.171"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="286.6" type="xsd:float"/>
+            <userParam name="sprank" value="12" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_33" name="raft0020.1596.1596" spectrumID="scan=1596" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_34" rank="1" chargeState="3" peptide_ref="PEP_29" experimentalMassToCharge="778.771243133547" calculatedMassToCharge="777.837909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00102427_PEP_29"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00003918_PEP_29"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="50"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.414"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.108"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="276.5" type="xsd:float"/>
+            <userParam name="sprank" value="56" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_34" name="raft0020.1604.1604" spectrumID="scan=1604" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_35" rank="1" chargeState="3" peptide_ref="PEP_30" experimentalMassToCharge="775.30457646688" calculatedMassToCharge="775.171243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00102427_PEP_30"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00003918_PEP_30"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 23"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="49"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.494"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.129"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="514.9" type="xsd:float"/>
+            <userParam name="sprank" value="7" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_35" name="raft0020.1740.1740" spectrumID="scan=1740" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_37" rank="1" chargeState="2" peptide_ref="PEP_32" experimentalMassToCharge="871.85327646688" calculatedMassToCharge="872.35327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00163111_PEP_32"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00031612_PEP_32"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 11"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="9"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.801"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.149"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="443.4" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_36" name="raft0020.2040.2040" spectrumID="scan=2040" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_38" rank="1" chargeState="3" peptide_ref="PEP_33" experimentalMassToCharge="998.10457646688" calculatedMassToCharge="999.00457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00025879_PEP_33"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 21"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="67"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.046"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.271"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="535.5" type="xsd:float"/>
+            <userParam name="sprank" value="67" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_37" name="raft0020.2110.2110" spectrumID="scan=2110" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_39" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="983.00457646688" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.428"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.051"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="500.7" type="xsd:float"/>
+            <userParam name="sprank" value="23" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_38" name="raft0020.2122.2122" spectrumID="scan=2122" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_40" rank="1" chargeState="3" peptide_ref="PEP_35" experimentalMassToCharge="997.60457646688" calculatedMassToCharge="996.90457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00395632_PEP_35"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 27"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="89"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.835"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.182"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="541.1" type="xsd:float"/>
+            <userParam name="sprank" value="10" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_39" name="raft0020.2150.2150" spectrumID="scan=2150" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_41" rank="1" chargeState="3" peptide_ref="PEP_36" experimentalMassToCharge="994.40457646688" calculatedMassToCharge="994.671243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00013252_PEP_36"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 28"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="68"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.000"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.189"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="1001.0" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_40" name="raft0020.2154.2154" spectrumID="scan=2154" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_42" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.70457646688" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.473"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.055"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="605.4" type="xsd:float"/>
+            <userParam name="sprank" value="10" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_41" name="raft0020.2240.2240" spectrumID="scan=2240" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_43" rank="1" chargeState="2" peptide_ref="PEP_37" experimentalMassToCharge="997.10327646688" calculatedMassToCharge="997.55327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00383097_PEP_37"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 11"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="19"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.734"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.179"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="336.3" type="xsd:float"/>
+            <userParam name="sprank" value="31" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_42" name="raft0020.2338.2338" spectrumID="scan=2338" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_44" rank="1" chargeState="2" peptide_ref="PEP_38" experimentalMassToCharge="994.50322646688" calculatedMassToCharge="995.00322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00397526_PEP_38"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 10"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="18"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.865"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.111"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="315.5" type="xsd:float"/>
+            <userParam name="sprank" value="40" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_43" name="raft0020.2372.2372" spectrumID="scan=2372" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_45" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.40457646688" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.320"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.017"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="516.3" type="xsd:float"/>
+            <userParam name="sprank" value="23" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_44" name="raft0020.2382.2382" spectrumID="scan=2382" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_46" rank="1" chargeState="3" peptide_ref="PEP_39" experimentalMassToCharge="980.40457646688" calculatedMassToCharge="979.671243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_39"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_39"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_39"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 21"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="67"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.249"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.116"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="495.4" type="xsd:float"/>
+            <userParam name="sprank" value="19" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_45" name="raft0020.2416.2416" spectrumID="scan=2416" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_47" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.471243133547" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.144"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.152"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="423.0" type="xsd:float"/>
+            <userParam name="sprank" value="9" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_46" name="raft0020.2422.2422" spectrumID="scan=2422" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_48" rank="1" chargeState="3" peptide_ref="PEP_40" experimentalMassToCharge="1000.604609800213" calculatedMassToCharge="999.704609800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00376294_PEP_40"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 24"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="64"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.874"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.214"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="655.6" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_47" name="raft0020.2562.2562" spectrumID="scan=2562" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_49" rank="1" chargeState="3" peptide_ref="PEP_41" experimentalMassToCharge="983.837909800213" calculatedMassToCharge="983.00457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00008603_PEP_41"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00025416_PEP_41"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021428_PEP_41"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00023006_PEP_41"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 25"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="63"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.791"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.018"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="684.7" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_48" name="raft0020.2606.2606" spectrumID="scan=2606" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_50" rank="1" chargeState="3" peptide_ref="PEP_42" experimentalMassToCharge="942.93797646688" calculatedMassToCharge="943.471309800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00004352_PEP_42"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 20"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="84"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.452"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.289"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="366.4" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_49" name="raft0020.2642.2642" spectrumID="scan=2642" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_51" rank="1" chargeState="3" peptide_ref="PEP_41" experimentalMassToCharge="983.637909800213" calculatedMassToCharge="983.00457646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00008603_PEP_41"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00025416_PEP_41"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021428_PEP_41"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00023006_PEP_41"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 24"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="64"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.621"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.056"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="396.2" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_50" name="raft0020.2746.2746" spectrumID="scan=2746" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_52" rank="1" chargeState="2" peptide_ref="PEP_43" experimentalMassToCharge="973.60322646688" calculatedMassToCharge="974.00322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00169309_PEP_43"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 11"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="13"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.395"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.062"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="417.9" type="xsd:float"/>
+            <userParam name="sprank" value="3" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_51" name="raft0020.2834.2834" spectrumID="scan=2834" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_53" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.837909800213" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 21"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="67"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.804"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.066"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="440.1" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_52" name="raft0020.2918.2918" spectrumID="scan=2918" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_54" rank="1" chargeState="2" peptide_ref="PEP_44" experimentalMassToCharge="982.95327646688" calculatedMassToCharge="983.40327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00173355_PEP_44"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 10"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="20"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.809"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.001"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="292.1" type="xsd:float"/>
+            <userParam name="sprank" value="29" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+          <SpectrumIdentificationItem id="SII_56" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.937909800213" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 26"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="62"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.415"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.153"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="838.7" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_53" name="raft0020.2900.2900" spectrumID="scan=2900" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_55" rank="1" chargeState="3" peptide_ref="PEP_39" experimentalMassToCharge="979.771243133547" calculatedMassToCharge="979.671243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_39"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_39"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_39"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 28"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="60"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.350"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.128"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="721.8" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_54" name="raft0020.2952.2952" spectrumID="scan=2952" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_57" rank="1" chargeState="3" peptide_ref="PEP_45" experimentalMassToCharge="994.471243133547" calculatedMassToCharge="995.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00386236_PEP_45"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 25"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="75"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.440"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.155"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="508.2" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_55" name="raft0020.3002.3002" spectrumID="scan=3002" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_58" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.237909800213" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 27"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="61"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="3.304"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.214"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="1000.1" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_56" name="raft0020.3134.3134" spectrumID="scan=3134" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_59" rank="1" chargeState="2" peptide_ref="PEP_46" experimentalMassToCharge="997.05327646688" calculatedMassToCharge="997.55327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00024427_PEP_46"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00219587_PEP_46"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 11"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="13"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.810"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.128"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="548.9" type="xsd:float"/>
+            <userParam name="sprank" value="6" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_57" name="raft0020.3128.3128" spectrumID="scan=3128" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_60" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.371243133547" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 24"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="64"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.566"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.123"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="562.9" type="xsd:float"/>
+            <userParam name="sprank" value="1" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_58" name="raft0020.3152.3152" spectrumID="scan=3152" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_61" rank="1" chargeState="3" peptide_ref="PEP_39" experimentalMassToCharge="979.671243133547" calculatedMassToCharge="979.671243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_39"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_39"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_39"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 24"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="64"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.544"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.155"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="529.8" type="xsd:float"/>
+            <userParam name="sprank" value="2" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_59" name="raft0020.3212.3212" spectrumID="scan=3212" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_62" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.40457646688" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 23"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="65"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.375"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.086"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="512.1" type="xsd:float"/>
+            <userParam name="sprank" value="5" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_60" name="raft0020.3472.3472" spectrumID="scan=3472" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_63" rank="1" chargeState="2" peptide_ref="PEP_47" experimentalMassToCharge="1002.00322646688" calculatedMassToCharge="1001.50322646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00009345_PEP_47"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 10"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="20"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.567"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.033"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="308.4" type="xsd:float"/>
+            <userParam name="sprank" value="34" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_61" name="raft0020.3622.3622" spectrumID="scan=3622" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_64" rank="1" chargeState="2" peptide_ref="PEP_48" experimentalMassToCharge="992.25327646688" calculatedMassToCharge="991.90327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00030466_PEP_48"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00397640_PEP_48"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 12"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="16"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.517"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.027"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="434.0" type="xsd:float"/>
+            <userParam name="sprank" value="24" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_62" name="raft0020.3590.3590" spectrumID="scan=3590" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_65" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.60457646688" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.838"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.206"/>
+            <userParam name="deltacnstar" value="1" type="xsd:float"/>
+            <userParam name="spscore" value="400.1" type="xsd:float"/>
+            <userParam name="sprank" value="22" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_63" name="raft0020.3842.3842" spectrumID="scan=3842" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_66" rank="1" chargeState="2" peptide_ref="PEP_49" experimentalMassToCharge="982.55327646688" calculatedMassToCharge="981.45327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00396964_PEP_49"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00333119_PEP_49"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00333381_PEP_49"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00337305_PEP_49"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 11"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="13"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.455"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.003"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="228.9" type="xsd:float"/>
+            <userParam name="sprank" value="72" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_64" name="raft0020.3914.3914" spectrumID="scan=3914" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_67" rank="1" chargeState="2" peptide_ref="PEP_50" experimentalMassToCharge="796.80327646688" calculatedMassToCharge="797.35327646688" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00155134_PEP_50"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00097494_PEP_50"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 10"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="20"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="1.313"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.180"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="301.3" type="xsd:float"/>
+            <userParam name="sprank" value="78" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_65" name="raft0020.3884.3884" spectrumID="scan=3884" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_68" rank="1" chargeState="3" peptide_ref="PEP_34" experimentalMassToCharge="982.30457646688" calculatedMassToCharge="982.337909800213" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_34"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_34"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.439"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.006"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="398.0" type="xsd:float"/>
+            <userParam name="sprank" value="16" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_66" name="raft0020.3978.3978" spectrumID="scan=3978" spectraData_ref="SD">
+          <SpectrumIdentificationItem id="SII_69" rank="1" chargeState="3" peptide_ref="PEP_51" experimentalMassToCharge="987.637909800213" calculatedMassToCharge="987.671243133547" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00401614_PEP_51"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021440_PEP_51"/>
+            <PeptideEvidenceRef peptideEvidence_ref="IPI00021439_PEP_51"/>
+            <cvParam cvRef="MS" accession="MS:1001121" name="number of matched peaks" value=" 22"/>
+            <cvParam cvRef="MS" accession="MS:1001362" name="number of unmatched peaks" value="66"/>
+            <cvParam cvRef="MS" accession="MS:1001155" name="Sequest:xcorr" value="2.469"/>
+            <cvParam cvRef="MS" accession="MS:1001156" name="Sequest:deltacn" value="0.183"/>
+            <userParam name="deltacnstar" value="0" type="xsd:float"/>
+            <userParam name="spscore" value="514.9" type="xsd:float"/>
+            <userParam name="sprank" value="5" type="xsd:float"/>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+      </SpectrumIdentificationList>
+      <ProteinDetectionList id="PDL">
+        <ProteinAmbiguityGroup id="1" name="1">
+          <ProteinDetectionHypothesis id="IPI00003918" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00003918_PEP_30">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_32"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00003918_PEP_29">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_31"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00003918_PEP_30">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_35"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00003918_PEP_29">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_34"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="5.4"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="2" name="2">
+          <ProteinDetectionHypothesis id="IPI00007611" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00007611_PEP_9">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_9"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00007611_PEP_10">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_10"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="10.3"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="3" name="3">
+          <ProteinDetectionHypothesis id="IPI00007940" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00007940_PEP_26">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_28"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00007940_PEP_14">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_14"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00007940_PEP_13">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_13"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00007940_PEP_27">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_29"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="5.5"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="4" name="4">
+          <ProteinDetectionHypothesis id="IPI00010153" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00010153_PEP_19">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_20"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00010153_PEP_20">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_21"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="14.3"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="5" name="5">
+          <ProteinDetectionHypothesis id="IPI00021439" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00021439_PEP_34">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_39"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00021439_PEP_51">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_69"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00021439_PEP_39">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_46"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="6.1"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="6" name="6">
+          <ProteinDetectionHypothesis id="IPI00023542" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00023542_PEP_18">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_19"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00023542_PEP_23">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_25"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00023542_PEP_18">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_22"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="7.3"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="7" name="7">
+          <ProteinDetectionHypothesis id="IPI00024145" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00024145_PEP_17">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_18"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00024145_PEP_16">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_17"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="6.8"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="8" name="8">
+          <ProteinDetectionHypothesis id="IPI00220803" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00220803_PEP_5">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_5"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00220803_PEP_3">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_3"/>
+            </PeptideHypothesis>
+            <PeptideHypothesis peptideEvidence_ref="IPI00220803_PEP_2">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_2"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="1.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="17.4"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="9" name="9">
+          <ProteinDetectionHypothesis id="IPI00004352" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00004352_PEP_42">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_50"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9969"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="7.5"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="10" name="10">
+          <ProteinDetectionHypothesis id="IPI00010845" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00010845_PEP_15">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_15"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9969"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="8.5"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="11" name="11">
+          <ProteinDetectionHypothesis id="IPI00013847" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00013847_PEP_12">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_12"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9969"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="4.8"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="12" name="12">
+          <ProteinDetectionHypothesis id="IPI00025879" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00025879_PEP_33">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_38"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9969"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="1.2"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="13" name="13">
+          <ProteinDetectionHypothesis id="IPI00376294" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00376294_PEP_40">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_48"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9969"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="9.4"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="14" name="14">
+          <ProteinDetectionHypothesis id="IPI00019353" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00019353_PEP_7">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_7"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9965"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="5.0"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="15" name="15">
+          <ProteinDetectionHypothesis id="IPI00029196" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00029196_PEP_25">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_27"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9965"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="2.8"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="16" name="16">
+          <ProteinDetectionHypothesis id="IPI00017342" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00017342_PEP_22">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_24"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9950"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="7.3"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="17" name="17">
+          <ProteinDetectionHypothesis id="IPI00008603" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00008603_PEP_41">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_49"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9587"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="6.1"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="18" name="18">
+          <ProteinDetectionHypothesis id="IPI00008530" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00008530_PEP_6">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_6"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.9013"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="6.9"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="19" name="19">
+          <ProteinDetectionHypothesis id="IPI00030363" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00030363_PEP_8">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_8"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.8155"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="11.7"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="20" name="20">
+          <ProteinDetectionHypothesis id="IPI00028091" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00028091_PEP_24">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_26"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.7811"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="4.8"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="21" name="21">
+          <ProteinDetectionHypothesis id="IPI00031612" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00031612_PEP_32">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_37"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.4917"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="7.6"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="22" name="22">
+          <ProteinDetectionHypothesis id="IPI00333119" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00333119_PEP_49">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_66"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.2911"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="5.7"/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="23" name="23">
+          <ProteinDetectionHypothesis id="IPI00009345" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00009345_PEP_47">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_63"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="24" name="24">
+          <ProteinDetectionHypothesis id="IPI00011363" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00011363_PEP_28">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_30"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="25" name="25">
+          <ProteinDetectionHypothesis id="IPI00013252" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00013252_PEP_36">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_41"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="26" name="26">
+          <ProteinDetectionHypothesis id="IPI00016014" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00016014_PEP_11">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_11"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="27" name="27">
+          <ProteinDetectionHypothesis id="IPI00024427" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00024427_PEP_46">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_59"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="28" name="28">
+          <ProteinDetectionHypothesis id="IPI00030466" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00030466_PEP_48">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_64"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="29" name="29">
+          <ProteinDetectionHypothesis id="IPI00097494" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00097494_PEP_50">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_67"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="30" name="30">
+          <ProteinDetectionHypothesis id="IPI00154608" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00154608_PEP_31">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_36"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="31" name="31">
+          <ProteinDetectionHypothesis id="IPI00169309" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00169309_PEP_43">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_52"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="32" name="32">
+          <ProteinDetectionHypothesis id="IPI00173355" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00173355_PEP_44">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_54"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="33" name="33">
+          <ProteinDetectionHypothesis id="IPI00299412" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00299412_PEP_4">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_4"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="34" name="34">
+          <ProteinDetectionHypothesis id="IPI00329030" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00329030_PEP_21">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_23"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="35" name="35">
+          <ProteinDetectionHypothesis id="IPI00383097" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00383097_PEP_37">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_43"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="36" name="36">
+          <ProteinDetectionHypothesis id="IPI00386236" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00386236_PEP_45">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_57"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="37" name="37">
+          <ProteinDetectionHypothesis id="IPI00395455" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00395455_PEP_1">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_1"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="38" name="38">
+          <ProteinDetectionHypothesis id="IPI00395632" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00395632_PEP_35">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_40"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+        <ProteinAmbiguityGroup id="39" name="39">
+          <ProteinDetectionHypothesis id="IPI00397526" passThreshold="false">
+            <PeptideHypothesis peptideEvidence_ref="IPI00397526_PEP_38">
+              <SpectrumIdentificationItemRef spectrumIdentificationItem_ref="SII_44"/>
+            </PeptideHypothesis>
+            <cvParam cvRef="MS" accession="MS:1001143" name="search engine specific score for peptides" value="0.0000"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+      </ProteinDetectionList>
+    </AnalysisData>
+  </DataCollection>
+</MzIdentML>

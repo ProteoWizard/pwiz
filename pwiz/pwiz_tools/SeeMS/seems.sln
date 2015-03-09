@@ -1,0 +1,60 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seems", "seems.csproj", "{2399F68B-D886-4D94-AB4B-700FE3E46849}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "..\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "..\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|x64.ActiveCfg = Debug|x64
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|x64.Build.0 = Debug|x64
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|x86.ActiveCfg = Debug|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|x86.Build.0 = Debug|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|x64.ActiveCfg = Release|x64
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|x64.Build.0 = Release|x64
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|x86.ActiveCfg = Release|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|x86.Build.0 = Release|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x64.ActiveCfg = Debug|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x64.Build.0 = Debug|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x86.ActiveCfg = Debug|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x86.Build.0 = Debug|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x64.ActiveCfg = Release|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x64.Build.0 = Release|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.ActiveCfg = Release|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.Build.0 = Release|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|x64.ActiveCfg = Debug|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|x64.Build.0 = Debug|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|x86.ActiveCfg = Debug|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|x86.Build.0 = Debug|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x64.ActiveCfg = Release|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x64.Build.0 = Release|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x86.ActiveCfg = Release|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x86.Build.0 = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.ActiveCfg = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.Build.0 = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.ActiveCfg = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.Build.0 = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.ActiveCfg = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.Build.0 = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.ActiveCfg = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {4124EFAD-D34B-4003-A878-9782BC2B214D}
+	EndGlobalSection
+EndGlobal

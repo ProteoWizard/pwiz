@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.Lib.ChromLib.Data" assembly="Skyline-daily">
+  <class name="IrtLibrary">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="PeptideModSeq"/>
+    <property name="Standard"/>
+    <property name="Irt"/>
+    <property name="TimeSource"/>
+  </class>
+  <class name="IsotopeModification">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="Name"/>
+    <property name="IsotopeLabel"/>
+    <property name="AminoAcid" />
+    <property name="Terminus" />
+    <property name="Formula" />
+    <property name="MassDiffMono" />
+    <property name="MassDiffAvg" />
+    <property name="Label13C" />
+    <property name="Label15N" />
+    <property name="Label18O" />
+    <property name="Label2H" />
+    <property name="UnimodId" />
+  </class>
+  <class name="Peptide">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Protein" name="Protein" column="ProteinId"/>
+    <property name="Sequence" />
+    <property name="StartIndex" />
+    <property name="EndIndex" />
+    <property name="PreviousAa" />
+    <property name="NextAa" />
+    <property name="CalcNeutralMass" />
+    <property name="NumMissedCleavages" />
+  </class>
+  <class name="Protein">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="Name" />
+    <property name="Description" />
+    <property name="Sequence" />
+  </class>
+  <class name="Precursor">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Peptide" name="Peptide" column="PeptideId"/>
+    <property name="IsotopeLabel" />
+    <property name="Mz" />
+    <property name="Charge" />
+    <property name="NeutralMass" />
+    <property name="ModifiedSequence" />
+    <property name="CollisionEnergy" />
+    <property name="DeclusteringPotential" />
+    <property name="TotalArea" />
+    <property name="NumTransitions" />
+    <property name="NumPoints" />
+    <property name="AverageMassErrorPPM"/>
+    <property name="Chromatogram" />
+    <many-to-one class="SampleFile" name="SampleFile" column="SampleFileId"/>
+    <bag name="Transitions">
+      <key column="PrecursorId"/>
+      <one-to-many class="Transition"/>
+    </bag>
+  </class>
+  <class name="Transition">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Precursor" name="Precursor" column="PrecursorId" />
+    <property name="Mz" />
+    <property name="Charge"/>
+    <property name="NeutralMass" />
+    <property name="NeutralLossMass" />
+    <property name="FragmentType" />
+    <property name="FragmentOrdinal" />
+    <property name="MassIndex" />
+    <property name="Area" />
+    <property name="Height"/>
+    <property name="Fwhm"/>
+    <property name="ChromatogramIndex" />
+  </class>
+  <class name="SampleFile">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="FilePath" />
+    <property name="SampleName" />
+    <property name="AcquiredTime" />
+    <property name="ModifiedTime" />
+    <property name="InstrumentIonizationType" />
+    <property name="InstrumentAnalyzer" />
+    <property name="InstrumentDetector" />
+  </class>
+  <class name="PrecursorRetentionTime">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Precursor" name="Precursor" column="PrecursorId"/>
+    <many-to-one class="SampleFile" name="SampleFile" column="SampleFileId"/>
+    <property name="RetentionTime"/>
+    <property name="StartTime"/>
+    <property name="EndTime"/>
+  </class>
+</hibernate-mapping>

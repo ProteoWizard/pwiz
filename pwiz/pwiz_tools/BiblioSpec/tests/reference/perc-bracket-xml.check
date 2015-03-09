@@ -1,0 +1,29 @@
+libLSID	numSpecs	majorVersion	minorVersion
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:perc-bracket.blib	1	1	3
+id	RefSpectraID	position	mass
+1	1	2	160.160004
+2	1	12	15.9949
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	ionMobilityHighEnergyDriftTimeOffsetMsec	retentionTime	fileID	SpecIDinFile	score	scoreType
+1	LCYVALDFEQEMATAASSSSLEK	856.39	3	LC[+160.2]YVALDFEQEM[+16.0]ATAASSSSLEK	-	-	1	296	0.0	0	0.0	81.12245	1	23406	0.0	1
+id	fileName
+1	/BiblioSpec/tests/inputs/bracket-perc.ms2
+id	scoreType
+0	UNKNOWN
+1	PERCOLATOR QVALUE
+2	PEPTIDE PROPHET SOMETHING
+3	SPECTRUM MILL
+4	IDPICKER FDR
+5	MASCOT IONS SCORE
+6	TANDEM EXPECTATION VALUE
+7	PROTEIN PILOT CONFIDENCE
+8	SCAFFOLD SOMETHING
+9	WATERS MSE PEPTIDE SCORE
+10	OMSSA EXPECTATION SCORE
+11	PROTEIN PROSPECTOR EXPECTATION SCORE
+12	SEQUEST XCORR
+13	MAXQUANT SCORE
+14	MORPHEUS SCORE
+15	MSGF+ SCORE
+16	PEAKS CONFIDENCE SCORE
+17	BYONIC SCORE
+18	PEPTIDE SHAKER CONFIDENCE

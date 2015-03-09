@@ -1,0 +1,115 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+project
+    : requirements
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
+    ;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+
+lib pwiz_data_obo
+    : # sources
+        obo.cpp
+    : # requirements
+        <library>/ext/boost//nowide
+    : # default-build
+    : # usage-requirements 
+        <library>/ext/boost//nowide
+    ;
+
+
+lib pwiz_data_common
+    : # sources
+        BinaryIndexStream.cpp
+        MemoryIndex.cpp
+        cv.cpp
+        ParamTypes.cpp
+        diff_std.cpp
+        CVTranslator.cpp
+        Unimod.cpp
+    : # requirements
+        <library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
+    : # default-build
+    : # usage-requirements
+        <library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
+    ;
+
+
+#
+# cvgen is a program that generates cv.hpp/cpp from .obo files (passed as args)
+# usage:
+#  bjam <full_path_to_this_directory>/cv.hpp (creates cv.hpp and cv.cpp in the source directory)
+#
+
+exe cvgen
+    : # sources
+        cvgen.cpp
+        pwiz_data_obo
+    : # requirements
+        <library>/ext/boost//filesystem
+    ;
+explicit cvgen ;
+
+
+install install_cvgen
+    : cvgen
+    : <location>.
+    ;
+explicit install_cvgen ;
+
+actions do_cvgen
+{
+   echo calling bjam install_cvgen
+   "$(>[1]:P)/cvgen" $(>)
+}
+
+
+import path ;
+path-constant PWIZ_DATA_COMMON_PATH : . ;
+make cv.hpp : [ path.glob $(PWIZ_DATA_COMMON_PATH) : *.obo ] : do_cvgen : <dependency>install_cvgen ;
+explicit cv.hpp ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+unit-test-if-exists BinaryIndexStreamTest : BinaryIndexStreamTest.cpp pwiz_data_common ;
+unit-test-if-exists MemoryIndexTest : MemoryIndexTest.cpp pwiz_data_common ;
+unit-test-if-exists obotest : obotest.cpp pwiz_data_obo $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
+unit-test-if-exists cvtest : cvtest.cpp pwiz_data_common ;
+unit-test-if-exists diff_std_test : diff_std_test.cpp pwiz_data_common ;
+unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp pwiz_data_common ;
+unit-test-if-exists CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_common ;
+unit-test-if-exists UnimodTest : UnimodTest.cpp pwiz_data_common ;

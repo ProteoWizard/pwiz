@@ -1,0 +1,216 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+import modules ;
+import path ;
+
+
+path-constant API_PATH : . ;
+
+
+# don't bother defining this API for non-Windows platforms.
+if [ modules.peek : NT ]
+{
+
+if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+{
+    SHELL "copy \"$(API_PATH)\\Interop.EDAL.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.EDAL.SxS.manifest\"" ;
+    SHELL "copy \"$(API_PATH)\\Interop.HSREADWRITELib.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.HSREADWRITELib.SxS.manifest\"" ;
+    RESCAN ;
+}
+
+rule vendor-api-requirements ( properties * )
+{
+    local dll-location = [ bruker-dll-location $(API_PATH) : $(properties) ] ;
+
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       $(dll-location) &&
+       [ path.exists $(dll-location)/Interop.EDAL.dll ]
+    {
+        path-constant PLATFORM_API_PATH : $(dll-location) ;
+
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
+        }
+        else
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
+        }
+
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
+        {
+            result += <define>PWIZ_READER_BRUKER_WITH_COMPASSXTRACT ;
+            result += <assembly>$(PLATFORM_API_PATH)/Interop.EDAL.dll ;
+            result += <assembly>$(PLATFORM_API_PATH)/Interop.HSREADWRITELib.dll ;
+            result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.dll ;
+            result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.Factory.dll ;
+            result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.Interfaces.dll ;
+            result += <assembly>$(PLATFORM_API_PATH)/BDal.CXt.Lc.UntU2.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Interfaces.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Interfaces.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Calibration.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.TemperatureCompensation.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Transformation.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Utilities.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/CompassXtractMS.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_4F1EA0CB-5A6A-43ED-9562-D6D873034577.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_6BB2E64A-27A0-4575-A66A-4E312C8B9AD7.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_6EEE649E-09AA-4332-8E82-8188652E8AB5.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_7F88E97F-2038-40ba-8F3A-FCA9A9719569.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_382D5134-9727-4be6-B6F8-754F577426D6.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Compressor_12451AC8-3BF1-48e1-8E66-DA05BF3852A0.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/mkl_sequential.dll ;
+            result += <manifest-dependency>$(PLATFORM_API_PATH)/Interop.EDAL.dll ;
+            result += <manifest-dependency>$(PLATFORM_API_PATH)/Interop.HSREADWRITELib.dll ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Interop.EDAL.SxS.manifest ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/Interop.HSREADWRITELib.SxS.manifest ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/FlexVariableTable.xml ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/ICRVariableTable.xml ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Constants.xml ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Constants.xml ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.BCO.Objects.xml ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/BDal.CCO.Objects.xml ;
+            result += <assembly-dependency>$(PLATFORM_API_PATH)/HSReadWrite.dll ;
+            #result += <linkflags>/CLRTHREADATTRIBUTE:STA ; # required by HSReadWrite.dll
+
+            if <address-model>64 in $(properties)
+            {
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_date_time-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll ;
+            }
+            else
+            {
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_regex-vc90-mt-1_37-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_thread-vc90-mt-1_37-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_date_time-vc90-mt-1_37-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/boost_system-vc90-mt-1_37-BDAL_20091123.dll ;
+                result += <assembly-dependency>$(PLATFORM_API_PATH)/msvcr71.dll ;
+            }
+        }
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/baf2sql_c.dll ;
+        result += <assembly-dependency>simplelogger.properties ;
+    }
+    else
+    {
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+rule dll-arch-specific-path ( properties * )
+{
+    if <address-model>64 in $(properties) { return <search>x64 ; }
+    else { return <search>x86 ; }
+}
+
+searched-lib baf2sql
+    : # sources
+    : # requirements
+        <link>shared:<define>PWIZ_DYN_LINK
+        <name>baf2sql_c
+        <conditional>@dll-arch-specific-path
+        <toolset-msvc:version>9.0:<build>no
+        <toolset-msvc:version>9.0express:<build>no
+        <toolset-msvc:version>10.0,<secure-scl>on:<build>no
+        <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
+    ;
+
+if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+{
+    lib pwiz_vendor_api_bruker
+        : # sources
+            CompassData.cpp
+            Baf2Sql.cpp
+            $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
+        : # requirements
+
+            # - when boost::thread is link=static, the exe header is tweaked to call
+            #   thread-local storage initialization routines (before main())
+            # - when a /clr object is link=static, the exe header is similarly tweaked
+            #   to initialize the CLR
+            # - these two tweaks are incompatible: either boost::thread must be link=shared,
+            #   or the CLR object must be
+            # HACK: not needed when using hacked tss_pe.cpp
+            #<link>shared
+            
+            <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+            <conditional>@vendor-api-requirements
+            <conditional>@msvc-requirement
+            <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+            <link>static # <using-clr>true and <link>shared don't mix
+            <library>baf2sql
+            <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
+        : # default-build
+        : # usage-requirements
+            <conditional>@vendor-api-requirements
+            <library>baf2sql
+            <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
+        ;
+
+    # a test utility, not a unit test
+    exe CompassDataTest
+        : CompassDataTest.cpp
+          pwiz_vendor_api_bruker
+        ;
+
+    explicit CompassDataTest ;
+}
+
+rule install-requirements ( properties * )
+{
+    local result ;
+    local dll_location = [ bruker-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
+    {
+        result += <source>simplelogger.properties ;
+        if --without-compassxtract in [ modules.peek : ARGV ]
+        {
+            result += <source>$(dll_location)/baf2sql_c.dll ;
+        }
+        else
+        {
+            for file in [ path.glob $(dll_location) : *.dll *.xml *.manifest ]
+            {
+                result += <source>$(file) ;
+            }
+        }
+    }
+    return $(result) ;
+}
+
+install install_pwiz_vendor_api_bruker
+    : : <conditional>@install-requirements
+    ;
+
+explicit install_pwiz_vendor_api_bruker ;
+
+# for application build and install
+install install_pwiz_vendor_api_bruker_stub
+    : [ path.glob $(API_PATH) : *.manifest ]
+    ;
+}

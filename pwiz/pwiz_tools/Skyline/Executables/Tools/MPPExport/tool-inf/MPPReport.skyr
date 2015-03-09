@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <revision index="1" />
+  <report name="MPP Report">
+    <table name="T1">DbTransition</table>
+    <table name="T2">DbTransitionResult</table>
+    <select>
+      <column name="T1">Precursor.Peptide.Protein.Name</column>
+	  <column name="T1">Precursor.Peptide.Protein.Description</column>
+      <column name="T1">Precursor.Peptide.Protein.PreferredName</column>
+      <column name="T1">Precursor.Peptide.Protein.Accession</column>
+      <column name="T1">Precursor.Peptide.Protein.Gene</column>
+      <column name="T1">Precursor.Peptide.Protein.Species</column>
+      <column name="T1">Precursor.Peptide.Sequence</column>
+      <column name="T1">Precursor.Mz</column>
+      <column name="T1">ProductMz</column>
+      <column name="T1">FragmentIon</column>
+    </select>
+    <group_by>
+      <column name="T2">Transition</column>
+      <column name="T2">PrecursorResult.OptStep</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name="T2">ResultFile.Replicate.Replicate</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name="T2">Area</column>
+    </cross_tab_values>
+  </report>
+</ReportSpecList>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <report name="Peak Area" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+    <column name="Precursor.Peptide.Sequence" />
+    <column name="Results!*.Value.Area" />
+    <column name="Precursor.Peptide.DocumentLocation" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.Name" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.DocumentLocation" />
+  </report>
+</ReportSpecList>

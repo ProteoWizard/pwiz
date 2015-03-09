@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="0.8">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="True" measured_rt_window="2" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications>
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Thermo TSQ Vantage" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.03" intercept="2.905" />
+          <regression_ce charge="3" slope="0.038" intercept="2.281" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" fragment_types="y" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" ion_count="3" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings>
+      <annotation name="TextAnnotation" targets="peptide" type="text" />
+    </data_settings>
+  </settings_summary>
+  <peptide_list label_name="Protein" auto_manage_children="false">
+    <note category="-1" />
+    <peptide sequence="TISE" calc_neutral_pep_mass="448.216929" num_missed_cleavages="0">
+      <annotation name="TextAnnotation">ValueOfTextAnnotation</annotation>
+      <precursor charge="2">
+        <note category="-1" />
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="347.16925" product_charge="1">
+          <note category="-1" />
+          <precursor_mz>225.11574</precursor_mz>
+          <product_mz>348.176526</product_mz>
+          <collision_energy>9.658472</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="2" calc_neutral_mass="234.085186" product_charge="1">
+          <note category="-1" />
+          <precursor_mz>225.11574</precursor_mz>
+          <product_mz>235.092462</product_mz>
+          <collision_energy>9.658472</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="NICK" calc_neutral_pep_mass="533.263168" num_missed_cleavages="0">
+      <note>ValueOfNote</note>
+      <precursor charge="2">
+        <note category="-1" />
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="419.22024" product_charge="1">
+          <note category="-1" />
+          <precursor_mz>267.63886</precursor_mz>
+          <product_mz>420.227516</product_mz>
+          <collision_energy>10.934166</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="2" calc_neutral_mass="306.136176" product_charge="1">
+          <note category="-1" />
+          <precursor_mz>267.63886</precursor_mz>
+          <product_mz>307.143452</product_mz>
+          <collision_energy>10.934166</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <StartWorkingDirectory>C:\Users\Yuval\Documents\pwiz\pwiz_tools\Skyline\Executables\Tools\MPPExport\files\</StartWorkingDirectory>
+    <StartArguments>C:\Users\Yuval\Documents\pwiz\pwiz_tools\Skyline\Executables\Tools\MPPExport\files\MPPReport.csv</StartArguments>
+  </PropertyGroup>
+</Project>

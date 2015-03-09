@@ -1,0 +1,146 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+project 
+    : requirements 
+        # hacks to allow building with <warnings>all with MSVC and boost
+        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code # (boost/numeric/ublas/lu.hpp)
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+;
+
+
+lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
+lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
+lib SHA1 : SHA1.cpp : <link>static ;
+
+# testing with precompiled header support
+#cpp-pch Std : Std.hpp : <include>. ;
+alias Std ;
+
+lib pwiz_utility_misc
+    : # sources
+        Base64.cpp 
+        IntegerSet.cpp
+        IterationListener.cpp
+        Filesystem.cpp
+        random_access_compressed_ifstream.cpp
+        SHA1Calculator.cpp
+        TabReader.cpp
+        MSIHandler.cpp
+        SHA1
+        Std
+    : # requirements
+        <warnings>all
+        <toolset>msvc:<source>automation_vector.cpp
+        <toolset>msvc:<source>COMInitializer.cpp
+        <toolset>msvc:<library>ole32
+        <toolset>msvc:<library>oleaut32
+        <library>/ext/boost//thread
+        <library>/ext/boost//iostreams
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//date_time
+        <library>/ext/boost//nowide
+        <library>/ext/zlib//z
+    : # default-build
+    : # usage-requirements
+        <library>/ext/boost//thread
+        <library>/ext/boost//iostreams
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//date_time
+        <library>/ext/boost//nowide
+        <library>/ext/zlib//z
+        <toolset>msvc:<library>ole32
+        <toolset>msvc:<library>oleaut32
+    ;
+
+
+using gd : 2.1.0 : $(GD_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) <png-src-location>$(PNG_SOURCE) <freetype-src-location>$(FREETYPE_SOURCE) ;
+
+lib pwiz_utility_image
+    : # sources
+        Image.cpp
+    : # requirements
+        <warnings>all
+        <library>/ext/gd//gd
+        <library>pwiz_utility_misc
+    : # default-build
+    : # usage-requirements
+        <library>/ext/gd//gd
+        <library>pwiz_utility_misc
+    ;
+
+
+lib pwiz_utility_vendor_reader_test_harness
+    : # sources
+        VendorReaderTestHarness.cpp
+    : # requirements
+        <library>pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <testing.semaphore>io_semaphore
+        #<testing.semaphore>mt_semaphore
+    ;
+explicit pwiz_utility_vendor_reader_test_harness ;
+
+
+unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists almost_equal_test : almost_equal_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists endian_test : endian_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists DateTimeTest : DateTimeTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists FilesystemTest : FilesystemTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc Std ;
+unit-test-if-exists SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc Std ;
+unit-test-if-exists mru_list_test : mru_list_test.cpp pwiz_utility_misc Std ;
+
+
+# explicit tests to demonstrate how CI handles stdout and stderr
+unit-test-if-exists FailUnitTest : FailTest.cpp ;
+run-if-exists FailTest.cpp : : : : FailRunTest ;
+explicit FailUnitTest FailRunTest ;
+
+
+run-if-exists TabReaderTest.cpp pwiz_utility_misc Std
+    : # args
+    : TabReaderTest.data/TabTest.tab # input-files
+    : # requirements
+    : TabReaderTest # target name
+    : # default-build
+    ;
+
+import modules ;
+if [ modules.peek : NT ]
+{
+    unit-test-if-exists automation_vector_test : automation_vector_test.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
+    unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc Std : <conditional>@msvc-requirement ;
+}
+
+exe sha1calc : sha1calc.cpp pwiz_utility_misc ;
+install bin : sha1calc : <location>. ;
+explicit bin ;
+

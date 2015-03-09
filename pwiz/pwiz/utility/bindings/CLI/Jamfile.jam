@@ -1,0 +1,268 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+import modules ;
+import path ;
+
+if [ modules.peek : NT ] {
+
+project
+    : requirements
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+        <conditional>@msvc-requirement
+        <define>UNICODE
+        <define>_UNICODE
+    : usage-requirements
+        <define>UNICODE
+        <define>_UNICODE
+    : default-build
+        release
+	;
+
+
+# The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
+# the build request. The default is link=static, so the command-line is tested for link=shared.
+local bound_lib_requirements = <link>static/<using-clr>false ;
+if link=shared in [ modules.peek : ARGV ]
+{
+    bound_lib_requirements = <link>shared/<using-clr>false ;
+}
+
+local bound_libs =
+
+        <define>PWIZ_BINDINGS_CLI_COMBINED
+
+        # msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_examples/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common/$(bound_lib_requirements)
+
+        # analysis
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/$(bound_lib_requirements)
+
+        # chemistry
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry/$(bound_lib_requirements)
+
+        # proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples/$(bound_lib_requirements)
+        
+        # tradata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/tradata//pwiz_data_tradata/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/tradata//pwiz_data_tradata_examples/$(bound_lib_requirements)
+
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage
+        #<library>/ext/boost//thread/<link>static
+    ;
+    
+local data_libs = 
+
+        <define>PWIZ_BINDINGS_CLI_COMBINED
+
+        # msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_examples/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common/$(bound_lib_requirements)
+
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage
+        #<library>/ext/boost//thread/<link>static
+    ;
+
+
+path-constant CLI_ROOT : . ;
+
+#
+# MCC 2009-06-01 NOTE:
+# I tried to modularize the CLI bindings and got pretty far but ran into a wall with native types
+# being private even between friend assemblies. The mechanism to make them public, "#pragma make_public",
+# doesn't work for templated types (like shared_ptr). Since pwiz shared_ptrs quite often as function parameters,
+# the native pwiz library would require considerable restructuring to make this modularization possible.
+#
+# There also might be other problems with the approach (passing native pointeres between managed assemblies):
+# http://www.codeguru.com/forum/showthread.php?t=425441
+#
+build-project-if-exists common ;
+build-project-if-exists chemistry ;
+build-project-if-exists msdata ;
+build-project-if-exists analysis ;
+build-project-if-exists proteome ;
+build-project-if-exists tradata ;
+
+
+# build XDC documentation from source files
+path-constant DOC_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc ;
+SHELL "if not exist \"$(DOC_PATH)\\\" mkdir \"$(DOC_PATH)\"" ;
+
+path-constant DOC_DATA_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc/data ;
+SHELL "if not exist \"$(DOC_DATA_PATH)\\\" mkdir \"$(DOC_DATA_PATH)\"" ;
+
+
+obj ParamTypes        : common/ParamTypes.cpp        : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
+obj IterationListener : common/IterationListener.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
+obj Unimod            : common/Unimod.cpp            : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
+
+obj MSDataDiff       : msdata/Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
+obj MSData           : msdata/MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData.xdc" ;
+obj MSDataFile       : msdata/MSDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataFile.xdc" ;
+obj MSDataReader     : msdata/Reader.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataReader.xdc" ;
+obj MSData_examples  : msdata/examples.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData_examples.xdc" ;
+
+obj spectrum_processing       : analysis/spectrum_processing.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/spectrum_processing.xdc" ;
+obj SpectrumList_PeakFilter   : analysis/SpectrumList_PeakFilter.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/SpectrumList_PeakFilter.xdc" ;
+
+obj chemistry              : chemistry/chemistry.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/chemistry.xdc" ;
+
+obj proteome               : proteome/proteome.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/proteome.xdc" ;
+obj ProteomeDataDiff       : proteome/Diff.cpp             : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataDiff.xdc" ;
+obj ProteomeData           : proteome/ProteomeData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData.xdc" ;
+obj ProteomeDataFile       : proteome/ProteomeDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataFile.xdc" ;
+obj ProteomeDataReader     : proteome/Reader.cpp           : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataReader.xdc" ;
+obj ProteomeData_examples  : proteome/examples.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData_examples.xdc" ;
+
+obj TraDataDiff       : tradata/Diff.cpp        : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraDataDiff.xdc" ;
+obj TraData           : tradata/TraData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraData.xdc" ;
+obj TraDataFile       : tradata/TraDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraDataFile.xdc" ;
+obj TraDataReader     : tradata/Reader.cpp      : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraDataReader.xdc" ;
+obj TraData_examples  : tradata/examples.cpp    : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraData_examples.xdc" ;
+
+
+lib pwiz_bindings_cli
+    : # sources
+        ParamTypes
+        IterationListener
+        Unimod
+        MSDataDiff
+        MSData
+        MSDataFile
+        MSDataReader
+        MSData_examples
+        spectrum_processing
+        SpectrumList_PeakFilter
+        chemistry
+        proteome
+        ProteomeDataDiff
+        ProteomeData
+        ProteomeDataFile
+        ProteomeDataReader
+        ProteomeData_examples
+        TraDataDiff
+        TraData
+        TraDataFile
+        TraDataReader
+        TraData_examples
+    : # requirements
+        $(bound_libs)
+        <link>shared
+        <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+    : # default-build
+    : # usage-requirements
+        $(bound_libs)
+    ;
+
+lib pwiz_data_cli
+    : # sources
+        ParamTypes
+        IterationListener
+        MSDataDiff
+        MSData
+        MSDataFile
+        MSDataReader
+        MSData_examples
+    : # requirements
+        $(data_libs)
+        <link>shared
+        <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+    : # default-build
+    : # usage-requirements
+        $(data_libs)
+    ;
+explicit pwiz_data_cli ;
+
+# merge XDC files to create XML documentation alongside the output assembly
+rule merge_xdc_files ( targets + : sources * : properties * )
+{
+    local target-path = [ path.make [ on $(targets[1]) return $(LOCATE) ] ] ;
+    OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
+}
+
+actions merge_xdc_files
+{
+    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
+}
+
+
+make pwiz_bindings_cli.xml
+    : # sources
+        pwiz_bindings_cli
+    : # action
+        @merge_xdc_files
+    : # requirements
+    ;
+
+
+rule merge_xdc_data_files ( targets + : sources * : properties * )
+{
+    local target-path = [ path.make [ on $(targets[1]) return $(LOCATE) ] ] ;
+    OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
+}
+
+actions merge_xdc_data_files
+{
+    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
+}
+
+
+make pwiz_data_cli.xml
+    : # sources
+        pwiz_data_cli
+    : # action
+        @merge_xdc_data_files
+    : # requirements
+    ;
+explicit pwiz_data_cli ;
+
+
+rule unit-test-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <using-clr>true <dependency>$(CLI_ROOT)//pwiz_bindings_cli <assembly>$(CLI_ROOT)//pwiz_bindings_cli ;
+    }
+    else
+    {
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+}

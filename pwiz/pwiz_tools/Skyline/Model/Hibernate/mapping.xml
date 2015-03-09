@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.Hibernate" assembly="Skyline-daily">
+  <class name="DbReplicate">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <property name="Replicate" />
+    <property name="ReplicatePath"/>
+  </class>
+  <class name="DbResultFile">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbReplicate" name="Replicate" />
+    <property name="FileName" />
+    <property name="SampleName" />
+    <property name="ModifiedTime" />
+    <property name="AcquiredTime" />
+  </class>
+  <class name="DbProtein">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <property name="Name" />
+    <property name="Description" length="100000" />
+    <property name="PreferredName"/>
+    <property name="Accession"/>
+    <property name="Gene"/>
+    <property name="Species"/>
+    <!-- <property name="WebSearchStatus"/>  We don't want this to appear in the Document Grid -->
+    <property name="Sequence" length="100000" />
+    <property name="Note" length="100000" />
+  </class>
+  <class name="DbPeptide">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbProtein" name="Protein" />
+    <property name="Sequence" />
+    <property name="ModifiedSequence" />
+    <property name="StandardType" />
+    <property name="BeginPos" />
+    <property name="EndPos" />
+    <property name="MissedCleavages" />
+    <property name="RetentionTimeCalculatorScore" />
+    <property name="PredictedRetentionTime" />
+    <property name="AverageMeasuredRetentionTime" />
+    <property name="Note" length="100000" />
+  </class>
+  <class name="DbProteinResult">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbProtein" name="Protein"/>
+    <many-to-one class="DbResultFile" name="ResultFile" />
+    <property name="ReplicateName" />
+    <property name="ReplicatePath" />
+    <property name="FileName"/>
+    <property name="SampleName"/>
+    <property name="ModifiedTime" />
+    <property name="AcquiredTime" />
+  </class>
+  <class name="DbPeptideResult">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbPeptide" name="Peptide" />
+    <many-to-one class="DbResultFile" name="ResultFile" />
+    <many-to-one class="DbProteinResult" name="ProteinResult" />
+    <property name="PeptidePeakFoundRatio"/>
+    <property name="PeptideRetentionTime" />
+    <property name="PredictedResultRetentionTime" />
+    <property name="RatioToStandard" />
+    <property name="BestReplicate" />
+  </class>
+  <class name="DbPrecursor">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbPeptide" name="Peptide" />
+    <property name="Charge" />
+    <component name="IsotopeLabelType">
+      <property name="Name"/>
+      <property name="SortOrder"/>
+    </component>
+    <property name="NeutralMass" />
+    <property name="Mz" />
+    <property name="CollisionEnergy" />
+    <property name="DeclusteringPotential" />
+    <property name="ModifiedSequence" />
+    <property name="Note" length="10000" />
+    <property name="LibraryName" />
+    <property name="LibraryType" />
+    <property name="LibraryRank" />
+    <property name="LibraryScore1" />
+    <property name="LibraryScore2" />
+    <property name="LibraryScore3" />
+    <property name="IsDecoy" />
+    <property name="DecoyMzShift" />
+  </class>
+  <class name="DbPrecursorResult">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbPrecursor" name="Precursor" />
+    <many-to-one class="DbResultFile" name="ResultFile" />
+    <many-to-one class="DbPeptideResult" name="PeptideResult" />
+    <property name="PrecursorPeakFoundRatio" />
+    <property name="BestRetentionTime" />
+    <property name="MaxFwhm"/>
+    <property name="MinStartTime"/>
+    <property name="MaxEndTime"/>
+    <property name="TotalArea"/>
+    <property name="TotalBackground"/>
+    <property name="TotalAreaRatio" />
+    <property name="RatioDotProduct" />
+    <!-- <property name="StdevAreaRatio" /> -->
+    <property name="TotalAreaNormalized" />
+    <property name="MaxHeight" />
+    <property name="AverageMassErrorPPM" />
+    <property name="CountTruncated" />
+    <property name="Identified" />
+    <property name="LibraryDotProduct" />
+    <property name="IsotopeDotProduct" />
+    <!-- <property name="TotalSignalToNoise" /> -->
+    <property name="UserSetTotal" />
+    <property name="OptStep" />
+    <property name="OptCollisionEnergy" />
+    <property name="OptDeclusteringPotential" />
+    <property name="Note" length="10000" />
+  </class>
+  <class name="DbPrecursorResultSummary">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbPrecursor" name="Precursor" />
+    <property name="ReplicatePath" />
+    <property name="MinBestRetentionTime" />
+    <property name="MaxBestRetentionTime" />
+    <property name="RangeBestRetentionTime" />
+    <property name="MeanBestRetentionTime" />
+    <property name="StdevBestRetentionTime" />
+    <property name="CvBestRetentionTime" />
+    <property name="MeanMaxFwhm" />
+    <property name="StdevMaxFwhm" />
+    <property name="CvMaxFwhm" />
+    <property name="MeanTotalArea" />
+    <property name="StdevTotalArea" />
+    <property name="CvTotalArea" />
+    <property name="MeanTotalAreaRatio" />
+    <property name="StdevTotalAreaRatio" />
+    <property name="CvTotalAreaRatio" />
+    <property name="MeanTotalAreaNormalized" />
+    <property name="StdevTotalAreaNormalized" />
+    <property name="CvTotalAreaNormalized" />
+    <property name="MeanMaxHeight" />
+    <property name="StdevMaxHeight" />
+    <property name="CvMaxHeight" />
+  </class>
+  <class name="DbTransition">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbPrecursor" name="Precursor" />
+    <property name="ProductCharge" />
+    <property name="ProductNeutralMass" />
+    <property name="ProductMz" />
+    <property name="FragmentIon" length="5"/>
+    <property name="FragmentIonType" length="1"/>
+    <property name="FragmentIonOrdinal" />
+    <property name="CleavageAa" length="1"/>
+    <property name="LossNeutralMass"/>
+    <property name="Losses" length="256"/>
+    <property name="Note" length="10000" />
+    <property name="LibraryRank" />
+    <property name="LibraryIntensity" />
+    <property name="IsotopeDistIndex" />
+    <property name="IsotopeDistRank" />
+    <property name="IsotopeDistProportion" />
+    <property name="FullScanFilterWidth" />
+    <property name="IsDecoy" />
+    <property name="ProductDecoyMzShift" />
+  </class>
+  <class name="DbTransitionResult">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbTransition" name="Transition" />
+    <many-to-one class="DbResultFile" name="ResultFile" />
+    <many-to-one class="DbPrecursorResult" name="PrecursorResult"/>
+    <property name="RetentionTime" />
+    <property name="Fwhm" />
+    <property name="FwhmDegenerate" />
+    <property name="StartTime" />
+    <property name="EndTime" />
+    <property name="Area" />
+    <property name="Background" />
+    <property name="AreaRatio" />
+    <property name="AreaNormalized" />
+    <!--    <property name="SignalToNoise" /> -->
+    <property name="Height" />
+    <property name="MassErrorPPM" />
+    <property name="Truncated" />
+    <property name="PeakRank" />
+    <property name="UserSetPeak" />
+    <property name="Note" length="10000" />
+  </class>
+  <class name="DbTransitionResultSummary">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbTransition" name="Transition" />
+    <many-to-one class="DbPrecursorResultSummary" name="PrecursorResultSummary" />
+    <property name="ReplicatePath" />
+    <property name="MinRetentionTime" />
+    <property name="MaxRetentionTime" />
+    <property name="RangeRetentionTime" />
+    <property name="MeanRetentionTime" />
+    <property name="StdevRetentionTime" />
+    <property name="CvRetentionTime" />
+    <property name="MeanFwhm" />
+    <property name="StdevFwhm" />
+    <property name="CvFwhm" />
+    <property name="MeanArea" />
+    <property name="StdevArea" />
+    <property name="CvArea" />
+    <property name="MeanAreaRatio" />
+    <property name="StdevAreaRatio" />
+    <property name="CvAreaRatio" />
+    <property name="MeanAreaNormalized" />
+    <property name="StdevAreaNormalized" />
+    <property name="CvAreaNormalized" />
+  </class>
+</hibernate-mapping>

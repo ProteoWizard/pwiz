@@ -1,0 +1,284 @@
+#
+# $Id$
+#
+#
+# Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+#                  MacCoss Lab, Department of Genome Sciences, UW
+#
+# Copyright 2009 University of Washington - Seattle, WA
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+##
+
+
+import modules ;
+if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+{
+    import path feature ;
+    path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
+    path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
+    path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
+
+    # read these from global module
+    TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
+    TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
+
+    rule build-properties ( targets + : sources * : properties * )
+    {
+        if <variant>debug in $(properties) ||
+           ( ( <debug-symbols>on in $(properties) ) && ( ! <variant>release in $(properties) ) )
+        {
+            CONFIGURATION on $(<[1]) = "Debug" ;
+        }
+        else
+        {
+            CONFIGURATION on $(<[1]) = "Release" ;
+        }
+
+        local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    }
+    
+    rule do_skyline_build ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    rule do_Inspect_Code ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    } 
+
+    # we're loosely coupled to ProteoWizard, just grabbing whatever was built last time
+    # this lets us run a debug skyline with a release proteowizard DLL (pwiz is pretty slow in debug build)
+    # but we have to explicitly manage some pwiz files that get copied around as part of the IDE dependency tree
+    # but not updated since msbuild doesn't have a sense of their sources
+
+    actions freshen_proteowizard
+    {
+        echo Freshening ProteoWizard DLLs...
+        copy /Y "$(PWIZ_WRAPPER_PATH)\obj\$(PLATFORM)\pwiz_data_cli.*" "$(SKYLINE_PATH)\TestUtil\bin\$(PLATFORM)\$(CONFIGURATION)\*"
+        copy /Y "$(PWIZ_WRAPPER_PATH)\obj\$(PLATFORM)\pwiz_data_cli.*" "$(PWIZ_WRAPPER_PATH)\bin\$(PLATFORM)\$(CONFIGURATION)\*"
+    }
+
+
+    actions do_skyline_build
+    {
+        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+
+        echo Building Crawdad in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/../Shared/Crawdad/CrawdadSolution.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Crawdad/obj/$(PLATFORM) /t:Crawdad /nologo /verbosity:minimal        
+
+        echo Building Skyline in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
+        echo Building Skyline Test in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
+        echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
+        echo Building Skyline TestConnected in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /nologo /verbosity:minimal
+        echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
+        echo Building Skyline TestTutorial in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestTutorial /nologo /verbosity:minimal        
+        echo Building Skyline TestPerf in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestPerf /nologo /verbosity:minimal
+        echo Building Skyline Test Runner in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestRunner /nologo /verbosity:minimal        
+        echo Building SkylineTester in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineTester /nologo /verbosity:minimal        
+        echo Building SkylineNightly in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineNightly /nologo /verbosity:minimal        
+    }
+
+    actions do_Inspect_Code
+    {
+        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        echo Running Code inspections
+        echo $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
+        $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
+    }
+
+    rule do_skyline_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test
+    {
+        echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
+        set name="Skyline unit test"
+        $(TEST_PRECOMMAND)
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll
+        set status=%ERRORLEVEL%
+        $(TEST_POSTCOMMAND)
+    }
+    
+    rule do_skyline_test_a ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_a
+    {
+        echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
+        set name="Skyline unit test A"
+        $(TEST_PRECOMMAND)
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll
+        set status=%ERRORLEVEL%
+        $(TEST_POSTCOMMAND)
+    }
+    
+    rule do_skyline_test_functional ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_functional
+    {
+        echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
+        set name="Skyline functional test"
+        $(TEST_PRECOMMAND)
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll
+        set status=%ERRORLEVEL%
+        $(TEST_POSTCOMMAND)
+    }
+    
+    rule do_skyline_test_passed ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_passed
+    {
+        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineTester.zip
+        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineNightly.zip
+    }
+    
+    rule build-location ( properties * )
+    {
+        local result ;
+        # don't override the location when it's already set
+        if ! <location> in $(properties:G)
+        {
+            if <variant>debug in $(properties) ||
+               ( ( <debug-symbols>on in $(properties) ) && ( ! <variant>release in $(properties) ) )
+            {
+                result = <location>$(SKYLINE_PATH)/bin/$(PLATFORM)/Debug ;
+            }
+            else
+            {
+                result = <location>$(SKYLINE_PATH)/bin/$(PLATFORM)/Release ;
+            }
+            return $(result) ;
+        }
+        else
+        {
+            return $(properties) ;
+        }
+    }
+
+
+    make Skyline.exe
+        : # sources
+        : # actions
+            @do_skyline_build
+            @freshen_proteowizard
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <conditional>@build-location
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//install_msparser/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+    ;
+
+    make InspectCode
+        : # sources
+        : # actions
+            @do_Inspect_Code
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <conditional>@build-location
+            <dependency>Skyline.exe
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//install_msparser/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+    ;
+        
+    
+        
+    make Test.dll
+        : # sources
+        : # actions
+            @do_skyline_test
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+    
+    make TestA.dll
+        : # sources
+        : # actions
+            @do_skyline_test_a
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+
+    make TestFunctional.dll
+        : # sources
+        : # actions
+            @do_skyline_test_functional
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+        
+    make Skyline.passed
+        : # sources
+        : # actions
+            @do_skyline_test_passed
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+            <dependency>Test.dll
+            <dependency>TestA.dll
+            <dependency>TestFunctional.dll
+            # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
+        ;
+        explicit InspectCode ;
+}

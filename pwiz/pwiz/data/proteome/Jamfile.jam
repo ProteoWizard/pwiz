@@ -1,0 +1,94 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+project
+    : requirements
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
+    ;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+
+lib pwiz_data_proteome_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
+lib pwiz_data_proteome
+    : # sources
+        AminoAcid.cpp
+        Peptide.cpp
+        Modification.cpp
+        Digestion.cpp
+        ProteomeData.cpp
+        Diff.cpp
+        Reader.cpp
+        Serializer_FASTA.cpp
+        Reader_FASTA.cpp
+        DefaultReaderList.cpp
+        ProteomeDataFile.cpp
+        ProteinListCache.cpp
+    : # requirements
+        <library>pwiz_data_proteome_version
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//thread
+        <library>/ext/zlib//z
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_data_proteome_version
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//thread
+        <library>/ext/zlib//z
+    ;
+
+
+lib pwiz_data_proteome_examples
+    :   examples.cpp
+    :   <library>pwiz_data_proteome
+    :
+    :	<library>pwiz_data_proteome
+    ;
+
+
+unit-test-if-exists AminoAcidTest : AminoAcidTest.cpp pwiz_data_proteome ;
+unit-test-if-exists PeptideTest : PeptideTest.cpp pwiz_data_proteome ;
+unit-test-if-exists DigestionTest : DigestionTest.cpp pwiz_data_proteome ;
+unit-test-if-exists ProteomeDataTest : ProteomeDataTest.cpp pwiz_data_proteome ;
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_proteome ;
+unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_proteome ;
+unit-test-if-exists Serializer_FASTA_Test : Serializer_FASTA_Test.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
+unit-test-if-exists ProteomeDataFileTest : ProteomeDataFileTest.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
+unit-test-if-exists ProteinListWrapperTest : ProteinListWrapperTest.cpp pwiz_data_proteome ;
+unit-test-if-exists ProteinListCacheTest : ProteinListCacheTest.cpp pwiz_data_proteome ;

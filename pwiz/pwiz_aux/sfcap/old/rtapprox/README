@@ -1,0 +1,22 @@
+====================
+rtapprox README FILE
+====================
+
+rtapprox is a sub-project of the ProteoWizard tool set the grew out of
+Rob Grothe's attempt to estimate the retention time of peptides coming
+off of a column with a linear least squares of their amino acid
+composition.
+
+There are three executables build by the make/Jamfile. 
+
+    rtapprox :  Reads in a pepxml file and calculates a linear least 
+                squares fit of the peptide composition to rt (retention 
+                time).
+
+    tabapprox : Roughly the same as rtapprox, but reads in a tab
+                delimited file.
+
+    predict : (unfinished) Paritions the rt space and treats each
+                partition linearly.
+
+The project is currently moth-balled.
