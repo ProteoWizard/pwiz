@@ -1696,6 +1696,9 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
   <data name="label25.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="label25.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+  </data>
   <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
     <value>264, 41</value>
   </data>
