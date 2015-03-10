@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_MZRefinerTest.cpp 4129 2012-11-20 00:05:37Z chambm $
+// $Id$
 //
 //
 // Original author: Bryson Gibbons <bryson.gibbons@pnnl.gov>
