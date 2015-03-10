@@ -89,14 +89,14 @@ class PWIZ_API_DECL CVConditionalFilter
     CVConditionalFilter(CVID software, string cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step = 0, int maxStep = 0);
     void updateFilter(CVID software, string cvTerm, double maxValue, double minValue, bool useMax, bool useMin, double step = 0, int maxStep = 0);
     void updateFilter(CVID software, string cvTerm, string rangeSet, double step = 0.0, int maxStep = 0);
-    bool passesFilter(identdata::SpectrumIdentificationItemPtr& sii, double& scoreVal);
-    bool isBetter(double lScoreVal, double rScoreVal);
-    bool isBetter(ScanData& lData, ScanData& rData);
+    bool passesFilter(identdata::SpectrumIdentificationItemPtr& sii, double& scoreVal) const;
+    bool isBetter(double lScoreVal, double rScoreVal) const;
+    bool isBetter(ScanData& lData, ScanData& rData) const;
     bool adjustFilterByStep();
-    cv::CVID getCVID() { return cvid; }
-    double getMax() { return max; }
-    double getMin() { return min; }
-    bool getAnd() { return isAnd; }
+    cv::CVID getCVID() const { return cvid; }
+    double getMax() const { return max; }
+    double getMin() const { return min; }
+    bool getAnd() const { return isAnd; }
     string getScoreName() { return scoreName; }
     string getThreshold() { return threshold; }
 
@@ -124,7 +124,7 @@ struct sortFilter
 {
     CVConditionalFilterPtr filter;
     sortFilter(CVConditionalFilterPtr& f) : filter(f) {};
-    bool operator() (ScanData& lData, ScanData& rData)
+    bool operator() (ScanData& lData, ScanData& rData) const
     {
         return filter->isBetter(lData, rData);
     }
@@ -135,6 +135,8 @@ class AdjustmentObject
 {
     public:
     AdjustmentObject(double gShift = 0.0, double gStDev = 0.0, double gMAD = 0.0) : globalShift(gShift), globalStDev(gStDev), globalMAD(gMAD) {}
+    virtual ~AdjustmentObject() {}
+
     string getAdjustmentType() const    { return adjustmentType; }
     string getPrettyAdjustment() const  { return prettyAdjustment; }
     double getStDev() const             { return stdev; }
@@ -1203,7 +1205,7 @@ PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTer
 /*****************************************************************************************************************
 * Evaluate if the spectrum identification item passes the filter
 *****************************************************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::passesFilter(SpectrumIdentificationItemPtr& sii, double& scoreVal)
+PWIZ_API_DECL bool CVConditionalFilter::passesFilter(SpectrumIdentificationItemPtr& sii, double& scoreVal) const
 {
     bool found = false;
     double value = 0;
@@ -1259,7 +1261,7 @@ PWIZ_API_DECL bool CVConditionalFilter::passesFilter(SpectrumIdentificationItemP
 * A function to allow us to sort a set of values from best to worst,
 *   depending on the threshold values definition of "better"
 ***********************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::isBetter(double lScoreVal, double rScoreVal)
+PWIZ_API_DECL bool CVConditionalFilter::isBetter(double lScoreVal, double rScoreVal) const
 {
     if (!isAnd && isMin)
     {
@@ -1292,7 +1294,7 @@ PWIZ_API_DECL bool CVConditionalFilter::isBetter(double lScoreVal, double rScore
 * Comparison function for sorting by score.
 * Should probably change to prefer rank first, and the sort identical rank by score.
 ***********************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::isBetter(ScanData& lData, ScanData& rData)
+PWIZ_API_DECL bool CVConditionalFilter::isBetter(ScanData& lData, ScanData& rData) const
 {
     // If rank == 0, probably PMF data, rely on the score used; otherwise, sort by rank unless it is equal
     if (lData.rank != 0 && rData.rank != 0 && lData.rank != rData.rank)

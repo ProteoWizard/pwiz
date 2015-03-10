@@ -674,7 +674,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
         {
             // Add to ident file list, and check for existence?
             // Remove quotes that may be used to encapsulate a path with spaces
-            if ((nextStr[0] == '\'' || nextStr[0] == '\"') && (nextStr.back() == '\'' || nextStr.back() == '\"'))
+            if ((bal::starts_with(nextStr, "\'") && bal::ends_with(nextStr, "\'")) || (bal::starts_with(nextStr, "\"") && bal::ends_with(nextStr, "\"")))
             {
                 // Remove the first and last characters
                 nextStr = nextStr.substr(1, nextStr.length() - 2);
