@@ -1389,7 +1389,7 @@ void SpectrumList_MZRefiner::Impl::configureShift(const MSData& msd, string iden
 {
     identFilePath = identFile;
     bad = 0;
-    adjust = NULL;
+    adjust.reset();
     // Will initialize the filter, using the software cv if necessary
     processIdentData(msd, filterConfigData, ilr);
     // Will only read the MSData when the identfile did not contain the scan start time(or corresponding cvParam) for at least one result
@@ -1676,7 +1676,7 @@ void SpectrumList_MZRefiner::Impl::getScanTimesFromMSData(const MSData& msd, pwi
     for (size_t i = 0; i < sl->size() && dataIndex < data.size(); ++i)
     {
         SpectrumPtr s = sl->spectrum(i, true);
-        if (s == NULL)
+        if (!s)
         {
             continue;
         }
@@ -1711,7 +1711,7 @@ void SpectrumList_MZRefiner::Impl::getScanTimesFromMSData(const MSData& msd, pwi
 *******************************************************************************/
 void SpectrumList_MZRefiner::Impl::shiftCalculator()
 {
-    adjust = NULL;
+    adjust.reset();
     // TODO: log output at a high detail level...
     int widths = 50;
     cout << std::left;
@@ -1786,7 +1786,7 @@ void SpectrumList_MZRefiner::Impl::shiftCalculator()
         }
     }
     // If we didn't/couldn't choose a dependent shift, do a global shift
-    if (this->adjust == NULL)
+    if (!this->adjust)
     {
         chosen = "Chose global shift...";
         this->adjust = globalShift;
@@ -1863,7 +1863,7 @@ PWIZ_API_DECL SpectrumList_MZRefiner::SpectrumList_MZRefiner(
     impl_->configureShift(msd, identFilePath, filterConfigData, ilr);
 
     // Exit if the shift calculations did not succeed for some reason
-    if (impl_->data.size() == 0 || impl_->adjust == NULL)
+    if (impl_->data.size() == 0 || !impl_->adjust)
     {
         // Throw exception: Could not shift - Reason unknown (specific reasons are thrown where they occur)
         throw runtime_error("[mzRefiner::ctor] Shift calculation failed.");
@@ -1897,7 +1897,7 @@ PWIZ_API_DECL SpectrumList_MZRefiner::SpectrumList_MZRefiner(
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_MZRefiner::spectrum(size_t index, bool getBinaryData) const
 {
-    if (impl_->adjust == NULL)
+    if (!impl_->adjust)
     {
         // This shouldn't be hit with the exceptions being thrown elsewhere; still here for safety
         // May be useful in the future with chained filters and a user option to continue with failed filters.
