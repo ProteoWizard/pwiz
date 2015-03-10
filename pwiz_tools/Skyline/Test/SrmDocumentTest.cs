@@ -223,6 +223,8 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExportImportTest()
         {
+            TestSmallMolecules = false; // We wouldn't expect a non-peptide mass list to work here.
+
             int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
