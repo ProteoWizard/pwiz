@@ -91,7 +91,7 @@ class PWIZ_API_DECL CVConditionalFilter
     void updateFilter(CVID software, string cvTerm, string rangeSet, double step = 0.0, int maxStep = 0);
     bool passesFilter(identdata::SpectrumIdentificationItemPtr& sii, double& scoreVal) const;
     bool isBetter(double lScoreVal, double rScoreVal) const;
-    bool isBetter(ScanData& lData, ScanData& rData) const;
+    bool isBetter(const ScanData& lData, const ScanData& rData) const;
     bool adjustFilterByStep();
     cv::CVID getCVID() const { return cvid; }
     double getMax() const { return max; }
@@ -124,7 +124,7 @@ struct sortFilter
 {
     CVConditionalFilterPtr filter;
     sortFilter(CVConditionalFilterPtr& f) : filter(f) {};
-    bool operator() (ScanData& lData, ScanData& rData) const
+    bool operator() (const ScanData& lData, const ScanData& rData) const
     {
         return filter->isBetter(lData, rData);
     }
@@ -1294,7 +1294,7 @@ PWIZ_API_DECL bool CVConditionalFilter::isBetter(double lScoreVal, double rScore
 * Comparison function for sorting by score.
 * Should probably change to prefer rank first, and the sort identical rank by score.
 ***********************************************************************************/
-PWIZ_API_DECL bool CVConditionalFilter::isBetter(ScanData& lData, ScanData& rData) const
+PWIZ_API_DECL bool CVConditionalFilter::isBetter(const ScanData& lData, const ScanData& rData) const
 {
     // If rank == 0, probably PMF data, rely on the score used; otherwise, sort by rank unless it is equal
     if (lData.rank != 0 && rData.rank != 0 && lData.rank != rData.rank)
