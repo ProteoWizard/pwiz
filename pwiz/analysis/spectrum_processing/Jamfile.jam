@@ -40,6 +40,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_ChargeStateCalculator.cpp
         SpectrumList_ChargeFromIsotope.cpp
         SpectrumList_MZWindow.cpp
+        SpectrumList_MZRefiner.cpp
         SpectrumList_MetadataFixer.cpp
         SpectrumList_TitleMaker.cpp
 		SpectrumList_PrecursorRefine.cpp
@@ -52,6 +53,7 @@ lib pwiz_analysis_spectrum_processing
         ThresholdFilter.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
+        <library>../../data/identdata//pwiz_data_identdata
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
@@ -62,6 +64,7 @@ lib pwiz_analysis_spectrum_processing
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
+        <library>../../data/identdata//pwiz_data_identdata
         <library>../peakdetect//pwiz_analysis_peakdetect
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
@@ -112,6 +115,14 @@ run-if-exists SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_proces
     : SpectrumList_PrecursorRecalculatorTest.data/PrecursorRefineOrbi.mzML # input-files
     : # requirements
     : SpectrumList_PrecursorRefineTest # target name
+    : # default-build
+    ;
+
+run-if-exists SpectrumList_MZRefinerTest.cpp pwiz_analysis_spectrum_processing 
+    : # args
+    : SpectrumList_MZRefinerTest.data/JD_06232014_sample4_C.mzML SpectrumList_MZRefinerTest.data/JD_06232014_sample4_C.mzid # input-files
+    : # requirements
+    : SpectrumList_MZRefinerTest # target name
     : # default-build
     ;
 

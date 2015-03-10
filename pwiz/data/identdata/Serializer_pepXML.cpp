@@ -1353,29 +1353,40 @@ struct HandlerSearchSummary : public SAXParser::Handler
             getAttribute(attributes, "aminoacid", aminoacid);
             bal::to_lower(getAttribute(attributes, "variable", variable));
             bal::to_lower(getAttribute(attributes, "peptide_terminus", peptideTerminus));
-
-            SearchModificationPtr searchModification(new SearchModification);
-            getAttribute(attributes, "massdiff", searchModification->massDelta);
-            if (!aminoacid.empty())
-                searchModification->residues.push_back(aminoacid[0]);
-            if (variable == "y" || variable == "n")
-                searchModification->fixedMod = (variable == "n");
-            else
-                searchModification->fixedMod = lexical_cast<bool>(variable);
-
-            if (bal::icontains(peptideTerminus, "n"))
-                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
-            else if (bal::icontains(peptideTerminus, "c"))
-                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
-
-            _sip->modificationParams.push_back(searchModification);
-
-            // in the case of either terminus, duplicate the mod with C terminal specificity
-            if (peptideTerminus == "nc")
+            
+            try
             {
-                searchModification.reset(new SearchModification(*searchModification));
-                searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
+                AminoAcid::Info::record(aminoacid[0]); // make sure the AA is supported by pwiz (ignore it if it throws)
+
+                SearchModificationPtr searchModification(new SearchModification);
+                getAttribute(attributes, "massdiff", searchModification->massDelta);
+                if (!aminoacid.empty())
+                    searchModification->residues.push_back(aminoacid[0]);
+                if (variable == "y" || variable == "n")
+                    searchModification->fixedMod = (variable == "n");
+                else
+                    searchModification->fixedMod = lexical_cast<bool>(variable);
+
+                if (bal::icontains(peptideTerminus, "n"))
+                    searchModification->specificityRules.cvid = MS_modification_specificity_peptide_N_term;
+                else if (bal::icontains(peptideTerminus, "c"))
+                    searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
+
                 _sip->modificationParams.push_back(searchModification);
+
+                // in the case of either terminus, duplicate the mod with C terminal specificity
+                if (peptideTerminus == "nc")
+                {
+                    searchModification.reset(new SearchModification(*searchModification));
+                    searchModification->specificityRules.cvid = MS_modification_specificity_peptide_C_term;
+                    _sip->modificationParams.push_back(searchModification);
+                }
+            }
+            catch (runtime_error& e)
+            {
+                // ignore unsupported AA
+                if (!bal::icontains(e.what(), "Invalid amino acid symbol"))
+                    throw e;
             }
         }
         else if (name == "terminal_modification")

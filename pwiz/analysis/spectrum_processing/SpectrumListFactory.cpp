@@ -35,6 +35,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRefine.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_MZRefiner.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
@@ -42,6 +43,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
@@ -650,6 +652,114 @@ UsageInfo usage_precursorRecalculation = {"","This filter recalculates the precu
     "although it does not use any 3rd party (vendor DLL) code.  Since the time the code was written, Thermo has since fixed "
     "up its own estimation in response, so it's less critical than it used to be (though can still be useful)."};
 
+SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    // Example string:
+    // "mzRefiner input1.pepXML input2.mzid msLevels=1- thresholdScore=specEValue thresholdValue=1e-10 thresholdStep=10 maxSteps=3�
+
+    istringstream parser(arg);
+    // expand the filenames by globbing to handle wildcards
+    vector<bfs::path> globbedFilenames;
+    string thresholdCV = "MS-GF:SpecEValue"; // Remove this default?
+    string thresholdSet = "-1e-10";          // Remove this default?
+    double thresholdStep = 0.0;
+    int maxSteps = 0;
+    string msLevelSets = "1-";
+
+    string nextStr;
+    while (parser >> nextStr)
+    {
+
+        if (nextStr.rfind('=') == string::npos)
+        {
+            // Add to ident file list, and check for existence?
+            // Remove quotes that may be used to encapsulate a path with spaces
+            if ((nextStr[0] == '\'' || nextStr[0] == '\"') && (nextStr.back() == '\'' || nextStr.back() == '\"'))
+            {
+                // Remove the first and last characters
+                nextStr = nextStr.substr(1, nextStr.length() - 2);
+            }
+            // expand the filenames by globbing to handle wildcards
+            if (expand_pathmask(bfs::path(nextStr), globbedFilenames) == 0)
+                cout << "[mzRefiner] no files found matching \"" << nextStr << "\"" << endl;
+        }
+        else
+        {
+            string keyword = nextStr.substr(0, nextStr.rfind('='));
+            string paramVal = nextStr.substr(nextStr.rfind('=') + 1);
+            if (keyword == "msLevels")
+            {
+                // use an IntegerSet
+                msLevelSets = paramVal;
+            }
+            else if (keyword == "thresholdScore")
+            {
+                thresholdCV = paramVal;
+            }
+            else if (keyword == "thresholdValue")
+            {
+                thresholdSet = paramVal;
+            }
+            else if (keyword == "thresholdStep")
+            {
+                thresholdStep = boost::lexical_cast<double>(paramVal);
+            }
+            else if (keyword == "maxSteps")
+            {
+                maxSteps = boost::lexical_cast<int>(paramVal);
+            }
+        }
+    }
+    // expand the filenames by globbing to handle wildcards
+    vector<string> files;
+    BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
+        files.push_back(filename.string());
+
+    // Currently this is no used. Do we need to use it?
+    IntegerSet msLevelsToRefine;
+    msLevelsToRefine.parse(msLevelSets);
+
+    string identFilePath = "";
+
+    vector<string> possibleDataFiles;
+    string lastSourceFile;
+
+    BOOST_FOREACH(const SourceFilePtr& sf, msd.fileDescription.sourceFilePtrs)
+    {
+        lastSourceFile = sf->name;
+    }
+
+    lastSourceFile = lastSourceFile.substr(0, lastSourceFile.rfind(".gz")); // remove a ".gz", if there is one
+    lastSourceFile = lastSourceFile.substr(0, lastSourceFile.rfind(".")); // remove the extension
+    possibleDataFiles.push_back(lastSourceFile);
+    possibleDataFiles.push_back(msd.run.id);
+
+    // Search for a file that matches the MSData file name, then search for one matching the dataset if not found.
+    // Load identfiles, and look at mzid.DataCollection.Inputs.SpectraData.name?
+    BOOST_FOREACH(string &dataFile, possibleDataFiles)
+    {
+        BOOST_FOREACH(string &file, files)
+        {
+            if (file.find(dataFile) != string::npos)
+            {
+                identFilePath = file;
+                break;
+            }
+        }
+        if (identFilePath != "")
+        {
+            break;
+        }
+    }
+
+    return SpectrumListPtr(new SpectrumList_MZRefiner(msd, identFilePath, thresholdCV, thresholdSet, thresholdStep, maxSteps));
+}
+UsageInfo usage_mzRefine = { "mzRefiner input1.pepXML input2.mzid [msLevels=<1->] [thresholdScore=<CV_Score_Name>] [thresholdValue=<floatset>] [thresholdStep=<float>] [maxSteps=<count>]", "This filter recalculates the m/z and charges, adjusting precursors for MS2 spectra and spectra masses for MS1 spectra. "
+"It uses an ident file with a threshold field and value to calculate the error and will then choose a shifting mechanism to correct masses throughout the file. "
+"It only works on orbitrap, FT, and TOF data. It is designed to work on mzML files created by msconvert from a single dataset (single run), and with an identification file created using that mzML file. "
+"It does not use any 3rd party (vendor DLL) code. "
+"Recommended Scores and thresholds: MS-GF:SpecEValue,-1e-10 (<1e-10); MyriMatch:MVH,35- (>35); xcorr,3- (>3)" };
+
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     return SpectrumListPtr(new SpectrumList_PrecursorRefine(msd));
@@ -1249,6 +1359,7 @@ JumpTableEntry jumpTable_[] =
     {"msLevel", usage_msLevel, filterCreator_msLevel},
     {"chargeState", usage_chargeState, filterCreator_chargeState},
     {"precursorRecalculation", usage_precursorRecalculation, filterCreator_precursorRecalculation},
+    {"mzRefiner", usage_mzRefine, filterCreator_mzRefine},
     {"precursorRefine", usage_precursorRefine, filterCreator_precursorRefine},
     {"peakPicking", usage_nativeCentroid, filterCreator_nativeCentroid},
     {"scanNumber", usage_scanNumber, filterCreator_scanNumber},
