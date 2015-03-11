@@ -126,6 +126,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SystemUtil\FormUtil.cs" />
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
     <Compile Include="SystemUtil\LocalizationHelper.cs" />
