@@ -1026,7 +1026,7 @@ PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTer
     }
     else if (!useMin)
     {
-        minValue = numeric_limits<double>::lowest(); //Get the negative equivalent of the max
+        minValue = -maxValue;
         threshold = "<= " + lexical_cast<string>(maxValue);
         isMax = true;
     }
@@ -1054,8 +1054,8 @@ PWIZ_API_DECL void CVConditionalFilter::updateFilter(CVID software, string cvTer
 **************************************************************************************/
 vector<double> parseDoubleSet(string rangeSet)
 {
-    double minValue = numeric_limits<double>::lowest(); //Get the negative equivalent of the max
     double maxValue = numeric_limits<double>::max();
+    double minValue = -maxValue;
 
     // [200,] [,-200] [-5,5] [5,-5] [1,5]
     if (rangeSet[0] == '[')
@@ -1365,7 +1365,7 @@ ostream& operator<<(ostream& out, CVConditionalFilter filter)
 class SpectrumList_MZRefiner::Impl
 {
 public:
-    SpectrumList_MZRefiner::Impl() : adjust(NULL), filter(NULL), bad(0), haveAllStartTimes(false) {}
+    Impl() : bad(0), haveAllStartTimes(false) {}
     AdjustmentObjectPtr adjust;
     string identFilePath;
     vector<ScanData> data;
