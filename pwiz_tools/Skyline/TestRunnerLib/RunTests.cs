@@ -356,6 +356,7 @@ namespace TestRunnerLib
         public void Log(string info, params object[] args)
         {
             Console.Write(info, args);
+            if (Console.Out != null) Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
             if (_log != null)
             {
                 _log.Write(info, args);
