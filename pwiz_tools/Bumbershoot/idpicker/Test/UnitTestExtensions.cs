@@ -52,6 +52,15 @@ namespace Test
                 Assert.AreEqual(expectedList[i], actualList[i], "Sequence elements at index " + i.ToString() + " are not equal.");
         }
 
+        public static void AssertMultilineStringEquals(this string expected, string actual)
+        {
+            var expectedList = expected.Replace("\r\n", "\n").TrimEnd('\n', '\t', ' ').Split('\n').ToList();
+            var actualList = actual.Replace("\r\n", "\n").TrimEnd('\n', '\t', ' ').Split('\n').ToList();
+            Assert.AreEqual(expectedList.Count, actualList.Count, "Strings have different numbers of lines.");
+            for (int i = 0; i < expectedList.Count; ++i)
+                Assert.AreEqual(expectedList[i], actualList[i], "Line " + i.ToString() + " is not equal.");
+        }
+
         public static IEnumerable<CustomUIItem> GetDockableForms(this Window window)
         {
             var dockPanes = window.AutomationElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.AutomationIdProperty, "dockPanel"))

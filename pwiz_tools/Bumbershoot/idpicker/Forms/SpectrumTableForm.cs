@@ -722,6 +722,9 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
+            // set Name of controls hosted in ToolStripControlHosts to the ToolStripItem's Name, for better UI Automation access
+            this.InitializeAccessibleNames();
+
             Text = TabText = "Spectrum View";
             Icon = Properties.Resources.SpectrumViewIcon;
 
@@ -1070,6 +1073,9 @@ namespace IDPicker.Forms
                 e.CellStyle.BackColor = _columnSettings[column].BackColor.Value;
             else
                 e.CellStyle.BackColor = e.CellStyle.BackColor;
+
+            if (e.RowIndexHierarchy.Count == 1 && e.RowIndexHierarchy[0] == -1)
+                return;
 
             Row row = GetRowFromRowHierarchy(e.RowIndexHierarchy);
 

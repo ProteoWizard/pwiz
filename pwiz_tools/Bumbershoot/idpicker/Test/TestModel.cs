@@ -564,6 +564,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestAminoAcidSequence ()
         {
             Assert.AreEqual("A", new AminoAcidSequence("A").ToString());
@@ -576,6 +577,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestGhostEntities() // test that no entity type gets dirty simply by querying it
         {
             session.DefaultReadOnly = true;
@@ -613,6 +615,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestOverallCounts ()
         {
             Assert.AreEqual(6, session.Query<Protein>().Count());
@@ -657,6 +660,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestSanity()
         {
             for (long i = 1; i <= testProteinSequences.Length; ++i)
@@ -674,6 +678,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestProteins()
         {
             Protein pro1 = session.UniqueResult<Protein>(o => o.Accession == "PRO1");
@@ -704,6 +709,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestPeptides()
         {
             Peptide pep1 = session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDE");
@@ -736,6 +742,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestPeptideInstances()
         {
             PeptideInstance pi1 = session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO1" &&
@@ -760,6 +767,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestSpectrumSourceGroups()
         {
             SpectrumSourceGroup ssg3 = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/");
@@ -789,6 +797,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestSpectrumSources() { TestSpectrumSources(true); }
         public void TestSpectrumSources(bool testMetadata)
         {
@@ -820,6 +829,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestSpectra() { TestSpectra(true); }
         public void TestSpectra(bool testMetadata)
         {
@@ -863,6 +873,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestAnalyses()
         {
             Analysis a1 = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 1");
@@ -889,6 +900,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestPeptideSpectrumMatches()
         {
             var ss1 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 1");
@@ -974,6 +986,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestModifications()
         {
             Modification mod1 = session.UniqueResult<Modification>(o => o.Formula == "C2H2O1");
@@ -1026,6 +1039,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestQonverterSettings ()
         {
             Assert.AreEqual(2, session.Query<QonverterSettings>().Count());

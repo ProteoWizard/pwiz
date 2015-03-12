@@ -278,6 +278,11 @@
         <property name="Offset" access="nosetter.camelcase"/>
         <property name="Site"/>
         <!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
+
+        <join optional="true" table="PeptideModificationProbability" >
+          <key column="PeptideModification"/>
+          <property name="Probability" access="nosetter.camelcase"/>
+        </join>
     </class>
 
   <sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">

@@ -59,6 +59,7 @@ namespace Test
 
         [Ignore]
         [TestMethod]
+        [TestCategory("Model")]
         public void TestImportExportIdpXml ()
         {
             var testModel = new TestModel();

@@ -33,7 +33,10 @@ using System.Windows.Forms;
 
 namespace IDPicker.Controls
 {
-    public class PreviewDataGridView : System.Windows.Forms.DataGridView
+    [Designer("System.Windows.Forms.Design.DataGridViewDesigner, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+    [Docking(DockingBehavior.Ask)]
+    [Editor("System.Windows.Forms.Design.DataGridViewComponentEditor, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(ComponentEditor))]
+    public class PreviewDataGridView : DataGridView
     {
         /// <summary>
         /// Occurs before the CellClick event, allowing "handling" of a cell-click, similar to KeyPress.
@@ -45,7 +48,7 @@ namespace IDPicker.Controls
             if (PreviewCellClick != null)
             {
                 var hitTestInfo = HitTest(e.X, e.Y);
-                var localPoint = PointToClient(e.Location);
+                var localPoint = e.Location; // PointToClient(e.Location);
                 var eventArgs = new DataGridViewPreviewCellClickEventArgs(hitTestInfo.ColumnIndex,
                                                                           hitTestInfo.RowIndex,
                                                                           localPoint.X, localPoint.Y,

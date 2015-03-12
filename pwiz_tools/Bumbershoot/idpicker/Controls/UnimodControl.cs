@@ -86,15 +86,15 @@ namespace IDPicker.Controls
         }
         #endregion
 
-        private HashSet<double> _savedMasses;
-        private HashSet<char> _savedSites;
+        private SortedSet<double> _savedMasses;
+        private SortedSet<char> _savedSites;
         private bool _automated;
         private Dictionary<TreeNode, TreeNode> _hiddenNodes;
-        private Dictionary<double, int> _currentMasses;
-        private Dictionary<char, int> _currentSites;
-        private Dictionary<char, HashSet<double>> _currentPairs;
+        private SortedDictionary<double, int> _currentMasses;
+        private SortedDictionary<char, int> _currentSites;
+        private SortedDictionary<char, ISet<double>> _currentPairs;
         private Dictionary<TreeNode, int> _categoryChecked;
-        private Dictionary<char, Dictionary<double, List<string>>> _unimodIndex;
+        private SortedDictionary<char, SortedDictionary<double, List<string>>> _unimodIndex;
         private TreeNode _rootNode;
 
         public UnimodControl()
@@ -105,17 +105,17 @@ namespace IDPicker.Controls
             SetUnimodDefaults(null, null, null);
         }
 
-        public void SetUnimodDefaults(HashSet<char> relevantSites, HashSet<double> relevantMasses, DistinctMatchFormat distinctMatchFormat)
+        public void SetUnimodDefaults(ISet<char> relevantSites, ISet<double> relevantMasses, DistinctMatchFormat distinctMatchFormat)
         {
             UnimodTree.Nodes.Clear();
-            _unimodIndex = new Dictionary<char, Dictionary<double, List<string>>>();
+            _unimodIndex = new SortedDictionary<char, SortedDictionary<double, List<string>>>();
             _hiddenNodes = new Dictionary<TreeNode, TreeNode>();
-            _currentMasses = new Dictionary<double, int>();
-            _currentSites = new Dictionary<char, int>();
-            _currentPairs = new Dictionary<char, HashSet<double>>();
+            _currentMasses = new SortedDictionary<double, int>();
+            _currentSites = new SortedDictionary<char, int>();
+            _currentPairs = new SortedDictionary<char, ISet<double>>();
             _categoryChecked = new Dictionary<TreeNode, int>();
-            _savedMasses = new HashSet<double>();
-            _savedSites = new HashSet<char>();
+            _savedMasses = new SortedSet<double>();
+            _savedSites = new SortedSet<char>();
             
             //get unimod values
             var refDict = new Dictionary<unimod.Classification, List<UnimodNode>>();
@@ -153,7 +153,7 @@ namespace IDPicker.Controls
                                                          });
 
                     if (!_unimodIndex.ContainsKey(newSiteChar))
-                        _unimodIndex.Add(newSiteChar, new Dictionary<double, List<string>>());
+                        _unimodIndex.Add(newSiteChar, new SortedDictionary<double, List<string>>());
                     if (!_unimodIndex[newSiteChar].ContainsKey(mass))
                         _unimodIndex[newSiteChar].Add(mass, new List<string> { mod.name });
                     else _unimodIndex[newSiteChar][mass].Add(mod.name);
@@ -246,8 +246,8 @@ namespace IDPicker.Controls
 
         public bool ChangesMade(bool resetChangeLog)
         {
-            var massList = new HashSet<double>();
-            var siteList = new HashSet<char>();
+            var massList = new SortedSet<double>();
+            var siteList = new SortedSet<char>();
             foreach (var kvp in _currentMasses)
                 massList.Add(kvp.Key);
             foreach (var kvp in _currentSites)
@@ -257,8 +257,8 @@ namespace IDPicker.Controls
                                     !siteList.SetEquals(_savedSites);
             if (resetChangeLog)
             {
-                _savedMasses = new HashSet<double>(massList);
-                _savedSites = new HashSet<char>(siteList);
+                _savedMasses = new SortedSet<double>(massList);
+                _savedSites = new SortedSet<char>(siteList);
             }
             return confirmedChanges;
         }
@@ -273,7 +273,7 @@ namespace IDPicker.Controls
             return _currentMasses.Select(kvp => kvp.Key).ToList();
         }
 
-        public Dictionary<char,HashSet<double>> GetUnimodPairs()
+        public IDictionary<char, ISet<double>> GetUnimodPairs()
         {
             return _currentPairs;
         }
@@ -296,7 +296,7 @@ namespace IDPicker.Controls
             if (_currentPairs.ContainsKey(baseNode.SiteChar))
                     _currentPairs[baseNode.SiteChar].Add(baseNode.Mass);
             else
-                _currentPairs.Add(baseNode.SiteChar, new HashSet<double>{baseNode.Mass});
+                _currentPairs.Add(baseNode.SiteChar, new SortedSet<double> { baseNode.Mass });
 
             _categoryChecked[baseNode.Parent]++;
         }

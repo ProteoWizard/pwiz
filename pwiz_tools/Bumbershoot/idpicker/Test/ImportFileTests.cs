@@ -88,6 +88,7 @@ namespace Test
         #endregion
 
         [TestMethod]
+        [TestCategory("GUI")]
         public void OpenWithoutFileArguments()
         {
             TestContext.LaunchAppTest("IDPicker.exe", "--test-ui-layout",
@@ -104,6 +105,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("GUI")]
         public void PwizBindings()
         {
             TestContext.LaunchAppTest("IDPicker.exe", "--test", // closes automatically after calling a pwiz function to make sure pwiz bindings load properly
@@ -125,6 +127,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("GUI")]
         public void ImportSingleFileOnOpen()
         {
             // get settings in a separate invocation because import starts immediately when a file is passed on the command-line
@@ -146,7 +149,7 @@ namespace Test
                     var importSettings = window.ModalWindow("Import Settings"); // TODO: don't use Text
                     windowStack.Push(importSettings);
 
-                    var settingsTable = importSettings.Get<Table>("dataGridView");
+                    var settingsTable = importSettings.GetFastTable("dataGridView");
                     Assert.IsNotNull(settingsTable);
                     Assert.AreEqual(1, settingsTable.Rows.Count);
 
@@ -247,6 +250,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("GUI")]
         public void ImportMultipleFilesOnOpen()
         {
             // get settings in a separate invocation because import starts immediately when a file is passed on the command-line
@@ -286,7 +290,7 @@ namespace Test
                     var importSettings = window.ModalWindow(SearchCriteria.ByAutomationId("UserDialog"));
                     windowStack.Push(importSettings);
 
-                    var settingsTable = importSettings.Get<Table>("dataGridView");
+                    var settingsTable = importSettings.GetFastTable("dataGridView");
                     Assert.IsNotNull(settingsTable);
                     Assert.AreEqual(4, settingsTable.Rows.Count);
 
@@ -393,6 +397,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("GUI")]
         public void ImportMultipleFilesFromMenu()
         {
             IDPickerAllSettings settings = null;
@@ -442,6 +447,7 @@ namespace Test
 
                     var saveButton = new Button(saveDialog.AutomationElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "1")), new NullActionListener());
                     saveButton.Click();
+                    windowStack.Pop();
 
                     var progressForm = window.ModalWindow(SearchCriteria.ByAutomationId("ProgressForm"), InitializeOption.NoCache);
                     windowStack.Push(progressForm);
@@ -449,7 +455,7 @@ namespace Test
                     var importSettings = window.ModalWindow(SearchCriteria.ByAutomationId("UserDialog"));
                     windowStack.Push(importSettings);
 
-                    var settingsTable = importSettings.Get<Table>("dataGridView");
+                    var settingsTable = importSettings.GetFastTable("dataGridView");
                     Assert.IsNotNull(settingsTable);
                     Assert.AreEqual(4, settingsTable.Rows.Count);
 
@@ -536,6 +542,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("GUI")]
         public void OpenExistingFileOnOpen()
         {
             TestContext.CopyTestInputFiles("201203-624176-12-mm-gui-test.idpDB");

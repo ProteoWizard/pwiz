@@ -37,7 +37,7 @@ using IDPicker.DataModel;
 
 namespace IDPicker.Controls
 {
-    public class TreeDataGridView : PreviewDataGridView
+    public class TreeDataGridView : AutomationDataGridView
     {
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]

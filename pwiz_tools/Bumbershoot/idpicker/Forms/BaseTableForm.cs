@@ -43,6 +43,30 @@ namespace IDPicker.Forms
 {
     public partial class BaseTableForm : DockableForm, IPersistentForm, TableExporter.ITable
     {
+        private class DataGridViewRowWithAccessibleValues : DataGridViewRow
+        {
+            public string RowHeaderCellEmptyString { get; set; }
+
+            protected class DataGridViewRowWithAccessibleValuesAccessibleObject : DataGridViewRowAccessibleObject
+            {
+                public string RowHeaderCellEmptyString { get; set; }
+
+                public DataGridViewRowWithAccessibleValuesAccessibleObject(DataGridViewRow owner) : base(owner) { RowHeaderCellEmptyString = String.Empty; }
+                public override string Value
+                {
+                    get
+                    {
+                        return String.Format("{0};{1}", Owner.HeaderCell.Value ?? RowHeaderCellEmptyString, String.Join(";", Owner.Cells.OfType<DataGridViewCell>().Where(o => o.Visible).Select(o => o.FormattedValue ?? String.Empty)));
+                    }
+                }
+            }
+
+            protected override AccessibleObject CreateAccessibilityInstance()
+            {
+                return new DataGridViewRowWithAccessibleValuesAccessibleObject(this) { RowHeaderCellEmptyString = RowHeaderCellEmptyString };
+            }
+        }
+
         public BaseTableForm()
         {
             InitializeComponent();
@@ -53,6 +77,7 @@ namespace IDPicker.Forms
 
             treeDataGridView.DefaultCellStyleChanged += treeDataGridView_DefaultCellStyleChanged;
             treeDataGridView.DataError +=treeDataGridView_DataError;
+            treeDataGridView.RowTemplate = new DataGridViewRowWithAccessibleValues();
 
             findTextBox.Tag = findTextBox.Text = "Find...";
             findTextBox.KeyUp += new KeyEventHandler(findTextBox_KeyUp);
@@ -214,9 +239,6 @@ namespace IDPicker.Forms
             base.OnLoad(e);
 
             treeDataGridView.ClearSelection();
-
-            // set Name of controls hosted in ToolStripControlHosts to the ToolStripItem's Name, for better UI Automation access
-            this.InitializeAccessibleNames();
         }
         
         protected virtual void OnFinishedSetData()

@@ -49,6 +49,8 @@ namespace IDPicker.Forms
     public partial class ModificationTableForm : DockableForm, TableExporter.ITable
     {
         public DataGridView DataGridView { get { return dataGridView; } }
+        public bool IsGridViewMode { get { return viewModeComboBox.SelectedIndex == 0; } }
+        public bool IsDetailViewMode { get { return !IsGridViewMode; } }
 
         public ModificationTableForm ()
         {
@@ -83,6 +85,8 @@ namespace IDPicker.Forms
             var style = dataGridView.DefaultCellStyle;
             filteredOutColor = style.ForeColor.Interpolate(style.BackColor, 0.5f);
 
+            detailDataGridView.CellContentDoubleClick += detailDataGridView_CellContentDoubleClick;
+
             _unimodControl = new UnimodControl();
             _unimodPopup = new Popup(_unimodControl);
             _unimodPopup.AutoClose = true;
@@ -93,6 +97,21 @@ namespace IDPicker.Forms
             pivotModeComboBox.SelectedIndex = 0;
             viewModeComboBox.SelectedIndex = 0;
             DistinctModificationFormat = new DistinctMatchFormat() { ModificationMassRoundToNearest = roundToNearestUpDown.Value };
+        }
+
+        void detailDataGridView_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+                return;
+
+            if (viewModeComboBox.SelectedIndex != 2)
+                return;
+            
+            string url = "http://www.phosphosite.org/siteSearchSubmitAction.do";
+            string representative = detailDataGridView[detailDataGridView.ColumnCount - 1, e.RowIndex].Value.ToString();
+            var paramDictionary = new Dictionary<string, object> { { "from", 0 }, { "queryId", -1 }, { "formType", "siteSearch" }, { "sequenceStr", representative } };
+
+            Util.PostFormToURL(url, paramDictionary);
         }
 
         const string deltaMassColumnName = "ΔMass";
@@ -131,50 +150,46 @@ namespace IDPicker.Forms
         }
 
         int rowSortColumnIndex = -1, columnSortRowIndex = -1;
-        SortOrder rowSortOrder = SortOrder.Descending, columnSortOrder = SortOrder.None;
+        SortOrder rowSortOrder = SortOrder.Descending, columnSortOrder = SortOrder.Ascending;
         void dataGridView_PreviewCellClick (object sender, DataGridViewPreviewCellClickEventArgs e)
         {
             // ignore double-clicks
-            if (e.Clicks > 1 )
+            if (e.Clicks > 1)
                 return;
 
-            var clientPoint = dataGridView.PointToScreen(e.Location);
+            var clientPoint = e.Location; // dataGridView.PointToScreen(e.Location);
             if (Math.Abs(clientPoint.X - dataGridView.RowHeadersWidth) < 5)
                 return;
 
-            if (e.RowIndex >= dataGridView.RowCount || e.ColumnIndex >= dataGridView.ColumnCount)
+            var hitTest = dataGridView.HitTest(clientPoint.X, clientPoint.Y);
+            if (hitTest.Type == DataGridViewHitTestType.None)
                 return;
 
-            // clicking on top-left cell sorts by delta mass;
-            // clicking on other column header sorts by count for the site
-            if (e.RowIndex < 0)
+            // clicking on top-left cell sorts by delta mass (left-click) or site (right-click);
+            // clicking on other column headers sorts by count for the site
+            if (e.RowIndex < 0 && e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                // initial sort is descending except for delta mass
-                SortOrder initialSortOrder = e.ColumnIndex < 0 ? SortOrder.Ascending : SortOrder.Descending;
+                // initial sort is descending (either for delta mass or for counts)
                 if (rowSortColumnIndex != e.ColumnIndex)
-                    rowSortOrder = initialSortOrder;
-                else if (rowSortOrder == SortOrder.Ascending)
                     rowSortOrder = SortOrder.Descending;
                 else
-                    rowSortOrder = SortOrder.Ascending;
-
+                    rowSortOrder = rowSortOrder.ToggleOrDefault(SortOrder.Descending);
                 rowSortColumnIndex = e.ColumnIndex;
 
                 applySort();
 
                 e.Handled = true;
             }
-            // clicking on row header sorts by count for the delta mass
+            // clicking on top-left cell sorts by delta mass (left-click) or site (right-click);
+            // clicking on other row headers sorts by count for the delta mass
             else if (e.ColumnIndex < 0)
             {
-                // initial sort is descending
-                if (columnSortRowIndex != e.RowIndex ||
-                    columnSortOrder == SortOrder.None ||
-                    columnSortOrder == SortOrder.Ascending)
-                    columnSortOrder = SortOrder.Descending;
+                // initial sort is descending for counts, ascending for site
+                var initialSortOrder = e.RowIndex < 0 ? SortOrder.Ascending : SortOrder.Descending;
+                if (columnSortRowIndex != e.RowIndex)
+                    columnSortOrder = initialSortOrder;
                 else
-                    columnSortOrder = SortOrder.Ascending;
-
+                    columnSortOrder = columnSortOrder.ToggleOrDefault(initialSortOrder);
                 columnSortRowIndex = e.RowIndex;
 
                 applySort();
@@ -188,6 +203,7 @@ namespace IDPicker.Forms
             // the row header is index -1, but sorts on column 0
             int sortColumnIndex = Math.Max(0, rowSortColumnIndex);
             int sortMultiplier = rowSortOrder == SortOrder.Ascending ? 1 : -1;
+            double columnSortRowMass = columnSortRowIndex > -1 ? (double) dataGridView.Rows[columnSortRowIndex].Cells[deltaMassColumnName].Value : 0;
             dataGridView.DataSource = deltaMassTable.ApplySort((x, y) =>
             {
                 // the total row is always first
@@ -209,12 +225,20 @@ namespace IDPicker.Forms
                 return sortMultiplier * compare;
             });
 
+            if (columnSortRowIndex > -1)
+            {
+                var newRow = dataGridView.Rows.OfType<DataGridViewRow>().SingleOrDefault(o => (double)o.Cells[deltaMassColumnName].Value == columnSortRowMass);
+                if (newRow != null) // the masses did not chang (so the row sort order may have changed)
+                    columnSortRowIndex = newRow.Index;
+            }
+
             // after setting DataSource, table must be refiltered
             trimModificationGrid();
 
             if (dataGridView.Rows.Count == 0)
                 return; // shouldn't happen
 
+            IEnumerable<DataGridViewColumn> columns;
             if (columnSortRowIndex > -1)
             {
                 var row = dataGridView.Rows[columnSortRowIndex];
@@ -228,16 +252,20 @@ namespace IDPicker.Forms
                     columnsBySiteAndSpectrumCount[spectrumCount][site] = dataGridView.Columns[i];
                 }
 
-                var columns = columnSortOrder == SortOrder.Descending ? columnsBySiteAndSpectrumCount.Values.Reverse()
-                                                                      : columnsBySiteAndSpectrumCount.Values;
-
                 // assign display index in order of spectrum count (site is tie-breaker)
-                int displayIndex = 1; // start after mass and total columns
-                foreach (var itr in columns)
-                    foreach (var itr2 in itr)
-                        itr2.Value.DisplayIndex = ++displayIndex;
-                //dataGridView.Rows.OfType<DataGridViewRowWithAccessibleValues>().ForEach(o => o);
+                columns = columnsBySiteAndSpectrumCount.Values.SelectMany(o => o.Values);
             }
+            else
+                // assign display index in order of site
+                columns = dataGridView.Columns.OfType<DataGridViewColumn>().Skip(2).OrderBy(o => GetSiteFromColumnName(o.HeaderText));
+
+            if (columnSortOrder == SortOrder.Descending)
+                columns = columns.Reverse();
+            int displayIndex = 1; // start after mass and total columns
+            foreach (var itr in columns)
+                itr.DisplayIndex = ++displayIndex;
+
+            dataGridView.Refresh();
         }
 
         void dataGridView_CellDoubleClick (object sender, DataGridViewCellEventArgs e)
@@ -372,7 +400,7 @@ namespace IDPicker.Forms
         private Color filteredOutColor;
 
         private Map<string, char> siteColumnNameToSite;
-        private DataTable deltaMassTable, basicDeltaMassTable;
+        private DataTable deltaMassTable, basicDeltaMassTable, detailModificationTable;
         private int totalModifications, basicTotalModifications;
 
         private Map<string, Map<double, List<unimod.Modification>>> basicDeltaMassAnnotations;
@@ -520,14 +548,24 @@ namespace IDPicker.Forms
             if (session == null)
                 return;
 
+            this.session = session;
+            viewFilter = dataFilter;
+            this.dataFilter = new DataFilter(dataFilter) { Modifications = null, ModifiedSite = null };
+
+            // if currently in the phosphosite view and the new filter does not contain protein or gene (group), switch back to grid view (which will make its own call to SetData)
+            if (viewModeComboBox.SelectedIndex == 2 &&
+                dataFilter.Protein.IsNullOrEmpty() && dataFilter.ProteinGroup.IsNullOrEmpty() &&
+                dataFilter.Gene.IsNullOrEmpty() && dataFilter.GeneGroup.IsNullOrEmpty())
+            {
+                //MessageBox.Show(this, "Select a single protein, protein group, gene, or gene group to enable the phosphosite view.", "Invalid filter for phosphosite view", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                viewModeComboBox.SelectedIndex = 0;
+                return;
+            }
+
             if (StartingSetData != null)
                 StartingSetData(this, EventArgs.Empty);
 
             Controls.OfType<Control>().ForEach(o => o.Enabled = false);
-
-            this.session = session;
-            viewFilter = dataFilter;
-            this.dataFilter = new DataFilter(dataFilter) { Modifications = null, ModifiedSite = null };
 
             if (dataGridView.SelectedCells.Count > 0)
                 oldSelectedAddress = new Pair<double, string>()
@@ -564,10 +602,14 @@ namespace IDPicker.Forms
 
             Controls.OfType<Control>().ForEach(o => o.Enabled = false);
 
-            detailDataGridView.Rows.Clear();
+            detailDataGridView.DataSource = null;
+            detailDataGridView.Columns.Clear();
+            detailDataGridView.Refresh();
+
             dataGridView.DataSource = null;
             dataGridView.Columns.Clear();
             dataGridView.Refresh();
+
             Refresh();
         }
 
@@ -641,7 +683,7 @@ namespace IDPicker.Forms
             {
                 var phosphoFilter = new DataFilter(dataFilter);
                 phosphoFilter.Modifications = session.Query<Modification>().Where(o => Math.Round(o.MonoMassDelta) == 80.0).ToList();
-                var query = session.CreateQuery("SELECT pro.Accession, pi.Offset+pm.Offset+1, pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.DistinctMatchId), COUNT(DISTINCT psm.Peptide.id) " +
+                var query = session.CreateQuery("SELECT pro.Accession, pi.Offset+pm.Offset+1, pm.Site, pm.Modification, MAX(pm.Probability), AVG(pm.Probability), COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.DistinctMatchId), COUNT(DISTINCT psm.Peptide.id), pi.Peptide.Sequence " +
                                                 phosphoFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                      DataFilter.ProteinToPeptideModification) +
                                                 " AND pro.IsDecoy = 0 " +
@@ -674,32 +716,45 @@ namespace IDPicker.Forms
                     //SetUnimodDefaults(queryRows);
                 }
 
-                detailDataGridView.Rows.Clear();
+                detailModificationTable = new DataTable();
+                detailModificationTable.BeginLoadData();
+                detailModificationTable.Columns.AddRange(new DataColumn[]
+                {
+                    new DataColumn() { ColumnName = "Accession", DataType = typeof(string) },
+                    new DataColumn() { ColumnName = "Offset", DataType = typeof(int) },
+                    new DataColumn() { ColumnName = "Site", DataType = typeof(string) },
+                    //new DataColumn() { ColumnName = deltaMassColumnName, DataType = typeof(double) },
+                    new DataColumn() { ColumnName = "MaxProbability", DataType = typeof(double), Caption = "Max Probability" },
+                    new DataColumn() { ColumnName = "AvgProbability", DataType = typeof(double), Caption = "Avg Probability"},
+                    new DataColumn() { ColumnName = "Peptides", DataType = typeof(int), Caption = "Distinct Peptides" },
+                    new DataColumn() { ColumnName = "Matches", DataType = typeof(int), Caption = "Distinct Matches" },
+                    new DataColumn() { ColumnName = "Spectra", DataType = typeof(int), Caption = "Filtered Spectra" },
+                    new DataColumn() { ColumnName = "Representative", DataType = typeof(string) }
+                });
+                detailModificationTable.PrimaryKey = detailModificationTable.Columns.OfType<DataColumn>().Take(2).ToArray();
+                detailModificationTable.DefaultView.Sort = "Accession,Offset";
+
                 foreach (var tuple in queryRows)
                 {
-                    try
-                    {
-                        var mod = (tuple[3] as DataModel.Modification);
-                        var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
-                        var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[2], roundedMass).Distinct();
+                    var mod = (tuple[3] as DataModel.Modification);
+                    var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
+                    //var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[0], roundedMass).Distinct();
 
-                        var newRow = new object[]
-                        {
+                    detailModificationTable.Rows.Add(
                             tuple[0], // accession
                             Convert.ToInt32(tuple[1]), // offset
                             tuple[2], // site
-                            roundedMass, // mass
-                            null, // probability
-                            Convert.ToInt32(tuple[6]), // spectra
-                            Convert.ToInt32(tuple[5]), // matches
-                            Convert.ToInt32(tuple[4]), // peptides
-                            String.Join("; ", explanations) // description
-                        };
-
-                        var rowIndex = detailDataGridView.Rows.Add(newRow);
-                    }
-                    catch { } //if row gives errors dont add it
+                            //roundedMass, // mass
+                            Convert.ToDouble(tuple[4] ?? 0), // max probability
+                            Convert.ToDouble(tuple[5] ?? 0), // avg probability
+                            Convert.ToInt32(tuple[8]), // spectra
+                            Convert.ToInt32(tuple[7]), // matches
+                            Convert.ToInt32(tuple[6]), // peptides
+                            tuple[9] // representative
+                        );
                 }
+
+                detailModificationTable.EndLoadData();
 
                 if (FinishedSetData != null)
                     FinishedSetData(this, EventArgs.Empty);
@@ -712,7 +767,20 @@ namespace IDPicker.Forms
 
         private void PopulateModificationDetailView(IEnumerable<object[]> queryRows)
         {
-            detailDataGridView.Rows.Clear();
+            detailModificationTable = new DataTable();
+            detailModificationTable.BeginLoadData();
+            detailModificationTable.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn() { ColumnName = "Site", DataType = typeof(string) },
+                new DataColumn() { ColumnName = deltaMassColumnName, DataType = typeof(double) },
+                new DataColumn() { ColumnName = "Peptides", DataType = typeof(int), Caption = "Distinct Peptides" },
+                new DataColumn() { ColumnName = "Matches", DataType = typeof(int), Caption = "Distinct Matches" },
+                new DataColumn() { ColumnName = "Spectra", DataType = typeof(int), Caption = "Filtered Spectra" },
+                new DataColumn() { ColumnName = "Description", DataType = typeof(string) }
+            });
+            detailModificationTable.PrimaryKey = detailModificationTable.Columns.OfType<DataColumn>().Take(2).ToArray();
+            detailModificationTable.DefaultView.Sort = "Site";
+
             foreach (var tuple in queryRows)
             {
                 try
@@ -721,23 +789,19 @@ namespace IDPicker.Forms
                     var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
                     var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[0], roundedMass).Distinct();
 
-                    var newRow = new object[]
-                    {
-                        null, // accession
-                        null, // offset
-                        tuple[0], // site
-                        roundedMass, // mass
-                        null, // probability
-                        Convert.ToInt32(tuple[4]), // spectra
-                        Convert.ToInt32(tuple[3]), // matches
-                        Convert.ToInt32(tuple[2]), // peptides
-                        String.Join("; ", explanations) // description
-                    };
-
-                    var rowIndex = detailDataGridView.Rows.Add(newRow);
+                    detailModificationTable.Rows.Add(
+                            tuple[0], // site
+                            roundedMass, // mass
+                            Convert.ToInt32(tuple[4]), // spectra
+                            Convert.ToInt32(tuple[3]), // matches
+                            Convert.ToInt32(tuple[2]), // peptides
+                            String.Join("; ", explanations) // description
+                        );
                 }
                 catch { } //if row gives errors dont add it
             }
+
+            detailModificationTable.EndLoadData();
         }
 
         private class DataGridViewRowWithAccessibleValues : DataGridViewRow
@@ -774,12 +838,20 @@ namespace IDPicker.Forms
                 // see if row snaps to a single Unimod delta mass at a very tight tolerance (note that a single exact mass can match multiple mods)
                 var filter = new unimod.Filter(deltaMass, tolerance) { approved = null, hidden = null };
                 var mods = unimod.modifications(filter);
-                //if (mods.Select(o => o.deltaMonoisotopicMass).Distinct().Count() == 1)
-                {
+                int distinctDeltaMasses = mods.Select(o => o.deltaMonoisotopicMass).Distinct().Count();
+                if (distinctDeltaMasses == 1)
                     foreach (var mod in mods)
                         headerText.AppendFormat("\n{0}", mod.name);
-                }
+                else
+                    headerText.AppendFormat("\n({0} Unimod matches)", distinctDeltaMasses);
+
                 Value = headerText.ToString();
+            }
+
+            public void DoMouseClick()
+            {
+                OnMouseDown(new DataGridViewCellMouseEventArgs(ColumnIndex, RowIndex, ContentBounds.X + ContentBounds.Width / 2, ContentBounds.Y + ContentBounds.Height / 2,
+                                                               new MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, ContentBounds.X + ContentBounds.Width / 2, ContentBounds.Y + ContentBounds.Height / 2, 0)));
             }
 
             protected class DataGridViewRowHeaderCellWithAccessibleValueAccessibleObject : DataGridViewRowHeaderCellAccessibleObject
@@ -877,40 +949,35 @@ namespace IDPicker.Forms
             dataGridView.ResumeLayout();
 
             trimModificationDetailTable();
+
+            Refresh();
         }
 
         private void trimModificationDetailTable()
         {
-            if (_unimodControl == null || detailDataGridView == null || detailDataGridView.Rows.Count == 0)
+            if (detailDataGridView == null || detailModificationTable.Rows.Count == 0)
                 return;
+            
+            List<double> unimodMasses = null;
+            List<char> unimodSites = null;
 
-            var pairs = _unimodControl.GetUnimodPairs();
+            if (_unimodControl != null)
+            {
+                unimodMasses = _unimodControl.GetUnimodMasses();
+                unimodSites = _unimodControl.GetUnimodSites();
+            }
+
             var minMatches = Int32.Parse(minMatchesTextBox.Text);
 
-            if (!pairs.Any())
-            {
-                detailDataGridView.SuspendLayout();
-                foreach (DataGridViewRow row in detailDataGridView.Rows)
-                {
-                    int matches = (int) row.Cells[matchesColumn.Index].Value;
-                    row.Visible = matches >= minMatches;
-                }
-                detailDataGridView.ResumeLayout();
-                return;
-            }
+            var rowFilter = new StringBuilder();
+            rowFilter.AppendFormat("Matches >= {0}", minMatches);
+            if (!unimodMasses.IsNullOrEmpty())
+                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o))));
+            if (!unimodSites.IsNullOrEmpty())
+                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodSites.Select(o => String.Format("(Site = '{0}')", o))));
 
-            detailDataGridView.SuspendLayout();
-            foreach (DataGridViewRow row in detailDataGridView.Rows)
-            {
-                var residue = (char)row.Cells[0].Value;
-                var mass = (double)row.Cells[1].Value;
-                int matches = (int)row.Cells[matchesColumn.Index].Value;
-                if (!pairs.ContainsKey(residue) || !pairs[residue].Contains(mass) || matches < minMatches)
-                    row.Visible = false;
-                else
-                    row.Visible = true;
-            }
-            detailDataGridView.ResumeLayout();
+            detailModificationTable.DefaultView.RowFilter = rowFilter.ToString();
+            detailDataGridView.Refresh();
         }
 
         private void SetUnimodDefaults(IList<object[]> queryRows)
@@ -922,8 +989,8 @@ namespace IDPicker.Forms
             foreach (var item in queryRows)
                 siteSet.Add((char) item[0]);
 
-            if (_unimodControl.InvokeRequired)
-                _unimodControl.Invoke(new MethodInvoker(() => _unimodControl.SetUnimodDefaults(siteSet, massSet, DistinctModificationFormat)));
+            if (InvokeRequired)
+                Invoke(new MethodInvoker(() => _unimodControl.SetUnimodDefaults(siteSet, massSet, DistinctModificationFormat)));
             else
                 _unimodControl.SetUnimodDefaults(siteSet, massSet, DistinctModificationFormat);
         }
@@ -946,6 +1013,21 @@ namespace IDPicker.Forms
                 currentView.Visible = true;
                 dataGridView.DataSource = deltaMassTable;
                 dataGridView.Columns[deltaMassColumnName].Visible = false;
+
+                detailDataGridView.DataSource = detailModificationTable;
+
+                if (detailDataGridView.Columns.Contains("Accession"))
+                    detailDataGridView.Columns["Accession"].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
+                if (detailDataGridView.Columns.Contains(deltaMassColumnName))
+                    detailDataGridView.Columns[deltaMassColumnName].DefaultCellStyle = new DataGridViewCellStyle() { Format = "g8" };
+                if (detailDataGridView.Columns.Contains("Description"))
+                    detailDataGridView.Columns["Description"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+                if (detailDataGridView.Columns.Contains("MaxProbability"))
+                {
+                    detailDataGridView.Columns["MaxProbability"].DefaultCellStyle = new DataGridViewCellStyle() { Format = "p2" };
+                    detailDataGridView.Columns["AvgProbability"].DefaultCellStyle = new DataGridViewCellStyle() { Format = "p2" };
+                }
 
                 applySort();
 
@@ -1070,10 +1152,11 @@ namespace IDPicker.Forms
 
         private void exportButton_Click (object sender, EventArgs e)
         {
-            if (sender == exportButton)
-                exportMenu.Show(Cursor.Position);
-            else
-                exportDetailMenu.Show(Cursor.Position);
+            copySelectedCellsToClipboardToolStripMenuItem.Enabled = exportSelectedCellsToFileToolStripMenuItem.Enabled = showSelectedCellsInExcelToolStripMenuItem.Enabled =
+                IsGridViewMode && dataGridView.SelectedCells.Count > 1 ||
+                IsDetailViewMode && detailDataGridView.SelectedCells.Count > 1;
+
+            exportMenu.Show(toolStrip, exportButton.Bounds.X - toolStrip.Location.X, toolStrip.Bounds.Bottom);
         }
 
         #region Export methods
@@ -1142,56 +1225,6 @@ namespace IDPicker.Forms
         IEnumerator IEnumerable.GetEnumerator()
         {
             return (IEnumerator) GetEnumerator();
-        }
-
-        public virtual List<List<string>> GetFormTable (bool selected, bool detail)
-        {
-            var exportTable = new List<List<string>>();
-            IList<int> exportedRows, exportedColumns;
-            var currentTable = detail ? detailDataGridView : dataGridView;
-
-            if (selected && currentTable.SelectedCells.Count > 0 && !currentTable.AreAllCellsSelected(false))
-            {
-                var selectedRows = new Set<int>();
-                var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
-
-                foreach (DataGridViewCell cell in currentTable.SelectedCells)
-                {
-                    selectedRows.Add(cell.RowIndex);
-                    selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
-                }
-
-                exportedRows = selectedRows.ToList();
-                exportedColumns = selectedColumns.Values;
-            }
-            else
-            {
-                exportedRows = currentTable.Rows.Cast<DataGridViewRow>().Select(o => o.Index).ToList();
-                exportedColumns = currentTable.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
-            }
-
-            // add column headers
-            exportTable.Add(new List<string>());
-            if (currentTable.RowHeadersVisible)
-                exportTable.Last().Add(deltaMassColumnName.Replace("Δ", "Delta "));
-            foreach (var columnIndex in exportedColumns)
-                exportTable.Last().Add(currentTable.Columns[columnIndex].HeaderText);
-
-            foreach (int rowIndex in exportedRows)
-            {
-                var rowText = new List<string>();
-                if (currentTable.Rows[rowIndex].HeaderCell.Value != null)
-                    rowText.Add(currentTable.Rows[rowIndex].HeaderCell.Value.ToString().Replace("\n"," ; "));
-                foreach (var columnIndex in exportedColumns)
-                {
-                    object value = currentTable[columnIndex, rowIndex].Value ?? String.Empty;
-                    rowText.Add(value.ToString());
-                }
-
-                exportTable.Add(rowText);
-            }
-
-            return exportTable;
         }
 
         internal List<TableExporter.TableTreeNode> getModificationTree()
@@ -1271,51 +1304,18 @@ namespace IDPicker.Forms
                                       sender == exportSelectedCellsToFileToolStripMenuItem ||
                                       sender == showSelectedCellsInExcelToolStripMenuItem;
 
-            /*var progressWindow = new Form
+            if (sender == copyToClipboardToolStripMenuItem ||
+                sender == copySelectedCellsToClipboardToolStripMenuItem)
+                TableExporter.CopyToClipboard(this);
+            else if (sender == exportToFileToolStripMenuItem ||
+                     sender == exportSelectedCellsToFileToolStripMenuItem)
+                TableExporter.ExportToFile(this);
+            else if (sender == showInExcelToolStripMenuItem ||
+                     sender == showSelectedCellsInExcelToolStripMenuItem)
             {
-                Size = new Size(300, 60),
-                Text = "Exporting...",
-                StartPosition = FormStartPosition.CenterScreen,
-                ControlBox = false
-            };
-            var progressBar = new ProgressBar
-            {
-                Dock = DockStyle.Fill,
-                Style = ProgressBarStyle.Marquee
-            };
-            progressWindow.Controls.Add(progressBar);
-            progressWindow.Show();
-
-            tempTable = new List<List<string>>();
-            var bg = new BackgroundWorker();
-            bg.RunWorkerCompleted += (x, y) =>
-            {
-                if (y.Error != null) Program.HandleException(y.Error);
-                progressWindow.Close();
-                if (sender == copyToClipboardToolStripMenuItem ||
-                    sender == copySelectedCellsToClipboardToolStripMenuItem ||
-                    sender == copyToClipboardDetailToolStripMenuItem ||
-                    sender == copySelectedCellsToClipboardDetailToolStripMenuItem)
-                    TableExporter.CopyToClipboard(tempTable);
-                else if (sender == exportToFileToolStripMenuItem ||
-                         sender == exportSelectedCellsToFileToolStripMenuItem ||
-                         sender == exportToFileDetailToolStripMenuItem ||
-                         sender == exportSelectedCellsToFileDetailToolStripMenuItem)
-                    TableExporter.ExportToFile(tempTable);
-                else if (sender == showInExcelToolStripMenuItem ||
-                         sender == showSelectedCellsInExcelToolStripMenuItem ||
-                         sender == showInExcelDetailToolStripMenuItem ||
-                         sender == showSelectedCellsInExcelDetailToolStripMenuItem)
-                {
-                    var exportWrapper = new Dictionary<string, List<List<string>>> { { Name, tempTable } };
-                    TableExporter.ShowInExcel(exportWrapper, false);
-                }
-            };
-            bg.DoWork += (x, y) =>
-            {
-                tempTable = GetFormTable(selected, detail);
-            };
-            bg.RunWorkerAsync();*/
+                var exportWrapper = new Dictionary<string, TableExporter.ITable> { { Name, this } };
+                TableExporter.ShowInExcel(exportWrapper, false);
+            }
         }
         #endregion
 
@@ -1343,21 +1343,14 @@ namespace IDPicker.Forms
 
         private void ModFilter_Leave(object sender, EventArgs e)
         {
-            var textbox = sender as TextBox;
+            var textbox = sender as ToolStripTextBox;
             if (textbox != null)
             {
-                //try
-                {
-                    int value;
-                    if (!Int32.TryParse(textbox.Text, out value) || value < 1)
-                        textbox.Text = "2";
+                int value;
+                if (!Int32.TryParse(textbox.Text, out value) || value < 1)
+                    textbox.Text = "2";
 
-                    trimModificationGrid();
-                }
-                /*catch
-                {
-                    textbox.Text = "1";
-                }*/
+                trimModificationGrid();
             }
         }
 
@@ -1452,6 +1445,9 @@ namespace IDPicker.Forms
                     dataGridView.Visible = true;
                     needDataRefresh = accessionColumn.Visible;
 
+                    unimodButton.Visible = true;
+                    roundToNearestUpDown.Visible = roundToNearestLabel.Visible = true;
+
                     minRowLabel.Visible = true;
                     minRowTextBox.Visible = true;
 
@@ -1470,6 +1466,9 @@ namespace IDPicker.Forms
                     dataGridView.Visible = false;
                     needDataRefresh = accessionColumn.Visible;
 
+                    unimodButton.Visible = true;
+                    roundToNearestUpDown.Visible = roundToNearestLabel.Visible = true;
+
                     minRowLabel.Visible = false;
                     minRowTextBox.Visible = false;
 
@@ -1485,8 +1484,19 @@ namespace IDPicker.Forms
 
                 // Phosphosite view
                 case 2:
+                    if (viewFilter.Protein.IsNullOrEmpty() && viewFilter.ProteinGroup.IsNullOrEmpty() &&
+                        viewFilter.Gene.IsNullOrEmpty() && viewFilter.GeneGroup.IsNullOrEmpty())
+                    {
+                        MessageBox.Show(this, "Select a single protein, protein group, gene, or gene group to enable the phosphosite view.", "Invalid filter for phosphosite view", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        viewModeComboBox.SelectedIndex = dataGridView.Visible ? 0 : 1;
+                        return;
+                    }
+
                     dataGridView.Visible = false;
                     needDataRefresh = !accessionColumn.Visible;
+
+                    unimodButton.Visible = false;
+                    roundToNearestUpDown.Visible = roundToNearestLabel.Visible = false;
 
                     minRowLabel.Visible = false;
                     minRowTextBox.Visible = false;
@@ -1497,8 +1507,8 @@ namespace IDPicker.Forms
                     detailDataGridView.Visible = true;
                     pivotModeComboBox.Visible = false;
 
-                    minMatchesTextBox.Visible = false;
-                    minMatchesLabel.Visible = false;
+                    minMatchesTextBox.Visible = true;
+                    minMatchesLabel.Visible = true;
                     break;
             }
 
@@ -1507,6 +1517,45 @@ namespace IDPicker.Forms
                 ClearData(true);
                 SetData(session, viewFilter);
             }
+        }
+
+        private int? TryCompare<T>(object a, object b) where T : struct, System.IComparable<T>
+        {
+            var x = a as Nullable<T>;
+            var y = b as Nullable<T>;
+            if (x == null || y == null)
+                return null;
+            else
+                return x.Value.CompareTo(y.Value);
+        }
+
+        private void detailDataGridView_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            // Try to sort based on the cells in the current column.
+            e.SortResult = TryCompare<int>(e.CellValue1, e.CellValue2) ??
+                           TryCompare<double>(e.CellValue1, e.CellValue2) ??
+                           TryCompare<float>(e.CellValue1, e.CellValue2) ??
+                           TryCompare<long>(e.CellValue1, e.CellValue2) ??
+                           TryCompare<decimal>(e.CellValue1, e.CellValue2) ??
+                           TryCompare<short>(e.CellValue1, e.CellValue2) ??
+                           TryCompare<char>(e.CellValue1, e.CellValue2) ??
+                           e.CellValue1.ToString().CompareTo(e.CellValue2.ToString());
+
+            // If the cells are equal, sort based on the ID column. 
+            if (e.SortResult == 0)
+            {
+                DataGridViewColumn tieBreakerColumn;
+                if (e.Column == siteColumn)
+                    tieBreakerColumn = massColumn;
+                else
+                    tieBreakerColumn = siteColumn;
+
+                e.SortResult = String.Compare(detailDataGridView[tieBreakerColumn.Index, e.RowIndex1].Value.ToString(),
+                                              detailDataGridView[tieBreakerColumn.Index, e.RowIndex2].Value.ToString());
+                if (detailDataGridView.SortOrder == SortOrder.Descending)
+                    e.SortResult *= -1; // site tie-breaker is always sorted ascending
+            }
+            e.Handled = true;
         }
     }
 }

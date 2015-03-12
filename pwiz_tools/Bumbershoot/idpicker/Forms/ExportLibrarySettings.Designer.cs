@@ -67,7 +67,7 @@ namespace IDPicker.Forms
             this.PrecursorLabel = new System.Windows.Forms.Label();
             this.ExportLibraryPanel = new System.Windows.Forms.Panel();
             this.ExportPSMsPanel = new System.Windows.Forms.Panel();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dataGridView1 = new IDPicker.Controls.AutomationDataGridView();
             this.psmColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.psmIncludeColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.ExportPSMButton = new System.Windows.Forms.Button();
@@ -352,7 +352,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label PrecursorLabel;
         private System.Windows.Forms.Panel ExportLibraryPanel;
         private System.Windows.Forms.Panel ExportPSMsPanel;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private IDPicker.Controls.AutomationDataGridView dataGridView1;
         private System.Windows.Forms.DataGridViewTextBoxColumn psmColumn;
         private System.Windows.Forms.DataGridViewCheckBoxColumn psmIncludeColumn;
         private System.Windows.Forms.Button ExportPSMButton;

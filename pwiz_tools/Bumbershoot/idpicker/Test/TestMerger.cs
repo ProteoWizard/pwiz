@@ -68,6 +68,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestMergerModel ()
         {
 

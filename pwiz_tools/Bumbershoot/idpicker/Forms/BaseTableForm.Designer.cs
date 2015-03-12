@@ -167,12 +167,12 @@ namespace IDPicker.Forms
             // 
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.findTextBox,
             this.toolStripSeparator2,
             this.exportButton,
             this.displayOptionsButton,
             this.pivotSetupButton,
-            this.groupingSetupButton});
+            this.groupingSetupButton,
+            this.findTextBox});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;

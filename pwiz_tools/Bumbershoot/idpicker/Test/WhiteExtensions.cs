@@ -47,6 +47,33 @@ using TestStack.White.AutomationElementSearch;
 
 namespace Test
 {
+    public class AutomationElementTreeNode
+    {
+        public AutomationElement.AutomationElementInformation Current { get; private set; }
+        public List<AutomationElementTreeNode> Children { get; private set; }
+
+        public override string ToString()
+        {
+            return String.Format("Id:{0} Name:{1} Children:{2}", Current.AutomationId ?? "null", Current.Name ?? "null", Children == null ? 0 : Children.Count);
+        }
+
+        private AutomationElementTreeNode(AutomationElement e, int maxDepth, int currentDepth)
+        {
+            Current = e.Current;
+
+            if (maxDepth == currentDepth)
+                return;
+
+            Children = new List<AutomationElementTreeNode>();
+            foreach (var child in e.FindAll(TreeScope.Children, Condition.TrueCondition).OfType<AutomationElement>())
+                Children.Add(new AutomationElementTreeNode(child, maxDepth, currentDepth + 1));
+        }
+
+        public AutomationElementTreeNode(AutomationElement e, int maxDepth = 5) : this(e, maxDepth, 1)
+        {
+        }
+    }
+
     public class IDPickerAllSettings
     {
         public IDPickerAllSettings()
@@ -57,6 +84,119 @@ namespace Test
 
         public IDPicker.Properties.Settings GeneralSettings { get; private set; }
         public IDPicker.Properties.GUI.Settings GUISettings { get; private set; }
+    }
+
+    /// <summary>
+    /// A subclass of the White Table UIItem that is customized to work with AutomationDataGridView; this was necessary to get around efficiency problems with System.Windows.Automation.
+    /// </summary>
+    [ControlTypeMapping(CustomUIItemType.Table)]
+    public class FastTable : Table
+    {
+        private TableRows rows;
+        private TableHeader header;
+        private readonly AutomationElementFinder finder;
+        private readonly FastTableRowFactory tableRowFactory;
+
+        public FastTable(AutomationElement element, ActionListener listener)
+            : base(element, listener)
+        {
+            finder = new AutomationElementFinder(automationElement);
+            tableRowFactory = new FastTableRowFactory(finder);
+        }
+
+        protected FastTable() { }
+
+        public override TableRows Rows
+        {
+            get
+            {
+                return rows ?? (rows = tableRowFactory.CreateRows(actionListener, Header ?? new NullTableHeader()));
+            }
+        }
+
+        public override TableHeader Header
+        {
+            get
+            {
+                if (header == null)
+                {
+                    AutomationElement headerElement = finder.Descendant(new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Header));
+                    if (headerElement == null) return null;
+                    header = new FastTableHeader(headerElement, actionListener);
+                }
+                return header;
+            }
+        }
+
+        public override void Refresh()
+        {
+            rows = null;
+        }
+
+        #region Nested classes that override some inappropriate White behavior intended to work with stock DataGridViews instead of AutomationDataGridView
+        public class FastTableHeader : TableHeader
+        {
+            protected FastTableHeader() { }
+
+            public FastTableHeader(AutomationElement automationElement, ActionListener actionListener) : base(automationElement, actionListener) { }
+
+            public override TableColumns Columns
+            {
+                get
+                {
+                    var headerItems = new AutomationElementFinder(automationElement).Descendants(AutomationSearchCondition.ByControlType(ControlType.HeaderItem));
+                    return new TableColumns(headerItems, actionListener);
+                }
+            }
+        }
+
+        public class FastTableRowFactory
+        {
+            private readonly AutomationElementFinder automationElementFinder;
+
+            public FastTableRowFactory(AutomationElementFinder automationElementFinder)
+            {
+                this.automationElementFinder = automationElementFinder;
+            }
+
+            public TableRows CreateRows(ActionListener actionListener, TableHeader tableHeader)
+            {
+                var rowElements = GetRowElements();
+                return new TableRows(rowElements, actionListener, tableHeader, new FastTableCellFactory(automationElementFinder.AutomationElement, actionListener));
+            }
+
+            private List<AutomationElement> GetRowElements()
+            {
+                // this will find only first level children of our element - rows
+                var dataItems = automationElementFinder.Children(AutomationSearchCondition.ByControlType(ControlType.DataItem));
+                return dataItems;
+            }
+
+            public int NumberOfRows
+            {
+                get { return GetRowElements().Count; }
+            }
+        }
+
+        public class FastTableCellFactory : TableCellFactory
+        {
+            private readonly AutomationElement tableElement;
+            private readonly ActionListener actionListener;
+
+            public FastTableCellFactory(AutomationElement tableElement, ActionListener actionListener)
+                : base(tableElement, actionListener)
+            {
+                this.tableElement = tableElement;
+                this.actionListener = actionListener;
+            }
+
+            public override TableCells CreateCells(TableHeader tableHeader, AutomationElement rowElement)
+            {
+                List<AutomationElement> tableCellElements = new AutomationElementFinder(rowElement).Children(AutomationSearchCondition.ByControlType(ControlType.DataItem));
+                return new TableCells(tableCellElements, tableHeader, actionListener);
+            }
+        }
+        #endregion
     }
 
     public static class WhiteExtensionMethods
@@ -111,6 +251,14 @@ namespace Test
             return RawGet<T>(item.AutomationElement, SearchCriteria.ByAutomationId(id), searchDepth);
         }
 
+        public static Table GetFastTable(this UIItem item, string id, int searchDepth = 3)
+        {
+            var element = item.GetElement(SearchCriteria.ByAutomationId(id).AndControlType(ControlType.Table));
+            if (element == null)
+                return null;
+            return new FastTable(element, new NullActionListener());
+        }
+
         public class TableRowHeaderCell : TableCell
         {
             public TableRowHeaderCell(AutomationElement e, ActionListener l) : base(e, l) { }
@@ -123,6 +271,7 @@ namespace Test
                 }
             }
         }
+
         /// <summary>
         /// Retrieves the header cell of a TableRow, since White does not make this accessible.
         /// </summary>
@@ -130,7 +279,7 @@ namespace Test
         /// <returns></returns>
         public static TableRowHeaderCell GetHeaderCell(this TableRow row)
         {
-            var header = row.AutomationElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Header));
+            var header = row.AutomationElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.HeaderItem));
             if (header != null)
                 return new TableRowHeaderCell(header, new NullActionListener());
             return null;
@@ -153,6 +302,73 @@ namespace Test
             }
 
             throw new TimeoutException("timeout waiting for status to return to 'Ready'");
+        }
+
+        public static void ClickAndWaitWhileBusy(this UIItem item, Window waitOnWindow)
+        {
+            item.Click();
+            waitOnWindow.Mouse.Location = waitOnWindow.TitleBar.Location;
+            waitOnWindow.WaitWhileBusy();
+            Thread.Sleep(200);
+        }
+
+        /// <summary>
+        /// Clears any existing text in the (editable) TextBox and enters the new text.
+        /// </summary>
+        public static void ClearAndEnter(this TextBox editTextBox, string text)
+        {
+            editTextBox.DoubleClick(); // select all
+            editTextBox.KeyIn(TestStack.White.WindowsAPI.KeyboardInput.SpecialKeys.DELETE); // clear
+            editTextBox.Enter(text);
+        }
+
+        /// <summary>
+        /// Toggles a TreeNode's check state. If the node is not checkable, it does nothing.
+        /// </summary>
+        public static void Toggle(this TreeNode checkableTreeNode)
+        {
+            object togglePattern;
+            if (!checkableTreeNode.AutomationElement.TryGetCurrentPattern(TogglePatternIdentifiers.Pattern, out togglePattern))
+                return; // TODO: log not toggleable
+            (togglePattern as TogglePattern).Toggle();
+        }
+
+        /// <summary>
+        /// Selects a TreeNode and presses SPACE on it to toggle it and trigger any events based on that. If the node is not checkable or selectable, it does nothing.
+        /// </summary>
+        public static void SelectAndToggle(this TreeNode checkableTreeNode)
+        {
+            object selectPattern;
+            if (!checkableTreeNode.AutomationElement.TryGetCurrentPattern(SelectionItemPatternIdentifiers.Pattern, out selectPattern))
+                return; // TODO: log not toggleable
+            (selectPattern as SelectionItemPattern).Select();
+            checkableTreeNode.KeyIn(TestStack.White.WindowsAPI.KeyboardInput.SpecialKeys.SPACE); // clear
+        }
+
+        /// <summary>
+        /// Toggles a TreeNode's check state. If the node is not checkable, it does nothing.
+        /// </summary>
+        public static bool IsChecked(this TreeNode checkableTreeNode)
+        {
+            object togglePattern;
+            if (!checkableTreeNode.AutomationElement.TryGetCurrentPattern(TogglePatternIdentifiers.Pattern, out togglePattern))
+                return false; // TODO: log not toggleable
+            return (togglePattern as TogglePattern).Current.ToggleState == ToggleState.On;
+        }
+
+        /// <summary>
+        /// Returns the values of the row's cells as a concatenated string delimited by the given character; empty cells use the given placeholder, and the row header can be optionally included;
+        /// if forceRefresh is true, then the cell values are retrieved individually rather than using the UIAutomation ValuePattern.
+        /// </summary>
+        public static string GetValuesAsString(this TableRow row, string emptyStringPlaceholder = "", string cellDelimiter = ";", bool includeRowHeader = false)
+        {
+            var rowString = row.AutomationElement.GetCurrentPropertyValue(ValuePatternIdentifiers.ValueProperty).ToString();
+            if (rowString.Length == 0)
+                rowString = row.AutomationElement.Current.Name;
+            var rowValues = rowString.Split(';').Select(o => o == String.Empty ? emptyStringPlaceholder : o);
+            if (!includeRowHeader && rowValues.Count() > row.Cells.Count)
+                rowValues = rowValues.Skip(1);
+            return String.Join(cellDelimiter, rowValues);
         }
 
         /// <summary>

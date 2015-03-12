@@ -37,7 +37,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 12;
+const int CURRENT_SCHEMA_REVISION = 13;
 
 namespace SchemaUpdater {
 
@@ -109,7 +109,16 @@ struct DistinctDoubleArraySum
     }
 };
 
-void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_12_to_13(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+{
+    ITERATION_UPDATE(ilr, 12, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    db.execute("CREATE TABLE IF NOT EXISTS PeptideModificationProbability(PeptideModification INTEGER PRIMARY KEY, Probability NUMERIC)");
+
+    //update_13_to_14(db, ilr, vacuumNeeded);
+}
+
+void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 11, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -133,10 +142,10 @@ void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr)
     db.execute("ALTER TABLE TempXIC RENAME TO XICMetrics");
     db.execute("CREATE INDEX XICMetrics_MatchSourcePeptide ON XICMetrics (DistinctMatch,SpectrumSource,Peptide);");
 
-    //update_12_to_13(db, ilr);
+    update_12_to_13(db, ilr, vacuumNeeded);
 }
 
-void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 10, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -158,11 +167,11 @@ void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr)
     // drop old table and rename new table
     db.execute("DROP TABLE FilterHistory; ALTER TABLE FilterHistoryNew RENAME TO FilterHistory");
 
-    update_11_to_12(db, ilr);
+    update_11_to_12(db, ilr, vacuumNeeded);
 }
 
 
-void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 9, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -171,11 +180,11 @@ void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr)
     db.execute("CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
 
 
-    update_10_to_11(db, ilr);
+    update_10_to_11(db, ilr, vacuumNeeded);
 }
 
 
-void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 8, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -197,10 +206,10 @@ void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr)
     // drop old table and rename new table
     db.execute("DROP TABLE FilterHistory; ALTER TABLE FilterHistoryNew RENAME TO FilterHistory");
 
-    update_9_to_10(db, ilr);
+    update_9_to_10(db, ilr, vacuumNeeded);
 }
 
-void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 7, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -224,10 +233,10 @@ void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr)
             throw runtime_error(e.what());
     }
 
-    update_8_to_9(db, ilr);
+    update_8_to_9(db, ilr, vacuumNeeded);
 }
 
-void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 6, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -357,20 +366,20 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
             throw runtime_error(e.what());
     }
 
-    update_7_to_8(db, ilr);
+    update_7_to_8(db, ilr, vacuumNeeded);
 }
 
-void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 5, CURRENT_SCHEMA_REVISION, "updating schema version")
 
     // force the basic filters to be reapplied
     db.execute("DROP TABLE IF EXISTS FilteringCriteria");
 
-    update_6_to_7(db, ilr);
+    update_6_to_7(db, ilr, vacuumNeeded);
 }
 
-void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 4, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -380,10 +389,10 @@ void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
                "                          TotalIonCurrentMS1 = IFNULL(TotalIonCurrentMS1, 0),"
                "                          TotalIonCurrentMS2 = IFNULL(TotalIonCurrentMS2, 0)");
 
-    update_5_to_6(db, ilr);
+    update_5_to_6(db, ilr, vacuumNeeded);
 }
 
-void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 3, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -404,10 +413,10 @@ void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
             throw runtime_error(e.what());
     }
 
-    update_4_to_5(db, ilr);
+    update_4_to_5(db, ilr, vacuumNeeded);
 }
 
-void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 2, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -423,10 +432,10 @@ void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
                "ALTER TABLE SpectrumSource ADD COLUMN QuantitationMethod INT;");
 
     // continue updating schema
-    update_3_to_4(db, ilr);
+    update_3_to_4(db, ilr, vacuumNeeded);
 }
 
-void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 1, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -456,10 +465,10 @@ void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
                "ALTER TABLE NewSpectrum RENAME TO Spectrum;");
 
     // continue updating schema
-    update_2_to_3(db, ilr);
+    update_2_to_3(db, ilr, vacuumNeeded);
 }
 
-void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
+void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 0, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -530,7 +539,7 @@ void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
     }
 
     // continue updating schema
-    update_1_to_2(db, ilr);
+    update_1_to_2(db, ilr, vacuumNeeded);
 }
 
 } // namespace
@@ -564,31 +573,34 @@ bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
     }
 
     //sqlite::transaction transaction(db);
+    bool vacuumNeeded = false;
 
     if (schemaRevision == 0)
-        update_0_to_1(db, ilr);
+        update_0_to_1(db, ilr, vacuumNeeded);
     else if (schemaRevision == 1)
-        update_1_to_2(db, ilr);
+        update_1_to_2(db, ilr, vacuumNeeded);
     else if (schemaRevision == 2)
-        update_2_to_3(db, ilr);
+        update_2_to_3(db, ilr, vacuumNeeded);
     else if (schemaRevision == 3)
-        update_3_to_4(db, ilr);
+        update_3_to_4(db, ilr, vacuumNeeded);
     else if (schemaRevision == 4)
-        update_4_to_5(db, ilr);
+        update_4_to_5(db, ilr, vacuumNeeded);
     else if (schemaRevision == 5)
-        update_5_to_6(db, ilr);
+        update_5_to_6(db, ilr, vacuumNeeded);
     else if (schemaRevision == 6)
-        update_6_to_7(db, ilr);
+        update_6_to_7(db, ilr, vacuumNeeded);
     else if (schemaRevision == 7)
-        update_7_to_8(db, ilr);
+        update_7_to_8(db, ilr, vacuumNeeded);
     else if (schemaRevision == 8)
-        update_8_to_9(db, ilr);
+        update_8_to_9(db, ilr, vacuumNeeded);
     else if (schemaRevision == 9)
-        update_9_to_10(db, ilr);
+        update_9_to_10(db, ilr, vacuumNeeded);
     else if (schemaRevision == 10)
-        update_10_to_11(db, ilr);
+        update_10_to_11(db, ilr, vacuumNeeded);
     else if (schemaRevision == 11)
-        update_11_to_12(db, ilr);
+        update_11_to_12(db, ilr, vacuumNeeded);
+    else if (schemaRevision == 12)
+        update_12_to_13(db, ilr, vacuumNeeded);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +
@@ -605,12 +617,15 @@ bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
     // update the schema revision
     db.execute("UPDATE About SET SchemaRevision = " + lexical_cast<string>(CURRENT_SCHEMA_REVISION));
     
-    // necessary for schema updates that change column names using UPDATE SQLITE_MASTER
-    try
+    if (vacuumNeeded)
     {
-        db.execute("VACUUM");
+        // necessary for schema updates that change column names using UPDATE SQLITE_MASTER
+        try
+        {
+            db.execute("VACUUM");
+        }
+        catch (sqlite::database_error&) {}
     }
-    catch (sqlite::database_error&) {}
 
     return true; // an update was done
 }

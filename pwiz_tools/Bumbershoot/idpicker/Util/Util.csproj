@@ -124,6 +124,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Util\STL_Containers\STL_Containers.csproj">

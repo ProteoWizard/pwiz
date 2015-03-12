@@ -54,7 +54,7 @@ namespace IDPicker.Forms
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilterHistoryForm));
-            this.dataGridView = new IDPicker.Controls.PreviewDataGridView();
+            this.dataGridView = new IDPicker.Controls.AutomationDataGridView();
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -392,7 +392,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        private IDPicker.Controls.PreviewDataGridView dataGridView;
+        private IDPicker.Controls.AutomationDataGridView dataGridView;
         private System.Windows.Forms.ContextMenuStrip exportMenu;
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;

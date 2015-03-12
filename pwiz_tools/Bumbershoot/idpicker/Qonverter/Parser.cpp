@@ -425,6 +425,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS PeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);"
                       "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, ObservedNeutralMass NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);"
                       "CREATE TABLE IF NOT EXISTS PeptideModification (Id INTEGER PRIMARY KEY, PeptideSpectrumMatch INT, Modification INT, Offset INT, Site TEXT);"
+                      "CREATE TABLE IF NOT EXISTS PeptideModificationProbability(PeptideModification INTEGER PRIMARY KEY, Probability NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatchScore (PsmId INTEGER NOT NULL, Value NUMERIC, ScoreNameId INTEGER NOT NULL, primary key (PsmId, ScoreNameId));"
                       "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);"
                       "CREATE TABLE IF NOT EXISTS IntegerSet (Value INTEGER PRIMARY KEY);"

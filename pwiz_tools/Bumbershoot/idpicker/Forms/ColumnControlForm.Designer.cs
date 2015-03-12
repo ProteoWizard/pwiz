@@ -55,7 +55,7 @@ namespace IDPicker.Forms
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.columnOptionsDGV = new System.Windows.Forms.DataGridView();
+            this.columnOptionsDGV = new IDPicker.Controls.AutomationDataGridView();
             this.nameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.decimalColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colorColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -301,7 +301,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        private System.Windows.Forms.DataGridView columnOptionsDGV;
+        private IDPicker.Controls.AutomationDataGridView columnOptionsDGV;
         private System.Windows.Forms.Button cancel_Button;
         private System.Windows.Forms.Button ok_Button;
         private System.Windows.Forms.TextBox defaultColorPreviewBox;

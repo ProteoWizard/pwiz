@@ -76,8 +76,8 @@ namespace IDPicker.Forms
             this.minMatchesLabel = new System.Windows.Forms.ToolStripLabel();
             this.roundToNearestLabel = new System.Windows.Forms.ToolStripLabel();
             this.minMatchesTextBox = new System.Windows.Forms.ToolStripTextBox();
-            this.dataGridView = new IDPicker.Controls.PreviewDataGridView();
-            this.detailDataGridView = new System.Windows.Forms.DataGridView();
+            this.dataGridView = new IDPicker.Controls.AutomationDataGridView();
+            this.detailDataGridView = new IDPicker.Controls.AutomationDataGridView();
             this.accessionColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.offsetColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.siteColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -87,19 +87,11 @@ namespace IDPicker.Forms
             this.matchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.spectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.unimodColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.exportDetailMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.copyToClipboardDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportToFileDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showInExcelDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportSelectedCellsToFileDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showSelectedCellsInExcelDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.invalidFilterLabel = new System.Windows.Forms.Label();
             this.exportMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.detailDataGridView)).BeginInit();
-            this.exportDetailMenu.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -340,6 +332,7 @@ namespace IDPicker.Forms
             this.detailDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.detailDataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             this.detailDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.detailDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.accessionColumn,
@@ -353,20 +346,24 @@ namespace IDPicker.Forms
             this.unimodColumn});
             this.detailDataGridView.Location = new System.Drawing.Point(2, 26);
             this.detailDataGridView.Name = "detailDataGridView";
+            this.detailDataGridView.ReadOnly = true;
             this.detailDataGridView.RowHeadersVisible = false;
             this.detailDataGridView.Size = new System.Drawing.Size(1035, 236);
             this.detailDataGridView.TabIndex = 6;
+            this.detailDataGridView.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.detailDataGridView_SortCompare);
             // 
             // accessionColumn
             // 
             this.accessionColumn.HeaderText = "Accession";
             this.accessionColumn.Name = "accessionColumn";
+            this.accessionColumn.ReadOnly = true;
             this.accessionColumn.Width = 140;
             // 
             // offsetColumn
             // 
             this.offsetColumn.HeaderText = "Position";
             this.offsetColumn.Name = "offsetColumn";
+            this.offsetColumn.ReadOnly = true;
             this.offsetColumn.Width = 60;
             // 
             // siteColumn
@@ -376,6 +373,7 @@ namespace IDPicker.Forms
             this.siteColumn.HeaderText = "Site";
             this.siteColumn.MinimumWidth = 20;
             this.siteColumn.Name = "siteColumn";
+            this.siteColumn.ReadOnly = true;
             this.siteColumn.Width = 50;
             // 
             // massColumn
@@ -385,12 +383,14 @@ namespace IDPicker.Forms
             this.massColumn.HeaderText = "ΔMass";
             this.massColumn.MinimumWidth = 20;
             this.massColumn.Name = "massColumn";
+            this.massColumn.ReadOnly = true;
             this.massColumn.Width = 70;
             // 
             // probabilityColumn
             // 
             this.probabilityColumn.HeaderText = "Probability";
             this.probabilityColumn.Name = "probabilityColumn";
+            this.probabilityColumn.ReadOnly = true;
             this.probabilityColumn.Width = 60;
             // 
             // peptidesColumn
@@ -399,6 +399,7 @@ namespace IDPicker.Forms
             this.peptidesColumn.HeaderText = "Distinct Peptides";
             this.peptidesColumn.MinimumWidth = 20;
             this.peptidesColumn.Name = "peptidesColumn";
+            this.peptidesColumn.ReadOnly = true;
             this.peptidesColumn.Width = 110;
             // 
             // matchesColumn
@@ -407,6 +408,7 @@ namespace IDPicker.Forms
             this.matchesColumn.HeaderText = "Distinct Matches";
             this.matchesColumn.MinimumWidth = 20;
             this.matchesColumn.Name = "matchesColumn";
+            this.matchesColumn.ReadOnly = true;
             this.matchesColumn.Width = 110;
             // 
             // spectraColumn
@@ -415,6 +417,7 @@ namespace IDPicker.Forms
             this.spectraColumn.HeaderText = "Filtered Spectra";
             this.spectraColumn.MinimumWidth = 20;
             this.spectraColumn.Name = "spectraColumn";
+            this.spectraColumn.ReadOnly = true;
             this.spectraColumn.Width = 110;
             // 
             // unimodColumn
@@ -426,66 +429,6 @@ namespace IDPicker.Forms
             this.unimodColumn.Name = "unimodColumn";
             this.unimodColumn.ReadOnly = true;
             this.unimodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // exportDetailMenu
-            // 
-            this.exportDetailMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.copyToClipboardDetailToolStripMenuItem,
-            this.exportToFileDetailToolStripMenuItem,
-            this.showInExcelDetailToolStripMenuItem,
-            this.toolStripSeparator2,
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem,
-            this.exportSelectedCellsToFileDetailToolStripMenuItem,
-            this.showSelectedCellsInExcelDetailToolStripMenuItem});
-            this.exportDetailMenu.Name = "contextMenuStrip1";
-            this.exportDetailMenu.Size = new System.Drawing.Size(247, 142);
-            // 
-            // copyToClipboardDetailToolStripMenuItem
-            // 
-            this.copyToClipboardDetailToolStripMenuItem.Name = "copyToClipboardDetailToolStripMenuItem";
-            this.copyToClipboardDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.copyToClipboardDetailToolStripMenuItem.Text = "Copy to Clipboard";
-            this.copyToClipboardDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
-            // 
-            // exportToFileDetailToolStripMenuItem
-            // 
-            this.exportToFileDetailToolStripMenuItem.Name = "exportToFileDetailToolStripMenuItem";
-            this.exportToFileDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.exportToFileDetailToolStripMenuItem.Text = "Export to File";
-            this.exportToFileDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
-            // 
-            // showInExcelDetailToolStripMenuItem
-            // 
-            this.showInExcelDetailToolStripMenuItem.Name = "showInExcelDetailToolStripMenuItem";
-            this.showInExcelDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.showInExcelDetailToolStripMenuItem.Text = "Show in Excel";
-            this.showInExcelDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(243, 6);
-            // 
-            // copySelectedCellsToClipboardDetailToolStripMenuItem
-            // 
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem.Name = "copySelectedCellsToClipboardDetailToolStripMenuItem";
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem.Text = "Copy Selected Cells to Clipboard";
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
-            // 
-            // exportSelectedCellsToFileDetailToolStripMenuItem
-            // 
-            this.exportSelectedCellsToFileDetailToolStripMenuItem.Name = "exportSelectedCellsToFileDetailToolStripMenuItem";
-            this.exportSelectedCellsToFileDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.exportSelectedCellsToFileDetailToolStripMenuItem.Text = "Export Selected Cells to File";
-            this.exportSelectedCellsToFileDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
-            // 
-            // showSelectedCellsInExcelDetailToolStripMenuItem
-            // 
-            this.showSelectedCellsInExcelDetailToolStripMenuItem.Name = "showSelectedCellsInExcelDetailToolStripMenuItem";
-            this.showSelectedCellsInExcelDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.showSelectedCellsInExcelDetailToolStripMenuItem.Text = "Show Selected Cells in Excel";
-            this.showSelectedCellsInExcelDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // toolStrip
             // 
@@ -510,6 +453,24 @@ namespace IDPicker.Forms
             this.toolStrip.TabIndex = 15;
             this.toolStrip.Text = "Tools";
             // 
+            // invalidFilterLabel
+            // 
+            this.invalidFilterLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.invalidFilterLabel.AutoSize = true;
+            this.invalidFilterLabel.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.invalidFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.invalidFilterLabel.Location = new System.Drawing.Point(197, 125);
+            this.invalidFilterLabel.Name = "invalidFilterLabel";
+            this.invalidFilterLabel.Size = new System.Drawing.Size(665, 24);
+            this.invalidFilterLabel.TabIndex = 16;
+            this.invalidFilterLabel.TabStop = true;
+            this.invalidFilterLabel.Text = "Select a single protein, protein group, gene, or gene group to enable the phospho" +
+    "site view.";
+            this.invalidFilterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.invalidFilterLabel.UseCompatibleTextRendering = true;
+            // 
             // ModificationTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -518,6 +479,7 @@ namespace IDPicker.Forms
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.detailDataGridView);
             this.Controls.Add(this.dataGridView);
+            this.Controls.Add(this.invalidFilterLabel);
             this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right) 
             | DigitalRune.Windows.Docking.DockAreas.Top) 
             | DigitalRune.Windows.Docking.DockAreas.Bottom) 
@@ -528,7 +490,6 @@ namespace IDPicker.Forms
             this.exportMenu.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.detailDataGridView)).EndInit();
-            this.exportDetailMenu.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
@@ -538,7 +499,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        private IDPicker.Controls.PreviewDataGridView dataGridView;
+        private IDPicker.Controls.AutomationDataGridView dataGridView;
         private System.Windows.Forms.ToolStripButton exportButton;
         private System.Windows.Forms.ContextMenuStrip exportMenu;
         private System.Windows.Forms.ToolStripMenuItem copyToClipboardToolStripMenuItem;
@@ -555,19 +516,11 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripButton unimodButton;
         private System.Windows.Forms.ToolStripComboBox pivotModeComboBox;
         private System.Windows.Forms.ToolStripComboBox viewModeComboBox;
-        private System.Windows.Forms.DataGridView detailDataGridView;
+        private IDPicker.Controls.AutomationDataGridView detailDataGridView;
         private System.Windows.Forms.ToolStripTextBox minMatchesTextBox;
         private System.Windows.Forms.ToolStripLabel minMatchesLabel;
         private System.Windows.Forms.ToolStripLabel roundToNearestLabel;
         private IDPicker.Controls.ToolStripNumericUpDown roundToNearestUpDown;
-        private System.Windows.Forms.ContextMenuStrip exportDetailMenu;
-        private System.Windows.Forms.ToolStripMenuItem copyToClipboardDetailToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exportToFileDetailToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showInExcelDetailToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripMenuItem copySelectedCellsToClipboardDetailToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileDetailToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showSelectedCellsInExcelDetailToolStripMenuItem;
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.DataGridViewTextBoxColumn accessionColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn offsetColumn;
@@ -578,6 +531,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn matchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn spectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn unimodColumn;
+        private System.Windows.Forms.Label invalidFilterLabel;
 
     }
 }

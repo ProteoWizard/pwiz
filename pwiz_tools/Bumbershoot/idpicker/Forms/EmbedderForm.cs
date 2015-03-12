@@ -87,7 +87,7 @@ namespace IDPicker.Forms
             dataGridView.Rows.Clear();
 
             var rows = session.CreateSQLQuery(
-                "SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod, " +
+                "SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MIN(IFNULL(s.ScanTimeInSeconds, 0)), QuantitationMethod, " +
                 //"IFNULL((SELECT count() FROM XICMetrics x JOIN PeptideSpectrumMatch psm on x.PsmId=psm.Id JOIN Spectrum s on psm.Spectrum = s.Id where s.Source =ss.Id), 0) " +
                 "IFNULL((SELECT TotalSpectra FROM XICMetricsSettings WHERE SourceId=ss.Id), 0), IFNULL((SELECT Settings FROM XICMetricsSettings WHERE SourceId=ss.Id), '') " +
                 "FROM SpectrumSource ss " +
@@ -100,7 +100,7 @@ namespace IDPicker.Forms
                                       Name = (string) o[1],
                                       Spectra = Convert.ToInt32(o[2]),
                                       EmbeddedSize = Convert.ToInt32(o[3]),
-                                      MaxScanTime = Convert.ToDouble(o[4]),
+                                      MinScanTime = Convert.ToDouble(o[4]),
                                       QuantitationMethodIndex = Convert.ToInt32(o[5]),
                                       XICTotal = Convert.ToInt32(o[6]),
                                       XICSettings = (string) o[7]
@@ -122,9 +122,10 @@ namespace IDPicker.Forms
                     hasEmbeddedSources = true;
                     hasNonEmbeddedSources = true;
                 }
-                else if (row.MaxScanTime > 0)
+                else if (row.MinScanTime > 0)
                 {
                     status = String.Format("{0} spectra with scan times", row.Spectra);
+                    hasEmbeddedSources = true;
                     hasNonEmbeddedSources = true;
                 }
                 else
@@ -492,6 +493,9 @@ namespace IDPicker.Forms
             if (TaskbarManager.IsPlatformSupported)
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Indeterminate);
 
+            okButton.Text = "Cancel";
+            EmbedInProgress = true;
+
             Refresh();
 
             new Thread(() =>
@@ -501,6 +505,8 @@ namespace IDPicker.Forms
                     var tls = session.SessionFactory.OpenStatelessSession();
                     tls.CreateSQLQuery(@"UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL;
                                          UPDATE SpectrumSource SET QuantitationMethod = 0;
+                                         UPDATE Spectrum SET ScanTimeInSeconds = NULL;
+                                         UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = NULL;
                                          DELETE FROM PeptideQuantitation;
                                          DELETE FROM DistinctMatchQuantitation;
                                          DELETE FROM ProteinQuantitation;

@@ -80,6 +80,7 @@ namespace Test
         #endregion
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestAggregation ()
         {
             var lhs = new DataFilter() { MaximumQValue = 1 };
@@ -101,6 +102,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestBasicFilters ()
         {
             string[] testProteinSequences = new string[]
@@ -388,6 +390,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestProteinGroups ()
         {
             string[] testProteinSequences = new string[]
@@ -468,6 +471,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestAminoAcidOffsets ()
         {
             string[] testProteinSequences = new string[]
@@ -563,6 +567,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestAdditionalPeptides ()
         {
             // each protein in the test scenarios is created from simple repeating motifs
@@ -1197,6 +1202,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestClusters ()
         {
             // each protein in the test scenarios is created from simple repeating motifs
@@ -1452,6 +1458,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestCoverage ()
         {
             string[] testProteinSequences = new string[]
@@ -1584,6 +1591,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestFilteredQueries ()
         {
             // each protein in the test scenarios is created from simple repeating motifs

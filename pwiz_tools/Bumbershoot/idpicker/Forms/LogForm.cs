@@ -45,6 +45,7 @@ namespace IDPicker.Forms
         NotifyingStringWriter logWriter;
         List<QueryStatistics> queryStatistics;
         ISessionFactory sessionFactory;
+        DataTable queryDebuggerTable;
 
         public TextWriter LogWriter { get { return logWriter; } }
 
@@ -61,6 +62,8 @@ namespace IDPicker.Forms
 
             queryStatistics = new List<QueryStatistics>();
             sessionFactory = null;
+
+            CreateHandle(); // HACK: ensure handle is created on the same thread as the control
         }
 
         public void SetSessionFactory(ISessionFactory sessionFactory)
@@ -96,9 +99,9 @@ namespace IDPicker.Forms
 
         private void logWriter_Wrote (object sender, NotifyingStringWriter.WroteEventArgs e)
         {
-            if (queryLogDataGridView.InvokeRequired)
+            if (InvokeRequired)
             {
-                queryLogDataGridView.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
+                BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
                 return;
             }
 
@@ -142,6 +145,132 @@ namespace IDPicker.Forms
                 e.Value = queryStatistics[e.RowIndex].ExecutionRowCount;
             else
                 e.Value = queryStatistics[e.RowIndex].CategoryName;
+        }
+
+        private void queryDebuggerQueryButton_Click(object sender, EventArgs e)
+        {
+            using(var session = sessionFactory.OpenStatelessSession())
+            {
+                try
+                {
+                    string queryString = queryDebuggerQueryTextBox.Text;
+                    var query = session.CreateQuery(queryString).SetReadOnly(true);
+
+                    queryDebuggerDataGridView.DataSource = null;
+                    queryDebuggerTable = new DataTable();
+                    queryDebuggerTable.BeginLoadData();
+                    foreach(var returnType in query.ReturnTypes)
+                    {
+                        queryDebuggerTable.Columns.Add(returnType.Name, typeof(string));
+                    }
+
+                    const string realNumberFormat = "{0:0}";
+
+                    if (queryDebuggerTable.Columns.Count > 1)
+                        foreach(object[] row in query.List<object[]>())
+                        {
+                            for(int i=0; i < row.Length; ++i)
+                            {
+                                object output = row[i];
+                                if (!tryObjectAsArray<double>(row[i], ref output, realNumberFormat))
+                                    if (!tryObjectAsArray<float>(row[i], ref output, realNumberFormat))
+                                        if (!tryObjectAsArray<int>(row[i], ref output))
+                                            if (!tryObjectAsArray<long>(row[i], ref output))
+                                                if (!tryObjectAsArray<short>(row[i], ref output))
+                                                    if (!tryObjectAsArray<char>(row[i], ref output))
+                                                        if (row[i] is byte[])
+                                                        {
+                                                            byte[] arrayBytes = row[i] as byte[];
+                                                            if (arrayBytes == null || arrayBytes.Length % 8 > 0)
+                                                                throw new ArgumentException("PivotData assumes that BLOBs are arrays of double precision floats");
+
+                                                            int arrayLength = arrayBytes.Length / 8;
+
+                                                            double[] arrayValues = new double[arrayLength];
+                                                            var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
+                                                            for (int j = 0; j < arrayLength; ++j)
+                                                                arrayValues[j] += arrayStream.ReadDouble();
+                                                            tryObjectAsArray<double>(arrayValues, ref output, realNumberFormat);
+                                                        }
+                                row[i] = output;
+                            }
+                            queryDebuggerTable.Rows.Add(row);
+                        }
+                    else
+                        foreach (object row in query.List())
+                        {
+                            object output = row;
+                            if (!tryObjectAsArray<double>(row, ref output, realNumberFormat))
+                                if (!tryObjectAsArray<float>(row, ref output, realNumberFormat))
+                                    if (!tryObjectAsArray<int>(row, ref output))
+                                        if (!tryObjectAsArray<long>(row, ref output))
+                                            if (!tryObjectAsArray<short>(row, ref output))
+                                                if (!tryObjectAsArray<char>(row, ref output))
+                                                    if (row is byte[])
+                                                    {
+                                                        byte[] arrayBytes = row as byte[];
+                                                        if (arrayBytes == null || arrayBytes.Length % 8 > 0)
+                                                            throw new ArgumentException("PivotData assumes that BLOBs are arrays of double precision floats");
+
+                                                        int arrayLength = arrayBytes.Length / 8;
+
+                                                        double[] arrayValues = new double[arrayLength];
+                                                        var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
+                                                        for (int j = 0; j < arrayLength; ++j)
+                                                            arrayValues[j] += arrayStream.ReadDouble();
+                                                        tryObjectAsArray<double>(arrayValues, ref output, realNumberFormat);
+                                                    }
+                            queryDebuggerTable.Rows.Add(output);
+                        }
+                    queryDebuggerDataGridView.DataSource = queryDebuggerTable;
+                    queryDebuggerDataGridView.Refresh();
+                }
+                catch(Exception ex)
+                {
+                    Program.HandleUserError(ex);
+                }
+            }
+        }
+
+        private bool tryObjectAsArray<T>(object value, ref object output, string format = "{0}")
+        {
+            T[] array = value as T[];
+            if (array != null)
+            {
+                output = String.Format("{{ {0} }}", String.Join(", ", array.Select(o => String.Format(format, o))));
+                return true;
+            }
+            return false;
+        }
+
+        private void queryDebuggerDataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            //e.Value = output;
+            //e.FormattingApplied = true;
+        }
+
+        private void queryDebuggerQueryTextBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.F9)
+                queryDebuggerQueryButton_Click(sender, e);
+        }
+
+        private void queryDebuggerSaveButton_Click(object sender, EventArgs e)
+        {
+            var sfg = new SaveFileDialog() { FileName = "queryDebugger.tsv", OverwritePrompt = true };
+            if (sfg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                return;
+
+            using (var fileStream = new StreamWriter(File.OpenWrite(sfg.FileName)))
+            {
+                for (int i = 0; i < queryDebuggerDataGridView.Rows.Count; ++i)
+                {
+                    fileStream.Write(queryDebuggerDataGridView[0, i].Value);
+                    for (int j = 1; j < queryDebuggerDataGridView.Columns.Count; ++j)
+                        fileStream.Write("\t{0}", queryDebuggerDataGridView[j, i].Value);
+                    fileStream.WriteLine();
+                }
+            }
         }
     }
 

@@ -51,7 +51,7 @@ namespace IDPicker
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.ProgressSplit = new System.Windows.Forms.SplitContainer();
-            this.JobDataView = new System.Windows.Forms.DataGridView();
+            this.JobDataView = new IDPicker.Controls.AutomationDataGridView();
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ProgressColumn = new CustomProgressCell.DataGridViewProgressColumn();
             this.dataGridViewProgressColumn1 = new CustomProgressCell.DataGridViewProgressColumn();
@@ -144,7 +144,7 @@ namespace IDPicker
         #endregion
 
         private System.Windows.Forms.SplitContainer ProgressSplit;
-        private System.Windows.Forms.DataGridView JobDataView;
+        private IDPicker.Controls.AutomationDataGridView JobDataView;
         private CustomProgressCell.DataGridViewProgressColumn dataGridViewProgressColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn NameColumn;
         private CustomProgressCell.DataGridViewProgressColumn ProgressColumn;

@@ -69,6 +69,7 @@ namespace Test
         #endregion
 
         [TestMethod]
+        [TestCategory("Utility")]
         public void TestContainsOrContainedBy()
         {
             FilterString filterString;
@@ -111,6 +112,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Utility")]
         public void TestGetCommonFilename ()
         {
             string[] input;
@@ -150,6 +152,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Utility")]
         public void TestUniqueSubstring()
         {
             string[] input;
@@ -310,9 +313,10 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(12, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(13, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel() { TestContext = TestContext };
             TestModel.ClassInitialize(TestContext);
@@ -321,8 +325,8 @@ namespace Test
 
             string filename = null;
 
-
             // test all revisions without a data filter applied
+            // we don't need to test upgrade from 12 to 13; the extra table (PeptideModificationProbability) is ignored and necessary for the current NHibernate bindings
             // we don't need to test upgrade from 11 to 12; the changed table (XICMetrics) is ignored
             // we don't need to test upgrade from 10 to 11; the extra columns (GeneGroups, Genes) are ignored
             // we don't need to test upgrade from 9 to 10; the extra tables (XICMetrics, XICMetricsSettings) are ignored
@@ -394,6 +398,7 @@ namespace Test
         }
 
         [TestMethod]
+        [TestCategory("Utility")]
         public void TestIsPathOnFixedDrive()
         {
             var drives = DriveInfo.GetDrives();

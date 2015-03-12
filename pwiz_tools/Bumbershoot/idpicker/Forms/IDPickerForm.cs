@@ -1406,6 +1406,7 @@ namespace IDPicker
                     }
 
                     toolStripStatusLabel.Text = "Ready";
+                    Activate();
                 }));
 
                 //show list of delayed non-fatal errors

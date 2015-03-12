@@ -450,7 +450,7 @@ namespace IDPicker.Forms
                 //tbStatus.Font = new Font(FontFamily.GenericMonospace, 10.0f);
             }));
 
-            session.CreateSQLQuery("CREATE TABLE IF NOT EXISTS PeptideModificationProbability (PeptideModification INTEGER PRIMARY KEY, Probability NUMERIC)").ExecuteUpdate();
+            //session.CreateSQLQuery("CREATE TABLE IF NOT EXISTS PeptideModificationProbability (PeptideModification INTEGER PRIMARY KEY, Probability NUMERIC)").ExecuteUpdate();
             session.CreateSQLQuery("DELETE FROM PeptideModificationProbability").ExecuteUpdate();
             var insertSiteProbabilityCommand = session.Connection.CreateCommand();
             var PepModParameter = insertSiteProbabilityCommand.CreateParameter();
@@ -466,6 +466,9 @@ namespace IDPicker.Forms
 
             var sourceFilepaths = new Dictionary<string, string>();
             distinctSources.ForEach(source => sourceFilepaths[source.Name] = IDPickerForm.LocateSpectrumSource(source.Name, session.Connection.GetDataSource()));
+
+            if (distinctSources.Any(source => sourceFilepaths[source.Name].IsNullOrEmpty()))
+                setStatus("Cancelled attestation: some sources are a missing source file");
 
             // group the spectra by source and run each source as a batch
             int totalSources = distinctSources.Count;

@@ -359,6 +359,30 @@ namespace IDPicker
     {
         public static IEnumerable<DataGridViewColumn> GetVisibleColumns(this DataGridView source) { return source.Columns.Cast<DataGridViewColumn>().Where(o => o.Visible); }
         public static IEnumerable<DataGridViewColumn> GetVisibleColumnsInDisplayOrder(this DataGridView source) { return source.GetVisibleColumns().OrderBy(o => o.DisplayIndex); }
+
+        /// <summary>
+        /// Returns SortOrder.Descending for SortOrder.Ascending, SortOrder.Ascending for SortOrder.Descending, or defaultOrder for SortOrder.None.
+        /// </summary>
+        public static SortOrder ToggleOrDefault(this SortOrder order, SortOrder defaultOrder = SortOrder.None)
+        {
+            switch(order)
+            {
+                case SortOrder.Ascending: return SortOrder.Descending;
+                case SortOrder.Descending: return SortOrder.Ascending;
+
+                default: case SortOrder.None: return defaultOrder;
+            }
+        }
+
+        public static System.Drawing.Point GetCenterPoint(this System.Drawing.Rectangle bounds)
+        {
+            return new System.Drawing.Point(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        }
+
+        public static System.Windows.Point GetCenterPoint(this System.Windows.Rect bounds)
+        {
+            return new System.Windows.Point(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        }
     }
 
     public static class StopwatchExtensionMethods

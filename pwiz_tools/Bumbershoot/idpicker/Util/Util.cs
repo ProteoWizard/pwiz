@@ -90,6 +90,28 @@ namespace IDPicker
                     InitializeAccessibleNames(child);
         }
 
+        public static void PostFormToURL(string url, IDictionary<string, object> paramDictionary)
+        {
+            var paramString = String.Join("&", paramDictionary.Select(o => String.Format("{0}={1}", o.Key, o.Value)));
+            const string postFormFileString = "<html><body><script>\n" +
+                                              "function post(path, params, method) { method = method || 'post'; var form = document.createElement('form'); form.setAttribute('method', method); form.setAttribute('action', path); for(var key in params) { if(params.hasOwnProperty(key)) { var hiddenField = document.createElement('input'); hiddenField.setAttribute('type', 'hidden'); hiddenField.setAttribute('name', key); hiddenField.setAttribute('value', params[key]); form.appendChild(hiddenField); } } document.body.appendChild(form); form.submit(); }\n" +
+                                              "function getQueryVariables() { var query = window.location.search.substring(1); var vars = query.split('&'); var result = {}; for (var i=0; i < vars.length; i++) { var pair = vars[i].split('='); result[pair[0]] = pair[1]; } return(result); } var query = getQueryVariables(); var site = query.site; if (site == undefined) {alert('No site specified in query string.');} else {delete query.site; post(site, query);}\n" +
+                                              "</script></body></html>";
+            string postFormFile = System.IO.Path.GetTempPath() + "idpickerPostForm.html";
+            if (!System.IO.File.Exists(postFormFile))
+                System.IO.File.WriteAllText(postFormFile, postFormFileString);
+            string postFormUrl = String.Format("file:///{0}?site={1}&{2}", postFormFile, Uri.EscapeUriString(url), Uri.EscapeUriString(paramString));
+
+            string browserCommand = Microsoft.Win32.Registry.GetValue(@"HKEY_CLASSES_ROOT\http\shell\open\command", "", null).ToString();
+            var tokens = browserCommand.Split(new string[] { ".exe" }, StringSplitOptions.None);
+            string browserExe = tokens[0].TrimStart('"') + ".exe";
+            string args = tokens[1].TrimStart('"', ' ');
+            if (args.Contains("%1")) args = args.Replace("%1", postFormUrl);
+            else args += " " + postFormFile;
+
+            System.Diagnostics.Process.Start(browserExe, args);
+        }
+
         /// <summary>
         /// Generate a CRC32 checksum from a byte array.
         /// </summary>

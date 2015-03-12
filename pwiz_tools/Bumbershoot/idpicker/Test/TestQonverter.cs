@@ -79,6 +79,7 @@ namespace Test
         #endregion
 
         [TestMethod]
+        [TestCategory("Model")]
         public void TestStaticQonverter ()
         {
             #region Example with forward and reverse proteins

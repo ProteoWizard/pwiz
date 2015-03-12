@@ -355,6 +355,8 @@ namespace IDPicker.DataModel
         /// </summary>
         public virtual char Site { get; protected set; }
 
+        public virtual double Probability { get { return probability; } protected set { probability = value; } }
+
         #region Transient instance members
         public PeptideModification () { }
         internal PeptideModification (string sequence, int offset)
@@ -370,6 +372,7 @@ namespace IDPicker.DataModel
         }
 
         private int offset;
+        private double probability;
         #endregion
     }
 

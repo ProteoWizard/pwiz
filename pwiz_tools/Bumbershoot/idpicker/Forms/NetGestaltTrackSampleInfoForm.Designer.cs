@@ -53,7 +53,7 @@ namespace IDPicker.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.dataGridView = new IDPicker.Controls.AutomationDataGridView();
             this.pivotGroupNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cancelButton = new System.Windows.Forms.Button();
             this.createButton = new System.Windows.Forms.Button();
@@ -180,7 +180,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView;
+        private IDPicker.Controls.AutomationDataGridView dataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn pivotGroupNameColumn;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button createButton;

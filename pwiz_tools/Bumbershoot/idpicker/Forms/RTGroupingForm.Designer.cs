@@ -52,7 +52,7 @@ namespace IDPicker.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.fileGroupingBox = new System.Windows.Forms.DataGridView();
+            this.fileGroupingBox = new IDPicker.Controls.AutomationDataGridView();
             this.autoGroupBox = new System.Windows.Forms.GroupBox();
             this.autoDetectButton = new System.Windows.Forms.Button();
             this.backRadio = new System.Windows.Forms.RadioButton();
@@ -223,7 +223,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        private System.Windows.Forms.DataGridView fileGroupingBox;
+        private IDPicker.Controls.AutomationDataGridView fileGroupingBox;
         private System.Windows.Forms.GroupBox autoGroupBox;
         private System.Windows.Forms.Button autoDetectButton;
         private System.Windows.Forms.RadioButton backRadio;
