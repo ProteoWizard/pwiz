@@ -2295,6 +2295,7 @@ namespace pwiz.Skyline.Model
         public AgilentIsolationListExporter(SrmDocument document)
             : base(document)
         {
+            IsPrecursorLimited = true;
             IsolationList = true;
         }
 
@@ -2460,6 +2461,7 @@ namespace pwiz.Skyline.Model
         public ThermoQExactiveIsolationListExporter(SrmDocument document)
             : base(document)
         {
+            IsPrecursorLimited = true;
             IsolationList = true;
         }
 
