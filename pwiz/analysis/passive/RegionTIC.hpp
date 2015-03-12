@@ -81,7 +81,7 @@ struct analyzer_strings<RegionTIC>
     static const char* id() {return "tic";}
     static const char* description() {return "write total ion counts for an m/z range";}
 #define TIC_MZRANGE_ARG "mz"
-    static const char* argsFormat() {return "["TIC_MZRANGE_ARG"=<mzLow>[,<mzHigh>]] ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static const char* argsFormat() {return "[" TIC_MZRANGE_ARG "=<mzLow>[,<mzHigh>]] [" TABULARCONFIG_DELIMITER_OPTIONS_STR "]";}
     static std::vector<std::string> argsUsage() 
     {
         std::vector<std::string> usage;

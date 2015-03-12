@@ -7,16 +7,16 @@
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -62,7 +62,7 @@ void printCommandUsage(ostream& os)
 // check for match, and construct list of expected values
 // in case of no match at all
 static string supportedAnalyzers;
-static bool supportedAnalyzer(const string &name,const string &id) 
+static bool supportedAnalyzer(const string &name,const string &id)
 {
     supportedAnalyzers += " \"";
     supportedAnalyzers += id;
@@ -70,7 +70,7 @@ static bool supportedAnalyzer(const string &name,const string &id)
     return name==id;
 }
 
-void initializeAnalyzers(MSDataAnalyzerContainer& analyzers, 
+void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
                          const vector<string>& commands)
 {
     shared_ptr<MSDataCache> cache(new MSDataCache);
@@ -139,7 +139,7 @@ string usage(const MSDataAnalyzerApplication& app)
         << "MassSpecAccess - command line access to mass spec data files\n"
         << "                 uses -x/--exec to specify analysis command.\n"
         << "\n"
-        << "Options:\n" 
+        << "Options:\n"
         << "\n"
         << app.usageOptions
         << "\n"
@@ -156,16 +156,16 @@ string usage(const MSDataAnalyzerApplication& app)
     printCommandUsage<Pseudo2DGel>(oss);
 
     oss << "\nExamples:\n\n"
-        << "msaccess data.mzML -x \"tic "TIC_MZRANGE_ARG"=409-410\" --filter=\"msLevel 2\"\n"
+        << "msaccess data.mzML -x \"tic " TIC_MZRANGE_ARG "=409-410\" --filter=\"msLevel 2\"\n"
         << "(creates data.mzML.tic.409.00-410.00.txt with total ion current info for mass range 409-410 in ms2 scans)\n"
         << "This could also be achieved as \"msaccess data.mzML -c mycfg.txt\" where mycfg.txt is a file containing the lines\n"
-        << "   exec = tic "TIC_MZRANGE_ARG"=409-410\n"
+        << "   exec = tic " TIC_MZRANGE_ARG "=409-410\n"
         << "   filter = msLevel 2\n\n"
         << "msaccess data.mzML -x spectrum_table\n"
         << "(creates data.mzML.spectrum_table.txt with summary information for all spectra as read from the scan headers)\n\n"
-        << "msaccess data.mzML -x \"binary "BINARY_INDEX_ARG"=0-3\"\n"
+        << "msaccess data.mzML -x \"binary " BINARY_INDEX_ARG "=0-3\"\n"
         << "(creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)\n\n"
-        << "msaccess data.mzML -x \"slice "SLICE_INDEX_ARG"=2,6 "SLICE_MZRANGE_ARG"=100,600 delimiter=tab\"\n"
+        << "msaccess data.mzML -x \"slice " SLICE_INDEX_ARG "=2,6 " SLICE_MZRANGE_ARG "=100,600 delimiter=tab\"\n"
         << "(creates data.mzML.slice.index_2-6.mz_100.0000-600.0000.tsv with a table of data in the selected range)\n\n"
         << "msaccess data.mzML -x \"image width=800 height=600\"\n"
         << "(creates data.mzML.image* with pseudo-2D-gel image of the data file)\n\n";
@@ -208,8 +208,6 @@ int main(int argc, const char* argv[])
     {
         cerr << "Caught unknown exception.\n";
     }
-    
+
     return 1;
 }
-
-

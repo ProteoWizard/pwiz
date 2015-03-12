@@ -22,7 +22,8 @@
 #       include <boost/thread/once.hpp>
 #   endif
 
-#   if defined(__GNUC__) && __GNUC__ >= 4
+//#   if defined(__GNUC__) && __GNUC__ >= 4
+#   if ! defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 4
 #     define BOOST_UTILITY_SINGLETON_API __attribute__ ((visibility("default")))
 #     pragma GCC visibility push(hidden)
 #   else
@@ -204,7 +205,8 @@ namespace boost
 
 } // namespace boost
 
-#   if defined(__GNUC__) && __GNUC__ >= 4
+//#   if defined(__GNUC__) && __GNUC__ >= 4
+#   if ! defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 4
 #     pragma GCC visibility pop
 #   endif
 

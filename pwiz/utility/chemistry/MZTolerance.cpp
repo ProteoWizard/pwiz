@@ -42,7 +42,16 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MZTolerance& mzt)
 PWIZ_API_DECL istream& operator>>(istream& is, MZTolerance& mzt)
 {
     string temp;
+#if defined(__clang__)
+    getline(is, temp);
+    size_t unitsIndex = temp.find_first_not_of("0123456789.-");
+    string value = temp.substr(0, unitsIndex);
+    temp.erase(0, unitsIndex);
+    temp.erase(temp.begin(), std::find_if(temp.begin(), temp.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    mzt.value = lexical_cast<double>(value);
+#else
     is >> mzt.value >> temp;
+#endif
 
     bal::to_lower(temp);
     if (temp == "mz" || temp == "m/z" || bal::starts_with(temp, "da")) mzt.units = MZTolerance::MZ;

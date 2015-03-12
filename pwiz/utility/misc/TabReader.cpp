@@ -25,7 +25,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
-namespace utility {
+namespace util {
 
 
 class DefaultTabHandler::Impl 

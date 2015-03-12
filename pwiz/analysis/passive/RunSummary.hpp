@@ -70,7 +70,7 @@ struct analyzer_strings<RunSummary>
 {
     static const char* id() {return "run_summary";}
     static const char* description() {return "print summary statistics about a run";}
-    static const char* argsFormat() {return "[msLevels=<int_set>] [charges=<int_set>] ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static const char* argsFormat() {return "[msLevels=<int_set>] [charges=<int_set>] [" TABULARCONFIG_DELIMITER_OPTIONS_STR "]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;

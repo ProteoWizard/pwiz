@@ -40,7 +40,7 @@ namespace data {
 namespace peakdata {
 
 
-using namespace pwiz::utility;
+using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace minimxml::SAXParser;
 

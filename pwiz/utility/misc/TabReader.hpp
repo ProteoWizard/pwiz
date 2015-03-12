@@ -33,7 +33,7 @@
 
 
 namespace pwiz {
-namespace utility {
+namespace util {
 
 struct PWIZ_API_DECL TabHandler
 {

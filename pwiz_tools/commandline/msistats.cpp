@@ -35,7 +35,7 @@
 #include "pwiz/utility/misc/MSIHandler.hpp"
 #include "pwiz/analysis/eharmony/Bin.hpp"
 
-using namespace pwiz::utility;
+using namespace pwiz::util;
 using namespace boost::accumulators;
 namespace bfs = boost::filesystem;
 

@@ -1855,7 +1855,11 @@ RAMPREAL *readPeaks(RAMPFILE *pFI,
               {
                   const char* pEndAttrValue;
                   pEndAttrValue = strchr( pBeginData + strlen( "contentType=\"") + 1 , '\"' );
-                  pEndAttrValue  = '\0';
+#if defined(__clang__)
+                  pEndAttrValue = 0; //change for C++-11
+#else
+                  pEndAttrValue = '\0'; //change for C++-11
+#endif
                   fprintf(stderr, "%s Unsupported content type\n" , pBeginData ); 
                   return NULL;
               }
@@ -1874,8 +1878,12 @@ RAMPREAL *readPeaks(RAMPFILE *pFI,
               {
                   const char* pEndAttrValue;
                   pEndAttrValue = strchr( pBeginData + strlen( "compressionType=\"") + 1 , '\"' );
-                  pEndAttrValue = '\0';
-                  fprintf(stderr, "%s Unsupported compression type\n" , pBeginData ); 
+#if defined(__clang__)
+                  pEndAttrValue = 0; //change for C++-11
+#else
+                  pEndAttrValue = '\0'; //change for C++-11
+#endif
+                  fprintf(stderr, "%s Unsupported compression type\n" , pBeginData );
                   return NULL;
               }
           }

@@ -89,7 +89,7 @@ struct analyzer_strings<RegionSIC>
 #define SIC_MZCENTER_ARG "mzCenter"
 #define SIC_RADIUS_ARG "radius"
 #define SIC_RADIUSUNITS_ARG "radiusUnits"
-    static const char* argsFormat() {return SIC_MZCENTER_ARG"=<mz> "SIC_RADIUS_ARG"=<radius> "SIC_RADIUSUNITS_ARG"=<amu|ppm> ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static const char* argsFormat() {return SIC_MZCENTER_ARG "=<mz> " SIC_RADIUS_ARG"=<radius> " SIC_RADIUSUNITS_ARG "=<amu|ppm> [" TABULARCONFIG_DELIMITER_OPTIONS_STR "]";}
     static std::vector<std::string> argsUsage() 
     {
         std::vector<std::string> usage;

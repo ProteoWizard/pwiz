@@ -30,9 +30,9 @@
 
 using namespace pwiz;
 using namespace eharmony;
-using namespace pwiz::utility;
-using namespace pwiz::proteome;
 using namespace pwiz::util;
+using namespace pwiz::proteome;
+
 
 typedef IslandizedDatabase::Gaussian Gaussian;
 

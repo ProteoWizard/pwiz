@@ -75,7 +75,7 @@ struct analyzer_strings<RegionSlice>
 #define SLICE_RETENTIONTIME_ARG "rt"
 #define SLICE_MZRANGE_ARG "mz"
     static const char* description() {return "write data from a rectangular region";}
-    static const char* argsFormat() {return "["SLICE_MZRANGE_ARG"=<mzLow>[,<mzHigh>]] ["SLICE_RETENTIONTIME_ARG"=<rtLow>[,<rtHigh>]]] ["SLICE_INDEX_ARG"=<indexLow>[,<indexHigh>] | "SLICE_SCAN_ARG"=<scanLow>[,<scanHigh>]] ["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static const char* argsFormat() {return "[" SLICE_MZRANGE_ARG "=<mzLow>[,<mzHigh>]] [" SLICE_RETENTIONTIME_ARG "=<rtLow>[,<rtHigh>]]] [" SLICE_INDEX_ARG "=<indexLow>[,<indexHigh>] | " SLICE_SCAN_ARG "=<scanLow>[,<scanHigh>]] [" TABULARCONFIG_DELIMITER_OPTIONS_STR "]";}
     static std::vector<std::string> argsUsage()
     {
         std::vector<std::string> result;

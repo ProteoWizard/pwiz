@@ -28,7 +28,6 @@
 #include <cstring>
 
 using namespace pwiz::util;
-using namespace pwiz::utility;
 
 ostream *os_ = NULL;
 

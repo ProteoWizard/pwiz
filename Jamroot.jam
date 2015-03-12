@@ -283,6 +283,8 @@ project pwiz
         # allow "long long" even with -pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
         <toolset>darwin:<cxxflags>-Wno-long-long
+	<toolset>darwin:<cxxflags>-std=c++11
+	<toolset>clang:<cxxflags>-std=c++11
 
         # any GCC executable that uses shared libraries must have all its code built with -fPIC
         <conditional>@static-with-fpic

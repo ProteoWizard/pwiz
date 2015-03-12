@@ -182,7 +182,7 @@ void testAnalyzerFamilyArgumentBackwardCompatibility()
 {
     if (os_) *os_ << "test for backward compatible commandline args:\n"; 
     RegionSIC::Config sicOld("100 5 amu"); //  mzCenter radius ("amu"|"ppm")
-    RegionSIC::Config sicNew(SIC_MZCENTER_ARG"=100 "SIC_RADIUS_ARG"=5 "SIC_RADIUSUNITS_ARG"=amu");
+    RegionSIC::Config sicNew(SIC_MZCENTER_ARG "=100 " SIC_RADIUS_ARG "=5 " SIC_RADIUSUNITS_ARG "=amu");
     unit_assert(sicOld == sicNew);
 
     RegionTIC::Config ticOld("delimiter=space 100 200"); //  mzlow mzhigh

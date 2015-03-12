@@ -81,7 +81,7 @@ struct analyzer_strings<SpectrumBinaryData>
 #define BINARY_INDEX_ARG "index"
 #define BINARY_SCAN_ARG "sn"
 #define BINARY_PRECISION_ARG "precision"
-    static const char* argsFormat() {return BINARY_INDEX_ARG"=<spectrumIndexLow>[,<spectrumIndexHigh>] | "BINARY_SCAN_ARG"=<scanNumberLow>[,<scanNumberHigh>] ["BINARY_PRECISION_ARG"=<precision>]";}
+    static const char* argsFormat() {return BINARY_INDEX_ARG "=<spectrumIndexLow>[,<spectrumIndexHigh>] | " BINARY_SCAN_ARG "=<scanNumberLow>[,<scanNumberHigh>] [" BINARY_PRECISION_ARG "=<precision>]";}
 
     static const char* description() {return "write binary data for selected spectra";}
 

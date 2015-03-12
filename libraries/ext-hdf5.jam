@@ -163,7 +163,7 @@ rule hdf5-requirements ( properties * )
     {
         return <source>$(location)/src/H5FDdirect.c
                <define>$(.posix_build_defines)
-               <cflags>-std=c99 ;
+               <cflags> ;
     }
     else
     {

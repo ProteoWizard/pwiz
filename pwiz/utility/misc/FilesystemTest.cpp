@@ -60,23 +60,23 @@ string setSystemDrive(const string& path)
 const char* testPathContentPairArray[] =
 {
     // path                                        content (empty indicates directory)
-    ABS"pwiz_foofoo_test",                           "root file",
-    ABS"pwiz_foo_test",                              "",
-    ABS"pwiz_foo_test"A"this file",                  "has content",
-    ABS"pwiz_foo_test"A"this dir has",               "",
-    ABS"pwiz_foo_test"A"this dir has"A"a test file", "with content",
-    ABS"pwiz_bar_test",                              "",
-    ABS"pwiz_bar_test"A"some file",                  "12345",
-    ABS"pwiz_bar_test"A"some dir",                   "",
+    ABS "pwiz_foofoo_test",                           "root file",
+    ABS "pwiz_foo_test",                              "",
+    ABS "pwiz_foo_test" A "this file",                  "has content",
+    ABS "pwiz_foo_test" A "this dir has",               "",
+    ABS "pwiz_foo_test" A "this dir has" A "a test file", "with content",
+    ABS "pwiz_bar_test",                              "",
+    ABS "pwiz_bar_test" A "some file",                  "12345",
+    ABS "pwiz_bar_test" A "some dir",                   "",
 
-    REL"pwiz_foofoo_test",                           "root file",
-    REL"pwiz_foo_test",                              "",
-    REL"pwiz_foo_test"A"this file",                  "has content",
-    REL"pwiz_foo_test"A"this dir has",               "",
-    REL"pwiz_foo_test"A"this dir has"A"a test file", "with content",
-    REL"pwiz_bar_test",                              "",
-    REL"pwiz_bar_test"A"some file",                  "12345",
-    REL"pwiz_bar_test"A"some dir",                   ""
+    REL "pwiz_foofoo_test",                           "root file",
+    REL "pwiz_foo_test",                              "",
+    REL "pwiz_foo_test" A "this file",                  "has content",
+    REL "pwiz_foo_test" A "this dir has",               "",
+    REL "pwiz_foo_test" A "this dir has" A "a test file", "with content",
+    REL "pwiz_bar_test",                              "",
+    REL "pwiz_bar_test" A "some file",                  "12345",
+    REL "pwiz_bar_test" A "some dir",                   ""
 };
 
 
@@ -92,21 +92,21 @@ struct TestPathmask
 
 const TestPathmask testPathmaskArray[] =
 {
-    { ABS"pwiz_f??f??_test",       ABS"pwiz_foofoo_test" },
-    { ABS"pwiz_???_test",          ABS"pwiz_foo_test"D ABS"pwiz_bar_test" },
-    { ABS"pwiz_f*o_test",          ABS"pwiz_foo_test"D ABS"pwiz_foofoo_test" },
-    { ABS"pwiz_foobar_test",       "" },
-    { ABS"pwiz_foo_test"A"no*hit", "" },
-    { ABS"pwiz_foo_test"A"*",      ABS"pwiz_foo_test"A"this file"D ABS"pwiz_foo_test"A"this dir has" },
-    { ABS"pwiz_foo_test"A"this *", ABS"pwiz_foo_test"A"this file"D ABS"pwiz_foo_test"A"this dir has" },
+    { ABS "pwiz_f??f??_test",       ABS "pwiz_foofoo_test" },
+    { ABS "pwiz_???_test",          ABS "pwiz_foo_test" D ABS "pwiz_bar_test" },
+    { ABS "pwiz_f*o_test",          ABS "pwiz_foo_test" D ABS "pwiz_foofoo_test" },
+    { ABS "pwiz_foobar_test",       "" },
+    { ABS "pwiz_foo_test" A "no*hit", "" },
+    { ABS "pwiz_foo_test" A "*",      ABS "pwiz_foo_test" A "this file" D ABS "pwiz_foo_test" A "this dir has" },
+    { ABS"pwiz_foo_test" A "this *", ABS "pwiz_foo_test" A "this file" D ABS "pwiz_foo_test" A "this dir has" },
 
-    { REL"pwiz_f??f??_test",       REL"pwiz_foofoo_test" },
-    { REL"pwiz_???_test",          REL"pwiz_foo_test"D REL"pwiz_bar_test" },
-    { REL"pwiz_f*o_test",          REL"pwiz_foo_test"D REL"pwiz_foofoo_test" },
-    { REL"pwiz_foobar_test",       "" },
-    { REL"pwiz_foo_test"A"no*hit", "" },
-    { REL"pwiz_foo_test"A"*",      REL"pwiz_foo_test"A"this file"D REL"pwiz_foo_test"A"this dir has" },
-    { REL"pwiz_foo_test"A"this *", REL"pwiz_foo_test"A"this file"D REL"pwiz_foo_test"A"this dir has" }
+    { REL "pwiz_f??f??_test",       REL "pwiz_foofoo_test" },
+    { REL "pwiz_???_test",          REL "pwiz_foo_test" D REL "pwiz_bar_test" },
+    { REL "pwiz_f*o_test",          REL "pwiz_foo_test" D REL "pwiz_foofoo_test" },
+    { REL "pwiz_foobar_test",       "" },
+    { REL "pwiz_foo_test" A "no*hit", "" },
+    { REL "pwiz_foo_test" A "*",      REL "pwiz_foo_test" A "this file" D REL "pwiz_foo_test" A "this dir has" },
+    { REL "pwiz_foo_test" A "this *", REL "pwiz_foo_test" A "this file" D REL "pwiz_foo_test" A "this dir has" }
 };
 
 

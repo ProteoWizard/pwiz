@@ -29,7 +29,7 @@
 #include "boost/shared_ptr.hpp"
 
 namespace pwiz {
-namespace utility {
+namespace util {
 
 class  PWIZ_API_DECL MSIHandler : public DefaultTabHandler
 {

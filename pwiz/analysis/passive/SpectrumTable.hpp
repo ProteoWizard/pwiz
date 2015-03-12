@@ -66,7 +66,7 @@ struct analyzer_strings<SpectrumTable>
 {
     static const char* id() {return "spectrum_table";}
     static const char* description() {return "write spectrum metadata as read from scan headers, in a table format";}
-    static const char* argsFormat() {return "["TABULARCONFIG_DELIMITER_OPTIONS_STR"]";}
+    static const char* argsFormat() {return "[" TABULARCONFIG_DELIMITER_OPTIONS_STR "]";}
     static std::vector<std::string> argsUsage()
     {
         return std::vector<std::string>(1, TABULARCONFIG_DELIMITER_USAGE_STR);

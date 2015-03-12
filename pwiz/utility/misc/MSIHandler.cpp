@@ -24,7 +24,7 @@
 #include "MSIHandler.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 namespace pwiz {
-namespace utility {
+namespace util {
 
 
 MSIHandler::Record::Record(const std::vector<std::string>& fields)
