@@ -34,7 +34,7 @@ namespace SkylineTester
 {
     public class TabNightly : TabBase
     {
-        public const string NIGHTLY_TASK_NAME = "Skyline nightly build";
+        public const string NIGHTLY_TASK_NAME = "SkylineTester scheduled run"; // Not to be confused with the SkylineNightly task
 
         private Timer _updateTimer;
         private Timer _stopTimer;
@@ -114,7 +114,7 @@ namespace SkylineTester
             {
                 // Create a new task definition and assign properties
                 TaskDefinition td = ts.NewTask();
-                td.RegistrationInfo.Description = "Skyline nightly build/test";
+                td.RegistrationInfo.Description = "SkylineTester scheduled build/test";
                 td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                 // Add a trigger that will fire the task every other day
@@ -144,6 +144,8 @@ namespace SkylineTester
 
                 // Register the task in the root folder
                 ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
+
+                MessageBox.Show("If you have a scheduled SkylineNightly run on this machine (and you should!) make certain that this SkylineTester schedule doesn't overlap that one.  They will interfere with each other.");
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
 
