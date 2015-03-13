@@ -139,7 +139,7 @@
     <value>8</value>
   </data>
   <data name="btnAddAnnotation.Text" xml:space="preserve">
-    <value>Add...</value>
+    <value>&amp;Add...</value>
   </data>
   <data name="&gt;&gt;btnAddAnnotation.Name" xml:space="preserve">
     <value>btnAddAnnotation</value>
@@ -199,7 +199,7 @@
     <value>6</value>
   </data>
   <data name="btnEditAnnotationList.Text" xml:space="preserve">
-    <value>Edit List...</value>
+    <value>&amp;Edit List...</value>
   </data>
   <data name="&gt;&gt;btnEditAnnotationList.Name" xml:space="preserve">
     <value>btnEditAnnotationList</value>
@@ -280,7 +280,7 @@
     <value>11</value>
   </data>
   <data name="btnAddGroupComparison.Text" xml:space="preserve">
-    <value>Add...</value>
+    <value>&amp;Add...</value>
   </data>
   <data name="&gt;&gt;btnAddGroupComparison.Name" xml:space="preserve">
     <value>btnAddGroupComparison</value>
@@ -310,7 +310,7 @@
     <value>10</value>
   </data>
   <data name="btnEditGroupComparisonList.Text" xml:space="preserve">
-    <value>Edit List...</value>
+    <value>&amp;Edit List...</value>
   </data>
   <data name="&gt;&gt;btnEditGroupComparisonList.Name" xml:space="preserve">
     <value>btnEditGroupComparisonList</value>

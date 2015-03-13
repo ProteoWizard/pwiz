@@ -233,10 +233,10 @@ namespace pwiz.SkylineTestTutorial
 
                 {
                     var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+                    var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                    WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
                     RunUI(() =>
                     {
-                        var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
-                        Assert.AreEqual(expectedRows, previewReportDlg.RowCount);
                         Assert.AreEqual(4, previewReportDlg.ColumnCount);
                         var precursors =
                             SkylineWindow.Document.MoleculeTransitionGroups.ToArray();
