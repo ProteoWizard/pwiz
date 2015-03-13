@@ -65,6 +65,7 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        unknownInstrumentIsError = true;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -196,7 +197,9 @@ Config parseCommandLine(int argc, char** argv)
     std::string ms_numpress_slof_default = ss2.str();
     bool detailedHelp = false;
 
-    po::options_description od_config("Options");
+    pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
+
+    po::options_description od_config("Options", consoleBounds.first);
     od_config.add_options()
         ("filelist,f",
             po::value<string>(&filelistFilename),
@@ -309,6 +312,9 @@ Config parseCommandLine(int argc, char** argv)
         ("acceptZeroLengthSpectra",
             po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")
+        ("ignoreUnknownInstrumentError",
+            po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(!config.unknownInstrumentIsError),
+            ": if true, if an instrument cannot be determined from a vendor file, it will not be an error ")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")
@@ -334,7 +340,8 @@ Config parseCommandLine(int argc, char** argv)
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
 
-
+    // negate unknownInstrumentIsError value since command-line parameter (ignoreUnknownInstrumentError) and the Config parameters use inverse semantics
+    config.unknownInstrumentIsError = !config.unknownInstrumentIsError;
 
     // append options description to usage string
 
@@ -342,7 +349,7 @@ Config parseCommandLine(int argc, char** argv)
 
     // extra usage
 
-    usage << SpectrumListFactory::usage(detailedHelp,"run this command with --help to see more detail") << endl;
+    usage << SpectrumListFactory::usage(detailedHelp, "run this command with --help to see more detail", consoleBounds.first) << endl;
 
     usage << "Examples:\n"
           << endl

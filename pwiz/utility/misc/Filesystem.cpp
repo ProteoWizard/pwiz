@@ -42,6 +42,7 @@ using std::runtime_error;
 #else
     #include <sys/types.h>
     #include <sys/stat.h>
+    #include <sys/ioctl.h>
     #include <glob.h>
     #include <dirent.h>
     #include <unistd.h>
@@ -263,6 +264,26 @@ PWIZ_API_DECL string read_file_header(const string& filepath, size_t length)
         is.read(&head[0], (std::streamsize)head.size());
     }
     return head;
+}
+
+
+PWIZ_API_DECL std::pair<int, int> get_console_bounds(const std::pair<int, int>& defaultBounds)
+{
+#ifdef WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    BOOL ret;
+    ret = GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    if (ret)
+        return make_pair(csbi.dwSize.X, csbi.dwSize.Y);
+    else
+        return defaultBounds;
+#else
+    winsize max;
+    if (ioctl(0, TIOCGWINSZ, &max) == 0)
+        return make_pair(max.ws_col, max.ws_row);
+    else
+        return defaultBounds;
+#endif
 }
 
 

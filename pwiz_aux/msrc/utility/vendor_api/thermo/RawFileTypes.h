@@ -97,6 +97,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_TSQ_Quantum_Ultra,
     InstrumentModelType_TSQ_Quantum_Ultra_AM,
     InstrumentModelType_TSQ_Vantage_Standard,
+    InstrumentModelType_TSQ_Vantage_EMR,
     InstrumentModelType_Element_XR,
     InstrumentModelType_Element_GD,
     InstrumentModelType_GC_IsoLink,
@@ -168,6 +169,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "TSQ QUANTUM ULTRA")       return InstrumentModelType_TSQ_Quantum_Ultra;
     else if (type == "TSQ QUANTUM ULTRA AM")    return InstrumentModelType_TSQ_Quantum_Ultra_AM;
     else if (type == "TSQ VANTAGE STANDARD")    return InstrumentModelType_TSQ_Vantage_Standard;
+    else if (type == "TSQ VANTAGE EMR")         return InstrumentModelType_TSQ_Vantage_EMR;
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
@@ -234,6 +236,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_TSQ_Vantage_Standard:
+        case InstrumentModelType_TSQ_Vantage_EMR:
             ionSources.push_back(IonizationType_ESI);
             break;
 
@@ -367,6 +370,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_TSQ_Vantage_Standard:
+        case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_GC_Quantum:
             return MassAnalyzerType_Triple_Quadrupole;
 
@@ -464,6 +468,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_TSQ_Vantage_Standard:
+        case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_GC_Quantum:
             massAnalyzers.push_back(MassAnalyzerType_Triple_Quadrupole);
             break;
@@ -579,6 +584,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_TSQ_Vantage_Standard:
+        case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_DSQ:
         case InstrumentModelType_PolarisQ:
         case InstrumentModelType_ITQ_700:

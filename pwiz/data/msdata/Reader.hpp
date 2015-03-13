@@ -52,6 +52,9 @@ class PWIZ_API_DECL Reader
         /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
         bool combineIonMobilitySpectra;
 
+        /// when true, if a reader cannot identify an instrument, an exception will be thrown asking users to report it
+        bool unknownInstrumentIsError;
+
         Config();
         Config(const Config& rhs);
     };

@@ -117,7 +117,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 }
 
 
-void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
+void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const Reader::Config& config)
 {
     msd.cvs = defaultCVList();
 
@@ -220,6 +220,12 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+    else
+    {
+        if (config.unknownInstrumentIsError)
+            throw runtime_error("[Reader_Thermo::fillInMetadata] unable to parse instrument model; please report this error to the ProteoWizard developers with this information: model(" + rawfile.value(InstModel) + ") name(" + rawfile.value(InstName) + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");
+        // TODO: else log warning
+    }
 
     msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(rawfile.getCreationDate());
@@ -254,7 +260,7 @@ void Reader_Thermo::read(const string& filename,
     result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 
-    fillInMetadata(filename, *rawfile, result);
+    fillInMetadata(filename, *rawfile, result, config);
 }
 
 

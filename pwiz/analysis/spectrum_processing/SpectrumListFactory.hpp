@@ -48,7 +48,7 @@ class PWIZ_API_DECL SpectrumListFactory
     static void wrap(msdata::MSData& msd, const std::vector<std::string>& wrappers, pwiz::util::IterationListenerRegistry* ilr = NULL);
 
     /// user-friendly documentation, with option of less or more detail
-    static std::string usage(bool detailedHelp = true, const char* morehelp_prompt = NULL);
+    static std::string usage(bool detailedHelp = true, const char* morehelp_prompt = NULL, int maxLineLength = 80);
 };
 
 

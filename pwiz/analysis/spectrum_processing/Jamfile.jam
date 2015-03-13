@@ -27,35 +27,27 @@ project
     ;
 
 
-lib pwiz_analysis_spectrum_processing
+lib pwiz_analysis_spectrum_processing_basic
     : # sources  
-        SpectrumListFactory.cpp
         SpectrumList_Sorter.cpp
         SpectrumList_ScanSummer.cpp
         SpectrumList_Filter.cpp
-        SpectrumList_PrecursorRecalculator.cpp
         SpectrumList_Smoother.cpp
         SpectrumList_PeakPicker.cpp
         SpectrumList_PeakFilter.cpp
         SpectrumList_ChargeStateCalculator.cpp
         SpectrumList_ChargeFromIsotope.cpp
         SpectrumList_MZWindow.cpp
-        SpectrumList_MZRefiner.cpp
         SpectrumList_MetadataFixer.cpp
         SpectrumList_TitleMaker.cpp
 		SpectrumList_PrecursorRefine.cpp
         SpectrumList_ZeroSamplesFilter.cpp
         SpectrumList_3D.cpp
-        PrecursorRecalculatorDefault.cpp
-        PrecursorMassFilter.cpp
 		MS2NoiseFilter.cpp
 		MS2Deisotoper.cpp
         ThresholdFilter.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/identdata//pwiz_data_identdata
-        <library>../peakdetect//pwiz_analysis_peakdetect
-        <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
         <library>$(PWIZ_ROOT_PATH)//svm
@@ -64,30 +56,47 @@ lib pwiz_analysis_spectrum_processing
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
-        <library>../../data/identdata//pwiz_data_identdata
-        <library>../peakdetect//pwiz_analysis_peakdetect
-        <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
         <library>$(PWIZ_ROOT_PATH)//svm
     ;
 
+lib pwiz_analysis_spectrum_processing
+    : # sources  
+        pwiz_analysis_spectrum_processing_basic
+        SpectrumList_MZRefiner.cpp
+        PrecursorRecalculatorDefault.cpp
+        PrecursorMassFilter.cpp
+        SpectrumList_PrecursorRecalculator.cpp
+        SpectrumListFactory.cpp
+    : # requirements
+        <library>pwiz_analysis_spectrum_processing_basic
+        <library>../../data/identdata//pwiz_data_identdata
+        <library>../peakdetect//pwiz_analysis_peakdetect
+        <library>../passive//pwiz_analysis_passive_core
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_analysis_spectrum_processing_basic
+        <library>../../data/identdata//pwiz_data_identdata
+        <library>../peakdetect//pwiz_analysis_peakdetect
+        <library>../passive//pwiz_analysis_passive_core
+    ;
 
 #
 # unit tests (ordered by dependency)
 #
 
 
-unit-test-if-exists SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test-if-exists SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing_basic ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing_basic ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test-if-exists SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test-if-exists SpectrumList_ChargeFromIsotopeTest : SpectrumList_ChargeFromIsotopeTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test-if-exists SpectrumList_ScanSummerTest : SpectrumList_ScanSummerTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test-if-exists MS2DeisotoperTest : MS2DeisotoperTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing_basic ;
+unit-test-if-exists SpectrumList_ChargeFromIsotopeTest : SpectrumList_ChargeFromIsotopeTest.cpp pwiz_analysis_spectrum_processing_basic ;
+unit-test-if-exists SpectrumList_ScanSummerTest : SpectrumList_ScanSummerTest.cpp pwiz_analysis_spectrum_processing_basic ;
+unit-test-if-exists MS2DeisotoperTest : MS2DeisotoperTest.cpp pwiz_analysis_spectrum_processing_basic ;
 unit-test-if-exists SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test-if-exists SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test-if-exists SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing_basic ;
+unit-test-if-exists SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing_basic ;
 
 
 # Special run targets for tests with data files.
@@ -127,7 +136,7 @@ run-if-exists SpectrumList_MZRefinerTest.cpp pwiz_analysis_spectrum_processing
     ;
 
 import path ;
-run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing_basic $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
     : # input-files
     : <vendor-api-support>off:<build>no # requirements

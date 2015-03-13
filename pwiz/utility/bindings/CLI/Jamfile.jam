@@ -84,7 +84,7 @@ local data_libs =
         # msdata
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/$(bound_lib_requirements)
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_examples/$(bound_lib_requirements)
-        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing_basic/$(bound_lib_requirements)
 
         # HACK: not needed when using hacked tss_pe.cpp
         #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage

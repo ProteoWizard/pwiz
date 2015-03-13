@@ -1481,7 +1481,7 @@ void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappe
 
 
 PWIZ_API_DECL
-string SpectrumListFactory::usage(bool detailedHelp,const char *morehelp_prompt)
+string SpectrumListFactory::usage(bool detailedHelp, const char *morehelp_prompt, int maxLineLength)
 {
     ostringstream oss;
     MSData fakemsd;
@@ -1520,9 +1520,8 @@ string SpectrumListFactory::usage(bool detailedHelp,const char *morehelp_prompt)
 
     // tidy up the word wrap
     std::string str = oss.str();
-    const size_t wrap = 70; // wrap at 70 columns
     size_t lastPos = 0;
-    for (size_t curPos = wrap ; curPos < str.length(); ) 
+    for (size_t curPos = maxLineLength; curPos < str.length();)
     {
         std::string::size_type newlinePos = str.rfind( '\n', curPos );
         if( newlinePos == std::string::npos || (newlinePos <= lastPos))
@@ -1536,13 +1535,13 @@ string SpectrumListFactory::usage(bool detailedHelp,const char *morehelp_prompt)
             else 
             {
                 str[ spacePos ] = '\n';
-                curPos = spacePos + wrap + 1;
+                curPos = spacePos + maxLineLength + 1;
             }
         } 
         else 
         {
             lastPos = curPos;
-            curPos = newlinePos + wrap + 1;
+            curPos = newlinePos + maxLineLength + 1;
         }
     }
 
