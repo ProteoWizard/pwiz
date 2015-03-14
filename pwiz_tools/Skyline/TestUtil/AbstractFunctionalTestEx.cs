@@ -65,18 +65,23 @@ namespace pwiz.SkylineTestUtil
         /// <param name="dataFiles">List of data file paths</param>
         public void ImportResults(params string[] dataFiles)
         {
-            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
-            {
-                var filePaths = dataFiles.Select(dataFile => TestFilesDir.GetTestPath(dataFile)).ToArray();
-                importResultsDlg.NamedPathSets =
-                    importResultsDlg.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
-                importResultsDlg.OkDialog();
-            });
+            ImportResultsAsync(dataFiles);
 
             WaitForConditionUI(() =>
             {
                 var document = SkylineWindow.DocumentUI;
                 return document.Settings.HasResults && document.Settings.MeasuredResults.IsLoaded;
+            });
+        }
+
+        public void ImportResultsAsync(params string[] dataFiles)
+        {
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            {
+                var filePaths = dataFiles.Select(dataFile => TestFilesDirs[0].GetTestPath(dataFile)).ToArray();
+                importResultsDlg.NamedPathSets =
+                    importResultsDlg.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
+                importResultsDlg.OkDialog();
             });
         }
 

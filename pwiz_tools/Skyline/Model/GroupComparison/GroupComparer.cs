@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                             BioReplicate = grouping.Key.Key,
                             Control = grouping.Key.Value,
                             ReplicateIndex = -1,
-                            Log2Abundance = Math.Log(grouping.Average(row => Math.Pow(2, row.Log2Abundance)), 2)
+                            Log2Abundance = grouping.Average(row => row.Log2Abundance),
                         };
                     }).ToList();
             }

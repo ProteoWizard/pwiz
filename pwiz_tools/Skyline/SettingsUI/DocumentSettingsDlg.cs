@@ -11,8 +11,8 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class DocumentSettingsDlg : FormEx
     {
-        private SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
-        private SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
+        private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
+        private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
 
         public DocumentSettingsDlg(IDocumentContainer documentContainer)
         {

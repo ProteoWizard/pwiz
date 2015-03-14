@@ -2863,6 +2863,9 @@
     </Compile>
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\CloseableDockableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
@@ -3694,9 +3697,6 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="SettingsUI\DocumentSettings\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

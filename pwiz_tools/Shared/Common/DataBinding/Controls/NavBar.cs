@@ -245,6 +245,11 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnManageViews(object sender, EventArgs eventArgs)
         {
+            ManageViews();
+        }
+
+        public void ManageViews()
+        {
             ViewContext.ManageViews(this);
         }
 

@@ -118,6 +118,7 @@
     <Compile Include="CustomReportsTutorialTest.cs" />
     <Compile Include="DiaTutorialTest.cs" />
     <Compile Include="ExistingExperimentsTutorialTest.cs" />
+    <Compile Include="GroupedStudies1TutorialTest.cs" />
     <Compile Include="GroupedStudiesTutorialTest.cs" />
     <Compile Include="IrtTutorialTest.cs" />
     <Compile Include="LibraryExplorerTutorialTest.cs" />
@@ -196,6 +197,7 @@
     <None Include="CustomReportsViews.zip" />
     <None Include="DiaViews.zip" />
     <None Include="ExistingExperimentsViews.zip" />
+    <None Include="GroupedStudies1Views.zip" />
     <None Include="IrtViews.zip" />
     <None Include="MethodEditCSVs.zip" />
     <None Include="MethodEditViews.zip" />

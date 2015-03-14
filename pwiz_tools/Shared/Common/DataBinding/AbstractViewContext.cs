@@ -196,7 +196,7 @@ namespace pwiz.Common.DataBinding
                     FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
                 })
                 {
-                    if (saveFileDialog.ShowDialog(owner) == DialogResult.Cancel)
+                    if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
                     {
                         return;
                     }
@@ -359,7 +359,7 @@ namespace pwiz.Common.DataBinding
             viewSpec = MakeEditable(viewSpec, originalName);
             using (var customizeViewForm = CreateViewEditor(viewSpec))
             {
-                if (customizeViewForm.ShowDialog(owner) == DialogResult.Cancel)
+                if (customizeViewForm.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
                 {
                     return null;
                 }
@@ -395,7 +395,7 @@ namespace pwiz.Common.DataBinding
                 ExportDataButtonVisible = false,
             })
             {
-                manageViewsForm.ShowDialog(owner.TopLevelControl);
+                manageViewsForm.ShowDialog(FormUtil.FindTopLevelOwner(owner));
             }
         }
 
