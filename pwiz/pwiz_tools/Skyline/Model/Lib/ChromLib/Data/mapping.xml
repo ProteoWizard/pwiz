@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
-    namespace="pwiz.Skyline.Model.Lib.ChromLib.Data" assembly="Skyline-daily">
+    namespace="pwiz.Skyline.Model.Lib.ChromLib.Data" assembly="Skyline">
   <class name="IrtLibrary">
     <id name="Id">
       <generator class="native"/>
