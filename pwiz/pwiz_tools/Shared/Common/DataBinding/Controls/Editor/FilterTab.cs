@@ -157,6 +157,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void BtnDeleteFilterOnClick(object sender, EventArgs e)
         {
+            DeleteSelectedFilters();
+        }
+
+        public void DeleteSelectedFilters()
+        {
             var newFilters = ViewSpec.Filters.Where((filterSpec, index) => !dataGridViewFilter.Rows[index].Selected);
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }

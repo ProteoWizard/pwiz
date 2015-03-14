@@ -41,6 +41,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -96,6 +97,9 @@ namespace pwiz.SkylineTestTutorial
         private bool IsFullData { get { return IsPauseForScreenShots; } }
 
         private const string TRUNCATED_PRECURSORS_VIEW_NAME = "Truncated Precursors";
+        private const string MISSING_PEAKS_VIEW_NAME = "Missing Peaks";
+
+        private readonly string _missingDataName = AnnotationDef.GetColumnName("MissingData");
 
         protected override void DoTest()
         {
@@ -108,6 +112,8 @@ namespace pwiz.SkylineTestTutorial
             ExploreBottomPeptides();
 
             PrepareForStatistics();
+
+            ReviewStatistics();
         }
 
         private void OpenImportArrange()
@@ -539,7 +545,7 @@ namespace pwiz.SkylineTestTutorial
             var pathTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
             int expectedItems = 148;
             if (IsFullData)
-                expectedItems = initialTestExecution ? 222 : 220;
+                expectedItems = initialTestExecution ? 222 : 221;
             try
             {
                 WaitForConditionUI(1000, () => documentGrid.RowCount == expectedItems &&
@@ -564,6 +570,8 @@ namespace pwiz.SkylineTestTutorial
 
         private void ExploreGlobalStandards()
         {
+            RunUI(() => SkylineWindow.SetIntegrateAll(true));
+
             var peptideCount = SkylineWindow.Document.PeptideCount;
 
             // Ensure some settings, in case prior steps did not occur
@@ -660,6 +668,8 @@ namespace pwiz.SkylineTestTutorial
 
         private void ExploreBottomPeptides()
         {
+            RunUI(() => SkylineWindow.SetIntegrateAll(true));
+
             var peptideCount = SkylineWindow.Document.PeptideCount;
 
             RunUI(() =>
@@ -827,6 +837,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot("Retention Times graph - poor run-to-run correlation - logical order", 43);
 
                 RestoreViewOnScreen(44);
+                SelectNode(SrmDocument.Level.Peptides, i);
                 ActivateReplicate("D_102_REP3");
 
                 PauseForScreenShot("Cromatogram graph (A) - no peak - Formate width 3.2", 44);
@@ -865,6 +876,8 @@ namespace pwiz.SkylineTestTutorial
 
         private void PrepareForStatistics()
         {
+            RunUI(() => SkylineWindow.SetIntegrateAll(true));
+
             {
                 Settings.Default.AnnotationDefList.Clear();
                 var annotationSettingsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
@@ -930,7 +943,7 @@ namespace pwiz.SkylineTestTutorial
                     gridView.CurrentCell = gridView.Rows[0].Cells[columnSubjectId.Index];
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid - SubjectId column selected", 50);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - SubjectId column selected", 51);
 
                 var filePath = GetTestPath(@"Heart Failure\raw\Annotations.xlsx");
                 SetExcelFileClipboardText(filePath, "Sheet1", 3, true);
@@ -950,7 +963,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() => annotationSettingsDlg.AnnotationsCheckedListBox.SetItemChecked(3, true));
 
-                PauseForScreenShot<ChooseAnnotationsDlg>("Annotations form with all annotations checked", 52);
+                PauseForScreenShot<ChooseAnnotationsDlg>("Annotations form with all annotations checked", 53);
 
                 OkDialog(annotationSettingsDlg, annotationSettingsDlg.OkDialog);
             }
@@ -958,48 +971,236 @@ namespace pwiz.SkylineTestTutorial
             if (IsEnableLiveReports)
             {
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-                bool hasTruncatedPrecursorsView = false;
-                RunUI(() => hasTruncatedPrecursorsView = documentGrid.BindingListSource.ViewContext.CustomViews.Contains(view =>
-                           view.Name == TRUNCATED_PRECURSORS_VIEW_NAME));
-                if (!hasTruncatedPrecursorsView)
-                        AddTruncatedPrecursorsView(documentGrid, false);
+
+                EnsureTruncatedPrecursorsView(documentGrid);
 
                 RunUI(() => documentGrid.ChooseView(TRUNCATED_PRECURSORS_VIEW_NAME));
 
                 var viewEditor = ShowDialog<ViewEditor>(documentGrid.NavBar.CustomizeView);
-                var missingDataName = AnnotationDef.GetColumnName("MissingData");
                 RunUI(() =>
                 {
                     var pathPeptides = PropertyPath.Parse("Proteins!*.Peptides!*");
                     viewEditor.ChooseColumnsTab.ExpandPropertyPath(pathPeptides, true);
                     viewEditor.Height = 452;
-                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(pathPeptides.Property(missingDataName)));
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(pathPeptides.Property(_missingDataName)));
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 });
 
-                PauseForScreenShot<ViewEditor>("Customize View form with MissingData annotation checked", 53);
+                PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form with MissingData annotation checked", 54);
 
                 OkDialog(viewEditor, viewEditor.OkDialog);
 
-                RunUI(() => FormEx.GetParentForm(documentGrid).Size = new Size(591, 283));
+                RunUI(() => FormEx.GetParentForm(documentGrid).Size = new Size(591, 296));
 
-                var pathMissingData = PropertyPath.Parse("Peptide").Property(missingDataName);
+                var pathMissingData = PropertyPath.Parse("Peptide").Property(_missingDataName);
                 WaitForConditionUI(() => (documentGrid.RowCount > 0 &&
                     documentGrid.FindColumn(pathMissingData) != null)); // Let it initialize
 
+                var pathCountTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
+                RunUI(() =>
+                {
+                    var columnCountTruncated = documentGrid.FindColumn(pathCountTruncated);
+                    documentGrid.DataGridView.Sort(columnCountTruncated,
+                        ListSortDirection.Descending);                    
+                });
+
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field", 54);
 
+                int expectedRows = IsFullData ? 223 : 149;
+                const int expectedRowsAbbreviated = 221; // When not all of the tests are run
                 RunUI(() =>
                 {
                     var columnSubjectId = documentGrid.FindColumn(pathMissingData);
                     var gridView = documentGrid.DataGridView;
+                    if (IsFullData && expectedRowsAbbreviated == gridView.Rows.Count)
+                        expectedRows = expectedRowsAbbreviated;
+                    else
+                        Assert.AreEqual(expectedRows, gridView.Rows.Count);
                     gridView.CurrentCell = gridView.Rows[0].Cells[columnSubjectId.Index];
                     gridView.CurrentCell.Value = true;
                     gridView.CurrentCell = gridView.Rows[1].Cells[columnSubjectId.Index];
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field checked", 54);
+                PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field checked", 55);
+
+                string linesTrue = TextUtil.LineSeparate(new string[expectedRows].Select(v => "TRUE"));
+                RunUI(() =>
+                {
+                    ClipboardEx.SetText(linesTrue);
+                    var gridView = documentGrid.DataGridView;
+                    var columnSubjectId = documentGrid.FindColumn(pathMissingData);
+                    gridView.CurrentCell = gridView.Rows[0].Cells[columnSubjectId.Index];
+                    gridView.SendPaste();
+
+                    for (int i = 0; i < expectedRows; i++)
+                    {
+                        var value = gridView.Rows[i].Cells[columnSubjectId.Index].Value;
+                        Assert.IsTrue((bool)value);
+                    }
+
+                    documentGrid.Close();
+                });
+
+                SelectPeptide("SQLPGIIAEGR");
+
+                PauseForScreenShot("Targets NP_036870 and peptides", 56);
             }
+
+            if (IsEnableLiveReports)
+            {
+                var pathPrecursors = PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*");
+                var pathCountTruncated = PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CountTruncated");
+                var pathTotalArea = PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.TotalArea");
+
+                var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+                var viewManager = ShowDialog<ManageViewsForm>(documentGrid.NavBar.ManageViews);
+                RunUI(() => viewManager.SelectView(TRUNCATED_PRECURSORS_VIEW_NAME));
+                var viewEditor = ShowDialog<ViewEditor>(viewManager.CopyView);
+                RunUI(() =>
+                {
+                    viewEditor.ViewName = MISSING_PEAKS_VIEW_NAME;
+                    viewEditor.ChooseColumnsTab.RemoveColumn(pathPrecursors);
+                    viewEditor.ChooseColumnsTab.RemoveColumn(pathCountTruncated);
+                    PivotReplicateAndIsotopeLabelWidget.SetPivotReplicate(viewEditor, true);
+                    viewEditor.Height = 352;
+                });
+
+                PauseForScreenShot<ViewEditor.ChooseColumnsView>("Missing Results view", 56);
+
+                RunUI(() =>
+                {
+                    viewEditor.TabControl.SelectTab(1);
+                    viewEditor.FilterTab.DeleteSelectedFilters();
+                    viewEditor.ActivatePropertyPath(pathTotalArea);
+                    int iFilter = viewEditor.ViewInfo.Filters.Count;
+                    viewEditor.FilterTab.AddSelectedColumn();
+                    viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_BLANK);
+                });
+
+                PauseForScreenShot<ViewEditor.FilterView>("Filter tab of column editor", 57);
+
+                OkDialog(viewEditor, viewEditor.OkDialog);
+                OkDialog(viewManager, viewManager.AcceptButton.PerformClick);
+            }
+        }
+
+        private void EnsureTruncatedPrecursorsView(DocumentGridForm documentGrid)
+        {
+            bool hasTruncatedPrecursorsView = false;
+            RunUI(() => hasTruncatedPrecursorsView = documentGrid.BindingListSource.ViewContext.CustomViews.Contains(view =>
+                view.Name == TRUNCATED_PRECURSORS_VIEW_NAME));
+            if (!hasTruncatedPrecursorsView)
+                AddTruncatedPrecursorsView(documentGrid, false);
+        }
+
+        private void ReviewStatistics()
+        {
+            RunUI(() => SkylineWindow.SetIntegrateAll(true));
+
+            RunUI(() =>
+            {
+                if (!string.IsNullOrEmpty(SkylineWindow.DocumentFilePath))
+                    SkylineWindow.SaveDocument();
+                SkylineWindow.OpenSharedFile(GetTestPath(@"Heart Failure\Rat_plasma.sky.zip"));
+            });
+
+            if (IsEnableLiveReports)
+            {
+                // From prepare for statistics section to get expected screenshot
+                var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+
+                bool hasMissingPeaksView = false;
+                RunUI(() => hasMissingPeaksView = documentGrid.BindingListSource.ViewContext.CustomViews.Contains(view =>
+                    view.Name == MISSING_PEAKS_VIEW_NAME));
+                if (hasMissingPeaksView)
+                {
+                    RunUI(() => documentGrid.ChooseView(MISSING_PEAKS_VIEW_NAME));
+
+                    WaitForConditionUI(() => documentGrid.IsComplete && documentGrid.RowCount == 10);
+
+                    var pathPeptide = PropertyPath.Parse("Peptide");
+                    var pathMissingData = pathPeptide.Property(_missingDataName);
+                    RunUI(() =>
+                    {
+                        var columnSubjectId = documentGrid.FindColumn(pathMissingData);
+                        var gridView = documentGrid.DataGridView;
+                        gridView.CurrentCell = gridView.Rows[gridView.RowCount - 2].Cells[columnSubjectId.Index];
+                        gridView.CurrentCell.Value = false;
+                        gridView.CurrentCell = gridView.Rows[gridView.RowCount - 1].Cells[columnSubjectId.Index];
+                        gridView.CurrentCell.Value = false;
+
+                        var columnPeptide = documentGrid.FindColumn(pathPeptide);
+                        gridView.CurrentCell = gridView.Rows[0].Cells[columnPeptide.Index];
+                        FormEx.GetParentForm(documentGrid).Size = new Size(756, 352);
+                    });
+
+                    PauseForScreenShot<DocumentGridForm>("Missing Peaks view in document grid", 57);
+
+                    RunUI(() =>
+                    {
+                        var columnSubjectId = documentGrid.FindColumn(pathMissingData);
+                        var gridView = documentGrid.DataGridView;
+                        gridView.CurrentCell = gridView.Rows[gridView.RowCount - 2].Cells[columnSubjectId.Index];
+                        gridView.CurrentCell.Value = true;
+                        gridView.CurrentCell = gridView.Rows[gridView.RowCount - 1].Cells[columnSubjectId.Index];
+                        gridView.CurrentCell.Value = true;
+                    });
+                }
+
+                OkDialog(documentGrid, documentGrid.Close);                
+            }
+
+            RestoreViewOnScreen(12); // Same layout for Peak Areas graph as on page 12
+
+            FindNode("DVFSQQADLSR");
+
+            RunUI(() =>
+            {
+                SkylineWindow.ShowTotalTransitions();
+                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
+                SkylineWindow.GroupByReplicateAnnotation("SubjectId");
+                SkylineWindow.ShowCVValues(true);
+            });
+
+            ActivateReplicate("D_102_REP1");
+
+            PauseForScreenShot("By SubjectId CV peak area ratio to global standard", 59);
+
+            RestoreViewOnScreen(60);
+
+            RunUI(() =>
+            {
+                SkylineWindow.GroupByReplicateAnnotation("Condition");
+                SkylineWindow.ShowCVValues(false);
+            });
+
+            FindNode("IAELFSDLEER");
+
+            PauseForScreenShot("IAELFSDLEER mean peak area ratio to global standard by condition", 60);
+
+            FindNode("FSISTDYSLK");
+
+            PauseForScreenShot("FSISTDYSLK mean peak area ratio to global standard by condition", 60);
+
+            FindNode("EVLPELGIK");
+
+            PauseForScreenShot("EVLPELGIK mean peak area ratio to global standard by condition", 60);
+
+            FindNode("SVVDIGLIK");
+
+            PauseForScreenShot("SVVDIGLIK mean peak area ratio to global standard by condition", 61);
+
+            FindNode("LQTEGDGIYTLNSEK");
+
+            PauseForScreenShot("LQTEGDGIYTLNSEK mean peak area ratio to global standard by condition", 61);
+
+            FindNode("CSSLLWAGAAWLR");
+
+            PauseForScreenShot("CSSLLWAGAAWLR mean peak area ratio to global standard by condition", 61);
+
+            FindNode("NLGVVVAPHALR");
+
+            PauseForScreenShot("NLGVVVAPHALR mean peak area ratio to global standard by condition", 61);
         }
 
         private void AddReplicateAnnotation(ChooseAnnotationsDlg annotationSettingsDlg,
