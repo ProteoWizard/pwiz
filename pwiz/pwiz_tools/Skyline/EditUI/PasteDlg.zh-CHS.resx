@@ -367,7 +367,7 @@
     <value>gridViewProteins</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Parent" xml:space="preserve">
     <value>tabPageProteinList</value>
@@ -442,7 +442,7 @@
     <value>gridViewPeptides</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Parent" xml:space="preserve">
     <value>tabPagePeptideList</value>
@@ -529,7 +529,7 @@
     <value>gridViewTransitionList</value>
   </data>
   <data name="&gt;&gt;gridViewTransitionList.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewTransitionList.Parent" xml:space="preserve">
     <value>tabPageTransitionList</value>
@@ -904,6 +904,6 @@
     <value>PasteDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
