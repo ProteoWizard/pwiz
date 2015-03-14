@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
