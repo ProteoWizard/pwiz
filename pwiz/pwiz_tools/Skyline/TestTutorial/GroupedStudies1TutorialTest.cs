@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 var pathLibraryName = PropertyPath.Parse("LibraryName");
-                RunUI(() => documentGrid.ChooseView("Precursors"));
+                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
                 WaitForConditionUI(() => documentGrid.RowCount > 0 &&
                     documentGrid.FindColumn(pathLibraryName) != null); // Let it initialize
 
@@ -492,7 +492,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void AddTruncatedPrecursorsView(DocumentGridForm documentGrid, bool initialTestExecution)
         {
-            RunUI(() => documentGrid.ChooseView("Precursors"));
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
             WaitForCondition(() => (documentGrid.RowCount > 0)); // Let it initialize
 
             var viewEditor = ShowDialog<ViewEditor>(documentGrid.NavBar.CustomizeView);
@@ -916,7 +916,7 @@ namespace pwiz.SkylineTestTutorial
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 RunUI(() =>
                 {
-                    documentGrid.ChooseView("Replicates");
+                    documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
                     FormEx.GetParentForm(documentGrid).Size = new Size(591, 283);
                 });
                 var pathSubjectId = PropertyPath.Root.Property(AnnotationDef.GetColumnName("SubjectId"));
