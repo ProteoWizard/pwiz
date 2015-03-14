@@ -344,6 +344,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        public void RemoveColumns(int startIndex, int endIndex)
+        {
+            for (int i = Math.Min(endIndex, ColumnCount) - 1; i >= Math.Max(0, startIndex); i--)
+                RemoveColumn(VisibleColumns[i].PropertyPath);
+        }
+
         public void ActivateColumn(int index)
         {
             ListViewHelper.SelectIndex(listViewColumns, index);

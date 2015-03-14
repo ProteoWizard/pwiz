@@ -214,5 +214,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ViewContext.CopyView(this, _views[listView1.SelectedIndices[0]]);
             RefreshUi(true);
         }
+
+        public void SelectView(string viewName)
+        {
+            for (int i = 0; i < listView1.Items.Count; i++)
+            {
+                listView1.Items[i].Selected = (listView1.Items[i].Text == viewName);
+            }
+        }
     }
 }
