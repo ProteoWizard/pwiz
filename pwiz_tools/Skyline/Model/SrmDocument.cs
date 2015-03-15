@@ -237,7 +237,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_9 = 1.9;   // Adds sequence lookup key for decoys
         public const double FORMAT_VERSION_2_61 = 2.61;   // Adds drift time high energy offsets for Waters IMS
         public const double FORMAT_VERSION_2_62 = 2.62;   // Revised small molecule support
-        public const double FORMAT_VERSION = FORMAT_VERSION_2_62;
+        public const double FORMAT_VERSION_3_1 = 3.1;   // Release format. No change from 2.62
+        public const double FORMAT_VERSION = FORMAT_VERSION_3_1;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
