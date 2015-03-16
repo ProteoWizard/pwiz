@@ -438,7 +438,7 @@ namespace Test
                     // - choosing an existing filepath asks user to confirm overwriting
                     // - that the automatically generated merged filepath is correct
                     Window saveDialog = null;
-                    IDPicker.Util.TryRepeatedly(() => saveDialog = window.ModalWindows()[0]);
+                    IDPicker.Util.TryRepeatedly<IndexOutOfRangeException>(() => saveDialog = window.ModalWindows()[0], 10, 500);
                     windowStack.Push(saveDialog);
 
                     // HACK: saveDialog.Get<TextBox>() won't work because of some unsupported control types in the Save Dialog (at least on Windows 7); I'm not sure if the 1001 id is stable

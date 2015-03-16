@@ -52,13 +52,14 @@ namespace Test
                 Assert.AreEqual(expectedList[i], actualList[i], "Sequence elements at index " + i.ToString() + " are not equal.");
         }
 
-        public static void AssertMultilineStringEquals(this string expected, string actual)
+        public static void AssertMultilineStringEquals(this string expected, string actual, string message = null)
         {
             var expectedList = expected.Replace("\r\n", "\n").TrimEnd('\n', '\t', ' ').Split('\n').ToList();
             var actualList = actual.Replace("\r\n", "\n").TrimEnd('\n', '\t', ' ').Split('\n').ToList();
-            Assert.AreEqual(expectedList.Count, actualList.Count, "Strings have different numbers of lines.");
+            var prefix = message != null ? message + ": " : String.Empty;
+            Assert.AreEqual(expectedList.Count, actualList.Count, prefix + "Strings have different numbers of lines: " + actual);
             for (int i = 0; i < expectedList.Count; ++i)
-                Assert.AreEqual(expectedList[i], actualList[i], "Line " + i.ToString() + " is not equal.");
+                Assert.AreEqual(expectedList[i], actualList[i], prefix + "Line " + i.ToString() + " is not equal.");
         }
 
         public static IEnumerable<CustomUIItem> GetDockableForms(this Window window)

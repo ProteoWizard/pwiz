@@ -56,6 +56,7 @@ namespace Test
         {
             return row.GetValuesAsString(emptyStringPlaceholder, cellDelimiter, includeRowHeader);
         }
+        
 
         [TestMethod]
         [TestCategory("GUI")]
@@ -448,6 +449,7 @@ namespace Test
                     minColumnTextBox.ClearAndEnter("1");
                     minRowTextBox.ClearAndEnter("100");
                     window.Mouse.Click(pointOutsideGridViewContent); // click outside the text box to commit the changed values
+                    System.Threading.Thread.Sleep(500);
 
                     gridViewTable = modificationTableForm.GetFastTable("dataGridView");
                     rows = gridViewTable.Rows;
@@ -561,9 +563,6 @@ namespace Test
                     var exportToFileMenuItem = exportMenu.Items[1];
                     var openInExcelMenuItem = exportMenu.Items[2];
 
-                    copyToClipboardMenuItem.Click();
-                    window.WaitWhileBusy();
-
                     string expectedTsvText = "Delta Mass\tTotal\tN-term\tC\tD\tE\tK\tQ\tR\tS\tT\tY\n" +
                                              "Total\t768\t134\t149\t95\t95\t116\t29\t33\t23\t20\t19\n" +
                                              "79.9663 ; Phospho\t51\t\t\t\t\t\t\t\t23\t20\t8\n" +
@@ -573,13 +572,18 @@ namespace Test
                                              "14.0157 ; Methyl ; Asp->Glu ; Gly->Ala ; Ser->Thr ; Val->Xle ; Asn->Gln\t57\t\t\t\t\t39\t\t18\t\t\t\n" +
                                              "-17.0265 ; Gln->pyro-Glu ; Ammonia-loss\t29\t\t\t\t\t\t29\t\t\t\t\n" +
                                              "-18.0106 ; Dehydrated ; Glu->pyro-Glu\t4\t\t\t\t4";
-                    var clipboardText = System.Windows.Forms.Clipboard.GetText();
-                    expectedTsvText.AssertMultilineStringEquals(clipboardText);
 
-                    exportButton.Click();
-                    exportToFileMenuItem.Click();
-                    window.WaitWhileBusy();
+                    IDPicker.Util.TryRepeatedly<Exception>(() =>
+                    {
+                        exportButton.ClickAndWaitWhileBusy(window);
+                        copyToClipboardMenuItem.ClickAndWaitWhileBusy(window);
+                        System.Threading.Thread.Sleep(500);
+                        var clipboardText = System.Windows.Forms.Clipboard.GetText();
+                        expectedTsvText.AssertMultilineStringEquals(clipboardText, "copyToClipboardTest");
+                        }, 5, 500);
 
+                    exportButton.ClickAndWaitWhileBusy(window);
+                    exportToFileMenuItem.ClickAndWaitWhileBusy(window);
                     var saveDialog = new PopUpMenu(window.GetElement(SearchCriteria.ByNativeProperty(AutomationElement.NameProperty, "Save As")), new NullActionListener());
 
                     // HACK: saveDialog.Get<TextBox>() won't work because of some unsupported control types in the Save Dialog (at least on Windows 7); I'm not sure if the 1001 id is stable
@@ -588,11 +592,10 @@ namespace Test
                     var saveButton = new Button(saveDialog.AutomationElement.FindFirst(TreeScope.Descendants, new AndCondition(new PropertyCondition(AutomationElement.AutomationIdProperty, "1"), new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button))), new NullActionListener());
                     saveTarget.BulkText = saveFilepath;
                     window.WaitWhileBusy();
-                    saveButton.RaiseClickEvent();
-                    window.WaitWhileBusy();
+                    saveButton.ClickAndWaitWhileBusy(window);
 
                     var exportedText = File.ReadAllText(saveFilepath);
-                    expectedTsvText.AssertMultilineStringEquals(exportedText);
+                    expectedTsvText.AssertMultilineStringEquals(exportedText, "exportToTsvTest");
 
                     // TODO: how to test Excel if it's not necessarily installed on the test agent?
                 }
