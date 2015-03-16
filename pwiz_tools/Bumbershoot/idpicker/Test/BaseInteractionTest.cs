@@ -29,6 +29,7 @@ using TestStack.White;
 
 namespace Test
 {
+    [TestClass]
     public class BaseInteractionTest
     {
         public TestContext TestContext { get; set; }
