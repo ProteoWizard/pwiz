@@ -1399,7 +1399,7 @@ namespace IDPicker
                             ++i;
                             form.DockingHandler.DockAreas = (form.DockingHandler.DockAreas | DockAreas.Float);
                             var rect = dockPanel.ClientRectangle;
-                            rect.Offset(i * 50, i * 50);
+                            rect.Offset(i * 15, i * 15);
                             rect.Size = new System.Drawing.Size(960, 600);
                             form.DockingHandler.Show(dockPanel, rect);
                         }
