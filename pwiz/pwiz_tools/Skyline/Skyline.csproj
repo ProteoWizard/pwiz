@@ -42,12 +42,12 @@
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_3_1/</InstallUrl>
     <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_3_1/</UpdateUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>7309</ApplicationRevision>
-    <ApplicationVersion>3.1.0.7309</ApplicationVersion>
+    <ApplicationRevision>7312</ApplicationRevision>
+    <ApplicationVersion>3.1.0.7312</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -3687,7 +3687,7 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-    <PublishFile Include="Skyline-daily.pdb">
+    <PublishFile Include="Skyline.pdb">
       <Visible>False</Visible>
       <Group>
       </Group>
