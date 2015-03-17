@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>7311</ApplicationRevision>
-    <ApplicationVersion>3.1.1.7311</ApplicationVersion>
+    <ApplicationRevision>7313</ApplicationRevision>
+    <ApplicationVersion>3.1.1.7313</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2863,9 +2863,6 @@
     </Compile>
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
-    <Compile Include="Util\CloseableDockableForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />

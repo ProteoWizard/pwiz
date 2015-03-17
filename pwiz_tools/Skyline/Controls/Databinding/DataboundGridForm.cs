@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -26,11 +27,18 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
-    public partial class DataboundGridForm : CloseableDockableForm
+    public partial class DataboundGridForm : DockableFormEx
     {
         public DataboundGridForm()
         {
             InitializeComponent();
+
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            Dispose();
         }
 
         #region Methods exposed for testing
