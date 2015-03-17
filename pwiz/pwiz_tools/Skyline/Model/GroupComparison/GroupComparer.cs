@@ -195,6 +195,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return null;
             }
             var summarizedRows = SummarizeDataRowsByAveraging(detailRows);
+            if (summarizedRows.Count == 0)
+            {
+                return null;
+            }
             if (null != runAbundances)
             {
                 runAbundances.AddRange(summarizedRows);
