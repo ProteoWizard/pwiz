@@ -46,8 +46,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>7313</ApplicationRevision>
-    <ApplicationVersion>3.1.1.7313</ApplicationVersion>
+    <ApplicationRevision>7317</ApplicationRevision>
+    <ApplicationVersion>3.1.1.7317</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2111,8 +2111,8 @@
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
-    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
+    <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Include="Method\Thermo\BuildThermoMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2123,8 +2123,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Resources\EmptyList.bmp" />
-    <Content Include="Resources\HomeIcon.bmp" />
-    <Content Include="Resources\magnifier_zoom_in.ico" />
+    <EmbeddedResource Include="Resources\HomeIcon.bmp" />
+    <EmbeddedResource Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
     <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_thumb.jpg" />
     <EmbeddedResource Include="Resources\StartPage\WizardTransitionIcon.png" />
@@ -2149,8 +2149,8 @@
     <EmbeddedResource Include="Resources\Molecule.bmp" />
     <EmbeddedResource Include="Resources\MoleculeList.bmp" />
     <EmbeddedResource Include="Resources\PeptideList.bmp" />
-    <None Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
-    <None Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2900,7 +2900,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Properties\app.manifest" />
+    <None Include="Properties\app.manifest">
+      <SubType>Designer</SubType>
+    </None>
     <EmbeddedResource Include="Resources\Blank.bmp" />
     <EmbeddedResource Include="Resources\DataProcessing.png" />
     <EmbeddedResource Include="Resources\File.png" />
@@ -3594,86 +3596,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PublishFile Include="BDal.BCO.Objects.xml">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>File</FileType>
-    </PublishFile>
-    <PublishFile Include="BDal.CCO.Objects.xml">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>File</FileType>
-    </PublishFile>
-    <PublishFile Include="BDal.CXt.Lc">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="BDal.CXt.Lc.Factory">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="BDal.CXt.Lc.Interfaces">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="BDal.CXt.Lc.UntU2">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="FlexVariableTable.xml">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>File</FileType>
-    </PublishFile>
-    <PublishFile Include="ICRVariableTable.xml">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>File</FileType>
-    </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>
       <Group>
