@@ -2863,9 +2863,6 @@
     </Compile>
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
-    <Compile Include="Util\CloseableDockableForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />

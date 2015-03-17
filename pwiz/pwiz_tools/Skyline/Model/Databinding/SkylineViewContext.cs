@@ -70,14 +70,14 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
         {
-            return MessageBox.Show(FormUtil.FindTopLevelOwner(owner), message, Program.Name, messageBoxButtons);
+            return MessageBox.Show(owner, message, Program.Name, messageBoxButtons);
         }
 
         public override bool RunLongJob(Control owner, Action<IProgressMonitor> job)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, job);
+                var status = longWaitDlg.PerformWork(owner == null ? null : owner.TopLevelControl, 1000, job);
                 return status.IsComplete;
             }
         }
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Databinding
             })
             {
                 // TODO: If document has been saved, initial directory should be document directory
-                if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
+                if (saveFileDialog.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
                 {
                     return false;
                 }
@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Model.Databinding
                 Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS)
             })
             {
-                saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
+                saveFileDialog.ShowDialog(owner);
                 if (!string.IsNullOrEmpty(saveFileDialog.FileName))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
@@ -517,7 +517,7 @@ namespace pwiz.Skyline.Model.Databinding
                         ReportSpecList.EXT_REPORTS)
             })
             {
-                importDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
+                importDialog.ShowDialog(owner);
                 if (string.IsNullOrEmpty(importDialog.FileName))
                 {
                     return;
