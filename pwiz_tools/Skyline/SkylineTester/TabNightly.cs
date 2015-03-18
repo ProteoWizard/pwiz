@@ -145,7 +145,6 @@ namespace SkylineTester
                 // Register the task in the root folder
                 ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
 
-                MessageBox.Show("If you have a scheduled SkylineNightly run on this machine (and you should!) make certain that this SkylineTester schedule doesn't overlap that one.  They will interfere with each other.");
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
 
@@ -164,7 +163,7 @@ namespace SkylineTester
             var hours = (startTime - DateTime.Now).Hours;
             if (hours < 0)
                 hours += 24;
-            MessageBox.Show("Nightly build will start in about {0} hours.".With(hours));
+            MessageBox.Show("Nightly build will start in about {0} hours.  If you have a scheduled SkylineNightly run on this machine (and you should!) make certain that this SkylineTester schedule doesn't overlap that one.  They will interfere with each other.".With(hours));
             return false;
         }
 
