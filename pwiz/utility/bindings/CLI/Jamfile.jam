@@ -120,15 +120,15 @@ path-constant DOC_DATA_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc/d
 SHELL "if not exist \"$(DOC_DATA_PATH)\\\" mkdir \"$(DOC_DATA_PATH)\"" ;
 
 
-obj ParamTypes        : common/ParamTypes.cpp        : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
-obj IterationListener : common/IterationListener.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
+obj ParamTypes        : common/ParamTypes.cpp        : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
+obj IterationListener : common/IterationListener.cpp : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
 obj Unimod            : common/Unimod.cpp            : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
 
-obj MSDataDiff       : msdata/Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
-obj MSData           : msdata/MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData.xdc" ;
-obj MSDataFile       : msdata/MSDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataFile.xdc" ;
-obj MSDataReader     : msdata/Reader.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataReader.xdc" ;
-obj MSData_examples  : msdata/examples.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData_examples.xdc" ;
+obj MSDataDiff       : msdata/Diff.cpp       : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
+obj MSData           : msdata/MSData.cpp     : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData.xdc" ;
+obj MSDataFile       : msdata/MSDataFile.cpp : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataFile.xdc" ;
+obj MSDataReader     : msdata/Reader.cpp     : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataReader.xdc" ;
+obj MSData_examples  : msdata/examples.cpp   : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData_examples.xdc" ;
 
 obj spectrum_processing       : analysis/spectrum_processing.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/spectrum_processing.xdc" ;
 obj SpectrumList_PeakFilter   : analysis/SpectrumList_PeakFilter.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/SpectrumList_PeakFilter.xdc" ;

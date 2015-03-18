@@ -672,6 +672,7 @@ install msconvert
     : pwiz_tools/commandline//msconvert
     : <conditional>@install-type
       <conditional>@install-location
+      <conditional>@install-identdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
     ;
