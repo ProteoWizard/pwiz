@@ -884,7 +884,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string compound = GetCompound(nodePep);
+            string compound = string.Concat(GetCompound(nodePep), nodeTranGroup.TransitionGroup.LabelTypeText);
             if (!_compoundCounts.ContainsKey(compound))
             {
                 _compoundCounts[compound] = 0;
