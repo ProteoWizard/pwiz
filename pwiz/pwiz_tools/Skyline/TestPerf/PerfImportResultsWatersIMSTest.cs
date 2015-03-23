@@ -110,8 +110,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
             RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
-            // Modifications and full-scan settings are already set up, so those
-            // pages should get skipped.
+            // Modifications are already set up, so that page should get skipped.
+            RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
+
 
             // Add FASTA also skipped because filter for document peptides was chosen.
 
