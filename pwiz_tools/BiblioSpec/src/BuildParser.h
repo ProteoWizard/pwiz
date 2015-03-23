@@ -130,7 +130,7 @@ class BuildParser : protected SAXHandler{
   BuildParser(BlibBuilder& maker,
               const char* filename,
               const ProgressIndicator* parent_progress);
-  ~BuildParser();
+  virtual ~BuildParser();
   virtual bool parseFile() = 0; // pure virtual, force subclass to define
 
   string getFileName();

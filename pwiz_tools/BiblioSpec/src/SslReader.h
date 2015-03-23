@@ -31,8 +31,9 @@ class sslPSM : public PSM {
   public:
     std::string filename; 
     PSM_SCORE_TYPE scoreType;
+    double retentionTime;
 
-    sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE){};
+    sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE), retentionTime(-1) {};
 
     static void setFile(sslPSM& psm, const std::string& value){
         if( value.empty() ){
@@ -90,12 +91,22 @@ class sslPSM : public PSM {
             }
         }
     }
+    static void setRetentionTime(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.retentionTime = boost::lexical_cast<double>(value);
+            } catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric retention time: %s",
+                                    value.c_str());
+            }
+        }
+    }
 };
 
 /**
  * The SslReader class to parse .ssl files.  Uses a DelimitedFileReader.
  */
-class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM> {
+class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public PwizReader {
   public:
     SslReader(BlibBuilder& maker,
               const char* sslname,
@@ -103,14 +114,24 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM> {
     ~SslReader();
 
     virtual bool parseFile();  // inherited from BuildParser
-    virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer 
+    virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer
 
+    virtual bool getSpectrum(int identifier,
+                             SpecData& returnData,
+                             SPEC_ID_TYPE type,
+                             bool getPeaks);
+
+    virtual bool getSpectrum(std::string identifier,
+                             SpecData& returnData,
+                             bool getPeaks);
 
   private:
     string sslName_;
     string sslDir_;   // look for spectrum files in the same dir as the ssl
     map<string, vector<PSM*> > fileMap_; // vector of PSMs for each spec file
     map<string, PSM_SCORE_TYPE> fileScoreTypes_; // score type for each file
+
+    map<int, double> overrideRt_; // forced retention times (key is scan number)
 
     void parseModSeq(vector<SeqMod>& mods, string& modSeq);
     void unmodifySequence(string& seq);

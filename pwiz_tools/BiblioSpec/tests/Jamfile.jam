@@ -174,6 +174,7 @@ blib-test-build sqt-ez : -o : output/sqt-ez.blib : sqt-ez.check : inputs/wormy4r
 blib-test-build ssl : -o : output/ssl.blib : ssl.check : inputs/demo.ssl ;
 blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : inputs/extra-cols.ssl ;
 blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : inputs/three-duplicates.ssl ;
+blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : inputs/ssl-with-rt.ssl ;
 
 # Test building with percolator XML files
 

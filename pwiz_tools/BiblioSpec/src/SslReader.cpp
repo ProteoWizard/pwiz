@@ -37,10 +37,14 @@ SslReader::SslReader(BlibBuilder& maker,
   {
     Verbosity::debug("Creating SslReader.");
     sslDir_ = getPath(sslName_);
+
+    delete specReader_;  // delete base class reader
+    specReader_ = this;
   }
 
   SslReader::~SslReader()
   {
+      specReader_ = NULL;  // avoid deleting this
   }
 
   /**
@@ -75,7 +79,11 @@ SslReader::SslReader(BlibBuilder& maker,
       } else {
           (mapAccess->second).push_back(curPSM);
       }
- 
+
+      if (newPSM.retentionTime >= 0)
+      {
+          overrideRt_[newPSM.specKey] = newPSM.retentionTime;
+      }
   }
 
   bool SslReader::parseFile(){
@@ -93,6 +101,7 @@ SslReader::SslReader(BlibBuilder& maker,
     // add the optional columns
     fileReader.addOptionalColumn("score-type", sslPSM::setScoreType);
     fileReader.addOptionalColumn("score", sslPSM::setScore);
+    fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
 
     // use tab-delimited
     fileReader.defineSeparators('\t');
@@ -134,7 +143,30 @@ SslReader::SslReader(BlibBuilder& maker,
     return true;
   }
 
+  bool SslReader::getSpectrum(int identifier,
+                              SpecData& returnData,
+                              SPEC_ID_TYPE type,
+                              bool getPeaks) {
+    if (type != SCAN_NUM_ID) {
+      throw BlibException(false, "SslReader can only look up spectra by scan number"); // Should never happen
+    }
+    if (PwizReader::getSpectrum(identifier, returnData, SCAN_NUM_ID, getPeaks))
+    {
+      map<int, double>::const_iterator i = overrideRt_.find(identifier);
+      if (i != overrideRt_.end()) {
+        returnData.retentionTime = i->second;
+      }
+      return true;
+    }
+    return false;
+  }
 
+  bool SslReader::getSpectrum(string identifier,
+                              SpecData& returnData,
+                              bool getPeaks) {
+    throw BlibException(false, "SslReader can only look up spectra by scan number"); // Should never happen
+    return false;
+  }
 
   /**
    * Finds modifications of the form [+/-float] and for each for each inserts
