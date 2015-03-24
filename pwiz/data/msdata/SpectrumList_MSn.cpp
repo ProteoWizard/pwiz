@@ -430,7 +430,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
           {
             const pair<int, double>& chargeMass = chargeMassPairs.at(i);
             precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, chargeMass.first));
-            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, chargeMass.second));
+            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass_OBSOLETE, chargeMass.second));
             precursor.selectedIons.back().set(MS_selected_ion_m_z, 
                                               calculateMassOverCharge(chargeMass.second, chargeMass.first,
                                                                       1), // this is a singly charged mass
@@ -522,7 +522,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
           
               // store each charge and accurate mass as a separate selected ion
               precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, eCharge));
-              precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, eMass));
+              precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass_OBSOLETE, eMass));
               precursor.selectedIons.back().set(MS_selected_ion_m_z, calculateMassOverCharge(eMass, eCharge, 1), MS_m_z);
               precursor.selectedIons.push_back(SelectedIon());
             }

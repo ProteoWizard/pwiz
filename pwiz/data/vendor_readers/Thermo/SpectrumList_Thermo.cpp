@@ -319,10 +319,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
         if (scanInfo->FAIMSOn())
-		{
-            result->set(MS_FAIMS);
             result->set(MS_FAIMS_compensation_voltage, scanInfo->CompensationVoltage());
-        }
 
         size_t scanRangeCount = scanInfo->scanRangeCount();
         if ((scanType == ScanType_SIM || scanType == ScanType_SRM) && scanRangeCount > 1)

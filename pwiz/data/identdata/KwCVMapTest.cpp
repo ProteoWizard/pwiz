@@ -36,11 +36,11 @@ void testCVMap()
 {
     if (os_) (*os_) << "\ntestCVMap()\n";
 
-    CVMap map("sample name", MS_sample_name_OBSOLETE,
+    CVMap map("sample name", MS_sample_name,
               "/mzIdentML/AnalysisSampleCollection/Sample/cvParam");
 
     unit_assert(map.keyword == "sample name");
-    unit_assert(map.cvid == MS_sample_name_OBSOLETE);
+    unit_assert(map.cvid == MS_sample_name);
     unit_assert(map("sample name"));
     unit_assert(!map("potato"));
 }
@@ -49,11 +49,11 @@ void testRegexCVMap()
 {
     if (os_) (*os_) << "\ntestRegexCVMap()\n";
     
-    RegexCVMap rx("[Ss]ample[ ]+[Nn]ame", MS_sample_name_OBSOLETE,
+    RegexCVMap rx("[Ss]ample[ ]+[Nn]ame", MS_sample_name,
                   "/mzIdentML/AnalysisSampleCollection/Sample/cvParam");
 
     //unit_assert(map.keyword == "sample name");
-    unit_assert(rx.cvid == MS_sample_name_OBSOLETE);
+    unit_assert(rx.cvid == MS_sample_name);
     unit_assert(rx("sample name"));
     unit_assert(rx("Sample name"));
     unit_assert(rx("sample Name"));
@@ -65,7 +65,7 @@ void testCVMapIO()
 {
     if (os_) (*os_) << "\ntestCVMapIO()\n";
 
-    CVMap map("sample name", MS_sample_name_OBSOLETE,
+    CVMap map("sample name", MS_sample_name,
               "/mzIdentML/AnalysisSampleCollection/Sample/cvParam");
     stringstream ss;
 
@@ -89,14 +89,14 @@ void testCVMapIO()
     if (os_) (*os_) << "keyword: " << cvmPtr->keyword << endl;
     if (os_) (*os_) << "cvid: " << cvmPtr->cvid << endl;
     unit_assert(cvmPtr->keyword == "sample name");
-    unit_assert(cvmPtr->cvid == MS_sample_name_OBSOLETE);
+    unit_assert(cvmPtr->cvid == MS_sample_name);
 }
 
 void testRegexCVMapIO()
 {
     if (os_) (*os_) << "\ntestRegexCVMapIO()\n";
     
-    RegexCVMap map("[Ss]ample [Nn]ame", MS_sample_name_OBSOLETE,
+    RegexCVMap map("[Ss]ample [Nn]ame", MS_sample_name,
               "/mzIdentML/AnalysisSampleCollection/Sample/cvParam");
     stringstream ss;
 
@@ -120,7 +120,7 @@ void testRegexCVMapIO()
     if (os_) (*os_) << "keyword: " << cvmPtr->keyword << endl;
     if (os_) (*os_) << "cvid: " << cvmPtr->cvid << endl;
     unit_assert(cvmPtr->keyword == "[Ss]ample [Nn]ame");
-    unit_assert(cvmPtr->cvid == MS_sample_name_OBSOLETE);
+    unit_assert(cvmPtr->cvid == MS_sample_name);
 }
 
 void testVectorIO()

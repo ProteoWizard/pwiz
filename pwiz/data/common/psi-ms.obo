@@ -1,6 +1,6 @@
 format-version: 1.2
-data-version: 3.65.0
-date: 02:07:2014 08:55
+data-version: 3.74.0
+date: 10:03:2015 16:37
 saved-by: Gerhard Mayer
 auto-generated-by: OBO-Edit 2.3
 import: http://pato.googlecode.com/svn/trunk/quality.obo
@@ -8,8 +8,8 @@ import: http://unit-ontology.googlecode.com/svn/trunk/unit.obo
 default-namespace: MS
 namespace-id-rule: * MS:$sequence(7,0,9999999)$
 remark: namespace: MS
-remark: version: 3.65.0
-remark: release date: 2014-07-02
+remark: version: 3.74.0
+remark: release date: 2015-03-10
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -61,9 +61,9 @@ is_a: MS:1000548 ! sample attribute
 [Term]
 id: MS:1000002
 name: sample name
-def: "OBSOLETE A reference string relevant to the sample under study." [PSI:MS]
-comment: This former purgatory term was made obsolete.
-is_obsolete: true
+def: "A reference string relevant to the sample under study." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000548 ! sample attribute
 
 [Term]
 id: MS:1000003
@@ -139,7 +139,6 @@ id: MS:1000013
 name: resolution type
 def: "OBSOLETE Specify the nature of resolution for the mass analyzer. Resolution is usually either constant with respect to m/z or proportional to m/z." [PSI:MS]
 comment: This former purgatory term was made obsolete.
-relationship: part_of MS:1000479 ! purgatory
 is_obsolete: true
 
 [Term]
@@ -173,8 +172,9 @@ relationship: has_units UO:0000031 ! minute
 [Term]
 id: MS:1000017
 name: Scan Function
-def: "Describes the type of mass analysis being performed. Two primary modes are: typical acquisition over a range of masses (Mass Scan), and Selected Ion Detection. The primary difference is that Selected Ion Detection produces a single value for the signal at the selected mass rather than producing a mass spectrum." [PSI:MS]
-relationship: part_of MS:1000479 ! purgatory
+def: "OBSOLETE Describes the type of mass analysis being performed. Two primary modes are: typical acquisition over a range of masses (Mass Scan), and Selected Ion Detection. The primary difference is that Selected Ion Detection produces a single value for the signal at the selected mass rather than producing a mass spectrum." [PSI:MS]
+comment: OBSOLETE This former purgatory term was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000018
@@ -194,7 +194,6 @@ name: scanning method
 def: "Describes the acquisition data type produced by a tandem mass spectrometry experiment." [PSI:MS]
 comment: OBSOLETE This former purgatory term was made obsolete.
 synonym: "Tandem Scanning Method" RELATED []
-relationship: part_of MS:1000479 ! purgatory
 is_obsolete: true
 
 [Term]
@@ -371,7 +370,6 @@ is_a: UO:0000000 ! unit
 id: MS:1000044
 name: dissociation method
 def: "Fragmentation method used for dissociation or fragmentation." [PSI:MS]
-xref: value-type:xsd\:string "The allowed value-type for this CV term."
 synonym: "Activation Method" RELATED []
 relationship: part_of MS:1000456 ! precursor activation
 
@@ -672,14 +670,16 @@ is_obsolete: true
 [Term]
 id: MS:1000090
 name: mass scan
-def: "A variation of instrument where a selected mass is scanned." [PSI:MS]
-is_a: MS:1000017 ! Scan Function
+def: "OBSOLETE A variation of instrument where a selected mass is scanned." [PSI:MS]
+comment: This child of the former purgatory term Scan Function was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000091
 name: selected ion detection
-def: "Please see Single Ion Monitoring." [PSI:MS]
-is_a: MS:1000017 ! Scan Function
+def: "OBSOLETE Please see Single Ion Monitoring." [PSI:MS]
+comment: This child of the former purgatory term Scan Function was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000092
@@ -1417,27 +1417,30 @@ is_a: MS:1000596 ! measurement method
 [Term]
 id: MS:1000207
 name: accurate mass
-def: "An experimentally determined mass that is can be to determine a unique elemental formula. For ions less than 200 u, a measurement with 5 ppm accuracy is sufficient to determine the elemental composition." [PSI:MS]
+def: "OBSOLETE An experimentally determined mass that is can be to determine a unique elemental formula. For ions less than 200 u, a measurement with 5 ppm accuracy is sufficient to determine the elemental composition." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000208
 name: average mass
-def: "The mass of an ion or molecule calculated using the average mass of each element weighted for its natural isotopic abundance." [PSI:MS]
+def: "OBSOLETE The mass of an ion or molecule calculated using the average mass of each element weighted for its natural isotopic abundance." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000209
 name: appearance energy
-def: "The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended." [PSI:MS]
+def: "OBSOLETE The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended." [PSI:MS]
 synonym: "AE" EXACT []
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000266 ! electronvolt
+is_obsolete: true
 
 [Term]
 id: MS:1000210
@@ -1452,7 +1455,6 @@ name: OBSOLETE charge number
 def: "OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state." [PSI:MS]
 synonym: "z" EXACT []
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
 is_obsolete: true
 
 [Term]
@@ -1466,10 +1468,11 @@ is_obsolete: true
 [Term]
 id: MS:1000213
 name: electron affinity
-def: "The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy." [PSI:MS]
+def: "OBSOLETE The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy." [PSI:MS]
+comment: This child of the former purgatory term ion attribute was made obsolete.
 synonym: "EA" EXACT []
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+is_obsolete: true
 
 [Term]
 id: MS:1000214
@@ -1481,10 +1484,11 @@ is_obsolete: true
 [Term]
 id: MS:1000215
 name: exact mass
-def: "The calculated mass of an ion or molecule containing a single isotope of each atom." [PSI:MS]
+def: "OBSOLETE The calculated mass of an ion or molecule containing a single isotope of each atom." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000216
@@ -1496,8 +1500,9 @@ is_a: MS:1000487 ! ion optics attribute
 [Term]
 id: MS:1000217
 name: ionization cross section
-def: "A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000218
@@ -1510,11 +1515,12 @@ is_obsolete: true
 [Term]
 id: MS:1000219
 name: ionization energy
-def: "The minimum energy required to remove an electron from an atom or molecule to produce a positive ion." [PSI:MS]
+def: "OBSOLETE The minimum energy required to remove an electron from an atom or molecule to produce a positive ion." [PSI:MS]
 synonym: "IE" EXACT []
+comment: This child of the former purgatory term ion attribute was made obsolete.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
 relationship: has_units UO:0000266 ! electronvolt
+is_obsolete: true
 
 [Term]
 id: MS:1000220
@@ -1533,40 +1539,45 @@ is_a: MS:1000597 ! ion optics type
 [Term]
 id: MS:1000222
 name: mass defect
-def: "The difference between the monoisotopic and nominal mass of a molecule or atom." [PSI:MS]
+def: "OBSOLETE The difference between the monoisotopic and nominal mass of a molecule or atom." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000223
 name: mass number
-def: "The sum of the protons and neutrons in an atom, molecule or ion." [PSI:MS]
+def: "OBSOLETE The sum of the protons and neutrons in an atom, molecule or ion." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000224
 name: molecular mass
-def: "The mass of one mole of a molecular substance (6.022 1415(10) x 10^23 molecules)." [PSI:MS]
+def: "OBSOLETE The mass of one mole of a molecular substance (6.022 1415(10) x 10^23 molecules)." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000225
 name: monoisotopic mass
-def: "The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element." [PSI:MS]
+def: "OBSOLETE The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000226
 name: molecular beam mass spectrometry
-def: "A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam." [PSI:MS]
+def: "OBSOLETE A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "MBMS" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000227
@@ -1578,22 +1589,25 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000228
 name: nitrogen rule
-def: "An organic molecule containing the elements C, H, O, S, P, or halogen has an odd nominal mass if it contains an odd number of nitrogen atoms." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE An organic molecule containing the elements C, H, O, S, P, or halogen has an odd nominal mass if it contains an odd number of nitrogen atoms." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000229
 name: nominal mass
-def: "The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element rounded to the nearest integer value." [PSI:MS]
+def: "OBSOLETE The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element rounded to the nearest integer value." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+comment: This child of the former purgatory term ion attribute was made obsolete.
 relationship: has_units UO:0000002 ! mass unit
+is_obsolete: true
 
 [Term]
 id: MS:1000230
 name: odd-electron rule
-def: "Odd-electron ions may dissociate to form either odd or even-electron ions, whereas even-electron ions generally form even-electron fragment ions." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Odd-electron ions may dissociate to form either odd or even-electron ions, whereas even-electron ions generally form even-electron fragment ions." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000231
@@ -1611,10 +1625,11 @@ is_obsolete: true
 [Term]
 id: MS:1000233
 name: proton affinity
-def: "The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states." [PSI:MS]
+def: "OBSOLETE The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states." [PSI:MS]
 synonym: "PA" EXACT [PSI:MS]
+comment: This child of the former purgatory term ion attribute was made obsolete.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000507 ! ion attribute
+is_obsolete: true
 
 [Term]
 id: MS:1000234
@@ -1622,7 +1637,6 @@ name: mass resolving power
 def: "OBSOLETE In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported." [PSI:MS]
 comment: This term was made obsolete because it was replaced by mass resolving power (MS:1000800).
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000444 ! m/z Separation Method
 is_obsolete: true
 
 [Term]
@@ -1651,9 +1665,10 @@ is_obsolete: true
 [Term]
 id: MS:1000238
 name: accelerator mass spectrometry
-def: "A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy." [PSI:MS]
+def: "OBSOLETE A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "AMS" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000239
@@ -1683,14 +1698,14 @@ name: blackbody infrared radiative dissociation
 def: "A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation." [PSI:MS]
 synonym: "BIRD" EXACT []
 is_a: MS:1000044 ! dissociation method
-is_a: MS:1000437 ! ion reaction
 
 [Term]
 id: MS:1000243
 name: charge-remote fragmentation
-def: "A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site." [PSI:MS]
+def: "OBSOLETE A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
 synonym: "CRF" EXACT []
-is_a: MS:1000437 ! ion reaction
+is_obsolete: true
 
 [Term]
 id: MS:1000244
@@ -1741,21 +1756,22 @@ name: electron capture dissociation
 def: "A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments." [PSI:MS]
 synonym: "ECD" EXACT []
 is_a: MS:1000044 ! dissociation method
-is_a: MS:1000437 ! ion reaction
 
 [Term]
 id: MS:1000251
 name: even-electron ion
-def: "An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state." [PSI:MS]
+def: "OBSOLETE An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
 synonym: "EE" EXACT []
-is_a: MS:1000508 ! ion chemical type
+is_obsolete: true
 
 [Term]
 id: MS:1000252
 name: electron-induced excitation in organics
-def: "The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion." [PSI:MS]
+def: "OBSOLETE The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
 synonym: "EIEIO" EXACT []
-is_a: MS:1000437 ! ion reaction
+is_obsolete: true
 
 [Term]
 id: MS:1000253
@@ -1781,9 +1797,10 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000256
 name: high-field asymmetric waveform ion mobility spectrometry
-def: "The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion." [PSI:MS]
+def: "OBSOLETE The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "FAIMS" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000257
@@ -1809,16 +1826,18 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000260
 name: ion kinetic energy spectrometry
-def: "A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge." [PSI:MS]
+def: "OBSOLETE A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "IKES" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000261
 name: ion mobility spectrometry
-def: "The separation of ions according to their velocity through a buffer gas under the influence of an electric field." [PSI:MS]
+def: "OBSOLETE The separation of ions according to their velocity through a buffer gas under the influence of an electric field." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "IMS" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000262
@@ -1845,9 +1864,10 @@ is_a: MS:1000443 ! mass analyzer type
 [Term]
 id: MS:1000265
 name: kinetic energy release distribution
-def: "Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction." [PSI:MS]
+def: "OBSOLETE Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
 synonym: "KERD" EXACT []
-is_a: MS:1000437 ! ion reaction
+is_obsolete: true
 
 [Term]
 id: MS:1000266
@@ -1862,9 +1882,10 @@ is_obsolete: true
 [Term]
 id: MS:1000267
 name: mass analyzed ion kinetic energy spectrometry
-def: "Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process." [PSI:MS]
+def: "OBSOLETE Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "MIKES" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000268
@@ -1872,22 +1893,23 @@ name: mass spectrometry
 def: "OBSOLETE The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments." [PSI:MS]
 comment: This former purgatory term was made obsolete.
 synonym: "MS" EXACT []
-relationship: part_of MS:1000479 ! purgatory
 is_obsolete: true
 
 [Term]
 id: MS:1000269
 name: mass spectrometry/mass spectrometry
-def: "The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions." [PSI:MS]
+def: "OBSOLETE The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "MS/MS" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000270
 name: multiple stage mass spectrometry
-def: "Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions." [PSI:MS]
+def: "OBSOLETE Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
 synonym: "MSn" EXACT []
-is_a: MS:1000445 ! sequential m/z separation method
+is_obsolete: true
 
 [Term]
 id: MS:1000271
@@ -1934,9 +1956,10 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000277
 name: residual gas analyzer
-def: "A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber." [PSI:MS]
+def: "OBSOLETE A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "RGA" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000278
@@ -1985,7 +2008,7 @@ is_obsolete: true
 [Term]
 id: MS:1000284
 name: stored waveform inverse fourier transform
-def: "A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments." [PSI:MS]
+def: "A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS2 experiments." [PSI:MS]
 synonym: "SWIFT" EXACT []
 is_a: MS:1000443 ! mass analyzer type
 
@@ -2007,9 +2030,10 @@ is_a: MS:1000597 ! ion optics type
 [Term]
 id: MS:1000287
 name: time-of-flight mass spectrometer
-def: "An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy." [PSI:MS]
+def: "OBSOLETE An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
 synonym: "TOF-MS" EXACT []
-is_a: MS:1000293 ! mass spectrometer
+is_obsolete: true
 
 [Term]
 id: MS:1000288
@@ -2020,14 +2044,16 @@ is_a: MS:1000443 ! mass analyzer type
 [Term]
 id: MS:1000289
 name: double-focusing mass spectrometer
-def: "A mass spectrometer that uses a magnetic sector for m/z focusing and an electric sector for energy focusing of an ion beam." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer that uses a magnetic sector for m/z focusing and an electric sector for energy focusing of an ion beam." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000290
 name: hybrid mass spectrometer
-def: "A mass spectrometer that combines m/z analyzers of different types to perform tandem mass spectrometry." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer that combines m/z analyzers of different types to perform tandem mass spectrometry." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000291
@@ -2045,8 +2071,9 @@ is_obsolete: true
 [Term]
 id: MS:1000293
 name: mass spectrometer
-def: "An instrument that measures the mass-to-charge ratio and relative abundances of ions." [PSI:MS]
-is_a: MS:1000479 ! purgatory
+def: "OBSOLETE An instrument that measures the mass-to-charge ratio and relative abundances of ions." [PSI:MS]
+comment: This former purgatory term was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000294
@@ -2080,8 +2107,9 @@ is_obsolete: true
 [Term]
 id: MS:1000298
 name: prolate traochoidal mass spectrometer
-def: "A mass spectrometer in which the ions of different m/z are separated by means of crossed electric and magnetic fields in such a way that the selected ions follow a prolate trochoidal path." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer in which the ions of different m/z are separated by means of crossed electric and magnetic fields in such a way that the selected ions follow a prolate trochoidal path." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000299
@@ -2099,20 +2127,23 @@ is_a: MS:1000597 ! ion optics type
 [Term]
 id: MS:1000301
 name: sector mass spectrometer
-def: "A mass spectrometer consisting of one or more magnetic sectors for m/z selection in a beam of ions. Such instruments may also have one or more electric sectors for energy selection." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer consisting of one or more magnetic sectors for m/z selection in a beam of ions. Such instruments may also have one or more electric sectors for energy selection." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000302
 name: tandem mass spectrometer
-def: "A mass spectrometer designed for mass spectrometry/mass spectrometry." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer designed for mass spectrometry/mass spectrometry." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000303
 name: transmission quadrupole mass spectrometer
-def: "A mass spectrometer that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000304
@@ -2125,14 +2156,16 @@ relationship: has_units UO:0000218 ! volt
 [Term]
 id: MS:1000305
 name: cyclotron motion
-def: "The circular motion of a charged particle moving at velocity v in a magnetic field B that results from the force qvB." [PSI:MS]
-is_a: MS:1000444 ! m/z Separation Method
+def: "OBSOLETE The circular motion of a charged particle moving at velocity v in a magnetic field B that results from the force qvB." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000306
 name: dynamic mass spectrometry
-def: "A mass spectrometer in which m/z separation using one or more electric fields that vary with time." [PSI:MS]
-is_a: MS:1000293 ! mass spectrometer
+def: "OBSOLETE A mass spectrometer in which m/z separation using one or more electric fields that vary with time." [PSI:MS]
+comment: This child of the former purgatory term mass spectrometer was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000307
@@ -2183,32 +2216,37 @@ is_obsolete: true
 [Term]
 id: MS:1000314
 name: mass selective axial ejection
-def: "The use of mass selective instability to eject ions of selected m/z values from an ion trap." [PSI:MS]
-is_a: MS:1000444 ! m/z Separation Method
+def: "OBSOLETE The use of mass selective instability to eject ions of selected m/z values from an ion trap." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000315
 name: mass selective instability
-def: "A method for selective ejection of ions according to their m/z value in an ion trap." [PSI:MS]
-is_a: MS:1000444 ! m/z Separation Method
+def: "OBSOLETE A method for selective ejection of ions according to their m/z value in an ion trap." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000316
 name: mathieu stability diagram
-def: "A graphical representation expressed in terms of reduced coordinates that describes charged particle motion in a quadrupole mass filter or quadrupole ion trap mass spectrometer." [PSI:MS]
-is_a: MS:1000444 ! m/z Separation Method
+def: "OBSOLETE A graphical representation expressed in terms of reduced coordinates that describes charged particle motion in a quadrupole mass filter or quadrupole ion trap mass spectrometer." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000317
 name: orthogonal extraction
-def: "The pulsed acceleration of ions perpendicular to their direction of travel into a time-of-flight mass spectrometer. Ions may be extracted from a directional ion source, drift tube or m/z separation stage." [PSI:MS]
-is_a: MS:1000444 ! m/z Separation Method
+def: "OBSOLETE The pulsed acceleration of ions perpendicular to their direction of travel into a time-of-flight mass spectrometer. Ions may be extracted from a directional ion source, drift tube or m/z separation stage." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000318
 name: resonance ion ejection
-def: "A mode of ion ejection in a quadrupole ion trap that relies on a auxiliary radio frequency voltage that is applied to the end-cap electrodes. The voltage is tuned to the secular frequency of a particular ion to eject it." [PSI:MS]
-is_a: MS:1000444 ! m/z Separation Method
+def: "OBSOLETE A mode of ion ejection in a quadrupole ion trap that relies on a auxiliary radio frequency voltage that is applied to the end-cap electrodes. The voltage is tuned to the secular frequency of a particular ion to eject it." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000319
@@ -2225,8 +2263,9 @@ is_a: MS:1000597 ! ion optics type
 [Term]
 id: MS:1000321
 name: 2E Mass Spectrum
-def: "A mass spectrum obtained by setting the electric sector field E to twice the value required to transmit the main ion-beam thereby allowing ions with a kinetic energy-to-charge ratio twice that of the main ion-beam to be transmitted. Product ions resulting from partial charge transfer reactions such as m^2+ + N ? m^+ + N^+ that occur in a collision cell (containing a gas, N) located in a field-free region preceding a magnetic and electric sector combination are detected. When the magnetic sector field B is scanned, a mass spectrum of singly charged product ions of doubly charged precursor ions is obtained." [PSI:MS]
-is_a: MS:1000445 ! sequential m/z separation method
+def: "OBSOLETE A mass spectrum obtained by setting the electric sector field E to twice the value required to transmit the main ion-beam thereby allowing ions with a kinetic energy-to-charge ratio twice that of the main ion-beam to be transmitted. Product ions resulting from partial charge transfer reactions such as m^2+ + N ? m^+ + N^+ that occur in a collision cell (containing a gas, N) located in a field-free region preceding a magnetic and electric sector combination are detected. When the magnetic sector field B is scanned, a mass spectrum of singly charged product ions of doubly charged precursor ions is obtained." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000322
@@ -2271,7 +2310,7 @@ is_a: MS:1000524 ! data file content
 [Term]
 id: MS:1000327
 name: consecutive reaction monitoring
-def: "OBSOLETE A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored." [PSI:MS]
+def: "OBSOLETE A type of MS2 experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored." [PSI:MS]
 comment: This term was made obsolete because it was replaced by consecutive reaction monitoring (MS:1000244).
 is_obsolete: true
 
@@ -2286,7 +2325,6 @@ id: MS:1000329
 name: linked scan
 def: "OBSOLETE A scan in an instrument with two or more m/z analysers or in a sector mass spectrometer that incorporates at least one magnetic sector and one electric sector. Two or more of the analyzers are scanned simultaneously so as to preserve a predetermined relationship between scan parameters to produce a product ion, precursor ion or constant neutral loss spectrum." [PSI:MS]
 comment: This former purgatory term was made obsolete.
-is_a: MS:1000479 ! purgatory
 is_obsolete: true
 
 [Term]
@@ -2320,28 +2358,30 @@ is_obsolete: true
 [Term]
 id: MS:1000334
 name: MS/MS in Time
-def: "A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discreet steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time." [PSI:MS]
-is_a: MS:1000445 ! sequential m/z separation method
+def: "OBSOLETE A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discreet steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000335
 name: MS/MS in Space
-def: "A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition." [PSI:MS]
-is_a: MS:1000445 ! sequential m/z separation method
+def: "OBSOLETE A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition." [PSI:MS]
+comment: This child of the former purgatory term m/z Separation Method was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000336
 name: neutral loss
 def: "The loss of an uncharged species during a rearrangement process." [PSI:MS]
-is_a: MS:1000445 ! sequential m/z separation method
 is_a: MS:1001055 ! modification parameters
 
 [Term]
 id: MS:1000337
 name: nth generation product ion
-def: "Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated." [PSI:MS]
+def: "OBSOLETE Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated." [PSI:MS]
+comment: This child of the former purgatory term product ion was made obsolete.
 synonym: "granddaughter ion" RELATED []
-is_a: MS:1000342 ! product ion
+is_obsolete: true
 
 [Term]
 id: MS:1000338
@@ -2360,9 +2400,10 @@ is_obsolete: true
 [Term]
 id: MS:1000340
 name: precursor ion
-def: "An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is deprecated." [PSI:MS]
+def: "OBSOLETE An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is deprecated." [PSI:MS]
+comment: This child of the former purgatory term ion role was made obsolete.
 synonym: "parent ion" RELATED []
-is_a: MS:1000506 ! ion role
+is_obsolete: true
 
 [Term]
 id: MS:1000341
@@ -2374,9 +2415,10 @@ is_a: MS:1000524 ! data file content
 [Term]
 id: MS:1000342
 name: product ion
-def: "An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated." [PSI:MS]
+def: "OBSOLETE An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated." [PSI:MS]
+comment: This child of the former purgatory term ion role was made obsolete.
 synonym: "daughter ion" RELATED []
-is_a: MS:1000506 ! ion role
+is_obsolete: true
 
 [Term]
 id: MS:1000343
@@ -2390,9 +2432,10 @@ is_obsolete: true
 [Term]
 id: MS:1000344
 name: progeny ion
-def: "A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+." [PSI:MS]
+def: "OBSOLETE A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
 synonym: "Progeny Fragment Ion" EXACT []
-is_a: MS:1000508 ! ion chemical type
+is_obsolete: true
 
 [Term]
 id: MS:1000345
@@ -2446,68 +2489,79 @@ is_obsolete: true
 [Term]
 id: MS:1000353
 name: adduct ion
-def: "Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000354
 name: aromatic ion
-def: "A planar cyclic ion that obeys the Hueckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A planar cyclic ion that obeys the Hueckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000355
 name: analog ion
-def: "Ions that have similar chemical valence, for example the acetyl cation CH3-CO+ and the thioacetyl cation CH3-CS+." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE Ions that have similar chemical valence, for example the acetyl cation CH3-CO+ and the thioacetyl cation CH3-CS+." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000356
 name: anti-aromatic ion
-def: "A planar cyclic ion with 4n ? electrons and is therefore not aromatic." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A planar cyclic ion with 4n ? electrons and is therefore not aromatic." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000357
 name: cationized molecule
-def: "An ion formed by the association of a cation with a neutral molecule, M, for example [M+ Na]+ and [M + K]+. The terms quasi-molecular ion and pseudo-molecular ion should not be used." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion formed by the association of a cation with a neutral molecule, M, for example [M+ Na]+ and [M + K]+. The terms quasi-molecular ion and pseudo-molecular ion should not be used." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000358
 name: cluster ion
-def: "An ion formed by a multi-component atomic or molecular assembly of one or more ions with atoms or molecules, such as [(H20)nH]+, [(NaCl)nNa]+ and [(H3PO3)nHPO3]-." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion formed by a multi-component atomic or molecular assembly of one or more ions with atoms or molecules, such as [(H20)nH]+, [(NaCl)nNa]+ and [(H3PO3)nHPO3]-." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000359
 name: Conventional ion
-def: "A radical cation or anion in which the charge site and the unpaired electron spin are both formally located in the same atom or group of atoms, as opposed to the spatially separate electronic configuration of distonic ions. The radical cation of methanol, CH3OH+, in which the charge and spin sites are formally located at the O atom is an example of a conventional ion, whereas .CH2-OH2+ is a distonic ion." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A radical cation or anion in which the charge site and the unpaired electron spin are both formally located in the same atom or group of atoms, as opposed to the spatially separate electronic configuration of distonic ions. The radical cation of methanol, CH3OH+, in which the charge and spin sites are formally located at the O atom is an example of a conventional ion, whereas .CH2-OH2+ is a distonic ion." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000360
 name: diagnostic ion
-def: "A product ion whose formation reveals structural or compositional information of its precursor. For instance, the phenyl cation in an electron ionization mass spectrum is a diagnostic ion for benzene and derivatives." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A product ion whose formation reveals structural or compositional information of its precursor. For instance, the phenyl cation in an electron ionization mass spectrum is a diagnostic ion for benzene and derivatives." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000361
 name: dimeric ion
-def: "An ion formed by ionization of a dimer or by the association of an ion with its neutral counterpart such as [M2]+ or [M-H-M]+." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion formed by ionization of a dimer or by the association of an ion with its neutral counterpart such as [M2]+ or [M-H-M]+." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000362
 name: distonic ion
-def: "A radical cation or anion in which the charge site and the unpaired electron spin cannot be both formally located in the same atom or group of atoms as it can be with a conventional ion. For example, CH2-OH2+ is a distonic ion whereas the radical cation of methanol, CH3OH+ is a conventional ion." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A radical cation or anion in which the charge site and the unpaired electron spin cannot be both formally located in the same atom or group of atoms as it can be with a conventional ion. For example, CH2-OH2+ is a distonic ion whereas the radical cation of methanol, CH3OH+ is a conventional ion." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000363
 name: enium ion
-def: "A positively charged lower-valency ion of the nonmetallic elements. The methenium ion is CH3+. Other examples are the oxenium, sulfenium, nitrenium, phosphenium, and halenium ions." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A positively charged lower-valency ion of the nonmetallic elements. The methenium ion is CH3+. Other examples are the oxenium, sulfenium, nitrenium, phosphenium, and halenium ions." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000364
@@ -2519,92 +2573,107 @@ is_obsolete: true
 [Term]
 id: MS:1000365
 name: ion?
-def: "An atomic or molecular species having a net positive or negative electric charge." [PSI:MS]
-relationship: part_of MS:1000479 ! purgatory
+def: "OBSOLETE An atomic or molecular species having a net positive or negative electric charge." [PSI:MS]
+comment: This former purgatory term was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000366
 name: Isotopologue ion
-def: "An ion that differs only in the isotopic composition of one or more of its constituent atoms. For example CH4+ and CH3D+ or 10BF3 and 11BF3. The term isotopologue is a contraction of isotopic homologue." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion that differs only in the isotopic composition of one or more of its constituent atoms. For example CH4+ and CH3D+ or 10BF3 and 11BF3. The term isotopologue is a contraction of isotopic homologue." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000367
 name: Isotopomeric ion
-def: "Isomeric ion having the same numbers of each isotopic atom but differing in their positions. Isotopomeric ions can be either configurational isomers in which two atomic isotopes exchange positions or isotopic stereoisomers. The term isotopomer is a shortening of isotopic isomer." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE Isomeric ion having the same numbers of each isotopic atom but differing in their positions. Isotopomeric ions can be either configurational isomers in which two atomic isotopes exchange positions or isotopic stereoisomers. The term isotopomer is a shortening of isotopic isomer." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000368
 name: metastable ion
-def: "An ion that is formed with internal energy higher than the threshold for dissociation but with a lifetime great enough to allow it to exit the ion source and enter the mass spectrometer where it dissociates before detection." [PSI:MS]
-is_a: MS:1002343 ! ion stability type
+def: "OBSOLETE An ion that is formed with internal energy higher than the threshold for dissociation but with a lifetime great enough to allow it to exit the ion source and enter the mass spectrometer where it dissociates before detection." [PSI:MS]
+comment: This child of the former purgatory term ion stability type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000369
 name: molecular ion
-def: "An ion formed by the removal of one or more electrons to form a positive ion or the addition off one or more electrons to form a negative ion." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion formed by the removal of one or more electrons to form a positive ion or the addition off one or more electrons to form a negative ion." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000370
 name: negative ion
-def: "An atomic or molecular species having a net negative electric charge." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An atomic or molecular species having a net negative electric charge." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000371
 name: non-classical ion
-def: "Hyper-coordinated carbonium ion such as the penta-coordinated norbornyl cation. Note: Tri-coordinated carbenium ions are termed classical ions." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE Hyper-coordinated carbonium ion such as the penta-coordinated norbornyl cation. Note: Tri-coordinated carbenium ions are termed classical ions." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000372
 name: onium ion
-def: "A positively charged hypervalent ion of the nonmetallic elements. Examples are the methonium ion CH5+, the hydrogenonium ion H3+ and the hydronium ion H3O+. Other examples are the carbonium, oxonium, sulfonium, nitronium, diazonium, phosphonium, and halonium ions. Onium ions are not limited to monopositive ions; multiply-charged onium ions exist such as the gitonic (proximal) oxonium dication H4O2+ and the distonic oxonium dication H2O+-CH2-CH2-OH2+." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A positively charged hypervalent ion of the nonmetallic elements. Examples are the methonium ion CH5+, the hydrogenonium ion H3+ and the hydronium ion H3O+. Other examples are the carbonium, oxonium, sulfonium, nitronium, diazonium, phosphonium, and halonium ions. Onium ions are not limited to monopositive ions; multiply-charged onium ions exist such as the gitonic (proximal) oxonium dication H4O2+ and the distonic oxonium dication H2O+-CH2-CH2-OH2+." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000373
 name: principal ion
-def: "Most abundant ion of an isotope cluster, such as the 11B79Br2 81Br+ ion of m/z 250 of the cluster of isotopologue molecular ions of BBr3. The term principal ion has also been used to describe ions that have been artificially isotopically enriched in one or more positions such as CH3 13CH3+ or CH2D2 +, but those are best defined as isotopologue ions." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE Most abundant ion of an isotope cluster, such as the 11B79Br2 81Br+ ion of m/z 250 of the cluster of isotopologue molecular ions of BBr3. The term principal ion has also been used to describe ions that have been artificially isotopically enriched in one or more positions such as CH3 13CH3+ or CH2D2 +, but those are best defined as isotopologue ions." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000374
 name: positive ion
-def: "An atomic or molecular species having a net positive electric charge." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An atomic or molecular species having a net positive electric charge." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000375
 name: protonated molecule
-def: "An ion formed by interaction of a neutral molecule with a proton and represented by the symbol [M + H]+, where M is the neutral molecule. The term 'protonated molecular ion,' 'quasi-molecular ion' and 'pseudo-molecular ion' are not recommended." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion formed by interaction of a neutral molecule with a proton and represented by the symbol [M + H]+, where M is the neutral molecule. The term 'protonated molecular ion,' 'quasi-molecular ion' and 'pseudo-molecular ion' are not recommended." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000376
 name: radical ion
-def: "An ion, either a cation or anion, containing unpaired electrons in its ground state. The unpaired electron is denoted by a superscript dot alongside the superscript symbol for charge, such as for the molecular ion of a molecule M, that is, M+. Radical ions with more than one charge and/or more than one unpaired electron are denoted such as M(2+)(2). Unless the positions of the unpaired electron and charge can be associated with specific atoms, superscript charge designation should be placed before the superscript dot designation." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE An ion, either a cation or anion, containing unpaired electrons in its ground state. The unpaired electron is denoted by a superscript dot alongside the superscript symbol for charge, such as for the molecular ion of a molecule M, that is, M+. Radical ions with more than one charge and/or more than one unpaired electron are denoted such as M(2+)(2). Unless the positions of the unpaired electron and charge can be associated with specific atoms, superscript charge designation should be placed before the superscript dot designation." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000377
 name: reference ion
-def: "A stable ion whose structure is known with certainty. These ions are usually formed by direct ionization of a neutral molecule of known structure and are used to verify by comparison the structure of an unknown ion." [PSI:MS]
-is_a: MS:1000508 ! ion chemical type
+def: "OBSOLETE A stable ion whose structure is known with certainty. These ions are usually formed by direct ionization of a neutral molecule of known structure and are used to verify by comparison the structure of an unknown ion." [PSI:MS]
+comment: This child of the former purgatory term ion chemical type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000378
 name: stable ion
-def: "An ion with internal energy sufficiently low that it does not rearrange or dissociate prior to detection in a mass spectrometer." [PSI:MS]
-is_a: MS:1002343 ! ion stability type
+def: "OBSOLETE An ion with internal energy sufficiently low that it does not rearrange or dissociate prior to detection in a mass spectrometer." [PSI:MS]
+comment: This child of the former purgatory term ion stability type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000379
 name: unstable ion
-def: "An ion with sufficient energy to dissociate within the ion source." [PSI:MS]
-is_a: MS:1002343 ! ion stability type
+def: "OBSOLETE An ion with sufficient energy to dissociate within the ion source." [PSI:MS]
+comment: This child of the former purgatory term ion stability type was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000380
@@ -2669,14 +2738,16 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000390
 name: ion desolvation
-def: "The removal of solvent molecules clustered around a gas-phase ion by means of heating and/or collisions with gas molecules." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The removal of solvent molecules clustered around a gas-phase ion by means of heating and/or collisions with gas molecules." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000391
 name: ion-pair formation
-def: "The reaction of a molecule to form both a positive ion and negative ion fragment among the products." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of a molecule to form both a positive ion and negative ion fragment among the products." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000392
@@ -2731,8 +2802,9 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000401
 name: pre-ionization state
-def: "An electronic state capable of undergoing auto-Ionization." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE An electronic state capable of undergoing auto-Ionization." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000402
@@ -2779,20 +2851,23 @@ is_a: MS:1000008 ! ionization type
 [Term]
 id: MS:1000409
 name: association reaction
-def: "The reaction of an ion with a neutral species in which the reactants combine to form a single ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of an ion with a neutral species in which the reactants combine to form a single ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000410
 name: alpha-cleavage
-def: "A homolytic cleavage where the bond fission occurs between at the atom adjacent to the atom at the apparent charge site and an atom removed from the aparent charge site by two bonds." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A homolytic cleavage where the bond fission occurs between at the atom adjacent to the atom at the apparent charge site and an atom removed from the aparent charge site by two bonds." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000411
 name: beta-cleavage
-def: "A homolytic cleavage where the bond fission occurs between at an atom removed from the apparent charge site atom by two bonds and an atom adjacent to that atom and removed from the aparent charge site by three bonds." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A homolytic cleavage where the bond fission occurs between at an atom removed from the apparent charge site atom by two bonds and an atom adjacent to that atom and removed from the aparent charge site by three bonds." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000412
@@ -2804,38 +2879,44 @@ is_a: MS:1000510 ! precursor activation attribute
 [Term]
 id: MS:1000413
 name: charge-induced fragmentation
-def: "Fragmentation of an odd electron ion in which the cleaved bond is adjacent to the apparent charge site. Synonymous with charge mediated fragmentation." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Fragmentation of an odd electron ion in which the cleaved bond is adjacent to the apparent charge site. Synonymous with charge mediated fragmentation." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000414
 name: charge inversion reaction
-def: "Reaction of an ion with a neutral species in which the charge on the product ion is reversed in sign with respect to the reactant ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Reaction of an ion with a neutral species in which the charge on the product ion is reversed in sign with respect to the reactant ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000415
 name: charge permutation reaction
-def: "The reaction of an ion with a neutral species with a resulting change in the magnitude or sign of the charge on the reactant ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of an ion with a neutral species with a resulting change in the magnitude or sign of the charge on the reactant ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000416
 name: charge stripping reaction
-def: "Reaction of a positive ion with a neutral species in which the positive charge on the product ion is greater than that on the reactant ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Reaction of a positive ion with a neutral species in which the positive charge on the product ion is greater than that on the reactant ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000417
 name: charge transfer reaction
-def: "The reaction of an ion with a neutral species in which some or all of the charge of the reactant ion is transferred to the neutral species." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of an ion with a neutral species in which some or all of the charge of the reactant ion is transferred to the neutral species." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000418
 name: collisional excitation
-def: "The reaction of an ion with a neutral species in which the translational energy of the collision is converted into internal energy of the ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of an ion with a neutral species in which the translational energy of the collision is converted into internal energy of the ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000419
@@ -2847,15 +2928,17 @@ is_a: MS:1000510 ! precursor activation attribute
 [Term]
 id: MS:1000420
 name: heterolytic cleavage
-def: "Fragmentation of a molecule or ion in which both electrons forming the single bond that is broken remain on one of the atoms that were originally bonded. This term is synonymous with heterolysis." [PSI:MS]
+def: "OBSOLETE Fragmentation of a molecule or ion in which both electrons forming the single bond that is broken remain on one of the atoms that were originally bonded. This term is synonymous with heterolysis." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
 synonym: "heterolysis" RELATED []
-is_a: MS:1000437 ! ion reaction
+is_obsolete: true
 
 [Term]
 id: MS:1000421
 name: high energy collision
-def: "Collision-induced dissociation process wherein the projectile ion has laboratory-frame translational energy higher than 1 keV." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Collision-induced dissociation process wherein the projectile ion has laboratory-frame translational energy higher than 1 keV." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000422
@@ -2867,15 +2950,17 @@ is_a: MS:1000133 ! collision-induced dissociation
 [Term]
 id: MS:1000423
 name: homolytic cleavage
-def: "Fragmentation of an odd electron ion that results from one of a pair of electrons that form a bond between two atoms moving to form a pair with the odd electron on the atom at the apparent charge site. Fragmentation results in the formation of an even electron ion and a radical. This reaction involves the movement of a single electron and is symbolized by a single-barbed arrow. Synonymous with Homolysis." [PSI:MS]
+def: "OBSOLETE Fragmentation of an odd electron ion that results from one of a pair of electrons that form a bond between two atoms moving to form a pair with the odd electron on the atom at the apparent charge site. Fragmentation results in the formation of an even electron ion and a radical. This reaction involves the movement of a single electron and is symbolized by a single-barbed arrow. Synonymous with Homolysis." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
 synonym: "homolysis" RELATED []
-is_a: MS:1000437 ! ion reaction
+is_obsolete: true
 
 [Term]
 id: MS:1000424
 name: hydrogen/deuterium exchange
-def: "Exchange of hydrogen atoms with deuterium atoms in a molecule or pre-formed ion in solution prior to introduction into a mass spectrometer, or by reaction of an ion with a deuterated collision gas inside a mass spectrometer." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Exchange of hydrogen atoms with deuterium atoms in a molecule or pre-formed ion in solution prior to introduction into a mass spectrometer, or by reaction of an ion with a deuterated collision gas inside a mass spectrometer." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000425
@@ -2887,44 +2972,51 @@ is_obsolete: true
 [Term]
 id: MS:1000426
 name: ionizing collision
-def: "The reaction of an ion with a neutral species in which one or more electrons are removed from either the ion or neutral." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of an ion with a neutral species in which one or more electrons are removed from either the ion or neutral." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000427
 name: ion/molecule reaction
-def: "The reaction of an ion with a neutral molecule. The term ion-molecule reaction is not recommended because the hyphen suggests a single species that is that is both an ion and a molecule." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE The reaction of an ion with a neutral molecule. The term ion-molecule reaction is not recommended because the hyphen suggests a single species that is that is both an ion and a molecule." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000428
 name: ion/neutral complex
-def: "A particular type of transition state that lies between precursor and product ions on the reaction coordinate of some ion reactions." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A particular type of transition state that lies between precursor and product ions on the reaction coordinate of some ion reactions." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000429
 name: ion/neutral species reaction
-def: "A process wherein a charged species interacts with a neutral reactant to produce either chemically different species or changes in the internal energy of one or both of the reactants." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A process wherein a charged species interacts with a neutral reactant to produce either chemically different species or changes in the internal energy of one or both of the reactants." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000430
 name: ion/neutral species exchange reaction
-def: "In this reaction an association reaction is accompanied by the subsequent or simultaneous liberation of a different neutral species as a product." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE In this reaction an association reaction is accompanied by the subsequent or simultaneous liberation of a different neutral species as a product." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000431
 name: kinetic method
-def: "An approach to determination of ion thermodynamic quantities by a bracketing procedure in which the relative probabilities of competing ion fragmentations are measured via the relative abundances of the reaction products. The extended kinetic method takes the associated entropy changes into account." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE An approach to determination of ion thermodynamic quantities by a bracketing procedure in which the relative probabilities of competing ion fragmentations are measured via the relative abundances of the reaction products. The extended kinetic method takes the associated entropy changes into account." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000432
 name: low energy collisions
-def: "A collision between an ion and neutral species with translational energy approximately 1000 eV or lower." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A collision between an ion and neutral species with translational energy approximately 1000 eV or lower." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000433
@@ -2935,8 +3027,9 @@ is_a: MS:1000044 ! dissociation method
 [Term]
 id: MS:1000434
 name: McLafferty Rearrangement
-def: "A dissociation reaction triggered by transfer of a hydrogen atom via a 6-member transition state to the formal radical/charge site from a carbon atom four atoms removed from the charge/radical site (the gamma-carbon); subsequent rearrangement of electron density leads to expulsion of an olefin molecule. This term was originally applied to ketone ions where the charge/radical site is the carbonyl oxygen, but it is now more widely applied." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A dissociation reaction triggered by transfer of a hydrogen atom via a 6-member transition state to the formal radical/charge site from a carbon atom four atoms removed from the charge/radical site (the gamma-carbon); subsequent rearrangement of electron density leads to expulsion of an olefin molecule. This term was originally applied to ketone ions where the charge/radical site is the carbonyl oxygen, but it is now more widely applied." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000435
@@ -2949,32 +3042,37 @@ is_a: MS:1000044 ! dissociation method
 [Term]
 id: MS:1000436
 name: partial charge transfer reaction
-def: "Reaction of an ion with a neutral species in which some but not all of the ion charge is transferred to the neutral." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Reaction of an ion with a neutral species in which some but not all of the ion charge is transferred to the neutral." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000437
 name: ion reaction
-def: "Chemical transformation involving an ion." [PSI:MS]
-relationship: part_of MS:1000365 ! ion?
+def: "OBSOLETE Chemical transformation involving an ion." [PSI:MS]
+comment: This child of the former purgatory term ion? was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000438
 name: superelastic collision
-def: "Collision in which the translational energy of the fast-moving collision partner is increased at the expense of internal energy of one or both collision partners." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Collision in which the translational energy of the fast-moving collision partner is increased at the expense of internal energy of one or both collision partners." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000439
 name: surface-induced reaction
-def: "A process wherein a reactant ion interacts with a surface to produce either chemically different species or a change in the internal energy of the reactant ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE A process wherein a reactant ion interacts with a surface to produce either chemically different species or a change in the internal energy of the reactant ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000440
 name: unimolecular dissociation
-def: "Fragmentation reaction in which the molecularity is treated as one, irrespective of whether the dissociative state is that of a metastable ion produced in the ion source or results from collisional excitation of a stable ion." [PSI:MS]
-is_a: MS:1000437 ! ion reaction
+def: "OBSOLETE Fragmentation reaction in which the molecularity is treated as one, irrespective of whether the dissociative state is that of a metastable ion produced in the ion source or results from collisional excitation of a stable ion." [PSI:MS]
+comment: This child of the former purgatory term ion reaction was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000441
@@ -2997,14 +3095,16 @@ relationship: part_of MS:1000451 ! mass analyzer
 [Term]
 id: MS:1000444
 name: m/z Separation Method
-def: "Mass/charge separation Method." [PSI:MS]
-relationship: part_of MS:1000479 ! purgatory
+def: "OBSOLETE Mass/charge separation Method." [PSI:MS]
+comment: This former purgatory term was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000445
 name: sequential m/z separation method
-def: "Sequential m/z separation method." [PSI:MS]
-relationship: part_of MS:1000479 ! purgatory
+def: "OBSOLETE Sequential m/z separation method." [PSI:MS]
+comment: This former purgatory term was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000446
@@ -3095,7 +3195,6 @@ id: MS:1000459
 name: spectrum instrument description
 def: "OBSOLETE Terms used to describe the spectrum." [PSI:MS]
 comment: This former purgatory term was made obsolete.
-relationship: part_of MS:1000479 ! purgatory
 is_obsolete: true
 
 [Term]
@@ -3149,7 +3248,7 @@ is_obsolete: true
 [Term]
 id: MS:1000467
 name: 1200 series LC/MSD SL
-def: "The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS/MS and 11 stages of manual MS/MS." [PSI:MS]
+def: "The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS2 and 11 stages of manual MS2." [PSI:MS]
 is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
@@ -3222,8 +3321,9 @@ is_a: MS:1000490 ! Agilent instrument model
 [Term]
 id: MS:1000479
 name: purgatory
-def: "Terms that will likely become obsolete unless there are wails of dissent." [PSI:MS]
-relationship: part_of MS:1001458 ! spectrum generation information
+def: "OBSOLETE Terms that will likely become obsolete unless there are wails of dissent." [PSI:MS]
+comment: The whole branch purgatory term was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000480
@@ -3411,20 +3511,23 @@ relationship: has_units UO:0000269 ! absorbance unit
 [Term]
 id: MS:1000506
 name: ion role
-def: "Ion Role." [PSI:MS]
-relationship: part_of MS:1000365 ! ion?
+def: "OBSOLETE Ion Role." [PSI:MS]
+comment: This child of the former purgatory term ion? was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000507
 name: ion attribute
-def: "Ion properties that are associated with a value." [PSI:MS]
-relationship: part_of MS:1000365 ! ion?
+def: "OBSOLETE Ion properties that are associated with a value." [PSI:MS]
+comment: This child of the former purgatory term ion? was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000508
 name: ion chemical type
-def: "Ion Type." [PSI:MS]
-relationship: part_of MS:1000365 ! ion?
+def: "OBSOLETE Ion Type." [PSI:MS]
+comment: This child of the former purgatory term ion? was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1000509
@@ -3920,7 +4023,7 @@ is_a: MS:1000524 ! data file content
 [Term]
 id: MS:1000580
 name: MSn spectrum
-def: "MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n." [PSI:MS]
+def: "MSn refers to multi-stage MS2 experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n." [PSI:MS]
 synonym: "multiple-stage mass spectrometry spectrum" EXACT []
 synonym: "nth generation product ion spectrum" EXACT []
 synonym: "product ion spectrum" EXACT []
@@ -4055,7 +4158,6 @@ name: electron transfer dissociation
 def: "A process to fragment ions in a mass spectrometer by inducing fragmentation of cations (e.g. peptides or proteins) by transferring electrons to them." [PSI:MS]
 synonym: "ETD" EXACT []
 is_a: MS:1000044 ! dissociation method
-is_a: MS:1000437 ! ion reaction
 
 [Term]
 id: MS:1000599
@@ -4063,7 +4165,6 @@ name: pulsed q dissociation
 def: "A process that involves precursor ion activation at high Q, a time delay to allow the precursor to fragment, then a rapid pulse to low Q where all fragment ions are trapped. The product ions can then be scanned out of the ion trap and detected." [PSI:MS]
 synonym: "PQD" EXACT []
 is_a: MS:1000044 ! dissociation method
-is_a: MS:1000437 ! ion reaction
 
 [Term]
 id: MS:1000600
@@ -6215,13 +6316,13 @@ is_a: MS:1000909 ! transition validation method
 [Term]
 id: MS:1000911
 name: transition validated with an MS/MS spectrum on specified instrument
-def: "The transition has been validated by obtaining an MS/MS spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term." [PSI:MS]
+def: "The transition has been validated by obtaining an MS2 spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term." [PSI:MS]
 is_a: MS:1000909 ! transition validation method
 
 [Term]
 id: MS:1000912
 name: transition purported from an MS/MS spectrum on a different, specified instrument
-def: "The transition has been purported by obtaining an MS/MS spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term. However, the detecting instrument is of a different type (e.g. ion trap) than the instrument that the transition will eventually be used on (e.g. triple quad)." [PSI:MS]
+def: "The transition has been purported by obtaining an MS2 spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term. However, the detecting instrument is of a different type (e.g. ion trap) than the instrument that the transition will eventually be used on (e.g. triple quad)." [PSI:MS]
 is_a: MS:1000909 ! transition validation method
 
 [Term]
@@ -6783,7 +6884,7 @@ is_a: MS:1001018 ! database type
 [Term]
 id: MS:1001080
 name: search type
-def: "Enumeration of type of search value (i.e. from PMF, sequence tag, MS-MS)." [PSI:PI]
+def: "Enumeration of type of search value (i.e. from PMF, sequence tag, MS2)." [PSI:PI]
 is_a: MS:1001249 ! search input details
 
 [Term]
@@ -6801,7 +6902,7 @@ is_a: MS:1001080 ! search type
 [Term]
 id: MS:1001083
 name: ms-ms search
-def: "An ms/ms search (with fragment ions)." [PSI:PI]
+def: "An MS2 search (with fragment ions)." [PSI:PI]
 is_a: MS:1001080 ! search type
 
 [Term]
@@ -8136,7 +8237,7 @@ is_obsolete: true
 id: MS:1001301
 name: protein rank
 def: "The rank of the protein in a list sorted by the search engine." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001147 ! protein ambiguity group result details
 
 [Term]
@@ -8553,7 +8654,7 @@ name: distinct peptide-level global FDR
 def: "Estimation of the global false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001105 ! peptide result details
-is_a: MS:1002484 ! peptide-level target-decoy threshold
+is_a: MS:1002484 ! peptide-level statistical threshold
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -8583,7 +8684,7 @@ is_a: MS:1002307 ! fragmentation ion type
 [Term]
 id: MS:1001369
 name: text format
-def: "Simple text file format of \"m/z [intensity]\" values for a PMF (or single MS-MS) search." [PSI:PI]
+def: "Simple text file format of \"m/z [intensity]\" values for a PMF (or single MS2) search." [PSI:PI]
 is_a: MS:1000560 ! mass spectrometer file format
 
 [Term]
@@ -9129,14 +9230,14 @@ id: MS:1001447
 name: prot:FDR threshold
 def: "False-discovery rate threshold for proteins." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1002485 ! protein-level target-decoy threshold
+is_a: MS:1002485 ! protein-level statistical threshold
 
 [Term]
 id: MS:1001448
 name: pep:FDR threshold
 def: "False-discovery rate threshold for peptides." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1002484 ! peptide-level target-decoy threshold
+is_a: MS:1002484 ! peptide-level statistical threshold
 
 [Term]
 id: MS:1001449
@@ -9241,7 +9342,7 @@ is_a: MS:1001040 ! intermediate analysis format
 [Term]
 id: MS:1001466
 name: MS2 format
-def: "MS2 file format for MS/MS spectral data." [PMID:15317041, DOI:10.1002/rcm.1603, http://fields.scripps.edu/sequest/SQTFormat.html]
+def: "MS2 file format for MS2 spectral data." [PMID:15317041, DOI:10.1002/rcm.1603, http://fields.scripps.edu/sequest/SQTFormat.html]
 is_a: MS:1001040 ! intermediate analysis format
 
 [Term]
@@ -9434,7 +9535,7 @@ is_a: MS:1001153 ! search engine specific score
 id: MS:1001494
 name: no threshold
 def: "In case no threshold was used." [PSI:PI]
-is_a: MS:1001060 ! quality estimation method details
+is_a: MS:1002482 ! statistical threshold
 
 [Term]
 id: MS:1001495
@@ -10027,7 +10128,7 @@ is_a: MS:1001456 ! analysis software
 [Term]
 id: MS:1001584
 name: combined pmf + ms-ms search
-def: "Search that includes data from Peptide Mass Fingerprint (PMF) and MS/MS (aka Peptide Fragment Fingerprint - PFF)." [PSI:MS]
+def: "Search that includes data from Peptide Mass Fingerprint (PMF) and MS2 (aka Peptide Fragment Fingerprint - PFF)." [PSI:MS]
 is_a: MS:1001080 ! search type
 
 [Term]
@@ -10217,7 +10318,7 @@ is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 [Term]
 id: MS:1001610
 name: ProteomeDiscoverer:MS Order
-def: "OBSOLETE Level of the mass spectrum (MS/MS=MS2 ... MS10)." [PSI:MS]
+def: "OBSOLETE Level of the mass spectrum (MS2 ... MS10)." [PSI:MS]
 comment: This term was made obsolete because it's recommended to use MS1 spectrum (MS:1000579) or MSn spectrum (MS:1000580) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
@@ -10349,7 +10450,7 @@ is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 [Term]
 id: MS:1001628
 name: ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Peak
-def: "Determines whether precursor artifact peaks from the MS/MS input spectra are removed." [PSI:MS]
+def: "Determines whether precursor artifact peaks from the MS2 input spectra are removed." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 
@@ -10466,14 +10567,14 @@ is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 
 [Term]
 id: MS:1001644
-name: ProteomeDiscoverer:Dynamic Modifications
+name: ProteomeDiscoverer:Dynamic Modification
 def: "Determine dynamic post-translational modifications (PTMs)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 
 [Term]
 id: MS:1001645
-name: ProteomeDiscoverer:Static Modifications
+name: ProteomeDiscoverer:Static Modification
 def: "Static Modification to all occurrences of a named amino acid." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
@@ -11021,30 +11122,38 @@ is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 [Term]
 id: MS:1001720
 name: ProteomeDiscoverer:1. Dynamic Modification
-def: "Determine 1st dynamic post-translational modifications (PTMs)." [PSI:MS]
+def: "OBSOLETE ProteomeDiscoverer's 1st dynamic post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Dynamic Modification (MS:1001644) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001721
 name: ProteomeDiscoverer:2. Dynamic Modification
-def: "Determine 2nd dynamic post-translational modifications (PTMs)." [PSI:MS]
+def: "OBSOLETE ProteomeDiscoverer's 2nd dynamic post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Dynamic Modification (MS:1001644) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001722
 name: ProteomeDiscoverer:3. Dynamic Modification
-def: "Determine 3rd dynamic post-translational modifications (PTMs)." [PSI:MS]
+def: "OBSOLETE ProteomeDiscoverer's 3rd dynamic post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Dynamic Modification (MS:1001644) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001723
 name: ProteomeDiscoverer:4. Dynamic Modification
-def: "Determine 4th dynamic post-translational modifications (PTMs)." [PSI:MS]
+def: "OBSOLETE ProteomeDiscoverer's 4th dynamic post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Dynamic Modification (MS:1001644) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001724
@@ -11532,9 +11641,10 @@ is_a: MS:1001457 ! data processing software
 [Term]
 id: MS:1001797
 name: travelling wave ion mobility mass spectrometer
-def: "An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide." [PSI:MS]
+def: "OBSOLETE An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide." [PSI:MS]
+comment: This child of the former purgatory term ion mobility spectrometry was made obsolete.
 synonym: "TWIMS" EXACT []
-is_a: MS:1000261 ! ion mobility spectrometry
+is_obsolete: true
 
 [Term]
 id: MS:1001798
@@ -11777,13 +11887,13 @@ is_a: MS:1001833 ! quantitation analysis summary
 [Term]
 id: MS:1001836
 name: spectral counting quantitation analysis
-def: "Spectral counting workflow (number of identified MS/MS spectra as approximation of peptide / protein quant)." [PSI:PI]
+def: "Spectral counting workflow (number of identified MS2 spectra as approximation of peptide / protein quant)." [PSI:PI]
 is_a: MS:1001833 ! quantitation analysis summary
 
 [Term]
 id: MS:1001837
 name: iTRAQ quantitation analysis
-def: "Quantification analysis using the AB SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z." [PSI:PI]
+def: "Quantification analysis using the AB SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near 114 m/z." [PSI:PI]
 is_a: MS:1002009 ! isobaric label quantitation analysis
 
 [Term]
@@ -11815,8 +11925,8 @@ is_a: MS:1001805 ! quantification datatype
 [Term]
 id: MS:1001842
 name: peptide PSM count
-def: "The number of MS/MS spectra identified for this peptide in spectral counting." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+def: "The number of MS2 spectra identified for this peptide in spectral counting." [PSI:PI]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
@@ -11852,7 +11962,7 @@ is_a: MS:1001805 ! quantification datatype
 [Term]
 id: MS:1001847
 name: reporter ion intensity
-def: "Intensity of MS/MS reporter ion (e.g. iTraq)." [PSI:PI]
+def: "Intensity of MS2 reporter ion (e.g. iTraq)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
@@ -11916,14 +12026,14 @@ is_a: MS:1002072 ! p-value
 [Term]
 id: MS:1001856
 name: reporter ion raw value
-def: "Intensity (or area) of MS/MS reporter ion (e.g. iTraq)." [PSI:PI]
+def: "Intensity (or area) of MS2 reporter ion (e.g. iTraq)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
 id: MS:1001857
 name: reporter ion normalized value
-def: "Normalized value of MS/MS reporter ion (e.g. iTraq)." [PSI:PI]
+def: "Normalized value of MS2 reporter ion (e.g. iTraq)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
@@ -12197,7 +12307,7 @@ is_a: MS:1001805 ! quantification datatype
 id: MS:1001895
 name: Progenesis:peptide count
 def: "The data type peptide count produced by Progenesis LC-MS." [PSI:MS]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
@@ -12211,28 +12321,28 @@ is_a: MS:1001805 ! quantification datatype
 id: MS:1001897
 name: MaxQuant:peptide counts (unique)
 def: "The data type peptide counts (unique) produced by MaxQuant." [PSI:MS]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
 id: MS:1001898
 name: MaxQuant:peptide counts (all)
 def: "The data type peptide counts (all) produced by MaxQuant." [PSI:MS]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
 id: MS:1001899
 name: MaxQuant:peptide counts (razor+unique)
 def: "The data type peptide counts (razor+unique) produced by MaxQuant." [PSI:MS]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
 id: MS:1001900
 name: MaxQuant:sequence length
 def: "The data type sequence length produced by MaxQuant." [PSI:MS]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
@@ -12259,8 +12369,8 @@ is_a: MS:1001805 ! quantification datatype
 [Term]
 id: MS:1001904
 name: MaxQuant:MS/MS count
-def: "The data type MS/MS count produced by MaxQuant." [PSI:MS]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+def: "The data type MS2 count produced by MaxQuant." [PSI:MS]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
@@ -12382,7 +12492,7 @@ name: Digital Object Identifier (DOI)
 def: "DOI unique identifier of a publication." [PSI:PI, http://dx.doi.org]
 synonym: "doi" EXACT []
 is_a: MS:1000878 ! external reference identifier
-relationship: has_regexp MS:1002480 ! (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?!["&\'<>])\S)+)
+relationship: has_regexp MS:1002480 ! (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+)
 
 [Term]
 id: MS:1001923
@@ -12694,27 +12804,33 @@ is_obsolete: true
 
 [Term]
 id: MS:1001968
-name: PTM localization score
-def: "A score that assign confidence to the localization of an amino acid modification on a peptide sequence." [PSI:MS]
-is_a: MS:1001143 ! search engine specific score for PSMs
+name: PSM-level PTM localization score
+def: "A score that assign confidence to the localization of an amino acid modification on a peptide sequence at the PSM-level." [PSI:PI]
+is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001969
-name: ProteomeDiscoverer:phosphoRS score
-def: "Peptide score based on the cumulative binomial probability that the observed match is a random event." [DOI:10.1021/pr200611n, PMID:22073976]
-is_a: MS:1001968 ! PTM localization score
+name: phosphoRS score
+def: "phosphoRS score for PTM site location at the PSM-level." [DOI:10.1021/pr200611n, PMID:22073976]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001970
-name: ProteomeDiscoverer:phosphoRS sequence probability
+name: phosphoRS sequence probability
 def: "Probability that the respective isoform is correct." [DOI:10.1021/pr200611n, PMID:22073976]
-is_a: MS:1001968 ! PTM localization score
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001971
-name: ProteomeDiscoverer:phosphoRS site probability
+name: phosphoRS site probability
 def: "Estimate of the probability that the respective site is truly phosphorylated." [DOI:10.1021/pr200611n, PMID:22073976]
-is_a: MS:1001968 ! PTM localization score
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001972
@@ -12733,9 +12849,11 @@ is_a: MS:1001456 ! analysis software
 id: MS:1001974
 name: DeBunker:score
 def: "Score specific to DeBunker." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001975
@@ -12767,52 +12885,63 @@ is_a: MS:1001456 ! analysis software
 id: MS:1001978
 name: MSQuant:PTM-score
 def: "The PTM score from MSQuant software." [DOI:10.1021/pr900721e, PMID:19888749]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001979
 name: MaxQuant:PTM Score
 def: "The PTM score from MaxQuant software." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001980
 name: MaxQuant:Phospho (STY) Probabilities
 def: "The Phospho (STY) Probabilities from MaxQuant software." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001405 ! spectrum identification result details
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001981
 name: MaxQuant:Phospho (STY) Score Diffs
 def: "The Phospho (STY) Score Diffs from MaxQuant software." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001405 ! spectrum identification result details
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
 
 [Term]
 id: MS:1001982
 name: MaxQuant:P-site localization probability
 def: "The P-site localization probability value from MaxQuant software." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001405 ! spectrum identification result details
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001983
 name: MaxQuant:PTM Delta Score
 def: "The PTM Delta Score value from MaxQuant software (Difference between highest scoring site and second highest)." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001984
@@ -12822,17 +12951,21 @@ is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1001985
-name: Ascore:Ascore
-def: "The Ascore score value from Ascore software." [DOI:10.1038/nbt1240, PMID:16964243]
+name: Ascore
+def: "A-score for PTM site location at the PSM-level." [DOI:10.1038/nbt1240, PMID:16964243]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001986
 name: H-Score
 def: "H-Score for peptide phosphorylation site location." [DOI:10.1021/pr1006813, PMID:20836569]
-is_a: MS:1001968 ! PTM localization score
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
 [Term]
 id: MS:1001987
@@ -12998,11 +13131,11 @@ is_a: MS:1000240 ! atmospheric pressure ionization
 id: MS:1002012
 name: Mascot:PTM site assignment confidence
 def: "Relative probability that PTM site assignment is correct, derived from the Mascot score difference between matches to the same spectrum (Mascot Delta Score)." [http://www.matrixscience.com/help/pt_mods_help.html#SITE]
-xref: value-type:xsd\:float "The allowed value-type for this CV term."
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001405 ! spectrum identification result details
-is_a: MS:1001968 ! PTM localization score
+is_a: MS:1001968 ! PSM-level PTM localization score
 relationship: has_units UO:0000187 ! percent
 
 [Term]
@@ -13289,7 +13422,8 @@ def: "MS-GF spectral E-value." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001153 ! search engine specific score
-is_a: MS:1001872 ! distinct peptide-level e-value
+is_a: MS:1002353 ! PSM-level e-value
+relationship: has_order MS:1002109 ! lower score better
 
 [Term]
 id: MS:1002053
@@ -13298,7 +13432,8 @@ def: "MS-GF E-value." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001153 ! search engine specific score
-is_a: MS:1001872 ! distinct peptide-level e-value
+is_a: MS:1002353 ! PSM-level e-value
+relationship: has_order MS:1002109 ! lower score better
 
 [Term]
 id: MS:1002054
@@ -13307,7 +13442,7 @@ def: "MS-GF Q-value." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001153 ! search engine specific score
-is_a: MS:1001868 ! distinct peptide-level q-value
+is_a: MS:1002354 ! PSM-level q-value
 
 [Term]
 id: MS:1002055
@@ -13465,16 +13600,20 @@ is_a: MS:1001536 ! Bruker Daltonics micrOTOF series
 [Term]
 id: MS:1002078
 name: ProteomeDiscoverer:1. Static Modification
-def: "Determine 1st static post-translational modifications (PTMs)." [PSI:MS]
+def: "OBSOLETE ProteomeDiscoverer's 1st static post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Static Modification (MS:1001645) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1002079
 name: ProteomeDiscoverer:2. Static Modification
-def: "Determine 2nd static post-translational modifications (PTMs)." [PSI:MS]
+def: "OBSOLETE ProteomeDiscoverer's 2nd static post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Static Modification (MS:1001645) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1002080
@@ -13550,7 +13689,7 @@ is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 [Term]
 id: MS:1002090
 name: Calculate Probability Scores
-def: "Flag indicating that a probability score for the assessment that a reported peptide match is a random occurence is calculated." [PSI:MS]
+def: "Flag indicating that a probability score for the assessment that a reported peptide match is a random occurrence is calculated." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1002094 ! common search engine input parameter
 
@@ -14099,43 +14238,43 @@ is_a: MS:1000752 ! TOPP software
 [Term]
 id: MS:1002181
 name: TOPP InspectAdapter
-def: "Identifies MS/MS spectra using the external program Inspect." [PSI:PI]
+def: "Identifies MS2 spectra using the external program Inspect." [PSI:PI]
 is_a: MS:1002180 ! TOPP software adaptor
 
 [Term]
 id: MS:1002182
 name: TOPP MascotAdapter
-def: "Identifies MS/MS spectra using the external program Mascot." [PSI:PI]
+def: "Identifies MS2 spectra using the external program Mascot." [PSI:PI]
 is_a: MS:1002180 ! TOPP software adaptor
 
 [Term]
 id: MS:1002183
 name: TOPP MascotAdapterOnline
-def: "Identifies MS/MS spectra using the online version of the external program Mascot." [PSI:PI]
+def: "Identifies MS2 spectra using the online version of the external program Mascot." [PSI:PI]
 is_a: MS:1002180 ! TOPP software adaptor
 
 [Term]
 id: MS:1002184
 name: TOPP OMSSAAdapter
-def: "Identifies MS/MS spectra using the external program OMSSA." [PSI:PI]
+def: "Identifies MS2 spectra using the external program OMSSA." [PSI:PI]
 is_a: MS:1002180 ! TOPP software adaptor
 
 [Term]
 id: MS:1002185
 name: TOPP PepNovoAdapter
-def: "Identifies MS/MS spectra using the external program PepNovo." [PSI:PI]
+def: "Identifies MS2 spectra using the external program PepNovo." [PSI:PI]
 is_a: MS:1002180 ! TOPP software adaptor
 
 [Term]
 id: MS:1002186
 name: TOPP XTandemAdapter
-def: "Identifies MS/MS spectra using the external program XTandem." [PSI:PI]
+def: "Identifies MS2 spectra using the external program XTandem." [PSI:PI]
 is_a: MS:1002180 ! TOPP software adaptor
 
 [Term]
 id: MS:1002187
 name: TOPP SpecLibSearcher
-def: "Identifies peptide MS/MS spectra by spectral matching with a searchable spectral library." [PSI:PI]
+def: "Identifies peptide MS2 spectra by spectral matching with a searchable spectral library." [PSI:PI]
 is_a: MS:1000752 ! TOPP software
 
 [Term]
@@ -14329,7 +14468,7 @@ id: MS:1002218
 name: percent collision energy ramp start
 def: "Collision energy at the start of the collision energy ramp in percent, normalized to the mass of the ion." [PSI:PI]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000138 ! percent collision energy
+is_a: MS:1000138 ! normalized collision energy
 relationship: has_units UO:0000187 ! percent
 
 [Term]
@@ -14337,7 +14476,7 @@ id: MS:1002219
 name: percent collision energy ramp end
 def: "Collision energy at the end of the collision energy ramp in percent, normalized to the mass of the ion." [PSI:PI]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1000138 ! percent collision energy
+is_a: MS:1000138 ! normalized collision energy
 relationship: has_units UO:0000187 ! percent
 
 [Term]
@@ -14537,7 +14676,7 @@ is_a: MS:1001153 ! search engine specific score
 id: MS:1002249
 name: SEQUEST:sprank
 def: "The SEQUEST result 'SpRank'." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001153 ! search engine specific score
 
@@ -14607,7 +14746,7 @@ is_a: MS:1001153 ! search engine specific score
 id: MS:1002258
 name: Comet:matched ions
 def: "The Comet result 'Matched Ions'." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001153 ! search engine specific score
 
@@ -14615,7 +14754,7 @@ is_a: MS:1001153 ! search engine specific score
 id: MS:1002259
 name: Comet:total ions
 def: "The Comet result 'Total Ions'." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for PSMs
 is_a: MS:1001153 ! search engine specific score
 
@@ -14624,7 +14763,7 @@ id: MS:1002260
 name: PSM:FDR threshold
 def: "False-discovery rate threshold for peptide-spectrum matches." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1002483 ! PSM-level target-decoy threshold
+is_a: MS:1002483 ! PSM-level statistical threshold
 
 [Term]
 id: MS:1002261
@@ -14799,7 +14938,7 @@ is_a: MS:1001838 ! SRM quantitation analysis
 [Term]
 id: MS:1002285
 name: Trans-Proteomic Pipeline
-def: "A suite of open source tools for the processing of MS/MS proteomics data developed by the Seattle Proteome Center at the Institute for Systems Biology." [PSI:PI]
+def: "A suite of open source tools for the processing of MS2 proteomics data developed by the Seattle Proteome Center at the Institute for Systems Biology." [PSI:PI]
 synonym: "TPP" EXACT []
 is_a: MS:1001456 ! analysis software
 
@@ -14813,7 +14952,7 @@ relationship: part_of MS:1002285 ! Trans-Proteomic Pipeline
 [Term]
 id: MS:1002287
 name: PeptideProphet
-def: "A program in the TPP that calculates PSM probabilities for MS/MS proteomics data searched with any of the supported sequence or spectral library search engines via the pepXML format." [PMID:12403597, PMID:23176103]
+def: "A program in the TPP that calculates PSM probabilities for MS2 proteomics data searched with any of the supported sequence or spectral library search engines via the pepXML format." [PMID:12403597, PMID:23176103]
 is_a: MS:1002286 ! Trans-Proteomic Pipeline software
 
 [Term]
@@ -15102,16 +15241,20 @@ is_a: MS:1002101 ! ProteomeDiscoverer input parameter
 [Term]
 id: MS:1002330
 name: ProteomeDiscoverer:3. Static Modification
-def: "Determine 3rd static (fixed) post-translational modifications (PTMs)." [PSI:PI]
+def: "OBSOLETE ProteomeDiscoverer's 3rd static post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Static Modification (MS:1001645) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1002331
 name: ProteomeDiscoverer:5. Dynamic Modification
-def: "Determine 5th dynamic (variable) post-translational modifications (PTMs)." [PSI:PI]
+def: "OBSOLETE ProteomeDiscoverer's 5th dynamic post-translational modification (PTM) input parameter." [PSI:PI]
+comment: This term was made obsolete because it's recommended to use ProteomeDiscoverer:Dynamic Modification (MS:1001644) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1002332
@@ -15191,8 +15334,9 @@ is_a: MS:1001457 ! data processing software
 [Term]
 id: MS:1002343
 name: ion stability type
-def: "Stability type of the ion." [PSI:PI]
-is_a: MS:1000365 ! ion?
+def: "OBSOLETE Stability type of the ion." [PSI:PI]
+comment: This child of the former purgatory term ion? was made obsolete.
+is_obsolete: true
 
 [Term]
 id: MS:1002344
@@ -15237,7 +15381,7 @@ name: PSM-level global FDR
 def: "Estimation of the global false discovery rate of peptide spectrum matches." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002345 ! PSM-level result details
-is_a: MS:1002483 ! PSM-level target-decoy threshold
+is_a: MS:1002483 ! PSM-level statistical threshold
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -15246,7 +15390,7 @@ name: PSM-level local FDR
 def: "Estimation of the local false discovery rate of peptide spectrum matches." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002345 ! PSM-level result details
-is_a: MS:1002483 ! PSM-level target-decoy threshold
+is_a: MS:1002483 ! PSM-level statistical threshold
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -15313,7 +15457,7 @@ name: distinct peptide-level local FDR
 def: "Estimation of the local false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001105 ! peptide result details
-is_a: MS:1002484 ! peptide-level target-decoy threshold
+is_a: MS:1002484 ! peptide-level statistical threshold
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -15339,7 +15483,7 @@ id: MS:1002362
 name: distinct peptide-level probability
 def: "Probability that the reported distinct peptide sequence (irrespective of mass modifications) has been correctly identified via the referenced PSMs." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001192 ! peptide identification confidence metric
+is_a: MS:1001092 ! peptide identification confidence metric
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -15378,7 +15522,7 @@ id: MS:1002367
 name: probability for proteins
 def: "Probability that a specific protein sequence has been correctly identified from the PSM and distinct peptide evidence, and based on the available protein sequences presented to the analysis software." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001192 ! protein identification confidence metric
+is_a: MS:1001198 ! protein identification confidence metric 
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -15393,7 +15537,7 @@ name: protein group-level global FDR
 def: "Estimation of the global false discovery rate of protein groups." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002346 ! protein group-level result details
-is_a: MS:1002486 ! protein group-level target-decoy threshold
+is_a: MS:1002486 ! protein group-level statistical threshold
 
 [Term]
 id: MS:1002370
@@ -15401,7 +15545,7 @@ name: protein group-level local FDR
 def: "Estimation of the local false discovery rate of protein groups." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1002346 ! protein group-level result details
-is_a: MS:1002486 ! protein group-level target-decoy threshold
+is_a: MS:1002486 ! protein group-level statistical threshold
 
 [Term]
 id: MS:1002371
@@ -15578,6 +15722,7 @@ name: PIA:protein score
 def: "The score given to a protein by any protein inference." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
+relationship: has_order MS:1002108 ! higher score better
 
 [Term]
 id: MS:1002395
@@ -15655,7 +15800,7 @@ is_a: MS:1001085 ! protein result details
 [Term]
 id: MS:1002406
 name: count of identified clusters
-def: "The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file." [PSI:PI]
+def: "The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file." [DOI:10.1002/pmic.201400080, PMID:25092112]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1002405 ! protein cluster details
 
@@ -15875,13 +16020,13 @@ relationship: part_of MS:1001000 ! spectrum interpretation
 
 [Term]
 id: MS:1002439
-name: final PSM list UNDER DISCUSSION
+name: final PSM list
 def: "A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is the final set of identifications to be interpreted by consuming software. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum must not be referenced from more than one SpectrumIdentificationResult." [PSI:PI]
 is_a: MS:1002438 ! spectrum identification list result details
 
 [Term]
 id: MS:1002440
-name: intermediate PSM list UNDER DISCUSSION
+name: intermediate PSM list
 def: "A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is not the final set of identifications to be interpreted by consuming software. This term should be used when results are provided from multiple search engines for the results from each search engine before they are combined to give consensus identifications. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum may be referenced from more than one SpectrumIdentificationResult." [PSI:PI]
 is_a: MS:1002438 ! spectrum identification list result details
 
@@ -16014,7 +16159,7 @@ name: protein group-level global FNR
 def: "Estimation of the global false negative rate of protein groups." [PSI:PI]
 is_a: MS:1002346 ! protein group-level result details
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
-is_a: MS:1002486 ! protein group-level target-decoy threshold
+is_a: MS:1002486 ! protein group-level statistical threshold
 
 [Term]
 id: MS:1002461
@@ -16027,7 +16172,7 @@ id: MS:1002462
 name: distinct peptide-level global FNR
 def: "Estimation of the global false negative rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry)." [PSI:PI]
 is_a: MS:1001105 ! peptide result details
-is_a: MS:1002484 ! peptide-level target-decoy threshold
+is_a: MS:1002484 ! peptide-level statistical threshold
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -16041,7 +16186,7 @@ id: MS:1002464
 name: PSM-level global FNR
 def: "Estimation of the global false negative rate of peptide spectrum matches." [PSI:PI]
 is_a: MS:1002345 ! PSM-level result details
-is_a: MS:1002483 ! PSM-level target-decoy threshold
+is_a: MS:1002483 ! PSM-level statistical threshold
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
 
 [Term]
@@ -16113,12 +16258,12 @@ def: "The sum of peptide-level scores for peptides mapped only to non-canonical 
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001147 ! protein ambiguity group result details
 relationship: has_order MS:1002108 ! higher score better
- 
+
 [Term]
 id: MS:1002475
 name: ProteoAnnotator:count alternative peptides
 def: "The count of the number of peptide sequences mapped to non-canonical gene models only within the group." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001147 ! protein ambiguity group result details
 
 [Term]
@@ -16154,7 +16299,7 @@ relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrom
 [Term]
 id: MS:1002480
 name: regular expression for a digital object identifier (DOI)
-def: "(10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?!["&\'<>])\S)+)." [PSI:PI, http://dx.doi.org/]
+def: "(10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+)." [PSI:PI, http://dx.doi.org/]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -16173,25 +16318,25 @@ is_a: MS:1001060 ! quality estimation method details
 id: MS:1002483
 name: PSM-level statistical threshold
 def: "Estimated statistical threshold at PSM-level." [PSI:MS]
-is_a: MS:1002482 ! statistical threshold
+is_a: MS:1002573 ! spectrum identification statistical threshold
 
 [Term]
 id: MS:1002484
 name: peptide-level statistical threshold
 def: "Estimated statistical threshold at peptide-level." [PSI:MS]
-is_a: MS:1002482 ! statistical threshold
+is_a: MS:1002573 ! spectrum identification statistical threshold
 
 [Term]
 id: MS:1002485
 name: protein-level statistical threshold
 def: "Estimated statistical threshold at protein-level." [PSI:MS]
-is_a: MS:1002482 ! statistical threshold
+is_a: MS:1002572 ! protein detection statistical threshold
 
 [Term]
 id: MS:1002486
 name: protein group-level statistical threshold
 def: "Estimated statistical threshold at protein group-level." [PSI:PI]
-is_a: MS:1002482 ! statistical threshold
+is_a: MS:1002572 ! protein detection statistical threshold
 
 [Term]
 id: MS:1002487
@@ -16210,6 +16355,7 @@ is_a: MS:1000878 ! external reference identifier
 id: MS:1002489
 name: special processing
 def: "Details describing a special processing." [PSI:PI]
+is_a: MS:1001080 ! search type
 relationship: part_of MS:1001000 ! spectrum interpretation
 
 [Term]
@@ -16299,15 +16445,15 @@ is_a: MS:1001105 ! peptide result details
 
 [Term]
 id: MS:1002504
-name: order
+name: modification index
 def: "The order of modifications to be referenced elsewhere in the document." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001055 ! modification parameters
 
 [Term]
 id: MS:1002505
 name: regular expression for modification localization scoring
-def: "([:digit:]+:[0|1]\{1\}.[:digit:]+:[:digit:]+[|:digit:]*:(true|false)\{1\})." [PSI:PI]
+def: "([:digit:]+:[0|1]\{1\}.[:digit:]+:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})" [PSI:PI]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -16348,7 +16494,7 @@ is_a: MS:1002508 ! cross-linking attribute
 id: MS:1002511
 name: cross-link spectrum identification item
 def: "Cross-linked spectrum identification item." [PSI:PI]
-xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1002508 ! cross-linking attribute
 
 [Term]
@@ -16405,3 +16551,378 @@ name: Progenesis:protein group raw abundance
 def: "The data type raw abundance for protein groups produced by Progenesis LC-MS." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002520
+name: peptide group ID
+def: "Peptide group identifier for peptide-level stats." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001105 ! peptide result details
+
+[Term]
+id: MS:1002521
+name: mass spectrometry imaging
+def: "A technique in which mass spectra are acquired in a spatially resolved manner. This is typically achieved by scanning a laser or primary ion beam over a sample and acquiring a mass spectrum at each position." [PSI:PI]
+is_a: MS:1000857 ! run attribute
+
+[Term]
+id: MS:1002522
+name: ProteomeDiscoverer:1. Static Terminal Modification
+def: "Determine 1st static terminal post-translational modifications (PTMs)." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+
+[Term]
+id: MS:1002523
+name: Q Exactive HF
+def: "Thermo Scientific Q Exactive." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002524
+name: PepFinder
+def: "Thermo Scientific PepFinder BioPharma analysis software." [PSI:PI]
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1002525
+name: TSQ 8000 Evo
+def: "Thermo Scientific TSQ 8000 Evo MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002526
+name: Exactive Plus
+def: "Thermo Scientific Exactive Plus MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002527
+name: instrument specific scan attribute
+def: "Instrument specific scan properties that are associated with a value." [PSI:PI]
+is_a: MS:1000503 ! scan attribute
+
+[Term]
+id: MS:1002528
+name: synchronous prefilter selection
+def: "Synchronous prefilter selection." [PSI:PI]
+synonym: "SPS" EXACT []
+is_a: MS:1002527 ! instrument specific scan attribute
+
+[Term]
+id: MS:1002529
+name: resolution array
+def: "A data array of resolution values." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+
+[Term]
+id: MS:1002530
+name: baseline array
+def: "A data array of signal baseline values (the signal in the absence of analytes)." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+
+[Term]
+id: MS:1002531
+name: UIMF format
+def: "SQLite-based file format created at Pacific Northwest National Lab. It stores an intermediate analysis of ion-mobility mass spectrometry data." [PSI:MS]
+is_a: MS:1000560 ! mass spectrometer file format
+
+[Term]
+id: MS:1002532
+name: UIMF nativeID format
+def: "Native format defined by frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger frameType=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1002533
+name: TripleTOF 6600
+def: "AB SCIEX TripleTOF 6600, a quadrupole - quadrupole - time-of-flight mass spectrometer." [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1002534
+name: ProLuCID:xcorr
+def: "The ProLuCID result 'XCorr'." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001153 ! search engine specific score
+relationship: has_order MS:1002108 ! higher score better
+
+[Term]
+id: MS:1002535
+name: ProLuCID:deltacn
+def: "The ProLuCID result 'DeltaCn'." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1002536
+name: D-Score
+def: "D-Score for PTM site location at the PSM-level." [DOI:10.1002/pmic.201200408, PMID:23307401]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002537
+name: MD-Score
+def: "MD-Score for PTM site location at the PSM-level." [DOI:10.1074/mcp.M110.003830–1, PMID:21057138]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001968 ! PSM-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002538
+name: PTM localization confidence metric
+def: "Localization confidence metric for a post translational modification (PTM)." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001405 ! spectrum identification result details
+
+[Term]
+id: MS:1002539
+name: PeptideShaker PTM confidence type
+def: "PeptideShaker quality criteria for the confidence of PTM localizations." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002538 ! PTM localization confidence metric
+
+[Term]
+id: MS:1002540
+name: PeptideShaker PSM confidence type
+def: "PeptideShaker quality criteria for the confidence of PSM's." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002347 ! PSM-level identification confidence metric
+
+[Term]
+id: MS:1002541
+name: PeptideShaker peptide confidence type
+def: "PeptideShaker quality criteria for the confidence of peptide identifications." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001092 ! peptide identification confidence metric
+
+[Term]
+id: MS:1002542
+name: PeptideShaker protein confidence type
+def: "PeptideShaker quality criteria for the confidence of protein identifications." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001198 ! protein identification confidence metric
+
+[Term]
+id: MS:1002543
+name: xiFDR
+def: "Target/Decoy based FDR estimation for cross-linking peptide-identifications." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002544
+name: xi
+def: "Search engine for cross-linked peptides." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002545
+name: xi:score
+def: "The xi result 'Score'." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001153 ! search engine specific score
+relationship: has_order MS:1002108 ! higher score better
+
+[Term]
+id: MS:1002546
+name: Skyline mzQuantML converter 
+def: "A software package to convert Skyline report to mzQuantML." [PSI:PI, http://code.google.com/p/srm-mzquantml-convertor/]
+is_a: MS:1001139 ! quantitation software name
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002547
+name: normalized spectral abundance factor
+def: "A normalized spectral abundance factor (NSAF)." [DOI:10.1021/pr060161n, PMID:16944946]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002548
+name: distributed normalized spectral abundance factor
+def: "A distributed normalized spectral abundance factor (dNSAF." [DOI:10.1021/ac9023999, PMID:20166708] 
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002549
+name: peptide-level PTM localization score
+def: "A score that assign confidence to the localization of an amino acid modification on a peptide sequence at the peptide-level." [PSI:PI]
+is_a: MS:1001405 ! spectrum identification result details
+
+[Term]
+id: MS:1002550
+name: peptide:phosphoRS score
+def: "phosphoRS score for PTM site location at the peptide-level." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002549 ! peptide-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002551
+name: peptide:Ascore
+def: "A-score for PTM site location at the peptide-level." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002549 ! peptide-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002552
+name: peptide:H-Score
+def: "H-Score for peptide phosphorylation site location at the peptide-level." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002549 ! peptide-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002553
+name: peptide:D-Score
+def: "D-Score for PTM site location at the peptide-level." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002549 ! peptide-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002554
+name: peptide:MD-Score
+def: "MD-Score for PTM site location at the peptide-level." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002549 ! peptide-level PTM localization score
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1002555
+name: PTM localization score threshold
+def: "Threshold for PTM site location score." [PSI:PI]
+is_a: MS:1001405 ! spectrum identification result details
+
+[Term]
+id: MS:1002556
+name: Ascore threshold
+def: "Threshold for Ascore PTM site location score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002557
+name: D-Score threshold
+def: "Threshold for D-score PTM site location score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002558
+name: MD-Score threshold
+def: "Threshold for MD-score PTM site location score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002559
+name: H-Score threshold
+def: "Threshold for H-score PTM site location score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:10025560
+name: DeBunker:score threshold
+def: "Threshold for DeBunker PTM site location score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002561
+name: Mascot:PTM site assignment confidence threshold
+def: "Threshold for Mascot PTM site assignment confidence." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002562
+name: MSQuant:PTM-score threshold
+def: "Threshold for MSQuant:PTM-score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002563
+name: MaxQuant:PTM Score threshold
+def: "Threshold for MaxQuant:PTM Score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002564
+name: MaxQuant:P-site localization probability threshold
+def: "Threshold for MaxQuant:P-site localization probability." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002565
+name: MaxQuant:PTM Delta Score threshold
+def: "Threshold for MaxQuant:PTM Delta Score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002566
+name: MaxQuant:Phospho (STY) Probabilities threshold
+def: "Threshold for MaxQuant:Phospho (STY) Probabilities." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002567
+name: phosphoRS score threshold
+def: "Threshold for phosphoRS score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002568
+name: phosphoRS site probability threshold
+def: "Threshold for phosphoRS site probability." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002555 ! PTM localization score threshold
+
+[Term]
+id: MS:1002569
+name: ProteomeDiscoverer:Number of Spectra Processed At Once
+def: "Number of spectra processed at once in a ProteomeDiscoverer search." [PSI:PI]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: MS:1002101 ! ProteomeDiscoverer input parameter
+
+[Term]
+id: MS:1002570
+name: sequence multiply subsumable protein
+def: "A protein for which the matched peptide sequences are the same, or a subset of, the matched peptide sequences for two or more other proteins combined. These other proteins need not all be in the same group." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001101 ! protein group or subset relationship
+
+[Term]
+id: MS:1002571
+name: spectrum multiply subsumable protein
+def: "A protein for which the matched spectra are the same, or a subset of, the matched spectra for two or more other proteins combined. These other proteins need not all be in the same group." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001101 ! protein group or subset relationship
+
+[Term]
+id: MS:1002572
+name: protein detection statistical threshold
+def: "Estimated statistical threshold used for protein detection." [PSI:MS]
+is_a: MS:1002482 ! statistical threshold
+
+[Term]
+id: MS:1002573
+name: spectrum identification statistical threshold
+def: "Estimated statistical threshold used for spectrum identification." [PSI:MS]
+is_a: MS:1002482 ! statistical threshold

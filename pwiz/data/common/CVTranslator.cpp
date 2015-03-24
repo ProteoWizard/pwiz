@@ -177,8 +177,6 @@ void CVTranslator::Impl::insertCVTerms()
 {
     for (vector<CVID>::const_iterator cvid=cvids().begin(); cvid!=cvids().end(); ++cvid)
     {
-        if (cvIsA(*cvid, MS_purgatory)) continue;
-
         const CVTermInfo& info = cvTermInfo(*cvid);
 
         if (info.isObsolete) continue;

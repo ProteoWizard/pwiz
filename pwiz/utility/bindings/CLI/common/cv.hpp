@@ -38,8 +38,8 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 3.65.0
-//   date: 02:07:2014 08:55
+//   data-version: 3.74.0
+//   date: 10:03:2015 16:37
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.3
 //   import: http://pato.googlecode.com/svn/trunk/quality.obo
@@ -47,8 +47,8 @@
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   remark: namespace: MS
-//   remark: version: 3.65.0
-//   remark: release date: 2014-07-02
+//   remark: version: 3.74.0
+//   remark: release date: 2015-03-10
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -66,7 +66,7 @@
 //
 // ["unimod.obo"]
 //   format-version: 1.2
-//   date: 2014:06:04 16:11
+//   date: 2015:01:12 16:11
 //
 // ["unit.obo"]
 //   format-version: 1.2
@@ -98,7 +98,7 @@ public enum class CVID
     MS_sample_number = 1000001,
 
     /// <summary>sample name: A reference string relevant to the sample under study.</summary>
-    MS_sample_name_OBSOLETE = 1000002,
+    MS_sample_name = 1000002,
 
     /// <summary>sample state: The chemical phase of a pure sample, or the state of a mixed sample.</summary>
     MS_sample_state = 1000003,
@@ -143,7 +143,7 @@ public enum class CVID
     MS_scan_start_time = 1000016,
 
     /// <summary>Scan Function: Describes the type of mass analysis being performed. Two primary modes are: typical acquisition over a range of masses (Mass Scan), and Selected Ion Detection. The primary difference is that Selected Ion Detection produces a single value for the signal at the selected mass rather than producing a mass spectrum.</summary>
-    MS_Scan_Function = 1000017,
+    MS_Scan_Function_OBSOLETE = 1000017,
 
     /// <summary>scan direction: Direction in terms of m/z of the scan for scanning analyzers (low to high, or high to low).</summary>
     MS_scan_direction = 1000018,
@@ -416,10 +416,10 @@ public enum class CVID
     MS_proportional_OBSOLETE = 1000089,
 
     /// <summary>mass scan: A variation of instrument where a selected mass is scanned.</summary>
-    MS_mass_scan = 1000090,
+    MS_mass_scan_OBSOLETE = 1000090,
 
     /// <summary>selected ion detection: Please see Single Ion Monitoring.</summary>
-    MS_selected_ion_detection = 1000091,
+    MS_selected_ion_detection_OBSOLETE = 1000091,
 
     /// <summary>decreasing m/z scan: High to low direction in terms of m/z of the scan for scanning analyzers.</summary>
     MS_decreasing_m_z_scan = 1000092,
@@ -830,16 +830,16 @@ public enum class CVID
     MS_SRM = MS_selected_reaction_monitoring,
 
     /// <summary>accurate mass: An experimentally determined mass that is can be to determine a unique elemental formula. For ions less than 200 u, a measurement with 5 ppm accuracy is sufficient to determine the elemental composition.</summary>
-    MS_accurate_mass = 1000207,
+    MS_accurate_mass_OBSOLETE = 1000207,
 
     /// <summary>average mass: The mass of an ion or molecule calculated using the average mass of each element weighted for its natural isotopic abundance.</summary>
-    MS_average_mass = 1000208,
+    MS_average_mass_OBSOLETE = 1000208,
 
     /// <summary>appearance energy: The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.</summary>
-    MS_appearance_energy = 1000209,
+    MS_appearance_energy_OBSOLETE = 1000209,
 
     /// <summary>AE: The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.</summary>
-    MS_AE = MS_appearance_energy,
+    MS_AE_OBSOLETE = MS_appearance_energy_OBSOLETE,
 
     /// <summary>base peak: The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.</summary>
     MS_base_peak = 1000210,
@@ -860,16 +860,16 @@ public enum class CVID
     MS_Da_OBSOLETE = MS_dalton_OBSOLETE,
 
     /// <summary>electron affinity: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.</summary>
-    MS_electron_affinity = 1000213,
+    MS_electron_affinity_OBSOLETE = 1000213,
 
     /// <summary>EA: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.</summary>
-    MS_EA = MS_electron_affinity,
+    MS_EA_OBSOLETE = MS_electron_affinity_OBSOLETE,
 
     /// <summary>electron energy obsolete: The potential difference through which electrons are accelerated before they are used to bring about electron ionization.</summary>
     MS_electron_energy_obsolete_OBSOLETE = 1000214,
 
     /// <summary>exact mass: The calculated mass of an ion or molecule containing a single isotope of each atom.</summary>
-    MS_exact_mass = 1000215,
+    MS_exact_mass_OBSOLETE = 1000215,
 
     /// <summary>field-free region: A section of a mass spectrometer in which there are no electric or magnetic fields.</summary>
     MS_field_free_region = 1000216,
@@ -878,16 +878,16 @@ public enum class CVID
     MS_FFR = MS_field_free_region,
 
     /// <summary>ionization cross section: A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule.</summary>
-    MS_ionization_cross_section = 1000217,
+    MS_ionization_cross_section_OBSOLETE = 1000217,
 
     /// <summary>ionization efficiency: The ratio of the number of ions formed to the number of electrons, molecules or photons used.</summary>
     MS_ionization_efficiency_OBSOLETE = 1000218,
 
     /// <summary>ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.</summary>
-    MS_ionization_energy = 1000219,
+    MS_ionization_energy_OBSOLETE = 1000219,
 
     /// <summary>IE: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.</summary>
-    MS_IE = MS_ionization_energy,
+    MS_IE_OBSOLETE = MS_ionization_energy_OBSOLETE,
 
     /// <summary>isotope dilution mass spectrometry: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.</summary>
     MS_isotope_dilution_mass_spectrometry_OBSOLETE = 1000220,
@@ -899,22 +899,22 @@ public enum class CVID
     MS_magnetic_deflection = 1000221,
 
     /// <summary>mass defect: The difference between the monoisotopic and nominal mass of a molecule or atom.</summary>
-    MS_mass_defect = 1000222,
+    MS_mass_defect_OBSOLETE = 1000222,
 
     /// <summary>mass number: The sum of the protons and neutrons in an atom, molecule or ion.</summary>
-    MS_mass_number = 1000223,
+    MS_mass_number_OBSOLETE = 1000223,
 
     /// <summary>molecular mass: The mass of one mole of a molecular substance (6.022 1415(10) x 10^23 molecules).</summary>
-    MS_molecular_mass = 1000224,
+    MS_molecular_mass_OBSOLETE = 1000224,
 
     /// <summary>monoisotopic mass: The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element.</summary>
-    MS_monoisotopic_mass = 1000225,
+    MS_monoisotopic_mass_OBSOLETE = 1000225,
 
     /// <summary>molecular beam mass spectrometry: A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.</summary>
-    MS_molecular_beam_mass_spectrometry = 1000226,
+    MS_molecular_beam_mass_spectrometry_OBSOLETE = 1000226,
 
     /// <summary>MBMS: A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.</summary>
-    MS_MBMS = MS_molecular_beam_mass_spectrometry,
+    MS_MBMS_OBSOLETE = MS_molecular_beam_mass_spectrometry_OBSOLETE,
 
     /// <summary>multiphoton ionization: Photoionization of an atom or molecule in which in two or more photons are absorbed.</summary>
     MS_multiphoton_ionization = 1000227,
@@ -923,13 +923,13 @@ public enum class CVID
     MS_MPI = MS_multiphoton_ionization,
 
     /// <summary>nitrogen rule: An organic molecule containing the elements C, H, O, S, P, or halogen has an odd nominal mass if it contains an odd number of nitrogen atoms.</summary>
-    MS_nitrogen_rule = 1000228,
+    MS_nitrogen_rule_OBSOLETE = 1000228,
 
     /// <summary>nominal mass: The mass of an ion or molecule calculated using the mass of the most abundant isotope of each element rounded to the nearest integer value.</summary>
-    MS_nominal_mass = 1000229,
+    MS_nominal_mass_OBSOLETE = 1000229,
 
     /// <summary>odd-electron rule: Odd-electron ions may dissociate to form either odd or even-electron ions, whereas even-electron ions generally form even-electron fragment ions.</summary>
-    MS_odd_electron_rule = 1000230,
+    MS_odd_electron_rule_OBSOLETE = 1000230,
 
     /// <summary>peak: A localized region of relatively large ion signal in a mass spectrum. Although peaks are often associated with particular ions, the terms peak and ion should not be used interchangeably.</summary>
     MS_peak = 1000231,
@@ -938,10 +938,10 @@ public enum class CVID
     MS_peak_intensity_OBSOLETE = 1000232,
 
     /// <summary>proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.</summary>
-    MS_proton_affinity = 1000233,
+    MS_proton_affinity_OBSOLETE = 1000233,
 
     /// <summary>PA: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.</summary>
-    MS_PA = MS_proton_affinity,
+    MS_PA_OBSOLETE = MS_proton_affinity_OBSOLETE,
 
     /// <summary>mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.</summary>
     MS_mass_resolving_power_OBSOLETE = 1000234,
@@ -962,10 +962,10 @@ public enum class CVID
     MS_u_OBSOLETE = MS_unified_atomic_mass_unit_OBSOLETE,
 
     /// <summary>accelerator mass spectrometry: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.</summary>
-    MS_accelerator_mass_spectrometry = 1000238,
+    MS_accelerator_mass_spectrometry_OBSOLETE = 1000238,
 
     /// <summary>AMS: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.</summary>
-    MS_AMS = MS_accelerator_mass_spectrometry,
+    MS_AMS_OBSOLETE = MS_accelerator_mass_spectrometry_OBSOLETE,
 
     /// <summary>atmospheric pressure matrix-assisted laser desorption ionization: Matrix-assisted laser desorption ionization in which the sample target is at atmospheric pressure and the ions formed by the pulsed laser are sampled through a small aperture into the mass spectrometer.</summary>
     MS_atmospheric_pressure_matrix_assisted_laser_desorption_ionization = 1000239,
@@ -992,10 +992,10 @@ public enum class CVID
     MS_BIRD = MS_blackbody_infrared_radiative_dissociation,
 
     /// <summary>charge-remote fragmentation: A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.</summary>
-    MS_charge_remote_fragmentation = 1000243,
+    MS_charge_remote_fragmentation_OBSOLETE = 1000243,
 
     /// <summary>CRF: A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.</summary>
-    MS_CRF = MS_charge_remote_fragmentation,
+    MS_CRF_OBSOLETE = MS_charge_remote_fragmentation_OBSOLETE,
 
     /// <summary>consecutive reaction monitoring: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
     MS_consecutive_reaction_monitoring_OBSOLETE_1000244 = 1000244,
@@ -1040,16 +1040,16 @@ public enum class CVID
     MS_ECD = MS_electron_capture_dissociation,
 
     /// <summary>even-electron ion: An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.</summary>
-    MS_even_electron_ion = 1000251,
+    MS_even_electron_ion_OBSOLETE = 1000251,
 
     /// <summary>EE: An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.</summary>
-    MS_EE = MS_even_electron_ion,
+    MS_EE_OBSOLETE = MS_even_electron_ion_OBSOLETE,
 
     /// <summary>electron-induced excitation in organics: The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.</summary>
-    MS_electron_induced_excitation_in_organics = 1000252,
+    MS_electron_induced_excitation_in_organics_OBSOLETE = 1000252,
 
     /// <summary>EIEIO: The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.</summary>
-    MS_EIEIO = MS_electron_induced_excitation_in_organics,
+    MS_EIEIO_OBSOLETE = MS_electron_induced_excitation_in_organics_OBSOLETE,
 
     /// <summary>electron multiplier: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons. The secondary electrons are then accelerated to other electrodes or parts of a continuous electrode to produce further secondary electrons.</summary>
     MS_electron_multiplier = 1000253,
@@ -1070,10 +1070,10 @@ public enum class CVID
     MS_FA = MS_flowing_afterglow,
 
     /// <summary>high-field asymmetric waveform ion mobility spectrometry: The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.</summary>
-    MS_high_field_asymmetric_waveform_ion_mobility_spectrometry = 1000256,
+    MS_high_field_asymmetric_waveform_ion_mobility_spectrometry_OBSOLETE = 1000256,
 
     /// <summary>FAIMS: The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.</summary>
-    MS_FAIMS = MS_high_field_asymmetric_waveform_ion_mobility_spectrometry,
+    MS_FAIMS_OBSOLETE = MS_high_field_asymmetric_waveform_ion_mobility_spectrometry_OBSOLETE,
 
     /// <summary>field desorption: The formation of gas-phase ions from a material deposited on a solid surface in the presence of a high electric field. Because this process may encompass ionization by field ionization or other mechanisms, it is not recommended as a synonym for field desorption ionization.</summary>
     MS_field_desorption = 1000257,
@@ -1094,16 +1094,16 @@ public enum class CVID
     MS_GD_MS = MS_glow_discharge_ionization,
 
     /// <summary>ion kinetic energy spectrometry: A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.</summary>
-    MS_ion_kinetic_energy_spectrometry = 1000260,
+    MS_ion_kinetic_energy_spectrometry_OBSOLETE = 1000260,
 
     /// <summary>IKES: A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.</summary>
-    MS_IKES = MS_ion_kinetic_energy_spectrometry,
+    MS_IKES_OBSOLETE = MS_ion_kinetic_energy_spectrometry_OBSOLETE,
 
     /// <summary>ion mobility spectrometry: The separation of ions according to their velocity through a buffer gas under the influence of an electric field.</summary>
-    MS_ion_mobility_spectrometry = 1000261,
+    MS_ion_mobility_spectrometry_OBSOLETE = 1000261,
 
     /// <summary>IMS: The separation of ions according to their velocity through a buffer gas under the influence of an electric field.</summary>
-    MS_IMS = MS_ion_mobility_spectrometry,
+    MS_IMS_OBSOLETE = MS_ion_mobility_spectrometry_OBSOLETE,
 
     /// <summary>infrared multiphoton dissociation: Multiphoton ionization where the reactant ion dissociates as a result of the absorption of multiple infrared photons.</summary>
     MS_infrared_multiphoton_dissociation = 1000262,
@@ -1124,10 +1124,10 @@ public enum class CVID
     MS_IT = MS_ion_trap,
 
     /// <summary>kinetic energy release distribution: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.</summary>
-    MS_kinetic_energy_release_distribution = 1000265,
+    MS_kinetic_energy_release_distribution_OBSOLETE = 1000265,
 
     /// <summary>KERD: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.</summary>
-    MS_KERD = MS_kinetic_energy_release_distribution,
+    MS_KERD_OBSOLETE = MS_kinetic_energy_release_distribution_OBSOLETE,
 
     /// <summary>Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.</summary>
     MS_Laser_Desorption_OBSOLETE = 1000266,
@@ -1139,10 +1139,10 @@ public enum class CVID
     MS_LD_OBSOLETE = MS_Laser_Desorption_OBSOLETE,
 
     /// <summary>mass analyzed ion kinetic energy spectrometry: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.</summary>
-    MS_mass_analyzed_ion_kinetic_energy_spectrometry = 1000267,
+    MS_mass_analyzed_ion_kinetic_energy_spectrometry_OBSOLETE = 1000267,
 
     /// <summary>MIKES: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.</summary>
-    MS_MIKES = MS_mass_analyzed_ion_kinetic_energy_spectrometry,
+    MS_MIKES_OBSOLETE = MS_mass_analyzed_ion_kinetic_energy_spectrometry_OBSOLETE,
 
     /// <summary>mass spectrometry: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.</summary>
     MS_mass_spectrometry_OBSOLETE = 1000268,
@@ -1151,16 +1151,16 @@ public enum class CVID
     MS_MS_OBSOLETE = MS_mass_spectrometry_OBSOLETE,
 
     /// <summary>mass spectrometry/mass spectrometry: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.</summary>
-    MS_mass_spectrometry_mass_spectrometry = 1000269,
+    MS_mass_spectrometry_mass_spectrometry_OBSOLETE = 1000269,
 
     /// <summary>MS/MS: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.</summary>
-    MS_MS_MS = MS_mass_spectrometry_mass_spectrometry,
+    MS_MS_MS_OBSOLETE = MS_mass_spectrometry_mass_spectrometry_OBSOLETE,
 
     /// <summary>multiple stage mass spectrometry: Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.</summary>
-    MS_multiple_stage_mass_spectrometry = 1000270,
+    MS_multiple_stage_mass_spectrometry_OBSOLETE = 1000270,
 
     /// <summary>MSn: Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.</summary>
-    MS_MSn = MS_multiple_stage_mass_spectrometry,
+    MS_MSn_OBSOLETE = MS_multiple_stage_mass_spectrometry_OBSOLETE,
 
     /// <summary>Negative Ion chemical ionization: Chemical ionization that results in the formation of negative ions.</summary>
     MS_Negative_Ion_chemical_ionization = 1000271,
@@ -1199,10 +1199,10 @@ public enum class CVID
     MS_REMPI = MS_resonance_enhanced_multiphoton_ionization,
 
     /// <summary>residual gas analyzer: A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.</summary>
-    MS_residual_gas_analyzer = 1000277,
+    MS_residual_gas_analyzer_OBSOLETE = 1000277,
 
     /// <summary>RGA: A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.</summary>
-    MS_RGA = MS_residual_gas_analyzer,
+    MS_RGA_OBSOLETE = MS_residual_gas_analyzer_OBSOLETE,
 
     /// <summary>surface enhanced laser desorption ionization: The formation of ionized species in the gas phase from analytes deposited on a particular surface substrate which is irradiated with a laser beam of which wavelength is absorbed by the surface. See also desorption/ionization on silicon and laser desorption/ionization.</summary>
     MS_surface_enhanced_laser_desorption_ionization = 1000278,
@@ -1240,10 +1240,10 @@ public enum class CVID
     /// <summary>SSMS: Mass spectrometry using spark ionization.</summary>
     MS_SSMS_OBSOLETE = MS_Spark_Source_Mass_Spectrometry_OBSOLETE,
 
-    /// <summary>stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.</summary>
+    /// <summary>stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS2 experiments.</summary>
     MS_stored_waveform_inverse_fourier_transform = 1000284,
 
-    /// <summary>SWIFT: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.</summary>
+    /// <summary>SWIFT: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS2 experiments.</summary>
     MS_SWIFT = MS_stored_waveform_inverse_fourier_transform,
 
     /// <summary>total ion current: The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum.</summary>
@@ -1259,19 +1259,19 @@ public enum class CVID
     MS_TLF = MS_time_lag_focusing,
 
     /// <summary>time-of-flight mass spectrometer: An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.</summary>
-    MS_time_of_flight_mass_spectrometer = 1000287,
+    MS_time_of_flight_mass_spectrometer_OBSOLETE = 1000287,
 
     /// <summary>TOF-MS: An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.</summary>
-    MS_TOF_MS = MS_time_of_flight_mass_spectrometer,
+    MS_TOF_MS_OBSOLETE = MS_time_of_flight_mass_spectrometer_OBSOLETE,
 
     /// <summary>cyclotron: A device that uses an oscillating electric field and magnetic field to accelerate charged particles.</summary>
     MS_cyclotron = 1000288,
 
     /// <summary>double-focusing mass spectrometer: A mass spectrometer that uses a magnetic sector for m/z focusing and an electric sector for energy focusing of an ion beam.</summary>
-    MS_double_focusing_mass_spectrometer = 1000289,
+    MS_double_focusing_mass_spectrometer_OBSOLETE = 1000289,
 
     /// <summary>hybrid mass spectrometer: A mass spectrometer that combines m/z analyzers of different types to perform tandem mass spectrometry.</summary>
-    MS_hybrid_mass_spectrometer = 1000290,
+    MS_hybrid_mass_spectrometer_OBSOLETE = 1000290,
 
     /// <summary>linear ion trap: A two dimensional Paul ion trap in which ions are confined in the axial dimension by means of an electric field at the ends of the trap.</summary>
     MS_linear_ion_trap = 1000291,
@@ -1280,7 +1280,7 @@ public enum class CVID
     MS_mass_spectrograph_obsolete_OBSOLETE = 1000292,
 
     /// <summary>mass spectrometer: An instrument that measures the mass-to-charge ratio and relative abundances of ions.</summary>
-    MS_mass_spectrometer = 1000293,
+    MS_mass_spectrometer_OBSOLETE = 1000293,
 
     /// <summary>mass spectrum: A plot of the relative abundance of a beam or other collection of ions as a function of the mass-to-charge ratio (m/z).</summary>
     MS_mass_spectrum = 1000294,
@@ -1295,7 +1295,7 @@ public enum class CVID
     MS_paul_ion_trap_OBSOLETE = 1000297,
 
     /// <summary>prolate traochoidal mass spectrometer: A mass spectrometer in which the ions of different m/z are separated by means of crossed electric and magnetic fields in such a way that the selected ions follow a prolate trochoidal path.</summary>
-    MS_prolate_traochoidal_mass_spectrometer = 1000298,
+    MS_prolate_traochoidal_mass_spectrometer_OBSOLETE = 1000298,
 
     /// <summary>quistor: An abbreviation of quadrupole ion storage trap. This term is synonymous with Paul Ion Trap. If so then add a synonym to paul and obsolete this term.</summary>
     MS_quistor_OBSOLETE = 1000299,
@@ -1304,22 +1304,22 @@ public enum class CVID
     MS_reflectron = 1000300,
 
     /// <summary>sector mass spectrometer: A mass spectrometer consisting of one or more magnetic sectors for m/z selection in a beam of ions. Such instruments may also have one or more electric sectors for energy selection.</summary>
-    MS_sector_mass_spectrometer = 1000301,
+    MS_sector_mass_spectrometer_OBSOLETE = 1000301,
 
     /// <summary>tandem mass spectrometer: A mass spectrometer designed for mass spectrometry/mass spectrometry.</summary>
-    MS_tandem_mass_spectrometer = 1000302,
+    MS_tandem_mass_spectrometer_OBSOLETE = 1000302,
 
     /// <summary>transmission quadrupole mass spectrometer: A mass spectrometer that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis.</summary>
-    MS_transmission_quadrupole_mass_spectrometer = 1000303,
+    MS_transmission_quadrupole_mass_spectrometer_OBSOLETE = 1000303,
 
     /// <summary>accelerating voltage: The electrical potential used to impart kinetic energy to ions in a mass spectrometer.</summary>
     MS_accelerating_voltage = 1000304,
 
     /// <summary>cyclotron motion: The circular motion of a charged particle moving at velocity v in a magnetic field B that results from the force qvB.</summary>
-    MS_cyclotron_motion = 1000305,
+    MS_cyclotron_motion_OBSOLETE = 1000305,
 
     /// <summary>dynamic mass spectrometry: A mass spectrometer in which m/z separation using one or more electric fields that vary with time.</summary>
-    MS_dynamic_mass_spectrometry = 1000306,
+    MS_dynamic_mass_spectrometry_OBSOLETE = 1000306,
 
     /// <summary>einzel lens: Three element charged particle lens in which the first and third elements are held at the same voltage. Such a lens produces focusing without changing the translational energy of the particle.</summary>
     MS_einzel_lens = 1000307,
@@ -1343,19 +1343,19 @@ public enum class CVID
     MS_scan_m_z_range__OBSOLETE = 1000313,
 
     /// <summary>mass selective axial ejection: The use of mass selective instability to eject ions of selected m/z values from an ion trap.</summary>
-    MS_mass_selective_axial_ejection = 1000314,
+    MS_mass_selective_axial_ejection_OBSOLETE = 1000314,
 
     /// <summary>mass selective instability: A method for selective ejection of ions according to their m/z value in an ion trap.</summary>
-    MS_mass_selective_instability = 1000315,
+    MS_mass_selective_instability_OBSOLETE = 1000315,
 
     /// <summary>mathieu stability diagram: A graphical representation expressed in terms of reduced coordinates that describes charged particle motion in a quadrupole mass filter or quadrupole ion trap mass spectrometer.</summary>
-    MS_mathieu_stability_diagram = 1000316,
+    MS_mathieu_stability_diagram_OBSOLETE = 1000316,
 
     /// <summary>orthogonal extraction: The pulsed acceleration of ions perpendicular to their direction of travel into a time-of-flight mass spectrometer. Ions may be extracted from a directional ion source, drift tube or m/z separation stage.</summary>
-    MS_orthogonal_extraction = 1000317,
+    MS_orthogonal_extraction_OBSOLETE = 1000317,
 
     /// <summary>resonance ion ejection: A mode of ion ejection in a quadrupole ion trap that relies on a auxiliary radio frequency voltage that is applied to the end-cap electrodes. The voltage is tuned to the secular frequency of a particular ion to eject it.</summary>
-    MS_resonance_ion_ejection = 1000318,
+    MS_resonance_ion_ejection_OBSOLETE = 1000318,
 
     /// <summary>space charge effect: The mutual repulsion of particles of like charge that limits the current in a charged-particle beam and causes beams or packets of charged particles to expand radially over time.</summary>
     MS_space_charge_effect = 1000319,
@@ -1364,7 +1364,7 @@ public enum class CVID
     MS_static_field = 1000320,
 
     /// <summary>2E Mass Spectrum: A mass spectrum obtained by setting the electric sector field E to twice the value required to transmit the main ion-beam thereby allowing ions with a kinetic energy-to-charge ratio twice that of the main ion-beam to be transmitted. Product ions resulting from partial charge transfer reactions such as m^2+ + N ? m^+ + N^+ that occur in a collision cell (containing a gas, N) located in a field-free region preceding a magnetic and electric sector combination are detected. When the magnetic sector field B is scanned, a mass spectrum of singly charged product ions of doubly charged precursor ions is obtained.</summary>
-    MS_2E_Mass_Spectrum = 1000321,
+    MS_2E_Mass_Spectrum_OBSOLETE = 1000321,
 
     /// <summary>charge inversion mass spectrum: The measurement of the relative abundance of ions that result from a charge inversion reaction as a function of m/z.</summary>
     MS_charge_inversion_mass_spectrum = 1000322,
@@ -1390,7 +1390,7 @@ public enum class CVID
     /// <summary>constant neutral mass loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
     MS_constant_neutral_mass_loss_spectrum = MS_constant_neutral_loss_spectrum,
 
-    /// <summary>consecutive reaction monitoring: A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
+    /// <summary>consecutive reaction monitoring: A type of MS2 experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
     MS_consecutive_reaction_monitoring_OBSOLETE_1000327 = 1000327,
 
     /// <summary>e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.</summary>
@@ -1412,16 +1412,16 @@ public enum class CVID
     MS_Linked_Scan_at_Constant_B_1__E_E0___1_2___E_OBSOLETE = 1000333,
 
     /// <summary>MS/MS in Time: A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discreet steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time.</summary>
-    MS_MS_MS_in_Time = 1000334,
+    MS_MS_MS_in_Time_OBSOLETE = 1000334,
 
     /// <summary>MS/MS in Space: A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition.</summary>
-    MS_MS_MS_in_Space = 1000335,
+    MS_MS_MS_in_Space_OBSOLETE = 1000335,
 
     /// <summary>neutral loss: The loss of an uncharged species during a rearrangement process.</summary>
     MS_neutral_loss = 1000336,
 
     /// <summary>nth generation product ion: Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated.</summary>
-    MS_nth_generation_product_ion = 1000337,
+    MS_nth_generation_product_ion_OBSOLETE = 1000337,
 
     /// <summary>nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.</summary>
     MS_nth_generation_product_ion_scan_OBSOLETE = 1000338,
@@ -1430,22 +1430,22 @@ public enum class CVID
     MS_nth_generation_product_ion_spectrum_OBSOLETE = 1000339,
 
     /// <summary>precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is deprecated.</summary>
-    MS_precursor_ion = 1000340,
+    MS_precursor_ion_OBSOLETE = 1000340,
 
     /// <summary>precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z.</summary>
     MS_precursor_ion_spectrum = 1000341,
 
     /// <summary>product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.</summary>
-    MS_product_ion = 1000342,
+    MS_product_ion_OBSOLETE = 1000342,
 
     /// <summary>product ion spectrum: A mass spectrum recorded from any spectrometer in which the appropriate m/z separation scan function is set to record the product ion or ions of selected precursor ions.</summary>
     MS_product_ion_spectrum_OBSOLETE = 1000343,
 
     /// <summary>progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.</summary>
-    MS_progeny_ion = 1000344,
+    MS_progeny_ion_OBSOLETE = 1000344,
 
     /// <summary>Progeny Fragment Ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.</summary>
-    MS_Progeny_Fragment_Ion = MS_progeny_ion,
+    MS_Progeny_Fragment_Ion_OBSOLETE = MS_progeny_ion_OBSOLETE,
 
     /// <summary>array detector: Detector comprising several ion collection elements, arranged in a line or grid where each element is an individual detector.</summary>
     MS_array_detector = 1000345,
@@ -1472,85 +1472,85 @@ public enum class CVID
     MS_secondary_electron_OBSOLETE = 1000352,
 
     /// <summary>adduct ion: Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules.</summary>
-    MS_adduct_ion = 1000353,
+    MS_adduct_ion_OBSOLETE = 1000353,
 
     /// <summary>aromatic ion: A planar cyclic ion that obeys the Hueckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure.</summary>
-    MS_aromatic_ion = 1000354,
+    MS_aromatic_ion_OBSOLETE = 1000354,
 
     /// <summary>analog ion: Ions that have similar chemical valence, for example the acetyl cation CH3-CO+ and the thioacetyl cation CH3-CS+.</summary>
-    MS_analog_ion = 1000355,
+    MS_analog_ion_OBSOLETE = 1000355,
 
     /// <summary>anti-aromatic ion: A planar cyclic ion with 4n ? electrons and is therefore not aromatic.</summary>
-    MS_anti_aromatic_ion = 1000356,
+    MS_anti_aromatic_ion_OBSOLETE = 1000356,
 
     /// <summary>cationized molecule: An ion formed by the association of a cation with a neutral molecule, M, for example [M+ Na]+ and [M + K]+. The terms quasi-molecular ion and pseudo-molecular ion should not be used.</summary>
-    MS_cationized_molecule = 1000357,
+    MS_cationized_molecule_OBSOLETE = 1000357,
 
     /// <summary>cluster ion: An ion formed by a multi-component atomic or molecular assembly of one or more ions with atoms or molecules, such as [(H20)nH]+, [(NaCl)nNa]+ and [(H3PO3)nHPO3]-.</summary>
-    MS_cluster_ion = 1000358,
+    MS_cluster_ion_OBSOLETE = 1000358,
 
     /// <summary>Conventional ion: A radical cation or anion in which the charge site and the unpaired electron spin are both formally located in the same atom or group of atoms, as opposed to the spatially separate electronic configuration of distonic ions. The radical cation of methanol, CH3OH+, in which the charge and spin sites are formally located at the O atom is an example of a conventional ion, whereas .CH2-OH2+ is a distonic ion.</summary>
-    MS_Conventional_ion = 1000359,
+    MS_Conventional_ion_OBSOLETE = 1000359,
 
     /// <summary>diagnostic ion: A product ion whose formation reveals structural or compositional information of its precursor. For instance, the phenyl cation in an electron ionization mass spectrum is a diagnostic ion for benzene and derivatives.</summary>
-    MS_diagnostic_ion = 1000360,
+    MS_diagnostic_ion_OBSOLETE = 1000360,
 
     /// <summary>dimeric ion: An ion formed by ionization of a dimer or by the association of an ion with its neutral counterpart such as [M2]+ or [M-H-M]+.</summary>
-    MS_dimeric_ion = 1000361,
+    MS_dimeric_ion_OBSOLETE = 1000361,
 
     /// <summary>distonic ion: A radical cation or anion in which the charge site and the unpaired electron spin cannot be both formally located in the same atom or group of atoms as it can be with a conventional ion. For example, CH2-OH2+ is a distonic ion whereas the radical cation of methanol, CH3OH+ is a conventional ion.</summary>
-    MS_distonic_ion = 1000362,
+    MS_distonic_ion_OBSOLETE = 1000362,
 
     /// <summary>enium ion: A positively charged lower-valency ion of the nonmetallic elements. The methenium ion is CH3+. Other examples are the oxenium, sulfenium, nitrenium, phosphenium, and halenium ions.</summary>
-    MS_enium_ion = 1000363,
+    MS_enium_ion_OBSOLETE = 1000363,
 
     /// <summary>fragment ion: A product ion that results from the dissociation of a precursor ion.</summary>
     MS_fragment_ion_OBSOLETE = 1000364,
 
     /// <summary>ion?: An atomic or molecular species having a net positive or negative electric charge.</summary>
-    MS_ion_ = 1000365,
+    MS_ion__OBSOLETE = 1000365,
 
     /// <summary>Isotopologue ion: An ion that differs only in the isotopic composition of one or more of its constituent atoms. For example CH4+ and CH3D+ or 10BF3 and 11BF3. The term isotopologue is a contraction of isotopic homologue.</summary>
-    MS_Isotopologue_ion = 1000366,
+    MS_Isotopologue_ion_OBSOLETE = 1000366,
 
     /// <summary>Isotopomeric ion: Isomeric ion having the same numbers of each isotopic atom but differing in their positions. Isotopomeric ions can be either configurational isomers in which two atomic isotopes exchange positions or isotopic stereoisomers. The term isotopomer is a shortening of isotopic isomer.</summary>
-    MS_Isotopomeric_ion = 1000367,
+    MS_Isotopomeric_ion_OBSOLETE = 1000367,
 
     /// <summary>metastable ion: An ion that is formed with internal energy higher than the threshold for dissociation but with a lifetime great enough to allow it to exit the ion source and enter the mass spectrometer where it dissociates before detection.</summary>
-    MS_metastable_ion = 1000368,
+    MS_metastable_ion_OBSOLETE = 1000368,
 
     /// <summary>molecular ion: An ion formed by the removal of one or more electrons to form a positive ion or the addition off one or more electrons to form a negative ion.</summary>
-    MS_molecular_ion = 1000369,
+    MS_molecular_ion_OBSOLETE = 1000369,
 
     /// <summary>negative ion: An atomic or molecular species having a net negative electric charge.</summary>
-    MS_negative_ion = 1000370,
+    MS_negative_ion_OBSOLETE = 1000370,
 
     /// <summary>non-classical ion: Hyper-coordinated carbonium ion such as the penta-coordinated norbornyl cation. Note: Tri-coordinated carbenium ions are termed classical ions.</summary>
-    MS_non_classical_ion = 1000371,
+    MS_non_classical_ion_OBSOLETE = 1000371,
 
     /// <summary>onium ion: A positively charged hypervalent ion of the nonmetallic elements. Examples are the methonium ion CH5+, the hydrogenonium ion H3+ and the hydronium ion H3O+. Other examples are the carbonium, oxonium, sulfonium, nitronium, diazonium, phosphonium, and halonium ions. Onium ions are not limited to monopositive ions; multiply-charged onium ions exist such as the gitonic (proximal) oxonium dication H4O2+ and the distonic oxonium dication H2O+-CH2-CH2-OH2+.</summary>
-    MS_onium_ion = 1000372,
+    MS_onium_ion_OBSOLETE = 1000372,
 
     /// <summary>principal ion: Most abundant ion of an isotope cluster, such as the 11B79Br2 81Br+ ion of m/z 250 of the cluster of isotopologue molecular ions of BBr3. The term principal ion has also been used to describe ions that have been artificially isotopically enriched in one or more positions such as CH3 13CH3+ or CH2D2 +, but those are best defined as isotopologue ions.</summary>
-    MS_principal_ion = 1000373,
+    MS_principal_ion_OBSOLETE = 1000373,
 
     /// <summary>positive ion: An atomic or molecular species having a net positive electric charge.</summary>
-    MS_positive_ion = 1000374,
+    MS_positive_ion_OBSOLETE = 1000374,
 
     /// <summary>protonated molecule: An ion formed by interaction of a neutral molecule with a proton and represented by the symbol [M + H]+, where M is the neutral molecule. The term 'protonated molecular ion,' 'quasi-molecular ion' and 'pseudo-molecular ion' are not recommended.</summary>
-    MS_protonated_molecule = 1000375,
+    MS_protonated_molecule_OBSOLETE = 1000375,
 
     /// <summary>radical ion: An ion, either a cation or anion, containing unpaired electrons in its ground state. The unpaired electron is denoted by a superscript dot alongside the superscript symbol for charge, such as for the molecular ion of a molecule M, that is, M+. Radical ions with more than one charge and/or more than one unpaired electron are denoted such as M(2+)(2). Unless the positions of the unpaired electron and charge can be associated with specific atoms, superscript charge designation should be placed before the superscript dot designation.</summary>
-    MS_radical_ion = 1000376,
+    MS_radical_ion_OBSOLETE = 1000376,
 
     /// <summary>reference ion: A stable ion whose structure is known with certainty. These ions are usually formed by direct ionization of a neutral molecule of known structure and are used to verify by comparison the structure of an unknown ion.</summary>
-    MS_reference_ion = 1000377,
+    MS_reference_ion_OBSOLETE = 1000377,
 
     /// <summary>stable ion: An ion with internal energy sufficiently low that it does not rearrange or dissociate prior to detection in a mass spectrometer.</summary>
-    MS_stable_ion = 1000378,
+    MS_stable_ion_OBSOLETE = 1000378,
 
     /// <summary>unstable ion: An ion with sufficient energy to dissociate within the ion source.</summary>
-    MS_unstable_ion = 1000379,
+    MS_unstable_ion_OBSOLETE = 1000379,
 
     /// <summary>adiabatic ionization: A process whereby an electron is removed from an atom, ion, or molecule to produce an ion in its lowest energy state.</summary>
     MS_adiabatic_ionization = 1000380,
@@ -1583,10 +1583,10 @@ public enum class CVID
     MS_electron_ionization = 1000389,
 
     /// <summary>ion desolvation: The removal of solvent molecules clustered around a gas-phase ion by means of heating and/or collisions with gas molecules.</summary>
-    MS_ion_desolvation = 1000390,
+    MS_ion_desolvation_OBSOLETE = 1000390,
 
     /// <summary>ion-pair formation: The reaction of a molecule to form both a positive ion and negative ion fragment among the products.</summary>
-    MS_ion_pair_formation = 1000391,
+    MS_ion_pair_formation_OBSOLETE = 1000391,
 
     /// <summary>ionization efficiency: The ratio of the number of ions formed to the number of electrons, molecules or photons used.</summary>
     MS_ionization_efficiency = 1000392,
@@ -1616,7 +1616,7 @@ public enum class CVID
     MS_plasma_desorption_ionization = 1000400,
 
     /// <summary>pre-ionization state: An electronic state capable of undergoing auto-Ionization.</summary>
-    MS_pre_ionization_state = 1000401,
+    MS_pre_ionization_state_OBSOLETE = 1000401,
 
     /// <summary>secondary ionization: The process in which ions are ejected from a sample surface as a result of bombardment by a primary beam of atoms or ions.</summary>
     MS_secondary_ionization = 1000402,
@@ -1640,43 +1640,43 @@ public enum class CVID
     MS_vertical_ionization = 1000408,
 
     /// <summary>association reaction: The reaction of an ion with a neutral species in which the reactants combine to form a single ion.</summary>
-    MS_association_reaction = 1000409,
+    MS_association_reaction_OBSOLETE = 1000409,
 
     /// <summary>alpha-cleavage: A homolytic cleavage where the bond fission occurs between at the atom adjacent to the atom at the apparent charge site and an atom removed from the aparent charge site by two bonds.</summary>
-    MS_alpha_cleavage = 1000410,
+    MS_alpha_cleavage_OBSOLETE = 1000410,
 
     /// <summary>beta-cleavage: A homolytic cleavage where the bond fission occurs between at an atom removed from the apparent charge site atom by two bonds and an atom adjacent to that atom and removed from the aparent charge site by three bonds.</summary>
-    MS_beta_cleavage = 1000411,
+    MS_beta_cleavage_OBSOLETE = 1000411,
 
     /// <summary>buffer gas: An inert gas used for collisional deactivation of internally excited ions.</summary>
     MS_buffer_gas = 1000412,
 
     /// <summary>charge-induced fragmentation: Fragmentation of an odd electron ion in which the cleaved bond is adjacent to the apparent charge site. Synonymous with charge mediated fragmentation.</summary>
-    MS_charge_induced_fragmentation = 1000413,
+    MS_charge_induced_fragmentation_OBSOLETE = 1000413,
 
     /// <summary>charge inversion reaction: Reaction of an ion with a neutral species in which the charge on the product ion is reversed in sign with respect to the reactant ion.</summary>
-    MS_charge_inversion_reaction = 1000414,
+    MS_charge_inversion_reaction_OBSOLETE = 1000414,
 
     /// <summary>charge permutation reaction: The reaction of an ion with a neutral species with a resulting change in the magnitude or sign of the charge on the reactant ion.</summary>
-    MS_charge_permutation_reaction = 1000415,
+    MS_charge_permutation_reaction_OBSOLETE = 1000415,
 
     /// <summary>charge stripping reaction: Reaction of a positive ion with a neutral species in which the positive charge on the product ion is greater than that on the reactant ion.</summary>
-    MS_charge_stripping_reaction = 1000416,
+    MS_charge_stripping_reaction_OBSOLETE = 1000416,
 
     /// <summary>charge transfer reaction: The reaction of an ion with a neutral species in which some or all of the charge of the reactant ion is transferred to the neutral species.</summary>
-    MS_charge_transfer_reaction = 1000417,
+    MS_charge_transfer_reaction_OBSOLETE = 1000417,
 
     /// <summary>collisional excitation: The reaction of an ion with a neutral species in which the translational energy of the collision is converted into internal energy of the ion.</summary>
-    MS_collisional_excitation = 1000418,
+    MS_collisional_excitation_OBSOLETE = 1000418,
 
     /// <summary>collision gas: An inert gas used for collisional excitation. The term target gas is not recommended.</summary>
     MS_collision_gas = 1000419,
 
     /// <summary>heterolytic cleavage: Fragmentation of a molecule or ion in which both electrons forming the single bond that is broken remain on one of the atoms that were originally bonded. This term is synonymous with heterolysis.</summary>
-    MS_heterolytic_cleavage = 1000420,
+    MS_heterolytic_cleavage_OBSOLETE = 1000420,
 
     /// <summary>high energy collision: Collision-induced dissociation process wherein the projectile ion has laboratory-frame translational energy higher than 1 keV.</summary>
-    MS_high_energy_collision = 1000421,
+    MS_high_energy_collision_OBSOLETE = 1000421,
 
     /// <summary>beam-type collision-induced dissociation: A collision-induced dissociation process that occurs in a beam-type collision cell.</summary>
     MS_beam_type_collision_induced_dissociation = 1000422,
@@ -1685,40 +1685,40 @@ public enum class CVID
     MS_HCD = MS_beam_type_collision_induced_dissociation,
 
     /// <summary>homolytic cleavage: Fragmentation of an odd electron ion that results from one of a pair of electrons that form a bond between two atoms moving to form a pair with the odd electron on the atom at the apparent charge site. Fragmentation results in the formation of an even electron ion and a radical. This reaction involves the movement of a single electron and is symbolized by a single-barbed arrow. Synonymous with Homolysis.</summary>
-    MS_homolytic_cleavage = 1000423,
+    MS_homolytic_cleavage_OBSOLETE = 1000423,
 
     /// <summary>hydrogen/deuterium exchange: Exchange of hydrogen atoms with deuterium atoms in a molecule or pre-formed ion in solution prior to introduction into a mass spectrometer, or by reaction of an ion with a deuterated collision gas inside a mass spectrometer.</summary>
-    MS_hydrogen_deuterium_exchange = 1000424,
+    MS_hydrogen_deuterium_exchange_OBSOLETE = 1000424,
 
     /// <summary>ion energy loss spectrum: A plot of the relative abundance of a beam or other collection of ions as a function their loss of translational energy in reactions with neutral species.</summary>
     MS_ion_energy_loss_spectrum_OBSOLETE = 1000425,
 
     /// <summary>ionizing collision: The reaction of an ion with a neutral species in which one or more electrons are removed from either the ion or neutral.</summary>
-    MS_ionizing_collision = 1000426,
+    MS_ionizing_collision_OBSOLETE = 1000426,
 
     /// <summary>ion/molecule reaction: The reaction of an ion with a neutral molecule. The term ion-molecule reaction is not recommended because the hyphen suggests a single species that is that is both an ion and a molecule.</summary>
-    MS_ion_molecule_reaction = 1000427,
+    MS_ion_molecule_reaction_OBSOLETE = 1000427,
 
     /// <summary>ion/neutral complex: A particular type of transition state that lies between precursor and product ions on the reaction coordinate of some ion reactions.</summary>
-    MS_ion_neutral_complex = 1000428,
+    MS_ion_neutral_complex_OBSOLETE = 1000428,
 
     /// <summary>ion/neutral species reaction: A process wherein a charged species interacts with a neutral reactant to produce either chemically different species or changes in the internal energy of one or both of the reactants.</summary>
-    MS_ion_neutral_species_reaction = 1000429,
+    MS_ion_neutral_species_reaction_OBSOLETE = 1000429,
 
     /// <summary>ion/neutral species exchange reaction: In this reaction an association reaction is accompanied by the subsequent or simultaneous liberation of a different neutral species as a product.</summary>
-    MS_ion_neutral_species_exchange_reaction = 1000430,
+    MS_ion_neutral_species_exchange_reaction_OBSOLETE = 1000430,
 
     /// <summary>kinetic method: An approach to determination of ion thermodynamic quantities by a bracketing procedure in which the relative probabilities of competing ion fragmentations are measured via the relative abundances of the reaction products. The extended kinetic method takes the associated entropy changes into account.</summary>
-    MS_kinetic_method = 1000431,
+    MS_kinetic_method_OBSOLETE = 1000431,
 
     /// <summary>low energy collisions: A collision between an ion and neutral species with translational energy approximately 1000 eV or lower.</summary>
-    MS_low_energy_collisions = 1000432,
+    MS_low_energy_collisions_OBSOLETE = 1000432,
 
     /// <summary>low-energy collision-induced dissociation: A collision-induced dissociation process wherein the precursor ion has the translational energy lower than approximately 1000 eV. This process typically requires multiple collisions and the collisional excitation is cumulative.</summary>
     MS_low_energy_collision_induced_dissociation = 1000433,
 
     /// <summary>McLafferty Rearrangement: A dissociation reaction triggered by transfer of a hydrogen atom via a 6-member transition state to the formal radical/charge site from a carbon atom four atoms removed from the charge/radical site (the gamma-carbon); subsequent rearrangement of electron density leads to expulsion of an olefin molecule. This term was originally applied to ketone ions where the charge/radical site is the carbonyl oxygen, but it is now more widely applied.</summary>
-    MS_McLafferty_Rearrangement = 1000434,
+    MS_McLafferty_Rearrangement_OBSOLETE = 1000434,
 
     /// <summary>photodissociation: A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.</summary>
     MS_photodissociation = 1000435,
@@ -1730,19 +1730,19 @@ public enum class CVID
     MS_MPD = MS_photodissociation,
 
     /// <summary>partial charge transfer reaction: Reaction of an ion with a neutral species in which some but not all of the ion charge is transferred to the neutral.</summary>
-    MS_partial_charge_transfer_reaction = 1000436,
+    MS_partial_charge_transfer_reaction_OBSOLETE = 1000436,
 
     /// <summary>ion reaction: Chemical transformation involving an ion.</summary>
-    MS_ion_reaction = 1000437,
+    MS_ion_reaction_OBSOLETE = 1000437,
 
     /// <summary>superelastic collision: Collision in which the translational energy of the fast-moving collision partner is increased at the expense of internal energy of one or both collision partners.</summary>
-    MS_superelastic_collision = 1000438,
+    MS_superelastic_collision_OBSOLETE = 1000438,
 
     /// <summary>surface-induced reaction: A process wherein a reactant ion interacts with a surface to produce either chemically different species or a change in the internal energy of the reactant ion.</summary>
-    MS_surface_induced_reaction = 1000439,
+    MS_surface_induced_reaction_OBSOLETE = 1000439,
 
     /// <summary>unimolecular dissociation: Fragmentation reaction in which the molecularity is treated as one, irrespective of whether the dissociative state is that of a metastable ion produced in the ion source or results from collisional excitation of a stable ion.</summary>
-    MS_unimolecular_dissociation = 1000440,
+    MS_unimolecular_dissociation_OBSOLETE = 1000440,
 
     /// <summary>scan: Function or process of the mass spectrometer where it records a spectrum.</summary>
     MS_scan = 1000441,
@@ -1754,10 +1754,10 @@ public enum class CVID
     MS_mass_analyzer_type = 1000443,
 
     /// <summary>m/z Separation Method: Mass/charge separation Method.</summary>
-    MS_m_z_Separation_Method = 1000444,
+    MS_m_z_Separation_Method_OBSOLETE = 1000444,
 
     /// <summary>sequential m/z separation method: Sequential m/z separation method.</summary>
-    MS_sequential_m_z_separation_method = 1000445,
+    MS_sequential_m_z_separation_method_OBSOLETE = 1000445,
 
     /// <summary>fast ion bombardment: The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.</summary>
     MS_fast_ion_bombardment = 1000446,
@@ -1837,7 +1837,7 @@ public enum class CVID
     /// <summary>alternating: Alternating.</summary>
     MS_alternating_OBSOLETE = 1000466,
 
-    /// <summary>1200 series LC/MSD SL: The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS/MS and 11 stages of manual MS/MS.</summary>
+    /// <summary>1200 series LC/MSD SL: The 1200 Series LC/MSD SL ion trap belongs to the Agilent LC/MSD ion trap family. It provides fast polarity switching and multisignal data acquisition capabilities in a single run while also providing 5 stages of automated data dependent MS2 and 11 stages of manual MS2.</summary>
     MS_1200_series_LC_MSD_SL = 1000467,
 
     /// <summary>6110 Quadrupole LC/MS: The 6110 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with an entry level single quadrupole mass spectrometer from the 6100 Series of Agilent quadrupole mass spectrometers. 6110 Quadrupole mass spectrometer has m/z range of 10-1500 and 2500 u/s scan speed. It proves useful for wide range of SIM quantitative applications.</summary>
@@ -1877,7 +1877,7 @@ public enum class CVID
     MS_1200_series_LC_MSD_VL = 1000478,
 
     /// <summary>purgatory: Terms that will likely become obsolete unless there are wails of dissent.</summary>
-    MS_purgatory = 1000479,
+    MS_purgatory_OBSOLETE = 1000479,
 
     /// <summary>mass analyzer attribute: Analyzer properties that are associated with a value.</summary>
     MS_mass_analyzer_attribute = 1000480,
@@ -1964,13 +1964,13 @@ public enum class CVID
     MS_base_peak_intensity = 1000505,
 
     /// <summary>ion role: Ion Role.</summary>
-    MS_ion_role = 1000506,
+    MS_ion_role_OBSOLETE = 1000506,
 
     /// <summary>ion attribute: Ion properties that are associated with a value.</summary>
-    MS_ion_attribute = 1000507,
+    MS_ion_attribute_OBSOLETE = 1000507,
 
     /// <summary>ion chemical type: Ion Type.</summary>
-    MS_ion_chemical_type = 1000508,
+    MS_ion_chemical_type_OBSOLETE = 1000508,
 
     /// <summary>activation energy: Activation Energy.</summary>
     MS_activation_energy = 1000509,
@@ -2203,16 +2203,16 @@ public enum class CVID
     /// <summary>Single-Stage Mass Spectrometry: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_Single_Stage_Mass_Spectrometry = MS_MS1_spectrum,
 
-    /// <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
+    /// <summary>MSn spectrum: MSn refers to multi-stage MS2 experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_MSn_spectrum = 1000580,
 
-    /// <summary>multiple-stage mass spectrometry spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
+    /// <summary>multiple-stage mass spectrometry spectrum: MSn refers to multi-stage MS2 experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_multiple_stage_mass_spectrometry_spectrum = MS_MSn_spectrum,
 
-    /// <summary>nth generation product ion spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
+    /// <summary>nth generation product ion spectrum: MSn refers to multi-stage MS2 experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_nth_generation_product_ion_spectrum = MS_MSn_spectrum,
 
-    /// <summary>product ion spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
+    /// <summary>product ion spectrum: MSn refers to multi-stage MS2 experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_product_ion_spectrum = MS_MSn_spectrum,
 
     /// <summary>CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
@@ -3280,10 +3280,10 @@ public enum class CVID
     /// <summary>transition optimized on specified instrument: The transition has been optimized by direct injection of the peptide into an instrument specified in a separate term, and the optimum voltages and fragmentation energies have been determined.</summary>
     MS_transition_optimized_on_specified_instrument = 1000910,
 
-    /// <summary>transition validated with an MS/MS spectrum on specified instrument: The transition has been validated by obtaining an MS/MS spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term.</summary>
+    /// <summary>transition validated with an MS/MS spectrum on specified instrument: The transition has been validated by obtaining an MS2 spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term.</summary>
     MS_transition_validated_with_an_MS_MS_spectrum_on_specified_instrument = 1000911,
 
-    /// <summary>transition purported from an MS/MS spectrum on a different, specified instrument: The transition has been purported by obtaining an MS/MS spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term. However, the detecting instrument is of a different type (e.g. ion trap) than the instrument that the transition will eventually be used on (e.g. triple quad).</summary>
+    /// <summary>transition purported from an MS/MS spectrum on a different, specified instrument: The transition has been purported by obtaining an MS2 spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term. However, the detecting instrument is of a different type (e.g. ion trap) than the instrument that the transition will eventually be used on (e.g. triple quad).</summary>
     MS_transition_purported_from_an_MS_MS_spectrum_on_a_different__specified_instrument = 1000912,
 
     /// <summary>transition predicted by informatic analysis: The transition has been predicted by informatics software without any direct spectral evidence.</summary>
@@ -3538,7 +3538,7 @@ public enum class CVID
     /// <summary>database type nucleotide: Database contains nucleic acid sequences.</summary>
     MS_database_type_nucleotide = 1001079,
 
-    /// <summary>search type: Enumeration of type of search value (i.e. from PMF, sequence tag, MS-MS).</summary>
+    /// <summary>search type: Enumeration of type of search value (i.e. from PMF, sequence tag, MS2).</summary>
     MS_search_type = 1001080,
 
     /// <summary>pmf search: A peptide mass fingerprint search.</summary>
@@ -3547,7 +3547,7 @@ public enum class CVID
     /// <summary>tag search: A sequence tag search.</summary>
     MS_tag_search = 1001082,
 
-    /// <summary>ms-ms search: An ms/ms search (with fragment ions).</summary>
+    /// <summary>ms-ms search: An MS2 search (with fragment ions).</summary>
     MS_ms_ms_search = 1001083,
 
     /// <summary>database nr: Non-redundant GenBank sequence database.</summary>
@@ -4348,7 +4348,7 @@ public enum class CVID
     /// <summary>frag: z+2 ion: Fragmentation information, type of product: z+2 ion.</summary>
     MS_frag__z_2_ion = 1001368,
 
-    /// <summary>text format: Simple text file format of \"m/z [intensity]\" values for a PMF (or single MS-MS) search.</summary>
+    /// <summary>text format: Simple text file format of \"m/z [intensity]\" values for a PMF (or single MS2) search.</summary>
     MS_text_format = 1001369,
 
     /// <summary>Mascot:homology threshold: The Mascot result 'homology threshold'.</summary>
@@ -4627,7 +4627,7 @@ public enum class CVID
     /// <summary>DTASelect format: DTASelect file format.</summary>
     MS_DTASelect_format = 1001464,
 
-    /// <summary>MS2 format: MS2 file format for MS/MS spectral data.</summary>
+    /// <summary>MS2 format: MS2 file format for MS2 spectral data.</summary>
     MS_MS2_format = 1001466,
 
     /// <summary>taxonomy: NCBI TaxID: This term is used if a NCBI TaxID is specified, e.g. 9606 for Homo sapiens.</summary>
@@ -4987,7 +4987,7 @@ public enum class CVID
     /// <summary>MaxQuant: MaxQuant is a quantitative proteomics software package designed for analyzing large mass spectrometric data sets. It is specifically aimed at high resolution MS data.</summary>
     MS_MaxQuant = 1001583,
 
-    /// <summary>combined pmf + ms-ms search: Search that includes data from Peptide Mass Fingerprint (PMF) and MS/MS (aka Peptide Fragment Fingerprint - PFF).</summary>
+    /// <summary>combined pmf + ms-ms search: Search that includes data from Peptide Mass Fingerprint (PMF) and MS2 (aka Peptide Fragment Fingerprint - PFF).</summary>
     MS_combined_pmf___ms_ms_search = 1001584,
 
     /// <summary>MyriMatch: Tabb Lab software for directly comparing peptides in a database to tandem mass spectra.</summary>
@@ -5077,7 +5077,7 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:Spectrum Selector:Minimum Peak Count: Minimum number of peaks in a tandem mass spectrum that is allowed to pass the filter and to be subjected to further processing in the workflow.</summary>
     MS_ProteomeDiscoverer_Spectrum_Selector_Minimum_Peak_Count = 1001609,
 
-    /// <summary>ProteomeDiscoverer:MS Order: Level of the mass spectrum (MS/MS=MS2 ... MS10).</summary>
+    /// <summary>ProteomeDiscoverer:MS Order: Level of the mass spectrum (MS2 ... MS10).</summary>
     MS_ProteomeDiscoverer_MS_Order_OBSOLETE = 1001610,
 
     /// <summary>ProteomeDiscoverer:Polarity Mode: Polarity mode (positive or negative).</summary>
@@ -5131,7 +5131,7 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Overtones: Determines whether precursor overtone peaks in the spectrum are removed from the input spectrum.</summary>
     MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Precursor_Overtones = 1001627,
 
-    /// <summary>ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Peak: Determines whether precursor artifact peaks from the MS/MS input spectra are removed.</summary>
+    /// <summary>ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Peak: Determines whether precursor artifact peaks from the MS2 input spectra are removed.</summary>
     MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Precursor_Peak = 1001628,
 
     /// <summary>ProteomeDiscoverer:Spectrum Grouper:Allow Mass Analyzer Mismatch: Determines whether the fragment spectrum for scans with the same precursor mass is grouped, regardless of mass analyzer and activation type.</summary>
@@ -5179,11 +5179,11 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:Spectrum Score Filter:Let Pass Above Scores: Determines whether spectra with scores above the threshold score are retained rather than filtered out.</summary>
     MS_ProteomeDiscoverer_Spectrum_Score_Filter_Let_Pass_Above_Scores = 1001643,
 
-    /// <summary>ProteomeDiscoverer:Dynamic Modifications: Determine dynamic post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_Dynamic_Modifications = 1001644,
+    /// <summary>ProteomeDiscoverer:Dynamic Modification: Determine dynamic post-translational modifications (PTMs).</summary>
+    MS_ProteomeDiscoverer_Dynamic_Modification = 1001644,
 
-    /// <summary>ProteomeDiscoverer:Static Modifications: Static Modification to all occurrences of a named amino acid.</summary>
-    MS_ProteomeDiscoverer_Static_Modifications = 1001645,
+    /// <summary>ProteomeDiscoverer:Static Modification: Static Modification to all occurrences of a named amino acid.</summary>
+    MS_ProteomeDiscoverer_Static_Modification = 1001645,
 
     /// <summary>ProteomeDiscoverer:Mascot:Decoy Search: Determines whether the Proteome Discoverer application searches an additional decoy database.</summary>
     MS_ProteomeDiscoverer_Mascot_Decoy_Search_OBSOLETE = 1001646,
@@ -5407,17 +5407,17 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge4: FT medium confidence XCorr parameter for charge >= 4.</summary>
     MS_ProteomeDiscoverer_SEQUEST_FT_Medium_Confidence_XCorr_Charge4 = 1001719,
 
-    /// <summary>ProteomeDiscoverer:1. Dynamic Modification: Determine 1st dynamic post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_1__Dynamic_Modification = 1001720,
+    /// <summary>ProteomeDiscoverer:1. Dynamic Modification: ProteomeDiscoverer's 1st dynamic post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_1__Dynamic_Modification_OBSOLETE = 1001720,
 
-    /// <summary>ProteomeDiscoverer:2. Dynamic Modification: Determine 2nd dynamic post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_2__Dynamic_Modification = 1001721,
+    /// <summary>ProteomeDiscoverer:2. Dynamic Modification: ProteomeDiscoverer's 2nd dynamic post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_2__Dynamic_Modification_OBSOLETE = 1001721,
 
-    /// <summary>ProteomeDiscoverer:3. Dynamic Modification: Determine 3rd dynamic post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_3__Dynamic_Modification = 1001722,
+    /// <summary>ProteomeDiscoverer:3. Dynamic Modification: ProteomeDiscoverer's 3rd dynamic post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_3__Dynamic_Modification_OBSOLETE = 1001722,
 
-    /// <summary>ProteomeDiscoverer:4. Dynamic Modification: Determine 4th dynamic post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_4__Dynamic_Modification = 1001723,
+    /// <summary>ProteomeDiscoverer:4. Dynamic Modification: ProteomeDiscoverer's 4th dynamic post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_4__Dynamic_Modification_OBSOLETE = 1001723,
 
     /// <summary>ProteomeDiscoverer:Static Modification for X: Static Modification for X.</summary>
     MS_ProteomeDiscoverer_Static_Modification_for_X = 1001724,
@@ -5636,10 +5636,10 @@ public enum class CVID
     MS_Unify = 1001796,
 
     /// <summary>travelling wave ion mobility mass spectrometer: An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide.</summary>
-    MS_travelling_wave_ion_mobility_mass_spectrometer = 1001797,
+    MS_travelling_wave_ion_mobility_mass_spectrometer_OBSOLETE = 1001797,
 
     /// <summary>TWIMS: An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide.</summary>
-    MS_TWIMS = MS_travelling_wave_ion_mobility_mass_spectrometer,
+    MS_TWIMS_OBSOLETE = MS_travelling_wave_ion_mobility_mass_spectrometer_OBSOLETE,
 
     /// <summary>LECO software: LECO software for data acquisition and analysis.</summary>
     MS_LECO_software = 1001798,
@@ -5755,10 +5755,10 @@ public enum class CVID
     /// <summary>SILAC quantitation analysis: SILAC workflow (heavy, light, and sometimes medium peak).</summary>
     MS_SILAC_quantitation_analysis = 1001835,
 
-    /// <summary>spectral counting quantitation analysis: Spectral counting workflow (number of identified MS/MS spectra as approximation of peptide / protein quant).</summary>
+    /// <summary>spectral counting quantitation analysis: Spectral counting workflow (number of identified MS2 spectra as approximation of peptide / protein quant).</summary>
     MS_spectral_counting_quantitation_analysis = 1001836,
 
-    /// <summary>iTRAQ quantitation analysis: Quantification analysis using the AB SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z.</summary>
+    /// <summary>iTRAQ quantitation analysis: Quantification analysis using the AB SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near 114 m/z.</summary>
     MS_iTRAQ_quantitation_analysis = 1001837,
 
     /// <summary>SRM quantitation analysis: Selected Reaction Monitoring workflow (XIC quantitation of precursor / fragment mass pair).</summary>
@@ -5773,7 +5773,7 @@ public enum class CVID
     /// <summary>LC-MS feature volume: Real (intensity times area) volume of the LC-MS feature.</summary>
     MS_LC_MS_feature_volume = 1001841,
 
-    /// <summary>peptide PSM count: The number of MS/MS spectra identified for this peptide in spectral counting.</summary>
+    /// <summary>peptide PSM count: The number of MS2 spectra identified for this peptide in spectral counting.</summary>
     MS_peptide_PSM_count = 1001842,
 
     /// <summary>MS1 feature maximum intensity: Maximum intensity of MS1 feature.</summary>
@@ -5788,7 +5788,7 @@ public enum class CVID
     /// <summary>isotopic pattern area: Area of all peaks belonging to the isotopic pattern of light or heavy peak (e.g. 15N).</summary>
     MS_isotopic_pattern_area = 1001846,
 
-    /// <summary>reporter ion intensity: Intensity of MS/MS reporter ion (e.g. iTraq).</summary>
+    /// <summary>reporter ion intensity: Intensity of MS2 reporter ion (e.g. iTraq).</summary>
     MS_reporter_ion_intensity = 1001847,
 
     /// <summary>simple ratio of two values: Simple ratio of two values (enumerator and denominator).</summary>
@@ -5815,10 +5815,10 @@ public enum class CVID
     /// <summary>t-test p-value: P-value of t-Test of two groups.</summary>
     MS_t_test_p_value = 1001855,
 
-    /// <summary>reporter ion raw value: Intensity (or area) of MS/MS reporter ion (e.g. iTraq).</summary>
+    /// <summary>reporter ion raw value: Intensity (or area) of MS2 reporter ion (e.g. iTraq).</summary>
     MS_reporter_ion_raw_value = 1001856,
 
-    /// <summary>reporter ion normalized value: Normalized value of MS/MS reporter ion (e.g. iTraq).</summary>
+    /// <summary>reporter ion normalized value: Normalized value of MS2 reporter ion (e.g. iTraq).</summary>
     MS_reporter_ion_normalized_value = 1001857,
 
     /// <summary>XIC area: Area of the extracted ion chromatogram (e.g. of a transition in SRM).</summary>
@@ -5959,7 +5959,7 @@ public enum class CVID
     /// <summary>MaxQuant:feature intensity: The data type feature intensity produced by MaxQuant.</summary>
     MS_MaxQuant_feature_intensity = 1001903,
 
-    /// <summary>MaxQuant:MS/MS count: The data type MS/MS count produced by MaxQuant.</summary>
+    /// <summary>MaxQuant:MS/MS count: The data type MS2 count produced by MaxQuant.</summary>
     MS_MaxQuant_MS_MS_count = 1001904,
 
     /// <summary>emPAI value: The emPAI value of protein abundance, produced from the emPAI algorithm.</summary>
@@ -6160,17 +6160,17 @@ public enum class CVID
     /// <summary>product ion drift time: The ion drift time of an MS2 product ion.</summary>
     MS_product_ion_drift_time_OBSOLETE = 1001967,
 
-    /// <summary>PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence.</summary>
-    MS_PTM_localization_score = 1001968,
+    /// <summary>PSM-level PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence at the PSM-level.</summary>
+    MS_PSM_level_PTM_localization_score = 1001968,
 
-    /// <summary>ProteomeDiscoverer:phosphoRS score: Peptide score based on the cumulative binomial probability that the observed match is a random event.</summary>
-    MS_ProteomeDiscoverer_phosphoRS_score = 1001969,
+    /// <summary>phosphoRS score: phosphoRS score for PTM site location at the PSM-level.</summary>
+    MS_phosphoRS_score = 1001969,
 
-    /// <summary>ProteomeDiscoverer:phosphoRS sequence probability: Probability that the respective isoform is correct.</summary>
-    MS_ProteomeDiscoverer_phosphoRS_sequence_probability = 1001970,
+    /// <summary>phosphoRS sequence probability: Probability that the respective isoform is correct.</summary>
+    MS_phosphoRS_sequence_probability = 1001970,
 
-    /// <summary>ProteomeDiscoverer:phosphoRS site probability: Estimate of the probability that the respective site is truly phosphorylated.</summary>
-    MS_ProteomeDiscoverer_phosphoRS_site_probability = 1001971,
+    /// <summary>phosphoRS site probability: Estimate of the probability that the respective site is truly phosphorylated.</summary>
+    MS_phosphoRS_site_probability = 1001971,
 
     /// <summary>PTM scoring algorithm version: Version of the post-translational modification scoring algorithm.</summary>
     MS_PTM_scoring_algorithm_version = 1001972,
@@ -6215,10 +6215,10 @@ public enum class CVID
     MS_MaxQuant_PTM_Delta_Score = 1001983,
 
     /// <summary>Ascore: Ascore software.</summary>
-    MS_Ascore = 1001984,
+    MS_Ascore_1001984 = 1001984,
 
-    /// <summary>Ascore:Ascore: The Ascore score value from Ascore software.</summary>
-    MS_Ascore_Ascore = 1001985,
+    /// <summary>Ascore: A-score for PTM site location at the PSM-level.</summary>
+    MS_Ascore_1001985 = 1001985,
 
     /// <summary>H-Score: H-Score for peptide phosphorylation site location.</summary>
     MS_H_Score = 1001986,
@@ -6517,11 +6517,11 @@ public enum class CVID
     /// <summary>impact: Bruker Daltonics' impact: ESI Q-TOF, Nanospray, APCI, APPI, GC-APCI, CaptiveSpray.</summary>
     MS_impact = 1002077,
 
-    /// <summary>ProteomeDiscoverer:1. Static Modification: Determine 1st static post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_1__Static_Modification = 1002078,
+    /// <summary>ProteomeDiscoverer:1. Static Modification: ProteomeDiscoverer's 1st static post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_1__Static_Modification_OBSOLETE = 1002078,
 
-    /// <summary>ProteomeDiscoverer:2. Static Modification: Determine 2nd static post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_2__Static_Modification = 1002079,
+    /// <summary>ProteomeDiscoverer:2. Static Modification: ProteomeDiscoverer's 2nd static post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_2__Static_Modification_OBSOLETE = 1002079,
 
     /// <summary>ProteomeDiscoverer:Spectrum Selector:Precursor Clipping Range Before: Precursor clipping range before.</summary>
     MS_ProteomeDiscoverer_Spectrum_Selector_Precursor_Clipping_Range_Before = 1002080,
@@ -6553,7 +6553,7 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:Peptide Without Protein XCorr Threshold: XCorr threshold for storing peptides that do not belong to a protein.</summary>
     MS_ProteomeDiscoverer_Peptide_Without_Protein_XCorr_Threshold = 1002089,
 
-    /// <summary>Calculate Probability Scores: Flag indicating that a probability score for the assessment that a reported peptide match is a random occurence is calculated.</summary>
+    /// <summary>Calculate Probability Scores: Flag indicating that a probability score for the assessment that a reported peptide match is a random occurrence is calculated.</summary>
     MS_Calculate_Probability_Scores = 1002090,
 
     /// <summary>ProteomeDiscoverer:Maximum Delta Cn: Delta Cn threshold for filtering out PSM's.</summary>
@@ -6823,25 +6823,25 @@ public enum class CVID
     /// <summary>TOPP software adaptor: Software adaptor to an external program in the TOPP software.</summary>
     MS_TOPP_software_adaptor = 1002180,
 
-    /// <summary>TOPP InspectAdapter: Identifies MS/MS spectra using the external program Inspect.</summary>
+    /// <summary>TOPP InspectAdapter: Identifies MS2 spectra using the external program Inspect.</summary>
     MS_TOPP_InspectAdapter = 1002181,
 
-    /// <summary>TOPP MascotAdapter: Identifies MS/MS spectra using the external program Mascot.</summary>
+    /// <summary>TOPP MascotAdapter: Identifies MS2 spectra using the external program Mascot.</summary>
     MS_TOPP_MascotAdapter = 1002182,
 
-    /// <summary>TOPP MascotAdapterOnline: Identifies MS/MS spectra using the online version of the external program Mascot.</summary>
+    /// <summary>TOPP MascotAdapterOnline: Identifies MS2 spectra using the online version of the external program Mascot.</summary>
     MS_TOPP_MascotAdapterOnline = 1002183,
 
-    /// <summary>TOPP OMSSAAdapter: Identifies MS/MS spectra using the external program OMSSA.</summary>
+    /// <summary>TOPP OMSSAAdapter: Identifies MS2 spectra using the external program OMSSA.</summary>
     MS_TOPP_OMSSAAdapter = 1002184,
 
-    /// <summary>TOPP PepNovoAdapter: Identifies MS/MS spectra using the external program PepNovo.</summary>
+    /// <summary>TOPP PepNovoAdapter: Identifies MS2 spectra using the external program PepNovo.</summary>
     MS_TOPP_PepNovoAdapter = 1002185,
 
-    /// <summary>TOPP XTandemAdapter: Identifies MS/MS spectra using the external program XTandem.</summary>
+    /// <summary>TOPP XTandemAdapter: Identifies MS2 spectra using the external program XTandem.</summary>
     MS_TOPP_XTandemAdapter = 1002186,
 
-    /// <summary>TOPP SpecLibSearcher: Identifies peptide MS/MS spectra by spectral matching with a searchable spectral library.</summary>
+    /// <summary>TOPP SpecLibSearcher: Identifies peptide MS2 spectra by spectral matching with a searchable spectral library.</summary>
     MS_TOPP_SpecLibSearcher = 1002187,
 
     /// <summary>TOPP ConsensusID: Computes a consensus identification from peptide identifications of several identification engines.</summary>
@@ -7135,16 +7135,16 @@ public enum class CVID
     /// <summary>SRM proteingroup level quantitation: Selected Reaction Monitoring proteingroup level quantitation.</summary>
     MS_SRM_proteingroup_level_quantitation = 1002284,
 
-    /// <summary>Trans-Proteomic Pipeline: A suite of open source tools for the processing of MS/MS proteomics data developed by the Seattle Proteome Center at the Institute for Systems Biology.</summary>
+    /// <summary>Trans-Proteomic Pipeline: A suite of open source tools for the processing of MS2 proteomics data developed by the Seattle Proteome Center at the Institute for Systems Biology.</summary>
     MS_Trans_Proteomic_Pipeline = 1002285,
 
-    /// <summary>TPP: A suite of open source tools for the processing of MS/MS proteomics data developed by the Seattle Proteome Center at the Institute for Systems Biology.</summary>
+    /// <summary>TPP: A suite of open source tools for the processing of MS2 proteomics data developed by the Seattle Proteome Center at the Institute for Systems Biology.</summary>
     MS_TPP = MS_Trans_Proteomic_Pipeline,
 
     /// <summary>Trans-Proteomic Pipeline software: A software program that is a component of the Trans-Proteomic Pipeline.</summary>
     MS_Trans_Proteomic_Pipeline_software = 1002286,
 
-    /// <summary>PeptideProphet: A program in the TPP that calculates PSM probabilities for MS/MS proteomics data searched with any of the supported sequence or spectral library search engines via the pepXML format.</summary>
+    /// <summary>PeptideProphet: A program in the TPP that calculates PSM probabilities for MS2 proteomics data searched with any of the supported sequence or spectral library search engines via the pepXML format.</summary>
     MS_PeptideProphet = 1002287,
 
     /// <summary>iProphet: A program in the TPP that calculates distinct peptide probabilities based on several lines of corroborating evidence including search results from multiple search engines via the pepXML format.</summary>
@@ -7273,11 +7273,11 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:ion settings: Specifies the fragment ions and neutral losses that are calculated.</summary>
     MS_ProteomeDiscoverer_ion_settings = 1002329,
 
-    /// <summary>ProteomeDiscoverer:3. Static Modification: Determine 3rd static (fixed) post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_3__Static_Modification = 1002330,
+    /// <summary>ProteomeDiscoverer:3. Static Modification: ProteomeDiscoverer's 3rd static post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_3__Static_Modification_OBSOLETE = 1002330,
 
-    /// <summary>ProteomeDiscoverer:5. Dynamic Modification: Determine 5th dynamic (variable) post-translational modifications (PTMs).</summary>
-    MS_ProteomeDiscoverer_5__Dynamic_Modification = 1002331,
+    /// <summary>ProteomeDiscoverer:5. Dynamic Modification: ProteomeDiscoverer's 5th dynamic post-translational modification (PTM) input parameter.</summary>
+    MS_ProteomeDiscoverer_5__Dynamic_Modification_OBSOLETE = 1002331,
 
     /// <summary>lab head: The scientist responsible for personnel, grants, and instrumentation in a functional laboratory group.</summary>
     MS_lab_head = 1002332,
@@ -7313,7 +7313,7 @@ public enum class CVID
     MS_MZmine = 1002342,
 
     /// <summary>ion stability type: Stability type of the ion.</summary>
-    MS_ion_stability_type = 1002343,
+    MS_ion_stability_type_OBSOLETE = 1002343,
 
     /// <summary>Maltcms: Modular Application Toolkit for Chromatography Mass-Spectrometry is an application framework mainly for developers.</summary>
     MS_Maltcms = 1002344,
@@ -7600,11 +7600,11 @@ public enum class CVID
     /// <summary>spectrum identification list result details: Information about the list of PSMs (SpectrumIdentificationList).</summary>
     MS_spectrum_identification_list_result_details = 1002438,
 
-    /// <summary>final PSM list UNDER DISCUSSION: A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is the final set of identifications to be interpreted by consuming software. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum must not be referenced from more than one SpectrumIdentificationResult.</summary>
-    MS_final_PSM_list_UNDER_DISCUSSION = 1002439,
+    /// <summary>final PSM list: A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is the final set of identifications to be interpreted by consuming software. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum must not be referenced from more than one SpectrumIdentificationResult.</summary>
+    MS_final_PSM_list = 1002439,
 
-    /// <summary>intermediate PSM list UNDER DISCUSSION: A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is not the final set of identifications to be interpreted by consuming software. This term should be used when results are provided from multiple search engines for the results from each search engine before they are combined to give consensus identifications. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum may be referenced from more than one SpectrumIdentificationResult.</summary>
-    MS_intermediate_PSM_list_UNDER_DISCUSSION = 1002440,
+    /// <summary>intermediate PSM list: A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is not the final set of identifications to be interpreted by consuming software. This term should be used when results are provided from multiple search engines for the results from each search engine before they are combined to give consensus identifications. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum may be referenced from more than one SpectrumIdentificationResult.</summary>
+    MS_intermediate_PSM_list = 1002440,
 
     /// <summary>Andi-MS format: AIA Analytical Data Interchange file format for mass spectrometry data.</summary>
     MS_Andi_MS_format = 1002441,
@@ -7723,7 +7723,7 @@ public enum class CVID
     /// <summary>regular expression: Regular expression.</summary>
     MS_regular_expression = 1002479,
 
-    /// <summary>regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?!["&\'<>])\S)+).</summary>
+    /// <summary>regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+).</summary>
     MS_regular_expression_for_a_digital_object_identifier__DOI_ = 1002480,
 
     /// <summary>higher energy beam-type collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.</summary>
@@ -7795,10 +7795,10 @@ public enum class CVID
     /// <summary>PSM is used for peptide-level scoring: Flags a PSM that it is used for peptide-level scoring.</summary>
     MS_PSM_is_used_for_peptide_level_scoring = 1002503,
 
-    /// <summary>order: The order of modifications to be referenced elsewhere in the document.</summary>
-    MS_order = 1002504,
+    /// <summary>modification index: The order of modifications to be referenced elsewhere in the document.</summary>
+    MS_modification_index = 1002504,
 
-    /// <summary>regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+:[:digit:]+[|:digit:]*:(true|false)\{1\}).</summary>
+    /// <summary>regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})</summary>
     MS_regular_expression_for_modification_localization_scoring = 1002505,
 
     /// <summary>modification position score: Modification position score.</summary>
@@ -7842,6 +7842,171 @@ public enum class CVID
 
     /// <summary>Progenesis:protein group raw abundance: The data type raw abundance for protein groups produced by Progenesis LC-MS.</summary>
     MS_Progenesis_protein_group_raw_abundance = 1002519,
+
+    /// <summary>peptide group ID: Peptide group identifier for peptide-level stats.</summary>
+    MS_peptide_group_ID = 1002520,
+
+    /// <summary>mass spectrometry imaging: A technique in which mass spectra are acquired in a spatially resolved manner. This is typically achieved by scanning a laser or primary ion beam over a sample and acquiring a mass spectrum at each position.</summary>
+    MS_mass_spectrometry_imaging = 1002521,
+
+    /// <summary>ProteomeDiscoverer:1. Static Terminal Modification: Determine 1st static terminal post-translational modifications (PTMs).</summary>
+    MS_ProteomeDiscoverer_1__Static_Terminal_Modification = 1002522,
+
+    /// <summary>Q Exactive HF: Thermo Scientific Q Exactive.</summary>
+    MS_Q_Exactive_HF = 1002523,
+
+    /// <summary>PepFinder: Thermo Scientific PepFinder BioPharma analysis software.</summary>
+    MS_PepFinder = 1002524,
+
+    /// <summary>TSQ 8000 Evo: Thermo Scientific TSQ 8000 Evo MS.</summary>
+    MS_TSQ_8000_Evo = 1002525,
+
+    /// <summary>Exactive Plus: Thermo Scientific Exactive Plus MS.</summary>
+    MS_Exactive_Plus = 1002526,
+
+    /// <summary>instrument specific scan attribute: Instrument specific scan properties that are associated with a value.</summary>
+    MS_instrument_specific_scan_attribute = 1002527,
+
+    /// <summary>synchronous prefilter selection: Synchronous prefilter selection.</summary>
+    MS_synchronous_prefilter_selection = 1002528,
+
+    /// <summary>SPS: Synchronous prefilter selection.</summary>
+    MS_SPS = MS_synchronous_prefilter_selection,
+
+    /// <summary>resolution array: A data array of resolution values.</summary>
+    MS_resolution_array = 1002529,
+
+    /// <summary>baseline array: A data array of signal baseline values (the signal in the absence of analytes).</summary>
+    MS_baseline_array = 1002530,
+
+    /// <summary>UIMF format: SQLite-based file format created at Pacific Northwest National Lab. It stores an intermediate analysis of ion-mobility mass spectrometry data.</summary>
+    MS_UIMF_format = 1002531,
+
+    /// <summary>UIMF nativeID format: Native format defined by frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger frameType=xsd:nonNegativeInteger.</summary>
+    MS_UIMF_nativeID_format = 1002532,
+
+    /// <summary>TripleTOF 6600: AB SCIEX TripleTOF 6600, a quadrupole - quadrupole - time-of-flight mass spectrometer.</summary>
+    MS_TripleTOF_6600 = 1002533,
+
+    /// <summary>ProLuCID:xcorr: The ProLuCID result 'XCorr'.</summary>
+    MS_ProLuCID_xcorr = 1002534,
+
+    /// <summary>ProLuCID:deltacn: The ProLuCID result 'DeltaCn'.</summary>
+    MS_ProLuCID_deltacn = 1002535,
+
+    /// <summary>D-Score: D-Score for PTM site location at the PSM-level.</summary>
+    MS_D_Score = 1002536,
+
+    /// <summary>MD-Score: MD-Score for PTM site location at the PSM-level.</summary>
+    MS_MD_Score = 1002537,
+
+    /// <summary>PTM localization confidence metric: Localization confidence metric for a post translational modification (PTM).</summary>
+    MS_PTM_localization_confidence_metric = 1002538,
+
+    /// <summary>PeptideShaker PTM confidence type: PeptideShaker quality criteria for the confidence of PTM localizations.</summary>
+    MS_PeptideShaker_PTM_confidence_type = 1002539,
+
+    /// <summary>PeptideShaker PSM confidence type: PeptideShaker quality criteria for the confidence of PSM's.</summary>
+    MS_PeptideShaker_PSM_confidence_type = 1002540,
+
+    /// <summary>PeptideShaker peptide confidence type: PeptideShaker quality criteria for the confidence of peptide identifications.</summary>
+    MS_PeptideShaker_peptide_confidence_type = 1002541,
+
+    /// <summary>PeptideShaker protein confidence type: PeptideShaker quality criteria for the confidence of protein identifications.</summary>
+    MS_PeptideShaker_protein_confidence_type = 1002542,
+
+    /// <summary>xiFDR: Target/Decoy based FDR estimation for cross-linking peptide-identifications.</summary>
+    MS_xiFDR = 1002543,
+
+    /// <summary>xi: Search engine for cross-linked peptides.</summary>
+    MS_xi = 1002544,
+
+    /// <summary>xi:score: The xi result 'Score'.</summary>
+    MS_xi_score = 1002545,
+
+    /// <summary>Skyline mzQuantML converter: A software package to convert Skyline report to mzQuantML.</summary>
+    MS_Skyline_mzQuantML_converter = 1002546,
+
+    /// <summary>normalized spectral abundance factor: A normalized spectral abundance factor (NSAF).</summary>
+    MS_normalized_spectral_abundance_factor = 1002547,
+
+    /// <summary>distributed normalized spectral abundance factor: A distributed normalized spectral abundance factor (dNSAF.</summary>
+    MS_distributed_normalized_spectral_abundance_factor = 1002548,
+
+    /// <summary>peptide-level PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence at the peptide-level.</summary>
+    MS_peptide_level_PTM_localization_score = 1002549,
+
+    /// <summary>peptide:phosphoRS score: phosphoRS score for PTM site location at the peptide-level.</summary>
+    MS_peptide_phosphoRS_score = 1002550,
+
+    /// <summary>peptide:Ascore: A-score for PTM site location at the peptide-level.</summary>
+    MS_peptide_Ascore = 1002551,
+
+    /// <summary>peptide:H-Score: H-Score for peptide phosphorylation site location at the peptide-level.</summary>
+    MS_peptide_H_Score = 1002552,
+
+    /// <summary>peptide:D-Score: D-Score for PTM site location at the peptide-level.</summary>
+    MS_peptide_D_Score = 1002553,
+
+    /// <summary>peptide:MD-Score: MD-Score for PTM site location at the peptide-level.</summary>
+    MS_peptide_MD_Score = 1002554,
+
+    /// <summary>PTM localization score threshold: Threshold for PTM site location score.</summary>
+    MS_PTM_localization_score_threshold = 1002555,
+
+    /// <summary>Ascore threshold: Threshold for Ascore PTM site location score.</summary>
+    MS_Ascore_threshold = 1002556,
+
+    /// <summary>D-Score threshold: Threshold for D-score PTM site location score.</summary>
+    MS_D_Score_threshold = 1002557,
+
+    /// <summary>MD-Score threshold: Threshold for MD-score PTM site location score.</summary>
+    MS_MD_Score_threshold = 1002558,
+
+    /// <summary>H-Score threshold: Threshold for H-score PTM site location score.</summary>
+    MS_H_Score_threshold = 1002559,
+
+    /// <summary>Mascot:PTM site assignment confidence threshold: Threshold for Mascot PTM site assignment confidence.</summary>
+    MS_Mascot_PTM_site_assignment_confidence_threshold = 1002561,
+
+    /// <summary>MSQuant:PTM-score threshold: Threshold for MSQuant:PTM-score.</summary>
+    MS_MSQuant_PTM_score_threshold = 1002562,
+
+    /// <summary>MaxQuant:PTM Score threshold: Threshold for MaxQuant:PTM Score.</summary>
+    MS_MaxQuant_PTM_Score_threshold = 1002563,
+
+    /// <summary>MaxQuant:P-site localization probability threshold: Threshold for MaxQuant:P-site localization probability.</summary>
+    MS_MaxQuant_P_site_localization_probability_threshold = 1002564,
+
+    /// <summary>MaxQuant:PTM Delta Score threshold: Threshold for MaxQuant:PTM Delta Score.</summary>
+    MS_MaxQuant_PTM_Delta_Score_threshold = 1002565,
+
+    /// <summary>MaxQuant:Phospho (STY) Probabilities threshold: Threshold for MaxQuant:Phospho (STY) Probabilities.</summary>
+    MS_MaxQuant_Phospho__STY__Probabilities_threshold = 1002566,
+
+    /// <summary>phosphoRS score threshold: Threshold for phosphoRS score.</summary>
+    MS_phosphoRS_score_threshold = 1002567,
+
+    /// <summary>phosphoRS site probability threshold: Threshold for phosphoRS site probability.</summary>
+    MS_phosphoRS_site_probability_threshold = 1002568,
+
+    /// <summary>ProteomeDiscoverer:Number of Spectra Processed At Once: Number of spectra processed at once in a ProteomeDiscoverer search.</summary>
+    MS_ProteomeDiscoverer_Number_of_Spectra_Processed_At_Once = 1002569,
+
+    /// <summary>sequence multiply subsumable protein: A protein for which the matched peptide sequences are the same, or a subset of, the matched peptide sequences for two or more other proteins combined. These other proteins need not all be in the same group.</summary>
+    MS_sequence_multiply_subsumable_protein = 1002570,
+
+    /// <summary>spectrum multiply subsumable protein: A protein for which the matched spectra are the same, or a subset of, the matched spectra for two or more other proteins combined. These other proteins need not all be in the same group.</summary>
+    MS_spectrum_multiply_subsumable_protein = 1002571,
+
+    /// <summary>protein detection statistical threshold: Estimated statistical threshold used for protein detection.</summary>
+    MS_protein_detection_statistical_threshold = 1002572,
+
+    /// <summary>spectrum identification statistical threshold: Estimated statistical threshold used for spectrum identification.</summary>
+    MS_spectrum_identification_statistical_threshold = 1002573,
+
+    /// <summary>DeBunker:score threshold: Threshold for DeBunker PTM site location score.</summary>
+    MS_DeBunker_score_threshold = 10025560,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 100000000,
@@ -8074,8 +8239,8 @@ public enum class CVID
     /// <summary>IBTP: Thio Ether Formation - BTP Adduct.</summary>
     UNIMOD_IBTP = 100000119,
 
-    /// <summary>GlyGly: Ubiquitinylation residue.</summary>
-    UNIMOD_GlyGly = 100000121,
+    /// <summary>GG: Ubiquitinylation residue.</summary>
+    UNIMOD_GG = 100000121,
 
     /// <summary>Formyl: Formylation.</summary>
     UNIMOD_Formyl = 100000122,
@@ -8437,10 +8602,10 @@ public enum class CVID
     /// <summary>Delta:H(4)C(2)O(-1)S(1): S-Ethylcystine from Serine.</summary>
     UNIMOD_Delta_H_4_C_2_O__1_S_1_ = 100000327,
 
-    /// <summary>Methyl:2H(3)13C(1): Monomethylated arginine.</summary>
+    /// <summary>Methyl:2H(3)13C(1): Monomethylation.</summary>
     UNIMOD_Methyl_2H_3_13C_1_ = 100000329,
 
-    /// <summary>Dimethyl:2H(6)13C(2): Dimethylated arginine.</summary>
+    /// <summary>Dimethyl:2H(6)13C(2): Dimethylation.</summary>
     UNIMOD_Dimethyl_2H_6_13C_2_ = 100000330,
 
     /// <summary>Thiophos-S-S-biotin: Thiophosphate labeled with biotin-HPDP.</summary>
@@ -8863,8 +9028,8 @@ public enum class CVID
     /// <summary>Dibromo: Dibromo.</summary>
     UNIMOD_Dibromo = 100000534,
 
-    /// <summary>LeuArgGlyGly: Ubiquitination.</summary>
-    UNIMOD_LeuArgGlyGly = 100000535,
+    /// <summary>LRGG: Ubiquitination.</summary>
+    UNIMOD_LRGG = 100000535,
 
     /// <summary>CLIP_TRAQ_3: CLIP_TRAQ_3.</summary>
     UNIMOD_CLIP_TRAQ_3 = 100000536,
@@ -9433,11 +9598,11 @@ public enum class CVID
     /// <summary>AEC-MAEC:2H(4): Deuterium cysteamine modification to S or T.</summary>
     UNIMOD_AEC_MAEC_2H_4_ = 100000792,
 
-    /// <summary>Hex1HexNAc1: Hex1HexNAc1.</summary>
-    UNIMOD_Hex1HexNAc1 = 100000793,
+    /// <summary>Hex(1)HexNAc(1): Hex1HexNAc1.</summary>
+    UNIMOD_Hex_1_HexNAc_1_ = 100000793,
 
-    /// <summary>Label:13C(6)+GlyGly: 13C6 labeled ubiquitinylation residue.</summary>
-    UNIMOD_Label_13C_6__GlyGly = 100000799,
+    /// <summary>Label:13C(6)+GG: 13C6 labeled ubiquitinylation residue.</summary>
+    UNIMOD_Label_13C_6__GG = 100000799,
 
     /// <summary>Biotin:Thermo-21345: Was PentylamineBiotin.</summary>
     UNIMOD_Biotin_Thermo_21345 = 100000800,
@@ -9490,11 +9655,8 @@ public enum class CVID
     /// <summary>cGMP+RMP-loss: S-guanylation-2.</summary>
     UNIMOD_cGMP_RMP_loss = 100000851,
 
-    /// <summary>Label:2H(4)+GlyGly: Ubiquitination 2H4 lysine.</summary>
-    UNIMOD_Label_2H_4__GlyGly = 100000853,
-
-    /// <summary>Label:13C(8)15N(2): 13C(8) 15N(2) Silac label.</summary>
-    UNIMOD_Label_13C_8_15N_2_ = 100000854,
+    /// <summary>Label:2H(4)+GG: Ubiquitination 2H4 lysine.</summary>
+    UNIMOD_Label_2H_4__GG = 100000853,
 
     /// <summary>MG-H1: Methylglyoxal-derived hydroimidazolone.</summary>
     UNIMOD_MG_H1 = 100000859,
@@ -9508,8 +9670,8 @@ public enum class CVID
     /// <summary>Label:13C(1)2H(3): SILAC.</summary>
     UNIMOD_Label_13C_1_2H_3_ = 100000862,
 
-    /// <summary>Label:13C(6)15N(2)+GlyGly: 13C(6) 15N(2) Lysine glygly.</summary>
-    UNIMOD_Label_13C_6_15N_2__GlyGly = 100000864,
+    /// <summary>Label:13C(6)15N(2)+GG: 13C(6) 15N(2) Lysine glygly.</summary>
+    UNIMOD_Label_13C_6_15N_2__GG = 100000864,
 
     /// <summary>ICPL:13C(6)2H(4): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, +10 Da form.</summary>
     UNIMOD_ICPL_13C_6_2H_4_ = 100000866,
@@ -9607,8 +9769,8 @@ public enum class CVID
     /// <summary>Ethoxyformyl: Ethoxyformylation.</summary>
     UNIMOD_Ethoxyformyl = 100000915,
 
-    /// <summary>Label:13C(4)15N(2)+GlyGly: 13C(4) 15N(2) Lysine glygly.</summary>
-    UNIMOD_Label_13C_4_15N_2__GlyGly = 100000923,
+    /// <summary>Label:13C(4)15N(2)+GG: 13C(4) 15N(2) Lysine glygly.</summary>
+    UNIMOD_Label_13C_4_15N_2__GG = 100000923,
 
     /// <summary>ethylamino: Ethyl amino.</summary>
     UNIMOD_ethylamino = 100000926,
@@ -10567,8 +10729,8 @@ public enum class CVID
     /// <summary>UgiJoullieProGlyProGly: Side reaction of PGPG with Side chain of aspartic or glutamic acid.</summary>
     UNIMOD_UgiJoullieProGlyProGly = 100001283,
 
-    /// <summary>IMEHex(2)NeuAc: Glycosylation with IME linked Hex(2) NeuAc.</summary>
-    UNIMOD_IMEHex_2_NeuAc = 100001286,
+    /// <summary>IMEHex(2)NeuAc(1): Glycosylation with IME linked Hex(2) NeuAc.</summary>
+    UNIMOD_IMEHex_2_NeuAc_1_ = 100001286,
 
     /// <summary>Arg-loss: Loss of arginine due to transpeptidation.</summary>
     UNIMOD_Arg_loss = 100001287,
@@ -10807,14 +10969,47 @@ public enum class CVID
     /// <summary>MurNAc: N-Acetylmuramic acid.</summary>
     UNIMOD_MurNAc = 100001400,
 
-    /// <summary>TransN-biotin: Transaminated Protein N-terminus biotinylated with biotin-hydrazide.</summary>
-    UNIMOD_TransN_biotin = 100001401,
-
     /// <summary>Label:2H(7)15N(4): Label:2H(7)15N(4).</summary>
     UNIMOD_Label_2H_7_15N_4_ = 100001402,
 
     /// <summary>Label:2H(6)15N(1): Label:2H(6)15N(1).</summary>
     UNIMOD_Label_2H_6_15N_1_ = 100001403,
+
+    /// <summary>EEEDVIEVYQEQTGG: Sumoylation by SUMO-1 after Cyanogen bromide (CNBr) cleavage.</summary>
+    UNIMOD_EEEDVIEVYQEQTGG = 100001405,
+
+    /// <summary>EDEDTIDVFQQQTGG: Sumoylation by SUMO-2/3 after Cyanogen bromide (CNBr) cleavage.</summary>
+    UNIMOD_EDEDTIDVFQQQTGG = 100001406,
+
+    /// <summary>Hex(5)HexNAc(4)NeuAc(2): Hex(5) HexNAc(4) NeuAc(2).</summary>
+    UNIMOD_Hex_5_HexNAc_4_NeuAc_2_ = 100001408,
+
+    /// <summary>Hex(5)HexNAc(4)NeuAc(1): Hex(5) HexNAc(4) NeuAc(1).</summary>
+    UNIMOD_Hex_5_HexNAc_4_NeuAc_1_ = 100001409,
+
+    /// <summary>dHex(1)Hex(5)HexNAc(4)NeuAc(1): DHex(1) Hex(5) HexNAc(4) NeuAc(1).</summary>
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_NeuAc_1_ = 100001410,
+
+    /// <summary>dHex(1)Hex(5)HexNAc(4)NeuAc(2): DHex(1) Hex(5) HexNAc(4) NeuAc(2).</summary>
+    UNIMOD_dHex_1_Hex_5_HexNAc_4_NeuAc_2_ = 100001411,
+
+    /// <summary>s-GlcNAc: O3S1HexNAc1.</summary>
+    UNIMOD_s_GlcNAc = 100001412,
+
+    /// <summary>PhosphoHex(2): H1O3P1Hex2.</summary>
+    UNIMOD_PhosphoHex_2_ = 100001413,
+
+    /// <summary>Trimethyl:13C(3)2H(9): 3-fold methylation with fully labelled methyl groups.</summary>
+    UNIMOD_Trimethyl_13C_3_2H_9_ = 100001414,
+
+    /// <summary>15N-oxobutanoic: Loss of ammonia (15N).</summary>
+    UNIMOD_15N_oxobutanoic = 100001419,
+
+    /// <summary>spermine: Spermine adduct.</summary>
+    UNIMOD_spermine = 100001420,
+
+    /// <summary>spermidine: Spermidine adduct.</summary>
+    UNIMOD_spermidine = 100001421,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 200000000,

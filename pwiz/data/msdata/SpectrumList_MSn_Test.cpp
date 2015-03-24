@@ -739,7 +739,7 @@ void test_v3(SpectrumListPtr sl, int msLevel)
             {
                 charges.push_back(param.value);
             }
-            if (param.cvid == MS_accurate_mass)
+            if (param.cvid == MS_accurate_mass_OBSOLETE)
             {
               masses.push_back(lexical_cast<double>(param.value));
             }
@@ -815,7 +815,7 @@ void test_v3(SpectrumListPtr sl, int msLevel)
             {
                 charges.push_back(param.value);
             }
-            if (param.cvid == MS_accurate_mass)
+            if (param.cvid == MS_accurate_mass_OBSOLETE)
             {
               masses.push_back(lexical_cast<double>(param.value));
             }

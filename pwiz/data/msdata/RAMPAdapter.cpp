@@ -143,7 +143,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
     result.basePeakMZ = spectrum->cvParam(MS_base_peak_m_z).valueAs<double>();    
     result.basePeakIntensity = spectrum->cvParam(MS_base_peak_intensity).valueAs<double>();    
     result.collisionEnergy = 0;
-    result.ionisationEnergy = spectrum->cvParam(MS_ionization_energy).valueAs<double>();
+    result.ionisationEnergy = spectrum->cvParam(MS_ionization_energy_OBSOLETE).valueAs<double>();
     result.lowMZ = spectrum->cvParam(MS_lowest_observed_m_z).valueAs<double>();        
     result.highMZ = spectrum->cvParam(MS_highest_observed_m_z).valueAs<double>();        
     result.precursorScanNum = 0;

@@ -614,7 +614,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
     string filterLine = spectrum.cvParam(MS_filter_string).value;
 	string compensationVoltage;
-	if (spectrum.hasCVParam(MS_FAIMS))
+    if (spectrum.hasCVParam(MS_FAIMS_compensation_voltage))
         compensationVoltage = spectrum.cvParam(MS_FAIMS_compensation_voltage).value;
     bool isCentroided = spectrum.hasCVParam(MS_centroid_spectrum);
 

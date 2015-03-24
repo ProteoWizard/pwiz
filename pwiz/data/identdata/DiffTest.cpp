@@ -612,7 +612,7 @@ void testSourceFile()
     a.externalFormatDocumentation.push_back("The Idiot's Guide to External Formats");
     b.externalFormatDocumentation.push_back("External Formats for Dummies");
     a.set(MS_sample_number);
-    b.set(MS_sample_name_OBSOLETE);
+    b.set(MS_sample_name);
 
     diff(a,b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
@@ -633,7 +633,7 @@ void testSourceFile()
     unit_assert(diff.a_b.cvParams.size() == 1);
     unit_assert(diff.b_a.cvParams.size() == 1);
     unit_assert(diff.a_b.hasCVParam(MS_sample_number));
-    unit_assert(diff.b_a.hasCVParam(MS_sample_name_OBSOLETE));
+    unit_assert(diff.b_a.hasCVParam(MS_sample_name));
 
 }
 
@@ -1162,7 +1162,7 @@ void testSample()
     unit_assert(!diff);
 
     b.contactRole.back().reset(new ContactRole(MS_role_type, ContactPtr(new Person("fer_rehto"))));
-    b.set(MS_sample_name_OBSOLETE);
+    b.set(MS_sample_name);
 
     diff(a, b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
@@ -1181,7 +1181,7 @@ void testSample()
     unit_assert(diff.b_a.contactRole.back()->contactPtr.get());
     unit_assert(diff.a_b.contactRole.back()->contactPtr->id == "contactPtr");
     unit_assert(diff.b_a.contactRole.back()->contactPtr->id == "fer_rehto");
-    unit_assert(diff.b_a.hasCVParam(MS_sample_name_OBSOLETE));
+    unit_assert(diff.b_a.hasCVParam(MS_sample_name));
 }
 
 
