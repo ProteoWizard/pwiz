@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 6;
+        private const int FORMAT_VERSION_CACHE = 7;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -631,8 +631,8 @@ namespace pwiz.Skyline.Model.Lib
                         foreach (var librarySourceFile in librarySourceFiles)
                         {
                             outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
-                            outStream.Write(BitConverter.GetBytes(librarySourceFile.FilePath.Length), 0, sizeof(int));
                             var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
+                            outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
                             outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
                         }
                         // Terminate with zero ID and zero name length
@@ -750,10 +750,8 @@ namespace pwiz.Skyline.Model.Lib
                             int filenameLength = GetInt32(sourceHeader, (int)SourceHeader.filename_length);
                             if (filenameLength == 0)
                                 break;
-                            byte[] filenameBytes = new byte[filenameLength];
-                            ReadComplete(stream, filenameBytes, filenameLength);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId,
-                                Encoding.UTF8.GetString(filenameBytes)));
+                            string filename = ReadString(stream, filenameLength);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId, filename));
                         }
                     }
 
