@@ -439,7 +439,9 @@ namespace pwiz.Skyline.Model
 
                 if (DecoyMassShift.HasValue)
                 {
-                    if ((DecoyMassShift.Value < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift.Value > MAX_PRODUCT_DECOY_MASS_SHIFT) &&
+                    var minShift = IsPrecursor() ? TransitionGroup.MIN_PRECURSOR_DECOY_MASS_SHIFT : MIN_PRODUCT_DECOY_MASS_SHIFT;
+                    var maxShift = IsPrecursor() ? TransitionGroup.MAX_PRECURSOR_DECOY_MASS_SHIFT : MAX_PRODUCT_DECOY_MASS_SHIFT;
+                    if ((DecoyMassShift.Value < minShift || DecoyMassShift.Value > maxShift) &&
                         !MPROPHET_REVERSED_MASS_SHIFTS.Contains(i => i == DecoyMassShift.Value))
                     {
                         throw new InvalidDataException(
