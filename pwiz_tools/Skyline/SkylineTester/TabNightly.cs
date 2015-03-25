@@ -161,9 +161,12 @@ namespace SkylineTester
             }
 
             var hours = (startTime - DateTime.Now).Hours;
+            var minutes = (startTime - DateTime.Now).Minutes;
             if (hours < 0)
                 hours += 24;
-            MessageBox.Show("Nightly build will start in about {0} hours.  If you have a scheduled SkylineNightly run on this machine (and you should!) make certain that this SkylineTester schedule doesn't overlap that one.  They will interfere with each other.".With(hours));
+            var delay = (hours > 0) ? hours : minutes;
+            var units = (hours > 0) ? "hours" : "minutes";
+            MainWindow.SetStatus("SkylineTester scheduled build will start about {0} {1} from now ({2}).  If you also have a scheduled SkylineNightly run on this machine make sure they don't overlap.".With(delay, units, DateTime.Now.ToString(CultureInfo.InvariantCulture)));
             return false;
         }
 

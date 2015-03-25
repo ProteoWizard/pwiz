@@ -443,7 +443,7 @@ namespace SkylineTester
 
                 if (Devenv == null)
                 {
-                    MessageBox.Show("Visual Studio 10.0 is required to build Skyline.");
+                    MessageBox.Show("Visual Studio 12.0 is required to build Skyline.");
                     return false;
                 }
 
