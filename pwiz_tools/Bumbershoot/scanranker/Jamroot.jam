@@ -33,7 +33,24 @@
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
-constant BOOST_VERSION : 1 43 0 ;
+# set up explicit 32-bit or 64-bit builds
+if "address-model=64" in [ modules.peek : ARGV ] || ( ! ( $(.os) = "NT" ) && $(.platform:L) = "x86_64" )
+{
+    constant PROCESSOR_ARCHITECTURE : "AMD64" ;
+    constant PLATFORM : "x64" ;
+}
+else if "address-model=32" in [ modules.peek : ARGV ] || $(.platform:L) = "x86" || $(.os) = "NT" 
+{
+    constant PROCESSOR_ARCHITECTURE : "x86" ;
+    constant PLATFORM : "x86" ;
+}
+else
+{
+    echo "Unable to determine address-model for platform $(.platform:L). The only supported platforms are x86 and x86_64." ;
+    exit ;
+}
+
+constant BOOST_VERSION : 1 56 0 ;
 
 local default_libraries_path = "./DirecTag/freicore/libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
@@ -70,47 +87,51 @@ import errors : error ;
 import feature ;
 import path ;
 
-project bumbershoot
+project scanranker
 	: requirements
-	    #<include>DirecTag/freicore/pwiz_src
-	    #<include>DirecTag/freicore/libraries/boost_aux
+	    <include>freicore/pwiz_src
+	    <include>$(libraries_path)/boost_aux
+        <include>$(boost_src)
+        <include>$(zlib_src)
 
-      # any module which links with .NET (either dynamically or statically) must use the shared runtime
-      <toolset>msvc:<runtime-link>shared
+        <toolset>gcc,<link>shared:<runtime-link>shared
+        <toolset>darwin,<link>shared:<runtime-link>shared
 
-      # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
-      # also, catch(...) will catch SEH exceptions with this on
-      <toolset>msvc:<asynch-exceptions>on
+        # any module which links with .NET (either dynamically or statically) must use the shared runtime
+        <toolset>msvc:<runtime-link>shared
 
-      # special msvc hacks
-      <toolset>msvc:<define>WIN32                     # windows
-      <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
-      <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
-      <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
-      <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
-      <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
-      <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
-      <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
-      <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
-      <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
-      <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-      <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
-      <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
-      <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
-      <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
-      <toolset>msvc:<linkflags>/OPT:REF,ICF
+        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+        # also, catch(...) will catch SEH exceptions with this on
+        <toolset>msvc:<asynch-exceptions>on
 
-      # warning: _SECURE_SCL_THROWS is deprecated
-      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+        # special msvc hacks
+        <toolset>msvc:<define>WIN32                     # windows
+        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+        <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
+        <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+        <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
+        <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
+        <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
+        <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
+        <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
+        <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+        <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
 
-      # use of boost::thread requires multithreaded runtime
-      <threading>multi
+        # warning: _SECURE_SCL_THROWS is deprecated
+        <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+
+        # use of boost::thread requires multithreaded runtime
+        <threading>multi
 
   : build-dir $(BUILD_PATH)
   : default-build
-      <variant>release
-      <link>static
-      <runtime-link>static
+        <variant>release
+        <link>static
+        <runtime-link>static
 	;
 
 alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
@@ -127,7 +148,7 @@ local application-name = "ScanRanker" ;
 import svnrev sequence ;
 
 constant MAJOR : 1 ;
-constant MINOR : 1 ;
+constant MINOR : 2 ;
 
 # rule for generating a C# AssemblyInfo file
 rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
@@ -234,18 +255,16 @@ if ! $(.has-boost)
 #generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements ScanRanker's presentation logic." $(COMPANY_AND_PRODUCT) ;
 generate-AssemblyInfo.cs GUI/IonMatcher/Properties/AssemblyInfo.cs : [ path.glob GUI/IonMatcher : *.cs ] : : : "IonMatcherGUI" "Graphical interface for IonMatcher." $(COMPANY_AND_PRODUCT) ;
 
+
 rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    if <link>shared in $(properties)
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
-    }
-    else
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
-    }
+    local location = [ path.make $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ] ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
 }
 
 rule install-type ( properties * )
@@ -262,13 +281,13 @@ rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     local dependencies ;
-    if <toolset>msvc in $(properties) && <link>static in $(properties)
+    if <toolset>msvc in $(properties)
     {
-        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
-        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
     }
     return $(dependencies) ;
@@ -285,7 +304,7 @@ install install
     : # sources
         DirecTag//directag
         DirecTag//adjustScanRankerScoreByGroup
-        DirecTag/idpQonvert//idpQonvert
+        DirecTag/Qonverter//idpQonvert
 		
     : # requirements
         <conditional>@install-type
@@ -404,7 +423,7 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>DirecTag//boost_1_43_0.tar.bz2
+    <dependency>DirecTag//boost_$(BOOST_VERSION:J=_).tar.bz2
   ;
 
 } # if SUBSET
