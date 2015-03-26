@@ -476,7 +476,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             {
                 return DataSourceUtil.TYPE_WATERS_RAW;
             }
-            if (instrumentModelLower.StartsWith("ab sciex"))
+            if (instrumentModelLower.StartsWith("ab sciex") || instrumentModelLower.StartsWith("sciex"))
             {
                 return DataSourceUtil.TYPE_WIFF;
             }
