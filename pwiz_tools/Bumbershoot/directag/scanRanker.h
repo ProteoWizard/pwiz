@@ -30,7 +30,6 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include <iostream>
 
-using namespace std;
 using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;

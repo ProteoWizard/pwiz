@@ -89,7 +89,7 @@ namespace directag
 	{
 		Spectrum();
 		Spectrum( const Spectrum& old );
-        Spectrum( const string& nativeID, size_t charge, double precursorMZ, const flat_map<double,double>& peaks);
+        Spectrum( const string& nativeID, size_t charge, double precursorMZ, const flat_map<double, float>& peaks);
 
 		void initialize( int numIntenClasses, int NumMzFidelityClasses )
 		{

@@ -76,15 +76,15 @@ namespace directag
 	{
 	}
 
-    Spectrum::Spectrum(const string& nativeID, size_t charge, double precursorMZ, const flat_map<double,double>& peaks)
+    Spectrum::Spectrum(const string& nativeID, size_t charge, double precursorMZ, const flat_map<double, float>& peaks)
     {
         id.setId(nativeID);
         id.charge = charge;
         mzOfPrecursor = precursorMZ;
 		mOfPrecursor = mzOfPrecursor * id.charge - ( id.charge * PROTON );
         peakPreData.clear();
-        typedef pair<double,double> Peak;
-        BOOST_FOREACH(Peak p, peaks)
+        typedef pair<double, float> Peak;
+        BOOST_FOREACH(const Peak& p, peaks)
             peakPreData.insert(p);
     }
 
@@ -197,7 +197,7 @@ namespace directag
 			for( int j=0; r_iItr != intenSortedPeakPreData.rend() && j < numFragments; ++j, ++r_iItr )
 			{
 				double mz = r_iItr->second;
-				double inten = r_iItr->first;
+				float inten = r_iItr->first;
 				peakPreData.insert( peakPreData.end(), make_pair( mz, inten ) );
 				peakData[ mz ].intensityRank = peakPreData.size();
 				peakData[ mz ].intensity = inten;

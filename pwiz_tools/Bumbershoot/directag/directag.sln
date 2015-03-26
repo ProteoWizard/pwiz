@@ -1,9 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "directag", "directag.vcproj", "{45679AE1-A904-4857-AF5F-9260B3DEFCA8}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "directag", "directag.vcxproj", "{45679AE1-A904-4857-AF5F-9260B3DEFCA8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freicore", "freicore\freicore.vcproj", "{566C3934-3217-403D-A29F-7013702332D1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freicore", "freicore\freicore.vcxproj", "{566C3934-3217-403D-A29F-7013702332D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

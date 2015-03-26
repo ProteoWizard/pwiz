@@ -29,7 +29,7 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
 #include "directagVersion.hpp"
-#include <boost/lockfree/fifo.hpp>
+#include <boost/lockfree/queue.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -43,7 +43,7 @@ namespace freicore
 namespace directag
 {
     SpectraList                         spectra;
-    boost::lockfree::fifo<Spectrum*>    taggingTasks;
+    boost::lockfree::queue<Spectrum*>   taggingTasks;
     TaggingStatistics                   taggingStatistics;
     PeakFilteringStatistics             peakStatistics;
     shared_ptr<RunTimeConfig>           rtConfig;
@@ -168,7 +168,7 @@ namespace directag
             Spectrum* taggingTask;
 	        while( true )
 	        {
-                if (!taggingTasks.dequeue(&taggingTask))
+                if (!taggingTasks.pop(taggingTask))
 			        break;
 
 			    Spectrum* s = taggingTask;
@@ -190,7 +190,7 @@ namespace directag
 		float maxPeakSpace = 0;
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
         {
-			taggingTasks.enqueue(*sItr);
+			taggingTasks.push(*sItr);
 			if( (*sItr)->totalPeakSpace > maxPeakSpace )
 				maxPeakSpace = (*sItr)->totalPeakSpace;
         }
