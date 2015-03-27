@@ -22,7 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Threading;
+using SkylineRunner.Properties;
 
 namespace SkylineRunner
 {
@@ -38,34 +40,41 @@ namespace SkylineRunner
 
         public Program(IEnumerable<string> args)
         {
-            const string skylineAppName = "Skyline";
-            string skylinePath = "\"" + Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
-            skylinePath += "\\Programs\\MacCoss Lab, UW\\" + skylineAppName + ".appref-ms" + "\"";
-
-            string guidSuffix = string.Format("-{0}", Guid.NewGuid());
-            var psiExporter = new ProcessStartInfo(@"cmd.exe")
+            const string skylineAppName = "Skyline"; // Not L10N
+            string[] possibleSkylinePaths = ListPossibleSkylineShortcutPaths(skylineAppName);
+            string skylinePath = possibleSkylinePaths.FirstOrDefault(File.Exists);
+            if (null == skylinePath)
+            {
+                Console.WriteLine(Resources.Program_Program_Error__Unable_to_find_Skyline_program_at_any_of_the_following_locations_);
+                foreach (var path in possibleSkylinePaths)
+                {
+                    Console.WriteLine(path);
+                }
+                return;
+            }
+            string guidSuffix = string.Format("-{0}", Guid.NewGuid()); // Not L10N
+            var psiExporter = new ProcessStartInfo(@"cmd.exe") // Not L10N
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                Arguments = String.Format("/c {0} CMD{1}", skylinePath, guidSuffix)
+                Arguments = String.Format("/c \"{0}\" CMD{1}", skylinePath, guidSuffix) // Not L10N
             };
-
             Process.Start(psiExporter);
 
-            string inPipeName = "SkylineInputPipe" + guidSuffix;
+            string inPipeName = "SkylineInputPipe" + guidSuffix; // Not L10N
             using (var serverStream = new NamedPipeServerStream(inPipeName))
             {
                 if(!WaitForConnection(serverStream, inPipeName))
                 {
-                    Console.WriteLine("Error: Could not connect to Skyline.");
-                    Console.WriteLine("Make sure you have a valid {0} installation.", skylineAppName);
+                    Console.WriteLine(Resources.Program_Program_Error__Could_not_connect_to_Skyline_);
+                    Console.WriteLine(Resources.Program_Program_Make_sure_you_have_a_valid__0__installation_, skylineAppName);
                     return;
                 }
 
                 using (StreamWriter sw = new StreamWriter(serverStream))
                 {
                     // Send the directory of SkylineRunner to Skyline
-                    sw.WriteLine("--dir=" + Directory.GetCurrentDirectory());
+                    sw.WriteLine("--dir=" + Directory.GetCurrentDirectory()); // Not L10N
 
                     foreach (string arg in args)
                     {
@@ -74,7 +83,7 @@ namespace SkylineRunner
                 }
             }
 
-            using (var pipeStream = new NamedPipeClientStream("SkylineOutputPipe" + guidSuffix))
+            using (var pipeStream = new NamedPipeClientStream("SkylineOutputPipe" + guidSuffix)) // Not L10N
             {
                 // The connect function will wait 5s for the pipe to become available
                 // If that is not acceptable specify a maximum waiting time (in ms)
@@ -84,8 +93,8 @@ namespace SkylineRunner
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Error: Could not connect to Skyline.");
-                    Console.WriteLine("Make sure you have a valid {0} installation.", skylineAppName);
+                    Console.WriteLine(Resources.Program_Program_Error__Could_not_connect_to_Skyline_);
+                    Console.WriteLine(Resources.Program_Program_Make_sure_you_have_a_valid__0__installation_, skylineAppName);
                     return;
                 }
 
@@ -139,6 +148,17 @@ namespace SkylineRunner
                 }
             }
             return true;
+        }
+
+        private static string[] ListPossibleSkylineShortcutPaths(string skylineAppName)
+        {
+            string programsFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
+            string shortcutFilename = skylineAppName + ".appref-ms"; // Not L10N
+            return new[]
+            {
+                Path.Combine(Path.Combine(programsFolderPath, "MacCoss Lab, UW"), shortcutFilename), // Not L10N
+                Path.Combine(Path.Combine(programsFolderPath, skylineAppName), shortcutFilename),
+            };
         }
     }
 }
