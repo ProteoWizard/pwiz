@@ -357,6 +357,10 @@ namespace pwiz.Skyline.Controls.Graphs
             catch (OperationCanceledException)
             {
             }
+            catch (Exception x)
+            {
+                Program.ReportException(x);
+            }
         }
 
         /// <summary>

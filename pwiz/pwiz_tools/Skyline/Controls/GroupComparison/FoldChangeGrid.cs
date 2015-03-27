@@ -26,6 +26,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -50,6 +51,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 toolStripButtonChangeSettings.Visible =
                     !string.IsNullOrEmpty(FoldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
                 FoldChangeBindingSource.ViewContext.BoundDataGridView = DataboundGridControl.DataGridView;
+                var skylineWindow = FoldChangeBindingSource.GroupComparisonModel.DocumentContainer as SkylineWindow;
+                if (null != skylineWindow)
+                {
+                    DataGridViewPasteHandler.Attach(skylineWindow, DataboundGridControl.DataGridView);
+                }
             }
         }
 
@@ -58,6 +64,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (null != FoldChangeBindingSource)
             {
                 FoldChangeBindingSource.ViewContext.BoundDataGridView = null;
+                databoundGridControl.BindingListSource = null;
             }
             base.OnHandleDestroyed(e);
         }

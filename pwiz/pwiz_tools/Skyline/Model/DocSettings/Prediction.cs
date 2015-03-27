@@ -879,15 +879,7 @@ namespace pwiz.Skyline.Model.DocSettings
             public int Index { get; private set; }
             public int CompareTo(DeltaIndex other)
             {
-                if (Delta > other.Delta)
-                {
-                    return -1;
-                }
-                if (Delta == other.Delta)
-                {
-                    return 0;
-                }
-                return 1;
+                return -Delta.CompareTo(other.Delta);
             }
         }
     }
