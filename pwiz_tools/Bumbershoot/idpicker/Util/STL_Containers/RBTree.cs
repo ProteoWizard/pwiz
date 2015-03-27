@@ -38,29 +38,36 @@
 // $Id$
 //
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-
 namespace System.Collections.Generic
 {
 
 	internal delegate void RBTreeModifiedHandler();
 
+    /// <summary>
+    /// Allows using a Comparison&lt;T&gt; object as an object that implemented IComparer&lt;T&gt;
+    /// </summary>
     public class ComparisonForwarder<T> : IComparer<T>
     {
+        /// <summary>
+        /// Constructs a ComparisonForwarder that forwards calls to Compare() to the given comparison predicate.
+        /// </summary>
         public ComparisonForwarder (Comparison<T> comparison) { Comparison = comparison; }
+
+        /// <summary>
+        /// The comparison predicate used by this instance.
+        /// </summary>
         public Comparison<T> Comparison { get; private set; }
+
+        /// <summary>
+        /// Compares two T values using the comparison predicate.
+        /// </summary>
         public int Compare (T x, T y) { return Comparison(x, y); }
     }
 
-    /// <remarks>
-	/// RBTree is implemented using black-red binary trees. The
-	/// algorithms follows the indications given in the textbook
-	/// "Introduction to Algorithms" Thomas H. Cormen, Charles E. 
-	/// Leiserson, Ronald L. Rivest
-	/// </remarks>
+    /// <summary>
+	/// RBTree is implemented using black-red binary trees. The algorithms follows the indications given in the textbook
+	/// "Introduction to Algorithms" Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest
+	/// </summary>
 	public class RBTree<T> : ICollection<T>, IEnumerable<T>
 	{
 		/// <summary>
@@ -78,29 +85,27 @@ namespace System.Collections.Generic
         /// </summary>
         public IComparer<T> Comparer { get; protected set; }
 
-        /// <summary>
-		/// Store the lock for multiple-reader access and single-writer access.
-		/// </summary>
+        // <summary>
+		// Store the lock for multiple-reader access and single-writer access.
+		// </summary>
 		//private ReaderWriterLock rwLock;
 
 		/// <summary>
-		/// Initializes an new instance of Collections.System.RBTree
+		/// Initializes a new instance of Collections.System.RBTree
 		/// class that is empty. A default comparer will be used to
 		/// compare the elements added to the RBTree.
 		/// </summary>
 		public RBTree()
 		{
-			Comparer = System.Collections.Generic.Comparer<T>.Default;
+			Comparer = Comparer<T>.Default;
 			Initialize();
 		}
 
 		/// <summary>
-		/// Initializes an new instance of Collections.System.RBTree
-		/// class that is empty.
+        /// Initializes an empty RBTree instance.
 		/// </summary>
 		/// <param name="comp">
-		/// comp represents the IComparer elements which will be used to
-		/// sort the elements in RBTree.
+		/// comp represents the IComparer elements which will be used to sort the elements in RBTree.
 		/// </param>
 		public RBTree(IComparer<T> comp)
 		{
@@ -108,6 +113,9 @@ namespace System.Collections.Generic
 			Initialize();
         }
 
+        /// <summary>
+        /// Initializes a RBTree by copying elements from another RBTree, using the given comparer.
+        /// </summary>
         public RBTree (RBTree<T> otherTree, IComparer<T> comp)
         {
             Comparer = comp;
@@ -115,17 +123,27 @@ namespace System.Collections.Generic
             Copy(otherTree);
         }
 
+        /// <summary>
+        /// Initializes an empty RBTree instance using the given comparison predicate.
+        /// </summary>
+        /// <param name="comp"></param>
         public RBTree (Comparison<T> comp)
         {
             Comparer = new ComparisonForwarder<T>(comp);
             Initialize();
         }
 
+        /// <summary>
+        /// Initializes a RBTree by copying elements from another RBTree, using the given comparison predicate.
+        /// </summary>
         public RBTree (RBTree<T> otherTree, Comparison<T> comp) : this(comp)
         {
             Copy(otherTree);
         }
 
+        /// <summary>
+        /// Initializes a RBTree by copying elements from another RBTree, using the same comparer.
+        /// </summary>
         public RBTree( RBTree<T> otherTree ) : this()
 		{
 			Copy( otherTree );
@@ -289,6 +307,9 @@ namespace System.Collections.Generic
 			}
 		}
 
+        /// <summary>
+        /// A pair whose first element is a reference to either a newly inserted key-value pair or an existing one, and the second element is a boolean storing whether the insert actually happened.
+        /// </summary>
 		public class InsertResult
 		{
 			internal InsertResult( T element, bool wasInserted )
@@ -297,6 +318,9 @@ namespace System.Collections.Generic
 				m_WasInserted = wasInserted;
 			}
 
+            /// <summary>
+            /// Returns the element, either newly inserted or a previously existing element.
+            /// </summary>
 			public T Element
 			{
 				get
@@ -304,7 +328,10 @@ namespace System.Collections.Generic
 					return m_Element;
 				}
 			}
-
+            
+            /// <summary>
+            /// Returns true if the element was inserted (i.e. the key was not already in the tree).
+            /// </summary>
 			public bool WasInserted
 			{
 				get
@@ -437,6 +464,9 @@ namespace System.Collections.Generic
 			return rv;
 		}
 
+        /// <summary>
+        /// Attempts to add an element in the tree, but does nothing if the element already exists.
+        /// </summary>
 		public void Add( T x )
 		{
 			Insert( x );
@@ -614,7 +644,7 @@ namespace System.Collections.Generic
 			}
 
 			/// <summary>
-			/// Advances the RBTreeEnumerator the next element of the RBTree.
+			/// Advances the RBTreeEnumerator to the next element of the RBTree.
 			/// Returns whether the move was possible.
 			/// </summary>
 			public bool MoveNext()
@@ -644,6 +674,10 @@ namespace System.Collections.Generic
 				return current != null;
 			}
 
+            /// <summary>
+            /// Advances the RBTreeEnumerator to the previous element of the RBTree.
+            /// Returns whether the move was possible.
+            /// </summary>
 			public bool MovePrev()
 			{
 				if( !isValid ) throw new InvalidOperationException( "The RBTree was modified after the enumerator was created" );
@@ -685,6 +719,9 @@ namespace System.Collections.Generic
 				}
 			}
 
+            /// <summary>
+            /// Returns true iff the enumerator points at a valid element. If it is false, it may mean the enumerator has not been initialized, or it can be considered pointing at the "end" of the RBTree.
+            /// </summary>
 			public bool IsValid
 			{
 				get
@@ -695,6 +732,9 @@ namespace System.Collections.Generic
 				}
 			}
 
+            /// <summary>
+            /// Does nothing.
+            /// </summary>
 			public void Dispose()
 			{
 			}
@@ -749,6 +789,9 @@ namespace System.Collections.Generic
 			return (IEnumerator) GetEnumerator();
 		}
 
+        /// <summary>
+        /// FOR TESTING: returns the number of times an RBTreeEnumerator can be advanced, which should be equal to the other Count property.
+        /// </summary>
 		public int EnumeratedCount
 		{
 			get
@@ -786,6 +829,9 @@ namespace System.Collections.Generic
 			}
 		}
 
+        /// <summary>
+        /// Removes the element pointed to by the given enumerator; this allows not having to redo the element search.
+        /// </summary>
         public void Remove( Enumerator x )
         {
             if( !x.IsValid )
@@ -794,6 +840,10 @@ namespace System.Collections.Generic
             RemoveRBTreeNode( x.CurrentNode );
         }
 
+        /// <summary>
+        /// Returns an enumerator to the first element greater than or equal to the given element
+        /// (i.e. the first position where the element could be inserted without violating ordering).
+        /// </summary>
 		public Enumerator LowerBound( T x )
 		{
 			//rwLock.AcquireReaderLock( Timeout.Infinite );
@@ -806,6 +856,10 @@ namespace System.Collections.Generic
 			}
 		}
 
+        /// <summary>
+        /// Returns an enumerator to the first element greater than the given element, or an invalid enumerator if the element is greater than all others in the map
+        /// (i.e. the last position where the element could be inserted without violating ordering).
+        /// </summary>
 		public Enumerator UpperBound( T x )
 		{
 			//rwLock.AcquireReaderLock( Timeout.Infinite );
@@ -826,6 +880,9 @@ namespace System.Collections.Generic
 			return node;
 		}
 
+        /// <summary>
+        /// Returns an enumerator for the given element if it is in the map, or an invalid enumerator if it's not.
+        /// </summary>
 		public Enumerator Find( T x )
 		{
 			//rwLock.AcquireReaderLock( Timeout.Infinite );
