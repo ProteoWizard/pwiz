@@ -72,7 +72,20 @@ namespace pwiz.Skyline.ToolsUI
             toolStoreItem.IconLoadComplete = null;
             if (toolStoreItem.IconDownloading)
             {
-                toolStoreItem.IconLoadComplete = () => Invoke(new Action(() => pictureBoxTool.Image = toolStoreItem.ToolImage));
+                toolStoreItem.IconLoadComplete = () =>
+                {
+                    try
+                    {
+                        if (IsHandleCreated)
+                        {
+                            Invoke(new Action(() => pictureBoxTool.Image = toolStoreItem.ToolImage));
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore
+                    }
+                };
             }
             pictureBoxTool.Image = toolStoreItem.ToolImage;
             textBoxOrganization.Text = toolStoreItem.Organization;
@@ -491,13 +504,20 @@ namespace pwiz.Skyline.ToolsUI
 
         protected void DownloadIconDone(object sender, DownloadDataCompletedEventArgs downloadDataCompletedEventArgs)
         {
-            using (MemoryStream ms = new MemoryStream(downloadDataCompletedEventArgs.Result))
+            try
             {
-                ToolImage = Image.FromStream(ms);
+                using (MemoryStream ms = new MemoryStream(downloadDataCompletedEventArgs.Result))
+                {
+                    ToolImage = Image.FromStream(ms);
+                }
+                IconDownloading = false;
+                if (IconLoadComplete != null)
+                    IconLoadComplete();
             }
-            IconDownloading = false;
-            if (IconLoadComplete != null)
-                IconLoadComplete();
+            catch (Exception exception)
+            {
+                Program.ReportException(exception);
+            }
         }
     }
 
