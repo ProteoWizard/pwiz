@@ -224,9 +224,15 @@ namespace pwiz.Skyline.Model.Results
                 double? minRT = null;
                 foreach (var fp in FilterPairs)
                 {
-                    if ((fp.MaxTime ?? double.MinValue) > (maxRT ?? double.MinValue))
+                    if (!fp.MaxTime.HasValue || !fp.MinTime.HasValue)
+                    {
+                        maxRT = null;
+                        minRT = null;
+                        break;
+                    }
+                    if (fp.MaxTime.Value > (maxRT ?? double.MinValue))
                         maxRT = fp.MaxTime.Value;
-                    if ((fp.MinTime ?? double.MaxValue) < (minRT ?? double.MaxValue))
+                    if (fp.MinTime.Value < (minRT ?? double.MaxValue))
                         minRT = fp.MinTime.Value;  
                 }
                 if (maxRT.HasValue)
