@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestA.Results
         public void FullScanFilterTest()
         {
             List<SrmDocument> docCheckpoints;
-            DoFullScanFilterTest(false, false, out docCheckpoints);
+            DoFullScanFilterTest(false, false, false, out docCheckpoints);
         }
 
         [TestMethod]
@@ -53,14 +53,26 @@ namespace pwiz.SkylineTestA.Results
         {
             List<SrmDocument> docCheckpoints;
             List<SrmDocument> docCheckpointsSM;
-            DoFullScanFilterTest(true, true, out docCheckpointsSM);
-            DoFullScanFilterTest(false, true, out docCheckpoints);
+            DoFullScanFilterTest(true, false, true, out docCheckpointsSM);
+            DoFullScanFilterTest(false, false, true, out docCheckpoints);
 
-            for (var i=0; i < docCheckpoints.Count; i++)
+            for (var i = 0; i < docCheckpoints.Count; i++)
                 CompareDocumentTransitions(docCheckpoints[i], docCheckpointsSM[i]);
         }
 
-        private void DoFullScanFilterTest(bool asSmallMolecules, bool dropMultipleCharges,
+        [TestMethod]
+        public void FullScanFilterTestAsSmallMoleculeMasses()
+        {
+            List<SrmDocument> docCheckpoints;
+            List<SrmDocument> docCheckpointsSM;
+            DoFullScanFilterTest(true, true, true, out docCheckpointsSM);
+            DoFullScanFilterTest(false, false, true, out docCheckpoints);
+
+            for (var i = 0; i < docCheckpointsSM.Count; i++)
+                CompareDocumentTransitions(docCheckpoints[i], docCheckpointsSM[i]);
+        }
+
+        private void DoFullScanFilterTest(bool asSmallMolecules, bool smallMoleculesAsMasses, bool dropMultipleCharges,
             out List<SrmDocument> docCheckpoints)
         {
             docCheckpoints = new List<SrmDocument>();
@@ -71,7 +83,7 @@ namespace pwiz.SkylineTestA.Results
             var expectedPepCount = 7;
             var expectedTransGroupCount = 7;
             var expectedTransCount = 49;
-            var doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules);
+            var doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
 
             // Import the first RAW file (or mzML for international)
@@ -100,7 +112,7 @@ namespace pwiz.SkylineTestA.Results
             expectedPepCount = 3;
             expectedTransGroupCount = 3;
             expectedTransCount = 21;
-            doc = InitFullScanDocument(docPath, 1, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules);
+            doc = InitFullScanDocument(docPath, 1, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
             docCheckpoints.Add(doc);
             Assert.AreEqual(FullScanMassAnalyzerType.orbitrap, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             // Make sure saving this type of document works
@@ -117,7 +129,7 @@ namespace pwiz.SkylineTestA.Results
             expectedPepCount = 3;
             expectedTransGroupCount = 4;
             expectedTransCount = 32;
-            doc = InitFullScanDocument(docPath, 3, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules);
+            doc = InitFullScanDocument(docPath, 3, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             docCheckpoints.Add(doc);
@@ -179,13 +191,16 @@ namespace pwiz.SkylineTestA.Results
                 }
             }
 
+            if (asSmallMolecules && smallMoleculesAsMasses)
+                return; // Can't work with isotope distributions when we don't have ion formulas
+
 
             // Import FT data with only MS1
             docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
             expectedPepCount = 2;
             expectedTransGroupCount = 2;
             expectedTransCount = 2;
-            doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules);
+            doc = InitFullScanDocument(docPath, 2, ref expectedPepCount, ref expectedTransGroupCount, ref expectedTransCount, dropMultipleCharges, asSmallMolecules, smallMoleculesAsMasses);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             var docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
@@ -267,7 +282,7 @@ namespace pwiz.SkylineTestA.Results
             Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
         }
 
-        private static SrmDocument InitFullScanDocument(string docPath, int prot, ref int pep, ref int prec, ref int tran, bool dropMultipleCharges, bool asSmallMolecules)
+        private static SrmDocument InitFullScanDocument(string docPath, int prot, ref int pep, ref int prec, ref int tran, bool dropMultipleCharges, bool asSmallMolecules, bool smallMoleculesAsMasses)
         {
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             int? expectedRevisionNumber = 0;
@@ -319,7 +334,11 @@ namespace pwiz.SkylineTestA.Results
                     }
                 }
                 var refine = new RefinementSettings();
-                doc = refine.ConvertToSmallMolecules(doc);
+                var oldDoc = doc;
+                AssertEx.Serializable(oldDoc);
+                doc = refine.ConvertToSmallMolecules(doc, smallMoleculesAsMasses);
+                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(oldDoc, doc);
+                AssertEx.Serializable(doc);
                 expectedRevisionNumber = null;
 
             }

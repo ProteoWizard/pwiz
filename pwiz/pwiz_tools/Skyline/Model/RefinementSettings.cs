@@ -678,6 +678,11 @@ namespace pwiz.Skyline.Model
                                     transitionCustomIon = new DocNodeCustomIon(mass, mass, // We can't really get at mono vs average mass from m/z, but for test purposes this is fine
                                         transition.Transition.FragmentIonName);
                                 }
+                                if (massesOnly)
+                                {
+                                    // Discard the formula if we're testing the use of mass-only target specification
+                                    transitionCustomIon = new DocNodeCustomIon(transitionCustomIon.MonoisotopicMass, transitionCustomIon.AverageMass);
+                                }
 
                                 var newTransition = new Transition(newTransitionGroup, ionType,
                                     null, transition.Transition.MassIndex, transition.Transition.Charge, null,
