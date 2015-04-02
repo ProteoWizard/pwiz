@@ -39,11 +39,30 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void TestImportSim()
         {
+            DoTestImportSim(false);
+        }
+
+        [TestMethod]
+        public void TestImportSimAsSmallMolecules()
+        {
+            DoTestImportSim(true);
+        }
+
+        private void DoTestImportSim(bool asSmallMolecules)
+        {
+            TestSmallMolecules = false; // Don't need that magic extra node
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+
+            var pepdoc = doc;
+            if (asSmallMolecules)
+            {
+                var refine = new RefinementSettings();
+                doc = refine.ConvertToSmallMolecules(pepdoc);
+            }
 
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
 
@@ -58,7 +77,7 @@ namespace pwiz.SkylineTestA.Results
             docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 3);
 
             // Check expected Mz range.
-            foreach (var nodeTran in docContainer.Document.PeptideTransitions)
+            foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
                 if (nodeTran.Results[0] == null)

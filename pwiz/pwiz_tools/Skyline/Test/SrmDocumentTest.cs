@@ -209,7 +209,7 @@ namespace pwiz.SkylineTest
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
-                                  ExportMethodType.Standard);
+                                  ExportMethodType.Standard, false);
             Assert.AreEqual(1, count);
             count = EqualCsvs(DOC_0_1_PEPTIDES_NO_EMPTY, 0, CreateAbiExporters, ExportStrategy.Buckets, 1, 6,
                               ExportMethodType.Standard);
@@ -223,29 +223,42 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExportImportTest()
         {
+            DoDocumentExportImportTest(false);
+        }
+
+        [TestMethod]
+        public void DocumentExportImportTestAsSmallMolecules()
+        {
+            DoDocumentExportImportTest(true);
+        }
+
+        public void DoDocumentExportImportTest(bool asSmallMolecules)
+        {
+            TestSmallMolecules = false; // We wouldn't expect a mixed peptide and non-peptide mass list to work.
+
             int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
-                                  ExportMethodType.Standard);
+                                  ExportMethodType.Standard, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateAgilentExporter, ExportStrategy.Single, 2, null,
-                                  ExportMethodType.Standard);
+                                  ExportMethodType.Standard, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Standard);
+                              ExportMethodType.Standard, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Scheduled);
+                              ExportMethodType.Scheduled, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Standard);
+                              ExportMethodType.Standard, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Scheduled);
+                              ExportMethodType.Scheduled, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Standard);
+                              ExportMethodType.Standard, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Scheduled);
+                              ExportMethodType.Scheduled, asSmallMolecules);
             Assert.AreEqual(1, count);
         }
 
@@ -310,10 +323,14 @@ namespace pwiz.SkylineTest
 
         private static int ExportAll(string xml, int countFields, CreateExporter exporters,
                                      ExportStrategy strategy, int minTransition, int? maxTransition,
-                                     ExportMethodType methodType)
+                                     ExportMethodType methodType, bool asSmallMolecules)
         {
             SrmDocument actual = AssertEx.Deserialize<SrmDocument>(xml);
-
+            if (asSmallMolecules)
+            {
+                var refine = new RefinementSettings();
+                actual = refine.ConvertToSmallMolecules(actual);
+            }
             return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType);
         }
 

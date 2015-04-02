@@ -43,6 +43,19 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void AsymmetricIsolationTest()
         {
+            DoAsymmetricIsolationTest(false);
+        }
+
+        [TestMethod]
+        public void AsymmetricIsolationTestAsSmallMolecules()
+        {
+            DoAsymmetricIsolationTest(true);
+        }
+
+        public void DoAsymmetricIsolationTest(bool asSmallMolecules)
+        {
+            TestSmallMolecules = false;  // We test small molecules explicitly in this test
+
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -50,7 +63,13 @@ namespace pwiz.SkylineTestA.Results
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
+            if (asSmallMolecules)
+            {
+                var refine = new RefinementSettings();
+                doc = refine.ConvertToSmallMolecules(doc);
+            }
+            var expectedMoleculeCount = asSmallMolecules ? 2 : 1;  // Different labels, different ion formulas
+            AssertEx.IsDocumentState(doc, null, 1, expectedMoleculeCount, 2, 4);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitial.IsEnabledMsMs);
             Assert.AreEqual(FullScanAcquisitionMethod.DIA, fullScanInitial.AcquisitionMethod);
@@ -66,10 +85,11 @@ namespace pwiz.SkylineTestA.Results
 
             {
                 // Import with symmetric isolation window
-                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.PeptideTransitionGroups.First();
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
+                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
                 Assert.AreEqual(0.25, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
@@ -84,10 +104,11 @@ namespace pwiz.SkylineTestA.Results
                 AssertEx.Serializable(docAsym);
                 Assert.IsTrue(docContainer.SetDocument(docAsym, doc, false));
 
-                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.PeptideTransitionGroups.First();
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
+                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
                 Assert.AreEqual(1.05, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
@@ -107,10 +128,11 @@ namespace pwiz.SkylineTestA.Results
                 AssertEx.Serializable(docPrespecified);
                 Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
 
-                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.PeptideTransitionGroups.First();
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
+                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
                 Assert.AreEqual(1.05, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
@@ -130,10 +152,11 @@ namespace pwiz.SkylineTestA.Results
                 AssertEx.Serializable(docPrespecified);
                 Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
 
-                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                nodeGroup = docResults.PeptideTransitionGroups.First();
+                SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
                 ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                 // Asymmetric should be a lot closer to 1.0
+                if (!asSmallMolecules) // TODO bspratt- proper isoptope label support for small molecules
                 Assert.AreEqual(1.05, ratio, 0.05);
 
                 // Revert to original document, and get rid of results cache
@@ -155,7 +178,7 @@ namespace pwiz.SkylineTestA.Results
 
                 try
                 {
-                    docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
+                    docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
                     Assert.Fail("Expected ambiguous isolation targets.");
                 }
                 catch (Exception x)
@@ -180,7 +203,7 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(docContainer.SetDocument(docOneWindow, doc, false));
 
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 0, 2, 0);
-                nodeGroup = docResults.PeptideTransitionGroups.First();
+                nodeGroup = docResults.MoleculeTransitionGroups.First();
                 Assert.IsNull(nodeGroup.Results[0][0].Ratio);
 
                 // Revert to original document, and get rid of results cache

@@ -795,5 +795,75 @@ namespace pwiz.SkylineTestUtil
             var sb = new StringBuilder();
             return sb.AppendLine().AppendLine(text).ToString();
         }
+
+        /// <summary>
+        /// Compares a peptide document with a small molecule document which is presumed to be
+        /// derived from the peptide document via RefinementSettings.ConvertToSmallMolecules()
+        /// </summary>
+        public static void ConvertedSmallMoleculeDocumentIsSimilar(SrmDocument document, SrmDocument converted)
+        {
+            var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator();
+            foreach (var peptideGroupDocNode in document.MoleculeGroups)
+            {
+                convertedMoleculeGroupsIterator.MoveNext();
+                var convertedMoleculeGroupDocNode = convertedMoleculeGroupsIterator.Current;
+                var convertedMoleculesIterator = convertedMoleculeGroupDocNode.Molecules.GetEnumerator();
+                IEnumerator<TransitionGroupDocNode> convertedTransitionGroupIterator = null;
+                foreach (var mol in peptideGroupDocNode.Molecules)
+                {
+                    var precursorCharge = 0;
+                    var isotopeLabelType = IsotopeLabelType.light;
+                    foreach (var transitionGroupDocNode in mol.TransitionGroups)
+                    {
+                        var transitionGroup = transitionGroupDocNode.TransitionGroup;
+                        if (transitionGroupDocNode.PrecursorCharge != precursorCharge ||
+                             !Equals(isotopeLabelType, transitionGroup.LabelType))
+                        {
+                            // A change in charge or label means a new small molecule
+                            convertedMoleculesIterator.MoveNext();
+                            var convertedMol = convertedMoleculesIterator.Current;
+                            Assert.AreEqual(mol.Note, convertedMol.Note);
+                            Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
+                            Assert.AreEqual(mol.Rank, convertedMol.Rank);
+                            Assert.AreEqual(mol.Results, convertedMol.Results);
+                            Assert.AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
+                            Assert.AreEqual(mol.BestResult, convertedMol.BestResult);
+
+                            convertedTransitionGroupIterator = convertedMol.TransitionGroups.GetEnumerator();
+                            convertedTransitionGroupIterator.MoveNext();
+                            precursorCharge = transitionGroup.PrecursorCharge;
+                            isotopeLabelType = transitionGroup.LabelType;
+                        }
+                        if (convertedTransitionGroupIterator != null)
+                        {
+                            var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
+                            var convertedTransitionGroup = convertedTransitionGroupDocNode.TransitionGroup;
+                            Assert.AreEqual(transitionGroupDocNode.PrecursorCharge, convertedTransitionGroupDocNode.PrecursorCharge);
+                            Assert.AreEqual(transitionGroup.LabelType, convertedTransitionGroup.LabelType);
+                            Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz, 1.0E-6, "transitiongroup as small molecule");
+                            Assert.AreEqual(transitionGroupDocNode.IsotopeDist, convertedTransitionGroupDocNode.IsotopeDist);
+                            Assert.AreEqual(transitionGroupDocNode.Results, convertedTransitionGroupDocNode.Results);
+
+                            Assert.AreEqual(transitionGroup.PrecursorCharge, convertedTransitionGroup.PrecursorCharge);
+                            Assert.AreEqual(transitionGroup.LabelType, convertedTransitionGroup.LabelType);
+
+                            var convertedTransitionIterator = convertedTransitionGroupDocNode.Transitions.GetEnumerator();
+                            foreach (var transition in transitionGroupDocNode.Transitions)
+                            {
+                                convertedTransitionIterator.MoveNext();
+                                var convertedTransition = convertedTransitionIterator.Current;
+                                Assert.AreEqual(transition.Mz, convertedTransition.Mz, 1.0E-6, "transition as small molecule");
+                                Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
+                                Assert.AreEqual(transition.Results, convertedTransition.Results);
+                            }
+                            Assert.IsFalse(convertedTransitionIterator.MoveNext());
+                        }
+                    }
+                    Assert.IsFalse(convertedTransitionGroupIterator == null || convertedTransitionGroupIterator.MoveNext());
+                }
+                Assert.IsFalse(convertedMoleculesIterator.MoveNext());
+            }
+            Assert.IsFalse(convertedMoleculeGroupsIterator.MoveNext());
+        }
     }
 }

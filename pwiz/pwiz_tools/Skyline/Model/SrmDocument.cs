@@ -553,7 +553,8 @@ namespace pwiz.Skyline.Model
 
         private void CheckIsProteinMetadataComplete()
         {
-            var unsearched = (from pg in MoleculeGroups where pg.ProteinMetadata.NeedsSearch() select pg);
+            // Non proteomic molecules never do protein metadata searches
+            var unsearched = (from pg in MoleculeGroups where pg.IsProteomic && pg.ProteinMetadata.NeedsSearch() select pg);
             IsProteinMetadataPending = unsearched.Any();
         }
 

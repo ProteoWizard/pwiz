@@ -788,7 +788,8 @@ namespace pwiz.Skyline.Model
                             continue;
                         // Skip this node, if it is heavy and the update caused it to have the
                         // same m/z value as the light value.
-                        if (!nodeChanged.TransitionGroup.LabelType.IsLight)
+                        if (!nodeChanged.TransitionGroup.LabelType.IsLight &&
+                            !Peptide.IsCustomIon) // No mods on customs
                         {
                             double precursorMassLight = settingsNew.GetPrecursorMass(
                                 IsotopeLabelType.light, Peptide.Sequence, explicitMods);

@@ -181,7 +181,8 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(calcFilter, calcPredict))
             {
                 // Get the normal precursor m/z for filtering, so that light and heavy ion picks will match.
-                precursorMz = SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), PrecursorCharge);
+                if (!IsCustomIon)  // TODO bspratt proper heavy labeling for small molecules
+                    precursorMz = SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), PrecursorCharge);
             }
             if (!IsAvoidMismatchedIsotopeTransitions)
                 precursorMzAccept = precursorMz;

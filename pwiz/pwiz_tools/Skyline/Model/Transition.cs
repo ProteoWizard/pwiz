@@ -291,6 +291,11 @@ namespace pwiz.Skyline.Model
                     ? peptide.Sequence[(int)offset]
                     : peptide.Sequence[(int)offset + 1]);
             }
+            else
+            {
+                // caller may have passed in offset = group.Peptide.Length - 1, which for custom ions gives -1
+                CleavageOffset = 0;
+            }
             Validate();
         }
 

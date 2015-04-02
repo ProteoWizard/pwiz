@@ -232,16 +232,17 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void SetCsvFileClipboardText(string filePath)
+        protected static void SetCsvFileClipboardText(string filePath, bool hasHeader = false)
         {
-            SetClipboardText(GetCsvFileText(filePath));
+            SetClipboardText(GetCsvFileText(filePath, hasHeader));
         }
 
-        protected static string GetCsvFileText(string filePath)
+        protected static string GetCsvFileText(string filePath, bool hasHeader = false)
         {
+            string resultStr;
             if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
             {
-                return File.ReadAllText(filePath);
+                resultStr = File.ReadAllText(filePath);
             }
             else
             {
@@ -259,8 +260,13 @@ namespace pwiz.SkylineTestUtil
                     }
                     sb.AppendLine(fields.ToCsvLine());
                 }
-                return sb.ToString();
+                resultStr = sb.ToString();
             }
+            if (hasHeader)
+            {
+                resultStr = resultStr.Substring(resultStr.IndexOf('\n') + 1);
+            }
+            return resultStr;
         }
 
         protected static void SetExcelFileClipboardText(string filePath, string page, int columns, bool hasHeader)

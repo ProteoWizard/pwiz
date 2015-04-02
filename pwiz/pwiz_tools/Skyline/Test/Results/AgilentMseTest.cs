@@ -42,10 +42,27 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void AgilentMseChromatogramTest()
         {
+            DoAgilentMseChromatogramTest(false);
+        }
+
+        [TestMethod]
+        public void AgilentMseChromatogramTestAsSmallMolecules()
+        {
+            DoAgilentMseChromatogramTest(true);
+        }
+
+        public void DoAgilentMseChromatogramTest(bool asSmallMolecules)
+        {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestSmallMolecules = false; // We have an explicit test for that here
 
             string docPath;
             SrmDocument document = InitAgilentMseDocument(testFilesDir, out docPath);
+            if (asSmallMolecules)
+            {
+                var refine = new RefinementSettings();
+                document = refine.ConvertToSmallMolecules(document);
+            }
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
             var doc = docContainer.Document;
             var listChromatograms = new List<ChromatogramSet>();
@@ -59,7 +76,7 @@ namespace pwiz.SkylineTest.Results
 
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var results = document.Settings.MeasuredResults;
-            foreach (var pair in document.PeptidePrecursorPairs)
+            foreach (var pair in document.MoleculePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
@@ -69,7 +86,7 @@ namespace pwiz.SkylineTest.Results
 
             // now drill down for specific values
             int nPeptides = 0;
-            foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.Results[0] != null))
+            foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
             {
                 // expecting just one peptide result in this small data set
                 if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)

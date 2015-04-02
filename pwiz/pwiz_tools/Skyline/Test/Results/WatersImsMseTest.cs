@@ -71,14 +71,37 @@ namespace pwiz.SkylineTest.Results
             WatersImsMseChromatogramTest(DriftFilterType.library);
         }
 
-        private void WatersImsMseChromatogramTest(DriftFilterType mode)
+        [TestMethod]
+        public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMolecules()
+        {
+            WatersImsMseChromatogramTest(DriftFilterType.none, true);
+        }
+
+        /* TODO bspratt drift time libs for small molecules
+
+        [TestMethod]
+        public void WatersImsMsePredictedDriftTimesChromatogramTestAsSmallMolecules()
+        {
+            WatersImsMseChromatogramTest(DriftFilterType.predictor, true);
+        }
+
+        [TestMethod]
+        public void WatersImsMseLibraryDriftTimesChromatogramTestAsSmallMolecules()
+        {
+            WatersImsMseChromatogramTest(DriftFilterType.library, true);
+        }
+          
+         */
+
+        private void WatersImsMseChromatogramTest(DriftFilterType mode, bool asSmallMolecules = false)
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestSmallMolecules = false; // Don't need that extra magic node
 
             bool withDriftTimePredictor = (mode == DriftFilterType.predictor); // Load the doc that has a drift time predictor?
             bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
             string docPath;
-            SrmDocument document = InitWatersImsMseDocument(testFilesDir, withDriftTimePredictor ? "single_with_driftinfo.sky" : "single_no_driftinfo.sky", out docPath);
+            SrmDocument document = InitWatersImsMseDocument(testFilesDir, withDriftTimePredictor ? "single_with_driftinfo.sky" : "single_no_driftinfo.sky", asSmallMolecules, out docPath);
             AssertEx.IsDocumentState(document, withDriftTimePredictor ? 1 : 0, 1, 1, 1, 8); // Drift time lib load bumps the doc version
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
             var doc = docContainer.Document;
@@ -112,8 +135,8 @@ namespace pwiz.SkylineTest.Results
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
             var results = document.Settings.MeasuredResults;
-            Assert.AreEqual(1, document.PeptidePrecursorPairs.Count());
-            foreach (var pair in document.PeptidePrecursorPairs)
+            Assert.AreEqual(1, document.MoleculePrecursorPairs.Count());
+            foreach (var pair in document.MoleculePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
@@ -130,7 +153,7 @@ namespace pwiz.SkylineTest.Results
 
             // now drill down for specific values
             int nPeptides = 0;
-            foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.Results[0] != null))
+            foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
             {
                 // expecting just one peptide result in this small data set
                 if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
@@ -168,7 +191,7 @@ namespace pwiz.SkylineTest.Results
                         var document2 = (SrmDocument) documentSerializer.Deserialize(reader);
                         Assert.IsNotNull(document2);
                         var im = document.Settings.GetIonMobilities(new MsDataFilePath(path));
-                        var pep = document2.Peptides.First();
+                        var pep = document2.Molecules.First();
                         foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                         {
                             double windowDT;
@@ -186,7 +209,7 @@ namespace pwiz.SkylineTest.Results
             testFilesDir.Dispose();
         }
 
-        private static SrmDocument InitWatersImsMseDocument(TestFilesDir testFilesDir, string skyFile, out string docPath)
+        private static SrmDocument InitWatersImsMseDocument(TestFilesDir testFilesDir, string skyFile, bool asSmallMolecules, out string docPath)
         {
             docPath = testFilesDir.GetTestPath(skyFile);
             var consoleBuffer = new StringBuilder();
@@ -194,6 +217,11 @@ namespace pwiz.SkylineTest.Results
             var cmdline = new CommandLine(consoleOutput);
             Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
             SrmDocument doc = cmdline.Document;
+            if (asSmallMolecules)
+            {
+                var refine = new RefinementSettings();
+                doc = refine.ConvertToSmallMolecules(doc);
+            }
             return doc;
         }
     }
