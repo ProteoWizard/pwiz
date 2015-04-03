@@ -153,4 +153,7 @@
   <data name="SummaryMethod_Skyline_Skyline" xml:space="preserve">
     <value>Skyline</value>
   </data>
+  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
+    <value>Unable to find a column named '{0}'</value>
+  </data>
 </root>

@@ -235,24 +235,31 @@ namespace MSStatArgsCollector
     {
         public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
         {
+            const string conditionColumnName = "Condition"; // Not L10N
             // Split report (.csv file) by lines
             string[] lines = report.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            string[] fields = lines[0].ParseDsvFields(TextUtil.CsvSeparator);
-            int groupIndex = Array.IndexOf(fields, "Condition"); // Not L10N
+            string[] fields = lines[0].ParseCsvFields();
+            int groupIndex = Array.IndexOf(fields, conditionColumnName);
+            if (groupIndex < 0)
+            {
+                MessageBox.Show(parent, 
+                    string.Format(MSstatsResources.MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__,
+                    conditionColumnName));
+                return null;
+            }
 
             ICollection<string> groups = new HashSet<string>();
-            try
+            // The last line in the CSV file is empty, thus we compare length - 1 
+            for (int i = 1; i < lines.Length - 1; i++)
             {
-                // The last line in the CSV file is empty, thus we compare length - 1 
-                for (int i = 1; i < lines.Length - 1; i++)
+                try
                 {
-                    groups.Add(lines[i].ParseDsvFields(TextUtil.CsvSeparator)[groupIndex]);
+                    groups.Add(lines[i].ParseCsvFields()[groupIndex]);
                 }
-            }
-            catch
-            {
-                // File improperly formatted
-                return null;
+                catch
+                {
+                    // ignore
+                }
             }
 
             using (var dlg = new GroupComparisonUi(groups.ToArray(), oldArgs))

@@ -79,6 +79,15 @@ namespace MSStatArgsCollector {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find a column named &apos;{0}&apos;.
+        /// </summary>
+        internal static string MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__ {
+            get {
+                return ResourceManager.GetString("MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Negative values are not valid..
         /// </summary>
         internal static string SampleSizeUi_OkDialog_Negative_values_are_not_valid_ {
