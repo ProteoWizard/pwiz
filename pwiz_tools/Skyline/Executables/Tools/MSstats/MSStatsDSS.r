@@ -31,7 +31,7 @@ arguments<-commandArgs(trailingOnly=TRUE);
 cat("\n\n =======================================")
 cat("\n ** Reading the data for MSstats..... \n")
 
-raw<-read.csv(arguments[1],sep=";")
+raw<-read.csv(arguments[1])
 
 # remove the rows for iRT peptides
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
@@ -52,12 +52,12 @@ colnames(raw)[colnames(raw)=="FileName"]<-"Run"
 
 
 ## impute zero to NA
-raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
+#raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
 
 ## check result grid missing or not
 countna<-apply(raw,2, function(x) sum(is.na(x) | x==""))
 naname<-names(countna[countna!=0])
-naname<-naname[-which(naname %in% c("StandardType","Intensity"))]
+naname<-naname[-which(naname %in% c("StandardType","Intensity","Truncated"))]
 
 if(length(naname)!=0){
 	stop(message(paste("Some ",paste(naname,collapse=", ")," have no value. Please check \"Result Grid\" in View.",sep="")))
@@ -86,13 +86,13 @@ if(optionnormalize==3){ inputnormalize<-"globalStandards" }
 if(optionnormalize!=0 & optionnormalize!=1 & optionnormalize!=2 & optionnormalize!=3){ inputnormalize<-FALSE }
 
 
-inputmissingpeaks<-arguments[10]
+inputmissingpeaks<-arguments[8]
 #if(inputmissingpeaks=="TRUE")
 #{
 #  cat("\n Input missing peaks was checked! \n")
 #}
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE")))
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), summaryMethod = arguments[9], equalFeatureVar = (arguments[10] == "TRUE"),skylineReport=TRUE))
 
 if(class(quantData)!="try-error"){
 
@@ -106,12 +106,40 @@ if(class(quantData)!="try-error"){
 		finalfile<-paste(paste(filenaming,num,sep="-"),".csv",sep="")
 	}
 
-	write.csv(quantData,file=finalfile)
+	write.csv(quantData$ProcessedData,file=finalfile)
 	cat("\n Saved dataProcessedData.csv \n")
 }
 #else{
 #	stop(message("\n Error : Can't process the data. \n"))
 #}
+
+
+#=====================
+# Function: groupComparison
+# generate testing results of protein inferences across concentrations
+
+###### any comparison is fine in order to get variance component.
+
+alllevel<-levels(quantData$ProcessedData$GROUP_ORIGINAL)
+
+comparison<-matrix(rep(0,times=length(alllevel)), nrow=1)
+comparison[1]<-1
+comparison[2]<-(-1)
+row.names(comparison)<-c("Disease-Healthy")
+
+
+## then testing with inputs from users
+cat("\n\n ============================")
+cat("\n ** Getting variance components... \n \n")
+
+
+## here is the issues : labeled, and interference need to be binary, not character
+resultComparison<-try(groupComparison(contrast.matrix=comparison,data=quantData))
+
+if(class(resultComparison)=="try-error"){
+	cat("\n Error : Can't get variance components. \n")
+}
+
 
 #=====================
 # Function: designSampleSize
@@ -131,23 +159,10 @@ if(inputnsample=="") inputnsample<-TRUE
 
 # num of peptide?
 # cat("\n Number of Peptides per protein :  ")
-inputnpep<-arguments[4]
-#inputnpep<-readline()
-if(inputnpep=="TRUE") inputnpep<-TRUE
-if(inputnpep!="TRUE") inputnpep<-as.numeric(inputnpep)
-if(inputnpep=="") inputnpep<-TRUE
-
-# num of peptide?
-# cat("\n Number of Transitions per peptides :  ")
-inputntran<-arguments[5]
-#inputntran<-readline()
-if(inputntran=="TRUE") inputntran<-TRUE
-if(inputntran!="TRUE") inputntran<-as.numeric(inputntran)
-if(inputntran=="") inputntran<-TRUE
 
 # power?
 # cat("\n power : ")
-inputpower<-arguments[6]
+inputpower<-arguments[4]
 #inputpower<-readline()
 if(inputpower=="TRUE") inputpower<-TRUE
 if(inputpower!="TRUE") inputpower<-as.numeric(inputpower)
@@ -155,26 +170,37 @@ if(inputpower=="") inputpower<-TRUE
 
 # FDR?
 # cat("\n FDR : (Default is 0.05)")
-inputfdr<-arguments[7]
+inputfdr<-arguments[5]
 #inputfdr<-readline()
 if(inputfdr=="TRUE") inputfdr<-0.05
 inputfdr<-as.numeric(inputfdr)
 
 # desiredFC?
 # cat("\n lower desired Fold Change : (Default is 1.25) ")
-inputlower<-arguments[8]
+inputlower<-arguments[6]
 #inputlower<-readline()
 if(inputlower=="TRUE") inputlower<-1.25
 inputlower<-as.numeric(inputlower)
 
 #cat("\n upper desired Fold Change : (Default is 1.75)")
-inputupper<-arguments[9]
+inputupper<-arguments[7]
 #inputupper<-readline()
 if(inputupper=="TRUE") inputupper<-1.75
 inputupper<-as.numeric(inputupper)
 
 
-result.sample<-try(designSampleSize(data=quantData,numSample=inputnsample,numPep=inputnpep,numTran=inputntran,desiredFC=c(inputlower,inputupper),FDR=inputfdr,power=inputpower))
+## if t-test, can't sample size calculation
+countnull<-0
+
+for(k in 1:length(resultComparison$fittedmodel)){
+	if(is.null(resultComparison$fittedmodel[[k]])) countnull<-countnull+1
+}
+
+if(countnull==length(resultComparison$fittedmodel)){
+	stop(message("\n Can't calculate sample size with log sum method. \n"))
+}
+
+result.sample<-try(designSampleSize(data=resultComparison$fittedmodel,numSample=inputnsample,desiredFC=c(inputlower,inputupper),FDR=inputfdr,power=inputpower))
 #result.sample<-designSampleSize(data=quantData,numSample=TRUE,numPep=2,numTran=3,desiredFC=c(1.25,1.75),FDR=0.05,power=0.8)
 
 if(class(result.sample)!="try-error"){

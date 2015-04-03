@@ -5,9 +5,8 @@ options(warn=-1)
 
 cat("\n\n ================================================================")
 cat("\n ** Loading the required statistical software packages in R ..... \n \n")
-
 # load the library
-library(MSstats)
+library("MSstats")
 
 ## save sessionInfo as .txt file
 session<-sessionInfo()
@@ -17,20 +16,12 @@ sink()
 
 # Input data
 arguments<-commandArgs(trailingOnly=TRUE);
-
-##  C:\Users\Ijae\AppData\Local\Temp\MSstats_Group_Comparison_MSstats_Input.csv 1 -1 Disease-Healthy 1 TRUE TRUE R E TRUE TRUE11
- ##C:\Users\Ijae\AppData\Local\Temp\MSstats_Group_Comparison_MSstats_Input.csv 1 -1 D-H 1 TRUE TRUE R E TRUE FALSE11
-####                                                                       1   2     
-### test argument
-#cat("arguments--> ")
 #cat(arguments)
-#cat(length(arguments))
-#cat("\n")
 
 cat("\n\n =======================================")
 cat("\n ** Reading the data for MSstats..... \n")
 
-raw<-read.csv(arguments[1],sep=";")
+raw<-read.csv(arguments[1])
 
 # remove the rows for iRT peptides
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
@@ -52,12 +43,12 @@ colnames(raw)[colnames(raw)=="FileName"]<-"Run"
 
 
 ## impute zero to NA
-raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
+#raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
 
 ## check result grid missing or not
 countna<-apply(raw,2, function(x) sum(is.na(x) | x==""))
 naname<-names(countna[countna!=0])
-naname<-naname[-which(naname %in% c("PrecursorCharge","FragmentIon","ProductCharge","StandardType","Intensity"))]
+naname<-naname[-which(naname %in% c("PrecursorCharge","FragmentIon","ProductCharge","StandardType","Intensity","Truncated"))]
 
 if(length(naname)!=0){
 	stop(message(paste("Some ",paste(naname,collapse=", ")," have no value. Please check \"Result Grid\" in View.",sep="")))
@@ -75,7 +66,7 @@ cat("\n ** Data Processing for analysis..... \n")
 ## get length of command line argument array
 len<-length(arguments)
 
-optionnormalize<-arguments[len-6] ## 5th
+optionnormalize<-arguments[len-3] ## 5th
 
 ## first check name of global standard
 #if(optionnormalize==3 & is.null(standardpepname)){
@@ -90,13 +81,13 @@ if(optionnormalize==3){ inputnormalize<-"globalStandards" }
 if(optionnormalize!=0 & optionnormalize!=1 & optionnormalize!=2 & optionnormalize!=3){ inputnormalize<-FALSE }
 
 # missing peaks cbox
-inputmissingpeaks<-arguments[11] ## 11 th, last
+inputmissingpeaks<-arguments[len]
 #if(inputmissingpeaks=="TRUE")
 #{
 #  cat("\n Input missing peaks was checked! \n")
 #}
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE")))
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE"), summaryMethod=arguments[len-1], equalFeatureVar=("TRUE"==arguments[len-2]),skylineReport=TRUE))
 
 
 if(class(quantData)!="try-error"){
@@ -111,7 +102,7 @@ if(class(quantData)!="try-error"){
 		finalfile<-paste(paste(filenaming,num,sep="-"),".csv",sep="")
 	}
 
-	write.csv(quantData,file=finalfile)
+	write.csv(quantData$ProcessedData,file=finalfile)
 	cat("\n Saved dataProcessedData.csv \n")
 
 }
@@ -135,7 +126,7 @@ numcomparison<-1
 
 ## then, what comparisons?
 
-alllevel<-levels(quantData$GROUP_ORIGINAL)
+alllevel<-levels(quantData$ProcessedData$GROUP_ORIGINAL)
 
 comparison<-NULL
 
@@ -155,63 +146,15 @@ for(k in 1:numcomparison){
 	row.names(comparison)[k]<-inputrowname 
 }
 
-
-
 ## input for options
 ## cat("\n\n ** Enter your choices for model..... \n")
 
-# labeled or label-free?
-inputlabel<-arguments[6] ## 6th ## count from the end, because length of group level can be different.
-
-
-### about input, is it possible neither true nor false? 12022013 meena
-####if(inputlabel=="" | inputlabel=="T") inputlabel<-"TRUE"  : 12022013 meena
-####if(inputlabel=="F") inputlabel<-"FALSE" : 12022013 meena
-if(inputlabel!="TRUE" & inputlabel!="FALSE"){
-	## cat("\n Wrong input. will use the default=TRUE.\n")
-	inputlabel<-"TRUE"
-}
-
 ##Equal Variance Check Box
-equalvariance<-arguments[7] ## 7th
+#equalvariance<-arguments[len-2] ## 7th
 
-if(equalvariance!="TRUE" & equalvariance!="FALSE"){
-	equalvariance<-"TRUE"
-}
-
-
-
-# scope of biological replicate?
-inputbio<-arguments[8] ## 8th
-
-if(inputbio=="" | inputbio=="R") inputbio<-"restricted"
-if(inputbio=="E") inputbio<-"expanded"
-if(inputbio!="expanded" & inputbio!="restricted"){
-	##  cat("\n Wrong input. will use the default=restricted. \n")
-	inputbio<-"restricted" 
-}
-
-
-# scope of technical replicate?
-
-inputtech<-arguments[9] ## 9th
-
-if(inputtech=="" | inputtech=="E") inputtech<-"expanded"
-if(inputtech=="R") inputtech<-"restricted"
-if(inputtech!="expanded" & inputtech!="restricted"){
-	## cat("\n Wrong input. will use the default=expanded. \n")
-	inputtech<-"expanded" 
-}
-
-# interference or not?
-inputinfer<-arguments[10]
-
-if(inputinfer=="" | inputinfer=="T") inputinfer<-"TRUE"
-if(inputinfer=="F") inputinfer<-"FALSE"
-if(inputinfer!="TRUE" & inputinfer!="FALSE"){
-	## cat("\n Wrong input. will use the default=TRUE.\n")
-	inputinfer<-"TRUE"
-}
+#if(equalvariance!="TRUE" & equalvariance!="FALSE"){
+#	equalvariance<-"TRUE"
+#}
 
 
 ## then testing with inputs from users
@@ -219,7 +162,7 @@ cat("\n\n ============================")
 cat("\n ** Starting comparison... \n \n")
 
 ## here is the issues : labeled, and interference need to be binary, not character
-resultComparison<-try(groupComparison(contrast.matrix=comparison,data=quantData,labeled=inputlabel=="TRUE",scopeOfBioReplication=inputbio, scopeOfTechReplication=inputtech, interference=inputinfer=="TRUE", equalFeatureVar=equalvariance=="TRUE"))
+resultComparison<-try(groupComparison(contrast.matrix=comparison,data=quantData))
 
 if(class(resultComparison)!="try-error"){
 

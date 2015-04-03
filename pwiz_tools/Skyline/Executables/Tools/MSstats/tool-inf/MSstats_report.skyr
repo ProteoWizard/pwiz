@@ -1,21 +1,18 @@
 <?xml version="1.0"?>
 <ReportSpecList>
-  <revision index="1" />
-  <report name="MSstats Input">
-    <table name="T1">DbTransition</table>
-    <table name="T2">DbTransitionResult</table>
-    <select>
-      <column name="T1">Precursor.Peptide.Protein.Name</column>
-      <column name="T1">Precursor.Peptide.Sequence</column>
-      <column name="T1">Precursor.Charge</column>
-      <column name="T1">FragmentIon</column>
-      <column name="T1">ProductCharge</column>
-      <column name="T1">Precursor.IsotopeLabelType</column>
-      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_Condition</column>
-      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_BioReplicate</column>
-      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.FileName</column>
-      <column name="T2">Area</column>
-      <column name="T1">Precursor.Peptide.StandardType</column>
-    </select>
+  <report name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+    <column name="Precursor.Peptide.Protein.Name" />
+    <column name="Precursor.Peptide.Sequence" />
+    <column name="Precursor.Charge" />
+    <column name="FragmentIon" />
+    <column name="ProductCharge" />
+    <column name="Precursor.IsotopeLabelType" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Condition&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_BioReplicate&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.FileName" />
+    <column name="Results!*.Value.Area" />
+    <column name="Precursor.Peptide.StandardType" />
+    <column name="Results!*.Value.Truncated" />
+    <filter column="Results!*.Value" opname="isnotnullorblank" />
   </report>
 </ReportSpecList>

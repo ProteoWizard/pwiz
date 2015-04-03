@@ -23,12 +23,11 @@ arguments<-commandArgs(trailingOnly=TRUE);
 #cat(arguments)
 #cat("\n")
 
-
 cat("\n\n =======================================")
 cat("\n ** Reading the data for MSstats..... \n")
 
 
-raw<-read.csv(arguments[1],sep=";")
+raw<-read.csv(arguments[1])
 
 # remove the rows for iRT peptides
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
@@ -49,12 +48,12 @@ colnames(raw)[colnames(raw)=="FileName"]<-"Run"
 
 
 ## impute zero to NA
-raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
+#raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
 
 ## check result grid missing or not
 countna<-apply(raw,2, function(x) sum(is.na(x) | x==""))
 naname<-names(countna[countna!=0])
-naname<-naname[-which(naname %in% c("StandardType","Intensity"))]
+naname<-naname[-which(naname %in% c("StandardType","Intensity","Truncated"))]
 
 if(length(naname)!=0){
 	stop(message(paste("Some ",paste(naname,collapse=", ")," have no value. Please check \"Result Grid\" in View. \n",sep="")))
@@ -84,7 +83,7 @@ inputmissingpeaks<-arguments[3]
 #  cat("\n Input missing peaks was checked! \n")
 #}
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE")))
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE"), summaryMethod = arguments[4], equalFeatureVar=("TRUE"==arguments[5]),skylineReport=TRUE))
 
 if(class(quantData)!="try-error"){
 
@@ -98,7 +97,7 @@ if(class(quantData)!="try-error"){
 		finalfile<-paste(paste(filenaming,num,sep="-"),".csv",sep="")
 	}
 
-	write.csv(quantData,file=finalfile)
+	write.csv(quantData$ProcessedData,file=finalfile)
 	cat("\n Saved dataProcessedData.csv \n")
 }
 #else{
@@ -114,7 +113,7 @@ cat("\n\n =======================================")
 cat("\n ** Generating dataProcess Plots..... \n \n")
 
 
-dataProcessPlots(data=quantData,type="ProfilePlot",address="")
+dataProcessPlots(data=quantData,type="ProfilePlot",address="",height=10, width=20)
 cat("\n Saved ProfilePlot.pdf \n \n")
 
 dataProcessPlots(data=quantData,type="QCPlot",address="")
