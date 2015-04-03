@@ -25,23 +25,21 @@ namespace MSStatArgsCollector
 {
     public partial class SampleSizeUi : Form
     {
-        private enum Args { normalize_to, samples, peptides, transitions, power, fdr, lower_fold, upper_fold, allow_missing_peaks }
+        private enum Args { normalize_to, samples, 
+            power, fdr, lower_fold, upper_fold, allow_missing_peaks,
+            summary_method, equal_variance
+        }
 
         public string[] Arguments { get; private set; }
 
         public SampleSizeUi(string[] oldArgs)
         {
             InitializeComponent();
-
+            SummaryMethod.InitCombo(comboBoxSummaryMethod);
             comboBoxNoramilzeTo.SelectedIndex = 1;
 
             if (oldArgs != null && oldArgs.Length == 8)
                 Arguments = oldArgs;
-
-            // set shift distance based on ititial form layout
-            SampleShift = numberSamples.Top - rBtnPeptides.Top;
-            PeptideShift = numberPeptides.Top - rBtnTransitions.Top;
-            TransitionShift = numberTransitions.Top - rBtnPower.Top;
 
             RestoreValues();
         }
@@ -56,8 +54,6 @@ namespace MSStatArgsCollector
             else
             {
                 RestoreCountValue(Args.samples, rBtnSamples, numberSamples, Samples);
-                RestoreCountValue(Args.peptides, rBtnPeptides, numberPeptides, Peptides);
-                RestoreCountValue(Args.transitions, rBtnTransitions, numberTransitions, Transitions);
 
                 string valueText = Arguments[(int) Args.power];
                 if (valueText.Equals(Truestring))
@@ -72,14 +68,14 @@ namespace MSStatArgsCollector
                 RestoreDecimalText(Arguments[(int)Args.fdr], numberFDR, Fdr);
                 RestoreDecimalText(Arguments[(int)Args.lower_fold], numberLDFC, Ldfc);
                 RestoreDecimalText(Arguments[(int)Args.upper_fold], numberUDFC, Udfc);
+                SummaryMethod.SelectValue(comboBoxSummaryMethod, Arguments[(int) Args.summary_method]);
+                cboxEqualVariance.Checked = Truestring == Arguments[(int) Args.equal_variance];
             }
 
-            if (!rBtnSamples.Checked && !rBtnPeptides.Checked && !rBtnTransitions.Checked && !rBtnPower.Checked)
+            if (!rBtnSamples.Checked && !rBtnPower.Checked)
             {
                 rBtnSamples.Checked = true;
             }
-
-            Height += Math.Min(Math.Min(SampleShift, PeptideShift), TransitionShift) + 5;
         }
 
         private void RestoreCountValue(Args argument, RadioButton radio, NumericUpDown numeric, decimal defaultValue)
@@ -184,18 +180,19 @@ namespace MSStatArgsCollector
         //
         private void GenerateArguments(decimal power, decimal fdr, decimal ldfc, decimal udfc)
         {
-            Arguments = Arguments ?? new string[9];
+            Arguments = new string[Enum.GetValues(typeof(Args)).Length];
 
             Arguments[(int) Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.peptides] = (rBtnPeptides.Checked) ? Truestring : numberPeptides.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.transitions] = (rBtnTransitions.Checked) ? Truestring : numberTransitions.Value.ToString(CultureInfo.InvariantCulture); 
             Arguments[(int) Args.power] = (rBtnPower.Checked) ? Truestring : power.ToString(CultureInfo.InvariantCulture);
 
             Arguments[(int) Args.fdr] = fdr.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.lower_fold] = ldfc.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.upper_fold] = udfc.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring; 
+            Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring;
+            Arguments[(int) Args.summary_method] =
+                (comboBoxSummaryMethod.SelectedItem as SummaryMethod ?? SummaryMethod.Linear).Name;
+            Arguments[(int) Args.equal_variance] = cboxEqualVariance.Checked ? Truestring : Falsestring;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -222,8 +219,6 @@ namespace MSStatArgsCollector
         // defaults
         private const int Normalize = 1;
         private const decimal Samples = 2m;
-        private const decimal Peptides = 1m;
-        private const decimal Transitions = 1m;
         private const decimal Power = 0.80m;
         private const decimal Fdr = 0.05m;
         private const decimal Ldfc = 1.25m;
@@ -239,76 +234,21 @@ namespace MSStatArgsCollector
             comboBoxNoramilzeTo.SelectedIndex = Normalize;
             rBtnSamples.Checked = true;
             numberSamples.Value = Samples;
-            numberPeptides.Value = Peptides;
-            numberTransitions.Value = Transitions;
             numberPower.Text = Power.ToString(CultureInfo.CurrentCulture);
             numberFDR.Text = Fdr.ToString(CultureInfo.CurrentCulture);
             numberLDFC.Text = Ldfc.ToString(CultureInfo.CurrentCulture);
             numberUDFC.Text = Udfc.ToString(CultureInfo.CurrentCulture);
         }
 
-        private int SampleShift { get; set; }
-        private int PeptideShift { get; set; }
-        private int TransitionShift { get; set; }
-
         private void rBtnSamples_CheckedChanged(object sender, EventArgs e)
         {
-            
             if (rBtnSamples.Checked)
             {
                 numberSamples.Enabled = numberSamples.Visible = false;
-                rBtnPeptides.Top += SampleShift;
-                numberPeptides.Top += SampleShift;
-                rBtnTransitions.Top += SampleShift;
-                numberTransitions.Top += SampleShift;
-                rBtnPower.Top += SampleShift;
-                numberPower.Top += SampleShift;
             }
             else
             {
-                rBtnPeptides.Top -= SampleShift;
-                numberPeptides.Top -= SampleShift;
-                rBtnTransitions.Top -= SampleShift;
-                numberTransitions.Top -= SampleShift;
-                rBtnPower.Top -= SampleShift;
-                numberPower.Top -= SampleShift;
                 numberSamples.Enabled = numberSamples.Visible = true;
-            }
-        }
-
-        private void rBtnPeptides_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rBtnPeptides.Checked)
-            {
-                numberPeptides.Enabled = numberPeptides.Visible = false;
-                rBtnTransitions.Top += PeptideShift;
-                numberTransitions.Top += PeptideShift;
-                rBtnPower.Top += PeptideShift;
-                numberPower.Top += PeptideShift;
-            }
-            else
-            {
-                rBtnTransitions.Top -= PeptideShift;
-                numberTransitions.Top -= PeptideShift;
-                rBtnPower.Top -= PeptideShift;
-                numberPower.Top -= PeptideShift;
-                numberPeptides.Enabled = numberPeptides.Visible = true;
-            }
-        }
-
-        private void rBtnTransitions_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rBtnTransitions.Checked)
-            {
-                numberTransitions.Enabled = numberTransitions.Visible = false;
-                rBtnPower.Top += TransitionShift;
-                numberPower.Top += TransitionShift;
-            }
-            else
-            {
-                rBtnPower.Top -= TransitionShift;
-                numberPower.Top -= TransitionShift;
-                numberTransitions.Enabled = numberTransitions.Visible = true;
             }
         }
 

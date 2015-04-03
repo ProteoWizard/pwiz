@@ -38,9 +38,9 @@ namespace MSStatArgsCollector
         public GroupComparisonUi(string[] groups, string[] oldArgs)
         {
             InitializeComponent();
+            SummaryMethod.InitCombo(comboBoxSummaryMethod);
 
-            comboBoxNoramilzeTo.SelectedIndex = 1;
-
+            comboBoxNormalizeTo.SelectedIndex = 1;
             Array.Sort(groups);
             ControlGroup.DataSource = ControlGroupList = groups;
             Arguments = oldArgs;
@@ -68,8 +68,6 @@ namespace MSStatArgsCollector
         }
 
         // Constants
-        private const string Expanded = "E"; // Not L10N
-        private const string RESTRICTED = "R"; // Not L10N
         private const string TRUESTRING = "TRUE"; // Not L10N
         private const string FALSESTRING = "FALSE"; // Not L10N
 
@@ -104,20 +102,9 @@ namespace MSStatArgsCollector
                     }
                 }
 
-                int lastArg = Arguments.Length - 1;
-                cboxInterferenceTransitions.Checked = Arguments[lastArg--].Equals(TRUESTRING);
-
-                if (Arguments[lastArg--].Equals(Expanded))
-                    techRepExp.Checked = true;
-
-                if (!Arguments[lastArg--].Equals(Expanded))
-                    bioRepRes.Checked = true;
-
-                // Restore settings 
-                cboxLabelData.Checked = Arguments[lastArg--].Equals(TRUESTRING);
-
                 // Restore name
-                textBoxName.Text = Arguments[lastArg];
+                textBoxName.Text = Arguments[Arguments.Length - 5];
+                SummaryMethod.SelectValue(comboBoxSummaryMethod, Arguments[Arguments.Length - 2]);
             }
             else
             {
@@ -231,12 +218,10 @@ namespace MSStatArgsCollector
             commandLineArguments.Add(textBoxName.Text);
 
             // Add settings
-            commandLineArguments.Add(comboBoxNoramilzeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));            
-            commandLineArguments.Add(cboxLabelData.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(comboBoxNormalizeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));            
             commandLineArguments.Add(cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING);
-            commandLineArguments.Add(bioRepExp.Checked ? Expanded : RESTRICTED);
-            commandLineArguments.Add(techRepExp.Checked ? Expanded : RESTRICTED);
-            commandLineArguments.Add(cboxInterferenceTransitions.Checked ? TRUESTRING : FALSESTRING);
+            SummaryMethod summaryMethod = comboBoxSummaryMethod.SelectedItem as SummaryMethod ?? SummaryMethod.Linear;
+            commandLineArguments.Add(summaryMethod.Name);
             commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
           
 

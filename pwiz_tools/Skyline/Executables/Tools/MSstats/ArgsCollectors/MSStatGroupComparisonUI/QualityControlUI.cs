@@ -24,26 +24,42 @@ namespace MSStatArgsCollector
 {
     public partial class QualityControlUI : Form
     {
-        private enum Args {normalize_to, allow_missing_peaks}
+        private enum Args {normalize_to, allow_missing_peaks, summary_method, equal_variance}
 
         public string[] Arguments { get; private set; }
         public QualityControlUI(string[] oldArgs)
         {
             InitializeComponent();
+            SummaryMethod.InitCombo(comboBoxSummaryMethod);
+            comboBoxNormalizeTo.SelectedIndex = 1;
 
-            comboBoxNoramilzeTo.SelectedIndex = 1;
-
-            if (oldArgs != null && oldArgs.Length == 1)
-                Arguments = oldArgs;
+            try
+            {
+                if (oldArgs != null && oldArgs.Length == Enum.GetValues(typeof (Args)).Length)
+                {
+                    comboBoxNormalizeTo.SelectedIndex = int.Parse(oldArgs[(int) Args.normalize_to],
+                        CultureInfo.InvariantCulture);
+                    cboxAllowMissingPeaks.Checked = TRUESTRING == oldArgs[(int) Args.allow_missing_peaks];
+                    SummaryMethod.SelectValue(comboBoxSummaryMethod, oldArgs[(int) Args.summary_method]);
+                    cboxEqualVariance.Checked = TRUESTRING == oldArgs[(int) Args.equal_variance];
+                }
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         private const string TRUESTRING = "TRUE"; // Not L10N
         private const string FALSESTRING = "FALSE"; // Not L10N
         private void GenerateArguments()
         {
-            Arguments = Arguments ?? new string[2];
-            Arguments[(int)Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
-            Arguments[(int)Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? TRUESTRING : FALSESTRING;           
+            Arguments = new string[Enum.GetValues(typeof(Args)).Length];
+            Arguments[(int)Args.normalize_to] = (comboBoxNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
+            Arguments[(int)Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? TRUESTRING : FALSESTRING;
+            Arguments[(int) Args.summary_method] =
+                ((comboBoxSummaryMethod.SelectedItem as SummaryMethod) ?? SummaryMethod.Linear).Name;
+            Arguments[(int) Args.equal_variance] = cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -55,7 +71,6 @@ namespace MSStatArgsCollector
         {
             GenerateArguments();
             DialogResult = DialogResult.OK;
-     
         }
 
     }

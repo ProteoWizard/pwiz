@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\..\..\..\AppData\Local\Apps\2.0\W8O92JRO.3CN\XX5G30HG.1QN\skyl..tion_e4141a2a22107248_0002.0005_d5b230f4fc3faecd\Tools\MSstats\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -69,6 +69,7 @@
     <Compile Include="SampleSizeUI.Designer.cs">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="SummaryMethod.cs" />
     <Compile Include="Text.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +93,9 @@
       <LastGenOutput>MSstatsResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="QualityControlUI.resx">
+      <DependentUpon>QualityControlUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SampleSizeUI.ja.resx">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </EmbeddedResource>
@@ -103,6 +107,20 @@
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>cd "$(SolutionDir)"
+
+
+
+del MSstats3_external.zip 2&gt; nul
+
+"$(ProgramW6432)\7-zip\7z.exe" a MSstats3_external.zip ..\*.r ..\tool-inf  "$(TargetDir)\$(TargetFileName)" 
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
