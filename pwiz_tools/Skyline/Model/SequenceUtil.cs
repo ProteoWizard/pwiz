@@ -647,6 +647,25 @@ namespace pwiz.Skyline.Model
             return MassDistribution.NewInstance(new SortedDictionary<double, double> {{mass, 1}}, _massResolution, _minimumAbundance);
         }
 
+        public string GetIonFormula(string peptideSequence, int charge)
+        {
+           return  GetIonFormula(peptideSequence, charge, null);
+        }
+
+        /// <summary>
+        /// Convert a charged peptide to a small molecule ion formula
+        /// </summary>
+        public string GetIonFormula(string seq, int charge, ExplicitSequenceMods mods)
+        {
+            double unexplainedMass;
+            var molecule = GetFormula(seq, mods, out unexplainedMass);
+            if (unexplainedMass != 0.0)
+                throw new ArgumentException("Unexplained mass when deriving ion formula from sequence "+seq); // Not L10N
+            for (int z = 0; z < charge; z++)
+                molecule = molecule.SetElementCount("H", molecule.GetElementCount("H") + 1); // Not L10N
+            return molecule.ToString();
+        }
+
 // ReSharper disable once ParameterTypeCanBeEnumerable.Local
         private MassDistribution GetMzDistribution(Molecule molecule, int charge, IsotopeAbundances abundances, double unexplainedMass, bool isMassH)
         {
@@ -865,7 +884,33 @@ namespace pwiz.Skyline.Model
 
         public double GetFragmentMass(Transition transition, IsotopeDistInfo isotopeDist, ExplicitSequenceMods mods)
         {
-            Assume.IsFalse(transition.IsCustom());
+            if (transition.IsCustom())
+            {
+                var type = transition.IonType;
+                var massIndex = transition.MassIndex;
+                if (Transition.IsPrecursor(type))
+                {
+                    if (isotopeDist != null)
+                    {
+                        int i = isotopeDist.MassIndexToPeakIndex(massIndex);
+                        if (0 > i || i >= isotopeDist.CountPeaks)
+                        {
+                            throw new IndexOutOfRangeException(
+                                string.Format(Resources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
+                                              GetMassIDescripion(massIndex), isotopeDist.PeakIndexToMassIndex(0),
+                                              isotopeDist.PeakIndexToMassIndex(isotopeDist.CountPeaks - 1)));
+                        }
+                        return isotopeDist.GetMassI(massIndex);
+                    }
+                    return (MassType == MassType.Average) 
+                            ? transition.Group.Peptide.CustomIon.AverageMass
+                            : transition.Group.Peptide.CustomIon.MonoisotopicMass;
+                }
+                return (MassType == MassType.Average) 
+                        ? transition.CustomIon.AverageMass
+                        : transition.CustomIon.MonoisotopicMass;
+            }
+
             return GetFragmentMass(transition.Group.Peptide.Sequence,
                                    transition.IonType,
                                    transition.Ordinal,
@@ -1119,6 +1164,11 @@ namespace pwiz.Skyline.Model
         public double GetAAModMass(char aa, int seqIndex, int seqLength)
         {
             return _massCalcBase.GetAAModMass(aa, seqIndex, seqLength, _mods);
+        }
+
+        public string GetIonFormula(string seq, int charge)
+        {
+            return _massCalcBase.GetIonFormula(seq, charge, _mods);
         }
 
         public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances)

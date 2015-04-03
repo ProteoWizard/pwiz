@@ -63,6 +63,22 @@ namespace pwiz.SkylineTestA
             numDecoys = docStudy7.PeptideCount;
             var decoysExplicitReverse = refineSettings.GenerateDecoys(docStudy7, numDecoys, DecoyGeneration.REVERSE_SEQUENCE);
             ValidateDecoys(docStudy7, decoysExplicitReverse, true);
+
+            // Random mass shifts with precursors (used to throw an exception due to bad range check that assumed product ions only)
+            while (true)
+            {
+                // As this is random we may need to make a few attempts before we get the values we need
+                SrmDocument doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("precursor_decoy_test.sky"));
+                AssertEx.IsDocumentState(doc, null, 1, 1, 2, 6);
+                numDecoys = 2;
+                var decoysRandom = refineSettings.GenerateDecoys(doc, numDecoys, DecoyGeneration.ADD_RANDOM);
+                // Verify that we successfully set a precursor transition decoy mass outside the allowed range of product transitions
+                if (decoysRandom.PeptideTransitions.Any(x => x.IsDecoy &&
+                                                    (x.Transition.DecoyMassShift > Transition.MAX_PRODUCT_DECOY_MASS_SHIFT ||
+                                                     x.Transition.DecoyMassShift < Transition.MIN_PRODUCT_DECOY_MASS_SHIFT)))
+                    break;
+            }
+
         }
 
         private static void ValidateDecoys(SrmDocument document, SrmDocument decoysDoc, bool modifiesSequences)

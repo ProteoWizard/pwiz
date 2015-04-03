@@ -217,7 +217,7 @@ namespace pwiz.Common.DataBinding
                             {
                                 using (var clonedBindingList = new BindingListSource())
                                 {
-                                    clonedBindingList.SetView(bindingListSource.ViewInfo, clonedList);
+                                    SetViewFrom(bindingListSource, clonedList, clonedBindingList);
                                     WriteData(progressMonitor, writer, clonedBindingList, dataFormat.GetDsvWriter());
                                 }
                             });
@@ -251,7 +251,7 @@ namespace pwiz.Common.DataBinding
                     {
                         using (var clonedBindingList = new BindingListSource())
                         {
-                            clonedBindingList.SetView(bindingListSource.ViewInfo, clonedList);
+                            SetViewFrom(bindingListSource, clonedList, clonedBindingList);
                             WriteData(progressMonitor, tsvWriter, clonedBindingList, DataFormats.TSV.GetDsvWriter());
                             progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                         }
@@ -641,6 +641,17 @@ namespace pwiz.Common.DataBinding
 
         public virtual void Preview(Control owner, ViewInfo viewInfo)
         {
+        }
+
+        protected void SetViewFrom(BindingListSource sourceBindingList, IEnumerable newRowSource,
+            BindingListSource targetBindingList)
+        {
+            targetBindingList.SetView(sourceBindingList.ViewInfo, newRowSource);
+            targetBindingList.RowFilter = sourceBindingList.RowFilter;
+            if (sourceBindingList.SortDescriptions != null)
+            {
+                targetBindingList.ApplySort(sourceBindingList.SortDescriptions);
+            }
         }
 
         private class UncancellableProgressMonitor : IProgressMonitor

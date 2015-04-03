@@ -362,6 +362,12 @@ namespace SkylineTester
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
                     tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute"));
+                foreach (var test in tutorialTests.ToArray())
+                {
+                    // Remove any tutorial tests we've hacked for small molecule testing - not of interest to localizers
+                    if (test.Contains("AsSmallMolecules"))
+                        tutorialTests.Remove(test);
+                }
                 var tutorialNodes = new TreeNode[tutorialTests.Count];
                 tutorialTests = tutorialTests.OrderBy(test => test).ToList();
                 RunUI(() =>

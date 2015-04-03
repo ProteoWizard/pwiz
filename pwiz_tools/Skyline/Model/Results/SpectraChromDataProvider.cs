@@ -332,19 +332,22 @@ namespace pwiz.Skyline.Model.Results
                         _isSingleMzMatch = true;
 
                         // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                        if (!filter.EnabledMsMs && lookaheadContext.GetMsLevel(i) != 1)
+                        var msLevel = lookaheadContext.GetMsLevel(i);
+                        if (!filter.EnabledMsMs && msLevel != 1)
                             continue;
 
                         // Skip quickly through the chromatographic lead-in and tail when possible 
-                        double? rtCheck = lookaheadContext.GetRetentionTime(i);
-                        if (filter.IsOutsideRetentionTimeRange(rtCheck))
+                        if (msLevel > 1) // We need all MS1 for TIC and BPC
                         {
-                            // Leave an update cue for the chromatogram painter then move on
-                            if (allChromData != null)
-                                allChromData.CurrentTime = (float)rtCheck.Value;
-                            continue;
+                            double? rtCheck = lookaheadContext.GetRetentionTime(i);
+                            if (filter.IsOutsideRetentionTimeRange(rtCheck))
+                            {
+                                // Leave an update cue for the chromatogram painter then move on
+                                if (allChromData != null)
+                                    allChromData.CurrentTime = (float)rtCheck.Value;
+                                continue;
+                            }
                         }
-
                         // Inexpensive checks are complete, now actually get the spectrum data
                         var dataSpectrum = lookaheadContext.GetSpectrum(i);
                         // Assertion for testing ID to spectrum index support

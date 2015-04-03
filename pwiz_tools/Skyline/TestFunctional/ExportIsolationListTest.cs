@@ -20,6 +20,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -41,6 +42,29 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestExportIsolationList()
         {
+            DoTestExportIsolationList(false);
+        }
+
+        [TestMethod]
+        public void TestExportIsolationListAsSmallMolecules()
+        {
+            DoTestExportIsolationList(true);
+        }
+
+        [TestMethod]
+        public void TestExportIsolationListAsExplicitRetentionTimes()
+        {
+            DoTestExportIsolationList(false, true);
+            DoTestExportIsolationList(true, true);
+        }
+
+        private bool AsSmallMolecules { get; set; }
+        private bool AsExplicitRetentionTimes { get; set; }
+
+        public void DoTestExportIsolationList(bool asSmallMolecules, bool asExplicitRetentionTimes = false)
+        {
+            AsSmallMolecules = asSmallMolecules;
+            AsExplicitRetentionTimes = asExplicitRetentionTimes;
             TestFilesZip = @"TestFunctional\ExportIsolationListTest.zip";
             RunFunctionalTest();
         }
@@ -62,6 +86,32 @@ namespace pwiz.SkylineTestFunctional
             // Load document which is already configured for DDA, and contains data for scheduling
             string standardDocumentFile = TestFilesDir.GetTestPath("BSA_Protea_label_free_meth3.sky");
             RunUI(() => SkylineWindow.OpenFile(standardDocumentFile));
+            if (AsSmallMolecules)
+            {
+                var document = SkylineWindow.Document;
+                var refine = new RefinementSettings();
+                var documentSM = refine.ConvertToSmallMolecules(document);
+                while (!SkylineWindow.SetDocument(documentSM, document))
+                    Thread.Sleep(100);
+            }
+
+            var t46 = 46.790;
+            var t39 = 39.900;
+            var halfWin = 1.0;
+            if (AsExplicitRetentionTimes)
+            {
+                var refine = new RefinementSettings();
+                var document = SkylineWindow.Document;
+                const double timeOffset = 10;  // To verify that explicit retention times are in use
+                const double winOffset = .4;
+                var documentSM = refine.ConvertToExplicitRetentionTimes(document, timeOffset, winOffset);
+                t46 += timeOffset;
+                t39 += timeOffset;
+                halfWin += winOffset*0.5;
+
+                while (!SkylineWindow.SetDocument(documentSM, document))
+                    Thread.Sleep(100);
+            }
 
             // Export Agilent unscheduled DDA list.
             ExportIsolationList(
@@ -76,25 +126,31 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledDda.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetDdaHeader(_fieldSeparator),
-                FieldSeparate("True", 582.318971, 20, 2, "Preferred", 46.790, 2, isolationWidth, 20.4),
-                FieldSeparate("True", 444.55002, 20, 3, "Preferred", 39.900, 2, isolationWidth, 19.2));
+                FieldSeparate("True", 582.318971, 20, 2, "Preferred", t46, 2*halfWin, isolationWidth, 20.4),
+                FieldSeparate("True", 444.55002, 20, 3, "Preferred", t39, 2*halfWin, isolationWidth, 19.2));
 
             // Export Thermo unscheduled DDA list.
             const double nce = ThermoQExactiveIsolationListExporter.NARROW_NCE;
+            var peptideA = AsSmallMolecules
+                ? "LVNELTEFAK(+H2) (light)"
+                : "LVNELTEFAK (light)";
+            var peptideB = AsSmallMolecules
+                ? "IKNLQSLDPSH(+H3) (light)"
+                : "IKNLQS[+80.0]LDPSH (light)";
             ExportIsolationList(
                 "ThermoUnscheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Standard,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", string.Empty, string.Empty, nce, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", string.Empty, string.Empty, nce, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", string.Empty, string.Empty, nce, peptideA),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", string.Empty, string.Empty, nce, peptideB));
 
             // Export Thermo scheduled DDA list.
             ExportIsolationList(
                 "ThermoScheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", 45.79, 47.79, nce, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", 38.9, 40.90, nce, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", t46-halfWin, t46+halfWin, nce, peptideA),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", t39-halfWin, t39+halfWin, nce, peptideB));
 
             // Export Agilent unscheduled Targeted list.
             ExportIsolationList(
@@ -109,24 +165,24 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledTargeted.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetTargetedHeader(_fieldSeparator),
-                FieldSeparate("True", 582.318971, 2, 46.790, 2, isolationWidth, 20.4, string.Empty),
-                FieldSeparate("True", 444.55002, 3, 39.900, 2, isolationWidth, 19.2, string.Empty));
+                FieldSeparate("True", 582.318971, 2, t46, 2*halfWin, isolationWidth, 20.4, string.Empty),
+                FieldSeparate("True", 444.55002, 3, t39, 2*halfWin, isolationWidth, 19.2, string.Empty));
 
             // Export Thermo unscheduled Targeted list.
             ExportIsolationList(
                 "ThermoUnscheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", string.Empty, string.Empty, nce, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", string.Empty, string.Empty, nce, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", string.Empty, string.Empty, nce, peptideA),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", string.Empty, string.Empty, nce, peptideB));
 
             // Export Thermo scheduled Targeted list.
             ExportIsolationList(
                 "ThermoScheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 ThermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", 45.79, 47.79, nce, "LVNELTEFAK (light)"),
-                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", 38.9, 40.90, nce, "IKNLQS[+80.0]LDPSH (light)"));
+                FieldSeparate(582.318971, string.Empty, string.Empty, 2, "Positive", t46-halfWin, t46+halfWin, nce, peptideA),
+                FieldSeparate(444.55002, string.Empty, string.Empty, 3, "Positive", t39-halfWin, t39+halfWin, nce, peptideB));
 
             // Export Thermo Fusion unscheduled Targeted list.
             ExportIsolationList(
@@ -141,8 +197,8 @@ namespace pwiz.SkylineTestFunctional
                 "FusionScheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 ThermoFusionMassListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(582.318971, 2, 45.79, 47.79, nce),
-                FieldSeparate(444.55002, 3, 38.90, 40.90, nce));
+                FieldSeparate(582.318971, 2, t46 - halfWin, t46 + halfWin, nce),
+                FieldSeparate(444.55002, 3, t39 - halfWin, t39 + halfWin, nce));
 
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);

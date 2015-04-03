@@ -40,13 +40,14 @@ namespace pwiz.SkylineTestA
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
 
             var document = InitRefineDocument(testFilesDir);
+            AssertEx.Serializable(document);  // This checks a longstanding schema error
 
             // First check a few refinements which should not change the document
             var refineSettings = new RefinementSettings();
             Assert.AreSame(document, refineSettings.Refine(document));
-            refineSettings.MinPeptidesPerProtein = 3;
+            refineSettings.MinPeptidesPerProtein = (TestSmallMolecules ? 1 : 3); // That magic small molecule node has just one child
             Assert.AreSame(document, refineSettings.Refine(document));
-            refineSettings.MinTransitionsPepPrecursor = 2;
+            refineSettings.MinTransitionsPepPrecursor = (TestSmallMolecules ? 1 : 2);
             Assert.AreSame(document, refineSettings.Refine(document));
 
             // Remove the protein with only 3 peptides
@@ -216,6 +217,28 @@ namespace pwiz.SkylineTestA
                 }
             }
             testFilesDir.Dispose();
+        }
+
+        [TestMethod]
+        public void RefineConvertToSmallMoleculesTest()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
+
+            var document = InitRefineDocument(testFilesDir);
+            var refineSettings = new RefinementSettings();
+            var converted = refineSettings.ConvertToSmallMolecules(document);
+            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
+        }
+
+        [TestMethod]
+        public void RefineConvertToSmallMoleculeMassesTest()
+        {
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
+
+            var document = InitRefineDocument(testFilesDir);
+            var refineSettings = new RefinementSettings();
+            var converted = refineSettings.ConvertToSmallMolecules(document, true);
+            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
         }
 
         private static SrmDocument InitRefineDocument(TestFilesDir testFilesDir)

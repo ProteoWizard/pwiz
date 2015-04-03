@@ -285,13 +285,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods,
                                       Transition transition, IsotopeDistInfo isotopeDist)
         {
-            if (transition.IsCustom())
+            if (transition.IsCustom() && string.IsNullOrEmpty(transition.CustomIon.Formula))
             {
-                // Return the ion mass before electron removal
-                return transition.CustomIon.GetMass(TransitionSettings.Prediction.FragmentMassType);
+                // Without a formula we're just going to grab its stated mass, so get a simple calculator
+                labelType = IsotopeLabelType.light;
             }
-
-            // Return the singly protonated mass of the peptide fragment
+            // Return the singly protonated mass of the peptide fragment, or custom ion mass before electron removal
             return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }
 
@@ -1691,6 +1690,7 @@ namespace pwiz.Skyline.Model.DocSettings
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionFromFormula(string formula, int charge, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionSinglePoint(double mass);
+        string GetIonFormula(string peptideSequence, int charge);
     }
 
     public interface IFragmentMassCalc

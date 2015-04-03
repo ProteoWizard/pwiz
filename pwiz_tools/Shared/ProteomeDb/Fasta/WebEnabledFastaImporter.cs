@@ -258,8 +258,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                         else
                         {
                             throw new ArgumentOutOfRangeException(
-                                String.Format("Unknown Fasta RegEx output formatter type \'{0}\'",  // Not L10N
-                                    regexOutputs[n]));
+                                String.Format("Fasta RegEx failure in \'{0}\'",  // Not L10N
+                                    line.Substring(start)));
                         }
                     }
                     if (headerResult.GetProteinMetadata().HasMissingMetadata())

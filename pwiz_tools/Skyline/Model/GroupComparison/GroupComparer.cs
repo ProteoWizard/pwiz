@@ -194,14 +194,20 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            var summarizedRows = SummarizeDataRowsByAveraging(detailRows);
+            var replicateRows = SummarizeDataRowsByAveraging(detailRows);
+            if (replicateRows.Count == 0)
+            {
+                return null;
+            }
             if (null != runAbundances)
             {
-                runAbundances.AddRange(summarizedRows);
+                runAbundances.AddRange(replicateRows);
             }
-            if (summarizedRows.Any(row => null != row.BioReplicate))
+
+            var summarizedRows = replicateRows;
+            if (replicateRows.Any(row => null != row.BioReplicate))
             {
-                var groupedByBioReplicate = summarizedRows.ToLookup(
+                var groupedByBioReplicate = replicateRows.ToLookup(
                     row => new KeyValuePair<string, bool>(row.BioReplicate, row.Control));
                 summarizedRows = groupedByBioReplicate.Select(
                     grouping =>
@@ -231,7 +237,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 //            var statsXValues = new Util.Statistics(summarizedRows.Select(row => row.Control ? 0.0 : 1));
 //            var slope = statsAbundances.Slope(statsXValues);
             
-            return new GroupComparisonResult(selector, summarizedRows.Count, foldChangeResult);
+            return new GroupComparisonResult(selector, replicateRows.Count, foldChangeResult);
         }
 
         private IList<RunAbundance> SummarizeDataRowsByAveraging(IList<DataRowDetails> dataRows)
