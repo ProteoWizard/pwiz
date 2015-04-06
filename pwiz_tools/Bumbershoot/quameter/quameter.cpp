@@ -1686,10 +1686,11 @@ namespace quameter
                         // For Metric MS1-2A, signal to noise ratio of MS1, peaks/medians
                         if (curRT >= firstQuartileIDTime && curRT <= thirdQuartileIDTime) 
                         {
-                            accs::accumulator_set<double, accs::stats<accs::tag::percentile, accs::tag::max> > ms1Peaks;
+                            accs::accumulator_set<double, accs::stats<accs::tag::percentile, accs::tag::max, accs::tag::count> > ms1Peaks;
                             BOOST_FOREACH(const double& p, intensV)
-                                ms1Peaks(p);
-                            sigNoisMS1(accs::max(ms1Peaks) / accs::percentile(ms1Peaks, accs::percentile_number = 50));
+                                    ms1Peaks(p);
+                            if(accs::count(ms1Peaks) > 0)
+                                sigNoisMS1(accs::max(ms1Peaks) / accs::percentile(ms1Peaks, accs::percentile_number = 50));
                         }
 
                         BOOST_FOREACH(const XICWindow& window, pepWindow)
@@ -1741,10 +1742,11 @@ namespace quameter
                         // Metric MS2-2: SNR of identified MS2 spectra
                         if (distinctModifiedPeptideByNativeID.count(spectrum->id) > 0) 
                         {
-                            accs::accumulator_set<double, accs::stats<accs::tag::percentile, accs::tag::max> > ms2Peaks;
+                            accs::accumulator_set<double, accs::stats<accs::tag::percentile, accs::tag::max, accs::tag::count> > ms2Peaks;
                             BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
                                 ms2Peaks(p);
-                            sigNoisMS2(accs::max(ms2Peaks) / accs::percentile(ms2Peaks, accs::percentile_number = 50));
+                            if(accs::count(ms2Peaks) > 0)
+                                sigNoisMS2(accs::max(ms2Peaks) / accs::percentile(ms2Peaks, accs::percentile_number = 50));
                         }
                         
                         // calculate TIC manually if necessary
