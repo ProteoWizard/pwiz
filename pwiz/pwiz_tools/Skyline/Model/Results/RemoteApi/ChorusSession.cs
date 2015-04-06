@@ -495,5 +495,42 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             // ReSharper restore NonLocalizedString
             return null;
         }
+
+        public static ChorusServerException WrapWebException(WebException webException)
+        {
+            try
+            {
+                if (null == webException.Response)
+                {
+                    return new ChorusServerException(string.Format("HTTP error response code {0}", webException.Status), webException); // Not L10N
+                }
+                using (var responseStream = webException.Response.GetResponseStream())
+                {
+                    if (null == responseStream)
+                    {
+                        return new ChorusServerException(string.Format("HTTP error response code {0}", webException.Status), webException); // Not L10N
+                    }
+                    MemoryStream memoryStream = new MemoryStream();
+                    int count;
+                    byte[] buffer = new byte[65536];
+                    while ((count = responseStream.Read(buffer, 0, buffer.Length)) != 0)
+                    {
+                        memoryStream.Write(buffer, 0, count);
+                    }
+                    String fullMessage = Encoding.UTF8.GetString(memoryStream.ToArray());
+                    var xmlSerializer = new XmlSerializer(typeof (ChorusErrorResponse));
+                    ChorusErrorResponse chorusErrorResponse = (ChorusErrorResponse) xmlSerializer.Deserialize(new StringReader(fullMessage));
+                    if (!string.IsNullOrEmpty(chorusErrorResponse.StackTrace))
+                    {
+                        Trace.TraceWarning(chorusErrorResponse.StackTrace);
+                    }
+                    return new ChorusServerException(chorusErrorResponse.Message, webException);
+                }
+            }
+            catch (Exception exception)
+            {
+                return new ChorusServerException(exception.Message, new AggregateException(webException, exception));
+            }
+        }
     }
 }

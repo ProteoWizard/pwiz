@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         private int _completedCount;
         private int _minTaskCount;
         private readonly Action _checkCancelledAction;
+        private Exception _exception;
 
         public ChromTaskList(Action checkCancelledAction, SrmDocument srmDocument, ChorusAccount chorusAccount, ChorusUrl chorusUrl, IEnumerable<ChromatogramRequestDocument> chromatogramRequestDocuments)
         {
@@ -138,6 +140,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     Monitor.Wait(LockObj, CANCEL_CHECK_MILLIS);
                     CheckCancelled();
                 }
+                if (null != _exception)
+                {
+                    throw new ChorusServerException(_exception.Message, _exception);
+                }
             }
             return task.GetChromatogram(chromKey, out times, out scanIds, out intensities, out massErrors);
         }
@@ -239,7 +245,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public IList<Exception> ListExceptions()
         {
-            return _chromatogramGeneratorTasks.SelectMany(task => task.Failures).ToArray();
+            Exception exception = _exception;
+            return null == exception ? new Exception[0] : new[] {_exception};
         }
 
         public IList<ChromatogramGeneratorTask> ListTasks()
@@ -254,6 +261,43 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             ChromatogramGeneratorTask task;
             _chromKeys.TryGetValue(chromKey, out task);
             return task;
+        }
+
+        public void HandleException(Exception exception)
+        {
+            var webException = exception as WebException;
+            if (null != webException)
+            {
+                exception = ChorusSession.WrapWebException(webException);
+            }
+            lock (LockObj)
+            {
+                if (null != _exception)
+                {
+                    return;
+                }
+                _exception = exception;
+                ChorusSession.Abort();
+                Monitor.PulseAll(LockObj);
+            }
+        }
+
+        public interface IRemoteChromLoadMonitor
+        {
+            void CheckCancelled();
+            void HandleError(Exception exception);
+        }
+
+        public class DefaultChromLoadMonitor : IRemoteChromLoadMonitor
+        {
+            public void CheckCancelled()
+            {
+            }
+
+            public void HandleError(Exception exception)
+            {
+                throw new ChorusServerException(exception.Message, exception);
+            }
         }
     }
 }

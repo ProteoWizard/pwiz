@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,8 +28,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 {
     public class ChromatogramGeneratorTask
     {
-        private const int MAX_FAILURE_COUNT = 10;
-        private readonly List<Exception> _failures = new List<Exception>();
         private bool _started;
         private bool _finished;
         private ChromatogramCache _chromatogramCache;
@@ -110,22 +106,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
                 catch (Exception exception)
                 {
-                    lock (this)
-                    {
-                        _failures.Add(exception);
-                        if (_failures.Count >= MAX_FAILURE_COUNT)
-                        {
-                            return;
-                        }
-                    }
-                    Debug.WriteLine(exception.ToString());
+                    ChromTaskList.HandleException(exception);
+                    return;
                 }
             }
-        }
-
-        public ReadOnlyCollection<Exception> Failures
-        {
-            get { return _failures.AsReadOnly(); }
         }
 
         public bool GetChromatogram(ChromKey chromKey, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
