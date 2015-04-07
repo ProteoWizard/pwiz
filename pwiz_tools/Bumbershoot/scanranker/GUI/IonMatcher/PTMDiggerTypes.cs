@@ -256,14 +256,22 @@ namespace IonMatcher
         {
             get
             {
-                return pwiz.MSGraph.MSGraphItemType.Spectrum;
+                return pwiz.MSGraph.MSGraphItemType.spectrum;
             }
         }
 
         public virtual string Title { get { return Id; } }
         public virtual Color Color { get { return Color.Gray; } }
 
-        public virtual void CustomizeXAxis( ZedGraph.Axis axis )
+	    /// <summary>
+	    /// gets the width of graph lines
+	    /// </summary>
+	    public float LineWidth
+	    {
+	        get { return 1; }
+	    }
+
+	    public virtual void CustomizeXAxis( ZedGraph.Axis axis )
         {
             axis.Title.FontSpec.Family = "Arial";
             axis.Title.FontSpec.Size = 14;
@@ -284,7 +292,7 @@ namespace IonMatcher
 
         public virtual pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return pwiz.MSGraph.MSGraphItemDrawMethod.Stick; }
+            get { return pwiz.MSGraph.MSGraphItemDrawMethod.stick; }
         }
 
         private AnnotationSettings annotationSettings;
@@ -437,9 +445,9 @@ namespace IonMatcher
             {
                 CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
                 if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum )
-                    return pwiz.MSGraph.MSGraphItemDrawMethod.Line;
+                    return pwiz.MSGraph.MSGraphItemDrawMethod.line;
                 else
-                    return pwiz.MSGraph.MSGraphItemDrawMethod.Stick;
+                    return pwiz.MSGraph.MSGraphItemDrawMethod.stick;
             }
         }
 

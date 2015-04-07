@@ -40,6 +40,7 @@ rule msbuild_ScanRankerGUI ( targets + : sources * : properties * )
     local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    PLATFORM on $(<[1]) = $(PLATFORM) ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
 }
 
@@ -47,7 +48,7 @@ actions msbuild_ScanRankerGUI
 {
     IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     echo Building ScanRankerGUI in $(CONFIGURATION:L) configuration...
-    msbuild $(THIS_PATH)/ScanRanker.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    msbuild $(THIS_PATH)/ScanRanker.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH);Platform=$(PLATFORM) /nologo /verbosity:minimal
 }
 
 
@@ -93,6 +94,8 @@ tar.extract
         pwiz_aux/msrc
         pwiz_aux/Jamfile.jam
         pwiz_tools/common
+        pwiz_tools/Shared/MSGraph
+        pwiz_tools/Shared/zedgraph
 
     : # requirements
         <location>$(PWIZ_SOURCE)

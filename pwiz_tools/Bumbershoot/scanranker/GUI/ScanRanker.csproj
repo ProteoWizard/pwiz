@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ScanRanker</RootNamespace>
     <AssemblyName>ScanRanker</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>down.ico</ApplicationIcon>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -37,11 +37,12 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>..\DirecTag\build-nt-x86\msvc-debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>..\DirecTag\build-nt-x86\msvc-release\</OutputPath>
@@ -50,31 +51,44 @@
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\DirecTag\build-nt-x86\msvc-debug-x86_64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>..\DirecTag\build-nt-x86\msvc-release-x86_64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Common, Version=2.6.234.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>libraries\Common.dll</HintPath>
-    </Reference>
-    <Reference Include="IDPickerWorkspace, Version=2.6.206.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>libraries\IDPickerWorkspace.dll</HintPath>
-    </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
     </Reference>
-    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=x86">
+    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>libraries\STL_Containers.dll</HintPath>
+      <HintPath>libraries\$(Platform)\STL_Containers.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+    <Reference Include="System.Data.SQLite, Version=1.0.96.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>libraries\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\DirecTag\freicore\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -172,17 +186,13 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=AnyCPU">
       <Name>Interop.EDAL.SxS.manifest</Name>
-      <HintPath>obj\Interop.EDAL.SxS.manifest</HintPath>
+      <HintPath>..\DirecTag\freicore\pwiz_src\pwiz_aux\msrc\utility\vendor_api\Bruker\$(Platform)\Interop.EDAL.SxS.manifest</HintPath>
     </NativeReference>
-    <NativeReference Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
-      <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
-      <HintPath>obj\Interop.HSREADWRITELib.SxS.manifest</HintPath>
-    </NativeReference>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.23.0, Type=AnyCPU">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>obj\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+      <HintPath>..\DirecTag\freicore\pwiz_src\pwiz_aux\msrc\utility\vendor_api\thermo\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -7,20 +7,50 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScanRanker", "ScanRanker.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IonMatcher", "IonMatcher\IonMatcher.csproj", "{FC9B250B-32CA-4921-9531-31D26234BC68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "..\DirecTag\freicore\pwiz_src\pwiz_tools\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "..\DirecTag\freicore\pwiz_src\pwiz_tools\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Debug|x64.ActiveCfg = Debug|x64
+		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Debug|x64.Build.0 = Debug|x64
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Debug|x86.ActiveCfg = Debug|x86
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Debug|x86.Build.0 = Debug|x86
+		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|x64.ActiveCfg = Release|x64
+		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|x64.Build.0 = Release|x64
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|x86.ActiveCfg = Release|x86
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|x86.Build.0 = Release|x86
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|x64.ActiveCfg = Debug|x64
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|x64.Build.0 = Debug|x64
 		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|x86.ActiveCfg = Debug|x86
 		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|x86.Build.0 = Debug|x86
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|x64.ActiveCfg = Release|x64
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|x64.Build.0 = Release|x64
 		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|x86.ActiveCfg = Release|x86
 		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|x86.Build.0 = Release|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x64.ActiveCfg = Debug|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x64.Build.0 = Debug|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x86.ActiveCfg = Debug|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x86.Build.0 = Debug|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x64.ActiveCfg = Release|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x64.Build.0 = Release|x64
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.ActiveCfg = Release|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.Build.0 = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.ActiveCfg = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.Build.0 = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.ActiveCfg = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.Build.0 = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.ActiveCfg = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.Build.0 = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.ActiveCfg = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

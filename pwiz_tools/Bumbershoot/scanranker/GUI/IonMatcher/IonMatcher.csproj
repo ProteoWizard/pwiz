@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IonMatcher</RootNamespace>
     <AssemblyName>IonMatcher</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -37,25 +37,43 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>..\..\DirecTag\build-nt-x86\msvc-debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\x86\Release\</OutputPath>
+    <OutputPath>..\..\DirecTag\build-nt-x86\msvc-release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\DirecTag\build-nt-x86\msvc-debug-x86_64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>..\..\DirecTag\build-nt-x86\msvc-release-x86_64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\libraries\MSGraph.dll</HintPath>
-    </Reference>
     <Reference Include="ObjectListView, Version=2.3.0.16691, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\libraries\ObjectListView.dll</HintPath>
@@ -64,9 +82,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
     </Reference>
-    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=x86">
+    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\libraries\STL_Containers.dll</HintPath>
+      <HintPath>..\libraries\$(Platform)\STL_Containers.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -83,10 +101,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="ZedGraph, Version=5.1.5.19079, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\libraries\ZedGraph.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Annotation.cs" />
@@ -178,6 +192,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Spanner.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DirecTag\freicore\pwiz_src\pwiz_tools\Shared\MSGraph\MSGraph.csproj">
+      <Project>{26cfd1ff-f4f7-4f66-b5b4-e686bdb9b34e}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DirecTag\freicore\pwiz_src\pwiz_tools\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
+      <Name>ZedGraph</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
