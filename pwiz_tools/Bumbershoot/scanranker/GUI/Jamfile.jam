@@ -82,18 +82,11 @@ using tar : bsdtar.exe ;
 local pwiz_src_tarball = [ SORT [ glob $(ROOT_PATH)/DirecTag/freicore/pwiz-src*.tar.bz2 ] ] ;
 pwiz_src_tarball = $(pwiz_src_tarball[-1]) ; # take the last (latest) tarball
 
-# extract support for pwiz CLI bindings from pwiz tarball
+# extract MSGraph and ZedGraph from pwiz tarball
 tar.extract
       # tar filepath
         $(pwiz_src_tarball)
     : # include patterns
-        quickbuild.* clean.*
-        Jamroot.jam
-        LICENSE NOTICE
-        pwiz
-        pwiz_aux/msrc
-        pwiz_aux/Jamfile.jam
-        pwiz_tools/common
         pwiz_tools/Shared/MSGraph
         pwiz_tools/Shared/zedgraph
 
