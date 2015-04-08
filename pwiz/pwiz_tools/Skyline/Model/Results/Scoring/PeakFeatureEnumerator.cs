@@ -25,7 +25,6 @@ using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -361,9 +360,26 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // Impossible to report precursor filter for results dependent DIA
                 if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme.FromResults)
                         return listMzFilters.ToArray();
-                var instrument = context.Document.Settings.TransitionSettings.Instrument;
                 foreach (var transitionGroupPeakData in TransitionGroupPeakData)
                 {
+                    double targetMzDia = 0, widthMzDia = 0;
+                    if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
+                    {
+                        var isolationWindows = fullScan.IsolationScheme.GetIsolationWindowsContaining(
+                            transitionGroupPeakData.NodeGroup.PrecursorMz);
+
+                        double start = double.MaxValue, end = double.MinValue;
+                        foreach (var isolationWindow in isolationWindows)
+                        {
+                            start = Math.Min(start, isolationWindow.Start);
+                            end = Math.Max(end, isolationWindow.End);
+                        }
+                        // This should not happen, but if no containing windows were found, give up.
+                        if (start > end)
+                            return new MzFilterPairs[0];
+                        targetMzDia = (start + end) / 2;
+                        widthMzDia = end - start;
+                    }
                     foreach (var transitionPeakData in transitionGroupPeakData.TranstionPeakData)
                     {
                         // Skip forced integration peaks
@@ -397,11 +413,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                 }
                                 else if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
                                 {
-                                    var isolationWindow = fullScan.IsolationScheme.GetIsolationWindow(mzFilter.TargetPrecursorMz,
-                                        instrument.MzMatchTolerance);
-                                    Assume.IsNotNull(isolationWindow);
-                                    mzFilter.TargetPrecursorMz = (isolationWindow.Start + isolationWindow.End) / 2;
-                                    mzFilter.WidthPrecursorMz = isolationWindow.End - isolationWindow.Start;
+                                    mzFilter.TargetPrecursorMz = targetMzDia;
+                                    mzFilter.WidthPrecursorMz = widthMzDia;
                                 }
                                 mzFilter.WidthProductMz = fullScan.GetProductFilterWindow(mzFilter.TargetProductMz.Value);
                             }
