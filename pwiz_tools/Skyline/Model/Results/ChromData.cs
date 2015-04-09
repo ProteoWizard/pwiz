@@ -619,7 +619,12 @@ namespace pwiz.Skyline.Model.Results
         private const float DESCENT_TOL = 0.005f;
         private const float ASCENT_TOL = 0.50f;
 
-        public bool IsAllMS1 { get { return Items.All(peak => peak.Data.Key.Source != ChromSource.fragment); } }
+        public bool IsAllMS1 { get { return Items.All(peak => IsMs1(peak.Data.Key.Source)); } }
+
+        private bool IsMs1(ChromSource source)
+        {
+            return source != ChromSource.fragment; // TODO: source == ChromSource.ms1 || source == ChromSource.sim;
+        }
 
         public double TotalArea { get { return IsAllMS1 ? MS1Area : MS2Area; } }
 
@@ -771,7 +776,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 double area = dataPeak.Peak.Area;
-                if (dataPeak.Data.Key.Source != ChromSource.fragment)
+                if (IsMs1(dataPeak.Data.Key.Source))
                     MS1Area += area;
                 else
                     MS2Area += area;
@@ -787,7 +792,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
-                if (dataPeak.Data.Key.Source != ChromSource.fragment)
+                if (IsMs1(dataPeak.Data.Key.Source))
                     MS1Area = (PeakCount == 0) ? 0 : MS1Area - area;
                 else
                     MS2Area = (PeakCount == 0) ? 0 : MS2Area - area;
@@ -858,11 +863,15 @@ namespace pwiz.Skyline.Model.Results
             set { throw new InvalidOperationException(); }
         }
 
+        void ICollection<ITransitionPeakData<IDetailedPeakData>>.CopyTo(ITransitionPeakData<IDetailedPeakData>[] array, int arrayIndex)
+        {
+            foreach (var pd in this)
+                array[arrayIndex++] = pd;
+        }
+
         void ICollection<ITransitionPeakData<IDetailedPeakData>>.Add(ITransitionPeakData<IDetailedPeakData> item)
         { throw new InvalidOperationException(); }
         bool ICollection<ITransitionPeakData<IDetailedPeakData>>.Contains(ITransitionPeakData<IDetailedPeakData> item)
-        { throw new InvalidOperationException(); }
-        void ICollection<ITransitionPeakData<IDetailedPeakData>>.CopyTo(ITransitionPeakData<IDetailedPeakData>[] array, int arrayIndex)
         { throw new InvalidOperationException(); }
         bool ICollection<ITransitionPeakData<IDetailedPeakData>>.Remove(ITransitionPeakData<IDetailedPeakData> item)
         { throw new InvalidOperationException(); }

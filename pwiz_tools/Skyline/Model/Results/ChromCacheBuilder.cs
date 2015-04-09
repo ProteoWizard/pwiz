@@ -947,20 +947,8 @@ namespace pwiz.Skyline.Model.Results
 // ReSharper restore SuggestBaseTypeForParameter
         {
             // Look for potential product ion matches
-            var listMatchingData = new List<Tuple<ChromData, TransitionDocNode>>();
-            const float tolerance = (float) TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            foreach (var chromData in chromDataSet.Chromatograms)
-            {
-                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                {
-                    if (ChromKey.CompareTolerant(chromData.Key.Product,
-                            (float) nodeTran.Mz, tolerance) == 0)
-                    {
-                        listMatchingData.Add(new Tuple<ChromData, TransitionDocNode>(chromData, nodeTran));
-                        break;
-                    }
-                }
-            }
+            var listMatchingData = GetBestMatching(chromDataSet.Chromatograms, nodeGroup.Transitions);
+
             // Only return a match, if at least two product ions match, or the precursor
             // has only a single product ion, and it matches
             int countChildren = nodeGroup.Children.Count;
@@ -976,6 +964,55 @@ namespace pwiz.Skyline.Model.Results
                 result[i] = match.Item1;
             }
             return result;
+        }
+
+        private static List<Tuple<ChromData, TransitionDocNode>> GetBestMatching(
+            IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions)
+        {
+            var listMatchingData = new List<Tuple<int, ChromData, TransitionDocNode>>();
+            const float tolerance = (float)TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            // Create lists of elements sorted by m/z
+            var listMzIndexChromatograms =
+                chromatograms.Select((c, i) => new Tuple<double, int, ChromData>(c.Key.Product, i, c)).ToList();
+            listMzIndexChromatograms.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
+            var listMzTrans =
+                transitions.Select(t => new Tuple<double, TransitionDocNode>(t.Mz, t)).ToList();
+            listMzTrans.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
+            // Find best matches between chromatograms and transitions by walking the ordered lists
+            int ic = 0, it = 0;
+            int cc = listMzIndexChromatograms.Count, ct = listMzTrans.Count;
+            while (ic < cc && it < ct)
+            {
+                var tc = listMzIndexChromatograms[ic];
+                var tt = listMzTrans[it];
+                if (ChromKey.CompareTolerant(tc.Item1, tt.Item1, tolerance) != 0)
+                {
+                    // Advance in the list with the smaller m/z
+                    if (tc.Item1 > tt.Item1)
+                        it++;
+                    else
+                        ic++;
+                }
+                else
+                {
+                    // If next chromatogram matches better, just advance and continue
+                    double delta = Math.Abs(tc.Item1 - tt.Item1);
+                    if (ic < cc - 1 && delta > Math.Abs(listMzIndexChromatograms[ic + 1].Item1 - tt.Item1))
+                        ic++;
+                    // or next transition matches better, just advance and continue
+                    else if (it < ct - 1 && delta > Math.Abs(tc.Item1 - listMzTrans[it + 1].Item1))
+                        it++;
+                    // otherwise, this is the best match, so add it
+                    else
+                    {
+                        listMatchingData.Add(new Tuple<int, ChromData, TransitionDocNode>(tc.Item2, tc.Item3, tt.Item2));
+                        it++;
+                        ic++;
+                    }
+                }
+            }
+            listMatchingData.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
+            return listMatchingData.Select(t => new Tuple<ChromData, TransitionDocNode>(t.Item2, t.Item3)).ToList();
         }
 
         private static readonly MzComparer MZ_COMPARER = new MzComparer();

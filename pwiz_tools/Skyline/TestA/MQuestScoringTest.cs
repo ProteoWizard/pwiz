@@ -310,11 +310,15 @@ namespace pwiz.SkylineTestA
             public MockPeptidePeakData(IList<ITransitionPeakData<TPeak>> transitionPeakData)
             {
                 TransitionGroupPeakData = new[] { new MockTranGroupPeakData<TPeak>(transitionPeakData), };
+                AnalyteGroupPeakData = TransitionGroupPeakData;
+                StandardGroupPeakData = new ITransitionGroupPeakData<TPeak>[0];
             }
 
             public MockPeptidePeakData(IList<ITransitionGroupPeakData<TPeak>> transitionGroupPeakData)
             {
                 TransitionGroupPeakData = transitionGroupPeakData;
+                AnalyteGroupPeakData = TransitionGroupPeakData.Where(t => !t.IsStandard).ToArray();
+                StandardGroupPeakData = TransitionGroupPeakData.Where(t => t.IsStandard).ToArray();
             }
 
             public PeptideDocNode NodePep { get { return null; } }
@@ -322,16 +326,28 @@ namespace pwiz.SkylineTestA
             public ChromFileInfo FileInfo { get { return null; } }
 
             public IList<ITransitionGroupPeakData<TPeak>> TransitionGroupPeakData { get; private set; }
+
+            public IList<ITransitionGroupPeakData<TPeak>> AnalyteGroupPeakData { get; private set; }
+
+            public IList<ITransitionGroupPeakData<TPeak>> StandardGroupPeakData { get; private set; }
+
+            public IList<ITransitionGroupPeakData<TPeak>> BestAvailableGroupPeakData
+            {
+                get { return StandardGroupPeakData.Count > 0 ? StandardGroupPeakData : AnalyteGroupPeakData; }
+            }
         }
 
         private class MockTranGroupPeakData<TPeak> : ITransitionGroupPeakData<TPeak> where TPeak : class
         {
-            public MockTranGroupPeakData(IList<ITransitionPeakData<TPeak>> transtionPeakData,
+            public MockTranGroupPeakData(IList<ITransitionPeakData<TPeak>> transitionPeakData,
                                          bool isStandard = false,
                                          int charge = 2,
                                          IsotopeLabelType labelType = null)
             {
-                TranstionPeakData = transtionPeakData;
+                TransitionPeakData = transitionPeakData;
+                Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
+                Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+
                 IsStandard = isStandard;
                 var libInfo = new ChromLibSpectrumHeaderInfo("", 0);
                 var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
@@ -341,7 +357,13 @@ namespace pwiz.SkylineTestA
 
             public TransitionGroupDocNode NodeGroup { get; private set; }
             public bool IsStandard { get; private set; }
-            public IList<ITransitionPeakData<TPeak>> TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<TPeak>> TransitionPeakData { get; private set; }
+            public IList<ITransitionPeakData<TPeak>> Ms1TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<TPeak>> Ms2TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<TPeak>> DefaultTranstionPeakData
+            {
+                get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
+            }
         }
 
         private class MockTranPeakData<TPeak> : ITransitionPeakData<TPeak> where TPeak : class

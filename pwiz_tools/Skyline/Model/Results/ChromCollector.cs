@@ -256,9 +256,9 @@ namespace pwiz.Skyline.Model.Results
             private const int MEGABYTES = 1024 * 1024;
 
             /// <summary>
-            /// Maximum memory size (in bytes) used by chromatogram buffers.
+            /// Maximum memory size (in bytes) used by chromatogram buffers for 32-bit Skyline.
             /// </summary>
-            private const int CHROMATOGRAM_BUFFER_SIZE = 250 * MEGABYTES;
+            private const int CHROMATOGRAM_BUFFER_SIZE = 500 * MEGABYTES;
 
             /// <summary>
             /// Number of individual buffers allocated within CHROMATOGRAM_BUFFER_SIZE.
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Initial number of intensities of a single chromatogram
             /// </summary>
-            private const int MAX_BLOCK = 20000;
+            private const int MAX_BLOCK = 1000;
 
             // Paging file variables.
             private readonly string _dataFilePath;
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Buffer variables
             private float[][] _buffers;
-            private readonly int _bufferSize;
+            private readonly long _bufferSize;
             private int _bufferIndex;
             private int _blockSize;
             private bool _subdividingBlocks;
@@ -289,11 +289,13 @@ namespace pwiz.Skyline.Model.Results
 
             public Allocator(
                 string dataFilePath, 
-                int bufferSize = CHROMATOGRAM_BUFFER_SIZE, 
-                int bufferParts = BUFFER_PARTS, 
+                long bufferSize = 0, 
+                long bufferParts = BUFFER_PARTS, 
                 int maxBlock = MAX_BLOCK)
             {
-                int minBlocksPerBuffer;
+                if (bufferSize == 0)
+                    bufferSize = Environment.Is64BitProcess ? GetTotalMemoryInBytes() / 3 * 2 : CHROMATOGRAM_BUFFER_SIZE;
+                long minBlocksPerBuffer;
                 _dataFilePath = dataFilePath;
                 _blockSize = maxBlock;
                 
@@ -310,6 +312,42 @@ namespace pwiz.Skyline.Model.Results
                 _buffers = new float[bufferParts][];
                 _collectors = new List<ChromCollector>[bufferParts];
                 Instance = this;
+            }
+
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+            private class MEMORYSTATUSEX
+            {
+                // ReSharper disable MemberCanBePrivate.Local
+                // ReSharper disable once NotAccessedField.Local
+                public uint dwLength;
+#pragma warning disable 169
+#pragma warning disable 649
+                public uint dwMemoryLoad;
+                public ulong ullTotalPhys;
+                public ulong ullAvailPhys;
+                public ulong ullTotalPageFile;
+                public ulong ullAvailPageFile;
+                public ulong ullTotalVirtual;
+                public ulong ullAvailVirtual;
+                public ulong ullAvailExtendedVirtual;
+#pragma warning restore 649
+#pragma warning restore 169
+                // ReSharper restore MemberCanBePrivate.Local
+                public MEMORYSTATUSEX()
+                {
+                    dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+                }
+            }
+            [return: MarshalAs(UnmanagedType.Bool)]
+            [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
+
+            static long GetTotalMemoryInBytes()
+            {
+                MEMORYSTATUSEX statEX = new MEMORYSTATUSEX();
+                if (GlobalMemoryStatusEx(statEX))
+                    return (long) statEX.ullTotalPhys;
+                return 0;
             }
 
             private readonly ChromCollector _endCollector = new ChromCollector(-1);
@@ -390,7 +428,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Log some interesting stats.
-                //LogStats();
+                LogStats();
 
                 _buffers = null;
                 _collectors = null;
@@ -400,7 +438,7 @@ namespace pwiz.Skyline.Model.Results
             private void LogStats()
 // ReSharper restore UnusedMember.Local
             {
-                var memoryUsedForBuffers = 0;
+                long memoryUsedForBuffers = 0;
                 foreach (var buffer in _buffers)
                     memoryUsedForBuffers += (buffer != null) ? _bufferSize : 0;
 
@@ -408,30 +446,30 @@ namespace pwiz.Skyline.Model.Results
                 log.InfoFormat("Length of buffers for chrom data: {0:0.0} MB", (double) memoryUsedForBuffers*sizeof (float)/MEGABYTES); // Not L10N
                 log.InfoFormat("Length of paging file: {0:0.0} MB", (double) _fileLength/MEGABYTES); // Not L10N
 
-//                var collectorCount = 0;
-//                var maxCollectorLength = 0;
-//                var averageCollectorLength = 0;
-//                foreach (var collectorList in _collectors)
-//                {
-//                    if (collectorList != null)
-//                    {
-//                        foreach (var collector in collectorList)
-//                        {
-//                            if (collector != _endCollector)
-//                            {
-//                                collectorCount++;
-//                                averageCollectorLength += collector.Length;
-//                                maxCollectorLength = Math.Max(maxCollectorLength, collector.Length);
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                log.InfoFormat("Collector count: {0}", collectorCount); // Not L10N
-//                log.InfoFormat("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength/collectorCount);   // Not L10N
-//                log.InfoFormat("Max. collector length: {0}", maxCollectorLength); // Not L10N
-//                log.InfoFormat("Collector buffer length (in floats) at end: {0}", _blockSize); // Not L10N
-//                log.InfoFormat("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock); // Not L10N
+                var collectorCount = 0;
+                var maxCollectorLength = 0;
+                var averageCollectorLength = 0;
+                foreach (var collectorList in _collectors)
+                {
+                    if (collectorList != null)
+                    {
+                        foreach (var collector in collectorList)
+                        {
+                            if (collector != _endCollector)
+                            {
+                                collectorCount++;
+                                averageCollectorLength += collector.Length;
+                                maxCollectorLength = Math.Max(maxCollectorLength, collector.Length);
+                            }
+                        }
+                    }
+                }
+
+                log.InfoFormat("Collector count: {0}", collectorCount); // Not L10N
+                log.InfoFormat("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength/collectorCount);   // Not L10N
+                log.InfoFormat("Max. collector length: {0}", maxCollectorLength); // Not L10N
+                log.InfoFormat("Collector buffer length (in floats) at end: {0}", _blockSize); // Not L10N
+                log.InfoFormat("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock); // Not L10N
             }
 
             public long Write(float[] data, int index, int length)

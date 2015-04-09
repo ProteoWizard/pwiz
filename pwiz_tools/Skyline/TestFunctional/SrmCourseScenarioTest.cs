@@ -177,26 +177,28 @@ namespace pwiz.SkylineTestFunctional
 
             matchedUserSetGroups = new[]
             {
-                new UserSetCount(UserSet.FALSE, 400),
-                new UserSetCount(UserSet.REINTEGRATED, 116),    // TODO: Exclude decoys
+                new UserSetCount(UserSet.FALSE, 276),
+                new UserSetCount(UserSet.REINTEGRATED, 8),
             };
             matchedUserSetTrans = new[]
             {
-                new UserSetCount(UserSet.FALSE, 1806),
-                new UserSetCount(UserSet.REINTEGRATED, 554),    // TODO: Exclude decoys
+                new UserSetCount(UserSet.FALSE, 1212),
+                new UserSetCount(UserSet.REINTEGRATED, 36),
             };
 
-            VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans);
+            VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans, true);
             VerifyMatchingPeakBoundaries(documentRescore, true);
 
             int changeCount = CountChangedPeaks(document, documentRescore);
             Assert.IsTrue(changeCount > 200);
         }
 
-        private void VerifyUserSets(SrmDocument document, UserSetCount[] userSetGroups, UserSetCount[] userSetTrans)
+        private void VerifyUserSets(SrmDocument document, UserSetCount[] userSetGroups, UserSetCount[] userSetTrans, bool ignoreDecoys = false)
         {
             var counts = new int[userSetGroups.Length];
-            foreach (var chromInfo in document.PeptideTransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            foreach (var chromInfo in document.PeptideTransitionGroups
+                .Where(nodeGroup => !ignoreDecoys || !nodeGroup.IsDecoy)
+                .SelectMany(nodeGroup => nodeGroup.ChromInfos))
             {
                 var userSet = chromInfo.UserSet;
                 counts[userSetGroups.IndexOf(us => Equals(us.UserSet, userSet))]++;
@@ -206,7 +208,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(userSetGroups[i].Count, counts[i]);
             }
             counts = new int[userSetTrans.Length];
-            foreach (var chromInfo in document.PeptideTransitions.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            foreach (var chromInfo in document.PeptideTransitions
+                .Where(nodeTran => !ignoreDecoys || !nodeTran.IsDecoy)
+                .SelectMany(nodeTran => nodeTran.ChromInfos))
             {
                 var userSet = chromInfo.UserSet;
                 counts[userSetTrans.IndexOf(us => Equals(us.UserSet, userSet))]++;

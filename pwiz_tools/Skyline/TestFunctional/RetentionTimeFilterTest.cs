@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                     AssertChromatogramWindow(document, chromatogramSet, predictedRt.Value - FILTER_LENGTH, predictedRt.Value + FILTER_LENGTH, tuple.Item3);
                 }
-                Assert.AreEqual(1 + (TestSmallMolecules ? 1 : 0), countNull);
+                Assert.AreEqual((TestSmallMolecules ? 1 : 0), countNull);
             }
 
             // Test using iRT with auto-calculated regression

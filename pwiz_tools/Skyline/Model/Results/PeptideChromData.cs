@@ -749,6 +749,8 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     internal sealed class PeptideChromDataPeak : ITransitionGroupPeakData<IDetailedPeakData>
     {
+        private ChromDataPeakList _peakGroup;
+
         public PeptideChromDataPeak(ChromDataSet data, ChromDataPeakList peakGroup)
         {
             Data = data;
@@ -759,9 +761,16 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsStandard { get { return Data.IsStandard; } }
 
-        public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData
+        public IList<ITransitionPeakData<IDetailedPeakData>> TransitionPeakData
         {
             get { return PeakGroup ?? ChromDataPeakList.EMPTY; }
+        }
+
+        public IList<ITransitionPeakData<IDetailedPeakData>> Ms1TranstionPeakData { get; private set; }
+        public IList<ITransitionPeakData<IDetailedPeakData>> Ms2TranstionPeakData { get; private set; }
+        public IList<ITransitionPeakData<IDetailedPeakData>> DefaultTranstionPeakData
+        {
+            get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
         }
 
         /// <summary>
@@ -772,7 +781,24 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Single peak group
         /// </summary>
-        public ChromDataPeakList PeakGroup { get; private set; }
+        public ChromDataPeakList PeakGroup
+        {
+            get { return _peakGroup; }
+            set
+            {
+                _peakGroup = value;
+                if (_peakGroup == null)
+                {
+                    Ms1TranstionPeakData = ChromDataPeakList.EMPTY;
+                    Ms2TranstionPeakData = ChromDataPeakList.EMPTY;
+                }
+                else
+                {
+                    Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
+                    Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                }
+            }
+        }
 
         /// <summary>
         /// Set this peak based on another best peak for a peak group
@@ -833,6 +859,8 @@ namespace pwiz.Skyline.Model.Results
             NodePep = nodePep;
             FileInfo = fileInfo;
             TransitionGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
+            AnalyteGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
+            StandardGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
             ScoringModel = LegacyScoringModel.DEFAULT_MODEL;
 
             Add(peak);
@@ -845,6 +873,15 @@ namespace pwiz.Skyline.Model.Results
         public IPeakScoringModel ScoringModel { get; private set; }
 
         public IList<ITransitionGroupPeakData<IDetailedPeakData>> TransitionGroupPeakData { get; private set; }
+
+        public IList<ITransitionGroupPeakData<IDetailedPeakData>> AnalyteGroupPeakData { get; private set; }
+
+        public IList<ITransitionGroupPeakData<IDetailedPeakData>> StandardGroupPeakData { get; private set; }
+
+        public IList<ITransitionGroupPeakData<IDetailedPeakData>> BestAvailableGroupPeakData
+        {
+            get { return StandardGroupPeakData.Count > 0 ? StandardGroupPeakData : AnalyteGroupPeakData; }
+        }
 
         private int IdentifiedCount { get; set; }
 
@@ -869,14 +906,17 @@ namespace pwiz.Skyline.Model.Results
             var modelFeatures = new double [modelCalcs.Count];
             // Here we score both the detailFeatureCalculators (for storage) 
             // and the peak calculators of the legacy model (for import-stage peak scoring)
+            // This will cause some scores to be calculated multiple times, but score
+            // caching should make this fast.
             var allFeatureCalculators = detailFeatureCalculators.Union(modelCalcs);
+            // Calculate summary data once for all scores
+            var summaryData = new PeptidePeakDataConverter<IDetailedPeakData>(this);
             foreach (var calc in allFeatureCalculators)
             {
                 double feature;
                 var summaryCalc = calc as SummaryPeakFeatureCalculator;
                 if (summaryCalc != null)
                 {
-                    var summaryData = new PeptidePeakDataConverter<IDetailedPeakData>(this);
                     feature = summaryCalc.Calculate(context, summaryData);
                 }
                 else
@@ -918,6 +958,8 @@ namespace pwiz.Skyline.Model.Results
             CombinedScore = 0;
             IdentifiedCount = 0;
             TransitionGroupPeakData.Clear();
+            AnalyteGroupPeakData.Clear();
+            StandardGroupPeakData.Clear();
             base.ClearItems();
         }
 
@@ -925,13 +967,19 @@ namespace pwiz.Skyline.Model.Results
         {
             AddPeak(item);
 
+            GetChangeList(item).Add(item);
+
             TransitionGroupPeakData.Insert(index, item);
+
             base.InsertItem(index, item);
         }
 
         protected override void RemoveItem(int index)
         {
             SubtractPeak(this[index]);
+
+            var tranGroupPeakData = TransitionGroupPeakData[index];
+            GetChangeList(tranGroupPeakData).Remove(tranGroupPeakData);
 
             TransitionGroupPeakData.RemoveAt(index);
             base.RemoveItem(index);
@@ -942,8 +990,17 @@ namespace pwiz.Skyline.Model.Results
             SubtractPeak(this[index]);
             AddPeak(item);
 
+            var tranGroupPeakData = TransitionGroupPeakData[index];
+            GetChangeList(tranGroupPeakData).Remove(tranGroupPeakData);
+            GetChangeList(item).Add(item);
+
             TransitionGroupPeakData[index] = item;
             base.SetItem(index, item);
+        }
+
+        private IList<ITransitionGroupPeakData<IDetailedPeakData>> GetChangeList(ITransitionGroupPeakData<IDetailedPeakData> peakData)
+        {
+            return peakData.IsStandard ? StandardGroupPeakData : AnalyteGroupPeakData;
         }
     }
 }

@@ -339,6 +339,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             TransitionGroupPeakData = groupPeakData == null ? new List<ITransitionGroupPeakData<ISummaryPeakData>>() 
                                         : groupPeakData.Select(gp => 
                                             new TransitionGroupPeakDataConverter<TData>(gp) as ITransitionGroupPeakData<ISummaryPeakData>).ToList();
+            AnalyteGroupPeakData = TransitionGroupPeakData.Where(t => !t.IsStandard).ToArray();
+            StandardGroupPeakData = TransitionGroupPeakData.Where(t => t.IsStandard).ToArray();
         }
 
         private readonly IPeptidePeakData<TData> _peptidePeakData;
@@ -348,6 +350,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public ChromFileInfo FileInfo { get { return _peptidePeakData.FileInfo; } }
 
         public IList<ITransitionGroupPeakData<ISummaryPeakData>> TransitionGroupPeakData { get; private set; }
+
+        public IList<ITransitionGroupPeakData<ISummaryPeakData>> AnalyteGroupPeakData { get; private set; }
+
+        public IList<ITransitionGroupPeakData<ISummaryPeakData>> StandardGroupPeakData { get; private set; }
+
+        public IList<ITransitionGroupPeakData<ISummaryPeakData>> BestAvailableGroupPeakData
+        {
+            get { return StandardGroupPeakData.Count > 0 ? StandardGroupPeakData : AnalyteGroupPeakData; }
+        }
+
     }
 
     /// <summary>
@@ -358,10 +370,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public TransitionGroupPeakDataConverter(ITransitionGroupPeakData<TData> groupPeakData)
         {
             _groupPeakData = groupPeakData;
-            var transPeakData = _groupPeakData.TranstionPeakData;
-            TranstionPeakData = transPeakData == null ? new List<ITransitionPeakData<ISummaryPeakData>>()
-                                              : _groupPeakData.TranstionPeakData.Select(tp => 
+            var transPeakData = _groupPeakData.TransitionPeakData;
+            TransitionPeakData = transPeakData == null ? new List<ITransitionPeakData<ISummaryPeakData>>()
+                                              : _groupPeakData.TransitionPeakData.Select(tp => 
                                                   new TransitionPeakDataConverter<TData>(tp) as ITransitionPeakData<ISummaryPeakData>).ToList();
+            Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
+            Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
         }
 
         private readonly ITransitionGroupPeakData<TData> _groupPeakData;
@@ -370,7 +384,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsStandard { get { return _groupPeakData.IsStandard; } }
 
-        public IList<ITransitionPeakData<ISummaryPeakData>> TranstionPeakData { get; private set; }
+        public IList<ITransitionPeakData<ISummaryPeakData>> TransitionPeakData { get; private set; }
+
+        public IList<ITransitionPeakData<ISummaryPeakData>> Ms1TranstionPeakData { get; private set; }
+
+        public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionPeakData { get; private set; }
+
+        public IList<ITransitionPeakData<ISummaryPeakData>> DefaultTranstionPeakData
+        {
+            get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
+        }
     }
 
     /// <summary>
@@ -400,6 +423,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public interface IPeptidePeakData<TData> : IPeptidePeakData
     {
         IList<ITransitionGroupPeakData<TData>> TransitionGroupPeakData { get; }
+
+        IList<ITransitionGroupPeakData<TData>> AnalyteGroupPeakData { get; }
+
+        IList<ITransitionGroupPeakData<TData>> StandardGroupPeakData { get; }
+
+        IList<ITransitionGroupPeakData<TData>> BestAvailableGroupPeakData { get; }
     }
 
     public interface ITransitionGroupPeakData<TData>
@@ -408,7 +437,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         bool IsStandard { get; }
 
-        IList<ITransitionPeakData<TData>> TranstionPeakData { get; }
+        IList<ITransitionPeakData<TData>> TransitionPeakData { get; }
+
+        IList<ITransitionPeakData<TData>> Ms1TranstionPeakData { get; }
+
+        IList<ITransitionPeakData<TData>> Ms2TranstionPeakData { get; }
+
+        IList<ITransitionPeakData<TData>> DefaultTranstionPeakData { get; }
     }
 
     public interface ITransitionPeakData<out TData>

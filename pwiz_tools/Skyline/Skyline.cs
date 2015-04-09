@@ -1120,7 +1120,7 @@ namespace pwiz.Skyline
                     text = ClipboardEx.GetText().Trim();
                     textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
                 }
-                catch (ExternalException)
+                catch (Exception)
                 {
                     MessageDlg.Show(this,
                                     ClipboardHelper.GetOpenClipboardMessage(

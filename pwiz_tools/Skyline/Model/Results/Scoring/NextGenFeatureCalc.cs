@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var massErrors = new List<double>();
             var weights = new List<double>();
             bool noTransitions = true;
-            foreach (var pdTran in tranGroupPeakDatas.SelectMany(pd => pd.TranstionPeakData))
+            foreach (var pdTran in tranGroupPeakDatas.SelectMany(pd => pd.TransitionPeakData))
             {
                 if (!IsIonType(pdTran.NodeTran))
                     continue;
@@ -256,15 +256,48 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score; }
         }
 
-        protected override IEnumerable<MQuestCrossCorrelation> FilterIons(IEnumerable<MQuestCrossCorrelation> crossCorrMatrix)
+        protected override IList<ITransitionPeakData<IDetailedPeakData>> FilterIons(IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroupPeakDatas)
         {
-            var crossCorrSelect = crossCorrMatrix.Where(xcorr => xcorr.TranPeakData1.NodeTran != null && xcorr.TranPeakData2.NodeTran != null)
-                                                 .Where(xcorr => xcorr.TranPeakData1.NodeTran.IsMs1 ^ xcorr.TranPeakData2.NodeTran.IsMs1).ToList();
-            if (!crossCorrSelect.ToList().Any())
-                return crossCorrSelect;
-            var areas = crossCorrSelect.Select(xcorr => xcorr.AreaSum).ToList();
-            var maxIndex = areas.IndexOf(areas.Max());
-            return crossCorrSelect.GetRange(maxIndex, 1);
+            return GetMaxAreaIon(MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas));
+        }
+
+        protected override IList<ITransitionPeakData<IDetailedPeakData>> FilterCrossIons(IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroupPeakDatas)
+        {
+            return GetMaxAreaIon(MQuestHelpers.GetMs1IonTypes(tranGroupPeakDatas));
+        }
+
+        private ITransitionPeakData<IDetailedPeakData>[] GetMaxAreaIon(IEnumerable<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
+        {
+            float maxArea = float.MinValue;
+            ITransitionPeakData<IDetailedPeakData> maxTran = null;
+            foreach (var tran in tranPeakDatas)
+            {
+                if (tran.PeakData.Area > maxArea)
+                {
+                    maxTran = tran;
+                    maxArea = tran.PeakData.Area;
+                }
+            }
+            return maxTran != null ? new[] {maxTran} : new ITransitionPeakData<IDetailedPeakData>[0];
+        }
+
+
+        /// <summary>
+        /// No score caching for this calculator
+        /// </summary>
+        protected override float? GetCachedScore(PeakScoringContext context,
+            IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// No score caching for this calculator
+        /// </summary>
+        protected override float SetCachedScore(PeakScoringContext context,
+            IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups, float score)
+        {
+            return score;
         }
     }
 
@@ -278,15 +311,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<IDetailedPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData).ToArray();
-            if (tranGroupPeakDatas.Length == 0)
+            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData);
+            if (tranGroupPeakDatas.Count == 0)
                 return float.NaN;
             var snValues = new List<double>();
             var weights = new List<double>();
-            foreach (var pdTran in tranGroupPeakDatas.SelectMany(pd => pd.TranstionPeakData))
+            foreach (var pdTran in GetIonTypes(tranGroupPeakDatas))
             {
-                if (!IsIonType(pdTran.NodeTran))
-                    continue;
                 var peakData = pdTran.PeakData;
                 if (peakData == null || peakData.Intensities == null || peakData.Intensities.Length == 0)
                     continue;
@@ -314,17 +345,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected double? GetSnValue(IDetailedPeakData peakData)
         {
             const int halfRange = 500;
-            var intensityList = new List<double>();
             int startNoiseCalc = Math.Max(peakData.StartIndex - halfRange, 0);
             int endNoiseCalc = Math.Min(peakData.EndIndex + halfRange, peakData.Intensities.Length);
             if (peakData.StartIndex > peakData.Intensities.Length || peakData.StartIndex == -1 || peakData.EndIndex == -1)
                 return null;
+            int intensityCount = (endNoiseCalc - peakData.EndIndex) + (peakData.StartIndex - startNoiseCalc);
+            if (intensityCount == 0)
+                return 0;
+            var intensityList = new List<double>(intensityCount);
             for (int i = startNoiseCalc; i < peakData.StartIndex; ++i)
                 intensityList.Add(peakData.Intensities[i]);
             for (int i = peakData.EndIndex; i < endNoiseCalc; ++i)
                 intensityList.Add(peakData.Intensities[i]);
-            if (intensityList.Count == 0)
-                return 0;
             double peakHeight = Math.Max(peakData.Intensities[peakData.TimeIndex], 1);
             // If there is no medianNoise, set it to 1.0
             double medianNoise = Math.Max(GetMedian(intensityList), 1);
@@ -338,16 +370,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             if (dataList.Count == 0)
                 return double.NaN;
-            var dataStats = new Statistics(dataList);
-            return dataStats.Median();
+            // and potentially needing to call QNthItem twice.
+            return Statistics.QNthItem(dataList, dataList.Count / 2);
         }
 
         public override bool IsReversedScore { get { return false; } }
 
-        protected abstract bool IsIonType(TransitionDocNode nodeTran);
-
-        protected abstract IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected abstract IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData);
+
+        protected virtual IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            return MQuestHelpers.GetDefaultIonTypes(tranGroupPeakDatas);
+        }
     }
 
     public class NextGenSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
@@ -359,12 +394,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise; }
         }
 
-        protected override bool IsIonType(TransitionDocNode nodeTran)
-        {
-            return nodeTran == null || !nodeTran.IsMs1;
-        }
-
-        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
@@ -380,12 +410,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise; }
         }
 
-        protected override bool IsIonType(TransitionDocNode nodeTran)
-        {
-            return nodeTran == null || !nodeTran.IsMs1;
-        }
-
-        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetStandardGroups(summaryPeakData);

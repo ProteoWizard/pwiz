@@ -190,6 +190,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                     nodeGroup,
                                                                     chromatogramSet,
                                                                     chromGroupInfoPrimary)).ToArray();
+                AnalyteGroupPeakData = TransitionGroupPeakData.Where(t => !t.IsStandard).ToArray();
+                StandardGroupPeakData = TransitionGroupPeakData.Where(t => t.IsStandard).ToArray();
             }
 
             public PeptideDocNode NodePep { get; private set; }
@@ -198,9 +200,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             public IList<ITransitionGroupPeakData<ISummaryPeakData>> TransitionGroupPeakData { get; private set; }
 
+            public IList<ITransitionGroupPeakData<ISummaryPeakData>> AnalyteGroupPeakData { get; private set; }
+
+            public IList<ITransitionGroupPeakData<ISummaryPeakData>> StandardGroupPeakData { get; private set; }
+
+            public IList<ITransitionGroupPeakData<ISummaryPeakData>> BestAvailableGroupPeakData
+            {
+                get { return StandardGroupPeakData.Count > 0 ? StandardGroupPeakData : AnalyteGroupPeakData; }
+            }
+
             private IEnumerable<ITransitionPeakData<ISummaryPeakData>> TransitionPeakData
             {
-                get { return TransitionGroupPeakData.SelectMany(pd => pd.TranstionPeakData); }
+                get { return TransitionGroupPeakData.SelectMany(pd => pd.TransitionPeakData); }
             }
 
             /// <summary>
@@ -265,7 +276,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 float end = float.MinValue;
                 foreach (var groupPeakData in TransitionGroupPeakData)
                 {
-                    foreach (var peakData in groupPeakData.TranstionPeakData)
+                    foreach (var peakData in groupPeakData.TransitionPeakData)
                     {
                         if (peakData.PeakData == null)
                             return false;
@@ -306,7 +317,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 get
                 {
                     ISummaryPeakData maxPeakData = null;
-                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TranstionPeakData))
+                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TransitionPeakData))
                     {
                         if (maxPeakData == null || tranPeakData.PeakData.Height > maxPeakData.Height)
                             maxPeakData = tranPeakData.PeakData;
@@ -320,7 +331,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 get
                 {
                     ISummaryPeakData maxPeakData = null;
-                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TranstionPeakData))
+                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TransitionPeakData))
                     {
                         if (maxPeakData == null || tranPeakData.PeakData.Height > maxPeakData.Height)
                             maxPeakData = tranPeakData.PeakData;
@@ -334,7 +345,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 get
                 {
                     ISummaryPeakData maxPeakData = null;
-                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TranstionPeakData))
+                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TransitionPeakData))
                     {
                         if (maxPeakData == null || tranPeakData.PeakData.Height > maxPeakData.Height)
                             maxPeakData = tranPeakData.PeakData;
@@ -364,7 +375,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var instrument = context.Document.Settings.TransitionSettings.Instrument;
                 foreach (var transitionGroupPeakData in TransitionGroupPeakData)
                 {
-                    foreach (var transitionPeakData in transitionGroupPeakData.TranstionPeakData)
+                    foreach (var transitionPeakData in transitionGroupPeakData.TransitionPeakData)
                     {
                         // Skip forced integration peaks
                         if (transitionPeakData.PeakData == null)
@@ -445,14 +456,31 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                  let tranInfo = _chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance)
                                  where tranInfo != null
                                  select new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
-                        TranstionPeakData = pd.ToArray();
+                        TransitionPeakData = pd.ToArray();
                     }
+                }
+                if (TransitionPeakData == null)
+                {
+                    TransitionPeakData = Ms1TranstionPeakData = Ms2TranstionPeakData =
+                        new ITransitionPeakData<ISummaryPeakData>[0];
+                }
+                else
+                {
+                    Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
+                    Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
                 }
             }
 
             public TransitionGroupDocNode NodeGroup { get; private set; }
             public bool IsStandard { get; private set; }
-            public IList<ITransitionPeakData<ISummaryPeakData>> TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<ISummaryPeakData>> TransitionPeakData { get; private set; }
+            public IList<ITransitionPeakData<ISummaryPeakData>> Ms1TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionPeakData { get; private set; }
+
+            public IList<ITransitionPeakData<ISummaryPeakData>> DefaultTranstionPeakData
+            {
+                get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
+            }
 
             public bool SetPeakIndex(int peakIndex)
             {
@@ -476,9 +504,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 private set
                 {
                     _peakIndex = value;
-                    if (TranstionPeakData != null)
+                    if (TransitionPeakData != null)
                     {
-                        foreach (SummaryTransitionPeakData tranPeakData in TranstionPeakData)
+                        foreach (SummaryTransitionPeakData tranPeakData in TransitionPeakData)
                         {
                             tranPeakData.PeakIndex = _peakIndex;
                         }

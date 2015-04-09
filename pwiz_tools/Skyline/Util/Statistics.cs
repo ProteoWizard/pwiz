@@ -1305,7 +1305,10 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private static double QNthItem(IList<double> list, int elementIndex)
+        /// <summary>
+        /// Linear time function for finding the n-th item in a list. This function changes the order of the elements in the list.
+        /// </summary>
+        public static double QNthItem(IList<double> list, int elementIndex)
         {
             int left = 0;
             int right = list.Count - 1;
