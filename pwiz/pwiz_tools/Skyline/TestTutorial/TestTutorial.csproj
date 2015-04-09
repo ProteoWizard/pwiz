@@ -113,6 +113,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SmallMoleculesTutorial.cs" />
     <Compile Include="AbsoluteQuantTutorialTest.cs" />
     <Compile Include="CEOptimizationTutorialTest.cs" />
     <Compile Include="CustomReportsTutorialTest.cs" />
@@ -204,6 +205,7 @@
     <None Include="MethodRefinementViews.zip" />
     <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
+    <None Include="SmallMoleculeViews.zip" />
     <None Include="SRMViews.zip" />
     <None Include="TargetedMSMSViews.zip" />
     <None Include="GroupedStudiesViews.zip" />
