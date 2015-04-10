@@ -217,8 +217,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
         //result->set(MS_lowest_observed_m_z, spectrum->getMinX(), MS_m_z);
         //result->set(MS_highest_observed_m_z, spectrum->getMaxX(), MS_m_z);
-        result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_detector_counts);
-        result->set(MS_base_peak_m_z, spectrum->getBasePeakX(), MS_m_z);
+
+        if (!config_.acceptZeroLengthSpectra)
+        {
+            result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_detector_counts);
+            result->set(MS_base_peak_m_z, spectrum->getBasePeakX(), MS_m_z);
+        }
+
         result->set(MS_total_ion_current, spectrum->getSumY(), MS_number_of_detector_counts);
 
         if (getBinaryData)
@@ -245,6 +250,7 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 
     typedef multimap<double, pair<ExperimentPtr, int> > ExperimentAndCycleByTime;
     ExperimentAndCycleByTime experimentAndCycleByTime;
+    vector<double> times, intensities;
 
     int periodCount = wifffile_->getPeriodCount(sample);
     for (int period=1; period <= periodCount; ++period)
@@ -259,12 +265,22 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
                 (experimentType == SIM && !config_.simAsSpectra))
                 continue;
 
-            vector<double> times, intensities;
-            msExperiment->getBPC(times, intensities);
+            if (config_.acceptZeroLengthSpectra)
+            {
+                msExperiment->getTIC(times, intensities);
 
-            for (int i=0; i < (int) times.size(); ++i)
-                if (intensities[i] > 0 && (config_.acceptZeroLengthSpectra || (wifffile_->getSpectrum(msExperiment, i+1)->getDataSize(false) > 0)))
-                    experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i+1)));
+                for (int i = 0, end = (int) times.size(); i < end; ++i)
+                    if (intensities[i] > 0)
+                        experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i + 1)));
+            }
+            else
+            {
+                msExperiment->getBPC(times, intensities);
+
+                for (int i = 0, end = (int)times.size(); i < end; ++i)
+                    if (intensities[i] > 0 && wifffile_->getSpectrum(msExperiment, i + 1)->getDataSize(false) > 0)
+                        experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i + 1)));
+            }
         }
     }
 

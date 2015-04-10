@@ -123,14 +123,16 @@ struct ExperimentImpl : public Experiment
     typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
     TransitionParametersMap transitionParametersMap;
 
-    const vector<double>& cycleTimes() const {initialize(); return cycleTimes_;}
-    const vector<double>& cycleIntensities() const {initialize(); return cycleIntensities_;}
-    const vector<double>& basePeakMZs() const {initialize(); return basePeakMZs_;}
-    const vector<double>& basePeakIntensities() const {initialize(); return basePeakIntensities_;}
+    const vector<double>& cycleTimes() const {initializeTIC(); return cycleTimes_;}
+    const vector<double>& cycleIntensities() const {initializeTIC(); return cycleIntensities_;}
+    const vector<double>& basePeakMZs() const {initializeBPC(); return basePeakMZs_;}
+    const vector<double>& basePeakIntensities() const {initializeBPC(); return basePeakIntensities_;}
 
     private:
-    void initialize() const;
-    mutable bool initialized_;
+    void initializeTIC() const;
+    void initializeBPC() const;
+    mutable bool initializedTIC_;
+    mutable bool initializedBPC_;
     mutable vector<double> cycleTimes_;
     mutable vector<double> cycleIntensities_;
     mutable vector<double> basePeakMZs_;
@@ -323,7 +325,7 @@ ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment
 
 
 ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
-: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), initialized_(false)
+: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), initializedTIC_(false), initializedBPC_(false)
 {
     try
     {
@@ -354,9 +356,9 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
     CATCH_AND_FORWARD
 }
 
-void ExperimentImpl::initialize() const
+void ExperimentImpl::initializeTIC() const
 {
-    if (initialized_)
+    if (initializedTIC_)
         return;
 
     try
@@ -365,16 +367,28 @@ void ExperimentImpl::initialize() const
         ToStdVector(tic->GetActualXValues(), cycleTimes_);
         ToStdVector(tic->GetActualYValues(), cycleIntensities_);
 
+        initializedTIC_ = true;
+    }
+    CATCH_AND_FORWARD
+}
+
+void ExperimentImpl::initializeBPC() const
+{
+    if (initializedBPC_)
+        return;
+
+    try
+    {
         BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
         BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
         BasePeakChromatogramInfo^ bpci = bpc->Info;
         ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
 
         basePeakMZs_.resize(cycleTimes_.size());
-        for (size_t i=0; i < cycleTimes_.size(); ++i)
+        for (size_t i = 0; i < cycleTimes_.size(); ++i)
             basePeakMZs_[i] = bpci->GetBasePeakMass(i);
 
-        initialized_ = true;
+        initializedBPC_ = true;
     }
     CATCH_AND_FORWARD
 }
