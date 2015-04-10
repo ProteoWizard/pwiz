@@ -916,8 +916,10 @@ namespace pwiz.Skyline.EditUI
                     var row = gridViewTransitionList.Rows[i];
                     var productMz = row.Cells[INDEX_PRODUCT_MZ].Value;
                     var productFormula = row.Cells[INDEX_PRODUCT_FORMULA].Value;
+                    var productCharge = row.Cells[INDEX_PRODUCT_CHARGE].Value;
                     if ((productMz != null && productMz.ToString().Length > 0) ||
-                        (productFormula != null && productFormula.ToString().Length > 0))
+                        (productFormula != null && productFormula.ToString().Length > 0) ||
+                        (productCharge != null && productCharge.ToString().Length > 0))
                     {
                         requireProductInfo = true; // Product list is not completely empty
                         break;
