@@ -25,6 +25,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -41,14 +42,20 @@ namespace pwiz.SkylineTestTutorial
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_1.pdf";
 
-            TestFilesZipPaths = new [] { @"https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip", @"TestTutorial\SmallMoleculeViews.zip" };
+            TestFilesZipPaths = new []
+            {
+                (UseRawFiles
+                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip"
+                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzMl.zip"),
+                @"TestTutorial\SmallMoleculeViews.zip"
+            };
             RunFunctionalTest();
         }
 
         private string GetTestPath(string relativePath = null)
         {
-            string folderMsMs = UseRawFiles ? "SmallMolecule" : "SmallMoleculeMzml";
-            string fullRelativePath = relativePath != null ? Path.Combine(folderMsMs, relativePath) : folderMsMs;
+            string folderSmallMolecule = UseRawFiles ? "SmallMolecule" : "SmallMoleculeMzml";
+            string fullRelativePath = relativePath != null ? Path.Combine(folderSmallMolecule, relativePath) : folderSmallMolecule;
             return TestFilesDirs[0].GetTestPath(fullRelativePath);
         }
 
@@ -139,7 +146,9 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
-                    openDataSourceDialog1.SelectAllFileType(ExtensionTestContext.ExtWatersRaw);
+                    openDataSourceDialog1.SelectAllFileType(UseRawFiles
+                        ? ExtensionTestContext.ExtWatersRaw
+                        : ExtensionTestContext.ExtMzml);
                 });
                 PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
                 OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
@@ -149,6 +158,8 @@ namespace pwiz.SkylineTestTutorial
 
                 WaitForCondition(() =>
                     SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+
+                SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 8);
 
