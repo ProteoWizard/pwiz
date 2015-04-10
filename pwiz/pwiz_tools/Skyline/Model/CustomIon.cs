@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 using pwiz.Common.SystemUtil;
@@ -67,6 +68,8 @@ namespace pwiz.Skyline.Model
         public double MonoisotopicMass { get; private set; }
         public double AverageMass { get; private set; }
 
+        private const string massFormat = "{0} [{1}/{2}]"; // Not L10N
+
         public string DisplayName
         {
             get
@@ -76,9 +79,20 @@ namespace pwiz.Skyline.Model
                 else if (!string.IsNullOrEmpty(Formula))
                     return Formula;
                 else
-                {
-                    return Resources.CustomIon_DisplayName_Ion;  // Not much we can say about it
-                }
+                    return String.Format(massFormat, Resources.CustomIon_DisplayName_Ion, MonoisotopicMass, AverageMass );  
+            }
+        }
+
+        public string InvariantName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(Name))
+                    return Name;
+                else if (!string.IsNullOrEmpty(Formula))
+                    return Formula;
+                else
+                    return String.Format(CultureInfo.InvariantCulture, massFormat, "Ion", MonoisotopicMass, AverageMass);  // Not L10N
             }
         }
 
