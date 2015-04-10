@@ -353,14 +353,15 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 int textIdIndex;
+                var textIdBytes = Encoding.UTF8.GetBytes(textId);
                 if (!dictTextIdToByteIndex.TryGetValue(textId, out textIdIndex))
                 {
                     textIdIndex = listTextIdBytes.Count;
-                    listTextIdBytes.AddRange(Encoding.UTF8.GetBytes(textId));
+                    listTextIdBytes.AddRange(textIdBytes);
                     dictTextIdToByteIndex.Add(textId, textIdIndex);
                 }
                 TextIdIndex = textIdIndex;
-                TextIdLen = (ushort) textId.Length;
+                TextIdLen = (ushort)textIdBytes.Length;
             }
         }
 

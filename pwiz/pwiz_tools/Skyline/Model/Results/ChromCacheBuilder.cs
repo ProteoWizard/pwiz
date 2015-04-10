@@ -619,7 +619,8 @@ namespace pwiz.Skyline.Model.Results
             var nodePep = peptideChromDataSets.NodePep;
             if (nodePep == null)
                 return;
-
+            if (!nodePep.IsProteomic)  // No retention time prediction for small molecules
+                return;
             string lookupSequence = nodePep.SourceUnmodifiedTextId;
             var lookupMods = nodePep.SourceExplicitMods;
             double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePaths[_currentFileIndex],
