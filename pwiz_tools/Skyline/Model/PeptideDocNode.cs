@@ -110,15 +110,20 @@ namespace pwiz.Skyline.Model
 
         public string ModifiedSequenceDisplay { get; private set; }
 
-        public string RawTextId { get { return CustomDisplayNameOrText(ModifiedSequence); } }
+        public string RawTextId { get { return CustomInvariantNameOrText(ModifiedSequence); } }
 
-        public string RawUnmodifiedTextId { get { return CustomDisplayNameOrText(Peptide.Sequence); }}
+        public string RawUnmodifiedTextId { get { return CustomInvariantNameOrText(Peptide.Sequence); }}
 
         public string RawTextIdDisplay { get { return CustomDisplayNameOrText(ModifiedSequenceDisplay); } }
 
         private string CustomDisplayNameOrText(string text)
         {
             return Peptide.IsCustomIon ? Peptide.CustomIon.DisplayName : text;
+        }
+
+        private string CustomInvariantNameOrText(string text)
+        {
+            return Peptide.IsCustomIon ? Peptide.CustomIon.InvariantName : text;
         }
 
         /// <summary>
