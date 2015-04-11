@@ -179,6 +179,15 @@ namespace pwiz.Skyline.Model.DocSettings
             return isolationWindow;
         }
 
+        public IEnumerable<IsolationWindow> GetIsolationWindowsContaining(double mz)
+        {
+            if (!FromResults)
+            {
+                foreach (var window in PrespecifiedIsolationWindows.Where(w => w.Contains(mz)))
+                    yield return window;
+            }
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
