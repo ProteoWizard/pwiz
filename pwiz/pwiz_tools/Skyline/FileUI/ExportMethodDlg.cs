@@ -212,6 +212,7 @@ namespace pwiz.Skyline.FileUI
         private static bool IsSingleDwellInstrumentType(string type)
         {
             return Equals(type, ExportInstrumentType.AGILENT_TOF) ||
+                   Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                    Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
@@ -244,6 +245,7 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
+                       Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
                        // requires start and stop times.
                        Equals(type, ExportInstrumentType.THERMO_LTQ);
@@ -578,6 +580,12 @@ namespace pwiz.Skyline.FileUI
                     MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
                 }                    
+            }
+
+            if (IsDia && _document.Settings.TransitionSettings.FullScan.IsolationScheme.FromResults)
+            {
+                MessageDlg.Show(this, Resources.ExportMethodDlg_OkDialog_The_DIA_isolation_list_must_have_prespecified_windows_);
+                return;
             }
 
             if (!documentExport.HasAllRetentionTimeStandards() &&
@@ -1314,9 +1322,9 @@ namespace pwiz.Skyline.FileUI
         {
             bool showDwell = false;
             bool showRunLength = false;
-            if (standard && !IsDia)
+            if (standard)
             {
-                if (!IsSingleDwellInstrument)
+                if (!IsSingleDwellInstrument && !IsDia)
                 {
                     labelDwellTime.Text = DWELL_TIME_TXT;
                     showDwell = true;

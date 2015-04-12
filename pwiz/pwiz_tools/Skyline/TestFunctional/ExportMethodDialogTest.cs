@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -556,6 +557,7 @@ namespace pwiz.SkylineTestFunctional
             string brukerTemplateMeth = TestFilesDir.GetTestPath("Bruker Template Scheduled Precursor List.m");
             WaitForDocumentLoaded();
 
+            // Export PRM method unscheduled
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
                     exportMethodDlg =>
                     {
@@ -563,14 +565,111 @@ namespace pwiz.SkylineTestFunctional
                         exportMethodDlg.ExportStrategy = ExportStrategy.Single;
                         exportMethodDlg.SetTemplateFile(brukerTemplateMeth);
                         exportMethodDlg.MethodType = ExportMethodType.Standard;
-                        Assert.IsTrue(exportMethodDlg.IsDwellTimeVisible);
+                        Assert.IsTrue(exportMethodDlg.IsRunLengthVisible);
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
-                        exportMethodDlg.DwellTime = 20;
+                        exportMethodDlg.RunLength = 20;
                         exportMethodDlg.OkDialog(brukerActualMeth);
                     });
 
             Assert.IsTrue(Directory.Exists(brukerActualMeth));
             AssertEx.NoDiff(File.ReadAllText(brukerExpectedMeth), File.ReadAllText(Path.Combine(brukerActualMeth, brukerOutputMethodFilename)));
+            DirectoryEx.SafeDelete(brukerActualMeth);
+
+            // Export PRM method scheduled
+            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    exportMethodDlg =>
+                    {
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.BRUKER_TOF;
+                        exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                        exportMethodDlg.SetTemplateFile(brukerTemplateMeth);
+                        exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                        Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
+                        Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                        exportMethodDlg.OkDialog(brukerActualMeth);
+                    });
+
+            Assert.IsTrue(Directory.Exists(brukerActualMeth));
+            brukerExpectedMeth = TestFilesDir.GetTestPath("BrukerExpectedSched.Method");
+            AssertEx.NoDiff(File.ReadAllText(brukerExpectedMeth), File.ReadAllText(Path.Combine(brukerActualMeth, brukerOutputMethodFilename)));
+            DirectoryEx.SafeDelete(brukerActualMeth);
+
+            // Export PRM method scheduled error
+            {
+                RunUI(() => SkylineWindow.ModifyDocument("Remove RT prediction",
+                    doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict => predict.ChangeRetentionTime(null)))));
+                var exportMethodDlgError = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+                RunUI(() =>
+                {
+                    exportMethodDlgError.InstrumentType = ExportInstrumentType.BRUKER_TOF;
+                    exportMethodDlgError.ExportStrategy = ExportStrategy.Single;
+                    exportMethodDlgError.SetTemplateFile(brukerTemplateMeth);
+                });
+                RunDlg<MessageDlg>(() => exportMethodDlgError.MethodType = ExportMethodType.Scheduled,
+                    dlg => dlg.CancelDialog());
+                OkDialog(exportMethodDlgError, exportMethodDlgError.CancelDialog);
+            }
+
+            // Export DIA Method
+            {
+                var isoWindows = new IsolationScheme("Prespecified", new[]
+                {
+                    new IsolationWindow(500, 521, null, 0.5, 0.5),
+                    new IsolationWindow(520, 541, null, 0.5, 0.5),
+                    new IsolationWindow(540, 561, null, 0.5, 0.5),
+                });
+
+                RunUI(() => SkylineWindow.ModifyDocument("Add isolation window list",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(full => full.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, isoWindows)))));
+                var exportMethodDlgDia = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+
+                RunUI(() =>
+                {
+                    exportMethodDlgDia.InstrumentType = ExportInstrumentType.BRUKER_TOF;
+                    exportMethodDlgDia.ExportStrategy = ExportStrategy.Single;
+                    exportMethodDlgDia.SetTemplateFile(brukerTemplateMeth);
+                });
+
+                RunDlg<MessageDlg>(() => exportMethodDlgDia.MethodType = ExportMethodType.Scheduled, dlg =>
+                {
+                    Assert.AreEqual(Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Scheduled_methods_are_not_yet_supported_for_DIA_acquisition, dlg.Message);
+                    dlg.CancelDialog();
+                });
+
+                RunUI(() =>
+                {
+                    Assert.IsTrue(exportMethodDlgDia.IsRunLengthVisible);
+                    exportMethodDlgDia.RunLength = 20;
+                    exportMethodDlgDia.OkDialog(brukerActualMeth);
+                });
+
+                Assert.IsTrue(Directory.Exists(brukerActualMeth));
+                brukerExpectedMeth = TestFilesDir.GetTestPath("BrukerExpectedDIA.Method");
+                AssertEx.NoDiff(File.ReadAllText(brukerExpectedMeth), File.ReadAllText(Path.Combine(brukerActualMeth, brukerOutputMethodFilename)));            
+            }
+
+            // Export DIA method error not prespecified
+            {
+                var isoResults = new IsolationScheme("Results (20)", 20.0);
+                RunUI(() => SkylineWindow.ModifyDocument("Add results isolation scheme",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(full => full.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, isoResults)))));
+
+                var exportMethodDlgDia = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+
+                RunUI(() =>
+                {
+                    exportMethodDlgDia.InstrumentType = ExportInstrumentType.BRUKER_TOF;
+                    exportMethodDlgDia.ExportStrategy = ExportStrategy.Single;
+                    exportMethodDlgDia.SetTemplateFile(brukerTemplateMeth);
+                });
+
+                RunDlg<MessageDlg>(exportMethodDlgDia.OkDialog, dlg =>
+                {
+                    Assert.AreEqual(Resources.ExportMethodDlg_OkDialog_The_DIA_isolation_list_must_have_prespecified_windows_, dlg.Message);
+                    dlg.CancelDialog();
+                });
+                
+                OkDialog(exportMethodDlgDia, exportMethodDlgDia.CancelDialog);
+            }
         }
 
         private void ABSciexShortNameTest()
