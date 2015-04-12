@@ -303,6 +303,7 @@ namespace pwiz.SkylineTestFunctional
         {
             ImportFile(TestFilesDir.GetTestPath("olgas_S130501_009_StC-DosR_B4.wiff"));
             ImportFile(TestFilesDir.GetTestPath("olgas_S130501_010_StC-DosR_C4.wiff"));
+            WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.IsLoaded);    // 2 minutes
         }
 
         protected void ImportFile(string fileName)
