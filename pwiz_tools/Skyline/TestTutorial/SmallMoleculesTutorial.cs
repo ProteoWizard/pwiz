@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 (UseRawFiles
                    ? @"https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzMl.zip"),
+                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMzml.zip"),
                 @"TestTutorial\SmallMoleculeViews.zip"
             };
             RunFunctionalTest();
