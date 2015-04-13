@@ -94,7 +94,7 @@ namespace pwiz.Skyline.SettingsUI
                     textSlope.Text = string.Format("{0:F04}", _regression.Conversion.Slope);
                     textIntercept.Text = string.Format("{0:F04}", _regression.Conversion.Intercept);
                      */
-                    if (_regression.Conversion == null)
+                    if (_regression.IsAutoCalculated || _regression.Conversion == null)
                         cbAutoCalc.Checked = true;
                     else
                     {
