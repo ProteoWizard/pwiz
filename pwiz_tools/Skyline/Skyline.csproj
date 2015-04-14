@@ -13,7 +13,6 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
-    <HighEntropyVA>False</HighEntropyVA>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>4477CD154A6B9F2CC1C91BF6EEABF81BA6572149</ManifestCertificateThumbprint>
     <ManifestKeyFile>
