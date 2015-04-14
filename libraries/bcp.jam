@@ -102,7 +102,7 @@ class bcp-generator : generator
     rule is-source-file ( target )
     {
         local filepath = [ $(target).name ] ;
-        if [ MATCH "(.*\.[ch](pp|xx)?$)" : $(filepath:L) ]
+        if [ MATCH "(.*\\.[ch](pp|xx)?$)" : $(filepath:L) ]
         {
             return true ;
         }
