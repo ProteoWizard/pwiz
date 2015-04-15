@@ -166,8 +166,8 @@ struct SpectrumImpl : public Spectrum
     virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const;
 
     virtual double getSumY() const {return sumY;}
-    virtual double getBasePeakX() const {return bpX;}
-    virtual double getBasePeakY() const {return bpY;}
+    virtual double getBasePeakX() const {initializeBasePeak(); return bpX;}
+    virtual double getBasePeakY() const {initializeBasePeak(); return bpY;}
     virtual double getMinX() const {return minX;}
     virtual double getMaxX() const {return maxX;}
 
@@ -182,13 +182,25 @@ struct SpectrumImpl : public Spectrum
     int cycle;
 
     // data points
-    double sumY, bpX, bpY, minX, maxX;
+    double sumY, minX, maxX;
     vector<double> x, y;
     bool pointsAreContinuous;
 
     // precursor info
     double selectedMz, intensity;
     int charge;
+
+    private:
+
+    mutable double bpX, bpY;
+    void initializeBasePeak() const
+    {
+        if (bpY == -1)
+        {
+            bpY = experiment->basePeakIntensities()[cycle - 1];
+            bpX = bpY > 0 ? experiment->basePeakMZs()[cycle - 1] : 0;
+        }
+    }
 };
 
 typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;
@@ -514,7 +526,7 @@ void ExperimentImpl::getBPC(std::vector<double>& times, std::vector<double>& int
 }
 
 SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
-: experiment(experiment), cycle(cycle), selectedMz(0)
+: experiment(experiment), cycle(cycle), selectedMz(0), bpY(-1), bpX(-1)
 {
     try
     {
@@ -525,8 +537,6 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
         sumY = experiment->cycleIntensities()[cycle-1];
         //minX = experiment->; // TODO Mass range?
         //maxX = spectrum->MaximumXValue;
-        bpY = experiment->basePeakIntensities()[cycle-1];
-        bpX = bpY > 0 ? experiment->basePeakMZs()[cycle-1] : 0;
 
         if (spectrumInfo->IsProductSpectrum)
         {
