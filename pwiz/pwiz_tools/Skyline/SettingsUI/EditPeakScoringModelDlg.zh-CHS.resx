@@ -236,7 +236,7 @@
     <value>6</value>
   </data>
   <data name="gridPeakCalculators.ToolTip" xml:space="preserve">
-    <value>峰值计算器和决定计算器对峰值分数之贡献的权重值</value>
+    <value>峰值计算器和决定计算器对峰值得分之贡献的权重值</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Name" xml:space="preserve">
     <value>gridPeakCalculators</value>
@@ -350,7 +350,7 @@
     <value>0</value>
   </data>
   <data name="tabPage1.Text" xml:space="preserve">
-    <value>模型分数</value>
+    <value>模型得分</value>
   </data>
   <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
     <value>tabPage1</value>
@@ -443,7 +443,7 @@
     <value>1</value>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
-    <value>特性分数</value>
+    <value>特性得分</value>
   </data>
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
@@ -596,7 +596,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>可用特性分数(&amp;A)：</value>
+    <value>可用特性得分(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -743,7 +743,7 @@
     <value>7</value>
   </data>
   <data name="lblColinearWarning.Text" xml:space="preserve">
-    <value>警告：计算器已产生共线性分数</value>
+    <value>警告：计算器已产生共线性得分</value>
   </data>
   <data name="&gt;&gt;lblColinearWarning.Name" xml:space="preserve">
     <value>lblColinearWarning</value>

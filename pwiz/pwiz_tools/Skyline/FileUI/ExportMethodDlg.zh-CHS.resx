@@ -607,7 +607,7 @@
     <value>忽视蛋白质(&amp;R)</value>
   </data>
   <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
-    <value>如果被选，肽段将在文件中进行分配，不会考虑蛋白质范围。
+    <value>如果选中，肽段将在文件中进行分配，不会考虑蛋白质范围。
  否则，如果蛋白质所包含的离子对数超过最大限制，
 那么同一蛋白质中的肽段会被分割。</value>
   </data>
@@ -639,8 +639,8 @@
     <value>添加能量梯度(&amp;A)</value>
   </data>
   <data name="cbEnergyRamp.ToolTip" xml:space="preserve">
-    <value>某些版本的 Thermo TSQ 软件要求
-添加能量变化列</value>
+    <value>某些版本Thermo TSQ软件要求添
+加触发器和参考列</value>
   </data>
   <data name="&gt;&gt;cbEnergyRamp.Name" xml:space="preserve">
     <value>cbEnergyRamp</value>
@@ -670,8 +670,8 @@
     <value>添加触发器和参考(&amp;N)</value>
   </data>
   <data name="cbTriggerRefColumns.ToolTip" xml:space="preserve">
-    <value>某些版本的 Thermo TSQ 软件要求
-添加能量变化列</value>
+    <value>某些版本Thermo TSQ软件要求添
+加触发器和参考列</value>
   </data>
   <data name="&gt;&gt;cbTriggerRefColumns.Name" xml:space="preserve">
     <value>cbTriggerRefColumns</value>

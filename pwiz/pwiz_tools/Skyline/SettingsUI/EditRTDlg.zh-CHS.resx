@@ -268,10 +268,10 @@
     <value>3</value>
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
-    <value>斜率被用于从计算得到的肽段分数中计算预测保留时间，
+    <value>斜率被用于从计算得到的肽段得分中计算预测保留时间，
 借助以下形式的等式：
 
-保留时间 = 斜率 * 分数 + 截距</value>
+保留时间 = 斜率 * 得分 + 截距</value>
   </data>
   <data name="&gt;&gt;textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
@@ -322,10 +322,10 @@
     <value>5</value>
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
-    <value>Y-截距被用于从计算得到的肽段分数中计算预测保留时间，
+    <value>Y-截距被用于从计算得到的肽段得分中计算预测保留时间，
 借助以下形式的等式：
 
-保留时间 = 斜率 * 分数 + 截距
+保留时间 = 斜率 * 得分 + 截距
 </value>
   </data>
   <data name="&gt;&gt;textIntercept.Name" xml:space="preserve">
@@ -700,7 +700,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
   </data>
   <data name="cbAutoCalc.ToolTip" xml:space="preserve">
     <value>检查并让Skyline基于以下条件为预测器计算斜率和截距：
-按照每个导入文件的分数对保留时间
+按照每个导入文件的得分对保留时间
 分别进行回归分析</value>
   </data>
   <data name="&gt;&gt;cbAutoCalc.Name" xml:space="preserve">

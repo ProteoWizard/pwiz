@@ -277,8 +277,8 @@
     <value>17, 17</value>
   </metadata>
   <data name="comboOptimizeType.ToolTip" xml:space="preserve">
-    <value>指定最优化是针对每个母离子的所有离子对
-还是分别针对每个离子对进行</value>
+    <value>指定最优化是针对每个母离子的所有离子对，
+还是分别针对每个离子对分别进行</value>
   </data>
   <data name="comboOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -450,7 +450,7 @@
     <value>3</value>
   </data>
   <data name="comboIonMass.ToolTip" xml:space="preserve">
-    <value>用于计算所有母离子质量的分子质量计算策略
+    <value>用于计算所有子离子质量的分子质量计算策略
 （单一同位素或平均）</value>
   </data>
   <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
@@ -1221,7 +1221,7 @@
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
     <value>从过滤器标签中仅应用离
-择用于排名的 MS/MS 峰匹配离子</value>
+子电荷和类型来选择用于排名的MS/MS 峰匹配离子</value>
   </data>
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
     <value>radioAll</value>
@@ -1455,7 +1455,7 @@
     <value>20</value>
   </data>
   <data name="textMaxInclusions.ToolTip" xml:space="preserve">
-    <value>多通道扫描期间由目标
+    <value>多通道扫描期间由靶向
 仪器测量的包含窗口最大数目。</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">

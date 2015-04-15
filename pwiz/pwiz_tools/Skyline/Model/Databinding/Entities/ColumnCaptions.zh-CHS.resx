@@ -289,13 +289,13 @@
     <value>库排名</value>
   </data>
   <data name="LibraryScore1">
-    <value>库分数 1</value>
+    <value>库得分 1</value>
   </data>
   <data name="LibraryScore2">
-    <value>库分数 2</value>
+    <value>库得分 2</value>
   </data>
   <data name="LibraryScore3">
-    <value>库分数 3</value>
+    <value>库得分 3</value>
   </data>
   <data name="LibraryType">
     <value>库类型</value>
@@ -577,7 +577,7 @@
     <value>保留时间</value>
   </data>
   <data name="RetentionTimeCalculatorScore">
-    <value>保留时间计算器分数</value>
+    <value>保留时间计算器得分</value>
   </data>
   <data name="SampleName">
     <value>样品名称</value>

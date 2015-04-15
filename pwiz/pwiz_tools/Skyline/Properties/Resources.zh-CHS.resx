@@ -1397,7 +1397,7 @@
     <value>斜度和截距必须同时具有值或同时没有值</value>
   </data>
   <data name="RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator" xml:space="preserve">
-    <value>保留时间回归必须针对分数计算器指定一个序列。</value>
+    <value>保留时间回归必须针对得分计算器指定一个序列。</value>
   </data>
   <data name="RetentionTimeRegression_Validate_Invalid_negative_retention_time_window__0__" xml:space="preserve">
     <value>无效的负数保留时间窗口{0}。</value>
@@ -1421,7 +1421,7 @@
     <value>最优步骤数目 {0} 不大于零。</value>
   </data>
   <data name="OptimizableRegression_Validate_The_number_of_optimization_steps__0__is_not_between__1__and__2__" xml:space="preserve">
-    <value>最优步骤书数目{0}不在 {1} 和 {2} 之间。</value>
+    <value>最优步骤数目{0}不在 {1} 和 {2} 之间。</value>
   </data>
   <data name="ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
     <value>“{0}”不是有效的表格名称。</value>
@@ -1708,13 +1708,13 @@
     <value>库标题中的数据缺损。文件可能已损坏。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted" xml:space="preserve">
-    <value>谱图头中的数据截断。文件可能已损坏。</value>
+    <value>谱图头中的数据缺损。文件可能已损坏。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>发现无效的母离子电荷。文件可能已损坏。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted" xml:space="preserve">
-    <value>谱图序列中的数据截断。文件可能已损坏。</value>
+    <value>谱图序列中的数据缺损。文件可能已损坏。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
     <value>加载库“{0}”失败。</value>
@@ -1883,7 +1883,7 @@
     <value>写入缓存文件失败。</value>
   </data>
   <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
-    <value>来自同一母离子的具有不同峰计数 {0} 和 {1}的离子对</value>
+    <value>来自同一母离子的离子对被发现具有不同峰计数 {0} 和 {1}。</value>
   </data>
   <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
     <value>加入文件{0}</value>
@@ -3004,7 +3004,7 @@
     <value>尝试初始化计算器{0}出现错误。</value>
   </data>
   <data name="EditRTDlg_ShowGraph_Retention_Times_by_Score" xml:space="preserve">
-    <value>依据分数的保留时间</value>
+    <value>依据得分的保留时间</value>
   </data>
   <data name="EditRTDlg_ShowGraph_Measured_Time" xml:space="preserve">
     <value>测量时间</value>
@@ -4776,10 +4776,10 @@
     <value>MProphetScoringModel 被赋予带有{0}特征的峰，但它拥有 {1} 个峰特征计算器</value>
   </data>
   <data name="PeakScoringModelList_Title_Edit_Peak_Scoring_Models" xml:space="preserve">
-    <value>编辑最高分数模型</value>
+    <value>编辑最高得分模型</value>
   </data>
   <data name="PeakScoringModelList_Label_Peak_Scoring_Models" xml:space="preserve">
-    <value>最高分数模型</value>
+    <value>最高得分模型</value>
   </data>
   <data name="LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area" xml:space="preserve">
     <value>对数共洗脱面积</value>
@@ -4863,7 +4863,7 @@
     <value>保留时间差异</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_" xml:space="preserve">
-    <value>针对{0}重新计算分数</value>
+    <value>针对{0}重新计算得分</value>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to" xml:space="preserve">
     <value>没有可以发布到 Panorama 的服务器</value>
@@ -5661,7 +5661,7 @@
     <value>结果的重新合并需要训练过的峰排名模型。</value>
   </data>
   <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
-    <value>针对{0}计算峰组分数</value>
+    <value>针对{0}计算峰组得分</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>下载工具出错</value>
@@ -5757,10 +5757,10 @@
     <value>意外的系数标志</value>
   </data>
   <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
-    <value>尝试使用具有{1}训练分数的模型以计分带有{0}特性的峰。</value>
+    <value>尝试使用具有{1}训练得分的模型以计分带有{0}特性的峰。</value>
   </data>
   <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score" xml:space="preserve">
-    <value>母离子-子离子形状分数</value>
+    <value>母离子-子离子形状得分</value>
   </data>
   <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product" xml:space="preserve">
     <value>母离子同位素点积</value>
@@ -5778,16 +5778,16 @@
     <value>文档必须具备导入的结果，以训练模型。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
-    <value>复合物分数（标准化）</value>
+    <value>复合物得分（标准化）</value>
   </data>
   <data name="LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_" xml:space="preserve">
     <value>模型中的每个计算器或是拥有未知值，或是仅采用一个值。</value>
   </data>
   <data name="LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
-    <value>尝试使用具有{1}训练分数的模型以计分带有{0}特性的峰。</value>
+    <value>尝试使用具有{1}训练得分的模型以计分带有{0}特性的峰。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
-    <value>训练一个模型，以查看复合物分数</value>
+    <value>训练一个模型，以查看复合物得分</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
     <value>训练模型失败：</value>
@@ -5796,7 +5796,7 @@
     <value>当前文档中没有诱饵肽。取消核选“使用诱饵”方框。</value>
   </data>
   <data name="LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_" xml:space="preserve">
-    <value>遗留分数模型未被训练。</value>
+    <value>遗留得分模型未被训练。</value>
   </data>
   <data name="LegacyScoringModel_ReadXml_Invalid_legacy_model_" xml:space="preserve">
     <value>无效的遗留模型。</value>
@@ -5823,13 +5823,13 @@
     <value>训练模型不适用于当前数据集。</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
-    <value>当前的峰分数模型与文档中的一个或多个肽不兼容。请训练一个新模型。</value>
+    <value>当前的峰得分模型与文档中的一个或多个肽不兼容。请训练一个新模型。</value>
   </data>
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>调整峰边界</value>
   </data>
   <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
-    <value>缺失分数</value>
+    <value>缺失得分</value>
   </data>
   <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">
     <value>缺失所有结果</value>
@@ -6237,10 +6237,10 @@
     <value>警告： “--工具-程序-宏”指令使用错误。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
-    <value>错误： 常规表达式{0}无法解析。</value>
+    <value>错误： 正则表达式{0}无法解析。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String" xml:space="preserve">
-    <value>错误： 常规表达式'{0}'没有任何群组。 必需拥有一个群组。必需拥有一个群组。与正则表达式中第一群组匹配的部分文件或子目录名称用作重复测定名称。</value>
+    <value>错误： 正则表达式'{0}'没有任何群组。 必需拥有一个群组。与正则表达式中第一群组匹配的部分文件或子目录名称用作重复测定名称。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_" xml:space="preserve">
     <value>警告： 无效的最优化参数({0})。使用“ce”、“dp”或“无”。 默认设置为无。</value>
@@ -6363,13 +6363,13 @@
     <value>错误： 目录{0}中未找到数据源。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__" xml:space="preserve">
-    <value>错误： 常规表达式的匹配对于{0}来说是空的。</value>
+    <value>错误： 正则表达式的匹配对于{0}来说是空的。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
-    <value>错误： 应用常规表达式后重复测定名称“{0}”重复。</value>
+    <value>错误： 应用正则表达式后重复测定名称“{0}”重复。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_" xml:space="preserve">
-    <value>错误：{0}不匹配常规表达式。</value>
+    <value>错误： {0}不匹配正则表达式。</value>
   </data>
   <data name="CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__" xml:space="preserve">
     <value>错误： 文档中的重复测定{0}具有意外文件{1}。</value>
@@ -6851,7 +6851,7 @@
     <value>缺失针对文件{1}中肽段{0}的 q 值</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_current_file_or_model_has_no_q_values_or_scores_to_analyze___Either_q_values_or_scores_are_necessary_to_compare_peak_picking_tools_" xml:space="preserve">
-    <value>当前文件或模型没有需要分析的 q 值或分数。 q 值或分数都不是比较峰值拣选工具所必需的。</value>
+    <value>当前文件或模型没有需要分析的 q 值或得分。 q 值或得分都不是比较峰值拣选工具所必需的。</value>
   </data>
   <data name="SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__" xml:space="preserve">
     <value>峰边界文件中的下列 {0} 个肽段没有被识别：</value>
@@ -7274,7 +7274,7 @@
     <value>第 {0} 行上缺失碰撞横截面值。</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_collisional_cross_section_on_line__1__" xml:space="preserve">
-    <value>第 {1} 行上的碰撞横截面的无效数字格式{0}。</value>
+    <value>第 {1} 行上的碰撞横截面的数字格式{0}无效。</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__" xml:space="preserve">
     <value>第 {1} 行上的碰撞横截面 {0} 必须大于零。</value>
@@ -7616,7 +7616,7 @@
     <value>获得关于 iRT 的实际经验，iRT 是在库中保存校准的、实际测量的肽段保留时间，以便将来用于针对预定采集和峰值身份验证的保留时间预测中。在本教程中，您将校准自己的 iRT 计算器，并且还将了解到更多关于 Biognosys 针对 iRT 包中的肽段标准提出的 iRT-C18 校准内容。您将从 SRM 数据中校准新的 iRT 值，SRM 数据是在发现实验中从 MS1 扫描过滤的谱图库和色谱图峰值。同时，您还将了解到如何重新校准这些 iRT 值，以在具有新梯度和新色谱柱上进行预定 SRM 采集。您将看到基于 iRT 的更准确保留时间预测将如何在您的色谱图峰值身份验证中为您提供更高的可信度。</value>
   </data>
   <data name="StartPage_getBoxPanels_peakpicking" xml:space="preserve">
-    <value>了解更多关于创建和测试在Skyline中如何匹配目标肽段和色谱图峰的高级模型。Skyline 2.5 版本现支持使用 mProphet 半监督学习算法创建单个色谱峰分数的线性结合。 在本教程中，您将学会生成诱饵肽和离子对、创建和评估 mProphet 评分模型，以及将它们应用到 Skyline 色谱图峰拣选中，同时针对 SRM 和 DIA/SWATH 数据。 您将了解到 mProphet 分配的 q 值（基于 FDR 调整的 p 值），以及您可以如何将这些值与自己拣选的色谱峰关联并在自定义报告中导出它们。</value>
+    <value>了解更多关于创建和测试在Skyline中如何匹配目标肽段和色谱图峰的高级模型。Skyline 2.5 版本现支持使用 mProphet 半监督学习算法创建单个色谱峰得分的线性结合。 在本教程中，您将学会生成诱饵肽和离子对、创建和评估 mProphet 评分模型，以及将它们应用到 Skyline 色谱图峰拣选中，同时针对 SRM 和 DIA/SWATH 数据。 您将了解到 mProphet 分配的 q 值（基于 FDR 调整的 p 值），以及您可以如何将这些值与自己拣选的色谱峰关联并在自定义报告中导出它们。</value>
   </data>
   <data name="StartPage_getBoxPanels_customreports" xml:space="preserve">
     <value>从利用 Skyline 自定义当前报告的能力查看、编辑并从您的 Skyline 文档中导出一系列广泛数值方面获得实际经验。仪器输出经由skyline导出后的报告最，适合用于 Excel 或以 R、Matlab、Java、C++ 和其他语言书写的自定义代码进行深度统计分析。此外，学习使用“Skyline 结果网格”视图，以在 Skyline 中检查您的数据的同时获得对这些值的访问并添加自定义注释。遵循本教程，从而极大地扩大您使用 Skyline 可以实现的实验范畴。</value>

@@ -340,7 +340,7 @@
   </data>
   <data name="textMaxNeutralLosses.ToolTip" xml:space="preserve">
     <value>在任何肽段上允许出现的最大
-中性丢失活动数目。</value>
+中性丢失数目。</value>
   </data>
   <data name="&gt;&gt;textMaxNeutralLosses.Name" xml:space="preserve">
     <value>textMaxNeutralLosses</value>
@@ -497,7 +497,7 @@
     <value>1</value>
   </data>
   <data name="comboRetentionTime.ToolTip" xml:space="preserve">
-    <value>指定可用于从肽段特定疏水性分数
+    <value>指定可用于从肽段特定疏水性得分
 预测保留时间的线性方程。</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.Name" xml:space="preserve">
@@ -529,8 +529,8 @@
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>如果选中，那么肽段将借助指定的过滤器和库设置
-过滤器以及库设置自动为肽段选择。否则，所有肽
-选择都必须由手动文档编辑完成。</value>
+从蛋白质中自动选择。否则，所有肽
+段选择都必须由手动文档编辑完成。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -969,7 +969,7 @@ MS/MS谱图库。</value>
     <value>4</value>
   </data>
   <data name="comboPeakScoringModel.ToolTip" xml:space="preserve">
-    <value>指定可用于从肽段特定疏水性分数
+    <value>指定可用于从肽段特定疏水性得分
 预测保留时间的线性方程。</value>
   </data>
   <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
@@ -1908,7 +1908,7 @@ MS/MS谱图库。</value>
     <value>3</value>
   </data>
   <data name="label36.Text" xml:space="preserve">
-    <value>峰值分数模型(&amp;P)：</value>
+    <value>峰值得分模型(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>

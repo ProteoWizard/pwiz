@@ -1270,7 +1270,7 @@
     <value>3</value>
   </data>
   <data name="groupBoxMS2.Text" xml:space="preserve">
-    <value>串联质谱筛选(&amp;S)</value>
+    <value>串联质谱过滤(&amp;S)</value>
   </data>
   <data name="&gt;&gt;groupBoxMS2.Name" xml:space="preserve">
     <value>groupBoxMS2</value>

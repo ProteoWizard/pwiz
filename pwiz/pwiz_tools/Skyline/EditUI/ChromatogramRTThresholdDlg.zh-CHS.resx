@@ -135,7 +135,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>指定将为其显示保留时间标记的最小亮度。</value>
+    <value>指定将为其显示保留时间标记的最小强度。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
