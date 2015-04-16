@@ -192,7 +192,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
    } else if(isElement("spectrum_query", name)) {
        // is it better to do this at the start of the element or the end?
        scanIndex=-1;
-       scanNumber=0;
+       scanNumber=-1;
        charge=0;
        precursorMZ=0;
        pepProb = 0;
@@ -201,33 +201,31 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        
        int minCharge = 1;
        
-       // if prophet type
-       if( analysisType_ == PEPTIDE_PROPHET_ANALYSIS ||
-           analysisType_ == INTER_PROPHET_ANALYSIS ||
-           analysisType_ == OMSSA_ANALYSIS ||
-           analysisType_ == PEAKS_ANALYSIS ||
-           analysisType_ == PROTEIN_PROSPECTOR_ANALYSIS ||
-           analysisType_ == PROTEOME_DISCOVERER_ANALYSIS ||
-           analysisType_ == XTANDEM_ANALYSIS) {
-           scanNumber = getIntRequiredAttrValue("start_scan",attr);
-       }
        // if spectrum mill type
-       else if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
-           spectrumName = getRequiredAttrValue("spectrum",attr);
-           scanNumber = -1;
+       if (analysisType_ == SPECTRUM_MILL_ANALYSIS) {
+           spectrumName = getRequiredAttrValue("spectrum", attr);
            minCharge = 0;
            // In case this is necessary for calculating charge
-           precursorMZ = atof(getAttrValue("precursor_m_over_z",attr));
+           precursorMZ = atof(getAttrValue("precursor_m_over_z", attr));
        }
        // if morpheus type
        else if (analysisType_ == MORPHEUS_ANALYSIS) {
+           spectrumName = getRequiredAttrValue("spectrum", attr);
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
-           spectrumName = getRequiredAttrValue("spectrum", attr);
        }
-       else if (analysisType_ == MSGF_ANALYSIS) {
+       // this should never happen, error should have been thrown earlier
+       else if (analysisType_ == UNKNOWN_ANALYSIS) {
+           throw BlibException(false, "The .pep.xml file is not from one of the recognized sources");
+       // if any other type
+       } else {
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
-           spectrumName = getRequiredAttrValue("spectrumNativeID", attr);
+           if (lookUpBy_ == NAME_ID) {
+               spectrumName = getRequiredAttrValue("spectrumNativeID", attr);
+           } else if (psms_.empty() && !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
+               // if the file has spectrumNativeIDs, use those for spectrum lookups
+               lookUpBy_ = NAME_ID;
+           }
        }
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
    } else if(isElement("search_hit", name)) {
