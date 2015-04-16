@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestTutorial
 
             TestFilesZipPaths = new[]
                 {
-                    ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportAbWiff
+                    UseRawFiles
                                ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies.zip"
                                : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzml.zip",
                     @"TestTutorial\GroupedStudiesViews.zip"
