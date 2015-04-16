@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
@@ -178,7 +179,10 @@ namespace pwiz.Skyline.Model
             IDictionary<int, OptimizationStep<TReg>> optTotals)
         {
             var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : null);
-            if (results == null)
+            // Skip the result set if it only has step 0, the predicted value. This happens
+            // when someone mistakenly sets "Optimizing" on a data set that does not contain
+            // optimization steps.
+            if (results == null || results.All(c => c.OptimizationStep == 0 || c.IsEmpty))
                 return;
             foreach (var chromInfo in results)
             {
