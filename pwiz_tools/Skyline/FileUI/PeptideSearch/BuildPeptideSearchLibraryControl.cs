@@ -107,11 +107,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private string[] _searchFileNames = new string[0];
-        private string[] SearchFileNames
+        public string[] SearchFileNames
         {
             get { return _searchFileNames; }
 
-            set
+            private set
             {
                 // Set new value
                 _searchFileNames = value;

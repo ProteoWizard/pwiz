@@ -101,6 +101,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.cbExcludeSourceFiles, "cbExcludeSourceFiles");
             this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
             this.cbExcludeSourceFiles.UseVisualStyleBackColor = true;
+            this.cbExcludeSourceFiles.CheckedChanged += new System.EventHandler(this.cbExcludeSourceFiles_CheckedChanged);
             // 
             // ImportResultsControl
             // 

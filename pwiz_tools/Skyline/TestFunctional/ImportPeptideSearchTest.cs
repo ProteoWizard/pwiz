@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestFunctional
             TestSkipWhenNoModifications();
             TestWizardBuildDocumentLibraryAndFinish();
             TestWizardCancel();
+            TestWizardExcludeSpectrumSourceFiles();
         }
 
         /// <summary>
@@ -308,6 +309,65 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                             ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.ClickCancelButton();
+            });
+
+            WaitForClosedForm(importPeptideSearchDlg);
+
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestWizardExcludeSpectrumSourceFiles()
+        {
+            // Open the empty .sky file (has no peptides)
+            PrepareDocument("ImportPeptideSearch-Exclude.sky");
+
+            // Launch the wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+
+            // We should be on the "Build Spectral Library" page of the wizard.
+            SrmDocument doc = SkylineWindow.Document;
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("SpectrumSources.blib")});
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            WaitForDocumentChange(doc);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                ImportResultsControl importResultsControl = importPeptideSearchDlg.ImportResultsControl as ImportResultsControl;
+                Assert.IsNotNull(importResultsControl);
+                
+                // Exclude spectrum source files is unchecked, so the control should match
+                // the two spectrum source files that match exactly: modless.mzXML and mods.mzXML
+                List<FoundResultsFile> foundResults = importResultsControl.FoundResultsFiles;
+                string[] missingResults = importResultsControl.MissingResultsFiles.ToArray();
+                Assert.AreEqual(2, foundResults.Count);
+                Assert.AreEqual("modless", foundResults[0].Name);
+                Assert.AreEqual("modless.mzXML", Path.GetFileName(foundResults[0].Path));
+                Assert.AreEqual("mods", foundResults[1].Name);
+                Assert.AreEqual("mods.mzXML", Path.GetFileName(foundResults[1].Path));
+                Assert.IsFalse(importResultsControl.ResultsFilesMissing);
+                Assert.AreEqual(0, missingResults.Count());
+
+                // Check exclude spectrum source files
+                Assert.IsTrue(importResultsControl.ExcluedSpectrumSourceFilesVisible);
+                importResultsControl.ExcludeSpectrumSourceFiles = true;
+
+                // The test files directory contains modless.raw, but no file with the same
+                // filestem as mods.mzXML, so the control should match just modless.raw
+                foundResults = importResultsControl.FoundResultsFiles;
+                missingResults = importResultsControl.MissingResultsFiles.ToArray();
+                Assert.AreEqual(1, foundResults.Count);
+                Assert.AreEqual("modless", foundResults[0].Name);
+                Assert.AreEqual("modless.raw", Path.GetFileName(foundResults[0].Path));
+                Assert.IsTrue(importResultsControl.ResultsFilesMissing);
+                Assert.AreEqual(1, missingResults.Count());
+                Assert.AreEqual("mods.mzXML", Path.GetFileName(missingResults[0]));
+                
                 importPeptideSearchDlg.ClickCancelButton();
             });
 

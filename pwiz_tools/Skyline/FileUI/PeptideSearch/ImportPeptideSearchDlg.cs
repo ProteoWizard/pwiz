@@ -237,7 +237,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         if (WorkflowType != Workflow.dia)
                         {
-                            oldImportResultsControl.InitializeChromatogramsPage(DocLib);
+                            oldImportResultsControl.InitializeChromatogramsPage(DocLib, BuildPepSearchLibControl.SearchFileNames);
 
                             if (WorkflowType == Workflow.dda)
                             {
