@@ -156,6 +156,28 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             }
         }
         break;
+
+        case MS_SIM_chromatogram:
+        {
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ie.Q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ie.q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
+            result->precursor.activation.set(MS_CID);
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
+
+            vector<float> times;
+            vector<float> intensities;
+            rawdata_->ChromatogramReader.ReadMRMChromatogram(ie.function, ie.offset, times, intensities);
+            result->defaultArrayLength = times.size();
+
+            if (getBinaryData)
+            {
+                result->getTimeArray()->data.assign(times.begin(), times.end());
+                result->getIntensityArray()->data.assign(intensities.begin(), intensities.end());
+            }
+        }
+        break;
     }
 
     return result;
@@ -183,7 +205,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
             continue;
         }
 
-        if (spectrumType != MS_SRM_spectrum)
+        if (spectrumType != MS_SRM_spectrum && spectrumType != MS_SIM_spectrum)
             continue;
 
         //rawdata_->Info.GetAcquisitionTimeRange(function, f1, f2);
@@ -196,18 +218,31 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         {
             index_.push_back(IndexEntry());
             IndexEntry& ie = index_.back();
-            ie.chromatogramType = MS_SRM_chromatogram;
             ie.index = index_.size()-1;
             ie.function = function;
             ie.offset = i;
             ie.Q1 = precursorMZs[i];
-            ie.Q3 = productMZs[i];
 
             std::ostringstream oss;
-            oss << "SRM SIC Q1=" << ie.Q1 <<
-                   " Q3=" << ie.Q3 <<
-                   " function=" << (function+1) <<
-                   " offset=" << ie.offset;
+
+            if (spectrumType == MS_SRM_spectrum)
+            {
+                ie.Q3 = productMZs[i];
+                ie.chromatogramType = MS_SRM_chromatogram;
+                oss << "SRM SIC Q1=" << ie.Q1 <<
+                       " Q3=" << ie.Q3 <<
+                       " function=" << (function + 1) <<
+                       " offset=" << ie.offset;
+            }
+            else
+            {
+                ie.Q3 = 0;
+                ie.chromatogramType = MS_SIM_chromatogram;
+                oss << "SIM SIC Q1=" << ie.Q1 <<
+                       " function=" << (function + 1) <<
+                       " offset=" << ie.offset;
+            }
+
             ie.id = oss.str();
             idToIndexMap_[ie.id] = ie.index;
         }

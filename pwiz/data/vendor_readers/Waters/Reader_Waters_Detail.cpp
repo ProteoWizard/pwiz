@@ -68,6 +68,7 @@ void translateFunctionType(PwizFunctionType functionType,
         case FunctionType_SIR:
             msLevel = 1;
             spectrumType = MS_SIM_spectrum;
+            break;
 
         case FunctionType_MRM:
         case FunctionType_AutoSpec_MRM:
