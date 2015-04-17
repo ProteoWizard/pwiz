@@ -505,7 +505,7 @@
     <value>タンパク質</value>
   </data>
   <data name="ProteinAccession">
-    <value>タンパク質取得</value>
+    <value>タンパク質アクセッション</value>
   </data>
   <data name="ProteinDescription">
     <value>タンパク質の説明</value>

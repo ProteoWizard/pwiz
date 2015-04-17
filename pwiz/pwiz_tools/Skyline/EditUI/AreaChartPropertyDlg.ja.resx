@@ -235,7 +235,7 @@
     <value>5</value>
   </data>
   <data name="cbDecimalCvs.Text" xml:space="preserve">
-    <value>十進数のCV値を表示(&amp;D)</value>
+    <value>CV値（10進）を表示(&amp;D)</value>
   </data>
   <data name="&gt;&gt;cbDecimalCvs.Name" xml:space="preserve">
     <value>cbDecimalCvs</value>

@@ -517,7 +517,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>20</value>
   </data>
   <data name="cbOutputImmediateWindow.Text" xml:space="preserve">
-    <value>即時ウィンドウに出力</value>
+    <value>イミディエイトウィンドウに出力</value>
   </data>
   <data name="&gt;&gt;cbOutputImmediateWindow.Name" xml:space="preserve">
     <value>cbOutputImmediateWindow</value>

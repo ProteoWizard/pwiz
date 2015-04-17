@@ -250,13 +250,13 @@
     <value>101, 22</value>
   </data>
   <data name="btnIsolationWindow.Text" xml:space="preserve">
-    <value>単離ウィンドウ</value>
+    <value>Isolation window</value>
   </data>
   <data name="btnIsolationWindow.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopLeft</value>
   </data>
   <data name="btnIsolationWindow.ToolTipText" xml:space="preserve">
-    <value>単離ウィンドウ</value>
+    <value>Isolation window</value>
   </data>
   <data name="btnIsolationWindow.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

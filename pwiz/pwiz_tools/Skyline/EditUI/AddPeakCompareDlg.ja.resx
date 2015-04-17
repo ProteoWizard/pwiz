@@ -394,7 +394,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ピーク選択比較を追加</value>
+    <value>ピークピッキングの比較を追加します。</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AddPeakCompareDlg</value>

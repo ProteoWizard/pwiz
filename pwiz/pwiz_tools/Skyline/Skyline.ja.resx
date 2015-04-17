@@ -1765,7 +1765,7 @@
     <value>173, 22</value>
   </data>
   <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
-    <value>取得別(&amp;A)</value>
+    <value>アクセッション別(&amp;A)</value>
   </data>
   <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
@@ -1807,7 +1807,7 @@
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>再統合(&amp;T)...</value>
+    <value>再積分(&amp;T)...</value>
   </data>
   <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -1978,7 +1978,7 @@
     <value>173, 22</value>
   </data>
   <data name="showTargetsByAccessionToolStripMenuItem.Text" xml:space="preserve">
-    <value>取得別(&amp;A)</value>
+    <value>アクセッション別(&amp;A)</value>
   </data>
   <data name="showTargetsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
@@ -2650,7 +2650,7 @@
     <value>178, 22</value>
   </data>
   <data name="immediateWindowToolStripMenuItem.Text" xml:space="preserve">
-    <value>即時ウィンドウ(&amp;I)</value>
+    <value>イミディエイトウィンドウ(&amp;I)</value>
   </data>
   <data name="toolStripSeparator47.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>

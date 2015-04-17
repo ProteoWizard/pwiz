@@ -529,7 +529,7 @@
     <value>10</value>
   </data>
   <data name="rbPrespecified.Text" xml:space="preserve">
-    <value>事前に指定した単離ウィンドウ(&amp;P)</value>
+    <value>事前に指定したIsolation window(&amp;P)</value>
   </data>
   <data name="&gt;&gt;rbPrespecified.Name" xml:space="preserve">
     <value>rbPrespecified</value>

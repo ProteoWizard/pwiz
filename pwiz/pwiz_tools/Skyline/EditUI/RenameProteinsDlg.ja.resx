@@ -235,7 +235,7 @@
     <value>現在の名前</value>
   </data>
   <data name="newNameDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
-    <value>新規名前</value>
+    <value>新たな名前</value>
   </data>
   <metadata name="renameProteinsWindowBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -274,7 +274,7 @@
     <value>4</value>
   </data>
   <data name="btnAccession.Text" xml:space="preserve">
-    <value>取得</value>
+    <value>アクセッション</value>
   </data>
   <data name="&gt;&gt;btnAccession.Name" xml:space="preserve">
     <value>btnAccession</value>

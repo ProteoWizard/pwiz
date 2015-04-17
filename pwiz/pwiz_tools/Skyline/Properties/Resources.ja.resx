@@ -1214,52 +1214,52 @@
     <value>なし</value>
   </data>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_filter_and_a_prespecifed_isolation_window" xml:space="preserve">
-    <value>単離スキームでは、フィルタと事前指定の単離ウィンドウを持つことはできません</value>
+    <value>単離スキームでは、フィルタと事前指定のIsolation windowを持つことはできません</value>
   </data>
   <data name="IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_" xml:space="preserve">
     <value>プリカーサーm/zフィルタは{0}から{1}の間でなければなりません</value>
   </data>
   <data name="IsolationScheme_DoValidate_Special_handling_applies_only_to_prespecified_isolation_windows" xml:space="preserve">
-    <value>特殊処理は、事前指定の単離ウィンドウのみに適用されます</value>
+    <value>特殊処理は、事前指定のIsolation windowのみに適用されます</value>
   </data>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_can_specify_multiplexed_windows_only_for_prespecified_isolation_windows" xml:space="preserve">
-    <value>単離スキームでは、事前指定の単離ウィンドウに対してのみ多重化ウィンドウを指定できます</value>
+    <value>単離スキームでは、事前指定のIsolation windowに対してのみ多重化ウィンドウを指定できます</value>
   </data>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_right_filter_without_a_left_filter" xml:space="preserve">
     <value>単離スキームでは、左フィルタなしでは右フィルタを持つことはできません</value>
   </data>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window" xml:space="preserve">
-    <value>単離スキームにはフィルタか事前指定の単離ウィンドウが必要です</value>
+    <value>単離スキームにはフィルタか事前指定のIsolation windowが必要です</value>
   </data>
   <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
     <value>多重化ウィンドウでは、各スキャンにつき最低1つのウィンドウが必要です</value>
   </data>
   <data name="IsolationScheme_DoValidate_The_number_of_prespecified_isolation_windows_must_be_a_multiple_of_the_windows_per_scan_in_multiplexed_sampling" xml:space="preserve">
-    <value>事前指定の単離ウィンドウ数は、多重化サンプリングにおけるスキャン毎のウィンドウ数の倍数でなければなりません。</value>
+    <value>事前指定のIsolation window数は、多重化サンプリングにおけるスキャン毎のウィンドウ数の倍数でなければなりません。</value>
   </data>
   <data name="IsolationScheme_DoValidate_Windows_per_scan_requires_multiplexed_isolation_windows" xml:space="preserve">
-    <value>スキャン毎のウィンドウでは、多重化単離ウィンドウが必要です</value>
+    <value>スキャン毎のウィンドウでは、多重化Isolation windowが必要です</value>
   </data>
   <data name="IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value" xml:space="preserve">
-    <value>単離ウィンドウには目標値が必要です。</value>
+    <value>Isolation windowには目標値が必要です。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_Start_must_be_between__0__and__1__" xml:space="preserve">
-    <value>単離ウィンドウの開始は{0}と{1}の間でなければなりません。</value>
+    <value>Isolation windowの開始は{0}と{1}の間でなければなりません。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_End_must_be_between__0__and__1__" xml:space="preserve">
-    <value>単離ウィンドウの終了は{0}と{1}の間でなければなりません。</value>
+    <value>Isolation windowの終了は{0}と{1}の間でなければなりません。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value" xml:space="preserve">
-    <value>単離ウィンドウの開始値が終値より大きくなっています。</value>
+    <value>Isolation windowの開始値が終値より大きくなっています。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window" xml:space="preserve">
-    <value>目標値が単離ウィンドウの範囲内にありません。</value>
+    <value>目標値がIsolation windowの範囲内にありません。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_margin_must_be_non_negative" xml:space="preserve">
-    <value>単離ウィンドウのマージンは負の値にはできません。</value>
+    <value>Isolation windowのマージンは負の値にはできません。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range" xml:space="preserve">
-    <value>単離ウィンドウのマージンは、装置範囲の極限で単離ウィンドウ全体に及びます。</value>
+    <value>Isolation windowのマージンは、装置範囲の極限でIsolation window全体に及びます。</value>
   </data>
   <data name="IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__" xml:space="preserve">
     <value>同位体濃縮は記号{0}に対しサポートされていません</value>
@@ -1541,10 +1541,10 @@
     <value>MS1フィルタリングのプリカーサー同位体のパーセントは、ベースピークの{0}%と{1}%の間でなければなりません。</value>
   </data>
   <data name="TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode" xml:space="preserve">
-    <value>単離ウィンドウ幅値はターゲットモードでは使用できません。</value>
+    <value>Isolation window幅値はターゲットモードでは使用できません。</value>
   </data>
   <data name="TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode" xml:space="preserve">
-    <value>DIAモードでは単離ウィンドウ幅値が必要です。</value>
+    <value>DIAモードではIsolation window幅値が必要です。</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_precursor_resolution_must_be_between__0__and__1__for_QIT" xml:space="preserve">
     <value>QITのプリカーサー分解能は{0}と{1}の間でなければなりません。</value>
@@ -1904,10 +1904,10 @@
     <value>点数内の時間 ({0}) と強度 ({1}) が一致しません。</value>
   </data>
   <data name="SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__" xml:space="preserve">
-    <value>2つの単離ウィンドウには、単離ターゲット{0}に一致するターゲットが含まれます。</value>
+    <value>2つのIsolation windowには、単離ターゲット{0}に一致するターゲットが含まれます。</value>
   </data>
   <data name="SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows" xml:space="preserve">
-    <value>単離スキームには単離ウィンドウは含まれません</value>
+    <value>単離スキームにはIsolation windowは含まれません</value>
   </data>
   <data name="ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid" xml:space="preserve">
     <value>時間間隔{0}から{1}は無効です。</value>
@@ -2898,10 +2898,10 @@
     <value>「{0}」という名前の単離スキームが既に存在しています。</value>
   </data>
   <data name="EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window" xml:space="preserve">
-    <value>単離ウィンドウに対し{0}を指定します。</value>
+    <value>Isolation windowに対し{0}を指定します。</value>
   </data>
   <data name="EditIsolationSchemeDlg_OkDialog_Specify_Start_and_End_values_for_at_least_one_isolation_window" xml:space="preserve">
-    <value>1つ以上の単離ウィンドウに開始値と終値を指定します。</value>
+    <value>1つ以上のIsolation windowに開始値と終値を指定します。</value>
   </data>
   <data name="EditIsolationSchemeDlg_OkDialog_The_selected_target_is_not_unique" xml:space="preserve">
     <value>選択したターゲットは一意ではありません。</value>
@@ -4512,7 +4512,7 @@
     <value>{1}単離スキームに対する予期しない名前「{0}」</value>
   </data>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows" xml:space="preserve">
-    <value>すべてのイオンの単離スキームには、単離ウィンドウを含むことができません</value>
+    <value>すべてのイオンの単離スキームには、Isolation windowを含むことができません</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_Peptides" xml:space="preserve">
     <value>ペプチド</value>
@@ -4872,7 +4872,7 @@
     <value>登録を押してPanoramaWebにプロジェクトを登録します。</value>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
-    <value>登録</value>
+    <value>アクセッション</value>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_Continue" xml:space="preserve">
     <value>続行</value>
@@ -5040,7 +5040,7 @@
     <value>範囲外エラーにより、デコンボリューションマトリックスのスライスの取り出しに失敗しました。</value>
   </data>
   <data name="OverlapDemultiplexer_the_isolation_window_overlap_scheme_does_not_cover_all_isolation_windows" xml:space="preserve">
-    <value>overlapiIsolationウィンドウスキームに欠損している隣接単離ウィンドウがいくつかあります。</value>
+    <value>overlapiIsolationウィンドウスキームに欠損している隣接Isolation windowがいくつかあります。</value>
   </data>
   <data name="OverlapDemultiplexer_RowStart_Number_of_regions__0__in_overlap_demultiplexer_approximation_must_be_less_than_number_of_scans__1__" xml:space="preserve">
     <value>重複デマルチプレクサ―近似値の領域数{0}は、スキャン数{1}未満でなければなりません。</value>
@@ -5301,7 +5301,7 @@
     <value>ネットワーク接続を確認するか、ツールプロバイダに問い合わせてインストールのサポートを依頼します。</value>
   </data>
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
-    <value>パッケージのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
+    <value>パッケージのインストールに失敗しました。イミディエイトウィンドウ内のログ出力エラー。</value>
   </data>
   <data name="ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__" xml:space="preserve">
     <value>{0}で欠損している結果ファイルの検索中。</value>
@@ -5340,7 +5340,7 @@
     <value>Pipのインストールが完了しました。</value>
   </data>
   <data name="PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__" xml:space="preserve">
-    <value>Pipのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
+    <value>Pipのインストールに失敗しました。イミディエイトウィンドウ内のログ出力エラー。</value>
   </data>
   <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
     <value>インストール</value>
@@ -5355,7 +5355,7 @@
     <value>以下のパッケージのダウンロードに失敗しました：</value>
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
-    <value>パッケージのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
+    <value>パッケージのインストールに失敗しました。イミディエイトウィンドウ内のログ出力エラー。</value>
   </data>
   <data name="RInstaller_GetR_R_installation_complete_" xml:space="preserve">
     <value>Rのインストールが完了しました。</value>
@@ -5538,7 +5538,7 @@
     <value>以下のパッケージをインストールできませんでした：</value>
   </data>
   <data name="RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_" xml:space="preserve">
-    <value>出力が即時ウィンドウに記録されました。</value>
+    <value>出力がイミディエイトウィンドウに記録されました。</value>
   </data>
   <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
     <value>エラー： インターネット接続がありません。</value>
@@ -5559,10 +5559,10 @@
     <value>パッケージ{0}のインストールに失敗しました：</value>
   </data>
   <data name="RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_" xml:space="preserve">
-    <value>エラー： パッケージのインストールが完了しませんでした。出力が即時ウィンドウに記録されました。</value>
+    <value>エラー： パッケージのインストールが完了しませんでした。出力がイミディエイトウィンドウに記録されました。</value>
   </data>
   <data name="RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_" xml:space="preserve">
-    <value>パッケージのインストール中の不明なエラー。出力が即時ウィンドウに記録されました。</value>
+    <value>パッケージのインストール中の不明なエラー。出力がイミディエイトウィンドウに記録されました。</value>
   </data>
   <data name="RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_" xml:space="preserve">
     <value>パッケージのインストール中の不明なエラー。ツールのインストールに失敗しました。</value>
@@ -5640,10 +5640,10 @@
     <value>mProphetの機能ファイル</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_Reintegrating" xml:space="preserve">
-    <value>再統合中</value>
+    <value>再積分中</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_" xml:space="preserve">
-    <value>ピークの再統合に失敗しました。</value>
+    <value>ピークの再積分に失敗しました。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>ドキュメントには、インポート結果が必要です。</value>
@@ -5658,7 +5658,7 @@
     <value>ドキュメントには、インポート結果が必要です。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
-    <value>結果の再統合には、トレーニングされたピークスコアモデルが必要です。</value>
+    <value>結果の再積分には、トレーニングされたピークスコアモデルが必要です。</value>
   </data>
   <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
     <value>{0}のピークグループスコアを計算中</value>
@@ -5805,7 +5805,7 @@
     <value>すべて</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_" xml:space="preserve">
-    <value>再統合前にドキュメントを完全に読み込まなければなりません。</value>
+    <value>再積分前にドキュメントを完全に読み込まなければなりません。</value>
   </data>
   <data name="PeptideSettingsUI_ComboPeakScoringModelSelected_Unrecognized_Model" xml:space="preserve">
     <value>認識されていないモデル</value>
@@ -5956,7 +5956,7 @@
     <value>全グラジエントクロマトグラムのインポートには時間がかかり、ディスク容量を消費する上、ピークの選択が効果的に行えない場合があります。</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_" xml:space="preserve">
-    <value>ピークを再統合するには、モデルをトレーニングし、選択する必要があります。</value>
+    <value>ピークを再積分するには、モデルをトレーニングし、選択する必要があります。</value>
   </data>
   <data name="MProphetResultsHandler_Q_VALUE_ANNOTATION_Q_Value" xml:space="preserve">
     <value>Q値</value>
@@ -5989,7 +5989,7 @@
     <value>単離スキームは多重化に設定されていますが、ファイルに多重化取得データが含まれていないようです。</value>
   </data>
   <data name="AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_" xml:space="preserve">
-    <value>以前の観察されていない単離ウィンドウを持つスペクトルである{0}のウィンドウマスクを取得しようとしました。逆多重化には、単離ウィンドウの繰り返しサイクルが必要です。</value>
+    <value>以前の観察されていないIsolation windowを持つスペクトルである{0}のウィンドウマスクを取得しようとしました。逆多重化には、Isolation windowの繰り返しサイクルが必要です。</value>
   </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>インポートされたスペクトルには、m/zまたは強度値 ({0} != {1}) がないようです。</value>
@@ -6010,7 +6010,7 @@
     <value>修飾ペプチドシークエンス内の認識されていないUnimod id{0}。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
-    <value>ピークを再統合</value>
+    <value>ピークを再積分</value>
   </data>
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
     <value>レポートを編集</value>
@@ -6087,7 +6087,7 @@
     <value>元の名前</value>
   </data>
   <data name="PeptideGroupTreeNode_RenderTip_Accession" xml:space="preserve">
-    <value>取得</value>
+    <value>アクセッション</value>
   </data>
   <data name="PeptideGroupTreeNode_RenderTip_Preferred_Name" xml:space="preserve">
     <value>推奨名</value>
@@ -6207,7 +6207,7 @@
     <value>このドキュメントには結果がありません</value>
   </data>
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
-    <value>取得別ターゲット</value>
+    <value>アクセッション別ターゲット</value>
   </data>
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name" xml:space="preserve">
     <value>推奨名別ターゲット</value>
@@ -6884,7 +6884,7 @@
     <value>{0} [外部]</value>
   </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
-    <value>モデルピーク選択を比較するには、ドキュメントが完全に読み込まれている必要があります。</value>
+    <value>モデルピークピッキングを比較するには、ドキュメントが完全に読み込まれている必要があります。</value>
   </data>
   <data name="ExportLiveReportDlg_ExportLiveReportDlg_Invariant" xml:space="preserve">
     <value>不変量</value>
@@ -7115,7 +7115,7 @@
     <value>無効なサーバーURL。</value>
   </data>
   <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
-    <value>インポートしたファイルのスキャンに、単離ウィンドウの中心値が欠損しているようです。</value>
+    <value>インポートしたファイルのスキャンに、Isolation windowの中心値が欠損しているようです。</value>
   </data>
   <data name="AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_" xml:space="preserve">
     <value>インポートしたファイルのスキャンの単離幅を決定することができません。</value>
@@ -8037,10 +8037,10 @@
     <value>ドキュメントには、クロマトグラムをエクスポートするターゲットが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_" xml:space="preserve">
-    <value>ドキュメントには、クロマトグラムを再統合するターゲットが含まれている必要があります。</value>
+    <value>ドキュメントには、クロマトグラムを再積分するターゲットが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_targets_in_order_to_compare_model_peak_picking_" xml:space="preserve">
-    <value>ドキュメントには、モデルピーク選択を比較するターゲットが含まれている必要があります。</value>
+    <value>ドキュメントには、モデルピークピッキングを比較するターゲットが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>ドキュメントには、機能をエクスポートするターゲットが含まれている必要があります。</value>

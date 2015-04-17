@@ -133,7 +133,7 @@
     <value>2</value>
   </data>
   <data name="lblFormDescription.Text" xml:space="preserve">
-    <value>繰り返し測定における時間の正規化を可能にするため、Skylineでは、スペクトルライブラリのペプチド同定の保持時間を使用します。2 回の繰り返し測定をアラインする場合は、両方の繰り返し測定から共通して検出されたペプチドの保持時間を用いて線形回帰を行います。Skylineでは、.99より大きい相関係数（すなわち「R」）を伴う線形回帰を取得するようにしています。Skylineでは、異常値を排除することにより、目標相関度に達するまで、回帰を最適化します。</value>
+    <value>繰り返し測定における時間の正規化を可能にするため、Skylineでは、スペクトルライブラリのペプチド同定の保持時間を使用します。2 回の繰り返し測定のアライメントを行う際、Skylineでは、両方の繰り返し測定で検出されたペプチドの溶出時間を用いて線形回帰を実行します。Skylineでは、0.99より大きい相関係数（すなわち「R」）が得られるように線形回帰を試みます。Skylineでは、異常値を排除することにより、目標相関度に達するまで、回帰を最適化します。</value>
   </data>
   <data name="&gt;&gt;lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>
@@ -181,7 +181,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>次に対してアラインする：</value>
+    <value>繰り返し測定のアライメントを行います：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -259,7 +259,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedSlope.HeaderText" xml:space="preserve">
-    <value>リファインなし勾配</value>
+    <value>最適化前の勾配</value>
   </data>
   <data name="colUnrefinedSlope.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -271,7 +271,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedIntercept.HeaderText" xml:space="preserve">
-    <value>リファインなし切片</value>
+    <value>最適化前の切片</value>
   </data>
   <data name="colUnrefinedIntercept.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -283,7 +283,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedCorrelationCoefficient.HeaderText" xml:space="preserve">
-    <value>リファインなしR</value>
+    <value>最適化前のR</value>
   </data>
   <data name="colUnrefinedCorrelationCoefficient.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

@@ -241,7 +241,7 @@
     <value>2</value>
   </data>
   <data name="radioMergeByName.Text" xml:space="preserve">
-    <value>繰り返し測定名別既存結果と統合</value>
+    <value>繰り返し測定名で、既存結果とまとめます。</value>
   </data>
   <data name="&gt;&gt;radioMergeByName.Name" xml:space="preserve">
     <value>radioMergeByName</value>
@@ -268,7 +268,7 @@
     <value>3</value>
   </data>
   <data name="radioMergeByIndex.Text" xml:space="preserve">
-    <value>繰り返し測定順別既存結果と統合</value>
+    <value>繰り返し測定順に、既存結果とまとめます。</value>
   </data>
   <data name="&gt;&gt;radioMergeByIndex.Name" xml:space="preserve">
     <value>radioMergeByIndex</value>
@@ -322,7 +322,7 @@
     <value>5</value>
   </data>
   <data name="cbMergePeptides.Text" xml:space="preserve">
-    <value>一致するペプチドを統合</value>
+    <value>一致するペプチドをまとめます</value>
   </data>
   <data name="&gt;&gt;cbMergePeptides.Name" xml:space="preserve">
     <value>cbMergePeptides</value>

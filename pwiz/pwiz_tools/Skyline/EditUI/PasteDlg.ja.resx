@@ -262,7 +262,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
+    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後に、タンパク質の説明（任意）が続きます。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -328,7 +328,7 @@
     <value>True</value>
   </metadata>
   <data name="colProteinAccession.HeaderText" xml:space="preserve">
-    <value>取得</value>
+    <value>アクセッション</value>
   </data>
   <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

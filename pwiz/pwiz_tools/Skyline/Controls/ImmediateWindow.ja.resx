@@ -200,10 +200,10 @@
 </value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
-    <value>即時ウィンドウ</value>
+    <value>イミディエイトウィンドウ</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>即時ウィンドウ</value>
+    <value>イミディエイトウィンドウ</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImmediateWindow</value>

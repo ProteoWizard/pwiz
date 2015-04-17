@@ -1567,7 +1567,7 @@
     <value>0</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
-    <value>取得メソッド(&amp;C)：</value>
+    <value>アクセッションメソッド(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>

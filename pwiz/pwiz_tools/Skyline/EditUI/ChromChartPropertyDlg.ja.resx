@@ -412,7 +412,7 @@
     <value>3</value>
   </data>
   <data name="cbRelative.Text" xml:space="preserve">
-    <value>ピーク幅相対(&amp;P)</value>
+    <value>相対ピーク幅(&amp;P)</value>
   </data>
   <data name="&gt;&gt;cbRelative.Name" xml:space="preserve">
     <value>cbRelative</value>
@@ -511,7 +511,7 @@
     <value>4</value>
   </data>
   <data name="cbShowOverlappingLabels.Text" xml:space="preserve">
-    <value>重複標識を表示</value>
+    <value>重複ラベルを表示します</value>
   </data>
   <data name="&gt;&gt;cbShowOverlappingLabels.Name" xml:space="preserve">
     <value>cbShowOverlappingLabels</value>

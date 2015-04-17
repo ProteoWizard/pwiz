@@ -325,8 +325,8 @@
     <value>17, 17</value>
   </metadata>
   <data name="cbRemoveRepeatedPeptides.ToolTip" xml:space="preserve">
-    <value>すべての反復ペプチドは削除され、
-最初に出現した各ペプチドだけが残ります。</value>
+    <value>反復ペプチドは全て削除され、
+最初のペプチドのみ残ります。</value>
   </data>
   <data name="&gt;&gt;cbRemoveRepeatedPeptides.Name" xml:space="preserve">
     <value>cbRemoveRepeatedPeptides</value>
@@ -356,7 +356,7 @@
     <value>重複ペプチドを削除(&amp;D)</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.ToolTip" xml:space="preserve">
-    <value>ドキュメント内で一意でないペプチドはすべて
+    <value>ドキュメント内のペプチドは、ユニークペプチド以外全て
 削除されます。</value>
   </data>
   <data name="&gt;&gt;cbRemoveDuplicatePeptides.Name" xml:space="preserve">
@@ -433,8 +433,8 @@
     <value>1</value>
   </data>
   <data name="textMinPeptides.ToolTip" xml:space="preserve">
-    <value>ペプチドがこの数より少ないタンパク質は
-ドキュメントから削除されます。</value>
+    <value>ペプチド数がこの数より少ない場合、これらのタンパク質はドキュメントから
+削除されます。</value>
   </data>
   <data name="&gt;&gt;textMinPeptides.Name" xml:space="preserve">
     <value>textMinPeptides</value>
@@ -599,8 +599,8 @@
   </data>
   <data name="comboReplicateUse.ToolTip" xml:space="preserve">
     <value>繰り返し測定結果を最適化に使用するかを決定：
-すべて - 繰り返し測定値の平均をとって、技術的繰り返し測定に使用する
-最良 - 各ペプチドに対して最良の繰り返し測定のみを分別に使用する</value>
+すべて - 繰り返し測定値は平均化され、テクニカル反復値として使用します。
+最良 - 各ペプチドに対して最良の繰り返し測定のみが使用され、分別に用います。</value>
   </data>
   <data name="&gt;&gt;comboReplicateUse.Name" xml:space="preserve">
     <value>comboReplicateUse</value>
@@ -712,8 +712,8 @@
     <value>3</value>
   </data>
   <data name="textMaxPeakFoundRatio.ToolTip" xml:space="preserve">
-    <value>次の数値を超えるピーク検出率を持つすべての成分は
-ドキュメントから削除されます。
+    <value>ピーク比がこの数よりも大きい場合、
+これらのピークは全てドキュメントから削除されます：
 
 緑 = 1.0
 橙色 &gt;= 0.5
@@ -830,8 +830,8 @@
     <value>1</value>
   </data>
   <data name="textMinPeakFoundRatio.ToolTip" xml:space="preserve">
-    <value>この数値を下回るピーク検出率を持つすべての成分は
-ドキュメントから削除されます。
+    <value>ピーク比がこの数よりも小さい場合、
+これらのピークは全てドキュメントから削除されます：
 
 緑 = 1.0
 橙色 &gt;= 0.5
@@ -889,9 +889,9 @@
     <value>3</value>
   </data>
   <data name="textMinIdotProduct.ToolTip" xml:space="preserve">
-    <value>MS1 プリカーサーピーク面積と予測される同位体分布の
-内積に対する比率がこの閾値を下回るすべての前駆体は
-ドキュメントから削除されます。</value>
+    <value>MS1プリカーサーピーク面積がこの閾値より下の場合、
+これらのプリカーサーイオンは全てドキ
+ュメントから削除されます。</value>
   </data>
   <data name="&gt;&gt;textMinIdotProduct.Name" xml:space="preserve">
     <value>textMinIdotProduct</value>
@@ -948,9 +948,9 @@
     <value>1</value>
   </data>
   <data name="textMinDotProduct.ToolTip" xml:space="preserve">
-    <value>プロダクトイオンピーク面積のライブラリ
-スペクトル内積に対する比率がこの閾値を下回る前駆体はすべて
-ドキュメントから削除されます。</value>
+    <value>ライブラリースペクトル内積に対して、
+プロダクトイオンピーク面積がこの閾値よりも低い場合、
+これらの全てのプリカーサーはドキュメントから削除されます。</value>
   </data>
   <data name="&gt;&gt;textMinDotProduct.Name" xml:space="preserve">
     <value>textMinDotProduct</value>
@@ -1007,7 +1007,7 @@
     <value>12</value>
   </data>
   <data name="groupLibCorr.Text" xml:space="preserve">
-    <value>予期相対強度相関度(&amp;E)：</value>
+    <value>予想される相対強度との相関(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;groupLibCorr.Name" xml:space="preserve">
     <value>groupLibCorr</value>

@@ -255,28 +255,27 @@
     <value>値の更新中に不明なエラーが発生しました。</value>
   </data>
   <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
-    <value>値の更新中のエラー：
-{0}</value>
+    <value>値：{0}の更新中にエラーにエラーが発生しました。</value>
   </data>
   <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
-    <value>行の書き込み中 </value>
+    <value>行の書き込み中です。</value>
     <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
 </comment>
   </data>
   <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
-    <value>{0}行の書き込み中</value>
+    <value>行{0}を書き込み中です。</value>
   </data>
   <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
-    <value>クエリの実行中</value>
+    <value>クエリを実行中です。</value>
   </data>
   <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
-    <value>{0}/{1}行の書き込み中</value>
+    <value>行{0}/{1}を書き込み中です。</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
     <value>本当にビュー'{0}'を消去してよろしいですか？</value>
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
-    <value>本当にこれらの{0}ビューを消去してよろしいですか？</value>
+    <value>本当にこれらのビュー{0}を消去してよろしいですか？</value>
   </data>
   <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
     <value>（{0}からフィルタ）</value>

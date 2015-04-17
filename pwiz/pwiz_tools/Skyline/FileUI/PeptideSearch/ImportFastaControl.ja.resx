@@ -280,7 +280,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
+    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後に、タンパク質の説明（任意）が続きます。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

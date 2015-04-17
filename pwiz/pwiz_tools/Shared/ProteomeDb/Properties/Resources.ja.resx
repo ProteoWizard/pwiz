@@ -98,46 +98,46 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質を追加済み</value>
+    <value xml:space="preserve">タンパク質{0}を追加しました。</value>
   </data>
     <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質のインポートが完了</value>
+    <value xml:space="preserve">タンパク質{0}のインポートが完了しました。</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
-    <value xml:space="preserve">既存のペプチドをリスト中</value>
+    <value xml:space="preserve">既存のペプチドをリスト中です。</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_proteins" xml:space="preserve">
-    <value xml:space="preserve">タンパク質をリスト中</value>
+    <value xml:space="preserve">タンパク質をリスト化しています。</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
-    <value xml:space="preserve">{0}タンパク質の消化中</value>
+    <value xml:space="preserve">タンパク質{0}を消化中です。</value>
   </data>
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
-    <value xml:space="preserve"> {0}タンパク質を{1}ユニークペプチドに消化済み</value>
+    <value xml:space="preserve">タンパク質{0}をユニークペプチド{1}に消化しました</value>
   </data>
   <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
     <value xml:space="preserve">読み取りロックの保持中は書き込みロックを取得できません。</value>
   </data>
   <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
-    <value xml:space="preserve">書き込みロックが必要</value>
+    <value xml:space="preserve">書き込みロックが必要です。</value>
   </data>
     <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
-    <value>変更を保存中</value>
+    <value>変更を保存中です。</value>
   </data>
   <data name="SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_" xml:space="preserve">
     <value>プロテオームファイル{0}には、現在のソフトウェアより新しい形式があります。 最新のソフトウェアバージョンに更新し、再度お試しください。</value>
   </data>
   <data name="ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details" xml:space="preserve">
-    <value>未解決のタンパク質の詳細を検索中</value>
+    <value>未解決のタンパク質の詳細を検索中です。</value>
   </data>
   <data name="ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins" xml:space="preserve">
-    <value>{0}タンパク質の詳細を取得するためにウェブサービスにアクセス中</value>
+    <value>タンパク質{0}の詳細を取得するため、ウェブサービスにアクセス中です。</value>
   </data>
   <data name="ProteinMetadata_DisplayText_Name___0__" xml:space="preserve">
     <value>名前：{0} </value>
   </data>
   <data name="ProteinMetadata_DisplayText_Accession___0__" xml:space="preserve">
-    <value>取得：{0} </value>
+    <value>アクセッション：{0} </value>
   </data>
   <data name="ProteinMetadata_DisplayText_Preferred_Name___0__" xml:space="preserve">
     <value>推奨名：{0} </value>
