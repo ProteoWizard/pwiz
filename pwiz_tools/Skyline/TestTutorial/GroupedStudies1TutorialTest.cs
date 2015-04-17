@@ -21,20 +21,26 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -103,6 +109,8 @@ namespace pwiz.SkylineTestTutorial
             PrepareForStatistics();
 
             ReviewStatistics();
+
+            SimpleGroupComparisons();
         }
 
         private void OpenImportArrange()
@@ -1347,6 +1355,123 @@ namespace pwiz.SkylineTestTutorial
             var doc = SkylineWindow.Document;
             RunUI(act);
             WaitForDocumentChange(doc); // make sure the action changes the document
+        }
+
+        private void SimpleGroupComparisons()
+        {
+            const string comparisonName = "Healthy v. Diseased";
+            var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            RunUI(() => documentSettingsDlg.TabControl.SelectedIndex = 1);
+            var editGroupComparisonDlg = ShowDialog <EditGroupComparisonDlg>(documentSettingsDlg.AddGroupComparison);
+            RunUI(() =>
+            {
+                editGroupComparisonDlg.TextBoxName.Text = comparisonName;
+                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = "Condition";
+            });
+            RunUI(() =>
+            {
+                editGroupComparisonDlg.ComboControlValue.SelectedItem = "Healthy";
+                editGroupComparisonDlg.ComboCaseValue.SelectedItem = "Diseased";
+                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = "SubjectId";
+                editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem = NormalizationMethod.GLOBAL_STANDARDS;
+                editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
+                editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
+            });
+            PauseForScreenShot<EditGroupComparisonDlg>("Edit Group Comparison", 64);
+            OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
+            PauseForScreenShot<DocumentSettingsDlg>("Document Settings", 65);
+            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+            RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
+            var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            RunUI(() =>
+            {
+                var foldChangeResultColumn =
+                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
+            });
+
+            PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 65);
+            RunUI(() =>
+            {
+                foldChangeGrid.ShowGraph();
+            });
+            PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph", 66);
+            var foldChangeGraph = FindOpenForm<FoldChangeBarGraph>();
+            RunUI(() =>
+            {
+                foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating);
+            });
+            RunUI(() =>
+            {
+                var foldChangeResultColumn =
+                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                foldChangeGrid.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
+            });
+            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount && foldChangeGrid.DataboundGridControl.IsComplete);
+            Assert.AreEqual(48, foldChangeGrid.DataboundGridControl.RowCount);
+            {
+                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+                {
+                    var pvalueColumn =
+                        foldChangeGrid.DataboundGridControl.FindColumn(
+                            PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"));
+                    foldChangeGrid.DataboundGridControl.QuickFilter(pvalueColumn);
+                });
+                RunUI(() =>
+                {
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_LESS_THAN);
+                    quickFilterForm.SetFilterOperand(0, 0.01.ToString(CultureInfo.CurrentCulture));
+                });
+                OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+            }
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            Assert.AreEqual(14, foldChangeGrid.DataboundGridControl.RowCount);
+            PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            var settingsForm = ShowDialog<GroupComparisonSettingsForm>(foldChangeGrid.ShowChangeSettings);
+            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
+            WaitForConditionUI(() => 37 == foldChangeGrid.DataboundGridControl.RowCount);
+            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedItem = "SubjectId");
+            RunUI(() =>
+            {
+                string folderName = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+                Assert.IsNotNull(folderName);
+                string newFileName = Path.Combine(folderName,
+                    "Rat_plasma_diff.sky");
+                SkylineWindow.SaveDocument(newFileName);
+                settingsForm.RadioScopePerPeptide.Checked = true;
+            });
+            {
+                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+                {
+                    var pvalueColumn =
+                        foldChangeGrid.DataboundGridControl.FindColumn(
+                            PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"));
+                    foldChangeGrid.DataboundGridControl.QuickFilter(pvalueColumn);
+                });
+                RunUI(() =>
+                {
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL);
+                    quickFilterForm.SetFilterOperand(0, 0.01.ToString(CultureInfo.CurrentCulture));
+                });
+                OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+            }
+            WaitForConditionUI(() => 92 == foldChangeGrid.DataboundGridControl.RowCount);
+            PauseForScreenShot<FoldChangeBarGraph>("Copy the graph", 68);
+            RunUI(() =>
+            {
+                foldChangeGrid.DataboundGridControl.DataGridView.SelectAll();
+                var colPeptide = foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("Peptide"));
+                var rowToDeselect =
+                    foldChangeGrid.DataboundGridControl.DataGridView.Rows.OfType<DataGridViewRow>()
+                        .First(row => (string) row.Cells[colPeptide.Index].FormattedValue ==  "VVLSGSDATLAYSAFK");
+                rowToDeselect.Selected = false;
+            });
+            PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 69);
+            var messageDlg = ShowDialog<MultiButtonMsgDlg>(foldChangeGrid.FoldChangeBindingSource.ViewContext.Delete);
+            PauseForScreenShot<MultiButtonMsgDlg>("Are you sure you want to delete...", 69);
+            OkDialog(messageDlg, messageDlg.BtnYesClick);
         }
     }
 }

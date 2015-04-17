@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var selectedRows = GetSelectedRows<FoldChangeBindingSource.FoldChangeRow>(BoundDataGridView);
             if (!selectedRows.Any())
             {
-                MessageBox.Show(BoundDataGridView, GroupComparisonStrings.GroupComparisonViewContext_Delete_No_rows_are_selected);
+                MessageDlg.Show(BoundDataGridView, GroupComparisonStrings.GroupComparisonViewContext_Delete_No_rows_are_selected);
                 return;
             }
             var docNodes = new Dictionary<IdentityPath, SkylineDocNode>();
