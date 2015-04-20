@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Model
                     writer.Write(FieldSeparator);
                     writer.Write(FieldSeparator);
                 }
-                writer.Write(1);  // Polarity
+                writer.Write((nodeTranGroup.PrecursorCharge > 0) ? 1 : 0);  // Polarity
                 writer.Write(FieldSeparator);                    
 
                 if (MethodType == ExportMethodType.Triggered)
@@ -824,7 +824,7 @@ namespace pwiz.Skyline.Model
                     writer.Write(RunLength);
                     writer.Write(FieldSeparator);
                 }
-                writer.Write(1);  // Polarity
+                writer.Write((nodeTranGroup.PrecursorCharge > 0) ? 1 : 0);  // Polarity
                 writer.Write(FieldSeparator);                                    
             }
             // Write modified sequence for the light peptide molecular structure
@@ -1323,7 +1323,10 @@ namespace pwiz.Skyline.Model
             writer.Write("MRM"); // Not L10N
             writer.Write(FieldSeparator);
             // Polarity
-            writer.Write("Positive"); // Not L10N
+            if (nodeTranGroup.TransitionGroup.PrecursorCharge > 0)
+                writer.Write("Positive"); // Not L10N
+            else
+                writer.Write("Negative"); // Not L10N
             writer.Write(FieldSeparator);
             // Scan Time (ms)
             writer.Write("100"); // Not L10N
