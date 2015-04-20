@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 using (var command = session.Connection.CreateCommand())
                 {
                     command.CommandText =
-                            String.Format("ALTER TABLE IonMobilityLibrary ADD COLUMN HighEnergyDriftTimeOffsetMsec DOUBLE"); // Not L10N
+                            "ALTER TABLE IonMobilityLibrary ADD COLUMN HighEnergyDriftTimeOffsetMsec DOUBLE"; // Not L10N
                     command.ExecuteNonQuery();
                     _schemaVersion = SCHEMA_VERSION_CURRENT;
                     session.Save(new DbVersionInfo { SchemaVersion = _schemaVersion });

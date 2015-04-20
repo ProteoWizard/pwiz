@@ -578,7 +578,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataSpectrum GetSpectrum(int scanIndex)
         {
-            using (_perf.CreateTimer(String.Format("GetSpectrum(index)"))) // Not L10N
+            using (_perf.CreateTimer("GetSpectrum(index)")) // Not L10N
             {
                 if (_scanCache != null)
                 {
