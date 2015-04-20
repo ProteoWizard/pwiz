@@ -661,8 +661,9 @@ namespace pwiz.Skyline.Model
             var molecule = GetFormula(seq, mods, out unexplainedMass);
             if (unexplainedMass != 0.0)
                 throw new ArgumentException("Unexplained mass when deriving ion formula from sequence "+seq); // Not L10N
-            for (int z = 0; z < charge; z++)
-                molecule = molecule.SetElementCount("H", molecule.GetElementCount("H") + 1); // Not L10N
+            int chargeStep = (charge > 0) ? 1 : -1;  // Negative charge on a peptide is not a real world concern, but useful for test purposes
+            for (int z = 0; z < Math.Abs(charge); z++)
+                molecule = molecule.SetElementCount("H", molecule.GetElementCount("H") + chargeStep); // Not L10N
             return molecule.ToString();
         }
 

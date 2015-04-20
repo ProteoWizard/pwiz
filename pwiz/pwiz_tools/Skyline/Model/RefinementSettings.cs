@@ -575,12 +575,14 @@ namespace pwiz.Skyline.Model
 
         public string SmallMoleculeNameFromPeptide(string peptideSequence, int precursorCharge, IsotopeLabelType isotopeLabelType)
         {
-             return String.Format("{0}(+H{1}{2})", // Not L10N
-                                     peptideSequence, precursorCharge, 
+             return String.Format("{0}({1}H{2}{3})", // Not L10N
+                                     peptideSequence, 
+                                     (precursorCharge < 0) ? "-" :"+", // Not L10N
+                                     Math.Abs(precursorCharge), 
                                      Equals(isotopeLabelType, IsotopeLabelType.light) ? string.Empty : " "+isotopeLabelType); // Not L10N
         }
 
-        public SrmDocument ConvertToSmallMolecules(SrmDocument document, bool massesOnly = false)
+        public SrmDocument ConvertToSmallMolecules(SrmDocument document, bool massesOnly = false, bool invertCharges = false)
         {
             var newdoc = new SrmDocument(document.Settings);
             newdoc = (SrmDocument)newdoc.ChangeIgnoreChangingChildren(true); // Retain copied results
@@ -611,13 +613,13 @@ namespace pwiz.Skyline.Model
                         foreach (var transitionGroupDocNode in mol.TransitionGroups)
                         {
                             var transitionGroup = transitionGroupDocNode.TransitionGroup;
-                            if (transitionGroup.PrecursorCharge != precursorCharge ||
+                            if (transitionGroup.PrecursorCharge != Math.Abs(precursorCharge) ||
                                 !Equals(isotopeLabelType, transitionGroup.LabelType))
                             {
                                 // Different charges or labels mean different ion formulas
                                 if (newPeptideDocNode != null)
                                     newPeptideGroupDocNode = (PeptideGroupDocNode)newPeptideGroupDocNode.Add(newPeptideDocNode);
-                                precursorCharge = transitionGroup.PrecursorCharge;
+                                precursorCharge = transitionGroup.PrecursorCharge * (invertCharges ? -1 : 1);
                                 isotopeLabelType = transitionGroup.LabelType;
                                 var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, mol.ExplicitMods) ?? seqMassCalcMono;
 
@@ -642,7 +644,7 @@ namespace pwiz.Skyline.Model
                                     mol.ExplicitRetentionTime, new TransitionGroupDocNode[0], mol.AutoManageChildren);
                                 newPeptideDocNode = newPeptideDocNode.ChangeResults(mol.Results);
                             }
-                            var newTransitionGroup = new TransitionGroup(newPeptide, transitionGroup.PrecursorCharge,
+                            var newTransitionGroup = new TransitionGroup(newPeptide, precursorCharge,
                                 transitionGroup.LabelType);
 
                             var newTransitionGroupDocNode = new TransitionGroupDocNode(newTransitionGroup,
@@ -658,12 +660,15 @@ namespace pwiz.Skyline.Model
                                 double mass = 0;
                                 var ionType = IonType.custom;
                                 CustomIon transitionCustomIon;
+                                var mzShift = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
+                                double mzShiftTransition = 0;
                                 if (transition.Transition.IonType == IonType.precursor)
                                 {
                                     ionType = IonType.precursor;
                                     var name = SmallMoleculeNameFromPeptide(peptideSequence,
                                         transition.Transition.Charge, transitionGroup.LabelType);
                                     transitionCustomIon = new DocNodeCustomIon(moleculeFormula, null, null, name);
+                                    mzShiftTransition = invertCharges ? 2.0 * BioMassCalc.MassProton : 0;  // We removed hydrogen rather than added
                                 }
                                 else if (transition.Transition.IonType == IonType.custom)
                                 {
@@ -685,7 +690,7 @@ namespace pwiz.Skyline.Model
                                 }
 
                                 var newTransition = new Transition(newTransitionGroup, ionType,
-                                    null, transition.Transition.MassIndex, transition.Transition.Charge, null,
+                                    null, transition.Transition.MassIndex, transition.Transition.Charge * (invertCharges ? -1 : 1), null,
                                     transitionCustomIon);
                                 if (ionType == IonType.precursor)
                                 {
@@ -694,8 +699,8 @@ namespace pwiz.Skyline.Model
                                 var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations,
                                     null, mass, transition.IsotopeDistInfo, null,
                                     transition.Results);
-                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz - transition.Mz) <= 1E-5);
-                                Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz - transitionGroupDocNode.PrecursorMz)-(newTransitionGroupDocNode.PrecursorCharge*BioMassCalc.MassElectron)) <= 1E-5);
+                                Assume.IsTrue((Math.Abs(newTransitionDocNode.Mz + mzShiftTransition - transition.Mz) - Math.Abs(transitionGroupDocNode.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
+                                Assume.IsTrue((Math.Abs(newTransitionGroupDocNode.PrecursorMz + mzShift - transitionGroupDocNode.PrecursorMz) - Math.Abs(transitionGroupDocNode.PrecursorCharge * BioMassCalc.MassElectron)) <= 1E-5);
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
                             }
