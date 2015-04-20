@@ -108,6 +108,9 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        public TabControl TabControl { get { return tabControl; } }
+        public TabControl GetTabControl()
+        {
+            return tabControl;
+        }
     }
 }

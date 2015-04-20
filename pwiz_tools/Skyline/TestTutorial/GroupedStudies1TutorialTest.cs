@@ -1361,7 +1361,7 @@ namespace pwiz.SkylineTestTutorial
         {
             const string comparisonName = "Healthy v. Diseased";
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            RunUI(() => documentSettingsDlg.TabControl.SelectedIndex = 1);
+            RunUI(() => documentSettingsDlg.GetTabControl().SelectedIndex = 1);
             var editGroupComparisonDlg = ShowDialog <EditGroupComparisonDlg>(documentSettingsDlg.AddGroupComparison);
             RunUI(() =>
             {
