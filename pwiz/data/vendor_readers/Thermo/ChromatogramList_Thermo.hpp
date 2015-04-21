@@ -35,7 +35,10 @@
 
 #ifdef PWIZ_READER_THERMO
 #include "pwiz_aux/msrc/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Once.hpp"
+#include <boost/icl/interval_set.hpp>
+#include <boost/icl/continuous_interval.hpp>
 using namespace pwiz::vendor_api::Thermo;
 #endif // PWIZ_READER_THERMO
 
@@ -58,6 +61,8 @@ public:
     
 #ifdef PWIZ_READER_THERMO
     ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config);
+
+    ChromatogramPtr xic(double startTime, double endTime, const boost::icl::interval_set<double>& massRanges, int msLevel);
 
     private:
 

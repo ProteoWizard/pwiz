@@ -390,6 +390,42 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
     boost::regex scanEventRegex("^\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+$");*/
 }
 
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::xic(double startTime, double endTime, const boost::icl::interval_set<double>& massRanges, int msLevel)
+{
+    string msLevelFilter("ms");
+    if (msLevel > 1)
+        msLevelFilter += lexical_cast<string>(msLevel);
+
+    stringstream massRange;
+    bool first = true;
+    BOOST_FOREACH(const boost::icl::interval_set<double>::interval_type& range, massRanges)
+    {
+        if (!first)
+        {
+            first = false;
+            massRange << ",";
+        }
+        massRange << range.lower() << "-" << range.upper();
+    }
+
+    ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange,
+                                                           Operator_None,
+                                                           Type_MassRange,
+                                                           msLevelFilter,
+                                                           massRange.str(), "",
+                                                           0,
+                                                           startTime, endTime,
+                                                           Smoothing_None, 0);
+    pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
+
+    ChromatogramPtr result(new Chromatogram);
+    result->id = (boost::format("XIC %1% %2% [%3%-%4%]") % msLevelFilter % massRange.str() % startTime % endTime).str();
+    result->setTimeIntensityPairs(data, cd->size(), UO_minute, MS_number_of_detector_counts);
+    return result;
+}
+
+
 } // detail
 } // msdata
 } // pwiz

@@ -30,6 +30,7 @@ project
 lib pwiz_analysis_chromatogram_processing
     : # sources  
         ChromatogramList_SavitzkyGolaySmoother.cpp
+        ChromatogramList_XICGenerator.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers

@@ -43,6 +43,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
+#include "pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
 #pragma warning( pop )
@@ -351,6 +352,21 @@ public ref class SpectrumList_3D : public msdata::SpectrumList
     static bool accept(msdata::SpectrumList^ inner);
 };
 
+public ref class ChromatogramList_XICGenerator : public msdata::ChromatogramList
+{
+    DEFINE_INTERNAL_LIST_WRAPPER_CODE(ChromatogramList_XICGenerator, pwiz::analysis::ChromatogramList_XICGenerator)
+
+    public:
+
+    ChromatogramList_XICGenerator(msdata::ChromatogramList^ inner);
+
+    virtual msdata::Chromatogram^ xic(double startTime, double endTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ massRanges, int msLevel);
+
+    /// <summary>
+    /// works only on ChromatogramList_Thermo
+    /// </summary>
+    static bool accept(msdata::ChromatogramList^ inner);
+};
 
 } // namespace analysis
 } // namespace CLI

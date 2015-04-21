@@ -392,6 +392,29 @@ bool SpectrumList_3D::accept(msdata::SpectrumList^ inner)
 }
 
 
+
+ChromatogramList_XICGenerator::ChromatogramList_XICGenerator(msdata::ChromatogramList^ inner)
+    : msdata::ChromatogramList(0)
+{
+    base_ = new b::ChromatogramList_XICGenerator(*inner->base_);
+    msdata::ChromatogramList::base_ = new boost::shared_ptr<pwiz::msdata::ChromatogramList>(base_);
+}
+
+msdata::Chromatogram^ ChromatogramList_XICGenerator::xic(double startTime, double endTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ massRanges, int msLevel)
+{
+    boost::icl::interval_set<double> massRangesSet;
+    for each (ContinuousInterval interval in massRanges)
+        massRangesSet.add(boost::icl::continuous_interval<double>(interval.Begin, interval.End));
+
+    try { return gcnew msdata::Chromatogram(new pwiz::msdata::ChromatogramPtr(base_->xic(startTime, endTime, massRangesSet, msLevel))); } CATCH_AND_FORWARD
+}
+
+bool ChromatogramList_XICGenerator::accept(msdata::ChromatogramList^ inner)
+{
+    return b::ChromatogramList_XICGenerator::accept(*inner->base_);
+}
+
+
 } // namespace analysis
 } // namespace CLI
 } // namespace pwiz

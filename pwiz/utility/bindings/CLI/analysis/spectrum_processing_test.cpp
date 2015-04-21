@@ -128,6 +128,23 @@ void testSorter()
 
 // TODO: test more filters
 
+void testXICGenerator()
+{
+    /*
+    MSDataFile^ msd = gcnew MSDataFile("c:/pwiz-src/trunk/pwiz/example_data/small.raw");
+    ChromatogramList_XICGenerator^ cl = gcnew ChromatogramList_XICGenerator(msd->run->chromatogramList);
+
+    List<ContinuousInterval>^ massRanges = gcnew List<ContinuousInterval>();
+    massRanges->Add(ContinuousInterval(358.5, 659.5));
+
+    Chromatogram^ c = cl->xic(0, 1000, massRanges, 1);
+    IList<double>^ timeArray = c->binaryDataArrays[0]->data;
+    IList<double>^ intensityArray = c->binaryDataArrays[1]->data;
+    for (int i=0; i < timeArray->Count; ++i)
+        System::Console::WriteLine(" ({0:f2}, {1:f2})", timeArray[i], intensityArray[i]);
+    */
+}
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG_EX(argc, argv, "_CLI")
@@ -137,6 +154,7 @@ int main(int argc, char* argv[])
         testFilter();
         testPeakFilter();
         //FIXME: testSorter();
+        testXICGenerator();
     }
     catch (exception& e)
     {
