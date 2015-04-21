@@ -209,7 +209,11 @@
 
 #define BOOST_ENUM_DOMAIN_OPERATORS(_name) \
     inline bool operator== (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;} \
-    inline bool operator!= (const _name::domain& lhs, const _name& rhs) {return rhs != lhs;}
+    inline bool operator!= (const _name::domain& lhs, const _name& rhs) {return rhs != lhs;} \
+    inline bool operator< (const _name::domain& lhs, const _name& rhs) {return rhs < lhs;} \
+    inline bool operator> (const _name::domain& lhs, const _name& rhs) {return rhs > lhs;} \
+    inline bool operator<= (const _name::domain& lhs, const _name& rhs) {return rhs <= lhs;} \
+    inline bool operator>= (const _name::domain& lhs, const _name& rhs) {return rhs >= lhs;}
 
 #define BOOST_BITFIELD_DOMAIN_OPERATORS(_name) \
     BOOST_ENUM_DOMAIN_OPERATORS(_name) \
