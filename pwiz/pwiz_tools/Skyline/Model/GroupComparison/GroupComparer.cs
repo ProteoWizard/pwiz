@@ -181,6 +181,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 Enumerable.Range(0, quantifiedRuns.Count).ToArray(),
                 subjects,
                 runQuantificationDataSet.SubjectControls);
+            if (quantifiedDataSet.SubjectControls.Distinct().Count() < 2)
+            {
+                return null;
+            }
 
             var foldChangeResult = DesignMatrix.GetDesignMatrix(quantifiedDataSet, false).PerformLinearFit(_qrFactorizationCache).First();
             return new GroupComparisonResult(selector, quantifiedRuns.Count, foldChangeResult);
@@ -229,6 +233,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 Enumerable.Range(0, summarizedRows.Count).ToArray(),
                 summarizedRows.Select(row=>row.Control).ToArray());
 
+            if (quantifiedDataSet.SubjectControls.Distinct().Count() < 2)
+            {
+                return null;
+            }
             var designMatrix = DesignMatrix.GetDesignMatrix(quantifiedDataSet, false);
             var foldChangeResult = designMatrix.PerformLinearFit(_qrFactorizationCache).First();
             // Not that because the design matrix has only two columns, this is equivalent to a simple linear
