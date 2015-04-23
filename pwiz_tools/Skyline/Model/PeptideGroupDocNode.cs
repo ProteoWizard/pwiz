@@ -98,11 +98,20 @@ namespace pwiz.Skyline.Model
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
-        public int PeptideCount { get { return Peptides.Count(); } }
+        public int PeptideCount { get { return IsProteomic ? MoleculeCount : 0; } }
 
-        public bool IsEmpty { get { return !Molecules.Any(); }}  // If empty, it's neither proteomic nor non-proteomic
-        public bool IsProteomic { get { return !SmallMolecules.Any(); } } // Default assumption for an empty PeptideGroupDocNode is that it's proteomic (probably undergoing population from a protein)
-        public bool IsNonProteomic { get { return SmallMolecules.Any(); } }
+        public bool IsEmpty { get { return MoleculeCount == 0; }}  // If empty, it's neither proteomic nor non-proteomic
+
+        public bool IsProteomic
+        {
+            // Default assumption for an empty PeptideGroupDocNode is that it's proteomic (probably undergoing population from a protein)
+            get { return IsEmpty || !((PeptideDocNode)Children[0]).Peptide.IsCustomIon; }
+        }
+
+        public bool IsNonProteomic
+        {
+            get { return !IsProteomic; }
+        }
 
         public IEnumerable<PeptideDocNode> Molecules { get { return Children.Cast<PeptideDocNode>(); } }
         public IEnumerable<PeptideDocNode> SmallMolecules { get { return Molecules.Where(p => p.Peptide.IsCustomIon); } }

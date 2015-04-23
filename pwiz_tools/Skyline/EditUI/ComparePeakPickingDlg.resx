@@ -505,7 +505,7 @@
     <value>True</value>
   </metadata>
   <data name="PeakMatch.HeaderText" xml:space="preserve">
-    <value>PeakMatch</value>
+    <value>Peak Match</value>
   </data>
   <metadata name="Score.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -742,7 +742,7 @@
     <value>True</value>
   </metadata>
   <data name="PeakMatch1.HeaderText" xml:space="preserve">
-    <value>PeakMatch (left)</value>
+    <value>Peak Match (left)</value>
   </data>
   <metadata name="PeakMatch2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

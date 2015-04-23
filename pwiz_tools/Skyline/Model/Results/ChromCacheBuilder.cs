@@ -873,13 +873,13 @@ namespace pwiz.Skyline.Model.Results
 
                 // If this is single matching, as in full-scan filtering, return only nodes
                 // matching a single precursor m/z value.  The one closest to the data.
-                float? bestMz = null;
+                double? bestMz = null;
                 if (singleMatch)
                 {
                     double matchMz = chromDataSet.PrecursorMz;
                     foreach (var match in listMatchingGroups)
                     {
-                        float currentMz = (float) match.Item1.PrecursorMz;
+                        double currentMz = match.Item1.PrecursorMz;
                         if (!bestMz.HasValue || Math.Abs(matchMz - currentMz) < Math.Abs(matchMz - bestMz.Value))
                             bestMz = currentMz;
                     }
@@ -889,7 +889,7 @@ namespace pwiz.Skyline.Model.Results
                 // may end up processing it at the same time.
                 var setChromData = new HashSet<ChromData>();
                 foreach (var match in listMatchingGroups.Where(match =>
-                    !bestMz.HasValue || bestMz.Value == (float) match.Item1.PrecursorMz))
+                    !bestMz.HasValue || bestMz.Value == match.Item1.PrecursorMz))
                 {
                     var arrayChromData = match.Item3.ToArray();
                     for (int j = 0; j < arrayChromData.Length; j++)
@@ -992,28 +992,44 @@ namespace pwiz.Skyline.Model.Results
                     if (tc.Item1 > tt.Item1)
                         it++;
                     else
-                        ic++;
+                        ic = NextChrom(ic, tc, null, listMatchingData);
                 }
                 else
                 {
                     // If next chromatogram matches better, just advance and continue
                     double delta = Math.Abs(tc.Item1 - tt.Item1);
                     if (ic < cc - 1 && delta > Math.Abs(listMzIndexChromatograms[ic + 1].Item1 - tt.Item1))
-                        ic++;
+                        ic = NextChrom(ic, tc, null, listMatchingData);
                     // or next transition matches better, just advance and continue
                     else if (it < ct - 1 && delta > Math.Abs(tc.Item1 - listMzTrans[it + 1].Item1))
                         it++;
                     // otherwise, this is the best match, so add it
                     else
                     {
-                        listMatchingData.Add(new Tuple<int, ChromData, TransitionDocNode>(tc.Item2, tc.Item3, tt.Item2));
+                        ic = NextChrom(ic, tc, tt, listMatchingData);
                         it++;
-                        ic++;
                     }
                 }
             }
+            // Advance through remaining chromatograms
+            while (ic < cc)
+                ic = NextChrom(ic, listMzIndexChromatograms[ic], null, listMatchingData);
+
             listMatchingData.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
             return listMatchingData.Select(t => new Tuple<ChromData, TransitionDocNode>(t.Item2, t.Item3)).ToList();
+        }
+
+        private static int NextChrom(int ic, Tuple<double, int, ChromData> tc, Tuple<double, TransitionDocNode> tt,
+                                     ICollection<Tuple<int, ChromData, TransitionDocNode>> listMatchingData)
+        {
+            // Make sure all chromatograms extracted from MS1 stay with the group regardless of whether
+            // they actually match transitions
+            var nodeTran = tt != null ? tt.Item2 : null;
+            if (nodeTran != null || tc.Item3.Key.Source != ChromSource.fragment)
+            {
+                listMatchingData.Add(new Tuple<int, ChromData, TransitionDocNode>(tc.Item2, tc.Item3, nodeTran));
+            }
+            return ic+1;
         }
 
         private static readonly MzComparer MZ_COMPARER = new MzComparer();
