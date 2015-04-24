@@ -56,8 +56,11 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_XICGenerator::xic(double startTim
     ChromatogramList_Thermo* thermo = dynamic_cast<ChromatogramList_Thermo*>(inner_.get());
     if (thermo == NULL)
         throw runtime_error("[ChromatogramList_XICGenerator] only works directly on Thermo ChromatogramLists");
-
+#ifdef PWIZ_READER_THERMO
     return thermo->xic(startTime, endTime, massRanges, msLevel);
+#else
+    throw runtime_error("[ChromatogramList_XICGenerator] only works directly on Thermo ChromatogramLists, and only when ProteoWizard is built with windows DLL vendor support.");
+#endif
 }
 
 
