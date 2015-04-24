@@ -430,7 +430,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         continue;
                     }
-                    var chromInfo = transition.Results[replicateIndex].FirstOrDefault(chrom => 0 == chrom.OptimizationStep);
+                    var chromInfoList = transition.Results[replicateIndex];
+                    if (null == chromInfoList)
+                    {
+                        continue;
+                    }
+                    var chromInfo = chromInfoList.FirstOrDefault(chrom => 0 == chrom.OptimizationStep);
                     if (null != chromInfo)
                     {
                         result[transition.EquivalentKey] = chromInfo;
