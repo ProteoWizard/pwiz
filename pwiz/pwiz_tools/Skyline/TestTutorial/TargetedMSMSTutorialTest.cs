@@ -82,6 +82,9 @@ namespace pwiz.SkylineTestTutorial
 
             AsSmallMolecules = asSmallMolecules;
 
+            if (asSmallMolecules)
+                TestDirectoryName = "AsSmallMolecules";
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf";
 
             TestFilesZipPaths = new[]
