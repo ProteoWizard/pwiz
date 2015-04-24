@@ -85,25 +85,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("ProteinAccession")]
         public string Accession
         {
-            get { return DocNode.IsNonProteomic ? null : DocNode.ProteinMetadata.Accession; }
+            get { return DocNode.ProteinMetadata.Accession; }
         }
 
         [InvariantDisplayName("ProteinPreferredName")]
         public string PreferredName
         {
-            get { return DocNode.IsNonProteomic ? null : DocNode.ProteinMetadata.PreferredName; }
+            get { return DocNode.ProteinMetadata.PreferredName; }
         }
 
         [InvariantDisplayName("ProteinGene")]
         public string Gene
         {
-            get { return DocNode.IsNonProteomic ? null : DocNode.ProteinMetadata.Gene; }
+            get { return DocNode.ProteinMetadata.Gene; }
         }
 
         [InvariantDisplayName("ProteinSpecies")]
         public string Species
         {
-            get { return DocNode.IsNonProteomic ? null : DocNode.ProteinMetadata.Species; }
+            get { return DocNode.ProteinMetadata.Species; }
         }
 
         // We don't want this to appear in the Document Grid
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("ProteinSequence")]
         public string Sequence 
         {
-            get { return DocNode.IsNonProteomic ? null : DocNode.PeptideGroup.Sequence; }
+            get { return DocNode.PeptideGroup.Sequence; }
         }
         [InvariantDisplayName("ProteinNote")]
         public string Note
