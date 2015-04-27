@@ -19,9 +19,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly double _monoisotopicMass;
         private readonly int _charge;
         private readonly bool _isMassH;
-        private ReadOnlyCollection<MzRankProportion> _expectedDistribution;
+        private ImmutableList<MzRankProportion> _expectedDistribution;
 
         public IsotopeDistInfo(MassDistribution massDistribution,
                                double monoisotopicMass,

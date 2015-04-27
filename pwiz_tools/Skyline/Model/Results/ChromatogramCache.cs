@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
             return Path.Combine(dirDocument, sbName.ToString());
         }
 
-        private readonly ReadOnlyCollection<ChromCachedFile> _cachedFiles;
+        private readonly ImmutableList<ChromCachedFile> _cachedFiles;
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly ChromGroupHeaderInfo5[] _chromatogramEntries;
         private readonly ChromTransition[] _chromTransitions;

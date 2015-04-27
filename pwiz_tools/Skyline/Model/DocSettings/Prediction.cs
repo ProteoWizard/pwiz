@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -65,7 +64,7 @@ namespace pwiz.Skyline.Model.DocSettings
         // May be true when the dictionary is null, because peptides were missing
         private bool _isMissingStandardPeptides;
 
-        private ReadOnlyCollection<MeasuredRetentionTime> _peptidesTimes;
+        private ImmutableList<MeasuredRetentionTime> _peptidesTimes;
        
         public RetentionTimeRegression(string name, RetentionScoreCalculatorSpec calculator,
                                        double? slope, double? intercept, double window,
@@ -2238,7 +2237,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         private ImmutableDictionary<LibKey, DriftTimeInfo> _measuredDriftTimePeptides;
-        private ReadOnlyCollection<ChargeRegressionLine> _chargeRegressionLines;
+        private ImmutableList<ChargeRegressionLine> _chargeRegressionLines;
 
         public DriftTimePredictor(string name,
                                     Dictionary<LibKey, DriftTimeInfo> measuredDriftTimePeptides,

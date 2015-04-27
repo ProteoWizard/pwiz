@@ -18,9 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class PeptideChromInfo : ChromInfo
     {
-        private ReadOnlyCollection<PeptideLabelRatio> _labelRatios;
+        private ImmutableList<PeptideLabelRatio> _labelRatios;
 
         public PeptideChromInfo(ChromFileInfoId fileId, float peakCountRatio, float? retentionTime,
                 IList<PeptideLabelRatio> labelRatios)
@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
-        private ReadOnlyCollection<RatioValue> _ratios;
+        private ImmutableList<RatioValue> _ratios;
 
         public TransitionGroupChromInfo(ChromFileInfoId fileId,
                                         int optimizationStep,
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
-        private ReadOnlyCollection<float?> _ratios;
+        private ImmutableList<float?> _ratios;
 
         public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
             : base(null)

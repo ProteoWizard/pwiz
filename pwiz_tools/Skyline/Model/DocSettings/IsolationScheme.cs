@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? PrecursorFilter { get; private set; }
         public double? PrecursorRightFilter { get; private set; }
-        private ReadOnlyCollection<IsolationWindow> _prespecifiedIsolationWindows;
+        private ImmutableList<IsolationWindow> _prespecifiedIsolationWindows;
 
         public string SpecialHandling { get; private set; }
         public int? WindowsPerScan { get; private set; }
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorFilter = precursorFilter;
             PrecursorRightFilter = precursorRightFilter;
             SpecialHandling = specialHandling;
-            PrespecifiedIsolationWindows = new IsolationWindow[0];
+            PrespecifiedIsolationWindows = ImmutableList<IsolationWindow>.EMPTY;
             DoValidate();
         }
 
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private IsolationScheme()
         {
-            PrespecifiedIsolationWindows = new IsolationWindow[0];
+            PrespecifiedIsolationWindows = ImmutableList<IsolationWindow>.EMPTY;
         }
 
         void IValidating.Validate()

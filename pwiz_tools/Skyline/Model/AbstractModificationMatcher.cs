@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
             listsToSearch.Add(new StaticMod[] { null }, false);
             foreach (var labelType in Settings.PeptideSettings.Modifications.GetModificationTypes())
             {
-                listsToSearch.Add(Settings.PeptideSettings.Modifications.GetModifications(labelType), 
+                listsToSearch.Add(Settings.PeptideSettings.Modifications.GetModifications(labelType).ToArray(), 
                     labelType.IsLight);
             }
             listsToSearch.Add(DefSetStatic, true);

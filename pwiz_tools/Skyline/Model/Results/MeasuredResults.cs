@@ -18,13 +18,13 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -35,12 +35,12 @@ namespace pwiz.Skyline.Model.Results
     [XmlRoot("measured_results")]
     public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
-        private ReadOnlyCollection<ChromatogramSet> _chromatograms;
+        private ImmutableList<ChromatogramSet> _chromatograms;
 
         private ChromatogramCache _cacheFinal;
         private ChromatogramCache _cacheRecalc;
-        private ReadOnlyCollection<ChromatogramCache> _listPartialCaches;
-        private ReadOnlyCollection<string> _listSharedCachePaths;
+        private ImmutableList<ChromatogramCache> _listPartialCaches;
+        private ImmutableList<string> _listSharedCachePaths;
         private ProgressStatus _statusLoading;
 
         public MeasuredResults(IList<ChromatogramSet> chromatograms)
@@ -582,7 +582,7 @@ namespace pwiz.Skyline.Model.Results
                 if (results._cacheFinal != null)
                     listPartialCaches.Insert(0, results._cacheFinal);
                 results._cacheFinal = null;
-                results._listPartialCaches = (listPartialCaches.Count == 0 ? null : listPartialCaches.AsReadOnly());
+                results._listPartialCaches = ImmutableList.ValueOf(listPartialCaches.Count == 0 ? null : listPartialCaches);
             }
             return results;
         }
@@ -935,7 +935,7 @@ namespace pwiz.Skyline.Model.Results
                         {
                             var cache = ChromatogramCache.Load(cachePath, _status, _loader);
                             if (_resultsClone.IsValidCache(cache, false))
-                                _resultsClone._listPartialCaches = new ReadOnlyCollection<ChromatogramCache>(new[] {cache});
+                                _resultsClone._listPartialCaches = ImmutableList.Singleton(cache);
                             else
                             {
                                 // Otherwise, get rid of this cache, since it will need to be
@@ -979,7 +979,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
                         if (listPartialCaches.Count > 0)
-                            _resultsClone._listPartialCaches = listPartialCaches.AsReadOnly();
+                            _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
                     }
                 }
 
@@ -1043,7 +1043,7 @@ namespace pwiz.Skyline.Model.Results
                     // Update the list if necessary
                     int countValid = listValidCaches.Count;
                     if (countValid < _resultsClone._listPartialCaches.Count)
-                        _resultsClone._listPartialCaches = (countValid > 0 ? listValidCaches.AsReadOnly() : null);
+                        _resultsClone._listPartialCaches = (countValid > 0 ? ImmutableList.ValueOf(listValidCaches) : null);
                 }
 
                 // Keep a record of files which have been found in a new location
@@ -1090,7 +1090,7 @@ namespace pwiz.Skyline.Model.Results
                                         if (_resultsClone._listPartialCaches != null)
                                             listPartialCaches.AddRange(_resultsClone._listPartialCaches);
                                         listPartialCaches.Add(cache);
-                                        _resultsClone._listPartialCaches = listPartialCaches.AsReadOnly();
+                                        _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
                                         continue;
                                     }
                                 }
@@ -1231,8 +1231,7 @@ namespace pwiz.Skyline.Model.Results
                     if (_resultsClone._listPartialCaches != null)
                         listPartialCaches.AddRange(_resultsClone._listPartialCaches);
                     listPartialCaches.Add(cache);
-                    _resultsClone._listPartialCaches =
-                        new ReadOnlyCollection<ChromatogramCache>(listPartialCaches);
+                    _resultsClone._listPartialCaches = ImmutableList.ValueOf(listPartialCaches);
                 }
 
                 Complete(false);

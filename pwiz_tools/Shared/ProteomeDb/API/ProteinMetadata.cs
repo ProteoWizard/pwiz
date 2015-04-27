@@ -367,12 +367,11 @@ namespace pwiz.ProteomeDatabase.API
             return new WebSearchInfo(newHistory);
         }
 
-        private readonly ReadOnlyCollection<WebSearchTerm> _history;
+        private readonly ImmutableList<WebSearchTerm> _history;
 
         public WebSearchInfo(IList<WebSearchTerm> history)
         {
-            history = history ?? new WebSearchTerm[0];
-            _history = MakeReadOnly(history);
+            _history = ImmutableList.ValueOfOrEmpty(history);
         }
 
         public List<WebSearchTerm> GetHistory()

@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         private readonly ChorusUrl _chorusUrl;
         private readonly bool _firstPass;
         private readonly IRetentionTimePredictor _retentionTimePredictor;
-        private readonly ReadOnlyCollection<ChromKey> _chromKeys;
+        private readonly ImmutableList<ChromKey> _chromKeys;
 
         public ChromatogramRequestProvider(SrmDocument srmDocument, ChorusUrl chorusUrl, IRetentionTimePredictor retentionTimePredictor, bool firstPass)
         {
@@ -45,13 +46,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             _firstPass = firstPass;
             // Create a SpectrumFilter without an IRetentionTimeProvider in order to get the list of ChromKeys that we will eventually provide.
             SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null, null);
-            _chromKeys = new ReadOnlyCollection<ChromKey>(ListChromKeys(GetChromatogramRequestDocument(spectrumFilter)).ToArray());
+            _chromKeys = ImmutableList.ValueOf(ListChromKeys(GetChromatogramRequestDocument(spectrumFilter)));
         }
 
         public SrmDocument SrmDocument { get { return _srmDocument; } }
         public ChorusUrl ChorusUrl { get { return _chorusUrl; } }
 
-        public ReadOnlyCollection<ChromKey> ChromKeys { get { return _chromKeys; }}
+        public ImmutableList<ChromKey> ChromKeys { get { return _chromKeys; }}
 
         public ChromatogramRequestDocument GetChromatogramRequest()
         {

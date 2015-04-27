@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -37,20 +38,19 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(Resources.IsotopeEnrichments_DEFAULT_Default,
             BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
 
-        private ReadOnlyCollection<IsotopeEnrichmentItem> _isotopeEnrichments;
+        private ImmutableList<IsotopeEnrichmentItem> _isotopeEnrichments;
 
         public IsotopeEnrichments(string name, IList<IsotopeEnrichmentItem> isotopeEnrichments)
             : base(name)
         {
-            Enrichments = isotopeEnrichments;
+            _isotopeEnrichments = MakeReadOnly(isotopeEnrichments);
 
             DoValidate();
         }
 
-        public IList<IsotopeEnrichmentItem> Enrichments
+        public ImmutableList<IsotopeEnrichmentItem> Enrichments
         {
             get { return _isotopeEnrichments; }
-            private set { _isotopeEnrichments = MakeReadOnly(value); }
         }
 
         public IsotopeAbundances IsotopeAbundances { get; private set; }
@@ -59,8 +59,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IsotopeEnrichments ChangeEnrichment(IsotopeEnrichmentItem item)
         {
-            return ChangeProp(ImClone(this), im => im.Enrichments = im.Enrichments.Select(e =>
-                Equals(e.IsotopeSymbol, item.IsotopeSymbol) ? item : e).ToArray());
+            return ChangeProp(ImClone(this), im => im._isotopeEnrichments = MakeReadOnly(im.Enrichments.Select(e =>
+                Equals(e.IsotopeSymbol, item.IsotopeSymbol) ? item : e)));
         }
 
         #endregion
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             var list = new List<IsotopeEnrichmentItem>();
             reader.ReadElements(list);
-            Enrichments = list;
+            _isotopeEnrichments = MakeReadOnly(list);
 
             reader.ReadEndElement();
 

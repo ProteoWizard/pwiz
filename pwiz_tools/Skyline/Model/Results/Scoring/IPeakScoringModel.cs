@@ -19,10 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class LinearModelParams : Immutable, IModelParams
     {
-        private ReadOnlyCollection<double> _weights;
+        private ImmutableList<double> _weights;
 
         public LinearModelParams(int numWeights)
         {

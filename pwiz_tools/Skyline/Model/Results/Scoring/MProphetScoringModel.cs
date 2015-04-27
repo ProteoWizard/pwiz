@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public const string NAME = "mProphet";  // Not L10N : Proper name not localized
 
-        private ReadOnlyCollection<IPeakFeatureCalculator> _peakFeatureCalculators;
+        private ImmutableList<IPeakFeatureCalculator> _peakFeatureCalculators;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
         private const int MAX_ITERATIONS = 30;

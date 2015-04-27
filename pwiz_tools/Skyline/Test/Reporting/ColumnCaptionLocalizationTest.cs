@@ -18,13 +18,13 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
@@ -43,7 +43,7 @@ namespace pwiz.SkylineTest.Reporting
     [TestClass]
     public class ColumnCaptionLocalizationTest : AbstractUnitTest
     {
-        private static readonly IList<Type> STARTING_TYPES = new ReadOnlyCollection<Type>(new[]
+        private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
             {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow)});
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".

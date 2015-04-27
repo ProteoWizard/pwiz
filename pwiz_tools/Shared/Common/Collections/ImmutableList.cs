@@ -16,68 +16,251 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace pwiz.Common.Collections
 {
     /// <summary>
-    /// Constructs lists which cannot be modified.
-    /// This class has static methods which return a read-only list.
-    /// The read-only list overrides Equals() so that it uses content-equality.
-    /// The actual implementation class is private.
+    /// Factory methods for constructing <see cref="ImmutableList{T}"/>.
     /// </summary>
     public static class ImmutableList
     {
-        public static IList<T> ValueOf<T>(IEnumerable<T> values)
+        /// <summary>
+        /// Returns an <see cref="ImmutableList{T}"/> containing the passed
+        /// in items, or null if <paramref name="values"/> is null.
+        /// </summary>
+        public static ImmutableList<T> ValueOf<T>(IEnumerable<T> values)
+        {
+            return ImmutableList<T>.ValueOf(values);
+        }
+
+        /// <summary>
+        /// Behaves like <see cref=".ValueOf"/>, but returns an empty ImmutableList
+        /// if <see paramref="values"/> is null.
+        /// </summary>
+        public static ImmutableList<T> ValueOfOrEmpty<T>(IEnumerable<T> values)
+        {
+            if (null == values)
+            {
+                return ImmutableList<T>.EMPTY;
+            }
+            return ValueOf(values);
+        }
+        public static ImmutableList<T> Empty<T>()
+        {
+            return ImmutableList<T>.EMPTY;
+        }
+        public static ImmutableList<T> Singleton<T>(T value)
+        {
+            return ImmutableList<T>.Singleton(value);
+        }
+    }
+
+    /// <summary>
+    /// Read only list of elements.  
+    /// This class differs from <see cref="System.Collections.ObjectModel.ReadOnlyCollection{T}" />
+    /// which is only a read-only wrapper around a potentially modifiable collection.  ImmutableList
+    /// guarantees that its contents cannot be modified by anyone.
+    /// ImmutableList also overrides Equals and GetHashCode to provide list contents equality
+    /// semantics.
+    /// Instances of ImmutableList cannot be constructed directly, instead use the factory methods in
+    /// <see cref="ImmutableList"/> which check whether the passed in collection is already
+    /// an ImmutableList, and makes a copy of the collection as appropriate.
+    /// </summary>
+    public abstract class ImmutableList<T> : IReadOnlyList<T>, IList<T>
+    {
+        public static readonly ImmutableList<T> EMPTY = new Impl(new T[0]);
+        public static ImmutableList<T> ValueOf(IEnumerable<T> values)
         {
             if (values == null)
             {
                 return null;
             }
-            var immutableList = values as Impl<T>;
+            var immutableList = values as ImmutableList<T>;
             if (immutableList != null)
             {
                 return immutableList;
             }
-            return new Impl<T>(values.ToArray());
-        }
-        public static IList<T> Empty<T>()
-        {
-            return Impl<T>.EMPTY_IMPL;
-        }
-        public static IList<T> Singleton<T>(T value)
-        {
-            return new Impl<T>(new[]{value});
-        }
-        class Impl<T> : ReadOnlyCollection<T>
-        {
-            public static readonly IList<T> EMPTY_IMPL = new Impl<T>(new T[0]);
-            public Impl(IList<T> list) : base(list)
+            var arrayValues = values.ToArray();
+            if (arrayValues.Length == 0)
             {
+                return EMPTY;
             }
-            public override int GetHashCode()
+            if (arrayValues.Length == 1)
             {
-                return CollectionUtil.GetHashCodeDeep(this);
+                return Singleton(arrayValues[0]);
+            }
+            return new Impl(arrayValues);
+        }
+
+        public static ImmutableList<T> Singleton(T value)
+        {
+            return new SingletonImpl(value);
+        }
+
+        /// <summary>
+        /// Private constructor to disallow any other implementations of this class.
+        /// </summary>
+        private ImmutableList()
+        {
+        }
+
+        public override int GetHashCode()
+        {
+            return CollectionUtil.GetHashCodeDeep(this);
+        }
+
+        public override bool Equals(object o)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+            if (o == this)
+            {
+                return true;
+            }
+            var that = o as ImmutableList<T>;
+            if (null == that)
+            {
+                return false;
+            }
+            return this.SequenceEqual(that);
+        }
+
+        public abstract int Count { get; }
+
+        void ICollection<T>.Add(T item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        void ICollection<T>.Clear()
+        {
+            throw new InvalidOperationException();
+        }
+
+        bool ICollection<T>.Remove(T item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool IsReadOnly { get { return true; } }
+        void IList<T>.Insert(int index, T item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        void IList<T>.RemoveAt(int index)
+        {
+            throw new InvalidOperationException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public abstract IEnumerator<T> GetEnumerator();
+
+        public abstract bool Contains(T item);
+        public abstract void CopyTo(T[] array, int arrayIndex);
+
+        public abstract int IndexOf(T item);
+        public abstract T this[int index] { get; }
+
+        T IList<T>.this[int index]
+        {
+            get { return this[index]; }
+            set { throw new InvalidOperationException(); }
+        }
+
+        private class Impl : ImmutableList<T>
+        {
+            private readonly IList<T> _items;
+            public Impl(T[] items)
+            {
+                _items = items;
             }
 
-            public override bool Equals(object o)
+            public override int Count
             {
-                if (o == null)
+                get { return _items.Count; }
+            }
+
+            public override IEnumerator<T> GetEnumerator()
+            {
+                return _items.GetEnumerator();
+            }
+
+            public override bool Contains(T item)
+            {
+                return _items.Contains(item);
+            }
+
+            public override void CopyTo(T[] array, int arrayIndex)
+            {
+                _items.CopyTo(array, arrayIndex);
+            }
+
+            public override int IndexOf(T item)
+            {
+                return _items.IndexOf(item);
+            }
+
+            public override T this[int index]
+            {
+                get { return _items[index]; }
+            }
+        }
+
+        private class SingletonImpl : ImmutableList<T>
+        {
+            private readonly T _item;
+            public SingletonImpl(T item)
+            {
+                _item = item;
+            }
+
+            public override int Count
+            {
+                get { return 1; }
+            }
+
+            public override IEnumerator<T> GetEnumerator()
+            {
+                yield return _item;
+            }
+
+            public override bool Contains(T item)
+            {
+                return Equals(_item, item);
+            }
+
+            public override void CopyTo(T[] array, int arrayIndex)
+            {
+                new[] {_item}.CopyTo(array, arrayIndex);
+            }
+
+            public override int IndexOf(T item)
+            {
+                return Equals(_item, item) ? 0 : -1;
+            }
+
+            public override T this[int index]
+            {
+                get
                 {
-                    return false;
+                    if (index != 0)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+                    return _item;
                 }
-                if (o == this)
-                {
-                    return true;
-                }
-                var that = o as Impl<T>;
-                if (null == that)
-                {
-                    return false;
-                }
-                return this.SequenceEqual(that);
             }
         }
     }

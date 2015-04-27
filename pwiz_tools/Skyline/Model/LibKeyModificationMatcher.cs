@@ -403,20 +403,17 @@ namespace pwiz.Skyline.Model
             var modsNew = base.GetDocModifications(document);
             var docPeptides = document.Molecules.ToArray();
             // Remove any new implicit mods that are not used.
-            var prevStaticMods = Settings.PeptideSettings.Modifications.StaticModifications;
             var listLightModsNew = new List<StaticMod>(modsNew.StaticModifications);
-            if (!Equals(prevStaticMods, modsNew.StaticModifications))
+            foreach (var mod in modsNew.StaticModifications)
             {
-                foreach (var mod in modsNew.StaticModifications)
-                {
-                    StaticMod mod1 = mod;
-                    if (UserDefinedTypedMods.Keys.Contains(userDefMod => userDefMod.Equivalent(mod1)))
-                        continue;
-                    if (!mod.IsUserSet && !ModAppliesToDoc(mod, true, false, docPeptides))
-                        listLightModsNew.Remove(mod);
-                }
-                modsNew = modsNew.ChangeStaticModifications(listLightModsNew);
+                StaticMod mod1 = mod;
+                if (UserDefinedTypedMods.Keys.Contains(userDefMod => userDefMod.Equivalent(mod1)))
+                    continue;
+                if (!mod.IsUserSet && !ModAppliesToDoc(mod, true, false, docPeptides))
+                    listLightModsNew.Remove(mod);
             }
+            if (!listLightModsNew.SequenceEqual(modsNew.StaticModifications))
+                modsNew = modsNew.ChangeStaticModifications(listLightModsNew);
             var prevHeavyMods = Settings.PeptideSettings.Modifications.GetModifications(DocDefHeavyLabelType);
             var listHeavyModsNew = new List<StaticMod>(modsNew.GetModifications(DocDefHeavyLabelType));
             if (!Equals(prevHeavyMods, modsNew.GetModifications(DocDefHeavyLabelType)))

@@ -18,10 +18,10 @@
  */
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 W2*identifiedCount;
         }
 
-        private ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
+        private ImmutableList<IPeakFeatureCalculator> _calculators;
 
         public LegacyScoringModel(string name, LinearModelParams parameters = null, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
         {

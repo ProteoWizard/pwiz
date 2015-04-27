@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
@@ -36,35 +36,33 @@ namespace pwiz.Skyline.Model.DocSettings
     public class DataSettings : Immutable, IXmlSerializable
     {
         public static DataSettings DEFAULT = new DataSettings(new AnnotationDef[0]);
-        private ReadOnlyCollection<AnnotationDef> _annotationDefs;
-        private ReadOnlyCollection<GroupComparisonDef> _groupComparisonDefs;
-        public DataSettings(IList<AnnotationDef> annotationDefs)
+        private ImmutableList<AnnotationDef> _annotationDefs;
+        private ImmutableList<GroupComparisonDef> _groupComparisonDefs;
+        public DataSettings(IEnumerable<AnnotationDef> annotationDefs)
         {
-            AnnotationDefs = annotationDefs;
+            _annotationDefs = MakeReadOnly(annotationDefs);
             _groupComparisonDefs = MakeReadOnly(new GroupComparisonDef[0]);
         }
 
-        public IList<AnnotationDef> AnnotationDefs
+        public ImmutableList<AnnotationDef> AnnotationDefs
         {
             get { return _annotationDefs; }
-            private set { _annotationDefs = MakeReadOnly(value); }
         }
 
-        public IList<GroupComparisonDef> GroupComparisonDefs
+        public ImmutableList<GroupComparisonDef> GroupComparisonDefs
         {
             get { return _groupComparisonDefs;}
-            private set { _groupComparisonDefs = MakeReadOnly(value); }
         }
 
         #region Property change methods
         public DataSettings ChangeAnnotationDefs(IList<AnnotationDef> annotationDefs)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.AnnotationDefs = v, annotationDefs);
+            return ChangeProp(ImClone(this), im=> im._annotationDefs = MakeReadOnly(annotationDefs));
         }
 
         public DataSettings ChangeGroupComparisonDefs(IList<GroupComparisonDef> groupComparisonDefs)
         {
-            return ChangeProp(ImClone(this), im => im.GroupComparisonDefs = groupComparisonDefs);
+            return ChangeProp(ImClone(this), im => im._groupComparisonDefs = MakeReadOnly(groupComparisonDefs));
         }
         #endregion
 
@@ -113,8 +111,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadElements(allElements, GetElementHelpers());
                 reader.ReadEndElement();
             }
-            AnnotationDefs = allElements.OfType<AnnotationDef>().ToArray();
-            GroupComparisonDefs = allElements.OfType<GroupComparisonDef>().ToArray();
+            _annotationDefs = MakeReadOnly(allElements.OfType<AnnotationDef>());
+            _groupComparisonDefs = MakeReadOnly(allElements.OfType<GroupComparisonDef>());
         }
 
         public void WriteXml(XmlWriter writer)

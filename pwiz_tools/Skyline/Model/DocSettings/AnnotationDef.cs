@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
@@ -46,13 +45,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public const string ANNOTATION_PREFIX = "annotation_"; // Not L10N
 
-        private ReadOnlyCollection<string> _items;
+        private ImmutableList<string> _items;
 
         public AnnotationDef(String name, AnnotationTargetSet annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
             AnnotationTargets = annotationTargets;
             Type = type;
-            Items = items;
+            _items = MakeReadOnly(items);
         }
         private AnnotationDef()
         {
@@ -76,15 +75,14 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public IList<String> Items
+        public ImmutableList<String> Items
         {
             get { return _items; }
-            private set { _items = MakeReadOnly(value); }
         }
 
-        public AnnotationDef ChangeItems(IList<string> prop)
+        public AnnotationDef ChangeItems(IEnumerable<string> prop)
         {
-            return ChangeProp(ImClone(this), im => im.Items = prop);
+            return ChangeProp(ImClone(this), im => im._items = MakeReadOnly(prop));
         }
 
         /// <summary>
@@ -175,7 +173,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 reader.ReadEndElement();
             }
-            Items = items;
+            _items = MakeReadOnly(items);
         }
 
         public override void WriteXml(XmlWriter writer)

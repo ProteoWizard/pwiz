@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -160,10 +159,10 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly DisplayTypeChrom _displayType;
             private PaneKey _paneKey;
 
-            private ReadOnlyCollection<DocNode> _docNodes;
-            private ReadOnlyCollection<String> _docNodeLabels;
-            private ReadOnlyCollection<List<PointPairList>> _pointPairLists;
-            private ReadOnlyCollection<ReplicateGroup> _replicateGroups;
+            private ImmutableList<DocNode> _docNodes;
+            private ImmutableList<String> _docNodeLabels;
+            private ImmutableList<List<PointPairList>> _pointPairLists;
+            private ImmutableList<ReplicateGroup> _replicateGroups;
 
 
             protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp, PaneKey paneKey)

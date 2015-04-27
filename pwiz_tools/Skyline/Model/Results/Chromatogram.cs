@@ -18,12 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Info for all files contained in this replicate
         /// </summary>
-        private ReadOnlyCollection<ChromFileInfo> _msDataFileInfo;
+        private ImmutableList<ChromFileInfo> _msDataFileInfo;
 
         /// <summary>
         /// Ids used in XML to refer to the files in this replicate
@@ -670,7 +670,7 @@ namespace pwiz.Skyline.Model.Results
             InstrumentInfoList = new MsInstrumentConfigInfo[0];
         }
 
-        private ReadOnlyCollection<MsInstrumentConfigInfo> _instrumentInfoList;
+        private ImmutableList<MsInstrumentConfigInfo> _instrumentInfoList;
 
         public ChromFileInfoId FileId { get { return (ChromFileInfoId) Id; }}
         public int FileIndex { get { return Id.GlobalIndex; } }

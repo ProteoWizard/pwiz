@@ -18,11 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("static_modification")]
     public sealed class StaticMod : XmlNamedElement
     {
-        private ReadOnlyCollection<FragmentLoss> _losses;
+        private ImmutableList<FragmentLoss> _losses;
 
         public StaticMod(string name, string aas, ModTerminus? term, string formula)
             : this(name, aas, term, formula, LabelAtoms.None, null, null)
@@ -672,7 +672,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public IsotopeLabelType LabelType { get; private set; }
-        public IList<StaticMod> Modifications { get; private set; }
+        public ImmutableList<StaticMod> Modifications { get; private set; }
 
         public bool HasImplicitModifications
         {
@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public sealed class ExplicitMods : Immutable
     {
-        private ReadOnlyCollection<TypedExplicitModifications> _modifications;
+        private ImmutableList<TypedExplicitModifications> _modifications;
 
         /// <summary>
         /// Create a new set of explicit or variable modifications.  Assumes that
@@ -1149,8 +1149,8 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class TypedExplicitModifications : Immutable
     {
         // Cached masses for faster calculation
-        private ReadOnlyCollection<double> _modMassesMono;
-        private ReadOnlyCollection<double> _modMassesAvg;
+        private ImmutableList<double> _modMassesMono;
+        private ImmutableList<double> _modMassesAvg;
         private TypedExplicitModifications _typedStaticMods;
 
         public TypedExplicitModifications(Peptide peptide, IsotopeLabelType labelType,
@@ -1207,7 +1207,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return im;
         }
 
-        private static ReadOnlyCollection<double> AddModMasses(IList<double> modMasses1, IList<double> modMasses2)
+        private static ImmutableList<double> AddModMasses(IList<double> modMasses1, IList<double> modMasses2)
         {
             double[] masses = modMasses1.ToArrayStd();
             for (int i = 0, count = Math.Min(masses.Length, modMasses2.Count); i < count; i++)

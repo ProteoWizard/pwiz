@@ -52,13 +52,11 @@ namespace pwiz.Common.SystemUtil
         /// <typeparam name="TItem">Type of the list elements</typeparam>
         /// <param name="list">The original list</param>
         /// <returns>A read-only list</returns>
-        protected static ReadOnlyCollection<TItem> MakeReadOnly<TItem>(IList<TItem> list)
+        protected static ImmutableList<TItem> MakeReadOnly<TItem>(IEnumerable<TItem> list)
         {
             // If not already read-only, make readonly, and if not already an array
             // convert to an array for minimum allocation overhead.
-// ReSharper disable SuspiciousTypeConversion.Global
-            return list as ReadOnlyCollection<TItem> ?? new ReadOnlyCollection<TItem>(list is Array ? list : list.ToArray());
-// ReSharper restore SuspiciousTypeConversion.Global
+            return ImmutableList.ValueOf(list);
         }
 
         /// <summary>

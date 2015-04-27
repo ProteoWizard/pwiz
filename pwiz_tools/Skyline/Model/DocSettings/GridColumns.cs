@@ -18,10 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -70,17 +69,16 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("grid_columns")]
     public class GridColumns : XmlNamedElement
     {
-        private ReadOnlyCollection<GridColumn> _columns;
+        private ImmutableList<GridColumn> _columns;
 
         public GridColumns(String name, IEnumerable<GridColumn> columns) : base(name)
         {
-            Columns = columns.ToArray();
+            _columns = MakeReadOnly(columns);
         }
 
-        public IList<GridColumn> Columns
+        public ImmutableList<GridColumn> Columns
         {
             get { return _columns; }
-            private set { _columns = MakeReadOnly(value); }
         }
 
         #region Implementation of IXmlSerializable
@@ -122,7 +120,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 columns.Add(new GridColumn(name, visible, width));
                 reader.Read();
             }
-            Columns = columns.ToArray();
+            _columns = ImmutableList.ValueOf(columns);
             reader.ReadEndElement();
         }
 

@@ -171,8 +171,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         // Cached calculators
-        private ReadOnlyCollection<TypedMassCalc> _precursorMassCalcs;
-        private ReadOnlyCollection<TypedMassCalc> _fragmentMassCalcs;
+        private ImmutableList<TypedMassCalc> _precursorMassCalcs;
+        private ImmutableList<TypedMassCalc> _fragmentMassCalcs;
 
         private static SequenceMassCalc GetBaseCalc(IsotopeLabelType labelType,
             ExplicitMods mods, IList<TypedMassCalc> massCalcs)
@@ -450,7 +450,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _fragmentMassCalcs = CreateMassCalcs(TransitionSettings.Prediction.FragmentMassType);
         }
 
-        private ReadOnlyCollection<TypedMassCalc> CreateMassCalcs(MassType type)
+        private ImmutableList<TypedMassCalc> CreateMassCalcs(MassType type)
         {
             var calcs = new List<TypedMassCalc>();
 
@@ -498,12 +498,12 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Cached standard types
         /// </summary>
-        private ImmutableDictionary<string, ReadOnlyCollection<PeptideDocNode>> _cachedPeptideStandards;
+        private ImmutableDictionary<string, ImmutableList<PeptideDocNode>> _cachedPeptideStandards;
         private static readonly PeptideDocNode[] EMPTY_STANDARDS = new PeptideDocNode[0];
 
         public IEnumerable<PeptideDocNode> GetPeptideStandards(string standardType)
         {
-            ReadOnlyCollection<PeptideDocNode> standardPeptides;
+            ImmutableList<PeptideDocNode> standardPeptides;
             if (_cachedPeptideStandards == null || !_cachedPeptideStandards.TryGetValue(standardType, out standardPeptides))
                 return EMPTY_STANDARDS; // So that emptiness is reference equal
 
@@ -537,12 +537,12 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             // Create new read-only lists, if necessary
             bool createdNewList = false;
-            var cachedPeptideStandardsRo = new Dictionary<string, ReadOnlyCollection<PeptideDocNode>>();
+            var cachedPeptideStandardsRo = new Dictionary<string, ImmutableList<PeptideDocNode>>();
             foreach (var pair in cachedPeptideStandards)
             {
                 string standardType = pair.Key;
                 var peptidesNew = pair.Value;
-                ReadOnlyCollection<PeptideDocNode> peptides;
+                ImmutableList<PeptideDocNode> peptides;
                 if (_cachedPeptideStandards == null ||
                     !_cachedPeptideStandards.TryGetValue(standardType, out peptides) ||
                     !ArrayUtil.EqualsDeep(peptides, peptidesNew))
@@ -558,7 +558,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (_cachedPeptideStandards == null || _cachedPeptideStandards.Count == cachedPeptideStandardsRo.Count)
                     return this;
             }
-            var prop = new ImmutableDictionary<string, ReadOnlyCollection<PeptideDocNode>>(cachedPeptideStandardsRo);
+            var prop = new ImmutableDictionary<string, ImmutableList<PeptideDocNode>>(cachedPeptideStandardsRo);
             return ChangeProp(ImClone(this), im => im._cachedPeptideStandards = prop);
         }
 

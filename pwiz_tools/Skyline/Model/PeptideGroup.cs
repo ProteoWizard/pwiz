@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.Model
             _name = (string.IsNullOrEmpty(name) ? null : name);
 
             _description = description;
-            Alternatives = new ReadOnlyCollection<ProteinMetadata>(alternatives ?? new ProteinMetadata[0]);
+            Alternatives = ImmutableList.ValueOfOrEmpty(alternatives);
             _sequence = sequence;
             _isDecoy = isDecoy;
 
@@ -187,7 +188,7 @@ namespace pwiz.Skyline.Model
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }
-        public IList<ProteinMetadata> Alternatives { get; private set; }
+        public ImmutableList<ProteinMetadata> Alternatives { get; private set; }
         public IEnumerable<string> AlternativesText
         {
             get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name ?? String.Empty, alt.Description ?? String.Empty)); }  // CONSIDER (bspratt) - include accession, preferredName etc?

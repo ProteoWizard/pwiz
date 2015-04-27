@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Globalization;
@@ -27,6 +26,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
@@ -517,10 +517,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public const string DEFAULT_END_FINDER = "3 ions";   // Not L10N
 
 
-        private ReadOnlyCollection<int> _precursorCharges;
-        private ReadOnlyCollection<int> _productCharges;
-        private ReadOnlyCollection<IonType> _ionTypes;
-        private ReadOnlyCollection<MeasuredIon> _measuredIons;
+        private ImmutableList<int> _precursorCharges;
+        private ImmutableList<int> _productCharges;
+        private ImmutableList<IonType> _ionTypes;
+        private ImmutableList<MeasuredIon> _measuredIons;
         private StartFragmentFinder _fragmentRangeFirst;
         private EndFragmentFinder _fragmentRangeLast;
 
@@ -569,7 +569,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public static ReadOnlyCollection<int> MakeChargeCollection(IList<int> charges)
+        public static ImmutableList<int> MakeChargeCollection(IList<int> charges)
         {
             var arrayCharges = charges.ToArrayStd();
             Array.Sort(arrayCharges);

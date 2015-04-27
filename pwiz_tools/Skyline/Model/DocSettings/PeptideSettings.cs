@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
@@ -769,7 +770,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static readonly IPeptideFilter UNFILTERED = new AllPeptidesFilter();
 
-        private ReadOnlyCollection<PeptideExcludeRegex> _exclusions;
+        private ImmutableList<PeptideExcludeRegex> _exclusions;
 
         // Cached regular expressions for fast matching
         private Regex _regexExclude;
@@ -1119,8 +1120,8 @@ namespace pwiz.Skyline.Model.DocSettings
             _serializationContext = mods;
         }
 
-        private ReadOnlyCollection<TypedModifications> _modifications;
-        private ReadOnlyCollection<IsotopeLabelType> _internalStandardTypes;
+        private ImmutableList<TypedModifications> _modifications;
+        private ImmutableList<IsotopeLabelType> _internalStandardTypes;
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IList<TypedModifications> heavyMods)
@@ -1655,9 +1656,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_PEPTIDE_COUNT = 1;
         public const int MAX_PEPTIDE_COUNT = 20;
 
-        private ReadOnlyCollection<LibrarySpec> _librarySpecs;
-        private ReadOnlyCollection<Library> _libraries;
-        private ReadOnlyCollection<Library> _disconnectedLibraries;
+        private ImmutableList<LibrarySpec> _librarySpecs;
+        private ImmutableList<Library> _libraries;
+        private ImmutableList<Library> _disconnectedLibraries;
 
         public PeptideLibraries(PeptidePick pick, PeptideRankId rankId, int? peptideCount,
             bool hasDocLib, IList<LibrarySpec> librarySpecs, IList<Library> libraries)
