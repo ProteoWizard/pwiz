@@ -39,7 +39,7 @@ namespace pwiz.Common.Collections
         }
 
         /// <summary>
-        /// Behaves like <see cref=".ValueOf"/>, but returns an empty ImmutableList
+        /// Behaves like <see cref="ImmutableList.ValueOf{T}"/>, but returns an empty ImmutableList
         /// if <see paramref="values"/> is null.
         /// </summary>
         public static ImmutableList<T> ValueOfOrEmpty<T>(IEnumerable<T> values)

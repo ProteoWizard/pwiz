@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil

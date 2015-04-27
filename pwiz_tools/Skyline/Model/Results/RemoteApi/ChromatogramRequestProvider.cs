@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
