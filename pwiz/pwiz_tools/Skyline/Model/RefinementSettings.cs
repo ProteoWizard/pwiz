@@ -582,7 +582,7 @@ namespace pwiz.Skyline.Model
                                      Equals(isotopeLabelType, IsotopeLabelType.light) ? string.Empty : " "+isotopeLabelType); // Not L10N
         }
 
-        public SrmDocument ConvertToSmallMolecules(SrmDocument document, bool massesOnly = false, bool invertCharges = false)
+        public SrmDocument ConvertToSmallMolecules(SrmDocument document, bool massesOnly = false, bool invertCharges = false, bool ignoreDecoys = false)
         {
             var newdoc = new SrmDocument(document.Settings);
             newdoc = (SrmDocument)newdoc.ChangeIgnoreChangingChildren(true); // Retain copied results
@@ -653,6 +653,8 @@ namespace pwiz.Skyline.Model
                                 transitionGroupDocNode.AutoManageChildren);
                             if (transitionGroupDocNode.IsDecoy)
                             {
+                                if (ignoreDecoys)
+                                    continue;
                                 throw new Exception("There is no translation from decoy to small molecules"); // Not L10N
                             }
                             foreach (var transition in transitionGroupDocNode.Transitions)
@@ -713,6 +715,12 @@ namespace pwiz.Skyline.Model
                     newdoc = (SrmDocument)newdoc.Add(newPeptideGroupDocNode);
                 }
             }
+
+            // No retention time prediction for small molecules (yet?)
+            newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
+                        newdoc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(null))));
+
+
             return newdoc;
         }
 

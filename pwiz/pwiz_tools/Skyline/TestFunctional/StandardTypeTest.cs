@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -36,8 +37,8 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -50,12 +51,30 @@ namespace pwiz.SkylineTestFunctional
         // Select peptide index 16
         const int SELECTED_PEPTIDE_INDEX = 16;
 
+        private bool AsSmallMolecules { get; set; }
+
+
         [TestMethod]
         public void TestStandardType()
         {
+            RunTestStandardType(false);
+        }
+
+        [TestMethod]
+        public void TestStandardTypeAsSmallMolecules()
+        {
+            RunTestStandardType(true);
+        }
+
+        private void RunTestStandardType(bool asSmallMolecules)
+        {
+            AsSmallMolecules = asSmallMolecules;
+            if (AsSmallMolecules)
+                TestDirectoryName = "AsSmallMolecules";
             TestFilesZip = @"TestFunctional\StandardTypeTest.zip";
             RunFunctionalTest();
         }
+
 
         //[TestMethod]
         public void TestStandardTypeWithOldReports()
@@ -65,13 +84,27 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
+
             // Open the SRMCourse.sky file
             string documentPath1 = TestFilesDir.GetTestPath("SRMCourse.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath1));
             WaitForDocumentLoaded();
-
+            if (AsSmallMolecules)
             {
-                var peps = SkylineWindow.Document.Peptides.ToArray();
+                var document = SkylineWindow.Document;
+                RunUI(() =>
+                {
+                    var refine = new RefinementSettings();
+                    var documentSM = refine.ConvertToSmallMolecules(document, ignoreDecoys:true);
+                    while (!SkylineWindow.SetDocument(documentSM, document))
+                        Thread.Sleep(100);
+                    document = SkylineWindow.Document;
+                });
+            }
+            else
+            {
+                var peps = SkylineWindow.Document.Molecules.ToArray();
                 Assert.IsNull(peps[0].GlobalStandardType);
                 Assert.IsTrue(peps.Skip(1).Take(10).All(nodePep =>
                     Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT)));
@@ -105,9 +138,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SetPeptideStandardType(1, 0, 3, null));
 
             // Set to decoys should fail
-            RunUI(() => SetPeptideStandardType(SkylineWindow.DocumentUI.PeptideGroupCount - 1, 0, 5,
-                PeptideDocNode.STANDARD_TYPE_NORMALIZAITON, false));
-
+            if (!AsSmallMolecules)
+            {
+                RunUI(() => SetPeptideStandardType(SkylineWindow.DocumentUI.MoleculeGroupCount - 1, 0, 5,
+                    PeptideDocNode.STANDARD_TYPE_NORMALIZAITON, false));
+            }
             // Set Normalization type
             RunUI(() => SetPeptideStandardType(1, 0, 3, PeptideDocNode.STANDARD_TYPE_NORMALIZAITON));
             RunUI(() =>
@@ -127,6 +162,7 @@ namespace pwiz.SkylineTestFunctional
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
                 Assert.IsTrue(pane.YAxis.Scale.Max < 0.12);
+                Assert.IsTrue(pane.YAxis.Scale.Max > 0.09);
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(5, SkylineWindow.GraphPeakArea.CurveCount);
 
@@ -136,6 +172,9 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SetStandardType(PeptideDocNode.STANDARD_TYPE_QC);
             });
             WaitForGraphs();
+
+            if (AsSmallMolecules)
+                return;  // No small molecule ion labels in 3.1
 
             RunUI(() =>
             {
@@ -147,7 +186,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(2, SkylineWindow.GraphPeakArea.CurveCount);
             });
-
 
             if (IsEnableLiveReports)
             {
@@ -256,7 +294,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var doc = SkylineWindow.DocumentUI;
                 int countReplicates = doc.Settings.MeasuredResults.Chromatograms.Count;
-                Assert.AreEqual(doc.PeptideTransitionCount * countReplicates, previewReportDlg.RowCount);
+                Assert.AreEqual(doc.MoleculeTransitionCount * countReplicates, previewReportDlg.RowCount);
                 Assert.AreEqual(columnsToAdd.Length, previewReportDlg.ColumnCount);
                 int iStandardType = previewReportDlg.FindColumn(PropertyPath.Parse("Precursor.Peptide.StandardType")).Index;
                 int iLabelType = previewReportDlg.FindColumn(PropertyPath.Parse("Precursor.IsotopeLabelType")).Index;
@@ -271,7 +309,7 @@ namespace pwiz.SkylineTestFunctional
                 int iTranRatio =
                     previewReportDlg.FindColumn(PropertyPath.Parse("Results!*.Value").Concat(ratioColumnTran)).Index;
                 int iRow = 0, iPeptide = 0;
-                foreach (var nodePep in doc.Peptides)
+                foreach (var nodePep in doc.Molecules)
                 {
                     foreach (var nodeGroup in nodePep.TransitionGroups)
                     {
@@ -422,7 +460,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var doc = SkylineWindow.DocumentUI;
                 int countReplicates = doc.Settings.MeasuredResults.Chromatograms.Count;
-                Assert.AreEqual(doc.PeptideTransitionCount*countReplicates, previewReportDlg.RowCount);
+                Assert.AreEqual(doc.MoleculeTransitionCount*countReplicates, previewReportDlg.RowCount);
                 Assert.AreEqual(columnsToAdd.Length, previewReportDlg.ColumnCount);
                 var headerNames = previewReportDlg.ColumnHeaderNames.ToArray();
                 int iStandardType = headerNames.IndexOf(name => Equals(name, "StandardType"));
@@ -432,7 +470,7 @@ namespace pwiz.SkylineTestFunctional
                 int iPrecRatio = headerNames.IndexOf(name => Equals(name, ratioColumnPrec.DisplayName));
                 int iTranRatio = headerNames.IndexOf(name => Equals(name, ratioColumnTran.DisplayName));
                 int iRow = 0, iPeptide = 0;
-                foreach (var nodePep in doc.Peptides)
+                foreach (var nodePep in doc.Molecules)
                 {
                     foreach (var nodeGroup in nodePep.TransitionGroups)
                     {
@@ -528,7 +566,7 @@ namespace pwiz.SkylineTestFunctional
         private static void ValidateStandardType(SrmDocument docChanged, int protindex, int pepStartIndex, int pepCount,
                                                  string standardType, bool success)
         {
-            var pepsChanged = docChanged.PeptideGroups.ElementAt(protindex).Peptides;
+            var pepsChanged = docChanged.MoleculeGroups.ElementAt(protindex).Molecules;
             Assert.IsTrue(pepsChanged.Skip(pepStartIndex).Take(pepCount).All(nodePep =>
                 Equals(nodePep.GlobalStandardType, standardType)) == success);
         }
