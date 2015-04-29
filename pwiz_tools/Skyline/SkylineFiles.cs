@@ -928,7 +928,7 @@ namespace pwiz.Skyline
                         Message = Path.GetFileName(fileName)
                     })
                     {
-                        longWaitDlg.PerformWork(this, 0, () =>
+                        longWaitDlg.PerformWork(this, 800, () =>
                             OptimizeCache(fileName, longWaitDlg));
                     }
                 }

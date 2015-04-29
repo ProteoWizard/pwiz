@@ -520,7 +520,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var cachedPeptideStandards = new Dictionary<string, IList<PeptideDocNode>>();
             foreach (PeptideGroupDocNode nodePepGroup in peptideGroupDocNodes)
             {
-                foreach (var nodePep in nodePepGroup.Peptides)
+                foreach (var nodePep in nodePepGroup.Molecules)
                 {
                     string standardType = nodePep.GlobalStandardType;
                     if (standardType == null)

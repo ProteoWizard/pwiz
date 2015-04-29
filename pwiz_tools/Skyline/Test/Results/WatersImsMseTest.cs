@@ -102,7 +102,7 @@ namespace pwiz.SkylineTest.Results
             bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
             string docPath;
             SrmDocument document = InitWatersImsMseDocument(testFilesDir, withDriftTimePredictor ? "single_with_driftinfo.sky" : "single_no_driftinfo.sky", asSmallMolecules, out docPath);
-            AssertEx.IsDocumentState(document, withDriftTimePredictor ? 1 : 0, 1, 1, 1, 8); // Drift time lib load bumps the doc version
+            AssertEx.IsDocumentState(document, (withDriftTimePredictor || asSmallMolecules) ? 1 : 0, 1, 1, 1, 8); // Drift time lib load bumps the doc version
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
             var doc = docContainer.Document;
             var docOriginal = doc;

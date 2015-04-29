@@ -498,22 +498,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 lists.ForEach(l => { if (l.Count < maxPoints) l.Add(CreatePointPairMissing(maxPoints - 1)); });
             }
 
-// ReSharper disable SuggestBaseTypeForParameter
             private static int GetChargeCount(PeptideDocNode nodePep)
-// ReSharper restore SuggestBaseTypeForParameter
             {
-                int chargeCount = 0;
-                bool[] chargesPresent = new bool[TransitionGroup.MAX_PRECURSOR_CHARGE];
-                foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
-                {
-                    int charge = nodeGroup.TransitionGroup.PrecursorCharge;
-                    if (!chargesPresent[charge])
-                    {
-                        chargesPresent[charge] = true;
-                        chargeCount++;
-                    }
-                }
-                return chargeCount;
+                return nodePep.TransitionGroups
+                    .Select(groupNode => groupNode.TransitionGroup.PrecursorCharge)
+                    .Distinct()
+                    .Count();
             }
 
             protected static PointPair PointPairMissing(int iGroup)
