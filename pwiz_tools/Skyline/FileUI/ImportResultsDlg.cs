@@ -352,7 +352,7 @@ namespace pwiz.Skyline.FileUI
                         string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__, filePath),
                         Resources.ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
                         x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                 }
 
                 return DataSourceUtil.GetWiffSubPaths(filePath, dataIds, ChooseSamples);

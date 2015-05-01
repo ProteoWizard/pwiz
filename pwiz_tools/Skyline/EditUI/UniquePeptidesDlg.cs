@@ -170,7 +170,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__,
                                                 BackgroundProteome.Name), x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                 }
             }
             if (_peptideProteins == null)

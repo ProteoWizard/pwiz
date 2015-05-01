@@ -121,7 +121,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         var message = TextUtil.LineSeparate(string.Format(Resources.MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__, dlg.FileName),
                                                                           x.Message);
-                        MessageDlg.Show(this, message);
+                        MessageDlg.ShowWithException(this, message, x);
                     }
                 }
             }

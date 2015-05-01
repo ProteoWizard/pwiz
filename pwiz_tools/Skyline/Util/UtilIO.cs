@@ -938,7 +938,7 @@ namespace pwiz.Skyline.Util
             catch (UnauthorizedAccessException x) { ex = x; }
 
             if (parent != null)
-                MessageDlg.Show(parent, ex.Message);
+                MessageDlg.ShowException(parent, ex);
             return false;
         }
 

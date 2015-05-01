@@ -223,7 +223,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     catch (FileEx.DeleteException de)
                     {
-                        MessageDlg.Show(this, de.Message);
+                        MessageDlg.ShowException(this, de);
                         return false;
                     }
                 }
@@ -253,14 +253,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         monitor => LibraryManager.BuildLibraryBackground(SkylineWindow, builder, monitor));
                     if (status.IsError)
                     {
-                        MessageDlg.Show(WizardForm, status.ErrorException.Message);
+                        MessageDlg.ShowException(WizardForm, status.ErrorException);
                         return false;
                     }
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
-                                                                                    Path.GetFileName(outputPath)), x.Message));
+                    MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                                                                                    Path.GetFileName(outputPath)), x.Message), x);
                     return false;
                 }
             }
@@ -311,15 +311,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             DocLib = LibraryManager.LoadLibrary(DocLibrarySpec, () => new DefaultFileLoadMonitor(monitor)));
                         if (status.IsError)
                         {
-                            MessageDlg.Show(WizardForm, status.ErrorException.Message);
+                            MessageDlg.ShowException(WizardForm, status.ErrorException);
                             return false;
                         }
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.Show(WizardForm,
+                        MessageDlg.ShowWithException(WizardForm,
                                         TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
-                                                                            DocLibrarySpec.Name), x.Message));
+                                                                            DocLibrarySpec.Name), x.Message), x);
                         return false;
                     }
                 }

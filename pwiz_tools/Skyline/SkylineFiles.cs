@@ -204,10 +204,10 @@ namespace pwiz.Skyline
 
                 return OpenFile(sharing.DocumentPath);
             }
-            catch (ZipException)
+            catch (ZipException zipException)
             {
-                MessageDlg.Show(this, string.Format(Resources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
-                                                    zipPath));
+                MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
+                                                    zipPath), zipException);
                 return false;
             }
             catch (Exception e)
@@ -215,7 +215,7 @@ namespace pwiz.Skyline
                 var message = TextUtil.LineSeparate(string.Format(
                         Resources.SkylineWindow_OpenSharedFile_Failure_extracting_Skyline_document_from_zip_file__0__,
                         zipPath), e.Message);
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, e);
                 return false;
             }
         }
@@ -1133,7 +1133,7 @@ namespace pwiz.Skyline
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest),
                                                     x.Message); 
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, x);
             }
             return false;
         }
@@ -1229,7 +1229,7 @@ namespace pwiz.Skyline
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ShowExportEspFeaturesDialog_Failed_attempting_to_save_ESP_features_to__0__, dlg.FileName),
                                     x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                 }
             }
         }
@@ -1374,10 +1374,10 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this,
+                MessageDlg.ShowWithException(this,
                                 TextUtil.LineSeparate(
                                 string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
-                                              peakBoundariesFile), x.Message));
+                                              peakBoundariesFile), x.Message), x);
             }         
         }
 
@@ -1441,8 +1441,8 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
-                                                    fastaFile, x.Message));
+                MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
+                                                    fastaFile, x.Message), x);
             }
         }
 
@@ -1483,7 +1483,7 @@ namespace pwiz.Skyline
                 }
                 catch(FormatException x)
                 {
-                    MessageDlg.Show(this, x.Message);
+                    MessageDlg.ShowException(this, x);
                     return;
                 }
                 reader = new StringReader(TextUtil.LineSeparate(header, TextUtil.LineSeparate(sequences.ToArray())));
@@ -2350,7 +2350,7 @@ namespace pwiz.Skyline
                         }
                         catch (FileEx.DeleteException deleteException)
                         {
-                            MessageDlg.Show(this, deleteException.Message);
+                            MessageDlg.ShowException(this, deleteException);
                         }
                     }
                 }

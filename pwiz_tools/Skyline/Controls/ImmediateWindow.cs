@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Controls
                         }
                         catch(Exception e)
                         {
-                            MessageDlg.Show(_parent, e.Message);
+                            MessageDlg.ShowException(_parent, e);
                         }
                     }
                 }

@@ -2179,7 +2179,8 @@ namespace pwiz.Skyline
                 var dataFile = e.ScanProvider.DataFilePath;
                 if (e.ScanIndex == -1)
                 {
-                    MessageDlg.Show(this, Resources.SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_, dataFile);
+                    MessageDlg.Show(this, 
+                        string.Format(Resources.SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_, dataFile));
                     return;
                 }
             }
@@ -3182,7 +3183,7 @@ namespace pwiz.Skyline
                 }
                 catch (CalculatorException e)
                 {
-                    MessageDlg.Show(this, e.Message);
+                    MessageDlg.ShowException(this, e);
                     Settings.Default.RTCalculatorName = string.Empty;
                 }
             }

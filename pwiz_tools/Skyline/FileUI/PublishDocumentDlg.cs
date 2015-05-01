@@ -108,7 +108,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
             }
 
             foreach (var serverFolder in listServerFolders)
@@ -195,8 +195,8 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
-                                                            x.Message));
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
+                                                            x.Message), x);
             }
         }
 
@@ -365,7 +365,7 @@ namespace pwiz.Skyline.FileUI
                 var panoramaEx = x.InnerException as PanoramaImportErrorException;
                 if(panoramaEx == null)
                 {
-                    MessageDlg.Show(parent, x.Message);
+                    MessageDlg.ShowException(parent, x);
                 }
                 else
                 {

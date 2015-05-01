@@ -140,7 +140,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 return;
             }
 
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__,
                                                                   fileName), x.Message);
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, x);
             }
 
             RefreshStatus();
@@ -209,12 +209,12 @@ namespace pwiz.Skyline.SettingsUI
 
                 ProteomeDb.OpenProteomeDb(textPath.Text);
             }
-            catch (Exception)
+            catch (Exception x)
             {
                 // In case exception is thrown opening protdb
                 string message = TextUtil.LineSeparate(Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid,
                                                        Resources.BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files);
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, x);
                 return;
             }
 
@@ -272,7 +272,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__,
                                                                       fastaFilePath), x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                     return;
                 }
             }

@@ -314,7 +314,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (InvalidDataException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 return;
             }
 

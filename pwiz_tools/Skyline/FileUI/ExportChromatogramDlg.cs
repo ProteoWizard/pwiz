@@ -117,7 +117,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.ExportChromatogramDlg_OkDialog_Failed_attempting_to_save_chromatograms_to__0__, filePath),
                                                         x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                 }
             }
             return true;

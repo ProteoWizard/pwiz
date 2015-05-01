@@ -293,7 +293,7 @@ namespace pwiz.Skyline.EditUI
             }
             catch (FormatException e)
             {
-                MessageDlg.Show(this, e.Message);
+                MessageDlg.ShowException(this, e);
                 ShowPeptideError(new PasteError
                                      {
                                          Column = colPeptideSequence.Index,
@@ -1866,7 +1866,7 @@ namespace pwiz.Skyline.EditUI
             {
                 dataGridView.Show();
                 // Show the invalid text, then remove all newly added rows.
-                MessageDlg.Show(this, e.Message);
+                MessageDlg.ShowException(this, e);
                 RemoveLastRows(dataGridView, dataGridView.RowCount - prevRowCount);
                 return;
             }

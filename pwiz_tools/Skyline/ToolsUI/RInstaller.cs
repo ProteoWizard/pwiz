@@ -146,7 +146,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (ex.InnerException.GetType() == typeof (ToolExecutionException))
                 {
-                    MessageDlg.Show(this, ex.Message);
+                    MessageDlg.ShowException(this, ex);
                     return false;
                 }
                 throw;
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.ToolsUI
                 //Win32Exception is thrown when the user does not ok Administrative Privileges
                 if (ex.InnerException is ToolExecutionException || ex.InnerException is System.ComponentModel.Win32Exception) 
                 {
-                    MessageDlg.Show(this, ex.Message);
+                    MessageDlg.ShowException(this, ex);
                     return false;
                 }
                 else

@@ -710,13 +710,13 @@ namespace pwiz.Skyline.FileUI
             }
             catch(UnauthorizedAccessException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 _exportProperties.ShowMessages = wasShowMessageValue;
                 return;
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 _exportProperties.ShowMessages = wasShowMessageValue;
                 return;
             }
@@ -1577,12 +1577,12 @@ namespace pwiz.Skyline.FileUI
                 {
                     var status = longWait.PerformWork(_dialog, 800, performExport);
                     if (status.IsError)
-                        MessageDlg.Show(_dialog, status.ErrorException.Message);
+                        MessageDlg.ShowException(_dialog, status.ErrorException);
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(_dialog, TextUtil.LineSeparate(Resources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
-                                                                   x.Message));
+                    MessageDlg.ShowWithException(_dialog, TextUtil.LineSeparate(Resources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
+                                                                   x.Message), x);
                 }
             }
         }

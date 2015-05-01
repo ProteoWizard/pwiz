@@ -156,7 +156,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                MessageDlg.Show(this, (ex.InnerException ?? ex).Message);
+                MessageDlg.ShowWithException(this, (ex.InnerException ?? ex).Message, ex);
             }
             return false;
         }
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (ex.InnerException is ToolExecutionException)
                 {
-                    MessageDlg.Show(this, ex.Message);
+                    MessageDlg.ShowException(this, ex);
                     return false;
                 }
                 throw;
@@ -389,7 +389,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (ex.InnerException is ToolExecutionException)
                 {
-                    MessageDlg.Show(this, ex.Message);
+                    MessageDlg.ShowException(this, ex);
                     return false;
                 }
                 throw;

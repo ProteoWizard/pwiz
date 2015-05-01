@@ -31,8 +31,14 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MessageDlg));
             this.btnOk = new System.Windows.Forms.Button();
             this.labelMessage = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.panel1.SuspendLayout();
+            this.panelMessageLabel = new System.Windows.Forms.Panel();
+            this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnMoreInfo = new System.Windows.Forms.Button();
+            this.panelMessageBox = new System.Windows.Forms.Panel();
+            this.tbxDetail = new System.Windows.Forms.TextBox();
+            this.panelMessageLabel.SuspendLayout();
+            this.buttonPanel.SuspendLayout();
+            this.panelMessageBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -46,15 +52,41 @@
             // labelMessage
             // 
             resources.ApplyResources(this.labelMessage, "labelMessage");
-            this.labelMessage.MaximumSize = new System.Drawing.Size(362, 0);
             this.labelMessage.Name = "labelMessage";
             // 
-            // panel1
+            // panelMessageLabel
             // 
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.BackColor = System.Drawing.SystemColors.Window;
-            this.panel1.Controls.Add(this.labelMessage);
-            this.panel1.Name = "panel1";
+            this.panelMessageLabel.BackColor = System.Drawing.SystemColors.Window;
+            this.panelMessageLabel.Controls.Add(this.labelMessage);
+            resources.ApplyResources(this.panelMessageLabel, "panelMessageLabel");
+            this.panelMessageLabel.Name = "panelMessageLabel";
+            // 
+            // buttonPanel
+            // 
+            this.buttonPanel.Controls.Add(this.btnMoreInfo);
+            this.buttonPanel.Controls.Add(this.btnOk);
+            resources.ApplyResources(this.buttonPanel, "buttonPanel");
+            this.buttonPanel.Name = "buttonPanel";
+            // 
+            // btnMoreInfo
+            // 
+            resources.ApplyResources(this.btnMoreInfo, "btnMoreInfo");
+            this.btnMoreInfo.Name = "btnMoreInfo";
+            this.btnMoreInfo.UseVisualStyleBackColor = true;
+            this.btnMoreInfo.Click += new System.EventHandler(this.btnMoreInfo_Click);
+            // 
+            // panelMessageBox
+            // 
+            this.panelMessageBox.Controls.Add(this.panelMessageLabel);
+            this.panelMessageBox.Controls.Add(this.buttonPanel);
+            resources.ApplyResources(this.panelMessageBox, "panelMessageBox");
+            this.panelMessageBox.Name = "panelMessageBox";
+            // 
+            // tbxDetail
+            // 
+            resources.ApplyResources(this.tbxDetail, "tbxDetail");
+            this.tbxDetail.Name = "tbxDetail";
+            this.tbxDetail.ReadOnly = true;
             // 
             // MessageDlg
             // 
@@ -62,8 +94,8 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnOk;
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.btnOk);
+            this.Controls.Add(this.panelMessageBox);
+            this.Controls.Add(this.tbxDetail);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.KeyPreview = true;
             this.MaximizeBox = false;
@@ -71,9 +103,12 @@
             this.Name = "MessageDlg";
             this.ShowInTaskbar = false;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MessageDlg_KeyDown);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.panelMessageLabel.ResumeLayout(false);
+            this.panelMessageLabel.PerformLayout();
+            this.buttonPanel.ResumeLayout(false);
+            this.panelMessageBox.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -81,6 +116,10 @@
 
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Label labelMessage;
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panelMessageLabel;
+        private System.Windows.Forms.FlowLayoutPanel buttonPanel;
+        private System.Windows.Forms.Button btnMoreInfo;
+        private System.Windows.Forms.Panel panelMessageBox;
+        private System.Windows.Forms.TextBox tbxDetail;
     }
 }

@@ -415,7 +415,7 @@ namespace pwiz.Skyline.SettingsUI
                     var message = TextUtil.LineSeparate(string.Format(Resources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
                                                                       dirPath),
                                                         x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                 }
             }
         }

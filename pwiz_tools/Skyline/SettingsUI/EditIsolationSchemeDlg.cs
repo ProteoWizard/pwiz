@@ -491,7 +491,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (InvalidDataException exception)
                 {
-                    MessageDlg.Show(this, exception.Message);
+                    MessageDlg.ShowException(this, exception);
                     return;
                 }
             }
@@ -559,7 +559,7 @@ namespace pwiz.Skyline.SettingsUI
                 catch (InvalidDataException exception)
                 {
                     _gridViewDriver.SelectRow(row);
-                    MessageDlg.Show(this, exception.Message);
+                    MessageDlg.ShowException(this, exception);
                     return null;
                 }
                 windowList.Add(isolationWindow);
@@ -897,8 +897,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(parent,
-                        string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__1__, lineNumber, x.Message));
+                    MessageDlg.ShowWithException(parent,
+                        string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__1__, lineNumber, x.Message), x);
                     return false;
                 }
                 return true;

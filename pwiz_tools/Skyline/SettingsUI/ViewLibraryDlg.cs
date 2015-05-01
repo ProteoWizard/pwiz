@@ -399,7 +399,7 @@ namespace pwiz.Skyline.SettingsUI
                         });
                         if (status.IsError)
                         {
-                            MessageDlg.Show(this, status.ErrorException.Message);
+                            MessageDlg.ShowException(this, status.ErrorException);
                             return;
                         }
                     }

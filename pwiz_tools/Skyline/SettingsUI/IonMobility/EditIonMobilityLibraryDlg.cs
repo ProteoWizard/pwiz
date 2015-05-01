@@ -179,7 +179,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 return;
             }
 
@@ -192,13 +192,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             catch (DatabaseOpeningException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
             }
             catch (Exception x)
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_library_file__0__could_not_be_created, path),
                                                     x.Message);
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, x);
             }
         }
 
@@ -254,7 +254,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             catch (DatabaseOpeningException e)
             {
-                MessageDlg.Show(this, e.Message);
+                MessageDlg.ShowException(this, e);
             }
         }
 
@@ -330,12 +330,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 textDatabase.Focus();
                 return;
             }
-            catch (StaleStateException)
+            catch (StaleStateException staleStateException)
             {
                 // CONSIDER: (copied from iRT code) Not sure if this is the right thing to do.  It would
                 //           be nice to solve whatever is causing this, but this is
                 //           better than showing an unexpected error form with stack trace.
-                MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_);
+                MessageDlg.ShowWithException(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_, staleStateException);
                 return;
             }
 

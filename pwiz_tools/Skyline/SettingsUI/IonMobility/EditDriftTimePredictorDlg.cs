@@ -231,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
                 catch (Exception e)
                 {
-                    MessageDlg.Show(this, e.Message);
+                    MessageDlg.ShowException(this, e);
                 }
             }
             UpdateControls();

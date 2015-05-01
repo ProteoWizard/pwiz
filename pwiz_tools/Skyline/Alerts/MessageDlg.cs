@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -28,21 +30,44 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class MessageDlg : FormEx
     {
-        public static void Show(IWin32Window parent, string message, params object[] args)
+        public static void Show(IWin32Window parent, string message)
         {
-            var formatMessage = string.Format(message, args);
-            using (var dlg = new MessageDlg(formatMessage))
+            ShowWithException(parent, message, null);
+        }
+
+        public static void ShowException(IWin32Window parent, Exception exception)
+        {
+            ShowWithException(parent, exception.Message, exception);
+        }
+
+        public static void ShowWithException(IWin32Window parent, string message, Exception exception)
+        {
+            string detailMessage = null;
+            if (exception != null)
             {
-                dlg.ShowWithTimeout(parent, formatMessage);
+                detailMessage = exception.ToString();
+            }
+            using (var dlg = new MessageDlg(message, detailMessage))
+            {
+                dlg.ShowWithTimeout(parent, message);
             }
         }
 
-        protected MessageDlg(string message)
+        protected MessageDlg(string message, string detailMessage)
         {
             InitializeComponent();
 
             int height = labelMessage.Height;
             labelMessage.Text = Message = message;
+            if (null != detailMessage)
+            {
+                tbxDetail.Text = DetailMessage = detailMessage;
+                btnMoreInfo.Visible = true;
+            }
+            else
+            {
+                btnMoreInfo.Visible = false;
+            }
             Height += Math.Max(0, labelMessage.Height - height*3);
         }
 
@@ -54,6 +79,8 @@ namespace pwiz.Skyline.Alerts
         }
 
         public string Message { get; private set; }
+
+        public string DetailMessage { get; private set; }
 
         public void OkDialog()
         {
@@ -75,16 +102,36 @@ namespace pwiz.Skyline.Alerts
 
         public void CopyMessage()
         {
-            const string formatMessage =
-@"---------------------------
-{0}
----------------------------
-{1}
----------------------------
-OK
----------------------------
-"; // Not L10N
-            ClipboardEx.SetText(string.Format(formatMessage, Text, Message));
+            const string separator = "---------------------------"; // Not L10N
+            List<string> lines = new List<String>();
+            lines.Add(separator);
+            lines.Add(Text);
+            lines.Add(separator);
+            lines.Add(Message);
+            lines.Add(separator);
+            if (null != DetailMessage)
+            {
+                lines.Add(TextUtil.SpaceSeparate(btnOk.Text, btnMoreInfo.Text));
+                lines.Add(separator);
+                lines.Add(DetailMessage);
+            }
+            else
+            {
+                lines.Add(btnOk.Text);
+            }
+            lines.Add(separator);
+            lines.Add(string.Empty);
+            ClipboardEx.SetText(TextUtil.LineSeparate(lines));
+        }
+
+        private void btnMoreInfo_Click(object sender, EventArgs e)
+        {
+            if (!tbxDetail.Visible)
+            {
+                Height += tbxDetail.Height;
+                tbxDetail.Dock = DockStyle.Bottom;
+                tbxDetail.Visible = true;
+            }
         }
     }
 }

@@ -239,7 +239,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (CalculatorException e)
                 {
-                    MessageDlg.Show(this, e.Message);
+                    MessageDlg.ShowException(this, e);
                 }
             }
         }
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.SettingsUI
                         var message = TextUtil.LineSeparate(string.Format(Resources.EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__,
                                                                           calc.Name),
                                                             x.Message);
-                        MessageDlg.Show(this,message);
+                        MessageDlg.ShowWithException(this,message, x);
                         return;
                     }
                 }

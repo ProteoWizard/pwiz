@@ -1133,7 +1133,7 @@ namespace pwiz.Skyline
                 }
                 catch (InvalidDataException x)
                 {
-                    MessageDlg.Show(this, x.Message);
+                    MessageDlg.ShowException(this, x);
                 }
             }
         }
@@ -2919,7 +2919,7 @@ namespace pwiz.Skyline
                 }
                 catch (ToolExecutionException e)
                 {
-                    MessageDlg.Show(_parent, e.Message);
+                    MessageDlg.ShowException(_parent, e);
                 }
             }
         }
@@ -3819,7 +3819,7 @@ namespace pwiz.Skyline
                     try
                     {
                         // TODO: Get topmost window
-                        MessageDlg.Show(this, message);
+                        MessageDlg.ShowWithException(this, message, status.ErrorException);
                     }
                     catch (Exception)
                     {

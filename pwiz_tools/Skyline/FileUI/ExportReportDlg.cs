@@ -229,7 +229,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, GetExceptionDisplayMessage(x)));
+                MessageDlg.ShowWithException(this, string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, GetExceptionDisplayMessage(x)), x);
                 return false;
             }
         }

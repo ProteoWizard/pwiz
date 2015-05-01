@@ -170,7 +170,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (OptimizationsOpeningException e)
             {
-                MessageDlg.Show(this, e.Message);
+                MessageDlg.ShowException(this, e);
             }
         }
 
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 return;
             }
 
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_, path),
                                                     x.Message);
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, x);
             }
         }
 
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (OptimizationsOpeningException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 textDatabase.Focus();
                 return;
             }
@@ -714,7 +714,7 @@ namespace pwiz.Skyline.SettingsUI
                         });
                         if (status.IsError)
                         {
-                            MessageDlg.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            MessageDlg.ShowException(MessageParent, status.ErrorException);
                         }
                     }
                     catch (Exception x)
@@ -722,7 +722,7 @@ namespace pwiz.Skyline.SettingsUI
                         var message = TextUtil.LineSeparate(string.Format(Resources.LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load_the_optimization_library_file__0__,
                                                                           optLibrary.DatabasePath),
                                                             x.Message);
-                        MessageDlg.Show(MessageParent, message);
+                        MessageDlg.ShowWithException(MessageParent, message, x);
                     }
                 }
                 AddToLibrary(optimizations);

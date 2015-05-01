@@ -90,14 +90,14 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (ChorusServerException chorusException)
                 {
-                    MessageDlg.Show(this, chorusException.Message);
+                    MessageDlg.ShowException(this, chorusException);
                     textPassword.Focus();
                     return false;
                 }
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, Resources.EditChorusAccountDlg_TestSettings_Error_connecting_to_server__ + x.Message);
+                MessageDlg.ShowWithException(this, Resources.EditChorusAccountDlg_TestSettings_Error_connecting_to_server__ + x.Message, x);
                 textServerURL.Focus();
                 return false;
             }

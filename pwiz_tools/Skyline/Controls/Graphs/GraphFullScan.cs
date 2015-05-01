@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void HandleLoadScanException(Exception ex)
         {
             GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Spectrum_unavailable;
-            MessageDlg.Show(this, ex.Message);
+            MessageDlg.ShowException(this, ex);
         }
 
         private SrmDocument DocumentUI
@@ -850,7 +850,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 double low = target.Value - spectrum.Precursors[0].IsolationWindowLower ?? 0;
                 double high = target.Value + spectrum.Precursors[0].IsolationWindowUpper ?? 0;
-                MessageDlg.Show(this, "Isolation window: {0}, {1}, {2}", low, target, high); // Not L10N
+                MessageDlg.Show(this, string.Format("Isolation window: {0}, {1}, {2}", low, target, high)); // Not L10N
             }
         }
 

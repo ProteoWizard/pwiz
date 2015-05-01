@@ -295,7 +295,7 @@ namespace pwiz.Skyline.SettingsUI
             catch (InvalidDataException x)
             {
                 if (showMessages)
-                    MessageDlg.Show(this, x.Message);
+                    MessageDlg.ShowException(this, x);
                 return null;
             }
 

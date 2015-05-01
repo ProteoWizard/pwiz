@@ -169,7 +169,7 @@ namespace pwiz.Skyline.ToolsUI
             catch (TargetInvocationException ex)
             {
                 if (ex.InnerException.GetType() == typeof (ToolExecutionException))
-                    MessageDlg.Show(this, ex.Message);
+                    MessageDlg.ShowException(this, ex);
                 else
                 {
                     throw;

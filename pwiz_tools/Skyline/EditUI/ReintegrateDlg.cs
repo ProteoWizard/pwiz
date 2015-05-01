@@ -101,7 +101,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_),
                                                                       x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                     return;
                 }
             }

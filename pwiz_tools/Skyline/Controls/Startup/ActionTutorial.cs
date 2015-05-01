@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.Startup
             }
             catch (Exception exception)
             {
-                MessageDlg.Show(Program.MainWindow, string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message));
+                MessageDlg.ShowWithException(Program.MainWindow, string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message), exception);
             }
         }
 
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 if (e.Error != null)
                 {
-                    MessageDlg.Show(Program.MainWindow,string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_,e.Error));
+                    MessageDlg.ShowWithException(Program.MainWindow,string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_,e.Error), e.Error);
                 }
                 else if(string.IsNullOrEmpty(SkyFileLocationInZip))
                 {

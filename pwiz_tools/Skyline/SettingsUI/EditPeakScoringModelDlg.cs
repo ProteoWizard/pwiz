@@ -177,9 +177,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (InvalidDataException x)
             {
-                MessageDlg.Show(this,
+                MessageDlg.ShowWithException(this,
                                TextUtil.LineSeparate(string.Format(Resources.EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_),
-                                                     x.Message));
+                                                     x.Message), x);
             }
 
             // Update last trained scoring model.

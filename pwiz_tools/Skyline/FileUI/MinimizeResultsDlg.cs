@@ -333,7 +333,7 @@ namespace pwiz.Skyline.FileUI
                         string.Format(Resources.MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
                                                 targetFile),
                         x.Message);
-                    MessageDlg.Show(this, message);
+                    MessageDlg.ShowWithException(this, message, x);
                     return;
                 }
                 skylineWindow.InvalidateChromatogramGraphs();

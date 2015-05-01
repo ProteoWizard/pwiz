@@ -153,8 +153,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (dataSources == null || dataSources.Length == 0)
             {
-                MessageDlg.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen,
-                                Program.Name);
+                MessageDlg.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen);
                 return;
             }
 
@@ -209,8 +208,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(WizardForm,
-                        TextUtil.LineSeparate(Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_, x.Message));
+                    MessageDlg.ShowWithException(WizardForm,
+                        TextUtil.LineSeparate(Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_, x.Message), x);
                 }
             }
 

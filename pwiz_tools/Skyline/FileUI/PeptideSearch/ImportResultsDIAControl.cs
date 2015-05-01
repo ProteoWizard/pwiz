@@ -82,8 +82,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 if (dataSources == null || !dataSources.Any())
                 {
-                    MessageDlg.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen,
-                                    Program.Name);
+                    MessageDlg.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen);
                     return;
                 }
 

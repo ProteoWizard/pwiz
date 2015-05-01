@@ -135,7 +135,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (ToolExecutionException x)
             {
-                MessageDlg.Show(parent, x.Message);
+                MessageDlg.ShowException(parent, x);
             }
             catch (IOException x)
             {
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             if (xFailure != null)
             {
-                MessageDlg.Show(parent, TextUtil.LineSeparate(String.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), xFailure.Message));                
+                MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(String.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), xFailure.Message), xFailure);                
             }
 
             if (result != null)

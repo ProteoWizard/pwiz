@@ -189,7 +189,7 @@ namespace pwiz.Skyline.EditUI
                     string initMessage = isModel
                         ? Resources.AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_
                         : Resources.AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_;
-                    MessageDlg.Show(this, string.Format(initMessage, x.Message));
+                    MessageDlg.ShowWithException(this, string.Format(initMessage, x.Message), x);
                     return;
                 }
             }

@@ -132,7 +132,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Failed_to_open_the_database_file___0_, x.Message));
+                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Failed_to_open_the_database_file___0_, x.Message), x);
                     return;
                 }
             }
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message));
+                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
                     return;
                 }
             }
@@ -242,14 +242,14 @@ namespace pwiz.Skyline.FileUI
             }
             catch (DatabaseOpeningException x)
             {
-                MessageDlg.Show(this, x.Message);
+                MessageDlg.ShowException(this, x);
                 return false;
             }
             catch (Exception x)
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created, path),
                                                     x.Message);
-                MessageDlg.Show(this, message);
+                MessageDlg.ShowWithException(this, message, x);
                 return false;
             }
             return true;
