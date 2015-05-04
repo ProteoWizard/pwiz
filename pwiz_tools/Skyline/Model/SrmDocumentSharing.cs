@@ -64,7 +64,8 @@ namespace pwiz.Skyline.Model
         public string SharedPath { get; private set; }
         public bool CompleteSharing { get; private set; }
 
-        private ILongWaitBroker WaitBroker { get; set; }
+        private IProgressMonitor ProgressMonitor { get; set; }
+        private ProgressStatus _progressStatus;
         private int CountEntries { get; set; }
         private int EntriesSaved { get; set; }
         private string CurrentEntry { get; set; }
@@ -82,11 +83,10 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void Extract(ILongWaitBroker waitBroker)
+        public void Extract(IProgressMonitor progressMonitor)
         {
-            WaitBroker = waitBroker;
-            WaitBroker.ProgressValue = 0;
-            WaitBroker.Message = DefaultMessage;
+            ProgressMonitor = progressMonitor;
+            ProgressMonitor.UpdateProgress(_progressStatus = new ProgressStatus(DefaultMessage));
 
             string extractDir = Path.GetFileName(SharedPath) ?? string.Empty;
             if (PathEx.HasExtension(extractDir, EXT_SKY_ZIP))
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model
 
                 foreach (var entry in zip.Entries)
                 {
-                    if (WaitBroker.IsCanceled)
+                    if (ProgressMonitor.IsCanceled)
                         break;
 
                     try
@@ -122,13 +122,13 @@ namespace pwiz.Skyline.Model
                     }
                     catch (Exception)
                     {
-                        if (!WaitBroker.IsCanceled)
+                        if (!ProgressMonitor.IsCanceled)
                             throw;
                     }
                 }
             }
 
-            if (WaitBroker.IsCanceled)
+            if (ProgressMonitor.IsCanceled)
             {
                 DirectoryEx.SafeDelete(extractDir);
             }
@@ -177,11 +177,10 @@ namespace pwiz.Skyline.Model
             return skylineFile;
         }
 
-        public void Share(ILongWaitBroker waitBroker)
+        public void Share(IProgressMonitor progressMonitor)
         {
-            WaitBroker = waitBroker;
-            WaitBroker.ProgressValue = 0;
-            WaitBroker.Message = DefaultMessage;
+            ProgressMonitor = progressMonitor;
+            ProgressMonitor.UpdateProgress(_progressStatus = new ProgressStatus(DefaultMessage));
 
             using (var zip = new ZipFile())
             {
@@ -274,8 +273,8 @@ namespace pwiz.Skyline.Model
                         tempDir = new TemporaryDirectory();
                     Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, 
                                                         Path.GetFileNameWithoutExtension(DocumentPath),
-                                                        WaitBroker);
-                    if (WaitBroker != null && WaitBroker.IsCanceled)
+                                                        ProgressMonitor);
+                    if (ProgressMonitor != null && ProgressMonitor.IsCanceled)
                         return;
 
                     foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
@@ -354,16 +353,16 @@ namespace pwiz.Skyline.Model
             {
                 zip.SaveProgress += SrmDocumentSharing_SaveProgress;
                 zip.Save(saver.SafeName);
-                WaitBroker.ProgressValue = 100;
+                ProgressMonitor.UpdateProgress(_progressStatus.Complete());
                 saver.Commit();
             }
         }
 
         private void SrmDocumentSharing_ExtractProgress(object sender, ExtractProgressEventArgs e)
         {
-            if (WaitBroker != null)
+            if (ProgressMonitor != null)
             {
-                if (WaitBroker.IsCanceled)
+                if (ProgressMonitor.IsCanceled)
                 {
                     e.Cancel = true;
                     return;
@@ -371,22 +370,22 @@ namespace pwiz.Skyline.Model
 
                 int progressValue = (int)Math.Round((ExtractedSize + e.BytesTransferred) * 100.0 / ExpectedSize);
 
-                if (progressValue != WaitBroker.ProgressValue)
+                if (progressValue != _progressStatus.PercentComplete)
                 {
-                    WaitBroker.ProgressValue = progressValue;
-                    WaitBroker.Message = (e.CurrentEntry != null
-                                              ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
-                                                              e.CurrentEntry.FileName)
-                                              : DefaultMessage);
+                    var message = (e.CurrentEntry != null
+                                       ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
+                                                       e.CurrentEntry.FileName)
+                                       : DefaultMessage);
+                    ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(progressValue));
                 }
             }
         }
 
         private void SrmDocumentSharing_SaveProgress(object sender, SaveProgressEventArgs e)
         {
-            if (WaitBroker != null)
+            if (ProgressMonitor != null)
             {
-                if (WaitBroker.IsCanceled)
+                if (ProgressMonitor.IsCanceled)
                 {
                     e.Cancel = true;
                     return;
@@ -397,11 +396,15 @@ namespace pwiz.Skyline.Model
                     1.0 * e.BytesTransferred / e.TotalBytesToTransfer : 0);
                 int progressValue = (int)Math.Round((EntriesSaved + percentCompressed) * 100 / CountEntries);
 
-                if (progressValue != WaitBroker.ProgressValue)
+                if (progressValue != _progressStatus.PercentComplete)
                 {
-                    WaitBroker.ProgressValue = progressValue;
+                    _progressStatus = _progressStatus.ChangePercentComplete(progressValue);
+                    
                     if (e.CurrentEntry == null)
-                        WaitBroker.Message = DefaultMessage;
+                    {
+                        ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(DefaultMessage));
+                    }
+                        
                     else
                     {
                         if (!Equals(CurrentEntry, e.CurrentEntry.FileName))
@@ -410,8 +413,9 @@ namespace pwiz.Skyline.Model
                                 EntriesSaved++;
                             CurrentEntry = e.CurrentEntry.FileName;
                         }
-                        WaitBroker.Message = string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
+                        var message = string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
                                                            e.CurrentEntry.FileName);
+                        ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
                     }
                 }
             }
@@ -422,7 +426,7 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<string> ListEntries()
         {
-            WaitBroker = null;
+            ProgressMonitor = null;
             var entries = new List<string>();
 
             using (ZipFile zip = ZipFile.Read(SharedPath))

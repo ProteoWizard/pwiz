@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
@@ -105,6 +106,18 @@ namespace pwiz.Skyline
         {
             get { return !string.IsNullOrEmpty(ReportName); }
         }
+
+        // For publishing the document to Panorama
+        private const string PANORAMA_SERVER_URI = "panorama-server"; // Not L10N
+        private const string PANORAMA_USERNAME = "panorama-username"; // Not L10N
+        private const string PANORAMA_PASSWD = "panorama-password"; // Not L10N
+        private const string PANORAMA_FOLDER = "panorama-folder"; // Not L10N
+        private string PanoramaServerUri { get; set; }
+        private string PanoramaUserName { get; set; }
+        private string PanoramaPassword { get; set; }
+        public string PanoramaFolder { get; private set; }
+        public bool PublishingToPanorama { get; private set; }
+        public Server PanoramaServer { get; private set; }
 
         // For importing a tool.
         public string ToolName { get; private set; }
@@ -942,6 +955,54 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
+                else if (IsNameValue(pair, PANORAMA_SERVER_URI))
+                {
+                    PanoramaServerUri = pair.Value;
+                }
+                else if (IsNameValue(pair, PANORAMA_USERNAME))
+                {
+                    PanoramaUserName = pair.Value;
+                }
+                else if (IsNameValue(pair, PANORAMA_PASSWD))
+                {
+                    PanoramaPassword = pair.Value;
+                }
+                else if (IsNameValue(pair, PANORAMA_FOLDER))
+                {
+                    PanoramaFolder = pair.Value;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(PanoramaServerUri) || !string.IsNullOrEmpty(PanoramaFolder))
+            {
+                if (!PanoramaArgsComplete())
+                {
+                    return false;
+                }
+                
+                var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
+                if (serverUri == null)
+                {
+                    _out.WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
+                        PanoramaServerUri);
+                    return false;
+                }
+
+                var panoramaClient = new WebPanoramaClient(serverUri);
+                var panoramaHelper = new PanoramaHelper(_out);
+                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
+                if (PanoramaServer == null)
+                {
+                    return false;
+                }
+
+                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
+                {
+                    return false;
+                }
+
+                RequiresSkylineDocument = true;
+                PublishingToPanorama = true;
             }
            
             // If skylineFile isn't set and one of the commands that requires --in is called, complain.
@@ -998,6 +1059,39 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private bool PanoramaArgsComplete()
+        {
+            var missingArgs = new List<string>();
+            const string prefix = "--"; // Not L10N
+            if (string.IsNullOrWhiteSpace(PanoramaServerUri))
+            {
+                missingArgs.Add(prefix + PANORAMA_SERVER_URI); 
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaUserName))
+            {
+                missingArgs.Add(prefix + PANORAMA_USERNAME);
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaPassword))
+            {
+                missingArgs.Add(prefix + PANORAMA_PASSWD);
+            }
+            if (string.IsNullOrWhiteSpace(PanoramaFolder))
+            {
+                missingArgs.Add(prefix + PANORAMA_FOLDER);
+            }
+
+            if (missingArgs.Count > 0)
+            {
+                _out.WriteLine(missingArgs.Count > 1       
+                    ? Resources.CommandArgs_PanoramaArgsComplete_plural_
+                    : Resources.CommandArgs_PanoramaArgsComplete_,
+                    TextUtil.LineSeparate(missingArgs)); 
+                return false;
+            }
+
+            return true;
+        }
+
         private class ValueMissingException : UsageException
         {
             public ValueMissingException(string name)
@@ -1018,6 +1112,69 @@ namespace pwiz.Skyline
         {
             protected UsageException(string message) : base(message)
             {
+            }
+        }
+
+        public class PanoramaHelper
+        {
+            private readonly TextWriter _statusWriter;
+           
+            public PanoramaHelper(TextWriter statusWriter)
+            {
+                _statusWriter = statusWriter;
+            }
+
+            public Uri ValidateServerUri(string panoramaServer)
+            {
+                // Make sure that the given server URL is valid.
+                var serverUri = PanoramaUtil.ServerNameToUri(panoramaServer);
+                if (serverUri == null)
+                {
+                    _statusWriter.WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
+                        panoramaServer);
+                    return null;
+                }
+                return serverUri;
+            }
+
+            public Server ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
+            {
+                try
+                {
+                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
+                    return new Server(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
+                }
+                catch (PanoramaServerException x)
+                {
+                    _statusWriter.WriteLine(x.Message); 
+                }
+                catch (Exception x)
+                {
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
+                }
+
+                return null;
+            }
+
+            public bool ValidateFolder(IPanoramaClient panoramaClient, Server server, string panoramaFolder)
+            {
+                try
+                {
+                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
+                    return true;
+                }
+                catch (PanoramaServerException x)
+                {
+                    _statusWriter.WriteLine(x.Message);
+                }
+                catch (Exception x)
+                {
+                    _statusWriter.WriteLine(
+                        "An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.\n{2}",
+                        panoramaFolder, panoramaClient.ServerUri,
+                        x.Message);
+                }
+                return false;
             }
         }
     }
@@ -1171,6 +1328,12 @@ namespace pwiz.Skyline
                 {
                     ExportInstrumentFile(ExportFileType.Method, commandArgs);
                 }
+            }
+            if (commandArgs.PublishingToPanorama)
+            {
+                // Publish document to the given folder on the Panorama Server
+                var panoramaHelper = new PanoramaPublishHelper(_out);
+                panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile, commandArgs.PanoramaFolder);
             }
         }
 
@@ -2690,6 +2853,71 @@ namespace pwiz.Skyline
             _out.Close();
         }
 
+        private class PanoramaPublishHelper
+        {
+            private readonly CommandStatusWriter _statusWriter;
+
+            public PanoramaPublishHelper(CommandStatusWriter statusWriter)
+            {
+                _statusWriter = statusWriter;
+            }
+
+            public void PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
+            {
+                var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
+                if (ShareDocument(document, documentPath, zipFilePath))
+                {
+                    PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
+                }
+            }
+
+            private void PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
+            {
+                var waitBroker = new CommandWaitBroker(_statusWriter,
+                    new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama));
+                IPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
+                try
+                {
+                    publishClient.SendZipFile(panoramaServer, panoramaFolder, zipFilePath, waitBroker);
+                }
+                catch (Exception x)
+                {
+                    var panoramaEx = x.InnerException as PanoramaImportErrorException;
+                    if (panoramaEx == null)
+                    {
+                        _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_, x.Message);
+                    }
+                    else
+                    {
+                        _statusWriter.WriteLine(
+							Resources.PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_, 
+                            panoramaEx.ServerUrl);
+                        _statusWriter.WriteLine(
+                            Resources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
+                            new Uri(panoramaEx.ServerUrl, panoramaEx.JobUrlPart));
+                    }
+                }
+            }
+
+            private bool ShareDocument(SrmDocument document, string documentPath, string fileDest)
+            {
+                var waitBroker = new CommandWaitBroker(_statusWriter,
+                    new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
+                var sharing = new SrmDocumentSharing(document, documentPath, fileDest, false);
+                try
+                {
+                    sharing.Share(waitBroker);
+                    return true;
+                }
+                catch (Exception x)
+                {
+                    _statusWriter.WriteLine(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
+                    _statusWriter.WriteLine(x.Message);
+                }
+                return false;
+            }
+        }
+
     }
 
     public class CommandStatusWriter : TextWriter
@@ -2930,6 +3158,8 @@ namespace pwiz.Skyline
         private DateTime _lastOutput;
 
         private readonly TextWriter _out;
+        private Thread _waitingThread;
+        private volatile bool _waiting;
 
         public CommandWaitBroker(TextWriter outWriter, ProgressStatus status)
         {
@@ -2958,12 +3188,31 @@ namespace pwiz.Skyline
 
         private void UpdateProgress(ProgressStatus status)
         {
+            if (status.PercentComplete != -1)
+            {
+                // Stop the waiting thread if it is running.
+                _waiting = false;
+                if(_waitingThread != null && _waitingThread.IsAlive)
+                {
+                    _waitingThread.Join();
+                }  
+            }
+           
             if (!string.IsNullOrEmpty(status.Message) &&
                 (_currentProgress == null || !ReferenceEquals(status.Message, _currentProgress.Message)))
             {
                 WriteStatusMessage(status.Message);
             }
-            if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
+            
+            if (status.PercentComplete == -1)
+            {
+                _out.Write(Resources.CommandWaitBroker_UpdateProgress_Waiting___);
+                _waiting = true;
+                // Start a thread that will indicate "waiting" progress to the console every few seconds.
+                _waitingThread = new Thread(Wait){IsBackground = true};
+                _waitingThread.Start();
+            }
+            else if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
             {
                 // Show progress at least every 2 seconds and at 100%, if any other percentage
                 // output has been shown.
@@ -2975,6 +3224,16 @@ namespace pwiz.Skyline
                 }
             }
             _currentProgress = status;
+        }
+
+        private void Wait()
+        {
+            while (_waiting)
+            {
+                _out.Write("."); // Not L10N
+                Thread.Sleep(1000);
+            }
+            _out.WriteLine(Resources.CommandWaitBroker_Wait_Done);
         }
     }
 }

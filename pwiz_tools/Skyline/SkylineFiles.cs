@@ -48,7 +48,6 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
@@ -2491,7 +2490,7 @@ namespace pwiz.Skyline
                     tag = true;
                 }
 
-                var serverPanoramaWeb = new Server(EditServerDlg.PANORAMA_WEB, string.Empty, string.Empty);
+                var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
                 var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
                 if (newServer == null)
                     return;

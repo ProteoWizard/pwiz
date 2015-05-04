@@ -25,9 +25,10 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -248,6 +249,11 @@ namespace pwiz.SkylineTestFunctional
                 }
                 return UserState.nonvalid;
             }
+
+            public FolderState IsValidFolder(string folderPath, string username, string password)
+            {
+                return FolderState.valid;
+            }
         }
 
         private class TestPanoramaPublishClient : IPanoramaPublishClient
@@ -297,7 +303,7 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker)
+            public void SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
             {                
             }
 

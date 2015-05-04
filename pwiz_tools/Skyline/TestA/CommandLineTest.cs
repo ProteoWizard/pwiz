@@ -1707,6 +1707,130 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("a \"\" c", CommandLine.JoinArgs(new [] {"a", string.Empty, "c"}));
         }
 
+        [TestMethod]
+        public void ConsolePanoramaArgsTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+
+            // Error: missing panorama args
+            var output = RunCommand("--in=" + docPath,
+                "--panorama-server=https://panoramaweb.org");
+
+            Assert.IsTrue(
+                output.Contains(string.Format(Resources.CommandArgs_PanoramaArgsComplete_plural_,
+                    TextUtil.LineSeparate("--panorama-username", "--panorama-password", "--panorama-folder"))));
+
+            output = RunCommand("--in=" + docPath,
+                "--panorama-server=https://panoramaweb.org",
+                "--panorama-username=user",
+                "--panorama-password=passwd");
+
+            Assert.IsTrue(
+                output.Contains(string.Format(Resources.CommandArgs_PanoramaArgsComplete_, "--panorama-folder")));
+
+
+            // Error: invalid server URL
+            const string badServer = "bad server url";
+            output = RunCommand("--in=" + docPath,
+                "--panorama-server=" + badServer,
+                "--panorama-username=user",
+                "--panorama-password=passwd",
+                "--panorama-folder=folder");
+
+            Assert.IsTrue(output.Contains(string.Format(
+                Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, badServer
+                )));
+
+
+            var buffer = new StringBuilder();
+            var helper = new CommandArgs.PanoramaHelper(new StringWriter(buffer));
+
+            // Error: Unknown server
+            var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
+            var client = new TestPanoramaClient() { MyServerState = ServerState.unknown, ServerUri = serverUri };
+            helper.ValidateServer(client, null, null);
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(
+                        string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                            serverUri.Host)));
+            buffer.Clear();
+
+
+            // Error: Not a Panorama Server
+            serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
+            client = new TestPanoramaClient() {MyPanoramaState = PanoramaState.other, ServerUri = serverUri};
+            helper.ValidateServer(client, null, null);
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(
+                        string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
+                            serverUri.Host)));
+            buffer.Clear();
+
+
+            // Error: Invalid user
+            serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
+            client = new TestPanoramaClient() { MyUserState = UserState.nonvalid, ServerUri = serverUri };
+            helper.ValidateServer(client, "invalid", "user");
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(
+                        Resources
+                            .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+            buffer.Clear();
+
+
+            // Error: unknown exception
+            client = new TestPanoramaClientThrowsException();
+            helper.ValidateServer(client, null, null);
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(
+                        string.Format(Resources.PanoramaHelper_ValidateServer_, "GetServerState threw an exception")));
+            buffer.Clear();
+
+            
+            // Error: folder does not exist
+            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri };
+            var server = helper.ValidateServer(client, "user", "password");
+            var folder = "folder/not/found";
+            helper.ValidateFolder(client, server, folder);
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(
+                        string.Format(
+                            Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
+                            folder, client.ServerUri)));
+            buffer.Clear();
+
+
+            // Error: no permissions on folder
+            client = new TestPanoramaClient() { MyFolderState = FolderState.nopermission, ServerUri = serverUri };
+            folder = "no/permissions";
+            helper.ValidateFolder(client, server, folder);
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(
+                        string.Format(
+                            Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                            "user", folder)));
+            buffer.Clear();
+
+
+            // Error: not a Panorama folder
+            client = new TestPanoramaClient() { MyFolderState = FolderState.notpanorama, ServerUri = serverUri };
+            folder = "not/panorama";
+            helper.ValidateFolder(client, server, folder);
+            Assert.IsTrue(
+                buffer.ToString()
+                    .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
+                        folder)));
+
+
+        }
+
         private static string GetTitleHelper()
         {
             int i = 1;
@@ -1744,5 +1868,50 @@ namespace pwiz.SkylineTestA
                 : pathToRaw;
         }
 
+        private class TestPanoramaClient : IPanoramaClient
+        {
+            public Uri ServerUri { get; set; }
+
+            public ServerState MyServerState { get; set; }
+            public PanoramaState MyPanoramaState { get; set; }
+            public UserState MyUserState { get; set; }
+            public FolderState MyFolderState { get; set; }
+
+            public TestPanoramaClient()
+            {
+                MyServerState = ServerState.available;
+                MyPanoramaState = PanoramaState.panorama;
+                MyUserState = UserState.valid;
+                MyFolderState = FolderState.valid;
+            }
+
+            public virtual ServerState GetServerState()
+            {
+                return MyServerState;
+            }
+
+            public PanoramaState IsPanorama()
+            {
+                return MyPanoramaState;
+            }
+
+            public UserState IsValidUser(string username, string password)
+            {
+                return MyUserState;
+            }
+
+            public FolderState IsValidFolder(string folderPath, string username, string password)
+            {
+                return MyFolderState;
+            }
+        }
+
+        private class TestPanoramaClientThrowsException : TestPanoramaClient
+        {
+            public override ServerState GetServerState()
+            {
+                throw new Exception("GetServerState threw an exception");
+            }    
+        }
     }
 }

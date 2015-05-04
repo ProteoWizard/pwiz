@@ -172,7 +172,16 @@ namespace pwiz.SkylineTest.Results
                 {
                     var sharePath = testFilesDir.GetTestPath(complete==1?"share_complete.zip":"share_minimized.zip");
                     var share = new SrmDocumentSharing(document, docPath, sharePath, complete==1);
-                    share.Share(new LongWaitDlg(null, false));
+                    using (var longWaitDlg = new LongWaitDlg
+                    { 
+                        // ReSharper disable once LocalizableElement
+                        Text = "unit test WatersImsTest -- sharing document",
+                    })
+                    {
+                        longWaitDlg.PerformWork(null, 1000, share.Share);
+                        Assert.IsFalse(longWaitDlg.IsCanceled);
+                    } 
+
                     var files = share.ListEntries().ToArray();
                     Assert.IsTrue(files.Contains(withDriftTimePredictor ? "scaled.imdb" : "mse-mobility.filtered-scaled.blib"));
                     // And round trip it to make sure we haven't left out any new features in minimized imdb or blib files

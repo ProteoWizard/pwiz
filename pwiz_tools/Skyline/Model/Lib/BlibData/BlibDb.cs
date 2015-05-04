@@ -38,13 +38,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private static readonly Regex REGEX_LSID =
             new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)"); // Not L10N
 
-        private ILongWaitBroker WaitBroker { get; set; }
+        private IProgressMonitor ProgressMonitor { get; set; }
+        private ProgressStatus _progressStatus;
 
         private BlibDb(String path)
         {
             FilePath = path;
             SessionFactory = BlibSessionFactoryFactory.CreateSessionFactory(path, false);
             DatabaseLock = new ReaderWriterLock();
+            _progressStatus = new ProgressStatus(string.Empty);
         }
 
         public ISession OpenSession()
@@ -474,26 +476,26 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private bool UpdateProgressMessage(string message)
         {
-            if (WaitBroker != null)
+            if (ProgressMonitor != null)
             {
-                if (WaitBroker.IsCanceled)
+                if (ProgressMonitor.IsCanceled)
                     return false;
 
-                WaitBroker.Message = message;
+                ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
             }
             return true;
         }
 
         private bool UpdateProgress(int totalPeptideCount, int doneCount)
         {
-            if (WaitBroker != null)
+            if (ProgressMonitor != null)
             {
-                if (WaitBroker.IsCanceled)
+                if (ProgressMonitor.IsCanceled)
                     return false;
 
                 int progressValue = (doneCount) * 100 / totalPeptideCount;
 
-                WaitBroker.ProgressValue = progressValue;
+                ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progressValue));
             }
             return true;
         }
@@ -773,10 +775,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="pathDirectory">Directory into which new minimized libraries are built</param>
         /// <param name="nameModifier">A name modifier to append to existing names for
         ///     full libraries to create new library names</param>
-        /// <param name="waitBroker">Broker to communicate status and progress</param>
+        /// <param name="progressMonitor">Broker to communicate status and progress</param>
         /// <returns>A new document instance with minimized libraries</returns>
         public static SrmDocument MinimizeLibraries(SrmDocument document,
-            string pathDirectory, string nameModifier, ILongWaitBroker waitBroker)
+            string pathDirectory, string nameModifier, IProgressMonitor progressMonitor)
         {
             var settings = document.Settings;
             var pepLibraries = settings.PeptideSettings.Libraries;
@@ -815,7 +817,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     string fileName = GetUniqueName(baseName, usedNames) + BiblioSpecLiteSpec.EXT;
                     using (var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName)))
                     {
-                        blibDb.WaitBroker = waitBroker;
+                        blibDb.ProgressMonitor = progressMonitor;
                         var librarySpecMin = librarySpec as BiblioSpecLiteSpec;
                         if (librarySpecMin == null || !librarySpecMin.IsDocumentLibrary)
                         {
@@ -831,7 +833,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             pepLibraries.Libraries[i], document));
                         
                         // Terminate if user canceled
-                        if (waitBroker != null && waitBroker.IsCanceled)
+                        if (progressMonitor != null && progressMonitor.IsCanceled)
                             return document;
 
                         listLibrarySpecs.Add(librarySpecMin);

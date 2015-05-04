@@ -788,6 +788,24 @@ namespace pwiz.Skyline.Util
             {
             }
         }
+
+        /// <summary>
+        /// Appends a time stamp value to the given Skyline file name.
+        /// </summary>
+        /// <param name="fileName"></param>
+        public static string GetTimeStampedFileName(string fileName)
+        {
+            string path;
+            do
+            {
+                path = Path.Combine(Path.GetDirectoryName(fileName) ?? String.Empty,
+                    Path.GetFileNameWithoutExtension(fileName) + "_" + // Not L10N
+                    DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + // Not L10N
+                    SrmDocumentSharing.EXT_SKY_ZIP);
+            }
+            while (File.Exists(path));
+            return path;
+        }
     }
 
     public static class DirectoryEx
