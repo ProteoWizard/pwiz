@@ -574,7 +574,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots; }
+            get { return _isPauseForScreenShots || Program.PauseSeconds < 0; }
             set
             {
                 _isPauseForScreenShots = value;
@@ -620,7 +620,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
+            else if (IsPauseForScreenShots)
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
