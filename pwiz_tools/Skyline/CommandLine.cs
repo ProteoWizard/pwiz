@@ -1170,7 +1170,7 @@ namespace pwiz.Skyline
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        "An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.\n{2}",
+                        "An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.\n{2}",  // Not L10N
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
