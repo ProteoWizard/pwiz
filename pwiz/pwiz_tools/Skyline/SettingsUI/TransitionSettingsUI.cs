@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -548,13 +549,21 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
             {
-                SrmSettings newSettings = _parent.DocumentUI.Settings.ChangeTransitionSettings(settings);
-                if (!_parent.ChangeSettings(newSettings, true))
+                try
                 {
-                    e.Cancel = true;
+                    SrmSettings newSettings = _parent.DocumentUI.Settings.ChangeTransitionSettings(settings);
+                    if (!_parent.ChangeSettings(newSettings, true))
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                    _transitionSettings = settings;
+                }
+                catch (InvalidDataException x)
+                {
+                    MessageDlg.Show(this, x.Message);
                     return;
                 }
-                _transitionSettings = settings;
             }
 
             DialogResult = DialogResult.OK;
