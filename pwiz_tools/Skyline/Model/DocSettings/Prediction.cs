@@ -1720,6 +1720,276 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+    [XmlRoot("predict_compensation_voltage")]
+    public class CompensationVoltageParameters : OptimizableRegression
+    {
+        public enum Tuning { none = 0, rough = 1, medium = 2, fine = 3 }
+
+        public const int MIN_STEP_COUNT = 1;
+        public const int MAX_STEP_COUNT = 10;
+
+        public virtual Tuning TuneLevel { get { return Tuning.none; } }
+        public CompensationVoltageRegressionRough RegressionRough { get; private set; }
+        public CompensationVoltageRegressionMedium RegressionMedium { get; private set; }
+        public CompensationVoltageRegressionFine RegressionFine { get; private set; }
+
+        public double MinCov { get; protected set; }
+        public double MaxCov { get; protected set; }
+        public int StepCountRough { get; protected set; }
+        public int StepCountMedium { get; protected set; }
+        public int StepCountFine { get; protected set; }
+        public double StepSizeRough { get { return (MaxCov - MinCov)/(StepCountRough*2); } }
+        public double StepSizeMedium { get { return StepSizeRough / (StepCountMedium + 1); } }
+        public double StepSizeFine { get { return StepSizeMedium / (StepCountFine + 1); } }
+
+        public CompensationVoltageParameters(string name, double min, double max, int stepsRough, int stepsMedium, int stepsFine)
+            : base(name, -1, -1)
+        {
+            MinCov = min;
+            MaxCov = max;
+            StepCountRough = stepsRough;
+            StepCountMedium = stepsMedium;
+            StepCountFine = stepsFine;
+            InitializeSubRegressions();
+        }
+
+        public CompensationVoltageParameters(CompensationVoltageParameters other)
+            : this(other.Name, other.MinCov, other.MaxCov, other.StepCountRough, other.StepCountMedium, other.StepCountFine)
+        {
+        }
+
+        protected void InitializeSubRegressions()
+        {
+            if (TuneLevel.Equals(Tuning.none))
+            {
+                RegressionRough = new CompensationVoltageRegressionRough(this);
+                RegressionMedium = new CompensationVoltageRegressionMedium(this);
+                RegressionFine = new CompensationVoltageRegressionFine(this);
+            }
+        }
+
+        public override OptimizationType OptType
+        {
+            get
+            {
+                switch (TuneLevel)
+                {
+                    case Tuning.fine:
+                        return OptimizationType.compensation_voltage_fine;
+                    case Tuning.medium:
+                        return OptimizationType.compensation_voltage_medium;
+                    default:
+                        return OptimizationType.compensation_voltage_rough;
+                }
+            }
+        }
+
+        public override double StepSize { get { return GetStepSize(TuneLevel); } }
+
+        public override int StepCount
+        {
+            get { return GetStepCount(TuneLevel); }
+            protected set
+            {
+                switch (TuneLevel)
+                {
+                    case Tuning.fine:
+                        StepCountFine = value;
+                        break;
+                    case Tuning.medium:
+                        StepCountMedium = value;
+                        break;
+                    case Tuning.rough:
+                        StepCountRough = value;
+                        break;
+                }
+            }
+        }
+
+        protected override double DefaultStepSize { get { return -1; } }
+        protected override int DefaultStepCount { get { return -1; } }
+
+        public static Tuning GetTuneLevel(string tuneLevel)
+        {
+            if (Equals(tuneLevel, ExportOptimize.COV_FINE))
+                return Tuning.fine;
+            if (Equals(tuneLevel, ExportOptimize.COV_MEDIUM))
+                return Tuning.medium;
+            return Equals(tuneLevel, ExportOptimize.COV_ROUGH) ? Tuning.rough : Tuning.none;
+        }
+
+        public double GetStepSize(Tuning tuneLevel)
+        {
+            switch (TuneLevel)
+            {
+                case Tuning.fine:
+                    return StepSizeFine;
+                case Tuning.medium:
+                    return StepSizeMedium;
+                default:
+                    return StepSizeRough;
+            }
+        }
+
+        public int GetStepCount(Tuning tuneLevel)
+        {
+            switch (tuneLevel)
+            {
+                case Tuning.fine:
+                    return StepCountFine;
+                case Tuning.medium:
+                    return StepCountMedium;
+                default:
+                    return StepCountRough;
+            }
+        }
+
+        #region Implementation of IXmlSerializable
+
+        protected enum ATTR
+        {
+            tune_level,
+            min_cov,
+            max_cov,
+            step_count_rough,
+            step_count_medium,
+            step_count_fine
+        }
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        protected CompensationVoltageParameters()
+        {
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            ReadName(reader);
+            MinCov = reader.GetDoubleAttribute(ATTR.min_cov);
+            MaxCov = reader.GetDoubleAttribute(ATTR.max_cov);
+            StepCountRough = reader.GetIntAttribute(ATTR.step_count_rough);
+            StepCountMedium = reader.GetIntAttribute(ATTR.step_count_medium);
+            StepCountFine = reader.GetIntAttribute(ATTR.step_count_fine);
+
+            InitializeSubRegressions();
+            // Consume tag
+            reader.Read();
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            WriteName(writer);
+            writer.WriteAttribute(ATTR.min_cov, MinCov);
+            writer.WriteAttribute(ATTR.max_cov, MaxCov);
+            writer.WriteAttribute(ATTR.step_count_rough, StepCountRough);
+            writer.WriteAttribute(ATTR.step_count_medium, StepCountMedium);
+            writer.WriteAttribute(ATTR.step_count_fine, StepCountFine);
+        }
+
+        public static CompensationVoltageParameters Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new CompensationVoltageParameters());
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(CompensationVoltageParameters obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return base.Equals(obj) &&
+                   Equals(obj.TuneLevel, TuneLevel) && Equals(obj.MinCov, MinCov) && Equals(obj.MaxCov, MaxCov) &&
+                   Equals(obj.StepCountRough, StepCountRough) && Equals(obj.StepCountMedium, StepCountMedium) &&
+                   Equals(obj.StepCountFine, StepCountFine);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return ReferenceEquals(this, obj) || Equals(obj as CompensationVoltageParameters);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode();
+                result = (result*397) ^ TuneLevel.GetHashCode();
+                result = (result*397) ^ MinCov.GetHashCode();
+                result = (result*397) ^ MaxCov.GetHashCode();
+                result = (result*397) ^ StepCountRough.GetHashCode();
+                result = (result*397) ^ StepCountMedium.GetHashCode();
+                result = (result*397) ^ StepCountFine.GetHashCode();
+                return result;
+            }
+        }
+
+        #endregion
+    }
+
+    [XmlRoot("predict_compensation_voltage_rough")]
+    public sealed class CompensationVoltageRegressionRough : CompensationVoltageParameters
+    {
+        public CompensationVoltageRegressionRough(CompensationVoltageParameters parent)
+            : base(parent)
+        {
+        }
+
+        public override Tuning TuneLevel { get { return Tuning.rough; } }
+
+        private CompensationVoltageRegressionRough()
+        {
+        }
+
+        public new static CompensationVoltageRegressionRough Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new CompensationVoltageRegressionRough());
+        }
+    }
+
+    [XmlRoot("predict_compensation_voltage_medium")]
+    public sealed class CompensationVoltageRegressionMedium : CompensationVoltageParameters
+    {
+        public CompensationVoltageRegressionMedium(CompensationVoltageParameters parent)
+            : base(parent)
+        {
+        }
+
+        public override Tuning TuneLevel { get { return Tuning.medium; } }
+
+        private CompensationVoltageRegressionMedium()
+        {
+        }
+
+        public new static CompensationVoltageRegressionMedium Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new CompensationVoltageRegressionMedium());
+        }
+    }
+
+    [XmlRoot("predict_compensation_voltage_fine")]
+    public sealed class CompensationVoltageRegressionFine : CompensationVoltageParameters
+    {
+        public CompensationVoltageRegressionFine(CompensationVoltageParameters parent)
+            : base(parent)
+        {
+        }
+
+        public override Tuning TuneLevel { get { return Tuning.fine; } }
+
+        private CompensationVoltageRegressionFine()
+        {
+        }
+
+        public new static CompensationVoltageRegressionFine Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new CompensationVoltageRegressionFine());
+        }
+    }
+
     /// <summary>
     /// A regression line with an associated name for use in cases
     /// where only a single set of regression coefficients is necessary.
@@ -1814,9 +2084,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract OptimizationType OptType { get; }
 
-        public double StepSize { get; private set; }
+        public virtual double StepSize { get; protected set; }
 
-        public int StepCount { get; private set; }
+        public virtual int StepCount { get; protected set; }
 
         protected abstract double DefaultStepSize { get; }
 
@@ -1863,22 +2133,30 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        public override void ReadXml(XmlReader reader)
+        protected void ReadName(XmlReader reader)
         {
             // Read tag attributes
             base.ReadXml(reader);
+        }
 
+        public override void ReadXml(XmlReader reader)
+        {
+            ReadName(reader);
             StepSize = reader.GetDoubleAttribute(ATTR.step_size, DefaultStepSize);
             StepCount = reader.GetIntAttribute(ATTR.step_count, DefaultStepCount);
 
             Validate();
         }
 
-        public override void WriteXml(XmlWriter writer)
+        protected void WriteName(XmlWriter writer)
         {
             // Write tag attributes
             base.WriteXml(writer);
+        }
 
+        public override void WriteXml(XmlWriter writer)
+        {
+            WriteName(writer);
             writer.WriteAttribute(ATTR.step_size, StepSize);
             writer.WriteAttribute(ATTR.step_count, StepCount);
         }

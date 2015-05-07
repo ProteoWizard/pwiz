@@ -540,6 +540,39 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        [UserScopedSettingAttribute]
+        public CompensationVoltageList CompensationVoltageList
+        {
+            get
+            {
+                CompensationVoltageList list = (CompensationVoltageList)this[typeof(CompensationVoltageList).Name];
+                if (list == null)
+                {
+                    list = new CompensationVoltageList();
+                    list.AddDefaults();
+                    CompensationVoltageList = list;
+                }
+                else
+                {
+                    list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(CompensationVoltageList).Name] = value;
+            }
+        }
+
+        public CompensationVoltageParameters GetCompensationVoltageByName(string name)
+        {
+            CompensationVoltageParameters regression;
+            return (CompensationVoltageList.TryGetValue(name, out regression) &&
+                    regression.GetKey() == CompensationVoltageList.GetDefault().GetKey())
+                ? null
+                : regression;
+        }
+
         public OptimizationLibrary GetOptimizationLibraryByName(string name)
         {
             OptimizationLibrary library;
@@ -1658,6 +1691,57 @@ namespace pwiz.Skyline.Properties
 
         public override int ExcludeDefaults { get { return 1; } }
     }
+
+    public sealed class CompensationVoltageList : SettingsList<CompensationVoltageParameters>
+    {
+        private static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
+
+        public override string GetDisplayName(CompensationVoltageParameters item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
+        public static CompensationVoltageParameters GetDefault()
+        {
+            return NONE;
+        }
+
+        public override IEnumerable<CompensationVoltageParameters> GetDefaults(int revisionIndex)
+        {
+            return new[]
+            {
+               GetDefault(),
+               new CompensationVoltageParameters("ABI", 6, 30, 3, 3, 3), // Not L10N
+            };
+        }
+
+        public void EnsureDefault()
+        {
+            // Make sure the choice of no retention time regression is present.
+            CompensationVoltageParameters defaultElement = GetDefault();
+            if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
+                Insert(0, defaultElement);
+        }
+
+        public override CompensationVoltageParameters EditItem(Control owner, CompensationVoltageParameters item,
+            IEnumerable<CompensationVoltageParameters> existing, object tag)
+        {
+            using (var editCov = new EditCoVDlg(item, existing ?? this))
+            {
+                return editCov.ShowDialog(owner) == DialogResult.OK ? editCov.Parameters : null;
+            }
+        }
+
+        public override CompensationVoltageParameters CopyItem(CompensationVoltageParameters item)
+        {
+            return (CompensationVoltageParameters)item.ChangeName(string.Empty);
+        }
+
+        public override string Title { get { return Resources.CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets; } }
+        public override string Label { get { return Resources.CompensationVoltageList_Label_Compensation__Voltage_Parameters_; } }
+        public override int ExcludeDefaults { get { return 1; } }
+    }
     
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
@@ -2259,6 +2343,7 @@ namespace pwiz.Skyline.Properties
                         MassType.Monoisotopic, // PrecursorMassType
                         MassType.Monoisotopic, // FragmentMassType
                         CollisionEnergyList.GetDefault(),
+                        null,
                         null,
                         OptimizationLibraryList.GetDefault(),
                         OptimizedMethodType.None

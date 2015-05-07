@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
         {
             CEOptimizationTest();
             OptLibNeutralLossTest();
+            CovOptimizationTest();
         }
 
         /// <summary>
@@ -405,6 +406,135 @@ namespace pwiz.SkylineTestFunctional
 
             string optLibExportPath = TestFilesDir.GetTestPath("OptNeutralLoss.csv");
             ExportCETransitionList(optLibExportPath, null);
+        }
+
+        private void CovOptimizationTest()
+        {
+            TestSmallMolecules = false; // No CoV optimization for small molecules yet
+
+            // Open the .sky file
+            string documentPath = TestFilesDir.GetTestPath(@"covdata\cov_optimization_part.sky");
+            string wiffFile = TestFilesDir.GetTestPath(@"covdata\wiff\041115 BG_sky Test Round 1.wiff");
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+
+            string outTransitionsRough = TestFilesDir.GetTestPath(@"covdata\cov_rough.csv");
+            string outTransitionsMedium = TestFilesDir.GetTestPath(@"covdata\cov_medium.csv");
+            string outTransitionsFine = TestFilesDir.GetTestPath(@"covdata\cov_fine.csv");
+
+            var doc = SkylineWindow.Document;
+
+            // Verify settings
+            var cov = doc.Settings.TransitionSettings.Prediction.CompensationVoltage;
+            Assert.AreEqual("ABI", cov.Name);
+            Assert.AreEqual(6, cov.MinCov);
+            Assert.AreEqual(30, cov.MaxCov);
+            Assert.AreEqual(3, cov.StepCountRough);
+            Assert.AreEqual(3, cov.StepCountMedium);
+            Assert.AreEqual(3, cov.StepCountFine);
+
+            var dlgExportRoughTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            // Try to export fine tune and check for error message
+            RunUI(() =>
+            {
+                Assert.AreEqual(ExportInstrumentType.ABI, dlgExportRoughTune.InstrumentType);
+                dlgExportRoughTune.OptimizeType = ExportOptimize.COV_FINE;
+            });
+            var errorDlgFineExport = ShowDialog<MessageDlg>(dlgExportRoughTune.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgFineExport.Message.Contains(Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_)));
+            OkDialog(errorDlgFineExport, errorDlgFineExport.OkDialog);
+
+            // Try to export medium tune and check for error message
+            RunUI(() => dlgExportRoughTune.OptimizeType = ExportOptimize.COV_MEDIUM);
+            var errorDlgMediumExport = ShowDialog<MessageDlg>(dlgExportRoughTune.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgMediumExport.Message.Contains(Resources.ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_)));
+            OkDialog(errorDlgMediumExport, errorDlgMediumExport.OkDialog);
+
+            // Export rough tune and verify against expected results
+            RunUI(() =>
+            {
+                dlgExportRoughTune.OptimizeType = ExportOptimize.COV_ROUGH;
+                dlgExportRoughTune.OkDialog(outTransitionsRough);
+            });
+            AssertEx.FileEquals(outTransitionsRough, TestFilesDir.GetTestPath(@"covdata\cov_rough_expected.csv"));
+            
+            // Import rough tune
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() =>
+            {
+                Assert.IsFalse(importResultsDlg.CanOptimizeMedium);
+                Assert.IsFalse(importResultsDlg.CanOptimizeFine);
+                importResultsDlg.OptimizationName = ExportOptimize.COV_ROUGH;
+                importResultsDlg.NamedPathSets = new[]
+                {
+                    new KeyValuePair<string, MsDataFileUri[]>("sMRM rough tune",
+                        new MsDataFileUri[] {new MsDataFilePath(wiffFile, "sMRM rough tune", 2)})
+                };
+            });
+            OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc);
+
+            // Paste in a peptide so we have missing results
+            RunUI(() => SkylineWindow.Paste("PEPTIDER"));
+
+            var dlgExportMediumTuneFail = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            // Try to export fine tune and check for error message
+            RunUI(() => dlgExportMediumTuneFail.OptimizeType = ExportOptimize.COV_FINE);
+            var errorDlgFineExport2 = ShowDialog<MessageDlg>(dlgExportMediumTuneFail.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgFineExport2.Message.Contains(Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_)));
+            OkDialog(errorDlgFineExport2, errorDlgFineExport2.OkDialog);
+
+            // Try to export medium tune and check for error message
+            RunUI(() => dlgExportMediumTuneFail.OptimizeType = ExportOptimize.COV_MEDIUM);
+            var errorDlgMediumExport2 = ShowDialog<MessageDlg>(dlgExportMediumTuneFail.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgMediumExport2.Message.Contains(Resources.ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_)));
+            OkDialog(errorDlgMediumExport2, errorDlgMediumExport2.OkDialog);
+            OkDialog(dlgExportMediumTuneFail, dlgExportMediumTuneFail.CancelDialog);
+
+            // Undo the paste; retry export medium tune and verify against expected results
+            RunUI(() => SkylineWindow.Undo());
+            var dlgExportMediumTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            RunUI(() =>
+            {
+                dlgExportMediumTune.OptimizeType = ExportOptimize.COV_MEDIUM;
+                dlgExportMediumTune.OkDialog(outTransitionsMedium);
+            });
+            AssertEx.FileEquals(outTransitionsMedium, TestFilesDir.GetTestPath(@"covdata\cov_medium_expected.csv"));
+
+            // Import medium tune
+            var importResultsDlgMedium = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() =>
+            {
+                Assert.IsTrue(importResultsDlgMedium.CanOptimizeMedium);
+                Assert.IsFalse(importResultsDlgMedium.CanOptimizeFine);
+                importResultsDlgMedium.OptimizationName = ExportOptimize.COV_MEDIUM;
+                importResultsDlgMedium.NamedPathSets = new[]
+                {
+                    new KeyValuePair<string, MsDataFileUri[]>("sMRM rmed tune",
+                        new MsDataFileUri[] {new MsDataFilePath(wiffFile, "sMRM rmed tune", 3)})
+                };
+            });
+            OkDialog(importResultsDlgMedium, importResultsDlgMedium.OkDialog);
+            WaitForDocumentChangeLoaded(doc);
+
+            var dlgExportFineTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            // Export fine tune and verify against expected results
+            RunUI(() =>
+            {
+                dlgExportFineTune.OptimizeType = ExportOptimize.COV_FINE;
+                dlgExportFineTune.OkDialog(outTransitionsFine);
+            });
+            AssertEx.FileEquals(outTransitionsFine, TestFilesDir.GetTestPath(@"covdata\cov_fine_expected.csv"));
+
+            // Verify that we can import fine tune
+            var importResultsDlgFine = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() =>
+            {
+                Assert.IsTrue(importResultsDlgFine.CanOptimizeMedium);
+                Assert.IsTrue(importResultsDlgFine.CanOptimizeFine);
+            });
+            OkDialog(importResultsDlgFine, importResultsDlgFine.CancelDialog);
+
+            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         private string GetPasteLine(string seq, int charge, string product, int productCharge, double ce)

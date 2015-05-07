@@ -296,6 +296,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionPrediction(MassType precursorMassType, MassType fragmentMassType,
                                     CollisionEnergyRegression collisionEnergy,
                                     DeclusteringPotentialRegression declusteringPotential,
+                                    CompensationVoltageParameters compensationVoltage,
                                     OptimizationLibrary optimizationLibrary,
                                     OptimizedMethodType optimizedMethodType)
         {
@@ -303,6 +304,7 @@ namespace pwiz.Skyline.Model.DocSettings
             FragmentMassType = fragmentMassType;
             CollisionEnergy = collisionEnergy;
             DeclusteringPotential = declusteringPotential;
+            CompensationVoltage = compensationVoltage;
             OptimizedLibrary = optimizationLibrary;
             OptimizedMethodType = optimizedMethodType;
 
@@ -314,6 +316,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    copy.FragmentMassType,
                    copy.CollisionEnergy,
                    copy.DeclusteringPotential,
+                   copy.CompensationVoltage,
                    copy.OptimizedLibrary,
                    copy.OptimizedMethodType)
         {
@@ -326,6 +329,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public CollisionEnergyRegression CollisionEnergy { get; private set; }
 
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
+
+        public CompensationVoltageParameters CompensationVoltage { get; private set; } 
 
         public OptimizationLibrary OptimizedLibrary { get; set; }
 
@@ -352,6 +357,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 return DeclusteringPotential;
             }
+            else if (Equals(optimize, ExportOptimize.COV_ROUGH) || Equals(optimize, ExportOptimize.COV_MEDIUM) || Equals(optimize, ExportOptimize.COV_FINE))
+            {
+                if (CompensationVoltage == null)
+                    throw new InvalidDataException(
+                        Resources
+                            .TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage);
+
+                switch (CompensationVoltageParameters.GetTuneLevel(optimize))
+                {
+                    case CompensationVoltageParameters.Tuning.fine:
+                        return CompensationVoltage.RegressionFine;
+                    case CompensationVoltageParameters.Tuning.medium:
+                        return CompensationVoltage.RegressionMedium;
+                    default:
+                        return CompensationVoltage.RegressionRough;
+                }
+            }
             return null;
         }
 
@@ -375,6 +397,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionPrediction ChangeDeclusteringPotential(DeclusteringPotentialRegression prop)
         {
             return ChangeProp(ImClone(this), im => im.DeclusteringPotential = prop);
+        }
+
+        public TransitionPrediction ChangeCompensationVoltage(CompensationVoltageParameters prop)
+        {
+            return ChangeProp(ImClone(this), im => im.CompensationVoltage = prop);
         }
 
         public TransitionPrediction ChangeOptimizationLibrary(OptimizationLibrary prop)
@@ -445,6 +472,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 RetentionTime = reader.DeserializeElement<RetentionTimeRegression>();   // v0.1.0 support
                 DeclusteringPotential = reader.DeserializeElement<DeclusteringPotentialRegression>();
                 OptimizedLibrary = reader.DeserializeElement<OptimizationLibrary>() ?? OptimizationLibrary.NONE;
+                CompensationVoltage = reader.DeserializeElement<CompensationVoltageParameters>();
 
                 reader.ReadEndElement();
             }
@@ -464,6 +492,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(DeclusteringPotential);
             if (OptimizedLibrary != null && !OptimizedLibrary.IsNone)
                 writer.WriteElement(OptimizedLibrary);
+            if (CompensationVoltage != null)
+                writer.WriteElement(CompensationVoltage);
         }
 
         #endregion
@@ -478,6 +508,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.FragmentMassType, FragmentMassType) &&
                    Equals(obj.CollisionEnergy, CollisionEnergy) &&
                    Equals(obj.DeclusteringPotential, DeclusteringPotential) &&
+                   Equals(obj.CompensationVoltage, CompensationVoltage) &&
                    Equals(obj.OptimizedLibrary, OptimizedLibrary) &&
                    Equals(obj.OptimizedMethodType, OptimizedMethodType);
         }
@@ -498,6 +529,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ FragmentMassType.GetHashCode();
                 result = (result*397) ^ (CollisionEnergy != null ? CollisionEnergy.GetHashCode() : 0);
                 result = (result*397) ^ (DeclusteringPotential != null ? DeclusteringPotential.GetHashCode() : 0);
+                result = (result*397) ^ (CompensationVoltage != null ? CompensationVoltage.GetHashCode() : 0);
                 result = (result*397) ^ OptimizedLibrary.GetHashCode();
                 result = (result*397) ^ OptimizedMethodType.GetHashCode();
                 return result;

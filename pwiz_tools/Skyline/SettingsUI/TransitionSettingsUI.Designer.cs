@@ -34,6 +34,8 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.comboCompensationVoltage = new System.Windows.Forms.ComboBox();
+            this.label19 = new System.Windows.Forms.Label();
             this.comboOptimizationLibrary = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.labelOptimizeType = new System.Windows.Forms.Label();
@@ -139,6 +141,8 @@
             // 
             // tabGeneral
             // 
+            this.tabGeneral.Controls.Add(this.comboCompensationVoltage);
+            this.tabGeneral.Controls.Add(this.label19);
             this.tabGeneral.Controls.Add(this.comboOptimizationLibrary);
             this.tabGeneral.Controls.Add(this.label20);
             this.tabGeneral.Controls.Add(this.labelOptimizeType);
@@ -155,6 +159,19 @@
             resources.ApplyResources(this.tabGeneral, "tabGeneral");
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.UseVisualStyleBackColor = true;
+            // 
+            // comboCompensationVoltage
+            // 
+            this.comboCompensationVoltage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboCompensationVoltage.FormattingEnabled = true;
+            resources.ApplyResources(this.comboCompensationVoltage, "comboCompensationVoltage");
+            this.comboCompensationVoltage.Name = "comboCompensationVoltage";
+            this.comboCompensationVoltage.SelectedIndexChanged += new System.EventHandler(this.comboCompensationVoltage_SelectedIndexChanged);
+            // 
+            // label19
+            // 
+            resources.ApplyResources(this.label19, "label19");
+            this.label19.Name = "label19";
             // 
             // comboOptimizationLibrary
             // 
@@ -734,5 +751,7 @@
         private System.Windows.Forms.ComboBox comboOptimizationLibrary;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.CheckBox cbExclusionUseDIAWindow;
+        private System.Windows.Forms.ComboBox comboCompensationVoltage;
+        private System.Windows.Forms.Label label19;
     }
 }

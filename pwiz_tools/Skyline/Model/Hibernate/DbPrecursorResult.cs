@@ -76,6 +76,8 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? OptCollisionEnergy { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? OptDeclusteringPotential { get; set; }
+        [QueryColumn(Format = Formats.OPT_PARAMETER)]
+        public virtual double? OptCompensationVoltage { get; set; }
         [QueryColumn(FullName = "PrecursorReplicateNote")] // Not L10N
         public virtual string Note { get; set; }
     }

@@ -287,6 +287,14 @@ namespace pwiz.Skyline.Controls
                     ReadOnly = true,
                     DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
                 });
+            Columns.Add(OptCompensationVoltageColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "OptCompensationVoltage",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Opt_Compensation_Voltage,
+                    ReadOnly = true,
+                    DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
+                });
             
             // Transitions
             Columns.Add(TransitionNoteColumn
@@ -830,6 +838,7 @@ namespace pwiz.Skyline.Controls
                                IsotopeDotProductColumn,
                                OptCollisionEnergyColumn,
                                OptDeclusteringPotentialColumn,
+                               OptCompensationVoltageColumn,
                            };
             }
         }
@@ -1606,7 +1615,8 @@ namespace pwiz.Skyline.Controls
                     row.Cells[UserSetTotalColumn.Index].Value =
                     row.Cells[PrecursorNoteColumn.Index].Value =
                     row.Cells[OptCollisionEnergyColumn.Index].Value =
-                    row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
+                    row.Cells[OptDeclusteringPotentialColumn.Index].Value =
+                    row.Cells[OptCompensationVoltageColumn.Index].Value = null;
             }
             else
             {
@@ -1629,6 +1639,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
                 row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
+                row.Cells[OptCompensationVoltageColumn.Index].Value = null;
 
                 if (optFunc != null)
                 {
@@ -1648,6 +1659,13 @@ namespace pwiz.Skyline.Controls
                         row.Cells[OptDeclusteringPotentialColumn.Index].Value =
                             dpRegression.GetDeclustringPotential(
                                 regressionMz, chromInfo.OptimizationStep);
+                    }
+                    var covRegression = optFunc as CompensationVoltageParameters;
+                    if (covRegression != null)
+                    {
+                        row.Cells[OptCompensationVoltageColumn.Index].Value =
+                            Document.GetCompensationVoltage(SelectedPeptideDocNode, SelectedTransitionGroupDocNode,
+                                chromInfo.OptimizationStep, covRegression.TuneLevel);
                     }
                 }
             }
@@ -1931,7 +1949,8 @@ namespace pwiz.Skyline.Controls
                                                     IdentifiedColumn,
                                                     UserSetTotalColumn,
                                                     OptCollisionEnergyColumn,
-                                                    OptDeclusteringPotentialColumn
+                                                    OptDeclusteringPotentialColumn,
+                                                    OptCompensationVoltageColumn
                                                 }));
             }
             else if (OnlyPrecursorsSelected())
@@ -2228,6 +2247,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn IsotopeDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn OptCollisionEnergyColumn { get; private set; }
         public DataGridViewTextBoxColumn OptDeclusteringPotentialColumn { get; private set; }
+        public DataGridViewTextBoxColumn OptCompensationVoltageColumn { get; private set; }
         public DataGridViewTextBoxColumn PrecursorNoteColumn { get; private set; }
         // Transition Columns
         public DataGridViewTextBoxColumn RetentionTimeColumn { get; private set; }

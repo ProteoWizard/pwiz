@@ -177,6 +177,57 @@
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="comboCompensationVoltage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 179</value>
+  </data>
+  <data name="comboCompensationVoltage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboCompensationVoltage.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.Name" xml:space="preserve">
+    <value>comboCompensationVoltage</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label19.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label19.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
+    <value>205, 162</value>
+  </data>
+  <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 13</value>
+  </data>
+  <data name="label19.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="label19.Text" xml:space="preserve">
+    <value>Compensation &amp;voltage:</value>
+  </data>
+  <data name="&gt;&gt;label19.Name" xml:space="preserve">
+    <value>label19</value>
+  </data>
+  <data name="&gt;&gt;label19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="comboOptimizationLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>23, 179</value>
   </data>
@@ -196,7 +247,7 @@
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;comboOptimizationLibrary.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -226,7 +277,7 @@
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="labelOptimizeType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -238,7 +289,7 @@
     <value>64, 13</value>
   </data>
   <data name="labelOptimizeType.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="labelOptimizeType.Text" xml:space="preserve">
     <value>O&amp;ptimize by:</value>
@@ -256,7 +307,7 @@
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;labelOptimizeType.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="comboOptimizeType.Items" xml:space="preserve">
     <value>Precursor</value>
@@ -271,7 +322,7 @@
     <value>121, 21</value>
   </data>
   <data name="comboOptimizeType.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>14</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -293,7 +344,7 @@ in each precursor totaled or for each transition separately</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;comboOptimizeType.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="cbUseOptimized.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -305,7 +356,7 @@ in each precursor totaled or for each transition separately</value>
     <value>204, 17</value>
   </data>
   <data name="cbUseOptimized.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="cbUseOptimized.Text" xml:space="preserve">
     <value>&amp;Use optimization values when present</value>
@@ -326,7 +377,7 @@ chosen.</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;cbUseOptimized.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="comboDeclusterPotential.Location" type="System.Drawing.Point, System.Drawing">
     <value>208, 109</value>
@@ -352,7 +403,7 @@ use the predicted DP for the unlabeled form. (AB instruments only)</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="label12.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -379,7 +430,7 @@ use the predicted DP for the unlabeled form. (AB instruments only)</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="comboCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
     <value>23, 109</value>
@@ -405,7 +456,7 @@ peptides use the predicted CE for the unlabeled form.</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -432,7 +483,7 @@ peptides use the predicted CE for the unlabeled form.</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="comboIonMass.Items" xml:space="preserve">
     <value>Monoisotopic</value>
@@ -463,7 +514,7 @@ to use in calculating all product ion masses</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;comboIonMass.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -490,7 +541,7 @@ to use in calculating all product ion masses</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="comboPrecursorMass.Items" xml:space="preserve">
     <value>Monoisotopic</value>
@@ -521,7 +572,7 @@ to use in calculating all precursor masses</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;comboPrecursorMass.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -548,7 +599,7 @@ to use in calculating all precursor masses</value>
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="tabGeneral.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2092,6 +2143,6 @@ with predicted transition m/z values.
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

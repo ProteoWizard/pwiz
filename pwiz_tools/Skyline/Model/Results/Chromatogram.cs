@@ -480,8 +480,11 @@ namespace pwiz.Skyline.Model.Results
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
         {
-            new XmlElementHelperSuper<CollisionEnergyRegression, OptimizableRegression>(),                 
-            new XmlElementHelperSuper<DeclusteringPotentialRegression, OptimizableRegression>(),                 
+            new XmlElementHelperSuper<CollisionEnergyRegression, OptimizableRegression>(),
+            new XmlElementHelperSuper<DeclusteringPotentialRegression, OptimizableRegression>(),
+            new XmlElementHelperSuper<CompensationVoltageRegressionRough, OptimizableRegression>(),
+            new XmlElementHelperSuper<CompensationVoltageRegressionMedium, OptimizableRegression>(),
+            new XmlElementHelperSuper<CompensationVoltageRegressionFine, OptimizableRegression>(),
         };
 
         public override void ReadXml(XmlReader reader)

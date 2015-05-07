@@ -30,79 +30,38 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportResultsDlg));
-            this.radioCreateNew = new System.Windows.Forms.RadioButton();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.radioCreateMultipleMulti = new System.Windows.Forms.RadioButton();
+            this.radioCreateMultiple = new System.Windows.Forms.RadioButton();
             this.radioAddExisting = new System.Windows.Forms.RadioButton();
-            this.labelNameNew = new System.Windows.Forms.Label();
-            this.textName = new System.Windows.Forms.TextBox();
-            this.labelNameAdd = new System.Windows.Forms.Label();
-            this.comboName = new System.Windows.Forms.ComboBox();
+            this.radioCreateNew = new System.Windows.Forms.RadioButton();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.radioCreateMultiple = new System.Windows.Forms.RadioButton();
-            this.radioCreateMultipleMulti = new System.Windows.Forms.RadioButton();
-            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.comboOptimizing = new System.Windows.Forms.ComboBox();
-            this.labelOptimizing = new System.Windows.Forms.Label();
+            this.labelTuning = new System.Windows.Forms.Label();
+            this.comboTuning = new System.Windows.Forms.ComboBox();
             this.cbShowAllChromatograms = new System.Windows.Forms.CheckBox();
+            this.labelOptimizing = new System.Windows.Forms.Label();
+            this.comboOptimizing = new System.Windows.Forms.ComboBox();
+            this.comboName = new System.Windows.Forms.ComboBox();
+            this.labelNameAdd = new System.Windows.Forms.Label();
+            this.textName = new System.Windows.Forms.TextBox();
+            this.labelNameNew = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // radioCreateNew
+            // helpTip
             // 
-            resources.ApplyResources(this.radioCreateNew, "radioCreateNew");
-            this.radioCreateNew.Name = "radioCreateNew";
-            this.helpTip.SetToolTip(this.radioCreateNew, resources.GetString("radioCreateNew.ToolTip"));
-            this.radioCreateNew.UseVisualStyleBackColor = true;
-            this.radioCreateNew.CheckedChanged += new System.EventHandler(this.radioCreateNew_CheckedChanged);
+            this.helpTip.AutoPopDelay = 15000;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
             // 
-            // radioAddExisting
+            // radioCreateMultipleMulti
             // 
-            resources.ApplyResources(this.radioAddExisting, "radioAddExisting");
-            this.radioAddExisting.Name = "radioAddExisting";
-            this.helpTip.SetToolTip(this.radioAddExisting, resources.GetString("radioAddExisting.ToolTip"));
-            this.radioAddExisting.UseVisualStyleBackColor = true;
-            this.radioAddExisting.CheckedChanged += new System.EventHandler(this.radioAddExisting_CheckedChanged);
-            // 
-            // labelNameNew
-            // 
-            resources.ApplyResources(this.labelNameNew, "labelNameNew");
-            this.labelNameNew.Name = "labelNameNew";
-            this.helpTip.SetToolTip(this.labelNameNew, resources.GetString("labelNameNew.ToolTip"));
-            // 
-            // textName
-            // 
-            resources.ApplyResources(this.textName, "textName");
-            this.textName.Name = "textName";
-            this.helpTip.SetToolTip(this.textName, resources.GetString("textName.ToolTip"));
-            // 
-            // labelNameAdd
-            // 
-            resources.ApplyResources(this.labelNameAdd, "labelNameAdd");
-            this.labelNameAdd.Name = "labelNameAdd";
-            this.helpTip.SetToolTip(this.labelNameAdd, resources.GetString("labelNameAdd.ToolTip"));
-            // 
-            // comboName
-            // 
-            resources.ApplyResources(this.comboName, "comboName");
-            this.comboName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboName.FormattingEnabled = true;
-            this.comboName.Name = "comboName";
-            this.helpTip.SetToolTip(this.comboName, resources.GetString("comboName.ToolTip"));
-            // 
-            // btnOk
-            // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.Name = "btnOk";
-            this.helpTip.SetToolTip(this.btnOk, resources.GetString("btnOk.ToolTip"));
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.helpTip.SetToolTip(this.btnCancel, resources.GetString("btnCancel.ToolTip"));
-            this.btnCancel.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.radioCreateMultipleMulti, "radioCreateMultipleMulti");
+            this.radioCreateMultipleMulti.Name = "radioCreateMultipleMulti";
+            this.radioCreateMultipleMulti.TabStop = true;
+            this.helpTip.SetToolTip(this.radioCreateMultipleMulti, resources.GetString("radioCreateMultipleMulti.ToolTip"));
+            this.radioCreateMultipleMulti.UseVisualStyleBackColor = true;
+            this.radioCreateMultipleMulti.CheckedChanged += new System.EventHandler(this.radioCreateMultipleMulti_CheckedChanged);
             // 
             // radioCreateMultiple
             // 
@@ -114,42 +73,89 @@
             this.radioCreateMultiple.UseVisualStyleBackColor = true;
             this.radioCreateMultiple.CheckedChanged += new System.EventHandler(this.radioCreateMultiple_CheckedChanged);
             // 
-            // radioCreateMultipleMulti
+            // radioAddExisting
             // 
-            resources.ApplyResources(this.radioCreateMultipleMulti, "radioCreateMultipleMulti");
-            this.radioCreateMultipleMulti.Name = "radioCreateMultipleMulti";
-            this.radioCreateMultipleMulti.TabStop = true;
-            this.helpTip.SetToolTip(this.radioCreateMultipleMulti, resources.GetString("radioCreateMultipleMulti.ToolTip"));
-            this.radioCreateMultipleMulti.UseVisualStyleBackColor = true;
-            this.radioCreateMultipleMulti.CheckedChanged += new System.EventHandler(this.radioCreateMultipleMulti_CheckedChanged);
+            resources.ApplyResources(this.radioAddExisting, "radioAddExisting");
+            this.radioAddExisting.Name = "radioAddExisting";
+            this.helpTip.SetToolTip(this.radioAddExisting, resources.GetString("radioAddExisting.ToolTip"));
+            this.radioAddExisting.UseVisualStyleBackColor = true;
+            this.radioAddExisting.CheckedChanged += new System.EventHandler(this.radioAddExisting_CheckedChanged);
             // 
-            // helpTip
+            // radioCreateNew
             // 
-            this.helpTip.AutoPopDelay = 15000;
-            this.helpTip.InitialDelay = 500;
-            this.helpTip.ReshowDelay = 100;
+            resources.ApplyResources(this.radioCreateNew, "radioCreateNew");
+            this.radioCreateNew.Name = "radioCreateNew";
+            this.helpTip.SetToolTip(this.radioCreateNew, resources.GetString("radioCreateNew.ToolTip"));
+            this.radioCreateNew.UseVisualStyleBackColor = true;
+            this.radioCreateNew.CheckedChanged += new System.EventHandler(this.radioCreateNew_CheckedChanged);
             // 
-            // comboOptimizing
+            // btnOk
             // 
-            resources.ApplyResources(this.comboOptimizing, "comboOptimizing");
-            this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboOptimizing.FormattingEnabled = true;
-            this.comboOptimizing.Name = "comboOptimizing";
-            this.helpTip.SetToolTip(this.comboOptimizing, resources.GetString("comboOptimizing.ToolTip"));
+            resources.ApplyResources(this.btnOk, "btnOk");
+            this.btnOk.Name = "btnOk";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // labelOptimizing
+            // btnCancel
             // 
-            resources.ApplyResources(this.labelOptimizing, "labelOptimizing");
-            this.labelOptimizing.Name = "labelOptimizing";
-            this.helpTip.SetToolTip(this.labelOptimizing, resources.GetString("labelOptimizing.ToolTip"));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // labelTuning
+            // 
+            resources.ApplyResources(this.labelTuning, "labelTuning");
+            this.labelTuning.Name = "labelTuning";
+            // 
+            // comboTuning
+            // 
+            this.comboTuning.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTuning.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTuning, "comboTuning");
+            this.comboTuning.Name = "comboTuning";
             // 
             // cbShowAllChromatograms
             // 
             resources.ApplyResources(this.cbShowAllChromatograms, "cbShowAllChromatograms");
             this.cbShowAllChromatograms.Name = "cbShowAllChromatograms";
-            this.helpTip.SetToolTip(this.cbShowAllChromatograms, resources.GetString("cbShowAllChromatograms.ToolTip"));
             this.cbShowAllChromatograms.UseVisualStyleBackColor = true;
             this.cbShowAllChromatograms.CheckedChanged += new System.EventHandler(this.cbShowAllChromatograms_CheckedChanged);
+            // 
+            // labelOptimizing
+            // 
+            resources.ApplyResources(this.labelOptimizing, "labelOptimizing");
+            this.labelOptimizing.Name = "labelOptimizing";
+            // 
+            // comboOptimizing
+            // 
+            this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOptimizing.FormattingEnabled = true;
+            resources.ApplyResources(this.comboOptimizing, "comboOptimizing");
+            this.comboOptimizing.Name = "comboOptimizing";
+            this.comboOptimizing.SelectedIndexChanged += new System.EventHandler(this.comboOptimizing_SelectedIndexChanged);
+            // 
+            // comboName
+            // 
+            this.comboName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            resources.ApplyResources(this.comboName, "comboName");
+            this.comboName.FormattingEnabled = true;
+            this.comboName.Name = "comboName";
+            // 
+            // labelNameAdd
+            // 
+            resources.ApplyResources(this.labelNameAdd, "labelNameAdd");
+            this.labelNameAdd.Name = "labelNameAdd";
+            // 
+            // textName
+            // 
+            resources.ApplyResources(this.textName, "textName");
+            this.textName.Name = "textName";
+            // 
+            // labelNameNew
+            // 
+            resources.ApplyResources(this.labelNameNew, "labelNameNew");
+            this.labelNameNew.Name = "labelNameNew";
             // 
             // ImportResultsDlg
             // 
@@ -157,6 +163,8 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelTuning);
+            this.Controls.Add(this.comboTuning);
             this.Controls.Add(this.cbShowAllChromatograms);
             this.Controls.Add(this.labelOptimizing);
             this.Controls.Add(this.comboOptimizing);
@@ -175,7 +183,6 @@
             this.MinimizeBox = false;
             this.Name = "ImportResultsDlg";
             this.ShowInTaskbar = false;
-            this.helpTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -197,5 +204,7 @@
         private System.Windows.Forms.ComboBox comboOptimizing;
         private System.Windows.Forms.Label labelOptimizing;
         private System.Windows.Forms.CheckBox cbShowAllChromatograms;
+        private System.Windows.Forms.Label labelTuning;
+        private System.Windows.Forms.ComboBox comboTuning;
     }
 }

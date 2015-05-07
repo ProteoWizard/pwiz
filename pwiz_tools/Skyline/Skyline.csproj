@@ -1124,6 +1124,12 @@
     <Compile Include="SettingsUI\DocumentSettingsDlg.Designer.cs">
       <DependentUpon>DocumentSettingsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\EditCoVDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditCoVDlg.Designer.cs">
+      <DependentUpon>EditCoVDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditCustomMoleculeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2245,6 +2251,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.zh-CHS.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCoVDlg.resx">
+      <DependentUpon>EditCoVDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.ja.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>

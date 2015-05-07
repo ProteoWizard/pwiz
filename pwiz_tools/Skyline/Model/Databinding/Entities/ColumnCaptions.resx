@@ -405,6 +405,9 @@
   <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
   </data>
+  <data name="OptCompensationVoltage">
+    <value>Opt Compensation Voltage</value>
+  </data>
   <data name="OptDeclusteringPotential">
     <value>Opt Declustering Potential</value>
   </data>

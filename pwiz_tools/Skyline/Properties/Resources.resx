@@ -619,6 +619,9 @@
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
     <value>Opt Declustering Potential</value>
   </data>
+  <data name="ResultsGrid_ResultsGrid_Opt_Compensation_Voltage" xml:space="preserve">
+    <value>Opt Compensation Voltage</value>
+  </data>
   <data name="ResultsGrid_ResultsGrid_Transition_Replicate_Note" xml:space="preserve">
     <value>Transition Replicate Note</value>
   </data>
@@ -8331,5 +8334,41 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
     <value>Please specify a value for the following argument required to publish the document to Panorma:
 {0}</value>
+  </data>
+  <data name="ExportOptimize_COV_Compensation_Voltage" xml:space="preserve">
+    <value>Compensation Voltage</value>
+  </data>
+  <data name="EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_" xml:space="preserve">
+    <value>Maximum compensation voltage cannot be less than minimum compensation volatage.</value>
+  </data>
+  <data name="EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_" xml:space="preserve">
+    <value>The compensation voltage parameters '{0}' already exist.</value>
+  </data>
+  <data name="ExportOptimize_COV_ROUGH_Rough_Tune" xml:space="preserve">
+    <value>Rough Tune</value>
+  </data>
+  <data name="ExportOptimize_COV_MEDIUM_Medium_Tune" xml:space="preserve">
+    <value>Medium Tune</value>
+  </data>
+  <data name="ExportOptimize_COV_FINE_Fine_Tune" xml:space="preserve">
+    <value>Fine Tune</value>
+  </data>
+  <data name="CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets" xml:space="preserve">
+    <value>Edit Compensation Voltage Parameter Sets</value>
+  </data>
+  <data name="CompensationVoltageList_Label_Compensation__Voltage_Parameters_" xml:space="preserve">
+    <value>Compensation &amp;Voltage Parameters:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Compensation_Voltage_" xml:space="preserve">
+    <value>Compensation Voltage:</value>
+  </data>
+  <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
+    <value>Compensation voltage parameters must be selected in the Prediction tab of the Transition Settings in order to import optimization data for compensation voltage</value>
+  </data>
+  <data name="ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_" xml:space="preserve">
+    <value>Cannot export medium tune transition list. The following precursors are missing rough tune results:</value>
+  </data>
+  <data name="ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_" xml:space="preserve">
+    <value>Cannot export fine tune transition list. The following precursors are missing medium tune results:</value>
   </data>
 </root>

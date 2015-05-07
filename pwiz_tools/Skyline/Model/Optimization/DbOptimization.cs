@@ -23,7 +23,15 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Optimization
 {
-    public enum OptimizationType { unknown = 0, collision_energy = 1, declustering_potential = 2 }
+    public enum OptimizationType
+    {
+        unknown = 0,
+        collision_energy = 1,
+        declustering_potential = 2,
+        compensation_voltage_rough = 3,
+        compensation_voltage_medium = 4,
+        compensation_voltage_fine = 5,
+    }
 
     public class OptimizationKey : IComparable
     {

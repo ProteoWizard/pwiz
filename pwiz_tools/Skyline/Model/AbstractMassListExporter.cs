@@ -730,6 +730,14 @@ namespace pwiz.Skyline.Model
             return Document.GetOptimizedDeclusteringPotential(nodePep, nodeGroup, nodeTran);
         }
 
+        protected double GetCompensationVoltage(PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeGroup,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            return Document.GetCompensationVoltage(nodePep, nodeGroup, step, CompensationVoltageParameters.GetTuneLevel(OptimizeType));
+        }
+
         protected int? GetRank(TransitionGroupDocNode nodeGroup,
                                TransitionGroupDocNode nodeGroupPrimary,
                                TransitionDocNode nodeTran)

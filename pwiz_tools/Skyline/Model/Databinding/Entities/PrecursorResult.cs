@@ -114,6 +114,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return dpRegression.GetDeclustringPotential(Precursor.GetRegressionMz(), ChromInfo.OptimizationStep);
             }
         }
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? OptCompensationVoltage
+        {
+            get
+            {
+                var optimizationFunction = GetResultFile().Replicate.ChromatogramSet.OptimizationFunction;
+                var covRegression = optimizationFunction as CompensationVoltageParameters;
+                if (null == covRegression)
+                {
+                    return null;
+                }
+                return SrmDocument.GetOptimizedCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode, covRegression.TuneLevel);
+            }
+        }
         [InvariantDisplayName("PrecursorReplicateNote")] // Not L10N
         public string Note 
         { 

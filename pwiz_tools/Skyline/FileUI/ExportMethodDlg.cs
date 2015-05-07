@@ -101,6 +101,13 @@ namespace pwiz.Skyline.FileUI
             comboTargetType.Items.Add(ExportMethodType.Triggered.GetLocalizedString());
             MethodType = ExportMethodType.Standard;
 
+            // Add optimizable regressions
+            comboOptimizing.Items.Add(ExportOptimize.NONE);
+            comboOptimizing.Items.Add(ExportOptimize.CE);
+            if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
+                comboOptimizing.Items.Add(ExportOptimize.DP);
+            comboOptimizing.SelectedIndex = 0;
+
             // Set instrument type based on CE regression name for the document.
             string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
             if (instrumentTypeName != null)
@@ -154,13 +161,11 @@ namespace pwiz.Skyline.FileUI
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
+            panelSciexTune.Top = labelOptimizing.Top;
 
-            // Add optimizable regressions
-            comboOptimizing.Items.Add(ExportOptimize.NONE);
-            comboOptimizing.Items.Add(ExportOptimize.CE);
-            if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
-                comboOptimizing.Items.Add(ExportOptimize.DP);
-            comboOptimizing.SelectedIndex = 0;
+            foreach (string tuneType in ExportOptimize.CompensationVoltageTuneTypes)
+                comboTuning.Items.Add(tuneType);
+            comboTuning.SelectedIndex = 0;
 
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
         }
@@ -323,8 +328,17 @@ namespace pwiz.Skyline.FileUI
             get { return _exportProperties.OptimizeType; }
             set
             {
+                if (value.Equals(ExportOptimize.COV_FINE) || value.Equals(ExportOptimize.COV_MEDIUM) ||
+                    value.Equals(ExportOptimize.COV_ROUGH))
+                {
+                    comboOptimizing.SelectedItem = ExportOptimize.COV;
+                    comboTuning.SelectedItem = value;
+                }
+                else
+                {
+                    comboOptimizing.SelectedItem = value;
+                }
                 _exportProperties.OptimizeType = value;
-                comboOptimizing.SelectedItem = _exportProperties.OptimizeType;
             }
         }
 
@@ -389,6 +403,24 @@ namespace pwiz.Skyline.FileUI
         private void UpdateAbSciexControls()
         {
             panelAbSciexTOF.Visible = InstrumentType == ExportInstrumentType.ABI_TOF;
+        }
+
+        private void UpdateCovControls()
+        {
+            bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
+            bool canOptimizeCov = InstrumentType.Equals(ExportInstrumentType.ABI) && _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+            if (covInList && !canOptimizeCov)
+            {
+                if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
+                {
+                    OptimizeType = ExportOptimize.NONE;
+                }
+                comboOptimizing.Items.Remove(ExportOptimize.COV);
+            }
+            else if (!covInList && canOptimizeCov)
+            {
+                comboOptimizing.Items.Add(ExportOptimize.COV);
+            }
         }
 
         private void UpdateThermoRtControls(ExportMethodType targetType)
@@ -630,8 +662,20 @@ namespace pwiz.Skyline.FileUI
                 else
                     dpNameDefault = null; // Ignored for all other types
 
-                if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault)) ||
-                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault)))))
+                var cov = predict.CompensationVoltage;
+                string covName = (cov != null) ? cov.Name : null;
+                string covNameDefault = _instrumentType;
+                if (covNameDefault.IndexOf(' ') != -1)
+                    covNameDefault = covNameDefault.Substring(0, covNameDefault.IndexOf(' '));
+                bool covInSynch = true;
+                if (_instrumentType == ExportInstrumentType.ABI)
+                    covInSynch = covName != null && covName.StartsWith(covNameDefault);
+                else
+                    covNameDefault = null; // Ignored for all other types
+
+                if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault))) ||
+                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault))) ||
+                    (!covInSynch && Settings.Default.CompensationVoltageList.Keys.Any(name => name.StartsWith(covNameDefault))))
                 {
                     var sb = new StringBuilder(string.Format(Resources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
                                                              _instrumentType));
@@ -643,11 +687,16 @@ namespace pwiz.Skyline.FileUI
                         sb.Append(Resources.ExportMethodDlg_OkDialog_Declustering_Potential).Append(TextUtil.SEPARATOR_SPACE)
                           .AppendLine(dpName ?? Resources.ExportMethodDlg_OkDialog_None);
                     }
+                    if (!covInSynch)
+                    {
+                        sb.Append(Resources.ExportMethodDlg_OkDialog_Compensation_Voltage_).Append(TextUtil.SEPARATOR_SPACE)
+                            .AppendLine(covName ?? Resources.ExportMethodDlg_OkDialog_None);
+                    }
                     sb.AppendLine().Append(Resources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
                     var result = MultiButtonMsgDlg.Show(this, sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
                     if (result == DialogResult.Yes)
                     {
-                        documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
+                        documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault, covNameDefault);
                     }
                     else if (result == DialogResult.Cancel)
                     {
@@ -809,6 +858,38 @@ namespace pwiz.Skyline.FileUI
                 _exportProperties.OptimizeStepSize = regression.StepSize;
                 _exportProperties.OptimizeStepCount = regression.StepCount;
             }
+            else if (Equals(_exportProperties.OptimizeType, ExportOptimize.COV))
+            {
+                string tuning = comboTuning.SelectedItem.ToString();
+                _exportProperties.OptimizeType = tuning;
+
+                var compensationVoltage = prediction.CompensationVoltage;
+                var tuneLevel = CompensationVoltageParameters.GetTuneLevel(tuning);
+
+                if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.medium))
+                {
+                    var missing = _document.MissingCompensationVoltageRough().ToList();
+                    if (missing.Any())
+                    {
+                        missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_);
+                        helper.ShowTextBoxError(comboTuning, TextUtil.LineSeparate(missing));
+                        return false;
+                    }
+                }
+                else if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.fine))
+                {
+                    var missing = _document.MissingCompensationVoltageMedium().ToList();
+                    if (missing.Any())
+                    {
+                        missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_);
+                        helper.ShowTextBoxError(comboTuning, TextUtil.LineSeparate(missing));
+                        return false;
+                    }
+                }
+
+                _exportProperties.OptimizeStepSize = compensationVoltage.GetStepSize(tuneLevel);
+                _exportProperties.OptimizeStepCount = compensationVoltage.GetStepCount(tuneLevel);
+            }
             else
             {
                 _exportProperties.OptimizeType = null;
@@ -959,7 +1040,8 @@ namespace pwiz.Skyline.FileUI
         /// <param name="document">Document to change</param>
         /// <param name="ceNameDefault">Default name for CE</param>
         /// <param name="dpNameDefault">Default name for DP</param>
-        private static SrmDocument ChangeInstrumentTypeSettings(SrmDocument document, string ceNameDefault, string dpNameDefault)
+        /// <param name="covNameDefault">Default name for CoV</param>
+        private static SrmDocument ChangeInstrumentTypeSettings(SrmDocument document, string ceNameDefault, string dpNameDefault, string covNameDefault)
         {
             var ceList = Settings.Default.CollisionEnergyList;
             CollisionEnergyRegression ce;
@@ -981,6 +1063,16 @@ namespace pwiz.Skyline.FileUI
                         dp = dpDefault;
                 }
             }
+            var covList = Settings.Default.CompensationVoltageList;
+            CompensationVoltageParameters cov = null;
+            if (covNameDefault != null && !covList.TryGetValue(covNameDefault, out cov))
+            {
+                foreach (var covDefault in covList.GetDefaults())
+                {
+                    if (covDefault.Name.StartsWith(covNameDefault))
+                        cov = covDefault;
+                }
+            }
 
             return document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
                 predict =>
@@ -989,6 +1081,8 @@ namespace pwiz.Skyline.FileUI
                             predict = predict.ChangeCollisionEnergy(ce);
                         if (dp != null)
                             predict = predict.ChangeDeclusteringPotential(dp);
+                        if (cov != null)
+                            predict = predict.ChangeCompensationVoltage(cov);
                         return predict;
                     }));
         }
@@ -1091,6 +1185,8 @@ namespace pwiz.Skyline.FileUI
             UpdateInstrumentControls(targetType);
 
             CalcMethodCount();
+
+            UpdateCovControls();
         }
 
         private void comboTargetType_SelectedIndexChanged(object sender, EventArgs e)
@@ -1444,6 +1540,7 @@ namespace pwiz.Skyline.FileUI
         private void comboOptimizing_SelectedIndexChanged(object sender, EventArgs e)
         {
             CalcMethodCount();
+            panelSciexTune.Visible = comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV);
         }
 
         #region Functional Test Support

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Util;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -68,6 +69,23 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.Items.Add(ExportOptimize.CE);
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
+            if (document.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
+            {
+                comboOptimizing.Items.Add(ExportOptimize.COV);
+
+                comboTuning.Items.Add(ExportOptimize.COV_ROUGH);
+                comboTuning.SelectedIndex = 0;
+                if (!document.MissingCompensationVoltageRough().Any())
+                {
+                    // We can only import optimizing CoV medium tune if there are no missing CoV rough tune values
+                    comboTuning.Items.Add(ExportOptimize.COV_MEDIUM);
+                    if (!document.MissingCompensationVoltageMedium().Any())
+                    {
+                        // We can only import optimizing CoV fine tune if there are no missing CoV medium tune values
+                        comboTuning.Items.Add(ExportOptimize.COV_FINE);
+                    }
+                }
+            }
             comboOptimizing.SelectedIndex = 0;
 
             cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
@@ -101,11 +119,15 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                return comboOptimizing.SelectedIndex != -1
-                           ?
-                               comboOptimizing.SelectedItem.ToString()
-                           :
-                               ExportOptimize.NONE;
+                int selectedIndex = comboOptimizing.SelectedIndex;
+                int covIndex = comboOptimizing.Items.IndexOf(ExportOptimize.COV);
+                if (covIndex != -1 && selectedIndex == covIndex)
+                {
+                    return comboTuning.SelectedItem.ToString();
+                }
+                return selectedIndex != -1
+                           ? comboOptimizing.SelectedItem.ToString()
+                           : ExportOptimize.NONE;
             }
 
             set
@@ -119,7 +141,17 @@ namespace pwiz.Skyline.FileUI
                     else
                         radioCreateNew.Checked = true;
                 }
-                comboOptimizing.SelectedItem = value;
+
+                if (value.Equals(ExportOptimize.COV_FINE) || value.Equals(ExportOptimize.COV_MEDIUM) ||
+                    value.Equals(ExportOptimize.COV_ROUGH))
+                {
+                    comboOptimizing.SelectedItem = ExportOptimize.COV;
+                    comboTuning.SelectedItem = value;
+                }
+                else
+                {
+                    comboOptimizing.SelectedItem = value;
+                }
             }
         }
 
@@ -512,6 +544,8 @@ namespace pwiz.Skyline.FileUI
                 int shiftHeight = radioCreateMultipleMulti.Top - radioCreateMultiple.Top;
                 labelOptimizing.Top += shiftHeight;
                 comboOptimizing.Top += shiftHeight;
+                labelTuning.Top = labelOptimizing.Top;
+                comboTuning.Top = comboOptimizing.Top;
             }
             // If comboOptimizing is not supposed to be below radioCreateNew and it is
             if (!radioCreateNew.Checked && comboOptimizing.Top > radioCreateNew.Top)
@@ -524,6 +558,8 @@ namespace pwiz.Skyline.FileUI
                 shiftHeight = radioCreateNew.Top - labelOptimizing.Top - shiftHeight;
                 labelOptimizing.Top += shiftHeight;
                 comboOptimizing.Top += shiftHeight;
+                labelTuning.Top = labelOptimizing.Top;
+                comboTuning.Top = comboOptimizing.Top;
             }
             // If comboOptimizing is supposed to be below radioCreateNew, but it is not
             if (radioCreateNew.Checked && comboOptimizing.Top < radioCreateNew.Top)
@@ -536,6 +572,8 @@ namespace pwiz.Skyline.FileUI
                 shiftHeight = radioAddExisting.Top - labelOptimizing.Top - shiftHeight;
                 labelOptimizing.Top += shiftHeight;
                 comboOptimizing.Top += shiftHeight;
+                labelTuning.Top = labelOptimizing.Top;
+                comboTuning.Top = comboOptimizing.Top;
             }
             // If comboOptimizing is supposed to be below radioCreateMultiple, but it is not
             if ((radioCreateMultiple.Checked || radioAddExisting.Checked) &&
@@ -545,18 +583,23 @@ namespace pwiz.Skyline.FileUI
                 int shiftHeight = radioCreateMultipleMulti.Top - labelOptimizing.Top;
                 labelOptimizing.Top += shiftHeight;
                 comboOptimizing.Top += shiftHeight;
+                labelTuning.Top = labelOptimizing.Top;
+                comboTuning.Top = comboOptimizing.Top;
                 radioCreateMultipleMulti.Top = radioCreateNew.Top - (radioCreateMultipleMulti.Top - radioCreateMultiple.Top);
             }
 
             if (radioAddExisting.Checked)
             {
-                comboOptimizing.Enabled = labelOptimizing.Enabled = false;
-                comboOptimizing.SelectedIndex = -1;
+                comboOptimizing.Enabled = labelOptimizing.Enabled = comboTuning.Enabled = labelTuning.Enabled = false;
+                comboOptimizing.SelectedIndex = comboTuning.SelectedIndex = -1;
             }
             else
             {
-                comboOptimizing.Enabled = labelOptimizing.Enabled = true;
-                comboOptimizing.SelectedIndex = 0;
+                comboOptimizing.Enabled = labelOptimizing.Enabled = comboTuning.Enabled = labelTuning.Enabled = true;
+                if (comboTuning.Items.Any())
+                {
+                    comboOptimizing.SelectedIndex = comboTuning.SelectedIndex = 0;
+                }
             }
         }
 
@@ -593,5 +636,15 @@ namespace pwiz.Skyline.FileUI
         {
             Settings.Default.AutoShowAllChromatogramsGraph = cbShowAllChromatograms.Checked;
         }
+
+        private void comboOptimizing_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selected = comboOptimizing.SelectedItem;
+            labelTuning.Visible = comboTuning.Visible = selected != null && selected.ToString().Equals(ExportOptimize.COV);
+        }
+
+        public bool CanExportCov { get { return comboOptimizing.Items.Contains(ExportOptimize.COV); } }
+        public bool CanOptimizeFine { get { return CanExportCov && comboTuning.Items.Contains(ExportOptimize.COV_FINE); } }
+        public bool CanOptimizeMedium { get { return CanExportCov && comboTuning.Items.Contains(ExportOptimize.COV_MEDIUM); } }
     }
 }

@@ -4860,6 +4860,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compensation &amp;Voltage Parameters:.
+        /// </summary>
+        public static string CompensationVoltageList_Label_Compensation__Voltage_Parameters_ {
+            get {
+                return ResourceManager.GetString("CompensationVoltageList_Label_Compensation__Voltage_Parameters_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Compensation Voltage Parameter Sets.
+        /// </summary>
+        public static string CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets {
+            get {
+                return ResourceManager.GetString("CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string ConfigureToolsDlg_AddFromFile_Cancel {
@@ -6462,6 +6480,25 @@ namespace pwiz.Skyline.Properties {
         public static string EditChorusAccountDlg_ValidateValues_Username_cannot_be_blank {
             get {
                 return ResourceManager.GetString("EditChorusAccountDlg_ValidateValues_Username_cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum compensation voltage cannot be less than minimum compensation volatage..
+        /// </summary>
+        public static string EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_ {
+            get {
+                return ResourceManager.GetString("EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_c" +
+                        "ompensation_volatage_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The compensation voltage parameters &apos;{0}&apos; already exist..
+        /// </summary>
+        public static string EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_ {
+            get {
+                return ResourceManager.GetString("EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_", resourceCulture);
             }
         }
         
@@ -8779,6 +8816,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage:.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Compensation_Voltage_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Compensation_Voltage_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decluster Potential:.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Declustering_Potential {
@@ -9051,6 +9097,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot export fine tune transition list. The following precursors are missing medium tune results:.
+        /// </summary>
+        public static string ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_fol" +
+                        "lowing_precursors_are_missing_medium_tune_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot export medium tune transition list. The following precursors are missing rough tune results:.
+        /// </summary>
+        public static string ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_f" +
+                        "ollowing_precursors_are_missing_rough_tune_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The {0} instrument lacks support for direct method export for triggered acquisition..
         /// </summary>
         public static string ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_ {
@@ -9133,6 +9199,42 @@ namespace pwiz.Skyline.Properties {
         public static string ExportOptimize_CE_Collision_Energy {
             get {
                 return ResourceManager.GetString("ExportOptimize_CE_Collision_Energy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage.
+        /// </summary>
+        public static string ExportOptimize_COV_Compensation_Voltage {
+            get {
+                return ResourceManager.GetString("ExportOptimize_COV_Compensation_Voltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fine Tune.
+        /// </summary>
+        public static string ExportOptimize_COV_FINE_Fine_Tune {
+            get {
+                return ResourceManager.GetString("ExportOptimize_COV_FINE_Fine_Tune", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Medium Tune.
+        /// </summary>
+        public static string ExportOptimize_COV_MEDIUM_Medium_Tune {
+            get {
+                return ResourceManager.GetString("ExportOptimize_COV_MEDIUM_Medium_Tune", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rough Tune.
+        /// </summary>
+        public static string ExportOptimize_COV_ROUGH_Rough_Tune {
+            get {
+                return ResourceManager.GetString("ExportOptimize_COV_ROUGH_Rough_Tune", resourceCulture);
             }
         }
         
@@ -17782,6 +17884,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Opt Compensation Voltage.
+        /// </summary>
+        public static string ResultsGrid_ResultsGrid_Opt_Compensation_Voltage {
+            get {
+                return ResourceManager.GetString("ResultsGrid_ResultsGrid_Opt_Compensation_Voltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Opt Declustering Potential.
         /// </summary>
         public static string ResultsGrid_ResultsGrid_Opt_Declustering_Potential {
@@ -24007,6 +24118,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy" +
                         "_regression_function", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation voltage parameters must be selected in the Prediction tab of the Transition Settings in order to import optimization data for compensation voltage.
+        /// </summary>
+        public static string TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage {
+            get {
+                return ResourceManager.GetString("TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_" +
+                        "selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_opt" +
+                        "imization_data_for_compensation_voltage", resourceCulture);
             }
         }
         

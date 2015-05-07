@@ -57,6 +57,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<CollisionEnergyRegression> _driverCE;
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
+        private readonly SettingsListComboDriver<CompensationVoltageParameters> _driverCoV;
         private readonly SettingsListComboDriver<OptimizationLibrary> _driverOptimizationLibrary;
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
@@ -89,6 +90,10 @@ namespace pwiz.Skyline.SettingsUI
                                                                                      Settings.Default.DeclusterPotentialList);
             sel = (Prediction.DeclusteringPotential == null ? null : Prediction.DeclusteringPotential.Name);
             _driverDP.LoadList(sel);
+
+            _driverCoV = new SettingsListComboDriver<CompensationVoltageParameters>(comboCompensationVoltage,
+                                                                                    Settings.Default.CompensationVoltageList);
+            _driverCoV.LoadList(Prediction.CompensationVoltage == null ? null : Prediction.CompensationVoltage.Name);
 
             _driverOptimizationLibrary = new SettingsListComboDriver<OptimizationLibrary>(comboOptimizationLibrary,
                 Settings.Default.OptimizationLibraryList);
@@ -303,6 +308,9 @@ namespace pwiz.Skyline.SettingsUI
             string nameDP = comboDeclusterPotential.SelectedItem.ToString();
             DeclusteringPotentialRegression declusteringPotential =
                 Settings.Default.GetDeclusterPotentialByName(nameDP);
+            string nameCoV = comboCompensationVoltage.SelectedItem.ToString();
+            CompensationVoltageParameters compensationVoltage =
+                Settings.Default.GetCompensationVoltageByName(nameCoV);
             string nameOptLib = comboOptimizationLibrary.SelectedItem.ToString();
             OptimizationLibrary optimizationLibrary =
                 Settings.Default.GetOptimizationLibraryByName(nameOptLib);
@@ -314,6 +322,7 @@ namespace pwiz.Skyline.SettingsUI
             TransitionPrediction prediction = new TransitionPrediction(precursorMassType,
                                                                        fragmentMassType, collisionEnergy,
                                                                        declusteringPotential,
+                                                                       compensationVoltage,
                                                                        optimizationLibrary,
                                                                        optimizedMethodType);
             Helpers.AssignIfEquals(ref prediction, Prediction);
@@ -611,6 +620,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverDP.SelectedIndexChangedEvent(sender, e);
         }
 
+        private void comboCompensationVoltage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverCoV.SelectedIndexChangedEvent(sender, e);
+        }
+
         private void comboOptimizationLibrary_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverOptimizationLibrary.SelectedIndexChangedEvent(sender, e);
@@ -759,6 +773,18 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboDeclusterPotential.SelectedItem.ToString(); }
             set { comboDeclusterPotential.SelectedItem = value; }
+        }
+
+        public CompensationVoltageParameters RegressionCOV
+        {
+            get { return _driverCoV.SelectedItem; }
+            set { comboCompensationVoltage.SelectedItem = value.Name; }
+        }
+
+        public string RegressionCOVName
+        {
+            get { return comboCompensationVoltage.SelectedItem.ToString(); }
+            set { comboCompensationVoltage.SelectedItem = value; }
         }
 
         public void EditSpecialTransitionsList()

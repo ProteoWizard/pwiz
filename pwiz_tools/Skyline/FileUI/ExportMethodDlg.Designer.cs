@@ -54,7 +54,7 @@
             this.cbExportMultiQuant = new System.Windows.Forms.CheckBox();
             this.cbUseStartAndEndRts = new System.Windows.Forms.CheckBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.labelOptimizing = new System.Windows.Forms.Label();
             this.labelMethods = new System.Windows.Forms.Label();
             this.labelMethodNum = new System.Windows.Forms.Label();
             this.panelThermoColumns = new System.Windows.Forms.Panel();
@@ -64,10 +64,14 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.panelThermoRt = new System.Windows.Forms.Panel();
+            this.comboTuning = new System.Windows.Forms.ComboBox();
+            this.panelSciexTune = new System.Windows.Forms.Panel();
+            this.label6 = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
             this.panelThermoRt.SuspendLayout();
+            this.panelSciexTune.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -236,10 +240,10 @@
             this.comboOptimizing.Name = "comboOptimizing";
             this.comboOptimizing.SelectedIndexChanged += new System.EventHandler(this.comboOptimizing_SelectedIndexChanged);
             // 
-            // label1
+            // labelOptimizing
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.labelOptimizing, "labelOptimizing");
+            this.labelOptimizing.Name = "labelOptimizing";
             // 
             // labelMethods
             // 
@@ -294,16 +298,37 @@
             resources.ApplyResources(this.panelThermoRt, "panelThermoRt");
             this.panelThermoRt.Name = "panelThermoRt";
             // 
+            // comboTuning
+            // 
+            this.comboTuning.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTuning.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTuning, "comboTuning");
+            this.comboTuning.Name = "comboTuning";
+            // 
+            // panelSciexTune
+            // 
+            this.panelSciexTune.Controls.Add(this.label6);
+            this.panelSciexTune.Controls.Add(this.comboTuning);
+            resources.ApplyResources(this.panelSciexTune, "panelSciexTune");
+            this.panelSciexTune.Name = "panelSciexTune";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelMaxTransitions);
+            this.Controls.Add(this.panelSciexTune);
             this.Controls.Add(this.panelTriggered);
             this.Controls.Add(this.labelMethodNum);
             this.Controls.Add(this.labelMethods);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.labelOptimizing);
             this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.cbIgnoreProteins);
             this.Controls.Add(this.btnBrowseTemplate);
@@ -318,7 +343,6 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.labelMaxTransitions);
             this.Controls.Add(this.textMaxTransitions);
             this.Controls.Add(this.radioBuckets);
             this.Controls.Add(this.radioProtein);
@@ -340,6 +364,8 @@
             this.panelTriggered.PerformLayout();
             this.panelThermoRt.ResumeLayout(false);
             this.panelThermoRt.PerformLayout();
+            this.panelSciexTune.ResumeLayout(false);
+            this.panelSciexTune.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -368,7 +394,7 @@
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.CheckBox cbEnergyRamp;
         private System.Windows.Forms.ComboBox comboOptimizing;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelOptimizing;
         private System.Windows.Forms.Label labelMethods;
         private System.Windows.Forms.Label labelMethodNum;
         private System.Windows.Forms.CheckBox cbTriggerRefColumns;
@@ -381,5 +407,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox cbUseStartAndEndRts;
         private System.Windows.Forms.Panel panelThermoRt;
+        private System.Windows.Forms.ComboBox comboTuning;
+        private System.Windows.Forms.Panel panelSciexTune;
+        private System.Windows.Forms.Label label6;
     }
 }
