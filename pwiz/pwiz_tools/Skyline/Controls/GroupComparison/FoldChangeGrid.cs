@@ -123,6 +123,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void toolStripButtonChangeSettings_Click(object sender, EventArgs e)
         {
+            ShowChangeSettings();
+        }
+
+        public void ShowChangeSettings()
+        {
             foreach (var form in Application.OpenForms.OfType<GroupComparisonSettingsForm>())
             {
                 if (ReferenceEquals(form.GroupComparisonModel, FoldChangeBindingSource.GroupComparisonModel))

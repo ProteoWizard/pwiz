@@ -4322,8 +4322,13 @@ namespace pwiz.Skyline
         {
             return new ToolStripMenuItem(groupComparisonDef.Name, null, (sender, args) =>
             {
-                FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonDef.Name);
+                ShowGroupComparisonWindow(groupComparisonDef.Name);
             });
+        }
+
+        public void ShowGroupComparisonWindow(string groupComparisonName)
+        {
+            FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
         }
 
         private void openContainingFolderMenuItem_Click(object sender, EventArgs e)

@@ -66,6 +66,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddGroupComparison_Click(object sender, System.EventArgs e)
         {
+            AddGroupComparison();
+        }
+
+        public void AddGroupComparison()
+        {
             using (var editDlg = new EditGroupComparisonDlg(
                 DocumentContainer,
                 GroupComparisonDef.EMPTY.ChangeSumTransitions(true),
@@ -101,6 +106,11 @@ namespace pwiz.Skyline.SettingsUI
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
+        }
+
+        public TabControl GetTabControl()
+        {
+            return tabControl;
         }
     }
 }
