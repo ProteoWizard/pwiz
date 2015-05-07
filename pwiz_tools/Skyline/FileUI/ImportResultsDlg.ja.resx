@@ -123,9 +123,6 @@
   <data name="cbShowAllChromatograms.Text" xml:space="preserve">
     <value>インポート中にクロマトグラムを表示(&amp;C)</value>
   </data>
-  <data name="textName.ToolTip" xml:space="preserve">
-    <value />
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>320, 40</value>
@@ -237,10 +234,7 @@
   <data name="&gt;&gt;cbShowAllChromatograms.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="comboOptimizing.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="textName.TabIndex" type="System.Int32, mscorlib">
+ <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="labelNameAdd.TabIndex" type="System.Int32, mscorlib">
@@ -252,17 +246,11 @@
   <data name="&gt;&gt;radioCreateMultipleMulti.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="btnCancel.ToolTip" xml:space="preserve">
-    <value />
-  </data>
   <data name="radioCreateMultiple.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 10</value>
   </data>
   <data name="radioAddExisting.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 212</value>
-  </data>
-  <data name="labelNameNew.ToolTip" xml:space="preserve">
-    <value />
   </data>
   <data name="labelNameNew.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -401,9 +389,6 @@
   <data name="&gt;&gt;comboOptimizing.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="comboName.ToolTip" xml:space="preserve">
-    <value />
-  </data>
   <data name="&gt;&gt;textName.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -441,9 +426,6 @@
   <data name="&gt;&gt;radioAddExisting.Name" xml:space="preserve">
     <value>radioAddExisting</value>
   </data>
-  <data name="cbShowAllChromatograms.ToolTip" xml:space="preserve">
-    <value />
-  </data>
   <data name="&gt;&gt;labelOptimizing.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -452,9 +434,6 @@
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
-  </data>
-  <data name="$this.ToolTip" xml:space="preserve">
-    <value />
   </data>
   <data name="radioCreateMultiple.Size" type="System.Drawing.Size, System.Drawing">
     <value>196, 17</value>
@@ -473,9 +452,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="btnOk.ToolTip" xml:space="preserve">
-    <value />
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -529,12 +505,6 @@
   </data>
   <data name="radioCreateNew.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 17</value>
-  </data>
-  <data name="labelNameAdd.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="labelOptimizing.ToolTip" xml:space="preserve">
-    <value />
   </data>
   <data name="radioCreateMultipleMulti.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
