@@ -1,0 +1,19 @@
+# declare a name for this job to be sample_job
+#PBS -N OpenSwath  
+# request the queue (enter the possible names, if omitted, serial is the default)
+#PBS -q serial     
+# request 1 node
+#PBS -l nodes=1
+# request 4 hours and 30 minutes of cpu time
+#PBS -l cput=02:00:00        
+# By default, PBS scripts execute in your home directory, not the 
+# directory from which they were submitted. The following line 
+# places you in the directory from which the job was submitted.  
+echo "starting now:"
+module load modules modules-init modules-gs
+module load gmp/latest mpc/latest mpfr/latest gcc/latest libsvm/3.12 boost/1.52.0 xerces-c/3.1.1 qt/4.7.0 gsl/1.15 glpk/4.47 OpenMS/1.11.1 git/latest
+echo "Loaded modules."
+cd /net/maccoss/vol1/home/damodei/HasmikSwath
+# run the program
+./parameters.ini $1
+exit 0

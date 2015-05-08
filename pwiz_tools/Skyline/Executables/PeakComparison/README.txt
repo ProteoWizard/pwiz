@@ -1,0 +1,1 @@
+This folder contains executables used for comparing Skyline peakpicking with various other tools like OpenSwath, PeakView, and Spectronaut.
