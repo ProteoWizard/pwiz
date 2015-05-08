@@ -1083,7 +1083,6 @@ namespace pwiz.Skyline.FileUI
         /// <param name="document">Document to change</param>
         /// <param name="ceNameDefault">Default name for CE</param>
         /// <param name="dpNameDefault">Default name for DP</param>
-        /// <param name="covNameDefault">Default name for CoV</param>
         private static SrmDocument ChangeInstrumentTypeSettings(SrmDocument document, string ceNameDefault, string dpNameDefault)
         {
             var ceList = Settings.Default.CollisionEnergyList;
