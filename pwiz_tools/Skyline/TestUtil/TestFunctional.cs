@@ -482,9 +482,21 @@ namespace pwiz.SkylineTestUtil
             Assert.Fail("Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
         }
 
+        private static string GetTextForForm(Control form)
+        {
+            var result = form.Text;
+            var threadExceptionDialog = form as ThreadExceptionDialog;
+            if (threadExceptionDialog != null)
+            {
+                // Locate the details text box, return the contents - much more informative than the dialog title
+                result = threadExceptionDialog.Controls.Cast<Control>().Where(control => control.GetType() == typeof (TextBox)).Aggregate(result, (current, control) => current + (": " + control.Text));
+            }
+            return result;
+        }
+
         private static string GetOpenFormsString()
         {
-            return string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, form.Text)));
+            return string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, GetTextForForm(form))));
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
