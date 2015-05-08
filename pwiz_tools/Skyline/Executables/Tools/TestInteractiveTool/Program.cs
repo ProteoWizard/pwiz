@@ -107,9 +107,20 @@ namespace TestInteractiveTool
                 };
             }
 
+            public void ImportFasta(string textFasta)
+            {
+                _toolClient.ImportFasta(textFasta);
+            }
+
+            public void TestAddSpectralLibrary(string libraryName, string libraryPath)
+            {
+                _toolClient.AddSpectralLibrary(libraryName, libraryPath);
+            }
+
             public void TestSelect(string link)
             {
-                Console.WriteLine("Select " + link);
+                if (!string.IsNullOrEmpty(link))
+                    Console.WriteLine("Select " + link);
                 SelectLink(link, PeptideLinkColumn);
             }
 
@@ -160,6 +171,12 @@ namespace TestInteractiveTool
 
         private static void SelectLink(string row, int linkColumn)
         {
+            if (string.IsNullOrEmpty(row))
+            {
+                _toolClient.SetDocumentLocation(null);
+                return;
+            }
+
             var report = _toolClient.GetReport("Peak Area");
             var link = report.Cells[int.Parse(row)][linkColumn];
             _toolClient.SetDocumentLocation(DocumentLocation.Parse(link));

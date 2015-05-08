@@ -32,14 +32,17 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.infoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectEndNodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.insertFASTAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.autoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.graph = new ZedGraph.ZedGraphControl();
             this.chromatogramGraph = new ZedGraph.ZedGraphControl();
-            this.autoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.addSpectralLibraryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -61,17 +64,34 @@
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.infoToolStripMenuItem});
+            this.infoToolStripMenuItem,
+            this.selectEndNodeToolStripMenuItem,
+            this.insertFASTAToolStripMenuItem,
+            this.addSpectralLibraryToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem.Text = "View";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(68, 20);
+            this.viewToolStripMenuItem.Text = "Examples";
             // 
             // infoToolStripMenuItem
             // 
             this.infoToolStripMenuItem.Name = "infoToolStripMenuItem";
-            this.infoToolStripMenuItem.Size = new System.Drawing.Size(95, 22);
-            this.infoToolStripMenuItem.Text = "Info";
+            this.infoToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.infoToolStripMenuItem.Text = "Show info";
             this.infoToolStripMenuItem.Click += new System.EventHandler(this.InfoClick);
+            // 
+            // selectEndNodeToolStripMenuItem
+            // 
+            this.selectEndNodeToolStripMenuItem.Name = "selectEndNodeToolStripMenuItem";
+            this.selectEndNodeToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.selectEndNodeToolStripMenuItem.Text = "Select end node";
+            this.selectEndNodeToolStripMenuItem.Click += new System.EventHandler(this.selectEndNodeToolStripMenuItem_Click);
+            // 
+            // insertFASTAToolStripMenuItem
+            // 
+            this.insertFASTAToolStripMenuItem.Name = "insertFASTAToolStripMenuItem";
+            this.insertFASTAToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.insertFASTAToolStripMenuItem.Text = "Insert FASTA";
+            this.insertFASTAToolStripMenuItem.Click += new System.EventHandler(this.insertFASTAToolStripMenuItem_Click);
             // 
             // replicatesToolStripMenuItem
             // 
@@ -87,13 +107,24 @@
             // allToolStripMenuItem
             // 
             this.allToolStripMenuItem.Name = "allToolStripMenuItem";
-            this.allToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.allToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.allToolStripMenuItem.Text = "All";
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(97, 6);
+            // 
+            // autoToolStripMenuItem
+            // 
+            this.autoToolStripMenuItem.Name = "autoToolStripMenuItem";
+            this.autoToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.autoToolStripMenuItem.Text = "Auto";
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(97, 6);
             // 
             // splitContainer1
             // 
@@ -144,16 +175,12 @@
             this.chromatogramGraph.Size = new System.Drawing.Size(617, 211);
             this.chromatogramGraph.TabIndex = 2;
             // 
-            // autoToolStripMenuItem
+            // addSpectralLibraryToolStripMenuItem
             // 
-            this.autoToolStripMenuItem.Name = "autoToolStripMenuItem";
-            this.autoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.autoToolStripMenuItem.Text = "Auto";
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.addSpectralLibraryToolStripMenuItem.Name = "addSpectralLibraryToolStripMenuItem";
+            this.addSpectralLibraryToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.addSpectralLibraryToolStripMenuItem.Text = "Add spectral library";
+            this.addSpectralLibraryToolStripMenuItem.Click += new System.EventHandler(this.addSpectralLibraryToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -189,6 +216,9 @@
         private ZedGraph.ZedGraphControl chromatogramGraph;
         private System.Windows.Forms.ToolStripMenuItem autoToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem selectEndNodeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem insertFASTAToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addSpectralLibraryToolStripMenuItem;
     }
 }
 

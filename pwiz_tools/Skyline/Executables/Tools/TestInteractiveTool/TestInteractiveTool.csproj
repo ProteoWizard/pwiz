@@ -65,7 +65,7 @@
   <ItemGroup>
     <Reference Include="SkylineTool, Version=1.0.0.0, Culture=neutral">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\SkylineTool\bin\$(Platform)\$(Configuration)\SkylineTool.dll</HintPath>
+      <HintPath>..\..\..\bin\$(Platform)\$(Configuration)\SkylineTool.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ABRF_sPRG_HCD.blib" />
     <None Include="app.config" />
     <None Include="TestToolAPI.sky" />
     <None Include="TestToolAPI.sky.view" />
@@ -94,7 +95,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>cd "$(SolutionDir)"
-"$(ProgramW6432)\7-zip\7z.exe" a $(TargetName).zip tool-inf ".\$(OutDir)$(TargetFileName)" ".\$(OutDir)SkylineTool.dll" TestToolAPI.*
+"$(ProgramW6432)\7-zip\7z.exe" a $(TargetName).zip tool-inf ".\$(OutDir)$(TargetFileName)" ".\$(OutDir)SkylineTool.dll" TestToolAPI.* *.blib
 copy $(TargetName).zip ..\..\..\TestFunctional\ToolServiceTest.zip</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

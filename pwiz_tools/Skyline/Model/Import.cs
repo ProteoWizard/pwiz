@@ -121,6 +121,8 @@ namespace pwiz.Skyline.Model
                 }
                 else if (seqBuilder == null)
                 {
+                    if (line.Trim().Length == 0)
+                        continue;
                     break;
                 }
                 else

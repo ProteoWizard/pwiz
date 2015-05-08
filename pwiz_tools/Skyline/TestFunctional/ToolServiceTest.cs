@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Tools;
@@ -78,13 +79,55 @@ namespace pwiz.SkylineTestFunctional
                 // Check document changes.
                 CheckDocumentChanges();
 
+                // Select insert node.
+                SelectInsertNode();
+
+                // Test FASTA import.
+                AssertEx.IsDocumentState(SkylineWindow.Document, 1, 1, 20, 46, 138);
+                ImportFasta(TEXT_FASTA);
+                AssertEx.IsDocumentState(SkylineWindow.Document, 2, 2, 82, 46, 138);
+
+                // Test addition of spectral library.
+                var docPreLibrary = SkylineWindow.Document;
+                var libraryPath = TestFilesDir.GetTestPath("ABRF_sPRG_HCD.blib");
+                _testToolClient.TestAddSpectralLibrary("Test library", libraryPath);
+
                 // Exit the test tool.
                 _testToolClient.Exit();
+
+                // Make sure we got all the library info we expect.
+                Assert.IsTrue(docPreLibrary.Peptides.All(nodePep => !nodePep.HasLibInfo));
+                var docWithLibrary = WaitForDocumentChangeLoaded(docPreLibrary);
+                Assert.IsTrue(docWithLibrary.Peptides.All(nodePep => nodePep.HasLibInfo));
             }
 
             // There is a race condition where undoing a change occasionally leaves the document in a dirty state.
             SkylineWindow.DiscardChanges = true;
         }
+
+        private const string TEXT_FASTA = @"
+>YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, ""Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding""
+MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE
+VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS
+GEKGINTMDLAQVTGQDPRSVTGRIKKINHLLTSSQLIYKGHVVKQLKLKKFSHDGVDSN
+PYINIRDHLATIVEVVKRSKNGIRQIIDLKRELKFDKEKRLSKAFIAAIAWLDEKEYLKK
+VLVVSPKNPAIKIRCVKYVKDIPDSKGSPSFEYDSNSADEDSVSDSKAAFEDEDLVEGLD
+NFNATDLLQNQGLVMEEKEDAVKNEVLLNRFYPLQNQTYDIADKSGLKGISTMDVVNRIT
+GKEFQRAFTKSSEYYLESVDKQKENTGGYRLFRIYDFEGKKKFFRLFTAQNFQKLTNAED
+EISVPKGFDELGKSRTDLKTLNEDNFVALNNTVRFTTDSDGQDIFFWHGELKIPPNSKKT
+PNKNKRKRQVKNSTNASVAGNISNPKRIKLEQHVSTAQEPKSAEDSPSSNGGTVVKGKVV
+NFGGFSARSLRSLQRQRAILKVMNTIGGVAYLREQFYESVSKYMGSTTTLDKKTVRGDVD
+LMVESEKLGARTEPVSGRKIIFLPTVGEDAIQRYILKEKDSKKATFTDVIHDTEIYFFDQ
+TEKNRFHRGKKSVERIRKFQNRQKNAKIKASDDAISKKSTSVNVSDGKIKRRDKKVSAGR
+TTVVVENTKEDKTVYHAGTKDGVQALIRAVVVTKSIKNEIMWDKITKLFPNNSLDNLKKK
+WTARRVRMGHSGWRAYVDKWKKMLVLAIKSEKISLRDVEELDLIKLLDIWTSFDEKEIKR
+PLFLYKNYEENRKKFTLVRDDTLTHSGNDLAMSSMIQREISSLKKTYTRKISASTKDLSK
+SQSDDYIRTVIRSILIESPSTTRNEIEALKNVGNESIDNVIMDMAKEKQIYLHGSKLECT
+DTLPDILENRGNYKDFGVAFQYRCKVNELLEAGNAIVINQEPSDISSWVLIDLISGELLN
+MDVIPMVRNVRPLTYTSRRFEIRTLTPPLIIYANSQTKLNTARKSAVKVPLGKPFSRLWV
+NGSGSIRPNIWKQVVTMVVNEIIFHPGITLSRLQSRCREVLSLHEISEICKWLLERQVLI
+TTDFDGYWVNHNWYSIYEST*
+";
 
         private void CheckCommunication()
         {
@@ -120,6 +163,11 @@ namespace pwiz.SkylineTestFunctional
                 }));
         }
 
+        private void SelectInsertNode()
+        {
+            _testToolClient.TestSelect(string.Empty);
+        }
+
         private void SelectPeptide(int index, string peptideSequence, string replicate)
         {
             _testToolClient.TestSelect(index.ToString("D"));
@@ -138,6 +186,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(peptideSequence, SkylineWindow.SelectedPeptideSequence);
                 Assert.AreEqual(replicate, SkylineWindow.ResultNameCurrent);
             });
+        }
+
+        private void ImportFasta(string textFasta)
+        {
+            _testToolClient.ImportFasta(textFasta);
         }
 
         private void CheckDocumentChanges()

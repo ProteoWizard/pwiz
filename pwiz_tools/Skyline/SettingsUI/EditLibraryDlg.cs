@@ -89,7 +89,6 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            LibrarySpec librarySpec;
             String path = textPath.Text;
 
             if (!File.Exists(path))
@@ -116,14 +115,15 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            string ext = Path.GetExtension(path);
-            if (Equals(ext, BiblioSpecLiteSpec.EXT))
-                librarySpec = new BiblioSpecLiteSpec(name, path);
-            else if (Equals(ext, BiblioSpecLibSpec.EXT))
-                librarySpec = new BiblioSpecLibSpec(name, path);
-            else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+            var librarySpec = LibrarySpec.CreateFromPath(name, path);
+            if (librarySpec == null)
             {
-                librarySpec = new ChromatogramLibrarySpec(name, path);
+                MessageDlg.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, path));
+                textPath.Focus();
+                return;
+            }
+            if (librarySpec is ChromatogramLibrarySpec)
+            {
                 using (var longWait = new LongWaitDlg{ Text = Resources.EditLibraryDlg_OkDialog_Loading_chromatogram_library })
                 {
                     Library lib = null;
@@ -171,18 +171,6 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
                 }
-            }
-            else if (Equals(ext, XHunterLibSpec.EXT))
-                librarySpec = new XHunterLibSpec(name, path);
-            else if (Equals(ext, NistLibSpec.EXT))
-                librarySpec = new NistLibSpec(name, path);
-            else if (Equals(ext, SpectrastSpec.EXT))
-                librarySpec = new SpectrastSpec(name, path);
-            else
-            {
-                MessageDlg.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, path));
-                textPath.Focus();
-                return;
             }
 
             _librarySpec = librarySpec;

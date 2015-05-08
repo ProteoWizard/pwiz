@@ -91,6 +91,16 @@ namespace SkylineTool
             return _client.GetVersion();
         }
 
+        public void ImportFasta(string textFasta)
+        {
+            _client.ImportFasta(textFasta);
+        }
+
+        public void AddSpectralLibrary(string libraryName, string libraryPath)
+        {
+            _client.AddSpectralLibrary(libraryName, libraryPath);
+        }
+
         private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver
         {
             private readonly SkylineToolClient _toolClient;
@@ -164,6 +174,16 @@ namespace SkylineTool
             public Version GetVersion()
             {
                 return (Version) RemoteCallFunction((Func<object>) GetVersion);
+            }
+
+            public void ImportFasta(string textFasta)
+            {
+                RemoteCall(ImportFasta, textFasta);
+            }
+
+            public void AddSpectralLibrary(string libraryName, string libraryPath)
+            {
+                RemoteCall(AddSpectralLibrary, libraryName, libraryPath);
             }
 
             public void AddDocumentChangeReceiver(string receiverName, string name)

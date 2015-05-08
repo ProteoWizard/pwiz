@@ -30,6 +30,8 @@ namespace SkylineTool
         string[] TestStringArray();
         Version[] TestVersionArray();
         Chromatogram[] TestChromatogramArray();
+        void ImportFasta(string fasta);
+        void TestAddSpectralLibrary(string libraryName, string libraryPath);
 
         void TestSelect(string link);
         void TestSelectReplicate(string link);
@@ -89,6 +91,16 @@ namespace SkylineTool
         public Chromatogram[] TestChromatogramArray()
         {
             return RemoteCallFunction(TestChromatogramArray);
+        }
+
+        public void ImportFasta(string textFasta)
+        {
+            RemoteCall(ImportFasta, textFasta);
+        }
+
+        public void TestAddSpectralLibrary(string libraryName, string libraryPath)
+        {
+            RemoteCall(TestAddSpectralLibrary, libraryName, libraryPath);
         }
 
         public void TestSelect(string link)

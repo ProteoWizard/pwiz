@@ -42,6 +42,10 @@ namespace SkylineTool
         string GetDocumentPath();
         Version GetVersion();
 
+        void ImportFasta(string fasta);
+
+        void AddSpectralLibrary(string libraryName, string libraryPath);
+
         void AddDocumentChangeReceiver(string receiverName, string toolName);
         void RemoveDocumentChangeReceiver(string receiverName);
     }

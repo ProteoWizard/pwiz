@@ -96,7 +96,7 @@ namespace ExampleInteractiveTool
         {
             // Select the peptide in Skyline when the user clicks on it.
             var documentLocation =
-                DocumentLocation.Parse(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]);
+                DocumentLocation.Parse(_selectedReplicate == "All" ? _peptideLinks[e.Index] : _replicateLinks[e.Index]); // Not L10N
             _toolClient.SetDocumentLocation(documentLocation);
         }
 
@@ -170,7 +170,9 @@ namespace ExampleInteractiveTool
             IReport report = _toolClient.GetReport("Peak Area"); // Not L10N
 
             // Get the same report, more dynamically.
-            var reportStream = typeof(MainForm).Assembly.GetManifestResourceStream("ExampleInteractiveTool.tool_inf.ExampleTool_report.skyr");
+            var reportStream = typeof(MainForm).Assembly.GetManifestResourceStream("ExampleInteractiveTool.tool_inf.ExampleTool_report.skyr"); // Not L10N
+            if (reportStream == null)
+                return;
             var reader = new StreamReader(reportStream);
             IReport report2 = _toolClient.GetReportFromDefinition(reader.ReadToEnd());
             AssertReportsEquals(report, report2);
@@ -245,12 +247,58 @@ namespace ExampleInteractiveTool
         /// <summary>
         /// Make sure two reports are the same.
         /// </summary>
+        // ReSharper disable once UnusedParameter.Local
         private static void AssertReportsEquals(IReport report1, IReport report2)
         {
             Debug.Assert(report1.Cells.Length == report2.Cells.Length);
             for (int iRow = 0; iRow < report1.Cells.Length; iRow++)
             {
                 Debug.Assert(report1.Cells[iRow].SequenceEqual(report2.Cells[iRow]));
+            }
+        }
+
+        private void selectEndNodeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _toolClient.SetDocumentLocation(null);
+        }
+
+        private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            const string fasta =
+                // ReSharper disable once NonLocalizedString
+@">YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, ""Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding""
+MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE
+VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS
+GEKGINTMDLAQVTGQDPRSVTGRIKKINHLLTSSQLIYKGHVVKQLKLKKFSHDGVDSN
+PYINIRDHLATIVEVVKRSKNGIRQIIDLKRELKFDKEKRLSKAFIAAIAWLDEKEYLKK
+VLVVSPKNPAIKIRCVKYVKDIPDSKGSPSFEYDSNSADEDSVSDSKAAFEDEDLVEGLD
+NFNATDLLQNQGLVMEEKEDAVKNEVLLNRFYPLQNQTYDIADKSGLKGISTMDVVNRIT
+GKEFQRAFTKSSEYYLESVDKQKENTGGYRLFRIYDFEGKKKFFRLFTAQNFQKLTNAED
+EISVPKGFDELGKSRTDLKTLNEDNFVALNNTVRFTTDSDGQDIFFWHGELKIPPNSKKT
+PNKNKRKRQVKNSTNASVAGNISNPKRIKLEQHVSTAQEPKSAEDSPSSNGGTVVKGKVV
+NFGGFSARSLRSLQRQRAILKVMNTIGGVAYLREQFYESVSKYMGSTTTLDKKTVRGDVD
+LMVESEKLGARTEPVSGRKIIFLPTVGEDAIQRYILKEKDSKKATFTDVIHDTEIYFFDQ
+TEKNRFHRGKKSVERIRKFQNRQKNAKIKASDDAISKKSTSVNVSDGKIKRRDKKVSAGR
+TTVVVENTKEDKTVYHAGTKDGVQALIRAVVVTKSIKNEIMWDKITKLFPNNSLDNLKKK
+WTARRVRMGHSGWRAYVDKWKKMLVLAIKSEKISLRDVEELDLIKLLDIWTSFDEKEIKR
+PLFLYKNYEENRKKFTLVRDDTLTHSGNDLAMSSMIQREISSLKKTYTRKISASTKDLSK
+SQSDDYIRTVIRSILIESPSTTRNEIEALKNVGNESIDNVIMDMAKEKQIYLHGSKLECT
+DTLPDILENRGNYKDFGVAFQYRCKVNELLEAGNAIVINQEPSDISSWVLIDLISGELLN
+MDVIPMVRNVRPLTYTSRRFEIRTLTPPLIIYANSQTKLNTARKSAVKVPLGKPFSRLWV
+NGSGSIRPNIWKQVVTMVVNEIIFHPGITLSRLQSRCREVLSLHEISEICKWLLERQVLI
+TTDFDGYWVNHNWYSIYEST*";
+
+            _toolClient.ImportFasta(fasta);
+        }
+
+        private void addSpectralLibraryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new OpenFileDialog())
+            {
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    _toolClient.AddSpectralLibrary("Test library", dialog.FileName); // Not L10N
+                }
             }
         }
     }

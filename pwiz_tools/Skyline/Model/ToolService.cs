@@ -28,9 +28,12 @@ using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -109,14 +112,17 @@ namespace pwiz.Skyline.Model
             DocumentLocation documentLocation = null;
             Program.MainWindow.Invoke(new Action(() =>
             {
-                documentLocation = new DocumentLocation(_skylineWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
-                if (_skylineWindow.Document.Settings.HasResults)
+                if (!_skylineWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
                 {
-                    var chromatogramSet =
-                        _skylineWindow.Document.Settings.MeasuredResults.Chromatograms[
-                            _skylineWindow.SelectedResultsIndex];
-                    documentLocation = documentLocation.SetChromFileId(
-                        chromatogramSet.MSDataFileInfos.First().FileId.GlobalIndex);
+                    documentLocation = new DocumentLocation(_skylineWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
+                    if (_skylineWindow.Document.Settings.HasResults)
+                    {
+                        var chromatogramSet =
+                            _skylineWindow.Document.Settings.MeasuredResults.Chromatograms[
+                                _skylineWindow.SelectedResultsIndex];
+                        documentLocation = documentLocation.SetChromFileId(
+                            chromatogramSet.MSDataFileInfos.First().FileId.GlobalIndex);
+                    }
                 }
             }));
             return documentLocation;
@@ -125,13 +131,18 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Select a document location in Skyline's tree view.
         /// </summary>
-        /// <param name="documentLocation">Which location to select.</param>
+        /// <param name="documentLocation">Which location to select (null for insert node).</param>
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
             Program.MainWindow.Invoke(new Action(() =>
             {
-                Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
-                Program.MainWindow.NavigateToBookmark(bookmark);
+                if (documentLocation == null)
+                    Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
+                else
+                {
+                    Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
+                    Program.MainWindow.NavigateToBookmark(bookmark);
+                }
             }));
         }
 
@@ -151,6 +162,8 @@ namespace pwiz.Skyline.Model
 
         public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
         {
+            if (documentLocation == null)
+                return new Chromatogram[0];
             var result = new List<Chromatogram>();
             SrmDocument document = Program.MainWindow.Document;
             Bookmark bookmark = Bookmark.ToBookmark(documentLocation, document);
@@ -272,6 +285,33 @@ namespace pwiz.Skyline.Model
             {
             }
             return version;
+        }
+
+        public void ImportFasta(string textFasta)
+        {
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
+                    false, Resources.ToolService_ImportFasta_Insert_proteins);
+            }));
+        }
+
+        public void AddSpectralLibrary(string libraryName, string libraryPath)
+        {
+            var librarySpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);
+            if (librarySpec == null)
+            {
+                // ReSharper disable once LocalizableElement
+                throw new ArgumentException(Resources.LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_, libraryPath);
+            }
+
+            // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                _skylineWindow.ModifyDocument(Resources.LibrarySpec_Add_spectral_library, doc =>
+                    doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
+                        lib.LibrarySpecs.Union(new[] {librarySpec}).ToArray()))));
+            }));
         }
 
         private readonly object _documentChangeSendersLock = new object();

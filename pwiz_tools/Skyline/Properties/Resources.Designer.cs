@@ -12370,6 +12370,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add spectral library.
+        /// </summary>
+        public static string LibrarySpec_Add_spectral_library {
+            get {
+                return ResourceManager.GetString("LibrarySpec_Add_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized library type at {0}.
+        /// </summary>
+        public static string LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_ {
+            get {
+                return ResourceManager.GetString("LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectrum count.
         /// </summary>
         public static string LibrarySpec_PEP_RANK_COPIES_Spectrum_count {
@@ -23084,6 +23102,15 @@ namespace pwiz.Skyline.Properties {
         public static string ToolOptionsUI_ToolOptionsUI_Default___0__ {
             get {
                 return ResourceManager.GetString("ToolOptionsUI_ToolOptionsUI_Default___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert proteins.
+        /// </summary>
+        public static string ToolService_ImportFasta_Insert_proteins {
+            get {
+                return ResourceManager.GetString("ToolService_ImportFasta_Insert_proteins", resourceCulture);
             }
         }
         

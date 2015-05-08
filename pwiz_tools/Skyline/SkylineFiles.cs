@@ -1445,7 +1445,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description)
+        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;

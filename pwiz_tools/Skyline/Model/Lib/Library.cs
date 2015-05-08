@@ -29,6 +29,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -979,6 +980,24 @@ namespace pwiz.Skyline.Model.Lib
             new PeptideRankId("Total intensity", Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity); // Not L10N
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
             new PeptideRankId("Picked intensity", Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity); // Not L10N
+
+        public static LibrarySpec CreateFromPath(string name, string path)
+        {
+            string ext = Path.GetExtension(path);
+            if (Equals(ext, BiblioSpecLiteSpec.EXT))
+                return new BiblioSpecLiteSpec(name, path);
+            else if (Equals(ext, BiblioSpecLibSpec.EXT))
+                return new BiblioSpecLibSpec(name, path);
+            else if (Equals(ext, ChromatogramLibrarySpec.EXT))
+                return new ChromatogramLibrarySpec(name, path);
+            else if (Equals(ext, XHunterLibSpec.EXT))
+                return new XHunterLibSpec(name, path);
+            else if (Equals(ext, NistLibSpec.EXT))
+                return new NistLibSpec(name, path);
+            else if (Equals(ext, SpectrastSpec.EXT))
+                return new SpectrastSpec(name, path);
+            return null;
+        }
 
         protected LibrarySpec(string name, string path)
             : base(name)

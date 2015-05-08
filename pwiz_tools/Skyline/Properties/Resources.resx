@@ -8392,4 +8392,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>Are you sure you want to continue?</value>
   </data>
+  <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
+    <value>Insert proteins</value>
+  </data>
+  <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
+    <value>Unrecognized library type at {0}</value>
+  </data>
+  <data name="LibrarySpec_Add_spectral_library" xml:space="preserve">
+    <value>Add spectral library</value>
+  </data>
 </root>
