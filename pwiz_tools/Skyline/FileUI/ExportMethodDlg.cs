@@ -662,20 +662,8 @@ namespace pwiz.Skyline.FileUI
                 else
                     dpNameDefault = null; // Ignored for all other types
 
-                var cov = predict.CompensationVoltage;
-                string covName = (cov != null) ? cov.Name : null;
-                string covNameDefault = _instrumentType;
-                if (covNameDefault.IndexOf(' ') != -1)
-                    covNameDefault = covNameDefault.Substring(0, covNameDefault.IndexOf(' '));
-                bool covInSynch = true;
-                if (_instrumentType == ExportInstrumentType.ABI)
-                    covInSynch = covName != null && covName.StartsWith(covNameDefault);
-                else
-                    covNameDefault = null; // Ignored for all other types
-
                 if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault))) ||
-                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault))) ||
-                    (!covInSynch && Settings.Default.CompensationVoltageList.Keys.Any(name => name.StartsWith(covNameDefault))))
+                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault))))
                 {
                     var sb = new StringBuilder(string.Format(Resources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
                                                              _instrumentType));
@@ -687,20 +675,75 @@ namespace pwiz.Skyline.FileUI
                         sb.Append(Resources.ExportMethodDlg_OkDialog_Declustering_Potential).Append(TextUtil.SEPARATOR_SPACE)
                           .AppendLine(dpName ?? Resources.ExportMethodDlg_OkDialog_None);
                     }
-                    if (!covInSynch)
-                    {
-                        sb.Append(Resources.ExportMethodDlg_OkDialog_Compensation_Voltage_).Append(TextUtil.SEPARATOR_SPACE)
-                            .AppendLine(covName ?? Resources.ExportMethodDlg_OkDialog_None);
-                    }
                     sb.AppendLine().Append(Resources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
                     var result = MultiButtonMsgDlg.Show(this, sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
                     if (result == DialogResult.Yes)
                     {
-                        documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault, covNameDefault);
+                        documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
                     }
                     else if (result == DialogResult.Cancel)
                     {
                         comboInstrument.Focus();
+                        return;
+                    }
+                }
+            }
+
+            if (documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
+                !Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
+            {
+                // Show warning if we don't have results for the highest tune level
+                var highestCoV = documentExport.HighestCompensationVoltageTuning();
+                string message = null;
+                switch (highestCoV)
+                {
+                    case CompensationVoltageParameters.Tuning.fine:
+                        {
+                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                            if (missing.Any())
+                            {
+                                message = TextUtil.LineSeparate(
+                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
+                                    TextUtil.LineSeparate(missing));
+                            }
+                            break;
+                        }
+                    case CompensationVoltageParameters.Tuning.medium:
+                        {
+                            message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
+                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                            if (missing.Any())
+                            {
+                                message = TextUtil.LineSeparate(message,
+                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
+                                    TextUtil.LineSeparate(missing));
+                            }
+                            break;
+                        }
+                    case CompensationVoltageParameters.Tuning.rough:
+                        {
+                            message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
+                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                            if (missing.Any())
+                            {
+                                message = TextUtil.LineSeparate(message,
+                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
+                                    TextUtil.LineSeparate(missing));
+                            }
+                            break;
+                        }
+                    case CompensationVoltageParameters.Tuning.none:
+                        {
+                            message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
+                            break;
+                        }
+                }
+
+                if (message != null)
+                {
+                    message = TextUtil.LineSeparate(message, Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_);
+                    if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, message, Resources.ExportMethodDlg_OkDialog_OK))
+                    {
                         return;
                     }
                 }
@@ -868,7 +911,7 @@ namespace pwiz.Skyline.FileUI
 
                 if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.medium))
                 {
-                    var missing = _document.MissingCompensationVoltageRough().ToList();
+                    var missing = _document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.rough).ToList();
                     if (missing.Any())
                     {
                         missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_);
@@ -878,7 +921,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 else if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.fine))
                 {
-                    var missing = _document.MissingCompensationVoltageMedium().ToList();
+                    var missing = _document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.medium).ToList();
                     if (missing.Any())
                     {
                         missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_);
@@ -1041,7 +1084,7 @@ namespace pwiz.Skyline.FileUI
         /// <param name="ceNameDefault">Default name for CE</param>
         /// <param name="dpNameDefault">Default name for DP</param>
         /// <param name="covNameDefault">Default name for CoV</param>
-        private static SrmDocument ChangeInstrumentTypeSettings(SrmDocument document, string ceNameDefault, string dpNameDefault, string covNameDefault)
+        private static SrmDocument ChangeInstrumentTypeSettings(SrmDocument document, string ceNameDefault, string dpNameDefault)
         {
             var ceList = Settings.Default.CollisionEnergyList;
             CollisionEnergyRegression ce;
@@ -1063,16 +1106,6 @@ namespace pwiz.Skyline.FileUI
                         dp = dpDefault;
                 }
             }
-            var covList = Settings.Default.CompensationVoltageList;
-            CompensationVoltageParameters cov = null;
-            if (covNameDefault != null && !covList.TryGetValue(covNameDefault, out cov))
-            {
-                foreach (var covDefault in covList.GetDefaults())
-                {
-                    if (covDefault.Name.StartsWith(covNameDefault))
-                        cov = covDefault;
-                }
-            }
 
             return document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
                 predict =>
@@ -1081,8 +1114,6 @@ namespace pwiz.Skyline.FileUI
                             predict = predict.ChangeCollisionEnergy(ce);
                         if (dp != null)
                             predict = predict.ChangeDeclusteringPotential(dp);
-                        if (cov != null)
-                            predict = predict.ChangeCompensationVoltage(cov);
                         return predict;
                     }));
         }

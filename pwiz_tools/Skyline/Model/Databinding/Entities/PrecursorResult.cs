@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return SrmDocument.GetOptimizedCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode, covRegression.TuneLevel);
+                return SrmDocument.GetOptimizedCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode);
             }
         }
         [InvariantDisplayName("PrecursorReplicateNote")] // Not L10N

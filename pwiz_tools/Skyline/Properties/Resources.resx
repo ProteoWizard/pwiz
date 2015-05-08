@@ -8371,4 +8371,25 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_" xml:space="preserve">
     <value>Cannot export fine tune transition list. The following precursors are missing medium tune results:</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>You are missing fine tune optimized compensation voltages for the following:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_" xml:space="preserve">
+    <value>You are missing fine tune optimized compensation voltages.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>You are missing medium tune optimized compensation voltages for the following:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_" xml:space="preserve">
+    <value>You have only rough tune optimized compensation voltages.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>You are missing any optimized compensation voltages for the following:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_" xml:space="preserve">
+    <value>Your document does not contain compensation voltage results, but compensation voltage is set under transition settings.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>Are you sure you want to continue?</value>
+  </data>
 </root>

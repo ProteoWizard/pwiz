@@ -1674,7 +1674,7 @@ namespace pwiz.Skyline.Model
                 primaryOrSecondary = IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran) ? "1" : "2"; // Not L10N
             }
 
-            string compensationVoltage = ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)
+            string compensationVoltage = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null
                 ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.00", CultureInfo)) // Not L10N
                 : null;
 

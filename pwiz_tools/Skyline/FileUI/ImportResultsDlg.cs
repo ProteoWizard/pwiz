@@ -26,6 +26,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -75,11 +76,11 @@ namespace pwiz.Skyline.FileUI
 
                 comboTuning.Items.Add(ExportOptimize.COV_ROUGH);
                 comboTuning.SelectedIndex = 0;
-                if (!document.MissingCompensationVoltageRough().Any())
+                if (!document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.rough).Any())
                 {
                     // We can only import optimizing CoV medium tune if there are no missing CoV rough tune values
                     comboTuning.Items.Add(ExportOptimize.COV_MEDIUM);
-                    if (!document.MissingCompensationVoltageMedium().Any())
+                    if (!document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.medium).Any())
                     {
                         // We can only import optimizing CoV fine tune if there are no missing CoV medium tune values
                         comboTuning.Items.Add(ExportOptimize.COV_FINE);

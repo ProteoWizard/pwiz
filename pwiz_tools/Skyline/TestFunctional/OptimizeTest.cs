@@ -420,6 +420,7 @@ namespace pwiz.SkylineTestFunctional
             string outTransitionsRough = TestFilesDir.GetTestPath(@"covdata\cov_rough.csv");
             string outTransitionsMedium = TestFilesDir.GetTestPath(@"covdata\cov_medium.csv");
             string outTransitionsFine = TestFilesDir.GetTestPath(@"covdata\cov_fine.csv");
+            string outTransitionsFinal = TestFilesDir.GetTestPath(@"covdata\cov_final.csv");
 
             var doc = SkylineWindow.Document;
 
@@ -433,12 +434,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(3, cov.StepCountFine);
 
             var dlgExportRoughTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
-            // Try to export fine tune and check for error message
+            // Try to export without optimizing and check for error message
             RunUI(() =>
             {
                 Assert.AreEqual(ExportInstrumentType.ABI, dlgExportRoughTune.InstrumentType);
-                dlgExportRoughTune.OptimizeType = ExportOptimize.COV_FINE;
+                dlgExportRoughTune.OptimizeType = ExportOptimize.NONE;
             });
+            var errorDlgNoCovs = ShowDialog<MultiButtonMsgDlg>(dlgExportRoughTune.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgNoCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_)));
+            OkDialog(errorDlgNoCovs, errorDlgNoCovs.BtnCancelClick);
+
+            // Try to export fine tune and check for error message
+            RunUI(() => dlgExportRoughTune.OptimizeType = ExportOptimize.COV_FINE);
             var errorDlgFineExport = ShowDialog<MessageDlg>(dlgExportRoughTune.OkDialog);
             RunUI(() => Assert.IsTrue(errorDlgFineExport.Message.Contains(Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_)));
             OkDialog(errorDlgFineExport, errorDlgFineExport.OkDialog);
@@ -490,9 +497,17 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errorDlgMediumExport2, errorDlgMediumExport2.OkDialog);
             OkDialog(dlgExportMediumTuneFail, dlgExportMediumTuneFail.CancelDialog);
 
-            // Undo the paste; retry export medium tune and verify against expected results
+            // Undo the paste
             RunUI(() => SkylineWindow.Undo());
+
             var dlgExportMediumTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            // Try to export without optimizing and check for error message
+            RunUI(() => dlgExportMediumTune.OptimizeType = ExportOptimize.NONE);
+            var errorDlgMissingRoughCovs = ShowDialog<MultiButtonMsgDlg>(dlgExportMediumTune.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgMissingRoughCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_)));
+            OkDialog(errorDlgMissingRoughCovs, errorDlgMissingRoughCovs.BtnCancelClick);
+
+            // Retry export medium tune and verify against expected results
             RunUI(() =>
             {
                 dlgExportMediumTune.OptimizeType = ExportOptimize.COV_MEDIUM;
@@ -517,6 +532,11 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChangeLoaded(doc);
 
             var dlgExportFineTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            // Try to export without optimizing and check for error message
+            RunUI(() => dlgExportFineTune.OptimizeType = ExportOptimize.NONE);
+            var errorDlgMissingMediumCovs = ShowDialog<MultiButtonMsgDlg>(dlgExportFineTune.OkDialog);
+            RunUI(() => Assert.IsTrue(errorDlgMissingMediumCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_)));
+            OkDialog(errorDlgMissingMediumCovs, errorDlgMissingMediumCovs.BtnCancelClick);
             // Export fine tune and verify against expected results
             RunUI(() =>
             {
@@ -525,14 +545,30 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.FileEquals(outTransitionsFine, TestFilesDir.GetTestPath(@"covdata\cov_fine_expected.csv"));
 
-            // Verify that we can import fine tune
+            // Import fine tune
             var importResultsDlgFine = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
             {
                 Assert.IsTrue(importResultsDlgFine.CanOptimizeMedium);
                 Assert.IsTrue(importResultsDlgFine.CanOptimizeFine);
+                importResultsDlgFine.OptimizationName = ExportOptimize.COV_FINE;
+                importResultsDlgFine.NamedPathSets = new[]
+                {
+                    new KeyValuePair<string, MsDataFileUri[]>("sMRM fine tune",
+                        new MsDataFileUri[] {new MsDataFilePath(wiffFile, "sMRM fine tune", 4)})
+                };
             });
-            OkDialog(importResultsDlgFine, importResultsDlgFine.CancelDialog);
+            OkDialog(importResultsDlgFine, importResultsDlgFine.OkDialog);
+            WaitForDocumentChangeLoaded(doc);
+
+            var dlgExportFinal = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            // Export and verify against expected results
+            RunUI(() =>
+            {
+                dlgExportFinal.OptimizeType = ExportOptimize.NONE;
+                dlgExportFinal.OkDialog(outTransitionsFinal);
+            });
+            AssertEx.FileEquals(outTransitionsFinal, TestFilesDir.GetTestPath(@"covdata\cov_final_expected.csv"));
 
             RunUI(() => SkylineWindow.SaveDocument());
         }

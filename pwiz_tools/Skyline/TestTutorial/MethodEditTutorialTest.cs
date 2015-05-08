@@ -404,7 +404,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap"); // Not L10N
                 transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI"); // Not L10N
-                transitionSettingsUI.RegressionCOV = Settings.Default.GetCompensationVoltageByName("ABI"); // Not L10N
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
