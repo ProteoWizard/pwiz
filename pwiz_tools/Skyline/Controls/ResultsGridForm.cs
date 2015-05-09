@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -93,7 +94,7 @@ namespace pwiz.Skyline.Controls
                     columnVisibles.Add(column.Visible);
                 }
                 columnChooserForm.SetColumns(columnLabels, columnVisibles);
-                if (columnChooserForm.ShowDialog(this) == DialogResult.Cancel)
+                if (FormUtil.ShowDialog(this, columnChooserForm) == DialogResult.Cancel)
                 {
                     return;
                 }

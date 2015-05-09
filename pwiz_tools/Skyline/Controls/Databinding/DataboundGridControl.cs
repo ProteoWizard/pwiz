@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Internal;
+using pwiz.Common.SystemUtil;
 
 // This code is associated with the DocumentGrid.
 
@@ -182,7 +183,7 @@ namespace pwiz.Skyline.Controls.Databinding
             using (var quickFilterForm = new QuickFilterForm())
             {
                 quickFilterForm.SetFilter(BindingListSource.ViewInfo.DataSchema, _columnFilterPropertyDescriptor, BindingListSource.RowFilter);
-                if (quickFilterForm.ShowDialog(this) == DialogResult.OK)
+                if (FormUtil.ShowDialog(this, quickFilterForm) == DialogResult.OK)
                 {
                     BindingListSource.RowFilter = quickFilterForm.RowFilter;
                 }
