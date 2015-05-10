@@ -770,7 +770,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var chromPeak = new ChromPeak(crawdadPeak, 0, chromGroup.Times, chromData.Intensities, null);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak, new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
-            var peaks = new BlockedArray<ChromPeak>(new[] {chromPeak}, 1, 4096);
+            var peaks = new[] {chromPeak};
             var header = new ChromGroupHeaderInfo5(new ChromGroupHeaderInfo(
               (float)precursorMz, 0, 1, 0, peaks.Length, 0, 0,
               chromGroup.Times.Length, 0, 0));

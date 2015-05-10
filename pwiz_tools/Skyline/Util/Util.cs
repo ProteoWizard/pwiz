@@ -947,7 +947,7 @@ namespace pwiz.Skyline.Util
     /// Read a potentially large array into a list of arrays in order to avoid very large memory allocations.
     /// We are trying to avoid not only memory fragmentation issues, but also the size limit of 2 gigabytes.
     /// </summary>
-    public class BlockedArray<TItem>
+    public class BlockedArray<TItem> : IReadOnlyList<TItem>
     {
         private readonly List<TItem[]> _blocks;
         private readonly int _itemCount;
@@ -1011,6 +1011,8 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public int Length { get { return _itemCount; } }
 
+        public int Count { get { return Length; } }
+
         /// <summary>
         /// Return the item corresponding to the given index.
         /// </summary>
@@ -1026,6 +1028,16 @@ namespace pwiz.Skyline.Util
                 var itemIndex = index%blockLength;
                 return _blocks[blockIndex][itemIndex];
             }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<TItem> GetEnumerator()
+        {
+            return _blocks.SelectMany(block => block).Take(_itemCount).GetEnumerator();
         }
 
         /// <summary>
