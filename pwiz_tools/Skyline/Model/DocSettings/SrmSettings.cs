@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string GetDisplayName(PeptideDocNode nodePep)
         {
-            return nodePep.Peptide.IsCustomIon ? nodePep.Peptide.CustomIon.DisplayName : GetModifiedSequence(nodePep);
+            return nodePep.Peptide.IsCustomIon ? nodePep.Peptide.CustomIon.DisplayName : nodePep.ModifiedSequenceDisplay;
         }
 
         public string GetModifiedSequence(PeptideDocNode nodePep)
