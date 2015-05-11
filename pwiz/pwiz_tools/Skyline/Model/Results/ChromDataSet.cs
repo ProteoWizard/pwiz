@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Model.Results
         {
             float min = MinRawTime;
             float max = MaxStartTime;
-            if (max - min > interval * 2)
+            if (max - min > interval * 2 || max > MinEndTime)
                 return min;
             return (max != float.MinValue ? max : double.MaxValue);
         }
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Model.Results
         {
             float min = MinEndTime;
             float max = MaxRawTime;
-            if (max - min > interval * 2)
+            if (max - min > interval * 2 || min < MaxStartTime)
                 return max;
             return (min != float.MaxValue ? min : double.MinValue);
         }
