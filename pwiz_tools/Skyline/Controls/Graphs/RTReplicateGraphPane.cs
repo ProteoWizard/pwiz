@@ -124,7 +124,8 @@ namespace pwiz.Skyline.Controls.Graphs
             int selectedReplicateIndex = SelectedIndex;
             double minRetentionTime = double.MaxValue;
             double maxRetentionTime = -double.MaxValue;
-            int iColor = 0, iCharge = -1, charge = -1;
+            int iColor = 0, iCharge = -1;
+            int? charge = null;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             int colorOffset = 0;
             var transitionGroupDocNode = parentNode as TransitionGroupDocNode;

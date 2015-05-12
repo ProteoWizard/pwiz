@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected static readonly Color[] COLORS_TRANSITION = GraphChromatogram.COLORS_LIBRARY;
         protected static readonly Color[] COLORS_GROUPS = GraphChromatogram.COLORS_GROUPS;
 
-        protected static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int charge, ref int iCharge)
+        protected static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int? charge, ref int iCharge)
         {
             return GraphChromatogram.GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
         }

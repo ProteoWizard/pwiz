@@ -1444,7 +1444,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     tranPeakInfoGraph = tranPeakInfo;
 
                 var scanName = nodeTran.FragmentIonName;
-                if (nodeTran.Transition.Charge > 1)
+                if (nodeTran.Transition.Charge != 1)  // Positive singly charged is uninteresting
                     scanName += Transition.GetChargeIndicator(nodeTran.Transition.Charge);
                 if (nodeTran.Transition.MassIndex > 0)
                     scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
@@ -1753,7 +1753,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // Construct and add graph items for all relevant transition groups.
             float fontSize = FontSize;
             int lineWidth = LineWidth;
-            int iCharge = -1, charge = -1;
+            int iCharge = -1;
+            int? charge = null;
             var chromGroupInfos = ChromGroupInfos;
             for (int i = 0; i < _nodeGroups.Length; i++)
             {
@@ -3264,14 +3265,14 @@ namespace pwiz.Skyline.Controls.Graphs
 //                Color.Pink,
 //            };
 
-        public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int charge,
+        public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int? charge,
                                         ref int iCharge)
         {
             // Make sure colors stay somewhat consistent among charge states.
             // The same label type should always have the same color, with the
             // first charge state in the peptide matching the peptide label type
             // modification font colors.
-            if (charge != nodeGroup.TransitionGroup.PrecursorCharge)
+            if (!charge.HasValue || charge != nodeGroup.TransitionGroup.PrecursorCharge)
             {
                 charge = nodeGroup.TransitionGroup.PrecursorCharge;
                 iCharge++;
