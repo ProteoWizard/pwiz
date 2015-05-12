@@ -34,7 +34,6 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class EditIsolationSchemeDlg : FormEx
     {
-        private string _lastMarginType;
         private IsolationScheme _isolationScheme;
         private readonly IEnumerable<IsolationScheme> _existing;
         private readonly GridViewDriver _gridViewDriver;
@@ -43,6 +42,7 @@ namespace pwiz.Skyline.SettingsUI
         public const int COLUMN_TARGET = 2;
         public const int COLUMN_START_MARGIN = 3;
         public const int COLUMN_END_MARGIN = 4;
+        public const int COLUMN_CE_RANGE = 5;
 
         public static class WindowType
         {
@@ -54,24 +54,6 @@ namespace pwiz.Skyline.SettingsUI
             public static string EXTRACTION
             {
                 get { return Resources.WindowType_EXTRACTION_Extraction; }
-            }
-        };
-
-        public static class WindowMargin
-        {
-            public static string NONE
-            {
-                get { return Resources.WindowMargin_NONE_None; }
-            }
-
-            public static string SYMMETRIC
-            {
-                get { return Resources.WindowMargin_SYMMETRIC_Symmetric; }
-            }
-
-            public static string ASYMMETRIC
-            {
-                get { return Resources.WindowMargin_ASYMMETRIC_Asymmetric; }
             }
         };
 
@@ -131,20 +113,11 @@ namespace pwiz.Skyline.SettingsUI
             comboDeconv.SelectedItem = DeconvolutionMethod.NONE;
             comboDeconvPre.Items.AddRange(deconvOptions);
 
-            // Initialize margins combo box.
-            comboMargins.Items.AddRange(
-                new object[]
-                {
-                    WindowMargin.NONE,
-                    WindowMargin.SYMMETRIC,
-                    WindowMargin.ASYMMETRIC
-                });
-            comboMargins.SelectedItem = WindowMargin.NONE; // Hides margin columns
-
-            // Hide target column to match checkbox, which starts unchecked
-            colTarget.Visible = false;
-
-           
+            // Hide columns to match checkboxes, which start unchecked
+            AdjustGridTop(-1);
+            comboIsolation.Visible = false;
+            colStartMargin.Visible = false;
+            colCERange.Visible = false;
 
             //Initialize IsolationComboBox
             comboIsolation.Items.AddRange(
@@ -207,9 +180,8 @@ namespace pwiz.Skyline.SettingsUI
                     rbPrespecified.Checked = true;
 
                     // Load grid and show appropriate columns.
-                    bool showTarget = false;
-                    bool showStartMargin = false;
-                    bool showEndMargin = false;
+                    bool showCERange = false;
+                    bool showMargin = false;
                     foreach (var isolationWindow in _isolationScheme.PrespecifiedIsolationWindows)
                     {
                         double start = isolationWindow.Start;
@@ -225,17 +197,16 @@ namespace pwiz.Skyline.SettingsUI
                             End = end,
                             Target = isolationWindow.Target,
                             StartMargin = isolationWindow.StartMargin,
-                            EndMargin = isolationWindow.EndMargin
+                            EndMargin = isolationWindow.EndMargin,
+                            CERange = isolationWindow.CERange
                         });
-                        showTarget |= isolationWindow.Target.HasValue;
-                        showStartMargin |= isolationWindow.StartMargin.HasValue;
-                        showEndMargin |= isolationWindow.EndMargin.HasValue;
+                        showCERange |= isolationWindow.CERange.HasValue;
+                        showMargin |= isolationWindow.StartMargin.HasValue;
                     }
 
-                    cbSpecifyTarget.Checked = showTarget;
-                    comboMargins.SelectedItem = showStartMargin
-                        ? (showEndMargin ? WindowMargin.ASYMMETRIC : WindowMargin.SYMMETRIC)
-                        : WindowMargin.NONE;
+                    cbSpecifyMargin.Checked = showMargin;
+                    cbSpecifyCERange.Checked = showCERange;
+
                     textWindowsPerScan.Text = _isolationScheme.WindowsPerScan.HasValue
                         ? _isolationScheme.WindowsPerScan.Value.ToString(LocalizationHelper.CurrentCulture)
                         : string.Empty;
@@ -301,9 +272,8 @@ namespace pwiz.Skyline.SettingsUI
             btnCalculate.Enabled = !fromResults;
             btnGraph.Enabled = !fromResults;
             gridIsolationWindows.Enabled = !fromResults;
-            cbSpecifyTarget.Enabled = !fromResults;
-            comboMargins.Enabled = !fromResults;
-            labelMargins.Enabled = !fromResults;
+            cbSpecifyMargin.Enabled = !fromResults;
+            cbSpecifyCERange.Enabled = !fromResults;
             labelDeconvPre.Enabled = !fromResults;
             if (comboDeconvPre.Enabled == fromResults)
             {
@@ -408,37 +378,6 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
 
-                // Check unique targets.
-                List<IsolationWindow> sortedWindowList;
-                if (cbSpecifyTarget.Checked)
-                {
-// ReSharper disable PossibleInvalidOperationException
-                    // IsolationWindow constructor above checks for null Target.
-                    sortedWindowList = windowList.OrderBy( o => o, new IsolationWindowTargetComparer()).ToList();
-                    for (int row = 1; row < sortedWindowList.Count; row++)
-                    {
-                        if (sortedWindowList[row].Target.Value == sortedWindowList[row - 1].Target.Value)
-                        {
-                            // Sort grid by Target so the user will see the duplicate Target values
-                            // next to each other.  There isn't an easy way to do a secondary sort
-                            // on the Start values, so just remove all the data from the grid and
-                            // insert it in sorted order.
-                            _gridViewDriver.Items.Clear();
-                            foreach (var isolationWindow in sortedWindowList)
-                            {
-                                _gridViewDriver.Items.Add(new EditIsolationWindow(isolationWindow));
-                            }
-                            _gridViewDriver.SelectCell(COLUMN_TARGET, row);
-                            MessageDlg.Show(this,
-                                Resources.EditIsolationSchemeDlg_OkDialog_The_selected_target_is_not_unique);
-                            gridIsolationWindows.Focus();
-                            _gridViewDriver.EditCell();
-                            return;
-                        }
-                    }
-// ReSharper restore PossibleInvalidOperationException
-                }
-
                 int? windowsPerScan = null;
                 if (Equals(SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED))
                 {
@@ -451,7 +390,7 @@ namespace pwiz.Skyline.SettingsUI
                     windowsPerScan = x;
                 }
                 // Check for overlap and gaps
-                sortedWindowList = windowList.OrderBy(o => o.Start).ToList();
+                var sortedWindowList = windowList.OrderBy(o => o.Start).ToList();
                 bool gapsOk = false;
                 bool overlapsOk = false;
                 bool overlap = Overlap;
@@ -510,7 +449,6 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate prespecified windows.
             var windowList = new List<IsolationWindow>();
-            string marginType = MarginType;
             for (int row = 0; row < _gridViewDriver.Items.Count; row++)
             {
                 var editWindow = _gridViewDriver.Items[row];
@@ -534,27 +472,18 @@ namespace pwiz.Skyline.SettingsUI
                     double endValue = editWindow.End.Value;
                     if (Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT))
                     {
-                        if (!Equals(marginType, WindowMargin.NONE))
-                        {
-                            startValue += editWindow.StartMargin ?? 0;
-                        }
-                        if (Equals(marginType, WindowMargin.ASYMMETRIC))
-                        {
-                            endValue -= editWindow.EndMargin ?? 0;
-                        }
-                        else if (Equals(marginType, WindowMargin.SYMMETRIC))
-                        {
-                            endValue -= editWindow.StartMargin ?? 0;
-                        }
+                        startValue += editWindow.StartMargin ?? 0;
+                        endValue -= editWindow.StartMargin ?? 0;
                     }
                     isolationWindow = new IsolationWindow(
                         // ReSharper disable PossibleInvalidOperationException
                         startValue,
                         endValue,
                         // ReSharper restore PossibleInvalidOperationException
-                        cbSpecifyTarget.Checked ? editWindow.Target : null,
-                        !Equals(marginType, WindowMargin.NONE) ? editWindow.StartMargin : null,
-                        Equals(marginType, WindowMargin.ASYMMETRIC) ? editWindow.EndMargin : null);
+                        null,
+                        cbSpecifyMargin.Checked ? editWindow.StartMargin : null,
+                        cbSpecifyMargin.Checked ? editWindow.StartMargin : null,
+                        cbSpecifyCERange.Checked ? editWindow.CERange : null);
                 }
                 catch (InvalidDataException exception)
                 {
@@ -573,13 +502,10 @@ namespace pwiz.Skyline.SettingsUI
                 return COLUMN_START;
             if (!editWindow.End.HasValue)
                 return COLUMN_END;
-            if (cbSpecifyTarget.Checked && !editWindow.Target.HasValue)
-                return COLUMN_TARGET;
-            string marginType = MarginType;
-            if (!Equals(marginType, WindowMargin.NONE) && !editWindow.StartMargin.HasValue)
+            if (cbSpecifyMargin.Checked && !editWindow.StartMargin.HasValue)
                 return COLUMN_START_MARGIN;
-            if (Equals(marginType, WindowMargin.ASYMMETRIC) && !editWindow.EndMargin.HasValue)
-                return COLUMN_END_MARGIN;
+            if (cbSpecifyCERange.Checked && !editWindow.CERange.HasValue)
+                return COLUMN_CE_RANGE;
             return -1;
         }
 
@@ -598,37 +524,21 @@ namespace pwiz.Skyline.SettingsUI
         }
 
 
-        private void comboMargins_SelectedIndexChanged(object sender, EventArgs e)
+
+        private void cbSpecifyMargin_CheckedChanged(object sender, EventArgs e)
         {
-            var selectedItem = MarginType;
-            if (Equals(selectedItem, WindowMargin.NONE))
-            {   if(!Equals(_lastMarginType,WindowMargin.NONE))
-                    AdjustGridTop(-1);
-                comboIsolation.Visible = false;
-                colStartMargin.Visible = false;
-                colEndMargin.Visible = false;
-            }
-            else if (Equals(selectedItem, WindowMargin.SYMMETRIC))
+            if (cbSpecifyMargin.Checked)
             {
-                if (Equals( _lastMarginType,WindowMargin.NONE))
-                    AdjustGridTop(1);
+                AdjustGridTop(1);
                 comboIsolation.Visible = true;
                 colStartMargin.Visible = true;
-                colEndMargin.Visible = false;
-                colStartMargin.HeaderText =
-                    Resources.EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Margin;
             }
             else
-            {
-                if (Equals(_lastMarginType,WindowMargin.NONE))
-                    AdjustGridTop(1);
-                comboIsolation.Visible = true;
-                colStartMargin.Visible = true;
-                colEndMargin.Visible = true;
-                colStartMargin.HeaderText =
-                    Resources.EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin;
+            {   
+                AdjustGridTop(-1);
+                comboIsolation.Visible = false;
+                colStartMargin.Visible = false;
             }
-            _lastMarginType = selectedItem;
         }
 
         private void AdjustGridTop(int direction)
@@ -647,9 +557,9 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void cbSpecifyTarget_CheckedChanged(object sender, EventArgs e)
+        private void cbSpecifyCERanges_CheckedChanged(object sender, EventArgs e)
         {
-            colTarget.Visible = cbSpecifyTarget.Checked;
+            colCERange.Visible = cbSpecifyCERange.Checked;
         }
 
         private void btnCalculate_Click(object sender, EventArgs e)
@@ -670,18 +580,13 @@ namespace pwiz.Skyline.SettingsUI
                         return;
 
                     // Determine whether isolation windows have a target and margins.
-                    cbSpecifyTarget.Checked = isolationWindows[0].Target.HasValue;
-                    if (isolationWindows[0].StartMargin.HasValue)
-                    {
-                        if (isolationWindows[0].EndMargin.HasValue)
-                            comboMargins.SelectedItem = WindowMargin.ASYMMETRIC;
-                        else
-                            comboMargins.SelectedItem = WindowMargin.SYMMETRIC;
-                    }
-                    else
-                        comboMargins.SelectedItem = WindowMargin.NONE;
+                    cbSpecifyMargin.Checked = (isolationWindows[0].StartMargin.HasValue &&
+                                               !Equals(isolationWindows[0].StartMargin.Value, 0.0));
 
-                    //Determine if calculation was on Isolation Or Extraction
+                    // Determine whether CE range is specified.
+                    cbSpecifyCERange.Checked = (isolationWindows[0].CERange.HasValue);
+
+                    // Determine if calculation was on Isolation Or Extraction
                     comboIsolation.SelectedItem = calculateDlg.IsIsolation ? 
                         WindowType.MEASUREMENT : 
                         WindowType.EXTRACTION;
@@ -707,11 +612,7 @@ namespace pwiz.Skyline.SettingsUI
 
             public int Compare(IsolationWindow x, IsolationWindow y)
             {
-                // Sort first by Target, then by Start value.
-// ReSharper disable PossibleInvalidOperationException
-                int result = x.Target.Value.CompareTo(y.Target.Value);
-// ReSharper restore PossibleInvalidOperationException
-                return result == 0 ? x.Start.CompareTo(y.Start) : result;
+                return x.Start.CompareTo(y.Start);
             }
 
             #endregion
@@ -843,49 +744,45 @@ namespace pwiz.Skyline.SettingsUI
 
             private EditIsolationWindow CreateEditIsolationWindow(IList<object> values, int lineNumber = -1)
             {
-                // Index values can change depending on visibility of optional Target.
-                int startMarginIndex = _editIsolationSchemeDlg.colTarget.Visible
-                    ? COLUMN_START_MARGIN
-                    : COLUMN_START_MARGIN - 1;
-                int endMarginIndex = startMarginIndex + 1;
+                var columnValues = new double?[GridView.Columns.Count];
+                int index = 0;
+                foreach (var value in values)
+                {
+                    while (!GridView.Columns[index].Visible)
+                        index++;
+                    string s = (string) value;
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        double d;
+                        if (!double.TryParse(s, out d))
+                        {
+                            throw new InvalidDataException(
+                                string.Format(
+                                    Resources.GridViewDriver_GetValue_An_invalid_number__0__was_specified_for__1__2__,
+                                    Helpers.TruncateString(s, 20),
+                                    GridView.Columns[index].HeaderText,
+                                    lineNumber > 0
+                                        ? TextUtil.SpaceSeparate(string.Empty,
+                                            string.Format(Resources.GridViewDriver_GetValue_on_line__0__, lineNumber))
+                                        : string.Empty));
+                        }
+                        columnValues[index] = d;
+                    }
+                    index++;
+                }
 
                 var isolationWindow = new EditIsolationWindow
                 {
-                    Start = GetValue(COLUMN_START, 0,
-                        lineNumber, values, values.Count > 0),
-                    End = GetValue(COLUMN_END, 1,
-                        lineNumber, values, values.Count > 1),
-                    Target = GetValue(COLUMN_TARGET, 2, lineNumber, values,
-                        _editIsolationSchemeDlg.colTarget.Visible && values.Count > 2),
-                    StartMargin = GetValue(COLUMN_START_MARGIN, startMarginIndex, lineNumber, values,
-                        _editIsolationSchemeDlg.colStartMargin.Visible && values.Count > startMarginIndex),
-                    EndMargin = GetValue(COLUMN_END_MARGIN, endMarginIndex, lineNumber, values,
-                        _editIsolationSchemeDlg.colEndMargin.Visible && values.Count > endMarginIndex)
+                    Start = columnValues[COLUMN_START],
+                    End = columnValues[COLUMN_END],
+                    Target = columnValues[COLUMN_TARGET],
+                    StartMargin = columnValues[COLUMN_START_MARGIN],
+                    EndMargin = columnValues[COLUMN_END_MARGIN],
+                    CERange = columnValues[COLUMN_CE_RANGE]
                 };
 
                 isolationWindow.Validate();
                 return isolationWindow;
-            }
-
-            // Get a value from a list of values with detailed error reporting.
-            private double? GetValue(int columnIndex, int listIndex, int lineNumber, IList<object> values,
-                bool expectValue)
-            {
-                if (!expectValue || listIndex >= values.Count || ((string) values[listIndex]).Trim().Length == 0)
-                    return null;
-                double value;
-                if (!double.TryParse((string) values[listIndex], out value))
-                {
-                    throw new InvalidDataException(
-                        string.Format(Resources.GridViewDriver_GetValue_An_invalid_number__0__was_specified_for__1__2__,
-                            Helpers.TruncateString((string) values[listIndex], 20),
-                            GridView.Columns[columnIndex].HeaderText,
-                            lineNumber > 0
-                                ? TextUtil.SpaceSeparate(string.Empty,
-                                    string.Format(Resources.GridViewDriver_GetValue_on_line__0__, lineNumber))
-                                : string.Empty));
-                }
-                return value;
             }
 
             private bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
@@ -971,19 +868,19 @@ namespace pwiz.Skyline.SettingsUI
             set { textWindowsPerScan.Text = Helpers.NullableDoubleToString(value); }
         }
 
-        public bool SpecifyTarget
+        public bool SpecifyMargin
         {
-            get { return cbSpecifyTarget.Checked; }
-            set { cbSpecifyTarget.Checked = value; }
+            get { return cbSpecifyMargin.Checked; }
+            set { cbSpecifyMargin.Checked = value; }
         }
 
-        public string MarginType
+        public bool SpecifyCERange
         {
-            get { return (string) comboMargins.SelectedItem; }
-            set { comboMargins.SelectedItem = value; }
+            get { return cbSpecifyCERange.Checked; }
+            set { cbSpecifyCERange.Checked = value; }
         }
 
-        public object CurrenWindowType
+        public object CurrentWindowType
         {
             get { return comboIsolation.SelectedIndex; }
             set
@@ -1024,23 +921,12 @@ namespace pwiz.Skyline.SettingsUI
             if (Equals(comboIsolation.SelectedItem,_lastWindowType)) return;
             _lastWindowType = comboIsolation.SelectedItem;
             
-            string selectedType = MarginType;
             bool isIsolation = Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT);
             int row = 0;
             foreach (EditIsolationWindow window in _gridViewDriver.Items)
             {
-                double startMargin = 0;
-                double endMargin = 0;
-                if (Equals(selectedType, WindowMargin.SYMMETRIC))
-                {
-                    startMargin = window.StartMargin ?? 0;
-                    endMargin = startMargin;
-                }
-                else if (Equals(selectedType, WindowMargin.ASYMMETRIC))
-                {
-                    startMargin = window.StartMargin ?? 0;
-                    endMargin = window.EndMargin ?? 0;
-                }
+                double startMargin = window.StartMargin ?? 0;
+                double endMargin = startMargin;
 
                 if (window.Start != null)
                 {
@@ -1088,7 +974,7 @@ namespace pwiz.Skyline.SettingsUI
             int windowsPerScan;
             if (! int.TryParse(textWindowsPerScan.Text, out windowsPerScan))
                 windowsPerScan = 1;
-            bool useMargins = !Equals(comboMargins.SelectedItem, WindowMargin.NONE);
+            bool useMargins = cbSpecifyMargin.Checked;
             using (var graphDlg = new DiaIsolationWindowsGraphForm(windows, useMargins,
                 comboDeconvPre.SelectedItem, windowsPerScan))
             {

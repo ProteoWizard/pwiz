@@ -208,6 +208,7 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] ISOLATION_LIST_TYPES =
             {
+                ABI_TOF,
                 AGILENT_TOF,
                 THERMO_Q_EXACTIVE,
                 THERMO_FUSION
@@ -232,11 +233,18 @@ namespace pwiz.Skyline.Model
                                    };
         }
 
-        public static string TransitionListExtention(string instrument)
+        public static string TransitionListExtension(string instrument)
         {
-            return (Equals(instrument, SHIMADZU)
+            return Equals(instrument, SHIMADZU)
                 ? ShimadzuNativeMassListExporter.EXT_SHIMADZU_TRANSITION_LIST
-                : TextUtil.EXT_CSV);
+                : TextUtil.EXT_CSV;
+        }
+
+        public static string IsolationListExtension(string instrument)
+        {
+            return Equals(instrument, ABI_TOF)
+                ? AbiTofIsolationListExporter.EXT_ABI_TOF_ISOLATION_LIST
+                : TextUtil.EXT_CSV;
         }
 
         /// <summary>
@@ -366,6 +374,8 @@ namespace pwiz.Skyline.Model
                         return ExportAbiQtrapMethod(doc, path, template);
                 case ExportInstrumentType.ABI_TOF:
                     OptimizeType = null;
+                    if (type == ExportFileType.IsolationList)
+                        return ExportAbiTofIsolationList(doc, path, template);
                     return ExportAbiTofMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT:
                 case ExportInstrumentType.AGILENT6400:
@@ -461,6 +471,14 @@ namespace pwiz.Skyline.Model
             exporter.ExportMultiQuant = ExportMultiQuant;
             
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportAbiTofIsolationList(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = new AbiTofIsolationListExporter(document);
+            exporter.ExportIsolationList(fileName);
 
             return exporter;
         }
@@ -2136,6 +2154,63 @@ namespace pwiz.Skyline.Model
                 argv.Add("-mq"); // Not L10N
 
             return argv;
+        }
+    }
+
+    public class AbiTofIsolationListExporter : AbstractMassListExporter
+    {
+        public const string EXT_ABI_TOF_ISOLATION_LIST = ".txt"; // Not L10N
+
+        public AbiTofIsolationListExporter(SrmDocument document)
+            : base(document, null)
+        {
+            IsolationList = true;
+        }
+
+        public void ExportIsolationList(string fileName)
+        {
+            var fullScan = Document.Settings.TransitionSettings.FullScan;
+            if (fullScan.AcquisitionMethod != FullScanAcquisitionMethod.DIA ||
+                fullScan.IsolationScheme == null || fullScan.IsolationScheme.FromResults)
+            {
+                throw new ArgumentException(
+                    Resources.SkylineWindow_exportIsolationListMenuItem_Click_There_is_no_isolation_list_data_to_export);
+            }
+
+            using (var fileSaver = new FileSaver(fileName))
+            {
+                var writer = new StreamWriter(fileSaver.SafeName);
+                foreach (var isolationWindow in fullScan.IsolationScheme.PrespecifiedIsolationWindows)
+                {
+                    if (isolationWindow.CERange.HasValue)
+                        Write(writer, isolationWindow.MethodStart, isolationWindow.MethodEnd, isolationWindow.CERange.Value);
+                    else
+                        Write(writer, isolationWindow.MethodStart, isolationWindow.MethodEnd);
+                }
+                writer.Close();
+                fileSaver.Commit();
+            }
+        }
+
+        // Write values separated by the field separator, and a line separator at the end.
+        private void Write(StreamWriter writer, params double[] vals)
+        {
+            writer.WriteLine(string.Join("\t", vals.Select(s => s.ToString(CultureInfo.InvariantCulture)))); // Not L10N
+        }
+
+        protected override string InstrumentType
+        {
+            get { return ExportInstrumentType.ABI_TOF; }
+        }
+
+        /// <summary>
+        /// Stubbed out override of abstract function not used in this class
+        /// </summary>
+        protected override void WriteTransition(TextWriter writer, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
+            int step)
+        {
+            throw new InvalidOperationException();  // Not expected to ever be called.
         }
     }
 

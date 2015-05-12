@@ -82,16 +82,6 @@ namespace pwiz.Skyline.SettingsUI
 
             Icon = Resources.Skyline;
 
-            // Initialize margins combo box.
-            comboMargins.Items.AddRange(
-                new object[]
-                    {
-                        WindowMargin.NONE,
-                        WindowMargin.SYMMETRIC,
-                        WindowMargin.ASYMMETRIC
-                    });
-            comboMargins.SelectedItem = WindowMargin.NONE;
-
             //Initialize window type combo box
             comboWindowType.Items.AddRange(new object[]
             {
@@ -121,23 +111,11 @@ namespace pwiz.Skyline.SettingsUI
             double start;
             double end;
             double windowWidth;
-            double marginLeft = 0;
-            double marginRight = 0;
+            double margin;
             int windowsPerScan = 0;
             double overlap = Overlap;
 
-            var comboMarginSelectedItem = comboMargins.SelectedItem.ToString();
-
-            if (string.Equals(comboMarginSelectedItem,WindowMargin.SYMMETRIC))
-            {
-                double.TryParse(textMarginLeft.Text, out marginLeft);
-                marginRight = marginLeft;
-            }
-            else if (string.Equals(comboMarginSelectedItem, WindowMargin.ASYMMETRIC))
-            {
-                double.TryParse(textMarginLeft.Text, out marginLeft);
-                double.TryParse(textMarginRight.Text, out marginRight);
-            }
+            double.TryParse(textMargin.Text, out margin);
 
             // No isolation windows if we don't have enough information or it is nonsense.
             if (!double.TryParse(textStart.Text, out start) ||
@@ -151,14 +129,15 @@ namespace pwiz.Skyline.SettingsUI
             bool isIsolation = Equals(comboWindowType.SelectedItem, EditIsolationSchemeDlg.WindowType.MEASUREMENT);
             if (isIsolation)
             {
-                start += marginLeft;
-                end -= marginRight;
-                windowWidth -= marginLeft + marginRight;
+                start += margin;
+                end -= margin;
+                windowWidth -= 2*margin;
             }
 
             if (start >= end ||
                 windowWidth <= 0 ||
-                overlap >= 100)
+                overlap >= 100 ||
+                (Multiplexed && windowsPerScan == 0))
             {
                 return isolationWindows;
             }
@@ -186,10 +165,16 @@ namespace pwiz.Skyline.SettingsUI
                 windowCount -= Multiplexed ? windowsPerScan : 1;
             }
 
+            double? ceRange = null;
+            if (!string.IsNullOrWhiteSpace(textCERange.Text))
+            {
+                double ceRangeValue;
+                if (double.TryParse(textCERange.Text, out ceRangeValue))
+                    ceRange = ceRangeValue;
+            }
+
             // Generate window list.
-            bool generateTarget = cbGenerateMethodTarget.Checked;
-            bool generateStartMargin = (comboMargins.SelectedItem.ToString() != WindowMargin.NONE);
-            bool generateEndMargin = (comboMargins.SelectedItem.ToString() == WindowMargin.ASYMMETRIC);
+            bool generateMargin = !Equals(margin, 0.0);
             if (overlap > 0)
             {
                 if (windowCount%2 == 0)
@@ -202,20 +187,21 @@ namespace pwiz.Skyline.SettingsUI
             for (int i = 0; i < windowCount; i++, start += windowStep)
             {
                 // Apply instrument limits to method start and end.
-                var methodStart = Math.Max(start - marginLeft, TransitionFullScan.MIN_RES_MZ);
-                var methodEnd = Math.Min(start + windowWidth + marginRight, TransitionFullScan.MAX_RES_MZ);
+                var methodStart = Math.Max(start - margin, TransitionFullScan.MIN_RES_MZ);
+                var methodEnd = Math.Min(start + windowWidth + margin, TransitionFullScan.MAX_RES_MZ);
 
                 // Skip this isolation window if it is empty due to instrument limits.
-                if (methodStart + marginLeft >= methodEnd - marginRight)
+                if (methodStart + margin >= methodEnd - margin)
                     continue;
 
                 var window = new EditIsolationWindow
                 {
-                    Start = methodStart + (isIsolation ? 0 : marginLeft),
-                    End = methodEnd - (isIsolation ?  0 : marginRight),
-                    Target = generateTarget ? (double?)((methodStart + methodEnd) / 2) : null,
-                    StartMargin = generateStartMargin ? (double?)marginLeft : null,
-                    EndMargin = generateEndMargin ? (double?)marginRight : null
+                    Start = methodStart + (isIsolation ? 0 : margin),
+                    End = methodEnd - (isIsolation ?  0 : margin),
+                    Target = null,
+                    StartMargin = generateMargin ? (double?)margin : null,
+                    EndMargin = generateMargin ? (double?)margin : null,
+                    CERange = ceRange
                 };
                 if (overlap > 0)
                 {
@@ -277,17 +263,30 @@ namespace pwiz.Skyline.SettingsUI
 
 
             // Validate margins.
-            double marginLeft = 0.0;
-            double marginRight = 0.0;
-            if (!Equals(comboMargins.SelectedItem.ToString(), WindowMargin.NONE) &&
-                    !helper.ValidateDecimalTextBox(textMarginLeft, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
-                        TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginLeft) ||
-                (Equals(comboMargins.SelectedItem.ToString(), WindowMargin.ASYMMETRIC) &&
-                    !helper.ValidateDecimalTextBox(textMarginRight, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
-                        TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginRight)))
+            double? margin = null;
+            if (!helper.IsZeroOrEmpty(textMargin))
             {
-                return;
+                double marginValue;
+                if (!helper.ValidateDecimalTextBox(textMargin, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE,
+                    TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginValue))
+                {
+                    return;
+                }
+                margin = marginValue;
             }
+
+            // Validate CE range.
+            double? ceRange = null;
+            if (!helper.IsZeroOrEmpty(textCERange))
+            {
+                double ceRangeValue;
+                if (!helper.ValidateDecimalTextBox(textCERange, 0.0, double.MaxValue, out ceRangeValue))
+                {
+                    return;
+                }
+                ceRange = ceRangeValue;
+            }
+
 
             // Validate multiplexing.
             if (Multiplexed)
@@ -309,7 +308,7 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
 // ReSharper disable ObjectCreationAsStatement
-                new IsolationWindow(start, end, null, marginLeft, marginRight);
+                new IsolationWindow(start, end, null, margin, margin, ceRange);
 // ReSharper restore ObjectCreationAsStatement
             }
             catch (InvalidDataException x)
@@ -319,33 +318,6 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             DialogResult = DialogResult.OK;
-        }
-
-        private void comboMargins_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var comboMarginsSelectedItem = comboMargins.SelectedItem.ToString();
-            if (string.Equals(comboMarginsSelectedItem,WindowMargin.NONE))
-            {
-                textMarginLeft.Enabled = false;
-                textMarginRight.Visible = false;
-                comboWindowType.Enabled = false;
-                labelWindowType.Enabled = false;
-            }
-            else if (string.Equals(comboMarginsSelectedItem,WindowMargin.SYMMETRIC))
-            {
-                textMarginLeft.Enabled = true;
-                textMarginRight.Visible = false;
-                comboWindowType.Enabled = true;
-                labelWindowType.Enabled = true;
-            }
-            else if (string.Equals(comboMarginsSelectedItem,WindowMargin.ASYMMETRIC))
-            {
-                textMarginLeft.Enabled = true;
-                textMarginRight.Visible = true;
-                comboWindowType.Enabled = true;
-                labelWindowType.Enabled = true;
-            }
-            UpdateWindowCount();
         }
 
         private void cbOptimizeWindowPlacement_CheckedChanged(object sender, EventArgs e)
@@ -386,13 +358,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdateWindowCount();
         }
 
-        private void textMarginLeft_TextChanged(object sender, EventArgs e)
-        {
-            if (IsIsolation)
-                UpdateWindowCount();
-        }
-
-        private void textMarginRight_TextChanged(object sender, EventArgs e)
+        private void textMargin_TextChanged(object sender, EventArgs e)
         {
             if (IsIsolation)
                 UpdateWindowCount();
@@ -436,28 +402,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public string Margins
-        {
-            get { return comboMargins.SelectedItem.ToString(); }
-            set { comboMargins.SelectedItem = value; }
-        }
-
         public double? MarginLeft
         {
-            get { return Helpers.ParseNullableDouble(textMarginLeft.Text); }
-            set { textMarginLeft.Text = Helpers.NullableDoubleToString(value); }
-        }
-
-        public double? MarginRight
-        {
-            get { return Helpers.ParseNullableDouble(textMarginRight.Text); }
-            set { textMarginRight.Text = Helpers.NullableDoubleToString(value); }
-        }
-
-        public bool GenerateTarget
-        {
-            get { return cbGenerateMethodTarget.Checked; }
-            set { cbGenerateMethodTarget.Checked = value; }
+            get { return Helpers.ParseNullableDouble(textMargin.Text); }
+            set { textMargin.Text = Helpers.NullableDoubleToString(value); }
         }
 
         public bool OptimizeWindowPlacement
@@ -477,51 +425,12 @@ namespace pwiz.Skyline.SettingsUI
             set { comboWindowType.SelectedItem = value; }
         }
 
-        public double RealMarginLeft
+        public double? CERange
         {
-            get { return (MarginLeft ?? 0); }
+            get { return Helpers.ParseNullableDouble(textCERange.Text); }
+            set { textCERange.Text = Helpers.NullableDoubleToString(value); }
         }
 
-        public double RealMarginRight
-        {
-            get { return (MarginRight ?? (MarginLeft ?? 0)); }    
-        }
-
-        public double? ExtractionStart
-        {
-            get
-            {
-                if (IsIsolation)
-                    return Start + RealMarginLeft;
-                else
-                    return Start;
-            }
-            set
-            {
-                if (IsIsolation)
-                    Start = value - RealMarginLeft;
-                else
-                    Start = value;
-            }
-        }
-
-        public double? ExtractionEnd
-        {
-            get
-            {
-                if (IsIsolation)
-                    return End - RealMarginRight;
-                else
-                    return End;
-            }
-            set
-            {
-                if (IsIsolation)
-                    End = value + RealMarginRight;
-                else
-                    End = value;
-            }
-        }
         #endregion
     }
 }

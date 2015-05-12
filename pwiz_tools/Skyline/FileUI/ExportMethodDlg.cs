@@ -759,11 +759,12 @@ namespace pwiz.Skyline.FileUI
                 {
                     case ExportFileType.List:
                         filter = Resources.ExportMethodDlg_OkDialog_Transition_List;
-                        ext = ExportInstrumentType.TransitionListExtention(_instrumentType);
+                        ext = ExportInstrumentType.TransitionListExtension(_instrumentType);
                         break;
 
                     case ExportFileType.IsolationList:
                         filter = Resources.ExportMethodDlg_OkDialog_Isolation_List;
+                        ext = ExportInstrumentType.IsolationListExtension(_instrumentType);
                         break;
 
                     case ExportFileType.Method:

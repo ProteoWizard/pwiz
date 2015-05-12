@@ -224,6 +224,7 @@
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
+    <Compile Include="SwathIsolationListsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

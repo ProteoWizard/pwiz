@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? Target { get; private set; }
         public double? StartMargin { get; private set; }
         public double? EndMargin { get; private set; }
+        public double? CERange { get; private set; }
 
         public double MethodStart { get { return Math.Max(Start - (StartMargin ?? 0), TransitionFullScan.MIN_RES_MZ); } }
         public double MethodEnd { get { return Math.Min(End + (EndMargin ?? (StartMargin ?? 0)), TransitionFullScan.MAX_RES_MZ); } }
@@ -45,13 +46,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public double IsolationStart { get { return MethodStart + (StartMargin ?? 0); } }
         public double IsolationEnd { get { return MethodEnd - (EndMargin ?? (StartMargin ?? 0)); } }
 
-        public IsolationWindow(double start, double end, double? target = null, double? startMargin = null, double? endMargin = null)
+        public IsolationWindow(double start, double end, double? target = null, double? startMargin = null, double? endMargin = null, double? ceRange = null)
         {
             Start = start;
             End = end;
             Target = target;
             StartMargin = startMargin;
             EndMargin = endMargin;
+            CERange = ceRange;
 
             DoValidate();
         }
@@ -63,6 +65,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Target = isolationWindow.Target;
             StartMargin = isolationWindow.StartMargin;
             EndMargin = isolationWindow.EndMargin;
+            CERange = isolationWindow.CERange;
 
             DoValidate();
         }
@@ -137,7 +140,8 @@ namespace pwiz.Skyline.Model.DocSettings
             target,
             margin,
             margin_left,
-            margin_right
+            margin_right,
+            ce_range
         }
 
         public XmlSchema GetSchema()
@@ -157,6 +161,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 StartMargin = reader.GetNullableDoubleAttribute(ATTR.margin_left);
                 EndMargin = reader.GetNullableDoubleAttribute(ATTR.margin_right);
             }
+            CERange = reader.GetNullableDoubleAttribute(ATTR.ce_range);
 
             // Consume tag
             reader.Read();
@@ -181,6 +186,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     writer.WriteAttributeNullable(ATTR.margin, StartMargin);
                 }
             }
+            writer.WriteAttributeNullable(ATTR.ce_range, CERange);
         }
 
         #endregion
@@ -192,7 +198,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return other.Start.Equals(Start) && other.End.Equals(End) && other.Target.Equals(Target) &&
-                other.StartMargin.Equals(StartMargin) && other.EndMargin.Equals(EndMargin);
+                other.StartMargin.Equals(StartMargin) && other.EndMargin.Equals(EndMargin) &&
+                other.CERange.Equals(CERange);
         }
 
         public override bool Equals(object obj)
@@ -208,10 +215,11 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = Start.GetHashCode();
-                result = (result*397) ^ End.GetHashCode();
+                result = (result * 397) ^ End.GetHashCode();
                 result = (result * 397) ^ (Target.HasValue ? Target.Value.GetHashCode() : 0);
                 result = (result * 397) ^ (StartMargin.HasValue ? StartMargin.Value.GetHashCode() : 0);
                 result = (result * 397) ^ (EndMargin.HasValue ? EndMargin.Value.GetHashCode() : 0);
+                result = (result * 397) ^ (CERange.HasValue ? CERange.Value.GetHashCode() : 0);
                 return result;
             }
         }

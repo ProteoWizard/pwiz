@@ -11759,6 +11759,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to SWATH (15 m/z).
+        /// </summary>
+        public static string IsolationSchemeList_GetDefaults_SWATH__15_m_z_ {
+            get {
+                return ResourceManager.GetString("IsolationSchemeList_GetDefaults_SWATH__15_m_z_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SWATH (25 m/z).
+        /// </summary>
+        public static string IsolationSchemeList_GetDefaults_SWATH__25_m_z_ {
+            get {
+                return ResourceManager.GetString("IsolationSchemeList_GetDefaults_SWATH__25_m_z_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SWATH (VW 100).
+        /// </summary>
+        public static string IsolationSchemeList_GetDefaults_SWATH__VW_100_ {
+            get {
+                return ResourceManager.GetString("IsolationSchemeList_GetDefaults_SWATH__VW_100_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SWATH (VW 64).
+        /// </summary>
+        public static string IsolationSchemeList_GetDefaults_SWATH__VW_64_ {
+            get {
+                return ResourceManager.GetString("IsolationSchemeList_GetDefaults_SWATH__VW_64_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Isolation scheme:.
         /// </summary>
         public static string IsolationSchemeList_Label_Isolation_scheme {

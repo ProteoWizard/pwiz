@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="editIsolationWindowBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>244, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -126,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>345, 12</value>
+    <value>313, 12</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -148,7 +151,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>23</value>
+    <value>22</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -157,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>345, 41</value>
+    <value>313, 41</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -178,7 +181,127 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>22</value>
+    <value>21</value>
+  </data>
+  <data name="cbSpecifyMargin.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="cbSpecifyMargin.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSpecifyMargin.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbSpecifyMargin.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbSpecifyMargin.Location" type="System.Drawing.Point, System.Drawing">
+    <value>232, 453</value>
+  </data>
+  <data name="cbSpecifyMargin.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 17</value>
+  </data>
+  <data name="cbSpecifyMargin.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="cbSpecifyMargin.Text" xml:space="preserve">
+    <value>Specify &amp;Margin</value>
+  </data>
+  <data name="&gt;&gt;cbSpecifyMargin.Name" xml:space="preserve">
+    <value>cbSpecifyMargin</value>
+  </data>
+  <data name="&gt;&gt;cbSpecifyMargin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSpecifyMargin.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSpecifyMargin.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboIsolation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>34, 217</value>
+  </data>
+  <data name="comboIsolation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboIsolation.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;comboIsolation.Name" xml:space="preserve">
+    <value>comboIsolation</value>
+  </data>
+  <data name="&gt;&gt;comboIsolation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboIsolation.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboIsolation.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelDeconvPre.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelDeconvPre.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDeconvPre.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="labelDeconvPre.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelDeconvPre.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 435</value>
+  </data>
+  <data name="labelDeconvPre.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="labelDeconvPre.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="labelDeconvPre.Text" xml:space="preserve">
+    <value>D&amp;econvolution:</value>
+  </data>
+  <data name="&gt;&gt;labelDeconvPre.Name" xml:space="preserve">
+    <value>labelDeconvPre</value>
+  </data>
+  <data name="&gt;&gt;labelDeconvPre.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDeconvPre.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelDeconvPre.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboDeconvPre.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="comboDeconvPre.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="comboDeconvPre.Location" type="System.Drawing.Point, System.Drawing">
+    <value>34, 451</value>
+  </data>
+  <data name="comboDeconvPre.Size" type="System.Drawing.Size, System.Drawing">
+    <value>140, 21</value>
+  </data>
+  <data name="comboDeconvPre.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;comboDeconvPre.Name" xml:space="preserve">
+    <value>comboDeconvPre</value>
+  </data>
+  <data name="&gt;&gt;comboDeconvPre.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboDeconvPre.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboDeconvPre.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="labelDeconvolution.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -208,7 +331,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelDeconvolution.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="comboDeconv.Location" type="System.Drawing.Point, System.Drawing">
     <value>179, 123</value>
@@ -229,7 +352,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboDeconv.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="btnCalculate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -241,7 +364,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCalculate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>264, 191</value>
+    <value>232, 191</value>
   </data>
   <data name="btnCalculate.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -262,7 +385,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCalculate.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -274,7 +397,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnGraph.Location" type="System.Drawing.Point, System.Drawing">
-    <value>345, 191</value>
+    <value>313, 191</value>
   </data>
   <data name="btnGraph.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -295,70 +418,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnGraph.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="labelMargins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="labelMargins.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelMargins.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="labelMargins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelMargins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>277, 507</value>
-  </data>
-  <data name="labelMargins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="labelMargins.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="labelMargins.Text" xml:space="preserve">
-    <value>Margi&amp;ns:</value>
-  </data>
-  <data name="&gt;&gt;labelMargins.Name" xml:space="preserve">
-    <value>labelMargins</value>
-  </data>
-  <data name="&gt;&gt;labelMargins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelMargins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelMargins.ZOrder" xml:space="preserve">
     <value>7</value>
-  </data>
-  <data name="comboMargins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="comboMargins.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="comboMargins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>280, 523</value>
-  </data>
-  <data name="comboMargins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 21</value>
-  </data>
-  <data name="comboMargins.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.Name" xml:space="preserve">
-    <value>comboMargins</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboMargins.ZOrder" xml:space="preserve">
-    <value>8</value>
   </data>
   <data name="textWindowsPerScan.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -367,13 +427,13 @@
     <value>False</value>
   </data>
   <data name="textWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
-    <value>135, 555</value>
+    <value>34, 499</value>
   </data>
   <data name="textWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
     <value>39, 20</value>
   </data>
   <data name="textWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="&gt;&gt;textWindowsPerScan.Name" xml:space="preserve">
     <value>textWindowsPerScan</value>
@@ -385,7 +445,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textWindowsPerScan.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="labelWindowsPerScan.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -400,13 +460,13 @@
     <value>NoControl</value>
   </data>
   <data name="labelWindowsPerScan.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 555</value>
+    <value>31, 483</value>
   </data>
   <data name="labelWindowsPerScan.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 13</value>
   </data>
   <data name="labelWindowsPerScan.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="labelWindowsPerScan.Text" xml:space="preserve">
     <value>&amp;Windows per scan:</value>
@@ -421,43 +481,43 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelWindowsPerScan.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>9</value>
   </data>
-  <data name="cbSpecifyTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="cbSpecifyCERange.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="cbSpecifyTarget.AutoSize" type="System.Boolean, mscorlib">
+  <data name="cbSpecifyCERange.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbSpecifyTarget.Enabled" type="System.Boolean, mscorlib">
+  <data name="cbSpecifyCERange.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="cbSpecifyTarget.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="cbSpecifyCERange.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="cbSpecifyTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>280, 558</value>
+  <data name="cbSpecifyCERange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>232, 476</value>
   </data>
-  <data name="cbSpecifyTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>91, 17</value>
+  <data name="cbSpecifyCERange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>113, 17</value>
   </data>
-  <data name="cbSpecifyTarget.TabIndex" type="System.Int32, mscorlib">
+  <data name="cbSpecifyCERange.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
   </data>
-  <data name="cbSpecifyTarget.Text" xml:space="preserve">
-    <value>Specify &amp;target</value>
+  <data name="cbSpecifyCERange.Text" xml:space="preserve">
+    <value>Specify CE &amp;Range</value>
   </data>
-  <data name="&gt;&gt;cbSpecifyTarget.Name" xml:space="preserve">
-    <value>cbSpecifyTarget</value>
+  <data name="&gt;&gt;cbSpecifyCERange.Name" xml:space="preserve">
+    <value>cbSpecifyCERange</value>
   </data>
-  <data name="&gt;&gt;cbSpecifyTarget.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbSpecifyCERange.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbSpecifyTarget.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbSpecifyCERange.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbSpecifyTarget.ZOrder" xml:space="preserve">
-    <value>11</value>
+  <data name="&gt;&gt;cbSpecifyCERange.ZOrder" xml:space="preserve">
+    <value>10</value>
   </data>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -466,7 +526,7 @@
     <value>15, 26</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>304, 20</value>
+    <value>272, 20</value>
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -481,7 +541,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>12</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -511,7 +571,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>13</value>
   </data>
   <data name="rbPrespecified.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -541,7 +601,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;rbPrespecified.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>14</value>
   </data>
   <data name="textRightPrecursorFilterMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>80, 123</value>
@@ -562,7 +622,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRightPrecursorFilterMz.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>15</value>
   </data>
   <data name="cbAsymIsolation.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -592,7 +652,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbAsymIsolation.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>16</value>
   </data>
   <data name="labelTh.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -625,7 +685,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelTh.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>17</value>
   </data>
   <data name="textPrecursorFilterMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>34, 123</value>
@@ -646,7 +706,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textPrecursorFilterMz.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>18</value>
   </data>
   <data name="labelIsolationWidth.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -664,7 +724,7 @@
     <value>3</value>
   </data>
   <data name="labelIsolationWidth.Text" xml:space="preserve">
-    <value>Isolation &amp;width:</value>
+    <value>&amp;Isolation width:</value>
   </data>
   <data name="&gt;&gt;labelIsolationWidth.Name" xml:space="preserve">
     <value>labelIsolationWidth</value>
@@ -676,7 +736,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelIsolationWidth.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>19</value>
   </data>
   <data name="rbUseResultsData.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -706,7 +766,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;rbUseResultsData.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>20</value>
   </data>
   <data name="gridIsolationWindows.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -729,21 +789,30 @@
   <data name="colTarget.HeaderText" xml:space="preserve">
     <value>Target</value>
   </data>
+  <data name="colTarget.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <metadata name="colStartMargin.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colStartMargin.HeaderText" xml:space="preserve">
-    <value>Start margin</value>
+    <value>Margin</value>
   </data>
   <metadata name="colEndMargin.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="colEndMargin.HeaderText" xml:space="preserve">
-    <value>End margin</value>
+    <value>End Margin</value>
   </data>
-  <metadata name="editIsolationWindowBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>244, 17</value>
+  <data name="colEndMargin.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <metadata name="colCERange.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
   </metadata>
+  <data name="colCERange.HeaderText" xml:space="preserve">
+    <value>CE Range</value>
+  </data>
   <data name="gridIsolationWindows.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -751,115 +820,22 @@
     <value>34, 244</value>
   </data>
   <data name="gridIsolationWindows.Size" type="System.Drawing.Size, System.Drawing">
-    <value>386, 251</value>
+    <value>354, 175</value>
   </data>
   <data name="gridIsolationWindows.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="&gt;&gt;gridIsolationWindows.Name" xml:space="preserve">
     <value>gridIsolationWindows</value>
   </data>
   <data name="&gt;&gt;gridIsolationWindows.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridIsolationWindows.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridIsolationWindows.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="labelDeconvPre.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelDeconvPre.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDeconvPre.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="labelDeconvPre.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelDeconvPre.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 507</value>
-  </data>
-  <data name="labelDeconvPre.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
-  </data>
-  <data name="labelDeconvPre.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="labelDeconvPre.Text" xml:space="preserve">
-    <value>&amp;Deconvolution:</value>
-  </data>
-  <data name="&gt;&gt;labelDeconvPre.Name" xml:space="preserve">
-    <value>labelDeconvPre</value>
-  </data>
-  <data name="&gt;&gt;labelDeconvPre.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelDeconvPre.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelDeconvPre.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="comboDeconvPre.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="comboDeconvPre.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="comboDeconvPre.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 523</value>
-  </data>
-  <data name="comboDeconvPre.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 21</value>
-  </data>
-  <data name="comboDeconvPre.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="&gt;&gt;comboDeconvPre.Name" xml:space="preserve">
-    <value>comboDeconvPre</value>
-  </data>
-  <data name="&gt;&gt;comboDeconvPre.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboDeconvPre.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboDeconvPre.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="comboIsolation.AutoCompleteCustomSource" xml:space="preserve">
-    <value>Isolation</value>
-  </data>
-  <data name="comboIsolation.AutoCompleteCustomSource1" xml:space="preserve">
-    <value>Extraction</value>
-  </data>
-  <data name="comboIsolation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 217</value>
-  </data>
-  <data name="comboIsolation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
-  </data>
-  <data name="comboIsolation.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
-  </data>
-  <data name="comboIsolation.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;comboIsolation.Name" xml:space="preserve">
-    <value>comboIsolation</value>
-  </data>
-  <data name="&gt;&gt;comboIsolation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboIsolation.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboIsolation.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>11</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -868,13 +844,25 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>436, 580</value>
+    <value>404, 530</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>379, 476</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Isolation Scheme</value>
+  </data>
+  <data name="&gt;&gt;editIsolationWindowBindingSource.Name" xml:space="preserve">
+    <value>editIsolationWindowBindingSource</value>
+  </data>
+  <data name="&gt;&gt;editIsolationWindowBindingSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colStart.Name" xml:space="preserve">
     <value>colStart</value>
@@ -906,16 +894,16 @@
   <data name="&gt;&gt;colEndMargin.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;editIsolationWindowBindingSource.Name" xml:space="preserve">
-    <value>editIsolationWindowBindingSource</value>
+  <data name="&gt;&gt;colCERange.Name" xml:space="preserve">
+    <value>colCERange</value>
   </data>
-  <data name="&gt;&gt;editIsolationWindowBindingSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;colCERange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditIsolationSchemeDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -74,29 +74,15 @@ namespace pwiz.SkylineTestFunctional
 
             // Check Margin values.
             CheckError(() =>
-                {
-                    _calcDlg.Start = 100;
-                    _calcDlg.End = 101;
-                    _calcDlg.WindowWidth = 1;
-                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
-                    _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
-                    _calcDlg.MarginLeft = null;
-                },
-                Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
-            CheckError(() => _calcDlg.MarginLeft = 0, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
-            CheckError(() => _calcDlg.MarginLeft = 1951, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            {
+                _calcDlg.Start = 100;
+                _calcDlg.End = 101;
+                _calcDlg.WindowWidth = 1;
+                _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
+                _calcDlg.MarginLeft = 1951;
+            },
+            Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
             CheckError(() => _calcDlg.MarginLeft = 1900, Resources.IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range);
-            CheckError(() =>
-                {
-                    _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
-                    _calcDlg.MarginLeft = 1;
-                    _calcDlg.MarginRight = null;
-                },
-                Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
-            CheckError(() => _calcDlg.MarginRight = 0, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
-            CheckError(() => _calcDlg.MarginRight = 1951, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
-            CheckError(() => _calcDlg.MarginRight = 1900, Resources.IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range);
-            CheckError(() => _calcDlg.MarginRight = 3);
 
             // One simple window.
             CheckWindows(() =>
@@ -104,8 +90,9 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 100;
                     _calcDlg.End = 101;
                     _calcDlg.WindowWidth = 1;
+                    _calcDlg.MarginLeft = null;
                 },
-                100, 101, null, null, null);
+                100, 101);
 
             // Two simple windows with overlap.
             CheckWindows(() =>
@@ -115,10 +102,10 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.WindowWidth = 1;
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                 },
-                100, 101, null, null, null,
-                101, 102, null, null, null,
-                99.5, 100.5, null, null, null,
-                100.5, 101.5, null, null, null);
+                100, 101,
+                101, 102,
+                99.5, 100.5,
+                100.5, 101.5);
 
             // One max-range window.
             CheckWindows(() =>
@@ -127,21 +114,41 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.End = 2000;
                     _calcDlg.WindowWidth = 1950;
                 },
-                50, 2000, null, null, null);
+                50, 2000);
 
-            // One max-range window with asymmetric margins and centered target.
+            // One max-range window with margins.
             CheckWindows(() =>
                 {
                     _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                     _calcDlg.Start = 50;
                     _calcDlg.End = 2000;
                     _calcDlg.WindowWidth = 1950;
-                    _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
                     _calcDlg.MarginLeft = 5;
-                    _calcDlg.MarginRight = 25;
-                    _calcDlg.GenerateTarget = true;
                 },
-                55, 1975, 1025, 5, 25);
+                55, 1995, 5);
+
+            // One max-range window with CE Range.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
+                    _calcDlg.Start = 50;
+                    _calcDlg.End = 2000;
+                    _calcDlg.WindowWidth = 1950;
+                    _calcDlg.CERange = 10;
+                },
+                50, 2000, 10);
+
+            // One max-range window with margin and CE Range.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
+                    _calcDlg.Start = 50;
+                    _calcDlg.End = 2000;
+                    _calcDlg.WindowWidth = 1950;
+                    _calcDlg.MarginLeft = 5;
+                    _calcDlg.CERange = 10;
+                },
+                55, 1995, 5, 10);
 
             // Now with window optimization.
             CheckWindows(() =>
@@ -150,13 +157,10 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 50;
                     _calcDlg.End = 1900;
                     _calcDlg.WindowWidth = 1850;
-                    _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
                     _calcDlg.MarginLeft = 5;
-                    _calcDlg.MarginRight = 25;
-                    _calcDlg.GenerateTarget = true;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                55, 1901.1140, 988.0570, 5, 25);
+                55, 1901.1140, 5);
 
             // Overlap without window optimization. Even window width
             CheckWindows(() =>
@@ -168,12 +172,12 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = false;
                 },
-                495, 515, null, null, null,
-                515, 535, null, null, null,
-                535, 555, null, null, null,
-                485, 505, null, null, null,
-                505, 525, null, null, null,
-                525, 545, null, null, null);
+                495, 515,
+                515, 535,
+                535, 555,
+                485, 505,
+                505, 525,
+                525, 545);
 
             // Overlap with window optimization. Even window width.
             CheckWindows(() =>
@@ -185,12 +189,12 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                495.4751, 515.4842, null, null, null,
-                515.4842, 535.4933, null, null, null,
-                535.4933, 555.5024, null, null, null,
-                485.4706, 505.4796, null, null, null,
-                505.4796, 525.4887, null, null, null,
-                525.4887, 545.4978, null, null, null);
+                495.4751, 515.4842,
+                515.4842, 535.4933,
+                535.4933, 555.5024,
+                485.4706, 505.4796,
+                505.4796, 525.4887,
+                525.4887, 545.4978);
 
             // Overlap without window optimization. Even window width. Overlap range not divisble by overlap width.
             CheckWindows(() =>
@@ -202,14 +206,14 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = false;
                 },
-                495, 515, null, null, null,
-                515, 535, null, null, null,
-                535, 555, null, null, null,
-                555, 575, null, null, null,
-                485, 505, null, null, null,
-                505, 525, null, null, null,
-                525, 545, null, null, null,
-                545, 565, null, null, null);
+                495, 515,
+                515, 535,
+                535, 555,
+                555, 575,
+                485, 505,
+                505, 525,
+                525, 545,
+                545, 565);
 
             // Overlap with window optimization. Even window width. Overlap range not divisble by overlap width.
             CheckWindows(() =>
@@ -221,14 +225,14 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                495.4751, 515.4842, null, null, null,
-                515.4842, 535.4933, null, null, null,
-                535.4933, 555.5024, null, null, null,
-                555.5024, 575.5115, null, null, null,
-                485.4706, 505.4796, null, null, null,
-                505.4796, 525.4887, null, null, null,
-                525.4887, 545.4978, null, null, null,
-                545.4978, 565.5069, null, null, null);
+                495.4751, 515.4842,
+                515.4842, 535.4933,
+                535.4933, 555.5024,
+                555.5024, 575.5115,
+                485.4706, 505.4796,
+                505.4796, 525.4887,
+                525.4887, 545.4978,
+                545.4978, 565.5069);
 
             // Overlap without window optimization. Odd window width.
             CheckWindows(() =>
@@ -240,12 +244,12 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = false;
                 },
-                495.0, 498.0, null, null, null,
-                498.0, 501.0, null, null, null,
-                501.0, 504.0, null, null, null,
-                493.5, 496.5, null, null, null,
-                496.5, 499.5, null, null, null,
-                499.5, 502.5, null, null, null);
+                495.0, 498.0,
+                498.0, 501.0,
+                501.0, 504.0,
+                493.5, 496.5,
+                496.5, 499.5,
+                499.5, 502.5);
 
             // Overlap with window optimization. Odd window width.
             CheckWindows(() =>
@@ -257,12 +261,12 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                495.4751, 498.4765, null, null, null,
-                498.4765, 501.4778, null, null, null,
-                501.4778, 504.4792, null, null, null,
-                494.4746, 497.4760, null, null, null,
-                497.4760, 500.4774, null, null, null,
-                500.4774, 503.4787, null, null, null);
+                495.4751, 498.4765,
+                498.4765, 501.4778,
+                501.4778, 504.4792,
+                494.4746, 497.4760,
+                497.4760, 500.4774,
+                500.4774, 503.4787);
 
             // Four windows that fit exactly.
             CheckWindows(() =>
@@ -271,14 +275,12 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 100;
                     _calcDlg.End = 200;
                     _calcDlg.WindowWidth = 25;
-                    _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
                     _calcDlg.MarginLeft = 1;
-                    _calcDlg.MarginRight = 2;
                 },
-                100, 125, null, 1, 2,
-                125, 150, null, 1, 2,
-                150, 175, null, 1, 2,
-                175, 200, null, 1, 2);
+                100, 125, 1,
+                125, 150, 1,
+                150, 175, 1,
+                175, 200, 1);
 
             // Four windows that don't fit exactly.
             CheckWindows(() =>
@@ -287,13 +289,12 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 100;
                     _calcDlg.End = 200;
                     _calcDlg.WindowWidth = 33;
-                    _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
                     _calcDlg.MarginLeft = 1;
                 },
-                100, 133, null, 1, null,
-                133, 166, null, 1, null,
-                166, 199, null, 1, null,
-                199, 232, null, 1, null);
+                100, 133, 1,
+                133, 166, 1,
+                166, 199, 1,
+                199, 232, 1);
 
             // One optimized window.
             CheckWindows(() =>
@@ -303,7 +304,7 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.WindowWidth = 1;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
-                100.2955, 101.2959, null, null, null);
+                100.2955, 101.2959);
 
             // More than max number of windows.
             RunUI(() =>
@@ -314,9 +315,8 @@ namespace pwiz.SkylineTestFunctional
 
                     // Cover miscellaneous Get methods.
                     string x = _calcDlg.Start + _calcDlg.End + _calcDlg.WindowWidth +
-                        _calcDlg.Margins + _calcDlg.MarginLeft + _calcDlg.MarginRight;
-                    bool t = _calcDlg.GenerateTarget;
-                    Assert.IsTrue(t || x != null); // Just using these variables so ReSharper won't complain.
+                        _calcDlg.MarginLeft.ToString();
+                    Assert.IsTrue(x != null); // Just using this so ReSharper won't complain.
                 });
 
             // Cancel all dialogs to conclude test.
@@ -351,15 +351,22 @@ namespace pwiz.SkylineTestFunctional
                 {
                     act();
                     var isolationWindows = _calcDlg.IsolationWindows;
-                    Assert.AreEqual(isolationWindows.Count*5, args.Length, "Expected {0} isolation windows, but got {1}.", args.Length / 5, isolationWindows.Count);
+                    var expectedColumns = 2;
+                    if (_calcDlg.MarginLeft.HasValue)
+                        expectedColumns++;
+                    if (_calcDlg.CERange.HasValue)
+                        expectedColumns++;
+                    Assert.AreEqual(isolationWindows.Count * expectedColumns, args.Length, 
+                        "Expected {0} isolation windows, but got {1}.", args.Length / expectedColumns, isolationWindows.Count);
                     int i = 0;
                     foreach (var window in isolationWindows)
                     {
                         CheckValue(window.Start, args[i++], "Start");
                         CheckValue(window.End, args[i++], "End");
-                        CheckValue(window.Target, args[i++], "Target");
-                        CheckValue(window.StartMargin, args[i++], "Start margin");
-                        CheckValue(window.EndMargin, args[i++], "End margin");
+                        if (_calcDlg.MarginLeft.HasValue)
+                            CheckValue(window.StartMargin, args[i++], "Start margin");
+                        if (_calcDlg.CERange.HasValue)
+                            CheckValue(window.CERange, args[i++], "CE Range");
                     }
                 });
 

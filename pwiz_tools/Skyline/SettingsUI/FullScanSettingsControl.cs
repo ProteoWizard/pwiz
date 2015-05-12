@@ -647,6 +647,12 @@ namespace pwiz.Skyline.SettingsUI
             comboIsolationScheme.Focus();
         }
 
+        public string IsolationSchemeName
+        {
+            get { return _driverIsolationScheme.Combo.SelectedItem.ToString(); }
+            set { _driverIsolationScheme.Combo.SelectedItem = value; }
+        }
+
         public bool ValidateProductRes(MessageBoxHelper helper, out double? productRes, TabControl tabControl = null, int tabIndex = -1)
         {
             FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;

@@ -8292,6 +8292,18 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <data name="ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter" xml:space="preserve">
     <value>Unexpected response {0} from Shimadzu method converter</value>
   </data>
+  <data name="IsolationSchemeList_GetDefaults_SWATH__15_m_z_" xml:space="preserve">
+    <value>SWATH (15 m/z)</value>
+  </data>
+  <data name="IsolationSchemeList_GetDefaults_SWATH__25_m_z_" xml:space="preserve">
+    <value>SWATH (25 m/z)</value>
+  </data>
+  <data name="IsolationSchemeList_GetDefaults_SWATH__VW_64_" xml:space="preserve">
+    <value>SWATH (VW 64)</value>
+  </data>
+  <data name="IsolationSchemeList_GetDefaults_SWATH__VW_100_" xml:space="preserve">
+    <value>SWATH (VW 100)</value>
+  </data>
     <data name="ExportMethodDlg_OkDialog_The_DIA_isolation_list_must_have_prespecified_windows_" xml:space="preserve">
     <value>The DIA isolation list must have prespecified windows.</value>
   </data>

@@ -59,6 +59,13 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
+        public bool IsZeroOrEmpty(TextBox control)
+        {
+            double value;
+            return string.IsNullOrWhiteSpace(control.Text) ||
+                   (double.TryParse(control.Text, out value) && Equals(value, 0.0));
+        }
+
         public bool ValidateDecimalTextBox(TextBox control, out double val)
         {
             bool valid = false;

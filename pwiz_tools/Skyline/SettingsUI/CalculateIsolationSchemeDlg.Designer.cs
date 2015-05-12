@@ -36,14 +36,10 @@
             this.textWindowsPerScan = new System.Windows.Forms.TextBox();
             this.labelWindowsPerScan = new System.Windows.Forms.Label();
             this.labelWindowCount = new System.Windows.Forms.Label();
-            this.cbGenerateMethodTarget = new System.Windows.Forms.CheckBox();
             this.cbOptimizeWindowPlacement = new System.Windows.Forms.CheckBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.textMarginRight = new System.Windows.Forms.TextBox();
-            this.textMarginLeft = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
+            this.textMargin = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.comboMargins = new System.Windows.Forms.ComboBox();
             this.textWidth = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.textEnd = new System.Windows.Forms.TextBox();
@@ -52,6 +48,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.comboDeconv = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.textCERange = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnOk
@@ -98,12 +96,6 @@
             this.labelWindowCount.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.labelWindowCount.Name = "labelWindowCount";
             // 
-            // cbGenerateMethodTarget
-            // 
-            resources.ApplyResources(this.cbGenerateMethodTarget, "cbGenerateMethodTarget");
-            this.cbGenerateMethodTarget.Name = "cbGenerateMethodTarget";
-            this.cbGenerateMethodTarget.UseVisualStyleBackColor = true;
-            // 
             // cbOptimizeWindowPlacement
             // 
             resources.ApplyResources(this.cbOptimizeWindowPlacement, "cbOptimizeWindowPlacement");
@@ -117,35 +109,16 @@
             this.label8.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.label8.Name = "label8";
             // 
-            // textMarginRight
+            // textMargin
             // 
-            resources.ApplyResources(this.textMarginRight, "textMarginRight");
-            this.textMarginRight.Name = "textMarginRight";
-            this.textMarginRight.TextChanged += new System.EventHandler(this.textMarginRight_TextChanged);
-            // 
-            // textMarginLeft
-            // 
-            resources.ApplyResources(this.textMarginLeft, "textMarginLeft");
-            this.textMarginLeft.Name = "textMarginLeft";
-            this.textMarginLeft.TextChanged += new System.EventHandler(this.textMarginLeft_TextChanged);
-            // 
-            // label5
-            // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
+            resources.ApplyResources(this.textMargin, "textMargin");
+            this.textMargin.Name = "textMargin";
+            this.textMargin.TextChanged += new System.EventHandler(this.textMargin_TextChanged);
             // 
             // label4
             // 
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            // 
-            // comboMargins
-            // 
-            resources.ApplyResources(this.comboMargins, "comboMargins");
-            this.comboMargins.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboMargins.FormattingEnabled = true;
-            this.comboMargins.Name = "comboMargins";
-            this.comboMargins.SelectedIndexChanged += new System.EventHandler(this.comboMargins_SelectedIndexChanged);
             // 
             // textWidth
             // 
@@ -193,12 +166,24 @@
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
             // 
+            // textCERange
+            // 
+            resources.ApplyResources(this.textCERange, "textCERange");
+            this.textCERange.Name = "textCERange";
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
             // CalculateIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textCERange);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.comboDeconv);
             this.Controls.Add(this.comboWindowType);
@@ -206,14 +191,10 @@
             this.Controls.Add(this.textWindowsPerScan);
             this.Controls.Add(this.labelWindowsPerScan);
             this.Controls.Add(this.labelWindowCount);
-            this.Controls.Add(this.cbGenerateMethodTarget);
             this.Controls.Add(this.cbOptimizeWindowPlacement);
             this.Controls.Add(this.label8);
-            this.Controls.Add(this.textMarginRight);
-            this.Controls.Add(this.textMarginLeft);
-            this.Controls.Add(this.label5);
+            this.Controls.Add(this.textMargin);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.comboMargins);
             this.Controls.Add(this.textWidth);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textEnd);
@@ -242,14 +223,10 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textWidth;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ComboBox comboMargins;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox textMarginLeft;
-        private System.Windows.Forms.TextBox textMarginRight;
+        private System.Windows.Forms.TextBox textMargin;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.CheckBox cbOptimizeWindowPlacement;
-        private System.Windows.Forms.CheckBox cbGenerateMethodTarget;
         private System.Windows.Forms.Label labelWindowCount;
         private System.Windows.Forms.TextBox textWindowsPerScan;
         private System.Windows.Forms.Label labelWindowsPerScan;
@@ -257,5 +234,7 @@
         private System.Windows.Forms.ComboBox comboWindowType;
         private System.Windows.Forms.ComboBox comboDeconv;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox textCERange;
+        private System.Windows.Forms.Label label5;
     }
 }

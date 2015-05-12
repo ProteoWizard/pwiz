@@ -24,9 +24,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 
 namespace pwiz.SkylineTestUtil
@@ -99,6 +101,16 @@ namespace pwiz.SkylineTestUtil
                        librarySettings.Libraries.Count > 0 &&
                        librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
             });
+        }
+
+        public TransitionSettingsUI ShowTransitionSettings(TransitionSettingsUI.TABS tab)
+        {
+            var fullScanDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                fullScanDlg.SelectedTab = tab;
+            });
+            return fullScanDlg;
         }
 
         /// <summary>

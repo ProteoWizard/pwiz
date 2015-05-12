@@ -682,6 +682,7 @@ namespace pwiz.Skyline.Util
             // 'sb' needs >0 size else GetTempFileName throws IndexOutOfRangeException.  260 is the most you'd want.
             StringBuilder sb = new StringBuilder(260);
 
+            Directory.CreateDirectory(basePath);
             uint result = GetTempFileName(basePath, prefix, unique, sb);
             if (result == 0)
             {

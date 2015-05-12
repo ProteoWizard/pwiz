@@ -28,19 +28,7 @@ namespace pwiz.Skyline.SettingsUI
         public double? Target { get; set; }
         public double? StartMargin { get; set; }
         public double? EndMargin { get; set; }
-
-        public EditIsolationWindow()
-        {
-        }
-
-        public EditIsolationWindow(IsolationWindow window)
-        {
-            Start = window.Start;
-            End = window.End;
-            Target = window.Target;
-            StartMargin = window.StartMargin;
-            EndMargin = window.EndMargin;
-        }
+        public double? CERange { get; set; }
 
         public void Validate()
         {

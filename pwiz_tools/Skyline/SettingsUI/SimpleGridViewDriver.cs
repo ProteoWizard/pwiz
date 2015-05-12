@@ -85,6 +85,11 @@ namespace pwiz.Skyline.SettingsUI
 
         protected abstract void DoPaste();
 
+        public bool IsColumnVisible(int col)
+        {
+            return _gridView.Columns[col].Visible;
+        }
+
         public string GetCellValue(int col, int row)
         {
             var cellValue = _gridView[col, row].Value;

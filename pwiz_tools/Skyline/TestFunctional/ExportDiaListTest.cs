@@ -181,7 +181,6 @@ namespace pwiz.SkylineTestFunctional
                         calcDlg.End = 600;
                         calcDlg.WindowWidth = 20;
                         calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
-                        calcDlg.GenerateTarget = true;
                         calcDlg.OkDialog();
                     });
                 OkDialog(editDlg, editDlg.OkDialog);

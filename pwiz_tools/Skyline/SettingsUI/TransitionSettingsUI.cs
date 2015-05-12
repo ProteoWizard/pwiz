@@ -944,6 +944,12 @@ namespace pwiz.Skyline.SettingsUI
             listAlwaysAdd.SetItemChecked(index, check);
         }
 
+        public string IsolationSchemeName
+        {
+            get { return FullScanSettingsControl.IsolationSchemeName; }
+            set { FullScanSettingsControl.IsolationSchemeName = value; }
+        }
+
         public bool ValidateIonCheckBoxes(IList<CheckState> predictedValues)
         {
             return !predictedValues.Where((t, i) => _driverIons.CheckedListBox.GetItemCheckState(i) != t).Any();
