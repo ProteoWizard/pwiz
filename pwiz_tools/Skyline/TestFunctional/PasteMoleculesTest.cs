@@ -334,7 +334,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify small molecule handling in Document Grid
                 RunUI(() => SkylineWindow.ShowDocumentGrid(true));
                 DocumentGridForm documentGrid = WaitForOpenForm<DocumentGridForm>();
-                RunUI(() => documentGrid.ChooseView("Transitions"));
+                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions));
                 WaitForCondition(() => (documentGrid.RowCount == 32));  // Let it initialize
 
                 // Simulate user editing the transition in the document grid
@@ -345,7 +345,7 @@ namespace pwiz.SkylineTestFunctional
                   SkylineWindow.Document.MoleculeTransitions.First().Note.Equals(noteText)));
 
                 // Simulate user editing the peptide in the document grid
-                RunUI(() => documentGrid.ChooseView("Peptides"));
+                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
                 WaitForCondition(() => (documentGrid.RowCount == 8));  // Let it initialize
                 const double explicitRT = 123.45;
                 var colRT = documentGrid.FindColumn(PropertyPath.Parse("ExplicitRetentionTime"));
@@ -360,7 +360,7 @@ namespace pwiz.SkylineTestFunctional
                   SkylineWindow.Document.Molecules.First().ExplicitRetentionTime.RetentionTimeWindow.Equals(explicitRTWindow)));
 
                 // Simulate user editing the precursor in the document grid
-                RunUI(() => documentGrid.ChooseView("Precursors"));
+                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
                 WaitForCondition(() => (documentGrid.RowCount == 16));  // Let it initialize
                 const double explicitCE = 123.45;
                 var colCE = documentGrid.FindColumn(PropertyPath.Parse("ExplicitCollisionEnergy"));
