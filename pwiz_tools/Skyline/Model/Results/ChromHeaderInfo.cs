@@ -1002,7 +1002,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static short To10x(double f)
         {
-            return (short) (f*10 + 0.5);
+            return (short) Math.Round(f*10);
         }
 
         public ChromPeak(CrawdadPeak peak,
