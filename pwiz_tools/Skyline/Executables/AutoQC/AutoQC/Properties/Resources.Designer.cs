@@ -73,6 +73,16 @@ namespace AutoQC.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap orangestatus {
+            get {
+                object obj = ResourceManager.GetObject("orangestatus", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap redstatus {
             get {
                 object obj = ResourceManager.GetObject("redstatus", resourceCulture);

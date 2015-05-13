@@ -28,24 +28,40 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AutoQc));
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabRunSetup = new System.Windows.Forms.TabPage();
-            this.comboBoxType = new System.Windows.Forms.ComboBox();
-            this.labelType = new System.Windows.Forms.Label();
-            this.labelNumberOfRows = new System.Windows.Forms.Label();
-            this.textBoxNewRows = new System.Windows.Forms.TextBox();
-            this.btnAddRows = new System.Windows.Forms.Button();
-            this.runGridView = new System.Windows.Forms.DataGridView();
-            this.Type = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.ColumnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.buttonClear = new System.Windows.Forms.Button();
-            this.statusImg = new System.Windows.Forms.PictureBox();
-            this.labelStatus = new System.Windows.Forms.Label();
-            this.textBoxLog = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.btnRunSprocopAuto = new System.Windows.Forms.Button();
             this.tabSettings = new System.Windows.Forms.TabPage();
+            this.buttonRun = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.labelDays = new System.Windows.Forms.Label();
+            this.textAccumulationTimeWindow = new System.Windows.Forms.TextBox();
+            this.labelAccumulationTimeWindow = new System.Windows.Forms.Label();
+            this.cbImportExistingFiles = new System.Windows.Forms.CheckBox();
+            this.labelInstrumentType = new System.Windows.Forms.Label();
+            this.comboBoxInstrumentType = new System.Windows.Forms.ComboBox();
+            this.skylineRunnerPathLabel = new System.Windows.Forms.Label();
+            this.btnFolderToWatch = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textFolderToWatchPath = new System.Windows.Forms.TextBox();
+            this.textSkylineRunnerPath = new System.Windows.Forms.TextBox();
+            this.btnSkylineFilePath = new System.Windows.Forms.Button();
+            this.textSkylinePath = new System.Windows.Forms.TextBox();
+            this.btnSkylingRunnerPath = new System.Windows.Forms.Button();
+            this.tabSprocopSettings = new System.Windows.Forms.TabPage();
+            this.cbRunsprocop = new System.Windows.Forms.CheckBox();
+            this.groupBoxSprocop = new System.Windows.Forms.GroupBox();
+            this.btnRScriptPath = new System.Windows.Forms.Button();
+            this.label10 = new System.Windows.Forms.Label();
+            this.textRScriptPath = new System.Windows.Forms.TextBox();
+            this.checkBoxIsHighRes = new System.Windows.Forms.CheckBox();
+            this.numericUpDownMMA = new System.Windows.Forms.NumericUpDown();
+            this.labelMMA = new System.Windows.Forms.Label();
+            this.labelThreshold = new System.Windows.Forms.Label();
+            this.numericUpDownThreshold = new System.Windows.Forms.NumericUpDown();
+            this.tabPanoramaSettings = new System.Windows.Forms.TabPage();
+            this.cbPublishToPanorama = new System.Windows.Forms.CheckBox();
             this.groupBoxPanorama = new System.Windows.Forms.GroupBox();
             this.labelPanoramaFolder = new System.Windows.Forms.Label();
             this.textPanoramaFolder = new System.Windows.Forms.TextBox();
@@ -55,391 +71,161 @@
             this.lblPanoramaPasswd = new System.Windows.Forms.Label();
             this.lblPanoramaEmail = new System.Windows.Forms.Label();
             this.textPanoramaEmail = new System.Windows.Forms.TextBox();
-            this.btnSave = new System.Windows.Forms.Button();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.btnRScriptPath = new System.Windows.Forms.Button();
-            this.label10 = new System.Windows.Forms.Label();
-            this.textBoxRScriptPath = new System.Windows.Forms.TextBox();
-            this.skylineRunnerPathLabel = new System.Windows.Forms.Label();
-            this.btnFolderToWatch = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.folderToWatchPath = new System.Windows.Forms.TextBox();
-            this.skylineRunnerPathInput = new System.Windows.Forms.TextBox();
-            this.btnSkylineFilePath = new System.Windows.Forms.Button();
-            this.skylineFilePath = new System.Windows.Forms.TextBox();
-            this.btnSkylingRunnerPath = new System.Windows.Forms.Button();
-            this.tabSprocopSettings = new System.Windows.Forms.TabPage();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.checkBoxIsHighRes = new System.Windows.Forms.CheckBox();
-            this.numericUpDownMMA = new System.Windows.Forms.NumericUpDown();
-            this.labelMMA = new System.Windows.Forms.Label();
-            this.labelThreshold = new System.Windows.Forms.Label();
-            this.numericUpDownThreshold = new System.Windows.Forms.NumericUpDown();
+            this.tabOutput = new System.Windows.Forms.TabPage();
+            this.labelStatusRunning = new System.Windows.Forms.Label();
+            this.buttonStop = new System.Windows.Forms.Button();
+            this.statusImg = new System.Windows.Forms.PictureBox();
+            this.textOutput = new System.Windows.Forms.RichTextBox();
             this.tabInstructions = new System.Windows.Forms.TabPage();
-            this.label5 = new System.Windows.Forms.Label();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
-            this.tabRunSetup.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.runGridView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).BeginInit();
             this.tabSettings.SuspendLayout();
-            this.groupBoxPanorama.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabSprocopSettings.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.groupBoxSprocop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMMA)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownThreshold)).BeginInit();
+            this.tabPanoramaSettings.SuspendLayout();
+            this.groupBoxPanorama.SuspendLayout();
+            this.tabOutput.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).BeginInit();
             this.tabInstructions.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabRunSetup);
             this.tabControl1.Controls.Add(this.tabSettings);
             this.tabControl1.Controls.Add(this.tabSprocopSettings);
+            this.tabControl1.Controls.Add(this.tabPanoramaSettings);
+            this.tabControl1.Controls.Add(this.tabOutput);
             this.tabControl1.Controls.Add(this.tabInstructions);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
+            this.tabControl1.Padding = new System.Drawing.Point(20, 6);
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(645, 572);
             this.tabControl1.TabIndex = 0;
             // 
-            // tabRunSetup
-            // 
-            this.tabRunSetup.Controls.Add(this.comboBoxType);
-            this.tabRunSetup.Controls.Add(this.labelType);
-            this.tabRunSetup.Controls.Add(this.labelNumberOfRows);
-            this.tabRunSetup.Controls.Add(this.textBoxNewRows);
-            this.tabRunSetup.Controls.Add(this.btnAddRows);
-            this.tabRunSetup.Controls.Add(this.runGridView);
-            this.tabRunSetup.Controls.Add(this.buttonClear);
-            this.tabRunSetup.Controls.Add(this.statusImg);
-            this.tabRunSetup.Controls.Add(this.labelStatus);
-            this.tabRunSetup.Controls.Add(this.textBoxLog);
-            this.tabRunSetup.Controls.Add(this.label7);
-            this.tabRunSetup.Controls.Add(this.btnRunSprocopAuto);
-            this.tabRunSetup.Location = new System.Drawing.Point(4, 22);
-            this.tabRunSetup.Name = "tabRunSetup";
-            this.tabRunSetup.Padding = new System.Windows.Forms.Padding(3);
-            this.tabRunSetup.Size = new System.Drawing.Size(637, 546);
-            this.tabRunSetup.TabIndex = 0;
-            this.tabRunSetup.Text = "Run  Setup";
-            this.tabRunSetup.UseVisualStyleBackColor = true;
-            // 
-            // comboBoxType
-            // 
-            this.comboBoxType.FormattingEnabled = true;
-            this.comboBoxType.Items.AddRange(new object[] {
-            "None",
-            "Threshold",
-            "QC"});
-            this.comboBoxType.Location = new System.Drawing.Point(94, 100);
-            this.comboBoxType.Name = "comboBoxType";
-            this.comboBoxType.Size = new System.Drawing.Size(92, 21);
-            this.comboBoxType.TabIndex = 67;
-            // 
-            // labelType
-            // 
-            this.labelType.AutoSize = true;
-            this.labelType.ForeColor = System.Drawing.Color.Black;
-            this.labelType.Location = new System.Drawing.Point(91, 84);
-            this.labelType.Name = "labelType";
-            this.labelType.Size = new System.Drawing.Size(55, 13);
-            this.labelType.TabIndex = 66;
-            this.labelType.Text = "Row type:";
-            // 
-            // labelNumberOfRows
-            // 
-            this.labelNumberOfRows.AutoSize = true;
-            this.labelNumberOfRows.ForeColor = System.Drawing.Color.Black;
-            this.labelNumberOfRows.Location = new System.Drawing.Point(8, 84);
-            this.labelNumberOfRows.Name = "labelNumberOfRows";
-            this.labelNumberOfRows.Size = new System.Drawing.Size(77, 13);
-            this.labelNumberOfRows.TabIndex = 65;
-            this.labelNumberOfRows.Text = "# of new rows:";
-            // 
-            // textBoxNewRows
-            // 
-            this.textBoxNewRows.Location = new System.Drawing.Point(10, 100);
-            this.textBoxNewRows.Name = "textBoxNewRows";
-            this.textBoxNewRows.Size = new System.Drawing.Size(72, 20);
-            this.textBoxNewRows.TabIndex = 64;
-            // 
-            // btnAddRows
-            // 
-            this.btnAddRows.Location = new System.Drawing.Point(192, 98);
-            this.btnAddRows.Name = "btnAddRows";
-            this.btnAddRows.Size = new System.Drawing.Size(50, 23);
-            this.btnAddRows.TabIndex = 63;
-            this.btnAddRows.Text = "Add";
-            this.btnAddRows.UseVisualStyleBackColor = true;
-            this.btnAddRows.Click += new System.EventHandler(this.buttonAddRuns_Click);
-            // 
-            // runGridView
-            // 
-            this.runGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.runGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Type,
-            this.ColumnFile});
-            this.runGridView.Location = new System.Drawing.Point(8, 125);
-            this.runGridView.Name = "runGridView";
-            this.runGridView.Size = new System.Drawing.Size(621, 200);
-            this.runGridView.TabIndex = 58;
-            this.runGridView.UserAddedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.runGridView_UserAddedRow);
-            this.runGridView.UserDeletedRow += new System.Windows.Forms.DataGridViewRowEventHandler(this.runGridView_UserDeletedRow);
-            // 
-            // Type
-            // 
-            this.Type.HeaderText = "Type";
-            this.Type.Items.AddRange(new object[] {
-            "None",
-            "Threshold",
-            "QC"});
-            this.Type.Name = "Type";
-            this.Type.Width = 210;
-            // 
-            // ColumnFile
-            // 
-            this.ColumnFile.HeaderText = "File";
-            this.ColumnFile.Name = "ColumnFile";
-            this.ColumnFile.Width = 300;
-            // 
-            // buttonClear
-            // 
-            this.buttonClear.Enabled = false;
-            this.buttonClear.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonClear.Location = new System.Drawing.Point(8, 54);
-            this.buttonClear.Name = "buttonClear";
-            this.buttonClear.Size = new System.Drawing.Size(148, 27);
-            this.buttonClear.TabIndex = 47;
-            this.buttonClear.Text = "Clear Stored Run Data";
-            this.buttonClear.UseVisualStyleBackColor = true;
-            this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
-            // 
-            // statusImg
-            // 
-            this.statusImg.Image = global::AutoQC.Properties.Resources.redstatus;
-            this.statusImg.Location = new System.Drawing.Point(599, 22);
-            this.statusImg.Name = "statusImg";
-            this.statusImg.Size = new System.Drawing.Size(30, 30);
-            this.statusImg.TabIndex = 39;
-            this.statusImg.TabStop = false;
-            // 
-            // labelStatus
-            // 
-            this.labelStatus.AutoSize = true;
-            this.labelStatus.Location = new System.Drawing.Point(222, 36);
-            this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(21, 13);
-            this.labelStatus.TabIndex = 40;
-            this.labelStatus.Text = "Off";
-            // 
-            // textBoxLog
-            // 
-            this.textBoxLog.AcceptsReturn = true;
-            this.textBoxLog.Location = new System.Drawing.Point(6, 331);
-            this.textBoxLog.Multiline = true;
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxLog.Size = new System.Drawing.Size(621, 207);
-            this.textBoxLog.TabIndex = 41;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(176, 36);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(40, 13);
-            this.label7.TabIndex = 38;
-            this.label7.Text = "Status:";
-            // 
-            // btnRunSprocopAuto
-            // 
-            this.btnRunSprocopAuto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRunSprocopAuto.Location = new System.Drawing.Point(8, 22);
-            this.btnRunSprocopAuto.Name = "btnRunSprocopAuto";
-            this.btnRunSprocopAuto.Size = new System.Drawing.Size(148, 27);
-            this.btnRunSprocopAuto.TabIndex = 37;
-            this.btnRunSprocopAuto.Text = "Run AutoQC";
-            this.btnRunSprocopAuto.UseVisualStyleBackColor = true;
-            this.btnRunSprocopAuto.Click += new System.EventHandler(this.btnRunSprocopAuto_Click);
-            // 
             // tabSettings
             // 
-            this.tabSettings.Controls.Add(this.groupBoxPanorama);
-            this.tabSettings.Controls.Add(this.btnSave);
+            this.tabSettings.BackColor = System.Drawing.Color.Transparent;
+            this.tabSettings.Controls.Add(this.buttonRun);
             this.tabSettings.Controls.Add(this.groupBox2);
-            this.tabSettings.Location = new System.Drawing.Point(4, 22);
+            this.tabSettings.Location = new System.Drawing.Point(4, 28);
+            this.tabSettings.Margin = new System.Windows.Forms.Padding(4);
             this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSettings.Size = new System.Drawing.Size(637, 546);
+            this.tabSettings.Padding = new System.Windows.Forms.Padding(4);
+            this.tabSettings.Size = new System.Drawing.Size(637, 540);
             this.tabSettings.TabIndex = 1;
             this.tabSettings.Text = "Settings";
-            this.tabSettings.UseVisualStyleBackColor = true;
             // 
-            // groupBoxPanorama
+            // buttonRun
             // 
-            this.groupBoxPanorama.Controls.Add(this.labelPanoramaFolder);
-            this.groupBoxPanorama.Controls.Add(this.textPanoramaFolder);
-            this.groupBoxPanorama.Controls.Add(this.lblPanoramaUrl);
-            this.groupBoxPanorama.Controls.Add(this.textPanoramaUrl);
-            this.groupBoxPanorama.Controls.Add(this.textPanoramaPasswd);
-            this.groupBoxPanorama.Controls.Add(this.lblPanoramaPasswd);
-            this.groupBoxPanorama.Controls.Add(this.lblPanoramaEmail);
-            this.groupBoxPanorama.Controls.Add(this.textPanoramaEmail);
-            this.groupBoxPanorama.Location = new System.Drawing.Point(8, 305);
-            this.groupBoxPanorama.Name = "groupBoxPanorama";
-            this.groupBoxPanorama.Size = new System.Drawing.Size(621, 193);
-            this.groupBoxPanorama.TabIndex = 55;
-            this.groupBoxPanorama.TabStop = false;
-            this.groupBoxPanorama.Text = "Panorama";
-            // 
-            // labelPanoramaFolder
-            // 
-            this.labelPanoramaFolder.AutoSize = true;
-            this.labelPanoramaFolder.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.labelPanoramaFolder.Location = new System.Drawing.Point(6, 135);
-            this.labelPanoramaFolder.Name = "labelPanoramaFolder";
-            this.labelPanoramaFolder.Size = new System.Drawing.Size(201, 13);
-            this.labelPanoramaFolder.TabIndex = 13;
-            this.labelPanoramaFolder.Text = "Folder on Panorama (e.g. /MacCoss/QC)";
-            // 
-            // textPanoramaFolder
-            // 
-            this.textPanoramaFolder.Location = new System.Drawing.Point(9, 151);
-            this.textPanoramaFolder.Name = "textPanoramaFolder";
-            this.textPanoramaFolder.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textPanoramaFolder.Size = new System.Drawing.Size(512, 20);
-            this.textPanoramaFolder.TabIndex = 14;
-            // 
-            // lblPanoramaUrl
-            // 
-            this.lblPanoramaUrl.AutoSize = true;
-            this.lblPanoramaUrl.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.lblPanoramaUrl.Location = new System.Drawing.Point(6, 24);
-            this.lblPanoramaUrl.Name = "lblPanoramaUrl";
-            this.lblPanoramaUrl.Size = new System.Drawing.Size(188, 13);
-            this.lblPanoramaUrl.TabIndex = 7;
-            this.lblPanoramaUrl.Text = "URL (e.g. https://panoramaweb.org/):";
-            // 
-            // textPanoramaUrl
-            // 
-            this.textPanoramaUrl.Location = new System.Drawing.Point(9, 40);
-            this.textPanoramaUrl.Name = "textPanoramaUrl";
-            this.textPanoramaUrl.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textPanoramaUrl.Size = new System.Drawing.Size(512, 20);
-            this.textPanoramaUrl.TabIndex = 8;
-            // 
-            // textPanoramaPasswd
-            // 
-            this.textPanoramaPasswd.Location = new System.Drawing.Point(244, 93);
-            this.textPanoramaPasswd.Name = "textPanoramaPasswd";
-            this.textPanoramaPasswd.PasswordChar = '*';
-            this.textPanoramaPasswd.Size = new System.Drawing.Size(207, 20);
-            this.textPanoramaPasswd.TabIndex = 12;
-            this.textPanoramaPasswd.UseSystemPasswordChar = true;
-            // 
-            // lblPanoramaPasswd
-            // 
-            this.lblPanoramaPasswd.AutoSize = true;
-            this.lblPanoramaPasswd.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.lblPanoramaPasswd.Location = new System.Drawing.Point(241, 73);
-            this.lblPanoramaPasswd.Name = "lblPanoramaPasswd";
-            this.lblPanoramaPasswd.Size = new System.Drawing.Size(56, 13);
-            this.lblPanoramaPasswd.TabIndex = 11;
-            this.lblPanoramaPasswd.Text = "Password:";
-            // 
-            // lblPanoramaEmail
-            // 
-            this.lblPanoramaEmail.AutoSize = true;
-            this.lblPanoramaEmail.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.lblPanoramaEmail.Location = new System.Drawing.Point(6, 75);
-            this.lblPanoramaEmail.Name = "lblPanoramaEmail";
-            this.lblPanoramaEmail.Size = new System.Drawing.Size(35, 13);
-            this.lblPanoramaEmail.TabIndex = 9;
-            this.lblPanoramaEmail.Text = "Email:";
-            // 
-            // textPanoramaEmail
-            // 
-            this.textPanoramaEmail.Location = new System.Drawing.Point(9, 93);
-            this.textPanoramaEmail.Name = "textPanoramaEmail";
-            this.textPanoramaEmail.Size = new System.Drawing.Size(207, 20);
-            this.textPanoramaEmail.TabIndex = 10;
-            // 
-            // btnSave
-            // 
-            this.btnSave.BackColor = System.Drawing.Color.Tomato;
-            this.btnSave.Location = new System.Drawing.Point(243, 504);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(126, 23);
-            this.btnSave.TabIndex = 54;
-            this.btnSave.Text = "Save Settings";
-            this.btnSave.UseVisualStyleBackColor = false;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            this.buttonRun.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonRun.Location = new System.Drawing.Point(243, 437);
+            this.buttonRun.Name = "buttonRun";
+            this.buttonRun.Size = new System.Drawing.Size(148, 27);
+            this.buttonRun.TabIndex = 56;
+            this.buttonRun.Text = "Run AutoQC";
+            this.buttonRun.UseVisualStyleBackColor = true;
+            this.buttonRun.Click += new System.EventHandler(this.btnRunAutoQC_Click);
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.btnRScriptPath);
-            this.groupBox2.Controls.Add(this.label10);
-            this.groupBox2.Controls.Add(this.textBoxRScriptPath);
+            this.groupBox2.Controls.Add(this.labelDays);
+            this.groupBox2.Controls.Add(this.textAccumulationTimeWindow);
+            this.groupBox2.Controls.Add(this.labelAccumulationTimeWindow);
+            this.groupBox2.Controls.Add(this.cbImportExistingFiles);
+            this.groupBox2.Controls.Add(this.labelInstrumentType);
+            this.groupBox2.Controls.Add(this.comboBoxInstrumentType);
             this.groupBox2.Controls.Add(this.skylineRunnerPathLabel);
             this.groupBox2.Controls.Add(this.btnFolderToWatch);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.label3);
-            this.groupBox2.Controls.Add(this.folderToWatchPath);
-            this.groupBox2.Controls.Add(this.skylineRunnerPathInput);
+            this.groupBox2.Controls.Add(this.textFolderToWatchPath);
+            this.groupBox2.Controls.Add(this.textSkylineRunnerPath);
             this.groupBox2.Controls.Add(this.btnSkylineFilePath);
-            this.groupBox2.Controls.Add(this.skylineFilePath);
+            this.groupBox2.Controls.Add(this.textSkylinePath);
             this.groupBox2.Controls.Add(this.btnSkylingRunnerPath);
             this.groupBox2.Location = new System.Drawing.Point(8, 16);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(621, 256);
+            this.groupBox2.Size = new System.Drawing.Size(621, 390);
             this.groupBox2.TabIndex = 53;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "System Paths";
             // 
-            // btnRScriptPath
+            // labelDays
             // 
-            this.btnRScriptPath.Location = new System.Drawing.Point(541, 206);
-            this.btnRScriptPath.Name = "btnRScriptPath";
-            this.btnRScriptPath.Size = new System.Drawing.Size(29, 23);
-            this.btnRScriptPath.TabIndex = 53;
-            this.btnRScriptPath.Text = "...";
-            this.btnRScriptPath.UseVisualStyleBackColor = true;
-            this.btnRScriptPath.Click += new System.EventHandler(this.btnRScriptPath_Click);
+            this.labelDays.AutoSize = true;
+            this.labelDays.Location = new System.Drawing.Point(128, 263);
+            this.labelDays.Name = "labelDays";
+            this.labelDays.Size = new System.Drawing.Size(29, 13);
+            this.labelDays.TabIndex = 56;
+            this.labelDays.Text = "days";
             // 
-            // label10
+            // textAccumulationTimeWindow
             // 
-            this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(6, 188);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(144, 15);
-            this.label10.TabIndex = 51;
-            this.label10.Text = "R(3.0.2) RScript.exe path";
+            this.textAccumulationTimeWindow.Location = new System.Drawing.Point(21, 260);
+            this.textAccumulationTimeWindow.Name = "textAccumulationTimeWindow";
+            this.textAccumulationTimeWindow.Size = new System.Drawing.Size(100, 20);
+            this.textAccumulationTimeWindow.TabIndex = 55;
             // 
-            // textBoxRScriptPath
+            // labelAccumulationTimeWindow
             // 
-            this.textBoxRScriptPath.Location = new System.Drawing.Point(7, 209);
-            this.textBoxRScriptPath.Name = "textBoxRScriptPath";
-            this.textBoxRScriptPath.Size = new System.Drawing.Size(514, 20);
-            this.textBoxRScriptPath.TabIndex = 52;
+            this.labelAccumulationTimeWindow.AutoSize = true;
+            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 244);
+            this.labelAccumulationTimeWindow.Name = "labelAccumulationTimeWindow";
+            this.labelAccumulationTimeWindow.Size = new System.Drawing.Size(135, 13);
+            this.labelAccumulationTimeWindow.TabIndex = 54;
+            this.labelAccumulationTimeWindow.Text = "Accumulation time window:";
+            // 
+            // cbImportExistingFiles
+            // 
+            this.cbImportExistingFiles.AutoSize = true;
+            this.cbImportExistingFiles.Checked = true;
+            this.cbImportExistingFiles.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbImportExistingFiles.Location = new System.Drawing.Point(21, 194);
+            this.cbImportExistingFiles.Name = "cbImportExistingFiles";
+            this.cbImportExistingFiles.Size = new System.Drawing.Size(210, 17);
+            this.cbImportExistingFiles.TabIndex = 53;
+            this.cbImportExistingFiles.Text = "Import existing mass spec. files in folder";
+            this.cbImportExistingFiles.UseVisualStyleBackColor = true;
+            // 
+            // labelInstrumentType
+            // 
+            this.labelInstrumentType.AutoSize = true;
+            this.labelInstrumentType.Location = new System.Drawing.Point(20, 310);
+            this.labelInstrumentType.Name = "labelInstrumentType";
+            this.labelInstrumentType.Size = new System.Drawing.Size(82, 13);
+            this.labelInstrumentType.TabIndex = 52;
+            this.labelInstrumentType.Text = "Instrument type:";
+            // 
+            // comboBoxInstrumentType
+            // 
+            this.comboBoxInstrumentType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxInstrumentType.FormattingEnabled = true;
+            this.comboBoxInstrumentType.Items.AddRange(new object[] {
+            "Thermo"});
+            this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 326);
+            this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
+            this.comboBoxInstrumentType.Size = new System.Drawing.Size(163, 21);
+            this.comboBoxInstrumentType.TabIndex = 51;
             // 
             // skylineRunnerPathLabel
             // 
             this.skylineRunnerPathLabel.AutoSize = true;
             this.skylineRunnerPathLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.skylineRunnerPathLabel.ForeColor = System.Drawing.SystemColors.Desktop;
-            this.skylineRunnerPathLabel.Location = new System.Drawing.Point(6, 20);
+            this.skylineRunnerPathLabel.Location = new System.Drawing.Point(20, 35);
             this.skylineRunnerPathLabel.Name = "skylineRunnerPathLabel";
-            this.skylineRunnerPathLabel.Size = new System.Drawing.Size(121, 15);
+            this.skylineRunnerPathLabel.Size = new System.Drawing.Size(117, 15);
             this.skylineRunnerPathLabel.TabIndex = 27;
-            this.skylineRunnerPathLabel.Text = "Skyline Runner Path:";
+            this.skylineRunnerPathLabel.Text = "SkylineRunner path:";
             // 
             // btnFolderToWatch
             // 
-            this.btnFolderToWatch.Location = new System.Drawing.Point(541, 150);
+            this.btnFolderToWatch.Location = new System.Drawing.Point(555, 162);
             this.btnFolderToWatch.Name = "btnFolderToWatch";
             this.btnFolderToWatch.Size = new System.Drawing.Size(29, 23);
             this.btnFolderToWatch.TabIndex = 50;
@@ -451,39 +237,41 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(6, 77);
+            this.label2.Location = new System.Drawing.Point(20, 91);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(97, 15);
+            this.label2.Size = new System.Drawing.Size(92, 15);
             this.label2.TabIndex = 28;
-            this.label2.Text = "Skyline File Path";
+            this.label2.Text = "Skyline file path";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(6, 132);
+            this.label3.Location = new System.Drawing.Point(20, 147);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(92, 15);
+            this.label3.Size = new System.Drawing.Size(90, 15);
             this.label3.TabIndex = 29;
-            this.label3.Text = "Folder to Watch";
+            this.label3.Text = "Folder to watch";
             // 
-            // folderToWatchPath
+            // textFolderToWatchPath
             // 
-            this.folderToWatchPath.Location = new System.Drawing.Point(7, 153);
-            this.folderToWatchPath.Name = "folderToWatchPath";
-            this.folderToWatchPath.Size = new System.Drawing.Size(514, 20);
-            this.folderToWatchPath.TabIndex = 30;
+            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 165);
+            this.textFolderToWatchPath.Name = "textFolderToWatchPath";
+            this.textFolderToWatchPath.Size = new System.Drawing.Size(514, 20);
+            this.textFolderToWatchPath.TabIndex = 30;
+            this.toolTip1.SetToolTip(this.textFolderToWatchPath, "Path to the folder where the instrument will write QC acquisition files");
             // 
-            // skylineRunnerPathInput
+            // textSkylineRunnerPath
             // 
-            this.skylineRunnerPathInput.Location = new System.Drawing.Point(7, 38);
-            this.skylineRunnerPathInput.Name = "skylineRunnerPathInput";
-            this.skylineRunnerPathInput.Size = new System.Drawing.Size(514, 20);
-            this.skylineRunnerPathInput.TabIndex = 31;
+            this.textSkylineRunnerPath.Location = new System.Drawing.Point(21, 53);
+            this.textSkylineRunnerPath.Name = "textSkylineRunnerPath";
+            this.textSkylineRunnerPath.Size = new System.Drawing.Size(514, 20);
+            this.textSkylineRunnerPath.TabIndex = 31;
+            this.toolTip1.SetToolTip(this.textSkylineRunnerPath, "Path to the SkylineRunner executable\r\n");
             // 
             // btnSkylineFilePath
             // 
-            this.btnSkylineFilePath.Location = new System.Drawing.Point(541, 94);
+            this.btnSkylineFilePath.Location = new System.Drawing.Point(555, 108);
             this.btnSkylineFilePath.Name = "btnSkylineFilePath";
             this.btnSkylineFilePath.Size = new System.Drawing.Size(29, 23);
             this.btnSkylineFilePath.TabIndex = 46;
@@ -491,16 +279,17 @@
             this.btnSkylineFilePath.UseVisualStyleBackColor = true;
             this.btnSkylineFilePath.Click += new System.EventHandler(this.btnSkylineFilePath_Click);
             // 
-            // skylineFilePath
+            // textSkylinePath
             // 
-            this.skylineFilePath.Location = new System.Drawing.Point(7, 95);
-            this.skylineFilePath.Name = "skylineFilePath";
-            this.skylineFilePath.Size = new System.Drawing.Size(514, 20);
-            this.skylineFilePath.TabIndex = 32;
+            this.textSkylinePath.Location = new System.Drawing.Point(21, 109);
+            this.textSkylinePath.Name = "textSkylinePath";
+            this.textSkylinePath.Size = new System.Drawing.Size(514, 20);
+            this.textSkylinePath.TabIndex = 32;
+            this.toolTip1.SetToolTip(this.textSkylinePath, "Path to a Skyline docuement where results will be imported");
             // 
             // btnSkylingRunnerPath
             // 
-            this.btnSkylingRunnerPath.Location = new System.Drawing.Point(541, 37);
+            this.btnSkylingRunnerPath.Location = new System.Drawing.Point(555, 52);
             this.btnSkylingRunnerPath.Name = "btnSkylingRunnerPath";
             this.btnSkylingRunnerPath.Size = new System.Drawing.Size(29, 23);
             this.btnSkylingRunnerPath.TabIndex = 45;
@@ -510,43 +299,85 @@
             // 
             // tabSprocopSettings
             // 
-            this.tabSprocopSettings.Controls.Add(this.groupBox1);
-            this.tabSprocopSettings.Location = new System.Drawing.Point(4, 22);
+            this.tabSprocopSettings.Controls.Add(this.cbRunsprocop);
+            this.tabSprocopSettings.Controls.Add(this.groupBoxSprocop);
+            this.tabSprocopSettings.Location = new System.Drawing.Point(4, 28);
             this.tabSprocopSettings.Name = "tabSprocopSettings";
             this.tabSprocopSettings.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSprocopSettings.Size = new System.Drawing.Size(637, 546);
+            this.tabSprocopSettings.Size = new System.Drawing.Size(637, 540);
             this.tabSprocopSettings.TabIndex = 3;
             this.tabSprocopSettings.Text = "SProCoP Settings";
             this.tabSprocopSettings.UseVisualStyleBackColor = true;
             // 
-            // groupBox1
+            // cbRunsprocop
             // 
-            this.groupBox1.Controls.Add(this.checkBoxIsHighRes);
-            this.groupBox1.Controls.Add(this.numericUpDownMMA);
-            this.groupBox1.Controls.Add(this.labelMMA);
-            this.groupBox1.Controls.Add(this.labelThreshold);
-            this.groupBox1.Controls.Add(this.numericUpDownThreshold);
-            this.groupBox1.Location = new System.Drawing.Point(19, 21);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(283, 147);
-            this.groupBox1.TabIndex = 53;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "SProCoP";
+            this.cbRunsprocop.AutoSize = true;
+            this.cbRunsprocop.Location = new System.Drawing.Point(19, 36);
+            this.cbRunsprocop.Name = "cbRunsprocop";
+            this.cbRunsprocop.Size = new System.Drawing.Size(92, 17);
+            this.cbRunsprocop.TabIndex = 54;
+            this.cbRunsprocop.Text = "Run SProCoP";
+            this.cbRunsprocop.UseVisualStyleBackColor = true;
+            this.cbRunsprocop.CheckedChanged += new System.EventHandler(this.cbRunsprocop_CheckedChanged);
+            // 
+            // groupBoxSprocop
+            // 
+            this.groupBoxSprocop.Controls.Add(this.btnRScriptPath);
+            this.groupBoxSprocop.Controls.Add(this.label10);
+            this.groupBoxSprocop.Controls.Add(this.textRScriptPath);
+            this.groupBoxSprocop.Controls.Add(this.checkBoxIsHighRes);
+            this.groupBoxSprocop.Controls.Add(this.numericUpDownMMA);
+            this.groupBoxSprocop.Controls.Add(this.labelMMA);
+            this.groupBoxSprocop.Controls.Add(this.labelThreshold);
+            this.groupBoxSprocop.Controls.Add(this.numericUpDownThreshold);
+            this.groupBoxSprocop.Location = new System.Drawing.Point(19, 74);
+            this.groupBoxSprocop.Name = "groupBoxSprocop";
+            this.groupBoxSprocop.Size = new System.Drawing.Size(564, 239);
+            this.groupBoxSprocop.TabIndex = 53;
+            this.groupBoxSprocop.TabStop = false;
+            this.groupBoxSprocop.Text = "SProCoP";
+            // 
+            // btnRScriptPath
+            // 
+            this.btnRScriptPath.Location = new System.Drawing.Point(513, 181);
+            this.btnRScriptPath.Name = "btnRScriptPath";
+            this.btnRScriptPath.Size = new System.Drawing.Size(29, 23);
+            this.btnRScriptPath.TabIndex = 59;
+            this.btnRScriptPath.Text = "...";
+            this.btnRScriptPath.UseVisualStyleBackColor = true;
+            this.btnRScriptPath.Click += new System.EventHandler(this.btnRScriptPath_Click);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label10.Location = new System.Drawing.Point(14, 164);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(144, 15);
+            this.label10.TabIndex = 57;
+            this.label10.Text = "R(3.0.2) RScript.exe path";
+            // 
+            // textRScriptPath
+            // 
+            this.textRScriptPath.Location = new System.Drawing.Point(15, 183);
+            this.textRScriptPath.Name = "textRScriptPath";
+            this.textRScriptPath.Size = new System.Drawing.Size(477, 20);
+            this.textRScriptPath.TabIndex = 58;
             // 
             // checkBoxIsHighRes
             // 
             this.checkBoxIsHighRes.AutoSize = true;
             this.checkBoxIsHighRes.ForeColor = System.Drawing.Color.Black;
-            this.checkBoxIsHighRes.Location = new System.Drawing.Point(12, 67);
+            this.checkBoxIsHighRes.Location = new System.Drawing.Point(18, 81);
             this.checkBoxIsHighRes.Name = "checkBoxIsHighRes";
-            this.checkBoxIsHighRes.Size = new System.Drawing.Size(124, 17);
+            this.checkBoxIsHighRes.Size = new System.Drawing.Size(115, 17);
             this.checkBoxIsHighRes.TabIndex = 56;
-            this.checkBoxIsHighRes.Text = "Is high resolution MS";
+            this.checkBoxIsHighRes.Text = "High resolution MS";
             this.checkBoxIsHighRes.UseVisualStyleBackColor = true;
             // 
             // numericUpDownMMA
             // 
-            this.numericUpDownMMA.Location = new System.Drawing.Point(12, 110);
+            this.numericUpDownMMA.Location = new System.Drawing.Point(18, 124);
             this.numericUpDownMMA.Name = "numericUpDownMMA";
             this.numericUpDownMMA.Size = new System.Drawing.Size(36, 20);
             this.numericUpDownMMA.TabIndex = 55;
@@ -555,17 +386,17 @@
             // 
             this.labelMMA.AutoSize = true;
             this.labelMMA.ForeColor = System.Drawing.Color.Black;
-            this.labelMMA.Location = new System.Drawing.Point(9, 94);
+            this.labelMMA.Location = new System.Drawing.Point(14, 108);
             this.labelMMA.Name = "labelMMA";
-            this.labelMMA.Size = new System.Drawing.Size(65, 13);
+            this.labelMMA.Size = new System.Drawing.Size(64, 13);
             this.labelMMA.TabIndex = 54;
-            this.labelMMA.Text = "MMA Value:";
+            this.labelMMA.Text = "MMA value:";
             // 
             // labelThreshold
             // 
             this.labelThreshold.AutoSize = true;
             this.labelThreshold.ForeColor = System.Drawing.Color.Black;
-            this.labelThreshold.Location = new System.Drawing.Point(9, 18);
+            this.labelThreshold.Location = new System.Drawing.Point(14, 32);
             this.labelThreshold.Name = "labelThreshold";
             this.labelThreshold.Size = new System.Drawing.Size(57, 13);
             this.labelThreshold.TabIndex = 53;
@@ -573,31 +404,198 @@
             // 
             // numericUpDownThreshold
             // 
-            this.numericUpDownThreshold.Location = new System.Drawing.Point(12, 34);
+            this.numericUpDownThreshold.Location = new System.Drawing.Point(18, 48);
             this.numericUpDownThreshold.Name = "numericUpDownThreshold";
             this.numericUpDownThreshold.Size = new System.Drawing.Size(36, 20);
             this.numericUpDownThreshold.TabIndex = 52;
             // 
+            // tabPanoramaSettings
+            // 
+            this.tabPanoramaSettings.Controls.Add(this.cbPublishToPanorama);
+            this.tabPanoramaSettings.Controls.Add(this.groupBoxPanorama);
+            this.tabPanoramaSettings.Location = new System.Drawing.Point(4, 28);
+            this.tabPanoramaSettings.Name = "tabPanoramaSettings";
+            this.tabPanoramaSettings.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPanoramaSettings.Size = new System.Drawing.Size(637, 540);
+            this.tabPanoramaSettings.TabIndex = 4;
+            this.tabPanoramaSettings.Text = "Panorama Settings";
+            this.tabPanoramaSettings.UseVisualStyleBackColor = true;
+            // 
+            // cbPublishToPanorama
+            // 
+            this.cbPublishToPanorama.AutoSize = true;
+            this.cbPublishToPanorama.Location = new System.Drawing.Point(19, 36);
+            this.cbPublishToPanorama.Name = "cbPublishToPanorama";
+            this.cbPublishToPanorama.Size = new System.Drawing.Size(123, 17);
+            this.cbPublishToPanorama.TabIndex = 57;
+            this.cbPublishToPanorama.Text = "Publish to Panorama";
+            this.cbPublishToPanorama.UseVisualStyleBackColor = true;
+            this.cbPublishToPanorama.CheckedChanged += new System.EventHandler(this.cbPublishToPanorama_CheckedChanged);
+            // 
+            // groupBoxPanorama
+            // 
+            this.groupBoxPanorama.Controls.Add(this.labelPanoramaFolder);
+            this.groupBoxPanorama.Controls.Add(this.textPanoramaFolder);
+            this.groupBoxPanorama.Controls.Add(this.lblPanoramaUrl);
+            this.groupBoxPanorama.Controls.Add(this.textPanoramaUrl);
+            this.groupBoxPanorama.Controls.Add(this.textPanoramaPasswd);
+            this.groupBoxPanorama.Controls.Add(this.lblPanoramaPasswd);
+            this.groupBoxPanorama.Controls.Add(this.lblPanoramaEmail);
+            this.groupBoxPanorama.Controls.Add(this.textPanoramaEmail);
+            this.groupBoxPanorama.Location = new System.Drawing.Point(19, 74);
+            this.groupBoxPanorama.Name = "groupBoxPanorama";
+            this.groupBoxPanorama.Size = new System.Drawing.Size(599, 218);
+            this.groupBoxPanorama.TabIndex = 56;
+            this.groupBoxPanorama.TabStop = false;
+            this.groupBoxPanorama.Text = "Panorama";
+            // 
+            // labelPanoramaFolder
+            // 
+            this.labelPanoramaFolder.AutoSize = true;
+            this.labelPanoramaFolder.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.labelPanoramaFolder.Location = new System.Drawing.Point(14, 147);
+            this.labelPanoramaFolder.Name = "labelPanoramaFolder";
+            this.labelPanoramaFolder.Size = new System.Drawing.Size(201, 13);
+            this.labelPanoramaFolder.TabIndex = 13;
+            this.labelPanoramaFolder.Text = "Folder on Panorama (e.g. /MacCoss/QC)";
+            // 
+            // textPanoramaFolder
+            // 
+            this.textPanoramaFolder.Location = new System.Drawing.Point(16, 165);
+            this.textPanoramaFolder.Name = "textPanoramaFolder";
+            this.textPanoramaFolder.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textPanoramaFolder.Size = new System.Drawing.Size(512, 20);
+            this.textPanoramaFolder.TabIndex = 14;
+            // 
+            // lblPanoramaUrl
+            // 
+            this.lblPanoramaUrl.AutoSize = true;
+            this.lblPanoramaUrl.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.lblPanoramaUrl.Location = new System.Drawing.Point(14, 32);
+            this.lblPanoramaUrl.Name = "lblPanoramaUrl";
+            this.lblPanoramaUrl.Size = new System.Drawing.Size(188, 13);
+            this.lblPanoramaUrl.TabIndex = 7;
+            this.lblPanoramaUrl.Text = "URL (e.g. https://panoramaweb.org/):";
+            // 
+            // textPanoramaUrl
+            // 
+            this.textPanoramaUrl.Location = new System.Drawing.Point(16, 49);
+            this.textPanoramaUrl.Name = "textPanoramaUrl";
+            this.textPanoramaUrl.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textPanoramaUrl.Size = new System.Drawing.Size(512, 20);
+            this.textPanoramaUrl.TabIndex = 8;
+            // 
+            // textPanoramaPasswd
+            // 
+            this.textPanoramaPasswd.Location = new System.Drawing.Point(251, 103);
+            this.textPanoramaPasswd.Name = "textPanoramaPasswd";
+            this.textPanoramaPasswd.PasswordChar = '*';
+            this.textPanoramaPasswd.Size = new System.Drawing.Size(207, 20);
+            this.textPanoramaPasswd.TabIndex = 12;
+            this.textPanoramaPasswd.UseSystemPasswordChar = true;
+            // 
+            // lblPanoramaPasswd
+            // 
+            this.lblPanoramaPasswd.AutoSize = true;
+            this.lblPanoramaPasswd.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.lblPanoramaPasswd.Location = new System.Drawing.Point(248, 86);
+            this.lblPanoramaPasswd.Name = "lblPanoramaPasswd";
+            this.lblPanoramaPasswd.Size = new System.Drawing.Size(56, 13);
+            this.lblPanoramaPasswd.TabIndex = 11;
+            this.lblPanoramaPasswd.Text = "Password:";
+            // 
+            // lblPanoramaEmail
+            // 
+            this.lblPanoramaEmail.AutoSize = true;
+            this.lblPanoramaEmail.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.lblPanoramaEmail.Location = new System.Drawing.Point(14, 86);
+            this.lblPanoramaEmail.Name = "lblPanoramaEmail";
+            this.lblPanoramaEmail.Size = new System.Drawing.Size(35, 13);
+            this.lblPanoramaEmail.TabIndex = 9;
+            this.lblPanoramaEmail.Text = "Email:";
+            // 
+            // textPanoramaEmail
+            // 
+            this.textPanoramaEmail.Location = new System.Drawing.Point(16, 103);
+            this.textPanoramaEmail.Name = "textPanoramaEmail";
+            this.textPanoramaEmail.Size = new System.Drawing.Size(207, 20);
+            this.textPanoramaEmail.TabIndex = 10;
+            // 
+            // tabOutput
+            // 
+            this.tabOutput.Controls.Add(this.labelStatusRunning);
+            this.tabOutput.Controls.Add(this.buttonStop);
+            this.tabOutput.Controls.Add(this.statusImg);
+            this.tabOutput.Controls.Add(this.textOutput);
+            this.tabOutput.Location = new System.Drawing.Point(4, 28);
+            this.tabOutput.Name = "tabOutput";
+            this.tabOutput.Padding = new System.Windows.Forms.Padding(3);
+            this.tabOutput.Size = new System.Drawing.Size(637, 540);
+            this.tabOutput.TabIndex = 5;
+            this.tabOutput.Text = "Output";
+            this.tabOutput.UseVisualStyleBackColor = true;
+            // 
+            // labelStatusRunning
+            // 
+            this.labelStatusRunning.AutoSize = true;
+            this.labelStatusRunning.Location = new System.Drawing.Point(68, 464);
+            this.labelStatusRunning.Name = "labelStatusRunning";
+            this.labelStatusRunning.Size = new System.Drawing.Size(95, 13);
+            this.labelStatusRunning.TabIndex = 64;
+            this.labelStatusRunning.Text = "AutoQC is stopped";
+            // 
+            // buttonStop
+            // 
+            this.buttonStop.Enabled = false;
+            this.buttonStop.Location = new System.Drawing.Point(531, 454);
+            this.buttonStop.Name = "buttonStop";
+            this.buttonStop.Size = new System.Drawing.Size(75, 23);
+            this.buttonStop.TabIndex = 63;
+            this.buttonStop.Text = "Stop";
+            this.buttonStop.UseVisualStyleBackColor = true;
+            this.buttonStop.Click += new System.EventHandler(this.btnStopAutoQC_Click);
+            // 
+            // statusImg
+            // 
+            this.statusImg.Image = global::AutoQC.Properties.Resources.redstatus;
+            this.statusImg.Location = new System.Drawing.Point(32, 447);
+            this.statusImg.Name = "statusImg";
+            this.statusImg.Size = new System.Drawing.Size(30, 30);
+            this.statusImg.TabIndex = 61;
+            this.statusImg.TabStop = false;
+            // 
+            // textOutput
+            // 
+            this.textOutput.Location = new System.Drawing.Point(25, 32);
+            this.textOutput.Name = "textOutput";
+            this.textOutput.ReadOnly = true;
+            this.textOutput.Size = new System.Drawing.Size(581, 390);
+            this.textOutput.TabIndex = 0;
+            this.textOutput.Text = "";
+            this.textOutput.TextChanged += new System.EventHandler(this.textOutput_TextChanged);
+            // 
             // tabInstructions
             // 
-            this.tabInstructions.Controls.Add(this.label5);
-            this.tabInstructions.Location = new System.Drawing.Point(4, 22);
+            this.tabInstructions.Controls.Add(this.richTextBox1);
+            this.tabInstructions.Location = new System.Drawing.Point(4, 28);
             this.tabInstructions.Name = "tabInstructions";
             this.tabInstructions.Padding = new System.Windows.Forms.Padding(3);
-            this.tabInstructions.Size = new System.Drawing.Size(637, 546);
+            this.tabInstructions.Size = new System.Drawing.Size(637, 540);
             this.tabInstructions.TabIndex = 2;
             this.tabInstructions.Text = "Instructions";
             this.tabInstructions.UseVisualStyleBackColor = true;
             // 
-            // label5
+            // richTextBox1
             // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(3, 3);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(588, 368);
-            this.label5.TabIndex = 44;
-            this.label5.Text = resources.GetString("label5.Text");
+            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBox1.Enabled = false;
+            this.richTextBox1.Location = new System.Drawing.Point(24, 17);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+            this.richTextBox1.Size = new System.Drawing.Size(587, 498);
+            this.richTextBox1.TabIndex = 0;
+            this.richTextBox1.Text = resources.GetString("richTextBox1.Text");
+            this.richTextBox1.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
             // 
             // AutoQc
             // 
@@ -611,22 +609,23 @@
             this.Name = "AutoQc";
             this.Text = " AutoQC";
             this.tabControl1.ResumeLayout(false);
-            this.tabRunSetup.ResumeLayout(false);
-            this.tabRunSetup.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.runGridView)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).EndInit();
             this.tabSettings.ResumeLayout(false);
-            this.groupBoxPanorama.ResumeLayout(false);
-            this.groupBoxPanorama.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.tabSprocopSettings.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.tabSprocopSettings.PerformLayout();
+            this.groupBoxSprocop.ResumeLayout(false);
+            this.groupBoxSprocop.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMMA)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownThreshold)).EndInit();
+            this.tabPanoramaSettings.ResumeLayout(false);
+            this.tabPanoramaSettings.PerformLayout();
+            this.groupBoxPanorama.ResumeLayout(false);
+            this.groupBoxPanorama.PerformLayout();
+            this.tabOutput.ResumeLayout(false);
+            this.tabOutput.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).EndInit();
             this.tabInstructions.ResumeLayout(false);
-            this.tabInstructions.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -634,53 +633,53 @@
         #endregion
 
         private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabRunSetup;
         private System.Windows.Forms.TabPage tabSettings;
-        private System.Windows.Forms.Button btnRunSprocopAuto;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label labelStatus;
-        private System.Windows.Forms.PictureBox statusImg;
-        private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Button btnSave;
-        private System.Windows.Forms.Button btnRScriptPath;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox textBoxRScriptPath;
         private System.Windows.Forms.Label skylineRunnerPathLabel;
         private System.Windows.Forms.Button btnFolderToWatch;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox folderToWatchPath;
-        private System.Windows.Forms.TextBox skylineRunnerPathInput;
+        private System.Windows.Forms.TextBox textFolderToWatchPath;
+        private System.Windows.Forms.TextBox textSkylineRunnerPath;
         private System.Windows.Forms.Button btnSkylineFilePath;
-        private System.Windows.Forms.TextBox skylineFilePath;
+        private System.Windows.Forms.TextBox textSkylinePath;
         private System.Windows.Forms.Button btnSkylingRunnerPath;
         private System.Windows.Forms.TabPage tabInstructions;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Button buttonClear;
-        private System.Windows.Forms.DataGridView runGridView;
-        private System.Windows.Forms.DataGridViewComboBoxColumn Type;
-        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnFile;
-        private System.Windows.Forms.ComboBox comboBoxType;
-        private System.Windows.Forms.Label labelType;
-        private System.Windows.Forms.Label labelNumberOfRows;
-        private System.Windows.Forms.TextBox textBoxNewRows;
-        private System.Windows.Forms.Button btnAddRows;
         private System.Windows.Forms.TabPage tabSprocopSettings;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBoxSprocop;
         private System.Windows.Forms.CheckBox checkBoxIsHighRes;
         private System.Windows.Forms.NumericUpDown numericUpDownMMA;
         private System.Windows.Forms.Label labelMMA;
         private System.Windows.Forms.Label labelThreshold;
         private System.Windows.Forms.NumericUpDown numericUpDownThreshold;
+        private System.Windows.Forms.Button buttonRun;
+        private System.Windows.Forms.TabPage tabPanoramaSettings;
         private System.Windows.Forms.GroupBox groupBoxPanorama;
+        private System.Windows.Forms.Label labelPanoramaFolder;
+        private System.Windows.Forms.TextBox textPanoramaFolder;
         private System.Windows.Forms.Label lblPanoramaUrl;
         private System.Windows.Forms.TextBox textPanoramaUrl;
         internal System.Windows.Forms.TextBox textPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaEmail;
         internal System.Windows.Forms.TextBox textPanoramaEmail;
-        private System.Windows.Forms.Label labelPanoramaFolder;
-        private System.Windows.Forms.TextBox textPanoramaFolder;
+        private System.Windows.Forms.TabPage tabOutput;
+        private System.Windows.Forms.RichTextBox textOutput;
+        private System.Windows.Forms.Button buttonStop;
+        private System.Windows.Forms.PictureBox statusImg;
+        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.CheckBox cbRunsprocop;
+        private System.Windows.Forms.CheckBox cbPublishToPanorama;
+        private System.Windows.Forms.Label labelStatusRunning;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnRScriptPath;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox textRScriptPath;
+        private System.Windows.Forms.Label labelInstrumentType;
+        private System.Windows.Forms.ComboBox comboBoxInstrumentType;
+        private System.Windows.Forms.CheckBox cbImportExistingFiles;
+        private System.Windows.Forms.Label labelDays;
+        private System.Windows.Forms.TextBox textAccumulationTimeWindow;
+        private System.Windows.Forms.Label labelAccumulationTimeWindow;
     }
 }

@@ -166,5 +166,65 @@ namespace AutoQC.Properties {
                 this["PanoramaFolder"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string InstrumentType {
+            get {
+                return ((string)(this["InstrumentType"]));
+            }
+            set {
+                this["InstrumentType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PublishToPanorama {
+            get {
+                return ((bool)(this["PublishToPanorama"]));
+            }
+            set {
+                this["PublishToPanorama"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RunSprocop {
+            get {
+                return ((bool)(this["RunSprocop"]));
+            }
+            set {
+                this["RunSprocop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ImportExistingFiles {
+            get {
+                return ((bool)(this["ImportExistingFiles"]));
+            }
+            set {
+                this["ImportExistingFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int AccumulationWindow {
+            get {
+                return ((int)(this["AccumulationWindow"]));
+            }
+            set {
+                this["AccumulationWindow"] = value;
+            }
+        }
     }
 }

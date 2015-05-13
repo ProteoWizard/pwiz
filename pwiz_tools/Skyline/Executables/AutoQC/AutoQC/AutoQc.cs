@@ -1,175 +1,273 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
+using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using log4net;
+using log4net.Appender;
+using log4net.Repository.Hierarchy;
 
 namespace AutoQC
 {
     public partial class AutoQc : Form
     {
-        // ReSharper disable once FieldCanBeMadeReadOnly.Local
-        private List<String> _rawFiles = new List<String>();
-        private FileSystemWatcher fileWatcher = new FileSystemWatcher {Filter = "*.raw" };
+        private const string AUTO_QC_RUNNING = "AutoQC is running";
+        private const string AUTO_QC_WAITING = "AutoQC is waiting for background processes to finish";
+        private const string AUTO_QC_STOPPED = "AutoQC is stopped";
+        private const int ACCUM_TIME_WINDOW = 31;
+
+        // TODO: We need to support other instrument vendors
+        private const string THERMO_EXT = ".raw";
+
+
+        // Collection of mass spec files to be processed.
+        private readonly ConcurrentQueue<FileInfo> _dataFiles;
+ 
+        private readonly FileSystemWatcher _fileWatcher;
+        private readonly QcConfig config;
+
+        // Background worker to run SkylineRunner
+        private BackgroundWorker _worker;
+
+        // Log
+        private readonly StringBuilder _logBuffer = new StringBuilder();
+        private const string LOG_FILE = "AutoQC.log";
+        private string _logFile;
+
+        private static readonly ILog LOG = LogManager.GetLogger(typeof(AutoQc).Name);
 
         public AutoQc()
         {
             InitializeComponent();
-            textBoxRScriptPath.Text = Properties.Settings.Default.RScriptPath;
-            skylineRunnerPathInput.Text = Properties.Settings.Default.SkylineRunnerPath;
-            skylineFilePath.Text = Properties.Settings.Default.SkylineFilePath;
-            folderToWatchPath.Text = Properties.Settings.Default.FolderToWatch;
-            fileWatcher.Created += (s, e) => FileAdded(e, this);
+            config = new QcConfig();
 
-            comboBoxType.SelectedIndex = 0;
+            // Initialize from default settings.
+            textSkylineRunnerPath.Text = config.SkylineRunnerPath;
+            textSkylinePath.Text = config.SkylineFilePath;
+            textFolderToWatchPath.Text = config.FolderToWatch;
+            textAccumulationTimeWindow.Text = config.AccumulationWindow != 0
+                ? config.AccumulationWindow.ToString()
+                : ACCUM_TIME_WINDOW.ToString();
+
+            comboBoxInstrumentType.SelectedItem = !string.IsNullOrWhiteSpace(config.InstrumentType)
+                ? config.InstrumentType
+                : "Thermo";
+
+            cbPublishToPanorama.Checked = config.PublishToPanorama;
+            groupBoxPanorama.Enabled = cbPublishToPanorama.Checked;
+            textPanoramaUrl.Text = config.PanoramaServerUrl;
+            textPanoramaEmail.Text = config.PanoramaUserName;
+            textPanoramaPasswd.Text = config.PanoramaPassword;
+            textPanoramaFolder.Text = config.PanoramaFolder;
+            cbRunsprocop.Checked = config.RunSprocop;
+            groupBoxSprocop.Enabled = cbRunsprocop.Checked;
+            textRScriptPath.Text = config.RScriptPath;
+
+            _dataFiles = new ConcurrentQueue<FileInfo>();
+
+            _fileWatcher = new FileSystemWatcher {Filter = "*" + THERMO_EXT };
+            _fileWatcher.Created += (s, e) => FileAdded(e, this);
         }
 
         private void btnSkylingRunnerPath_Click(object sender, EventArgs e)
         {
-            OpenFile("Executable Files(*.exe)|*.exe|All Files (*.*)|*.*", skylineRunnerPathInput);
+            OpenFile("Executable Files(*.exe)|*.exe|All Files (*.*)|*.*", textSkylineRunnerPath);
         }
 
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile("Skyline Files(*.sky)|*.sky|All Files (*.*)|*.*", skylineFilePath);
+            OpenFile("Skyline Files(*.sky)|*.sky|All Files (*.*)|*.*", textSkylinePath);
         }
 
         private void btnRScriptPath_Click(object sender, EventArgs e)
         {
-            OpenFile("Executable Files(*.exe)|*.exe|All Files (*.*)|*.*", textBoxRScriptPath);
+            OpenFile("Executable Files(*.exe)|*.exe|All Files (*.*)|*.*", textRScriptPath);
         }
 
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
             var dialog = new FolderBrowserDialog
             {
-                Description = "Select the directory that Xcalibur will export the raw files to."
+                Description = "Directory where the instrument will write QC files."
             };
             if(dialog.ShowDialog(this) == DialogResult.OK)
             {
-                folderToWatchPath.Text = dialog.SelectedPath;
+                textFolderToWatchPath.Text = dialog.SelectedPath;
             }
         }
 
         private void OpenFile(string filter, TextBox textbox)
         {
-            var dialog = new OpenFileDialog {Filter = filter, Title = "Please select a file to open."};
+            var dialog = new OpenFileDialog {Filter = filter};
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
                 textbox.Text = dialog.FileName;
             }
         }
+      
 
-        // Returns the current configuration
-        public QcConfig GetCurrentConfig()
+        private void btnRunAutoQC_Click(object sender, EventArgs e)
         {
-            var config = new QcConfig(folderToWatchPath.Text,
-                skylineRunnerPathInput.Text,
-                skylineFilePath.Text,
-                textBoxRScriptPath.Text);
-            return config;
+            Run();
         }
 
-        // Adds n runs to runGridView of selected type
-        private void buttonAddRuns_Click(object sender, EventArgs e)
+        private void btnStopAutoQC_Click(object sender, EventArgs e)
         {
-            try
+            Stop();
+        }
+
+        private void Run()
+        {
+            Log("Starting AutoQC...", true, false);
+            SetRunningControls();
+
+            Log("Validating settings...", false, false);
+            if (!ValidatePaths())
             {
-                int currentIndex = runGridView.Rows.Count - 2;
-                int rowCount = int.Parse(textBoxNewRows.Text);
-                runGridView.Rows.Add(rowCount);
-                int finalIndex = runGridView.Rows.Count - 1;
-                foreach (DataGridViewRow row in runGridView.Rows)
+                SetStoppedControls();
+                return;
+            }
+
+            log4net.GlobalContext.Properties["WorkingDirectory"] = textFolderToWatchPath.Text;
+            log4net.Config.XmlConfigurator.Configure();
+//            var fileAppender =
+//                LogManager.GetRepository().GetAppenders().First(/*appender => appender is RollingFileAppender*/);
+            
+
+            _logFile = Path.Combine(textFolderToWatchPath.Text, LOG_FILE);
+            // Delete the log file if it exists. TODO: rollover log file?
+            if (File.Exists(_logFile))
+            {
+                try
                 {
-                    if (row.Index > currentIndex && row.Index < finalIndex)
-                    {
-                        row.Cells[0].Value = comboBoxType.SelectedItem;
-                    }
+                    File.Delete(_logFile);
                 }
-                RenumberRows();
-            }
-            catch (FormatException ex)
-            {
-                Log("You must specify a valid integer value to add.");
-            }
-           
-        }
-
-        private void runGridView_UserAddedRow(object sender, DataGridViewRowEventArgs e)
-        {
-            RenumberRows();
-        }
-
-        private void runGridView_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
-        {
-            RenumberRows();
-        }
-
-        private void RenumberRows()
-        {
-            for (int i = 0; i < runGridView.Rows.Count; i++)
-            {
-                DataGridViewRowHeaderCell cell = runGridView.Rows[i].HeaderCell;
-                cell.Value = (i + 1).ToString(CultureInfo.InvariantCulture);
-                runGridView.Rows[i].HeaderCell = cell;
-                runGridView.AutoResizeRowHeadersWidth(i, DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader);
-                runGridView.AutoResizeRowHeadersWidth(i, DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
-            }
-        }
-
-        // SProCoP Automation
-        private void btnRunSprocopAuto_Click(object sender, EventArgs e)
-        {
-            if (ValidateForm())
-            {
-                if (IsRunning())
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
                 {
-                    StopSProCoPqc(true);
                 }
-                else
-                {
-                    btnRunSprocopAuto.Text = "Stop SProCoP AutoQC";
-                    statusImg.Image = Properties.Resources.greenstatus;
-                    labelStatus.Text = "Running";
-                    RunSProCoPqc();
-                } 
             }
+
+            Log("Watching folder " + config.FolderToWatch);
+            Log("Mass spec. files will be imported to " + config.SkylineFilePath);
+
+            if (!ValidateForm())
+            {
+                SetStoppedControls();
+                FlushLogFile();
+                return;
+            }
+
+            SaveConfig();
+
+            // Queue up any existing data (e.g. *.raw) files in the folder
+            var files =
+                new DirectoryInfo(config.FolderToWatch).GetFiles("*" + THERMO_EXT).OrderBy(f => f.LastWriteTime).ToList();
+            foreach (var file in files)
+            {
+                _dataFiles.Enqueue(file);
+            }
+
+            _fileWatcher.Path = config.FolderToWatch;
+            _fileWatcher.EnableRaisingEvents = true; // Enables events on the _fileWatcher
+
+            ProcessFiles();
+        }
+
+        private void Stop()
+        {
+            Log("Cancelling...");
+            _fileWatcher.EnableRaisingEvents = false;
+            _worker.CancelAsync();
+            SetWaitingControls();
+        }
+
+        private void SetStoppedControls()
+        {
+            buttonRun.Enabled = true;
+            buttonStop.Enabled = false;
+            tabControl1.SelectTab(tabOutput);
+            statusImg.Image = Properties.Resources.redstatus;
+            labelStatusRunning.Text = AUTO_QC_STOPPED;
+            tabControl1.Update();
+        }
+
+        private void SetRunningControls()
+        {
+            buttonRun.Enabled = false;
+            buttonStop.Enabled = true;
+            tabControl1.SelectTab(tabOutput);
+            statusImg.Image = Properties.Resources.greenstatus;
+            labelStatusRunning.Text = AUTO_QC_RUNNING;
+            tabControl1.Update();
+        }
+
+        private void SetWaitingControls()
+        {
+            buttonRun.Enabled = false;
+            buttonStop.Enabled = false;
+            tabControl1.SelectTab(tabOutput);
+            statusImg.Image = Properties.Resources.orangestatus;
+            labelStatusRunning.Text = AUTO_QC_WAITING;
+            tabControl1.Update();
         }
 
         private bool ValidateForm()
         {
-            int thresholdRows = 0;
-            foreach (DataGridViewRow row in runGridView.Rows)
-            {
-                if (null != row.Cells[0].Value)
-                {
-                    if (row.Cells[0].Value.ToString().Equals("Threshold"))
-                        thresholdRows++;
-                }
-            }
-            // Checks to make sure values are valid before program continues with run.
-            if (thresholdRows != numericUpDownThreshold.Value)
-            {
-                Log("There must be the same number of thresholds in your QC sequence as defined above in the configurations tab.");
-                return false;
-            }
-            // Must have at least 3 runs
-            if (runGridView.Rows.Count - 1 < 3)
-            {
-                Log("Your SProCoP Sequence must contain more than 3 runs, refer to the configuration tab.");
-                return false;
-            }
-            // Checks if program has been run before and if so user needs to select a row in the grid view to continue running on
-            if (_rawFiles.Count > 0 && runGridView.SelectedRows.Count != 1 && !IsRunning())
-            {
-                Log("Please select a row in the grid which you would like to start the run on.");
-                return false;
-            }
+            return ValidateSprocopSettings() && ValidatePanoramaSettings();
+        }
 
-            // Validate Panorama options
-            if (!ValidatePanoramaSettings())
+        private bool ValidatePaths()
+        {
+            bool error = false;
+            if (string.IsNullOrWhiteSpace(config.SkylineRunnerPath))
             {
+                LogError("Please specify path to SkylineRunner.exe.");
+                error = true;
+            }
+            else if (!File.Exists(config.SkylineRunnerPath))
+            {
+                LogError(string.Format("{0} does not exist.", config.SkylineRunnerPath));
+                error = true;
+            }
+            if (string.IsNullOrWhiteSpace(config.SkylineFilePath))
+            {
+                LogError("Please specify path to a Skyline file.");
+                error = true;   
+            }
+            else if (!File.Exists(config.SkylineFilePath))
+            {
+                LogError(string.Format("{0} does not exist.", config.SkylineFilePath));
+                error = true;
+            }
+            if (string.IsNullOrWhiteSpace(config.FolderToWatch))
+            {
+                LogError("Please specify path to a folder where mass spec files will be written.");
+                error = true;
+            }
+            else if (!Directory.Exists(config.FolderToWatch))
+            {
+                LogError(string.Format("Directory {0} does not exist.", config.SkylineFilePath));
+                error = true;
+            }
+            
+            return !error;
+        }
+
+        private bool ValidateSprocopSettings()
+        {
+            if (!cbRunsprocop.Checked)
+            {
+                Log("Will NOT run SProCoP.");
+                return true;
+            }
+            if (string.IsNullOrWhiteSpace(textRScriptPath.Text))
+            {
+                LogError("Please specify path to Rscript.exe.");
                 return false;
             }
             return true;
@@ -177,167 +275,291 @@ namespace AutoQC
 
         private bool ValidatePanoramaSettings()
         {
+            if (!cbPublishToPanorama.Checked)
+            {
+                Log("Will NOT publish Skyline document to Panorama.");
+                return true;
+            }
+
+            Log("Validating Panorama settings...");
             var panoramaUrl = textPanoramaUrl.Text;
             Uri serverUri;
             try
             {
-                serverUri = new Uri(PanoramaUtils.ServerNameToUrl(panoramaUrl));
+                serverUri = new Uri(PanoramaUtil.ServerNameToUrl(panoramaUrl));
             }
             catch (UriFormatException)
             {
-                Log("Panorama server name is invalid.");
+                LogError("Panorama server name is invalid.");
                 return false;
             }
 
             var panoramaEmail = textPanoramaEmail.Text;
             var panoramaPasswd = textPanoramaPasswd.Text;
-
+            var panoramaFolder = textPanoramaFolder.Text;
+            if (string.IsNullOrWhiteSpace(panoramaEmail))
+            {
+                LogError("Please specify a Panorama user name.");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(panoramaPasswd))
+            {
+                LogError("Please specify a Panorama user password.");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(panoramaFolder))
+            {
+                LogError("Please specify a folder on the Panorama server.");
+                return false;   
+            }
+            
             var panoramaClient = new WebPanoramaClient(serverUri);
             try
             {
-                PanoramaUtils.VerifyServerInformation(panoramaClient, serverUri, panoramaEmail, panoramaPasswd);
+                PanoramaUtil.VerifyServerInformation(panoramaClient, serverUri, panoramaEmail, panoramaPasswd);
             }
             catch (Exception ex)
             {
-                Log(ex.Message);
+                LogError(ex.Message);
                 return false;
             }
 
-//            try
-//            {
-//                PanoramaUtils.verifyFolder(new Server(serverUri, panoramaEmail, panoramaPasswd), textPanoramaFolder.Text);
-//            }
-//            catch (Exception ex)
-//            {
-//                Log(ex.Message);
-//                throw;
-//            }
+            try
+            {
+                PanoramaUtil.VerifyFolder(panoramaClient, new Server(serverUri, panoramaEmail, panoramaPasswd), textPanoramaFolder.Text);
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Message);
+                return false;
+            }
 
             return true;
         }
 
-        public void Log(string line, bool clear = false)
+        public void Log(string line, bool clear = false, bool logToFile = true)
         {
-            if (clear)
-                textBoxLog.Text = string.Empty;
-            textBoxLog.Text +=line +  "\r\n";
-            textBoxLog.SelectionStart = textBoxLog.TextLength;
-            textBoxLog.ScrollToCaret();
+            RunUI(() =>
+            {
+                if (clear)
+                {
+                    textOutput.Text = string.Empty;
+                }
+                textOutput.AppendText(line + Environment.NewLine);
+                textOutput.SelectionStart = textOutput.TextLength;
+                textOutput.ScrollToCaret();
+                textOutput.Update();
+                
+            });
+            if (logToFile)
+            {
+                LogToFile(line);
+            }
         }
 
-        private void RunSProCoPqc()
+        public void LogError(string line, bool logToFile = true)
         {
-            if (_rawFiles.Count > 0 && runGridView.SelectedRows.Count == 1)
+            line = "ERROR: " + line;
+            RunUI(() =>
             {
-                int selectedRowIndex  = runGridView.SelectedRows[0].Index;
-                int totalRawFiles = _rawFiles.Count;
-                for (var i = totalRawFiles - 1; i >= selectedRowIndex; i--)
+                textOutput.SelectionStart = textOutput.TextLength;
+                textOutput.SelectionLength = 0;
+                textOutput.SelectionColor = Color.Red;
+                textOutput.AppendText(line + Environment.NewLine);
+                textOutput.SelectionColor = textOutput.ForeColor;
+                textOutput.ScrollToCaret();
+                textOutput.Update();
+            });
+            if (logToFile)
+            {
+                LogToFile(line);
+            }
+        }
+
+        private void LogToFile(string text)
+        {
+            LOG.Info(text);
+            // Write to log file
+//            lock (_logBuffer)
+//            {
+//                _logBuffer.Append(DateTime.Now).Append(" -- ").Append(text).Append(Environment.NewLine);
+//                if (_logBuffer.Length > 1000)
+//                {
+//                    File.AppendAllText(_logFile, _logBuffer.ToString());
+//                    _logBuffer.Clear();
+//                }
+//            }
+        }
+
+        private void FlushLogFile()
+        {
+//            lock (_logBuffer)
+//            {
+//                if (_logBuffer.Length > 0)
+//                {
+//                    File.AppendAllText(_logFile, _logBuffer.ToString());
+//                    _logBuffer.Clear();
+//                }
+//            }  
+        }
+
+        private void SaveConfig()
+        {
+            config.FolderToWatch = textFolderToWatchPath.Text;
+            config.SkylineRunnerPath = textSkylineRunnerPath.Text;
+            config.SkylineFilePath = textSkylinePath.Text;
+            config.InstrumentType = comboBoxInstrumentType.SelectedText;
+
+            config.PublishToPanorama = cbPublishToPanorama.Checked;
+            config.PanoramaServerUrl = textPanoramaUrl.Text;
+            config.PanoramaUserName = textPanoramaEmail.Text;
+            config.PanoramaPassword = textPanoramaPasswd.Text;
+            config.PanoramaFolder = textPanoramaFolder.Text;
+
+            config.RunSprocop = cbRunsprocop.Checked;
+            config.RScriptPath = textRScriptPath.Text;
+            
+            config.SaveConfig();
+        }
+
+        private void ProcessFiles()
+        {
+            Log("Running....");
+            if (_worker != null && _worker.IsBusy)
+            {
+                // TODO: Make sure this does not happen!
+                LogError("Working is running!!!");
+                return;
+            }
+            _worker = new BackgroundWorker {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
+            _worker.DoWork += BackgroundWorker_DoWork;
+            _worker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
+            _worker.RunWorkerAsync();
+        }
+
+        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            SetStoppedControls();
+            Log("Stopping AutoQC.\n\n\n");
+            FlushLogFile();
+        }
+
+        private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+            if (worker == null)
+            {
+                return;
+            }
+
+            while (true)
+            {
+                if (worker.CancellationPending)
                 {
-                        _rawFiles.RemoveAt(i);
-                        runGridView.Rows[i].Cells[1].Value = string.Empty;
+                    e.Cancel = true;
+                    break;
+                }
+
+                if (!_dataFiles.IsEmpty)
+                {
+                    FileInfo fileInfo;
+                    _dataFiles.TryDequeue(out fileInfo);
+                    if (fileInfo != null)
+                    {
+                        ProcessFile(fileInfo);    
+                    }
+                }
+                else
+                {
+                    Log("Waiting for files...");
+                    System.Threading.Thread.Sleep(10000);
                 }
             }
-            var config = GetCurrentConfig();
-            buttonClear.Enabled = false;
-            Log("SProCoP QC is watching " + config.FolderToWatch);
-
-            fileWatcher.Path = config.FolderToWatch;
-            fileWatcher.EnableRaisingEvents = true; // Enables events on the fileWatcher;
-
-            Log("Ready for Xcalibur sequence to be started.");
-
         }
 
-        private bool IsRunning()
-        {
-            return labelStatus.Text == "Running";
-        }
 
-        private void StopSProCoPqc(bool isForcedStop)
-        {
-            btnRunSprocopAuto.Text = "Run SProCoP AutoQC";
-            statusImg.Image = Properties.Resources.redstatus;
-            labelStatus.Text = "Off";
-            fileWatcher.EnableRaisingEvents = false;
-            buttonClear.Enabled = true;
-
-            if(isForcedStop)
-            {
-                Log("SProCoPQC was stopped in the middle of a sequence and did not finish processing all files.");
-                Log("If you would like to start a new run from the beginning clear your run data.");
-            }
-            else
-            {
-                Log("AutoQC has finished running successfully.");
-                Log("If you would like to start a new run from the beginning clear your run data.");
-            }
-            
-        }
-
-        void FileAdded(FileSystemEventArgs e,AutoQc emitterChanger)
+        void FileAdded(FileSystemEventArgs e, AutoQc autoQc)
         {
             BeginInvoke(new Action(() =>
             {
-                emitterChanger.Log(e.Name + " created.");
-                _rawFiles.Add(e.FullPath);
-
-                var currentIndex = _rawFiles.Count;
-                if (null != runGridView.Rows[currentIndex - 1].Cells[0].Value)
-                {
-                    runGridView.Rows[currentIndex - 1].ReadOnly = true; // So that user can't modify datagrid cells that have already been processed (while program is running).
-                    runGridView.Rows[currentIndex - 1].Cells[1].Value = Path.GetFileName(e.FullPath);
-                }
-                if (currentIndex == 1)
-                {
-                    return;
-                }
-                var fileToProcessIndex = currentIndex - 2; // Index of array is -1 and we want to process previous file so minus another 1.
-                ProcessFile(_rawFiles[fileToProcessIndex], fileToProcessIndex);
-                // If is last raw file will process previous file then execute function LastFileAdded.
-                if (_rawFiles.Count == runGridView.RowCount - 1) // Checks if is the last file to be processed
-                {
-                    var fileInfo = new FileInfo(e.FullPath);
-                    LastFileAdded(fileInfo);
-                }
+                autoQc.Log(e.Name + " added to directory.");
+                _dataFiles.Enqueue(new FileInfo(e.FullPath));
             }));
         }
 
-        // pre: last file to process
-        // waits for a minute with no change in the size of the file before processing
-        void LastFileAdded(FileInfo file)
+        void ProcessFile(FileInfo file)
         {
+            if (IsFileReady(file))
+            {
+                ProcessOneFile(file.FullName);    
+            }
+        }
+
+        static bool IsFileReady(FileInfo file)
+        {
+            // TODO: fix this
             long fileSize = 0;
             while (true)
             {
                 if (fileSize == 0 || file.Length > fileSize)
+                {
                     fileSize = file.Length;
+                }
                 else
                 {
-                    ProcessFile(_rawFiles[_rawFiles.Count - 1], _rawFiles.Count - 1);
-                    StopSProCoPqc(false);
-                    break;
+                    // File size hasn't changed since the last time we checked.
+                    // Assume file has been fully written.
+                    return true;
                 }
-                System.Threading.Thread.Sleep(60000);
+                // Wait for 30 seconds.
+                System.Threading.Thread.Sleep(3000);
             }
+        }
+
+        private void ProcessOneFile(string filePath)
+        {
+            var args = @"--in=""" + config.SkylineFilePath + @""" --import-file=""" + filePath + @""" --save";
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = config.SkylineRunnerPath,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                },
+                EnableRaisingEvents = true
+            };
+
+            process.StartInfo.WorkingDirectory = config.FolderToWatch;
+            process.OutputDataReceived += WriteToLog;
+            process.ErrorDataReceived += WriteToLog;
+            process.Exited += ProcessExit;
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
         }
 
         private void ProcessFile(string path, int index)
         {
-            var conf = GetCurrentConfig();
-            var type = runGridView.Rows[index].Cells[0].Value.ToString();
-            Log(path + " being processed as " + type);
+            // Log(path + " being processed as " + type);
             string args = string.Empty;
-            string exportReportPath = Path.GetDirectoryName(conf.ReportFilePath)+"\\"+"report.csv";
+            string exportReportPath = Path.GetDirectoryName(config.ReportFilePath)+"\\"+"report.csv";
             string saveQcPath = Path.GetDirectoryName(path) + "\\QC.pdf";
+            var type = "QC"; // TODO fix this
             switch(type)
             {
                 case "None":
                     break;
                 case "Threshold":
-                    args = @"--in=""" + conf.SkylineFilePath + @""" --import-file=""" + path + @""" --save";
+                    args = @"--in=""" + textSkylinePath + @""" --import-file=""" + path + @""" --save";
                     break;
                 case "QC":
-                    args = String.Format(@"--in=""" + conf.SkylineFilePath + @""" --import-file=""" + path + @""" --save --report-conflict-resolution=overwrite --report-add=""{0}"" --report-name=""{1}"" --report-file=""{2}""", conf.ReportFilePath, "SProCoP Input", exportReportPath);
+                    args = String.Format(@"--in=""" + textSkylinePath + @""" --import-file=""" + path + @""" --save --report-conflict-resolution=overwrite --report-add=""{0}"" --report-name=""{1}"" --report-file=""{2}""", config.ReportFilePath, "SProCoP Input", exportReportPath);
                     break;
             }
 
@@ -347,7 +569,7 @@ namespace AutoQC
                 var startInfo = new ProcessStartInfo
                 {
                     WindowStyle = ProcessWindowStyle.Hidden,
-                    FileName = conf.SkylineRunnerPath,
+                    FileName = config.SkylineRunnerPath,
                     Arguments = args,
                     UseShellExecute = false
                 };
@@ -357,66 +579,165 @@ namespace AutoQC
                     if (type == "QC")
                     {
                         process.WaitForExit();
-                        var process2 = new Process();
-                        var startInfo2 = new ProcessStartInfo
-                        {
-                            FileName = conf.RScriptPath,
-                            Arguments = String.Format(@"""{0}"" ""{1}"" {2} {3} 1 {4} ""{5}""", conf.SProCoPrScript, exportReportPath, numericUpDownThreshold.Value, checkBoxIsHighRes.Checked ? 1:0, numericUpDownMMA.Value,saveQcPath),
-                            UseShellExecute = false
-                        };
-                        process2.StartInfo = startInfo2;
-                        process2.Start();
+//                        var process2 = new Process();
+//                        var startInfo2 = new ProcessStartInfo
+//                        {
+//                            FileName = config.RScriptPath,
+//                            Arguments = String.Format(@"""{0}"" ""{1}"" {2} {3} 1 {4} ""{5}""", config.SProCoPrScript, exportReportPath, numericUpDownThreshold.Value, checkBoxIsHighRes.Checked ? 1:0, numericUpDownMMA.Value,saveQcPath),
+//                            UseShellExecute = false
+//                        };
+//                        process2.StartInfo = startInfo2;
+//                        process2.Start();
                     }
             }
         }
 
-        private void buttonClear_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Handle a line of output/error data from the process.
+        /// </summary>
+        private void WriteToLog(object sender, DataReceivedEventArgs e)
         {
-            if (IsRunning())
+            Log(e.Data);
+        }
+
+        private void RunUI(Action action)
+        {
+            try
             {
-                Log("Can't clear session data while AutoQC is running.");
+                Invoke(action);
             }
-            else
+            catch (ObjectDisposedException)
             {
-                _rawFiles = new List<string>();
-                foreach (DataGridViewRow row in runGridView.Rows)
-                {
-                    row.ReadOnly = false;
-                }
-                Log("All data in this session ahs been cleared, you may begin a new run at any time.", true);
             }
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Handle process exit (success, error, or interrupt).
+        /// </summary>
+        void ProcessExit(object sender, EventArgs e)
         {
-            var config = GetCurrentConfig();
-            Properties.Settings.Default.RScriptPath = config.RScriptPath;
-            Properties.Settings.Default.SkylineRunnerPath = config.SkylineRunnerPath;
-            Properties.Settings.Default.SkylineFilePath = config.SkylineFilePath;
-            Properties.Settings.Default.ReportFilePath = config.ReportFilePath;
-            Properties.Settings.Default.FolderToWatch = config.FolderToWatch;
-            Properties.Settings.Default.SkylineRunnerPath = config.SkylineRunnerPath;
-            Properties.Settings.Default.SProCoPRScript = config.SProCoPrScript;
-            Properties.Settings.Default.Save();
+               Log("Process exited.");
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textOutput_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cbRunsprocop_CheckedChanged(object sender, EventArgs e)
+        {
+            groupBoxSprocop.Enabled = cbRunsprocop.Checked;
+        }
+
+        private void cbPublishToPanorama_CheckedChanged(object sender, EventArgs e)
+        {
+            groupBoxPanorama.Enabled = cbPublishToPanorama.Checked;
         }
     }
 
     public class QcConfig
     {
-        public String FolderToWatch;
-        public String SkylineRunnerPath;
-        public String SkylineFilePath;
-        public String ReportFilePath = Path.Combine(Directory.GetCurrentDirectory(), "SProCoP_report.skyr");
-        public String RScriptPath;
-        public String SProCoPrScript = Path.Combine(Directory.GetCurrentDirectory(), "QCplotsRgui2.R");
-        
-        public QcConfig(string folderToWatch, string skylineRunnerPath, string skylineFilePath,
-            string rScriptPath)
+        #region [Settings]
+        public string FolderToWatch
         {
-            FolderToWatch = folderToWatch;
-            SkylineRunnerPath = skylineRunnerPath;
-            SkylineFilePath = skylineFilePath;
-            RScriptPath = rScriptPath;
+            get { return Properties.Settings.Default.FolderToWatch; }
+            set { Properties.Settings.Default.FolderToWatch = value; }
+        }
+
+        public bool ImportExistingFiles
+        {
+            get { return Properties.Settings.Default.ImportExistingFiles; }
+            set { Properties.Settings.Default.ImportExistingFiles = value; }   
+        }
+
+        public int AccumulationWindow
+        {
+            get { return Properties.Settings.Default.AccumulationWindow; }
+            set { Properties.Settings.Default.AccumulationWindow = value; }          
+        }
+
+        public string SkylineRunnerPath
+        {
+            get { return Properties.Settings.Default.SkylineRunnerPath; }
+            set { Properties.Settings.Default.SkylineRunnerPath = value; }
+        }
+
+        public string SkylineFilePath
+        {
+            get { return Properties.Settings.Default.SkylineFilePath; }
+            set { Properties.Settings.Default.SkylineFilePath = value; }
+        }
+
+        public string InstrumentType
+        {
+            get { return Properties.Settings.Default.InstrumentType; }
+            set { Properties.Settings.Default.InstrumentType = value; }
+        }
+        #endregion
+
+        #region [Panorama settings]
+        public bool PublishToPanorama
+        {
+            get { return Properties.Settings.Default.PublishToPanorama; }
+            set { Properties.Settings.Default.PublishToPanorama = value; }
+        }
+
+        public string PanoramaServerUrl
+        {
+            get { return Properties.Settings.Default.PanoramaUrl; }
+            set { Properties.Settings.Default.PanoramaUrl = value; }
+        }
+
+        public string PanoramaUserName
+        {
+            get { return Properties.Settings.Default.PanoramaUserEmail; }
+            set { Properties.Settings.Default.PanoramaUserEmail = value; }
+        }
+
+        public string PanoramaPassword
+        {
+            get { return Properties.Settings.Default.PanoramaPassword; }
+            set { Properties.Settings.Default.PanoramaPassword = value; }
+        }
+
+        public string PanoramaFolder
+        {
+            get { return Properties.Settings.Default.PanoramaFolder; }
+            set { Properties.Settings.Default.PanoramaFolder = value; }
+        }
+        #endregion
+
+        #region [SProCop settings]
+        public bool RunSprocop
+        {
+            get { return Properties.Settings.Default.RunSprocop; }
+            set { Properties.Settings.Default.RunSprocop = value; }
+        }
+
+        public string RScriptPath
+        {
+            get { return Properties.Settings.Default.RScriptPath; }
+            set { Properties.Settings.Default.RScriptPath = value; }
+        }
+        public String ReportFilePath
+        {
+            get { return Path.Combine(Directory.GetCurrentDirectory(), "SProCoP_report.skyr"); }
+        }
+
+        public String SProCoPrScript
+        {
+            get { return Path.Combine(Directory.GetCurrentDirectory(), "QCplotsRgui2.R"); }
+        }
+        #endregion
+
+        public void SaveConfig()
+        {
+            Properties.Settings.Default.Save();
         }
     }
 }
