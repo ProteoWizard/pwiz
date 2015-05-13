@@ -2106,7 +2106,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (idName == null)
                 return;
 
-            if (HasDocumentLibrary && !LibrarySpecs.Any(spec => spec.IsDocumentLibrary))
+            if (HasDocumentLibrary && !LibrarySpecs.Any(spec => spec != null && spec.IsDocumentLibrary))
             {
                 // Not possible to reconcile until Document Library is loaded.
                 return;
