@@ -137,15 +137,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 MessageDlg.Show(parent, x.Message);
             }
-            catch (IOException x)
-            {
-                xFailure = x;
-            }
-            catch (ZipException x)
-            {
-                xFailure = x;
-            }
-            catch (UnauthorizedAccessException x)
+            catch (Exception x)
             {
                 xFailure = x;
             }
