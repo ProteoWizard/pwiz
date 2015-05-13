@@ -149,7 +149,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (parentNode is PeptideDocNode)
                     {
+                        // Resharper code inspection v9.0 on TC gets this one wrong
+                        // ReSharper disable ExpressionIsAlwaysNull
                         int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        // ReSharper restore ExpressionIsAlwaysNull
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Length];
                     }
                     else if (displayType == DisplayTypeChrom.total)
