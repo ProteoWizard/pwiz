@@ -73,9 +73,10 @@ namespace OutputParser
                                 concatIssues.Add(issue.Attributes["TypeId"].Value,new List<string>());
                                 issueCounter.Add(issue.Attributes["TypeId"].Value, 0);
                             }
-                            if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(issue.Attributes["File"].Value))
+                            var location = issue.Attributes["File"].Value + ":" + issue.Attributes["Line"].Value;
+                            if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(location))
                             {
-                                concatIssues[issue.Attributes["TypeId"].Value].Add(issue.Attributes["File"].Value);
+                                concatIssues[issue.Attributes["TypeId"].Value].Add(location);
                             }
                             issueCounter[issue.Attributes["TypeId"].Value]++;
                             totalIssueCounter++;
