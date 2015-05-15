@@ -54,8 +54,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            CEOptimizationTest();
-            OptLibNeutralLossTest();
+//            CEOptimizationTest();
+//            OptLibNeutralLossTest();
             CovOptimizationTest();
         }
 
@@ -421,11 +421,14 @@ namespace pwiz.SkylineTestFunctional
             string outTransitionsMedium = TestFilesDir.GetTestPath(@"covdata\cov_medium.csv");
             string outTransitionsFine = TestFilesDir.GetTestPath(@"covdata\cov_fine.csv");
             string outTransitionsFinal = TestFilesDir.GetTestPath(@"covdata\cov_final.csv");
+            string outTransitionsFinalWithOptLib = TestFilesDir.GetTestPath(@"covdata\cov_final2.csv");
 
             var doc = SkylineWindow.Document;
 
             // Verify settings
-            var cov = doc.Settings.TransitionSettings.Prediction.CompensationVoltage;
+            var prediction = doc.Settings.TransitionSettings.Prediction;
+            var cov = prediction.CompensationVoltage;
+            Assert.AreEqual(OptimizedMethodType.Precursor, prediction.OptimizedMethodType);
             Assert.AreEqual("ABI", cov.Name);
             Assert.AreEqual(6, cov.MinCov);
             Assert.AreEqual(30, cov.MaxCov);
@@ -570,16 +573,85 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.FileEquals(outTransitionsFinal, TestFilesDir.GetTestPath(@"covdata\cov_final_expected.csv"));
 
+            // Add new optimization library
+            var dlgTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            var dlgEditOptLib = ShowDialog<EditOptimizationLibraryDlg>(dlgTransitionSettings.AddToOptimizationLibraryList);
+
+            string optLibPath = TestFilesDir.GetTestPath("cov.optdb");
+
+            RunUI(() =>
+            {
+                dlgEditOptLib.CreateDatabase(optLibPath);
+                dlgEditOptLib.LibName = "Test CoV library";
+                Assert.AreEqual(ExportOptimize.CE, dlgEditOptLib.ViewType);
+                dlgEditOptLib.ViewType = ExportOptimize.COV;
+                Assert.AreEqual(ExportOptimize.COV, dlgEditOptLib.ViewType);
+            });
+
+            var dlgAddFromResults = ShowDialog<AddOptimizationsDlg>(dlgEditOptLib.AddResults);
+            RunUI(() =>
+            {
+                Assert.AreEqual(5, dlgAddFromResults.OptimizationsCount);
+                Assert.AreEqual(0, dlgAddFromResults.ExistingOptimizationsCount);
+            });
+            OkDialog(dlgAddFromResults, dlgAddFromResults.OkDialog);
+
+            string pasteText = TextUtil.LineSeparate(
+                GetPasteLine("GDFQFNISR", 2, 12.34),
+                GetPasteLine("DVSLLHKPTTQISDFHVATR", 4, 23.45));
+            RunUI(() =>
+            {
+                var libOptimizations = dlgEditOptLib.LibraryOptimizations;
+                Assert.AreEqual(5, libOptimizations.Count);
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "FNDDFSR", 2, null, 0, 17.00)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "GDFQFNISR", 2, null, 0, 12.75)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "IDPNAWVER", 2, null, 0, 12.50)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "TDRPSQQLR", 2, null, 0, 14.00)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "DVSLLHKPTTQISDFHVATR", 4, null, 0, 18.25)));
+                dlgEditOptLib.SetOptimizations(new DbOptimization[0]);
+                Assert.AreEqual(0, libOptimizations.Count);
+                SetClipboardText(pasteText);
+            });
+
+            var addOptDlg = ShowDialog<AddOptimizationsDlg>(dlgEditOptLib.DoPasteLibrary);
+            RunUI(() =>
+            {
+                Assert.AreEqual(2, addOptDlg.OptimizationsCount);
+                Assert.AreEqual(0, addOptDlg.ExistingOptimizationsCount);
+            });
+            OkDialog(addOptDlg, addOptDlg.OkDialog);
+            OkDialog(dlgEditOptLib, dlgEditOptLib.OkDialog);
+            OkDialog(dlgTransitionSettings, dlgTransitionSettings.OkDialog);
+
+            // Export with optimization library and verify against expected results
+            var dlgExportFinal2 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            RunUI(() =>
+            {
+                dlgExportFinal2.OptimizeType = ExportOptimize.NONE;
+                dlgExportFinal2.OkDialog(outTransitionsFinalWithOptLib);
+            });
+            AssertEx.FileEquals(outTransitionsFinalWithOptLib, TestFilesDir.GetTestPath(@"covdata\cov_final_expected2.csv"));
+
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
-        private string GetPasteLine(string seq, int charge, string product, int productCharge, double ce)
+        private static string GetPasteLine(string seq, int charge, string product, int productCharge, double ce)
         {
             var fields = new[]
             {
                 string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(charge)),
                 string.Format(CultureInfo.CurrentCulture, "{0}{1}", product, Transition.GetChargeIndicator(productCharge)),
                 ce.ToString(CultureInfo.CurrentCulture)
+            };
+            return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
+        }
+
+        private static string GetPasteLine(string seq, int charge, double cov)
+        {
+            var fields = new[]
+            {
+                string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(charge)),
+                cov.ToString(CultureInfo.CurrentCulture)
             };
             return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }

@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using NHibernate;
+using NHibernate.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -42,7 +43,6 @@ namespace pwiz.Skyline.SettingsUI
     public partial class EditOptimizationLibraryDlg : FormEx
     {
         private readonly IEnumerable<OptimizationLibrary> _existing;
-        private readonly OptimizationType _type;
         private readonly SrmDocument _document;
 
         public OptimizationLibrary Library { get; private set; }
@@ -54,10 +54,9 @@ namespace pwiz.Skyline.SettingsUI
         //an old one, or editing an old one
         private readonly string _editingName = string.Empty;
 
-        public EditOptimizationLibraryDlg(SrmDocument document, OptimizationLibrary lib, IEnumerable<OptimizationLibrary> existing, OptimizationType type)
+        public EditOptimizationLibraryDlg(SrmDocument document, OptimizationLibrary lib, IEnumerable<OptimizationLibrary> existing)
         {
             _existing = existing;
-            _type = type;
             _document = document;
 
             InitializeComponent();
@@ -65,15 +64,45 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
 
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
-                                                               new SortableBindingList<DbOptimization>());
-
-            UpdateValueHeader();
-            UpdateNumOptimizations();
+                                                               new SortableBindingList<DbOptimization>(), this, document);
 
             if (lib != null)
             {
                 textName.Text = _editingName = lib.Name;
                 OpenDatabase(lib.DatabasePath);
+            }
+
+            comboType.Items.Add(ExportOptimize.CE);
+            comboType.Items.Add(ExportOptimize.COV);
+            comboType.SelectedIndex = 0;
+        }
+
+        public string ViewType
+        {
+            get { return comboType.SelectedItem != null ? comboType.SelectedItem.ToString() : null; }
+            set { comboType.SelectedItem = value; }
+        }
+
+        public OptimizationType ViewDbType
+        {
+            get
+            {
+                if (Equals(ViewType, ExportOptimize.CE))
+                    return OptimizationType.collision_energy;
+                if (Equals(ViewType, ExportOptimize.DP))
+                    return OptimizationType.declustering_potential;
+                if (Equals(ViewType, ExportOptimize.COV))
+                    return OptimizationType.compensation_voltage_fine;
+                return OptimizationType.unknown;
+            }
+            set
+            {
+                if (Equals(value, OptimizationType.collision_energy))
+                    ViewType = ExportOptimize.CE;
+                else if (Equals(value, OptimizationType.declustering_potential))
+                    ViewType = ExportOptimize.DP;
+                else if (Equals(value, OptimizationType.compensation_voltage_fine))
+                    ViewType = ExportOptimize.COV;
             }
         }
 
@@ -111,12 +140,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private BindingList<DbOptimization> LibraryOptimizationList { get { return _gridViewLibraryDriver.Items; } }
-
-        public IEnumerable<DbOptimization> LibraryOptimizations
-        {
-            get { return LibraryOptimizationList; }
-        }
+        public BindingList<DbOptimization> LibraryOptimizations { get { return _gridViewLibraryDriver.Optimizations; } }
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
@@ -158,10 +182,10 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                OptimizationDb db = OptimizationDb.GetOptimizationDb(path, null, Program.ActiveDocumentUI);
+                OptimizationDb db = OptimizationDb.GetOptimizationDb(path, null, _document);
                 var dbOptimizations = db.GetOptimizations().ToArray();
 
-                LoadLibrary(dbOptimizations);
+                SetOptimizations(dbOptimizations);
 
                 // Clone all of the optimizations to use for comparison in OkDialog
                 _original = dbOptimizations.Select(p => new DbOptimization(p)).ToArray();
@@ -200,8 +224,15 @@ namespace pwiz.Skyline.SettingsUI
 
                     CreateDatabase(dlg.FileName);
                     textDatabase.Focus();
+                    SetOptimizations(new DbOptimization[0]);
+                    _original = null;
                 }
             }
+        }
+
+        public void SetOptimizations(IEnumerable<DbOptimization> optimizations)
+        {
+            _gridViewLibraryDriver.SetOptimizations(optimizations);
         }
 
         public void CreateDatabase(string path)
@@ -282,7 +313,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.Equals(Path.GetExtension(path), OptimizationDb.EXT))
                 path += OptimizationDb.EXT;
 
-            if (!ValidateOptimizationList(LibraryOptimizationList, Resources.EditOptimizationLibraryDlg_OkDialog_library))
+            if (!ValidateOptimizationList(LibraryOptimizations, Resources.EditOptimizationLibraryDlg_OkDialog_library))
             {
                 gridViewLibrary.Focus();
                 return;
@@ -351,26 +382,94 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-        private void LoadLibrary(IEnumerable<DbOptimization> library)
-        {
-            LibraryOptimizationList.Clear();
-            foreach (var optimization in library)
-                LibraryOptimizationList.Add(optimization);
-        }
-
         public class LibraryGridViewDriver : PeptideGridViewDriver<DbOptimization>
         {
             private const int COLUMN_PRODUCT_ION = 1;
             private const int COLUMN_VALUE = 2;
+            private const int COLUMN_TYPE = 3;
+
+            private readonly EditOptimizationLibraryDlg _form;
+            private readonly SrmDocument _document;
+
+            public BindingList<DbOptimization> Optimizations { get; private set; }
 
             private static readonly Regex RGX_PRODUCT_ION = new Regex(@"^[\s]*(?<ion>precursor|[abcxyz][\d]+)[\s]*(?:-[\s]*(?<loss>[\d]+(?:[\.,][\d]+)?)[\s]*)?$", RegexOptions.IgnoreCase); // Not L10N
 
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
-                                         SortableBindingList<DbOptimization> items)
+                                         SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document)
                 : base(gridView, bindingSource, items)
             {
+                gridView.UserDeletingRow += gridView_UserDeletingRow;
+                gridView.UserDeletedRow += gridView_UserDeletedRow;
                 gridView.CellFormatting += gridView_CellFormatting;
                 gridView.CellParsing += gridView_CellParsing;
+                _form = form;
+                _document = document;
+                Optimizations = new BindingList<DbOptimization>();
+                Optimizations.ListChanged += OptimizationsChanged;
+            }
+
+            private string ViewType { get { return _form.ViewType; } }
+            private OptimizationType ViewDbType { get { return _form.ViewDbType; } }
+
+            private void OptimizationsChanged(object sender, ListChangedEventArgs e)
+            {
+                var list = sender as BindingList<DbOptimization>;
+                if (list == null)
+                    return;
+
+                switch (e.ListChangedType)
+                {
+                    case ListChangedType.ItemAdded:
+                        var newItem = list[e.NewIndex];
+                        if (newItem.Type.Equals((int)ViewDbType))
+                        {
+                            Items.Add(newItem);
+                            _form.UpdateNumOptimizations();
+                        }
+                        break;
+                    case ListChangedType.Reset:
+                        UpdateView();
+                        break;
+                }
+            }
+
+            public void SetOptimizations(IEnumerable<DbOptimization> optimizations)
+            {
+                Optimizations.RaiseListChangedEvents = false;
+                Optimizations.Clear();
+                optimizations.ForEach(opt => Optimizations.Add(opt));
+                Optimizations.RaiseListChangedEvents = true;
+                Optimizations.ResetBindings();
+            }
+
+            public void UpdateView()
+            {
+                // Update the grid view to show the appropriate headers and optimizations based on the combobox
+                GridView.Columns[COLUMN_VALUE].HeaderText = ViewType;
+                GridView.Columns[COLUMN_PRODUCT_ION].Visible = !Equals(ViewType, ExportOptimize.COV);
+
+                Items.Clear();
+                Items.RaiseListChangedEvents = false;
+                Optimizations.Where(opt => opt.Type.Equals((int)ViewDbType)).ForEach(opt => Items.Add(opt));
+                Items.RaiseListChangedEvents = true;
+                Items.ResetBindings();
+
+                _form.UpdateNumOptimizations();
+            }
+
+            private void gridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+            {
+                var optimization = e.Row.DataBoundItem as DbOptimization;
+                if (optimization == null)
+                    return;
+
+                Optimizations.Remove(optimization);
+            }
+
+            private void gridView_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
+            {
+                _form.UpdateNumOptimizations();
             }
 
             private void gridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -432,23 +531,36 @@ namespace pwiz.Skyline.SettingsUI
             public DbOptimization GetOptimization(OptimizationType type, string sequence, int charge, string fragmentIon, int productCharge)
             {
                 DbOptimization[] optimizations =
-                    Items.Where(item => Equals(item.Type, (int)type) && Equals(item.PeptideModSeq, sequence) &&
-                        Equals(item.Charge, charge) && Equals(item.FragmentIon, fragmentIon) && Equals(item.ProductCharge, productCharge)).ToArray();
+                    Optimizations.Where(opt => Equals(opt.Type, (int)type) && Equals(opt.PeptideModSeq, sequence) &&
+                        Equals(opt.Charge, charge) && Equals(opt.FragmentIon, fragmentIon) && Equals(opt.ProductCharge, productCharge)).ToArray();
                 return optimizations.Count() == 1 ? optimizations.First() : null;
             }
 
             protected override void DoPaste()
             {
                 var libraryOptimizationsNew = new List<DbOptimization>();
-                if (GridView.DoPaste(MessageParent, ValidateOptimizationRow, values =>
-                    libraryOptimizationsNew.Add(new DbOptimization(
-                        OptimizationType.collision_energy,
-                        Transition.StripChargeIndicators(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
-                        Transition.GetChargeFromIndicator(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1),
-                        NormalizeProductIon(Transition.StripChargeIndicators(values[1], Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE)),
-                        Transition.GetChargeFromIndicator(values[1], Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).GetValueOrDefault(1),
-                        double.Parse(values[2]))
-                    )))
+                bool add = false;
+
+                if (Equals(ViewType, ExportOptimize.CE))
+                {
+                    add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
+                        values => libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
+                            Transition.StripChargeIndicators(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
+                            Transition.GetChargeFromIndicator(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1),
+                            NormalizeProductIon(Transition.StripChargeIndicators(values[1], Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE)),
+                            Transition.GetChargeFromIndicator(values[1], Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).GetValueOrDefault(1),
+                            double.Parse(values[2]))));
+                }
+                else if (Equals(ViewType, ExportOptimize.COV))
+                {
+                    add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
+                        values => libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
+                            Transition.StripChargeIndicators(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE),
+                            Transition.GetChargeFromIndicator(values[0], TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE).GetValueOrDefault(1),
+                            null, 0, double.Parse(values[1]))));
+                }
+
+                if (add)
                 {
                     AddToLibrary(libraryOptimizationsNew);
                 }
@@ -467,17 +579,19 @@ namespace pwiz.Skyline.SettingsUI
                     : string.Format(culture, "{0} -{1}", normalizedIon, Math.Round(double.Parse(matches[0].Groups["loss"].Value, culture), 1)); // Not L10N
             }
 
-            private static bool ValidateOptimizationRow(object[] columns, IWin32Window parent, int lineNumber)
+            private bool ValidateOptimizationRow(object[] columns, IWin32Window parent, int lineNumber)
             {
-                if (columns.Length != 3)
+                if (columns.Length != GridView.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible))
                 {
-                    MessageDlg.Show(parent, Resources.LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_3_columns);
+                    MessageDlg.Show(parent, Resources.LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_);
                     return false;
                 }
 
-                string seq = columns[COLUMN_SEQUENCE] as string;
-                string prod = columns[COLUMN_PRODUCT_ION] as string;
-                string val = columns[COLUMN_VALUE] as string;
+                bool prodVisible = GridView.Columns[COLUMN_PRODUCT_ION].Visible;
+
+                string seq = columns[0] as string;
+                string prod = prodVisible ? columns[1] as string : null;
+                string val = columns.Last() as string;
                 string message;
                 if (string.IsNullOrWhiteSpace(seq))
                 {
@@ -487,20 +601,20 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
                 }
-                else if (ValidateProductIon(prod) != null)
+                else if (prodVisible && string.IsNullOrWhiteSpace(prod))
                 {
-                    message = string.Format(Resources.LibraryGridViewDriver_ValidateOptimizationRow_The_text__0__is_not_a_valid_product_ion_on_line__1_, prod, lineNumber);
+                    message = string.Format(Resources.LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_, prod, lineNumber);
+                }
+                else if (prodVisible && ValidateProductIon(prod) != null)
+                {
+                    message = string.Format(Resources.LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__, prod, lineNumber);
                 }
                 else
                 {
                     double dVal;
-                    if (string.IsNullOrWhiteSpace(prod) || string.IsNullOrWhiteSpace(val))
+                    if (string.IsNullOrWhiteSpace(val))
                     {
                         message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
-                    }
-                    else if (ValidateProductIon(prod) != null)
-                    {
-                        message = string.Format(Resources.LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__, prod, lineNumber);
                     }
                     else if (!double.TryParse(val, out dVal))
                     {
@@ -550,7 +664,7 @@ namespace pwiz.Skyline.SettingsUI
                             curKey.ProductCharge = Transition.GetChargeFromIndicator(value, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE).GetValueOrDefault(1);
                             break;
                     }
-                    int iExist = Items.ToArray().IndexOf(item => Equals(item.Key, curKey));
+                    int iExist = Optimizations.ToArray().IndexOf(item => Equals(item.Key, curKey));
                     if (iExist != -1 && iExist != rowIndex)
                     {
                         errorText = string.Format(
@@ -604,7 +718,7 @@ namespace pwiz.Skyline.SettingsUI
                     return true;
                 var cell = row.Cells[COLUMN_SEQUENCE];
                 string errorText = ValidateSequence(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null);
-                if (errorText == null)
+                if (errorText == null && !row.Cells[COLUMN_TYPE].Value.Equals((int) OptimizationType.compensation_voltage_fine))
                 {
                     cell = row.Cells[COLUMN_PRODUCT_ION];
                     errorText = ValidateProductIon(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null);
@@ -645,8 +759,7 @@ namespace pwiz.Skyline.SettingsUI
 
             public void AddResults()
             {
-                var document = Program.ActiveDocumentUI;
-                var settings = document.Settings;
+                var settings = _document.Settings;
                 if (!settings.HasResults)
                 {
                     MessageDlg.Show(MessageParent, Resources.LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_);
@@ -654,24 +767,35 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 var newOptimizations = new HashSet<DbOptimization>();
-                foreach (PeptideGroupDocNode seq in document.MoleculeGroups)
+
+                foreach (PeptideGroupDocNode seq in _document.MoleculeGroups.Where(seq => seq.TransitionCount > 0 && !seq.IsDecoy))
                 {
-                    // Skip peptide groups with no transitions and skip decoys
-                    if (seq.TransitionCount == 0 || seq.IsDecoy)
-                        continue;
                     foreach (PeptideDocNode peptide in seq.Children)
                     {
                         foreach (TransitionGroupDocNode nodeGroup in peptide.Children)
                         {
-                            string sequence = document.Settings.GetSourceTextId(peptide);
+                            string sequence = _document.Settings.GetSourceTextId(peptide);
                             int charge = nodeGroup.PrecursorCharge;
                             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                             {
-                                var optimizationKey = new OptimizationKey(OptimizationType.collision_energy, sequence, charge, nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture), nodeTran.Transition.Charge);
-                                double? value = OptimizationStep<CollisionEnergyRegression>.FindOptimizedValueFromResults(settings, peptide, nodeGroup, nodeTran, OptimizedMethodType.Transition, GetCollisionEnergy);
+                                OptimizationKey key = null;
+                                double? value = null;
+                                if (Equals(ViewType, ExportOptimize.CE))
+                                {
+                                    key = new OptimizationKey(ViewDbType, sequence, charge, nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture), nodeTran.Transition.Charge);
+                                    value = OptimizationStep<CollisionEnergyRegression>.FindOptimizedValueFromResults(
+                                            settings, peptide, nodeGroup, nodeTran, OptimizedMethodType.Transition, GetCollisionEnergy);
+                                }
+                                else if (Equals(ViewType, ExportOptimize.COV))
+                                {
+                                    key = new OptimizationKey(ViewDbType, sequence, charge, null, 0);
+                                    double? cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(_document.Settings,
+                                        peptide, nodeGroup, null, OptimizedMethodType.Precursor, SrmDocument.GetCompensationVoltageFine);
+                                    value = cov.HasValue ? cov.Value : 0;
+                                }
                                 if (value.HasValue && value > 0)
                                 {
-                                    newOptimizations.Add(new DbOptimization(optimizationKey, value.Value));
+                                    newOptimizations.Add(new DbOptimization(key, value.Value));
                                 }
                             }
                         }
@@ -682,7 +806,10 @@ namespace pwiz.Skyline.SettingsUI
 
             public void AddOptimizationLibrary(SrmDocument document)
             {
-                var optLibs = Settings.Default.OptimizationLibraryList.Where(lib => !lib.IsNone);
+                string txtName = _form.textName.Text;
+                string txtPath = _form.textDatabase.Text;
+                var optLibs = Settings.Default.OptimizationLibraryList.Where(
+                        lib => !lib.IsNone && !(Equals(txtName, lib.Name) && Equals(txtPath, lib.DatabasePath)));
                 using (var addOptimizationLibraryDlg = new AddOptimizationLibraryDlg(optLibs))
                 {
                     if (addOptimizationLibraryDlg.ShowDialog(MessageParent) == DialogResult.OK)
@@ -709,7 +836,7 @@ namespace pwiz.Skyline.SettingsUI
                             var optDb = OptimizationDb.GetOptimizationDb(optLibrary.DatabasePath, monitor, document);
                             if (optDb != null)
                             {
-                                optimizations = optDb.GetOptimizations();
+                                optimizations = optDb.GetOptimizations().Where(opt => Equals(opt.Type, (int)ViewDbType));
                             }
                         });
                         if (status.IsError)
@@ -736,27 +863,30 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 var dictLibraryIndices = new Dictionary<OptimizationKey, int>();
-                for (int i = 0; i < Items.Count; i++)
+                for (int i = 0; i < Optimizations.Count; i++)
                 {
                     // Sometimes the last item can be empty with no sequence.
-                    if (Items[i].Key != null)
-                        dictLibraryIndices.Add(Items[i].Key, i);
+                    if (Optimizations[i].Key != null)
+                        dictLibraryIndices.Add(Optimizations[i].Key, i);
                 }
 
                 var listOptimizationsNew = libraryOptimizationsNew.ToList();
                 var listChangedOptimizations = new List<OptimizationKey>();
 
                 // Check for existing matching optimizations
-                foreach (var optimization in listOptimizationsNew)
+                for (int i = listOptimizationsNew.Count - 1; i >= 0; i--)
                 {
                     int optimizationIndex;
-                    if (!dictLibraryIndices.TryGetValue(optimization.Key, out optimizationIndex))
-                        continue;
-                    var optimizationExist = Items[optimizationIndex];
-                    if (Equals(optimization, optimizationExist))
+                    if (!dictLibraryIndices.TryGetValue(listOptimizationsNew[i].Key, out optimizationIndex))
                         continue;
 
-                    listChangedOptimizations.Add(optimization.Key);
+                    if (Equals(listOptimizationsNew[i], Optimizations[optimizationIndex]))
+                    {
+                        listOptimizationsNew.RemoveAt(i);
+                        continue;
+                    }
+
+                    listChangedOptimizations.Add(listOptimizationsNew[i].Key);
                 }
 
                 listChangedOptimizations.Sort();
@@ -772,7 +902,7 @@ namespace pwiz.Skyline.SettingsUI
                     action = dlg.Action;
                 }
 
-                Items.RaiseListChangedEvents = false;
+                Optimizations.RaiseListChangedEvents = false;
                 try
                 {
                     // Add the new optimizations to the library list
@@ -784,11 +914,11 @@ namespace pwiz.Skyline.SettingsUI
                         if (!dictLibraryIndices.TryGetValue(key, out optimizationIndex))
                         {
                             optimization.Id = null;
-                            Items.Add(optimization);
+                            Optimizations.Add(optimization);
                             continue;
                         }
 
-                        var optimizationExist = Items[optimizationIndex];
+                        var optimizationExist = Optimizations[optimizationIndex];
                         // Replace optimizations if the user said to
                         if (action == AddOptimizationsAction.replace)
                         {
@@ -797,64 +927,45 @@ namespace pwiz.Skyline.SettingsUI
                         // Skip optimizations if the user said to, or no change has occurred.
                         else if (action == AddOptimizationsAction.skip || Equals(optimization, optimizationExist))
                         {
-                            continue;
                         }
                         // Average existing and new if that is what the user specified.
                         else if (action == AddOptimizationsAction.average)
                         {
                             optimizationExist.Value = (optimization.Value + optimizationExist.Value) / 2;
                         }
-
-                        Items.ResetItem(optimizationIndex);
                     }
                 }
                 finally
                 {
-                    Items.RaiseListChangedEvents = true;
+                    Optimizations.RaiseListChangedEvents = true;
                 }
-                Items.ResetBindings();
+                Optimizations.ResetBindings();
             }
-        }
-
-        private void UpdateValueHeader()
-        {
-            switch (_type)
-            {
-                case OptimizationType.collision_energy:
-                    columnValue.HeaderText = Resources.EditOptimizationLibraryDlg_UpdateValueHeader_Collision_Energy;
-                    break;
-                case OptimizationType.declustering_potential:
-                    columnValue.HeaderText = Resources.EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential;
-                    break;
-            }
-        }
-
-        private void gridViewLibrary_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
-        {
-            UpdateNumOptimizations();
-        }
-
-        private void gridViewLibrary_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
-        {
-            UpdateNumOptimizations();
         }
 
         private void UpdateNumOptimizations()
         {
-            switch (_type)
+            int optCount = _gridViewLibraryDriver.Optimizations.Count(opt => opt.Type.Equals((int) ViewDbType));
+            if (Equals(ViewType, ExportOptimize.CE))
             {
-                case OptimizationType.collision_energy:
-                    labelNumOptimizations.Text = string.Format(LibraryOptimizationList.Count == 1
-                        ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy
-                        : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies,
-                        LibraryOptimizationList.Count);
-                    break;
-                case OptimizationType.declustering_potential:
-                    labelNumOptimizations.Text = string.Format(LibraryOptimizations.Count() == 1
-                        ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential
-                        : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials,
-                        LibraryOptimizationList.Count);
-                    break;
+                labelNumOptimizations.Text = string.Format(optCount == 1
+                    ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy
+                    : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies,
+                    optCount);
+            }
+            else if (Equals(ViewType, ExportOptimize.DP))
+            {
+                labelNumOptimizations.Text = string.Format(optCount == 1
+                    ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential
+                    : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials,
+                    optCount);
+            }
+            else if (Equals(ViewType, ExportOptimize.COV))
+            {
+                labelNumOptimizations.Text = string.Format(optCount == 1
+                    ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage
+                    : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages,
+                    optCount);
             }
         }
 
@@ -886,6 +997,11 @@ namespace pwiz.Skyline.SettingsUI
         public void AddOptimizationDatabase(SrmDocument document)
         {
             _gridViewLibraryDriver.AddOptimizationLibrary(document);
+        }
+
+        private void comboType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _gridViewLibraryDriver.UpdateView();
         }
 
         #region Functional Test Support

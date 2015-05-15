@@ -1604,7 +1604,7 @@ namespace pwiz.Skyline.Properties
         public override OptimizationLibrary EditItem(Control owner, OptimizationLibrary item,
             IEnumerable<OptimizationLibrary> existing, object tag)
         {
-            using (EditOptimizationLibraryDlg editOptimizationLibraryDlg = new EditOptimizationLibraryDlg(Program.ActiveDocument, item, existing ?? this, OptimizationType.collision_energy))
+            using (EditOptimizationLibraryDlg editOptimizationLibraryDlg = new EditOptimizationLibraryDlg(Program.ActiveDocument, item, existing ?? this))
             {
                 return editOptimizationLibraryDlg.ShowDialog(owner) == DialogResult.OK ? editOptimizationLibraryDlg.Library : null;
             }

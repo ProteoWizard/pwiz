@@ -7715,6 +7715,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} optimized compensation voltage.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_volt" +
+                        "age", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} optimized compensation voltages.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_volt" +
+                        "ages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} optimized declustering potential.
         /// </summary>
         public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential {
@@ -12321,22 +12341,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The pasted text must have 3 columns.
+        ///   Looks up a localized string similar to Missing product ion on line {1}..
         /// </summary>
-        public static string LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_3_columns {
+        public static string LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_ {
             get {
-                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_3_columns" +
-                        "", resourceCulture);
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The text {0} is not a valid product ion on line {1}..
+        ///   Looks up a localized string similar to The pasted text must contain the same number of columns as the table..
         /// </summary>
-        public static string LibraryGridViewDriver_ValidateOptimizationRow_The_text__0__is_not_a_valid_product_ion_on_line__1_ {
+        public static string LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_ {
             get {
-                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizationRow_The_text__0__is_not_a_valid_product" +
-                        "_ion_on_line__1_", resourceCulture);
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_sa" +
+                        "me_number_of_columns_as_the_table_", resourceCulture);
             }
         }
         

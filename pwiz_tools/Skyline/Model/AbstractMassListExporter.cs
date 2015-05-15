@@ -735,7 +735,8 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            return ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)
+            var prediction = Document.Settings.TransitionSettings.Prediction;
+            return ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) || prediction.OptimizedMethodType == OptimizedMethodType.None
                 ? Document.GetCompensationVoltage(nodePep, nodeGroup, step, CompensationVoltageParameters.GetTuneLevel(OptimizeType))
                 : Document.GetOptimizedCompensationVoltage(nodePep, nodeGroup);
         }

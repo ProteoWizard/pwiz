@@ -6982,8 +6982,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies" xml:space="preserve">
     <value>{0} optimized collision energies</value>
   </data>
-  <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_3_columns" xml:space="preserve">
-    <value>The pasted text must have 3 columns</value>
+  <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_" xml:space="preserve">
+    <value>The pasted text must contain the same number of columns as the table.</value>
   </data>
   <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential" xml:space="preserve">
     <value>{0} optimized declustering potential</value>
@@ -8126,8 +8126,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__" xml:space="preserve">
     <value>Invalid product ion format {0} on line {1}.</value>
   </data>
-  <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_text__0__is_not_a_valid_product_ion_on_line__1_" xml:space="preserve">
-    <value>The text {0} is not a valid product ion on line {1}.</value>
+  <data name="LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_" xml:space="preserve">
+    <value>Missing product ion on line {1}.</value>
   </data>
   <data name="OptimizationDb_ConvertFromOldFormat_Failed_to_convert__0__optimizations_to_new_format_" xml:space="preserve">
     <value>Failed to convert {0} optimizations to new format.</value>
@@ -8412,5 +8412,11 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="LibrarySpec_Add_spectral_library" xml:space="preserve">
     <value>Add spectral library</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage" xml:space="preserve">
+    <value>{0} optimized compensation voltage</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages" xml:space="preserve">
+    <value>{0} optimized compensation voltages</value>
   </data>
 </root>

@@ -47,15 +47,18 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.columnSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProductIon = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnOptType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnProductCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bindingSourceLibrary = new System.Windows.Forms.BindingSource(this.components);
             this.contextMenuAdd = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addFromResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addFromFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.columnSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnProductIon = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnProductCharge = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label3 = new System.Windows.Forms.Label();
+            this.comboType = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -143,6 +146,7 @@
             this.columnSequence,
             this.columnProductIon,
             this.columnValue,
+            this.columnOptType,
             this.columnCharge,
             this.columnProductCharge});
             this.gridViewLibrary.DataSource = this.bindingSourceLibrary;
@@ -155,28 +159,6 @@
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridViewLibrary.DefaultCellStyle = dataGridViewCellStyle5;
             this.gridViewLibrary.Name = "gridViewLibrary";
-            this.gridViewLibrary.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewLibrary_RowsAdded);
-            this.gridViewLibrary.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewLibrary_RowsRemoved);
-            // 
-            // contextMenuAdd
-            // 
-            this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.addFromResultsMenuItem,
-            this.addFromFileMenuItem});
-            this.contextMenuAdd.Name = "contextMenuAdd";
-            resources.ApplyResources(this.contextMenuAdd, "contextMenuAdd");
-            // 
-            // addFromResultsMenuItem
-            // 
-            this.addFromResultsMenuItem.Name = "addFromResultsMenuItem";
-            resources.ApplyResources(this.addFromResultsMenuItem, "addFromResultsMenuItem");
-            this.addFromResultsMenuItem.Click += new System.EventHandler(this.addFromResultsMenuItem_Click);
-            // 
-            // addFromFileMenuItem
-            // 
-            this.addFromFileMenuItem.Name = "addFromFileMenuItem";
-            resources.ApplyResources(this.addFromFileMenuItem, "addFromFileMenuItem");
-            this.addFromFileMenuItem.Click += new System.EventHandler(this.addFromFileMenuItem_Click);
             // 
             // columnSequence
             // 
@@ -205,6 +187,12 @@
             resources.ApplyResources(this.columnValue, "columnValue");
             this.columnValue.Name = "columnValue";
             // 
+            // columnOptType
+            // 
+            this.columnOptType.DataPropertyName = "Type";
+            resources.ApplyResources(this.columnOptType, "columnOptType");
+            this.columnOptType.Name = "columnOptType";
+            // 
             // columnCharge
             // 
             this.columnCharge.DataPropertyName = "Charge";
@@ -217,12 +205,47 @@
             resources.ApplyResources(this.columnProductCharge, "columnProductCharge");
             this.columnProductCharge.Name = "columnProductCharge";
             // 
+            // contextMenuAdd
+            // 
+            this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addFromResultsMenuItem,
+            this.addFromFileMenuItem});
+            this.contextMenuAdd.Name = "contextMenuAdd";
+            resources.ApplyResources(this.contextMenuAdd, "contextMenuAdd");
+            // 
+            // addFromResultsMenuItem
+            // 
+            this.addFromResultsMenuItem.Name = "addFromResultsMenuItem";
+            resources.ApplyResources(this.addFromResultsMenuItem, "addFromResultsMenuItem");
+            this.addFromResultsMenuItem.Click += new System.EventHandler(this.addFromResultsMenuItem_Click);
+            // 
+            // addFromFileMenuItem
+            // 
+            this.addFromFileMenuItem.Name = "addFromFileMenuItem";
+            resources.ApplyResources(this.addFromFileMenuItem, "addFromFileMenuItem");
+            this.addFromFileMenuItem.Click += new System.EventHandler(this.addFromFileMenuItem_Click);
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // comboType
+            // 
+            this.comboType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboType, "comboType");
+            this.comboType.Name = "comboType";
+            this.comboType.SelectedIndexChanged += new System.EventHandler(this.comboType_SelectedIndexChanged);
+            // 
             // EditOptimizationLibraryDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.comboType);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.gridViewLibrary);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCreate);
@@ -266,9 +289,12 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuAdd;
         private System.Windows.Forms.ToolStripMenuItem addFromResultsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addFromFileMenuItem;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox comboType;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnProductIon;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnValue;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnOptType;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnCharge;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnProductCharge;
 

@@ -3458,7 +3458,7 @@ namespace pwiz.Skyline.Model
             return covRough.HasValue && covRough.Value > 0 ? covRough.Value + regression.StepSizeMedium*step : 0;
         }
 
-        private static double GetCompensationVoltageFine(SrmSettings settings, PeptideDocNode nodePep,
+        public static double GetCompensationVoltageFine(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, CompensationVoltageParameters regression, int step)
         {
             if (regression == null)
@@ -3471,7 +3471,22 @@ namespace pwiz.Skyline.Model
 
         public double GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
-            var covMain = Settings.TransitionSettings.Prediction.CompensationVoltage;
+            var prediction = Settings.TransitionSettings.Prediction;
+            var lib = prediction.OptimizedLibrary;
+
+            if (lib != null && !lib.IsNone)
+            {
+                var optimization = lib.GetOptimization(OptimizationType.compensation_voltage_fine,
+                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge, null, 0);
+                if (optimization != null)
+                {
+                    return optimization.Value;
+                }
+            }
+
+            var covMain = prediction.CompensationVoltage;
+            if (covMain == null)
+                return 0;
 
             double cov;
             if ((cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValue(

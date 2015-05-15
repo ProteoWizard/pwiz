@@ -39,6 +39,9 @@ namespace pwiz.Skyline.SettingsUI.Optimization
 
             comboLibrary.Items.AddRange(libraries.Cast<object>().ToArray());
             ComboHelper.AutoSizeDropDown(comboLibrary);
+
+            if (comboLibrary.Items.Count > 0)
+                comboLibrary.SelectedIndex = 0;
         }
 
         public OptimizationLibrarySource Source
@@ -131,6 +134,8 @@ namespace pwiz.Skyline.SettingsUI.Optimization
             if (Source == OptimizationLibrarySource.settings)
             {
                 comboLibrary.Enabled = true;
+                if (comboLibrary.Items.Count > 0)
+                    comboLibrary.SelectedIndex = 0;
                 textFilePath.Enabled = false;
                 textFilePath.Text = string.Empty;
                 btnBrowseFile.Enabled = false;
