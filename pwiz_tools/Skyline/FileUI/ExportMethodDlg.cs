@@ -408,7 +408,7 @@ namespace pwiz.Skyline.FileUI
         private void UpdateCovControls()
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
-            bool canOptimizeCov = InstrumentType.Equals(ExportInstrumentType.ABI) && _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+            bool canOptimizeCov = InstrumentType.Contains("SCIEX") && _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null; // Not L10N
             if (covInList && !canOptimizeCov)
             {
                 if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))

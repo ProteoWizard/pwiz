@@ -278,6 +278,11 @@ namespace BuildQTRAPMethod
                 triggerThreshold = ((IMassRange4)msExperiment.GetMassRange(0)).TriggerThreshold;
             }
 
+            
+            var templateMassRangeParams = (ParamDataColl)((IMassRange)msExperiment.GetMassRange(0)).MassDepParamTbl;
+            short templateCxpParameterIdx;
+            var templateCxp = (ParameterData)templateMassRangeParams.FindParameter("CXP", out templateCxpParameterIdx);
+
             msExperiment.DeleteAllMasses();
 
             float? medianArea = null;
@@ -306,6 +311,12 @@ namespace BuildQTRAPMethod
                 massRangeParams.Description = transition.Label;
                 massRangeParams.AddSetParameter("DP", (float) transition.DP, (float) transition.DP, 0, out s);
                 massRangeParams.AddSetParameter("CE", (float) transition.CE, (float) transition.CE, 0, out s);
+
+                if (templateCxpParameterIdx > 0 && templateCxp != null)
+                    massRangeParams.AddSetParameter("CXP", templateCxp.startVal, templateCxp.stopVal, templateCxp.stepVal, out s);
+
+                if(transition.CoV.HasValue)
+                    massRangeParams.AddSetParameter("COV", (float)transition.CoV, (float)transition.CoV, 0, out s);
 
                 if (analystSupportsEnhancedScheduledMrm)
                 {

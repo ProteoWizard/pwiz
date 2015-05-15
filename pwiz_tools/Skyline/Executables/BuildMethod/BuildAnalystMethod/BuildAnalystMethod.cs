@@ -94,6 +94,10 @@ namespace BuildAnalystMethod
 
                 if (i < values.Length)
                     Primary = string.IsNullOrEmpty(values[i]) ? 1 : int.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    CoV = string.IsNullOrEmpty(values[i]) ? 1 : double.Parse(values[i], CultureInfo.InvariantCulture);
             }
             catch (FormatException)
             {
@@ -114,6 +118,7 @@ namespace BuildAnalystMethod
         public string Group { get; private set; }
         public float? AveragePeakArea { get; private set; }
         public double? VariableRtWindow { get; private set; }
+        public double? CoV { get; private set; }
 
         public int ExperimentIndex { get; set; }
     }
