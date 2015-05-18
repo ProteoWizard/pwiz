@@ -431,7 +431,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             // Agilent profile mode data returns all zero-intensity samples, so we filter out
             // samples that aren't adjacent to a non-zero-intensity sample value.
 
-            double lowestObservedMz = 0, highestObservedMz = 0;
+            double lowestObservedMz = numeric_limits<double>::max(), highestObservedMz = 0;
             result->defaultArrayLength = 0;
 
             // special case for the first sample
