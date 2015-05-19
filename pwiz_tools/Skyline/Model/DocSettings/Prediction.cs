@@ -1768,21 +1768,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public override OptimizationType OptType
-        {
-            get
-            {
-                switch (TuneLevel)
-                {
-                    case Tuning.fine:
-                        return OptimizationType.compensation_voltage_fine;
-                    case Tuning.medium:
-                        return OptimizationType.compensation_voltage_medium;
-                    default:
-                        return OptimizationType.compensation_voltage_rough;
-                }
-            }
-        }
+        public override OptimizationType OptType { get { return GetOptimizationType(TuneLevel); } }
 
         public override double StepSize { get { return GetStepSize(TuneLevel); } }
 
@@ -1816,6 +1802,19 @@ namespace pwiz.Skyline.Model.DocSettings
             if (Equals(tuneLevel, ExportOptimize.COV_MEDIUM))
                 return Tuning.medium;
             return Equals(tuneLevel, ExportOptimize.COV_ROUGH) ? Tuning.rough : Tuning.none;
+        }
+
+        public static OptimizationType GetOptimizationType(Tuning tuneLevel)
+        {
+            switch (tuneLevel)
+            {
+                case Tuning.fine:
+                    return OptimizationType.compensation_voltage_fine;
+                case Tuning.medium:
+                    return OptimizationType.compensation_voltage_medium;
+                default:
+                    return OptimizationType.compensation_voltage_rough;
+            }
         }
 
         public double GetStepSize(Tuning tuneLevel)

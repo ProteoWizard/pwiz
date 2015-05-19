@@ -142,6 +142,16 @@ namespace pwiz.Skyline.Model.Optimization
                 : null;
         }
 
+        public DbOptimization GetOptimization(OptimizationType type, string seq, int charge)
+        {
+            return GetOptimization(type, seq, charge, null, 0);
+        }
+
+        public bool HasType(OptimizationType type)
+        {
+            return GetOptimizations().Any(opt => Equals(opt.Type, (int) type));
+        }
+
         private void RequireUsable()
         {
             if (!IsUsable)

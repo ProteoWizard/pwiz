@@ -689,62 +689,80 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            if (documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                !Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
+            if (documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
             {
-                // Show warning if we don't have results for the highest tune level
-                var highestCoV = documentExport.HighestCompensationVoltageTuning();
-                string message = null;
-                switch (highestCoV)
+                if (Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
                 {
-                    case CompensationVoltageParameters.Tuning.fine:
-                        {
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
-                            {
-                                message = TextUtil.LineSeparate(
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
-                            }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.medium:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
-                            {
-                                message = TextUtil.LineSeparate(message,
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
-                            }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.rough:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
-                            {
-                                message = TextUtil.LineSeparate(message,
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
-                            }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.none:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
-                            break;
-                        }
-                }
-
-                if (message != null)
-                {
-                    message = TextUtil.LineSeparate(message, Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_);
-                    if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, message, Resources.ExportMethodDlg_OkDialog_OK))
+                    var precursorsMissingRanks = documentExport.GetPrecursorsWithoutTopRank(_exportProperties.PrimaryTransitionCount,
+                        _exportProperties.SchedulingReplicateNum).ToArray();
+                    if (precursorsMissingRanks.Any())
                     {
-                        return;
+                        if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(
+                                Resources.ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_,
+                                TextUtil.LineSeparate(precursorsMissingRanks),
+                                Resources.ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_),
+                                Resources.ExportMethodDlg_OkDialog_OK))
+                        {
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    // Show warning if we don't have results for the highest tune level
+                    var highestCoV = documentExport.HighestCompensationVoltageTuning();
+                    string message = null;
+                    switch (highestCoV)
+                    {
+                        case CompensationVoltageParameters.Tuning.fine:
+                            {
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
+                            }
+                        case CompensationVoltageParameters.Tuning.medium:
+                            {
+                                message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(message,
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
+                            }
+                        case CompensationVoltageParameters.Tuning.rough:
+                            {
+                                message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(message,
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
+                            }
+                        case CompensationVoltageParameters.Tuning.none:
+                            {
+                                message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
+                                break;
+                            }
+                    }
+
+                    if (message != null)
+                    {
+                        message = TextUtil.LineSeparate(message, Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_);
+                        if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, message, Resources.ExportMethodDlg_OkDialog_OK))
+                        {
+                            return;
+                        }
                     }
                 }
             }

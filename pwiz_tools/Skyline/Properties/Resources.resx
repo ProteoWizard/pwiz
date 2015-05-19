@@ -8419,4 +8419,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages" xml:space="preserve">
     <value>{0} optimized compensation voltages</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_" xml:space="preserve">
+    <value>Compensation voltage optimization should be run on one transition per precursor. The best transition could not be determined for the following precursors:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" xml:space="preserve">
+    <value>Provide transition ranking information through imported results, a spectral library, or choose only one target transition per precursor.</value>
+  </data>
 </root>

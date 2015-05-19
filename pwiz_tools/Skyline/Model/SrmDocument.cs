@@ -3357,9 +3357,13 @@ namespace pwiz.Skyline.Model
         public IEnumerable<string> GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning tuneLevel)
         {
             if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.none))
-                return new string[0];
+                yield break;
 
-            var missing = new List<string>();
+            var optLib = Settings.HasOptimizationLibrary
+                ? Settings.TransitionSettings.Prediction.OptimizedLibrary
+                : null;
+            var optType = CompensationVoltageParameters.GetOptimizationType(tuneLevel);
+
             foreach (var seq in MoleculeGroups.Where(seq => seq.TransitionCount > 0))
             {
                 foreach (PeptideDocNode nodePep in seq.Children)
@@ -3367,6 +3371,17 @@ namespace pwiz.Skyline.Model
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children.Where(nodeGroup => ((TransitionGroupDocNode)nodeGroup).Children.Any()))
                     {
                         double? cov;
+
+                        if (optLib != null)
+                        {
+                            // Check if the optimization library has a value
+                            var optimization = optLib.GetOptimization(optType, Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge);
+                            if (optimization != null)
+                            {
+                                break;
+                            }
+                        }
+
                         switch (tuneLevel)
                         {
                             case CompensationVoltageParameters.Tuning.fine:
@@ -3384,16 +3399,22 @@ namespace pwiz.Skyline.Model
                         }
                         if (!cov.HasValue || cov.Value.Equals(0))
                         {
-                            missing.Add(nodeGroup.ToString());
+                            yield return nodeGroup.ToString();
                         }
                     }
                 }
             }
-            return missing;
         }
 
         public CompensationVoltageParameters.Tuning HighestCompensationVoltageTuning()
         {
+            if (Settings.HasOptimizationLibrary)
+            {
+                // Optimization library may contain fine tune CoV values
+                if (Settings.TransitionSettings.Prediction.OptimizedLibrary.HasType(OptimizationType.compensation_voltage_fine))
+                    return CompensationVoltageParameters.Tuning.fine;
+            }
+
             // Get highest tune level imported
             var highestTuneLevel = CompensationVoltageParameters.Tuning.none;
             if (Settings.HasResults)
@@ -3422,6 +3443,36 @@ namespace pwiz.Skyline.Model
                 }
             }
             return highestTuneLevel;
+        }
+
+        public IEnumerable<string> GetPrecursorsWithoutTopRank(int primaryTransitionCount, int? schedulingReplicateIndex)
+        {
+            foreach (var seq in MoleculeGroups)
+            {
+                foreach (PeptideDocNode nodePep in seq.Children)
+                {
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children.Where(nodeGroup => ((TransitionGroupDocNode)nodeGroup).TransitionCount > 1))
+                    {
+                        bool rankOne = false;
+                        foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                        {
+                            var groupPrimary = primaryTransitionCount > 0
+                                ? nodePep.GetPrimaryResultsGroup(nodeGroup)
+                                : null;
+                            int? rank = nodeGroup.GetRank(groupPrimary, nodeTran, schedulingReplicateIndex);
+                            if (rank.HasValue && rank == 1)
+                            {
+                                rankOne = true;
+                                break;
+                            }
+                        }
+                        if (!rankOne)
+                        {
+                            yield return nodeGroup.ToString();
+                        }
+                    }
+                }
+            }
         }
 
         public double GetCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, int step, CompensationVoltageParameters.Tuning tuneLevel)
@@ -3477,7 +3528,7 @@ namespace pwiz.Skyline.Model
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(OptimizationType.compensation_voltage_fine,
-                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge, null, 0);
+                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge);
                 if (optimization != null)
                 {
                     return optimization.Value;

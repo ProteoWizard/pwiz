@@ -8854,6 +8854,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compensation voltage optimization should be run on one transition per precursor. The best transition could not be determined for the following precursors:.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_t" +
+                        "ransition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_foll" +
+                        "owing_precursors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decluster Potential:.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Declustering_Potential {
@@ -8922,6 +8933,17 @@ namespace pwiz.Skyline.Properties {
         public static string ExportMethodDlg_OkDialog_Orbitrap {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_Orbitrap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Provide transition ranking information through imported results, a spectral library, or choose only one target transition per precursor..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_" +
+                        "results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" +
+                        "", resourceCulture);
             }
         }
         

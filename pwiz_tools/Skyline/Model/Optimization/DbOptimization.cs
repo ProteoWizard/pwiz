@@ -78,6 +78,10 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 throw new ArgumentException(Resources.OptimizationKey_CompareTo_Cannot_compare_OptimizationKey_to_an_object_of_a_different_type);
             }
+            else if (!Equals(OptType, other.OptType))
+            {
+                return OptType.CompareTo(other.OptType);
+            }
             else if (!Equals(PeptideModSeq, other.PeptideModSeq))
             {
                 return String.Compare(PeptideModSeq, other.PeptideModSeq, StringComparison.InvariantCulture);
@@ -107,7 +111,8 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 return false;
             }
-            return Equals(PeptideModSeq, other.PeptideModSeq) &&
+            return OptType.Equals(other.OptType) &&
+                Equals(PeptideModSeq, other.PeptideModSeq) &&
                 Charge == other.Charge &&
                 FragmentIon == other.FragmentIon &&
                 ProductCharge == other.ProductCharge;
@@ -118,6 +123,7 @@ namespace pwiz.Skyline.Model.Optimization
             unchecked
             {
                 int result = (PeptideModSeq != null ? PeptideModSeq.GetHashCode() : 0);
+                result = (result*397) ^ OptType.GetHashCode();
                 result = (result*397) ^ Charge.GetHashCode();
                 if (FragmentIon != null)
                     result = (result*397) ^ FragmentIon.GetHashCode();

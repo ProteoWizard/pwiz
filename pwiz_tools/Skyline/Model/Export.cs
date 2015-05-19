@@ -1562,6 +1562,8 @@ namespace pwiz.Skyline.Model
         public AbiMassListExporter(SrmDocument document, DocNode node)
             : base(document, node)
         {
+            _precursorMissingRank =
+                document.GetPrecursorsWithoutTopRank(PrimaryTransitionCount, SchedulingReplicateIndex).ToArray();
         }
 
         public double DwellTime { get; set; }
@@ -1570,6 +1572,8 @@ namespace pwiz.Skyline.Model
         private int OptimizeStepIndex { get; set; }
 
         private readonly Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
+
+        private readonly string[] _precursorMissingRank;
 
         protected override string InstrumentType
         {
@@ -1651,6 +1655,14 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            bool exportCov = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+            if (exportCov && (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)) && nodeTranGroup.TransitionCount > 1 && !_precursorMissingRank.Any())
+            {
+                // If we know the top ranked transition for every precursor and this is not it, skip writing it
+                int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
+                if (!rank.HasValue || rank.Value != 1)
+                    return;
+            }
             OptimizeStepIndex = step;
             string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
             string q3 = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo);
@@ -1692,7 +1704,7 @@ namespace pwiz.Skyline.Model
                 primaryOrSecondary = IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran) ? "1" : "2"; // Not L10N
             }
 
-            string compensationVoltage = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null
+            string compensationVoltage = exportCov
                 ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.00", CultureInfo)) // Not L10N
                 : null;
 

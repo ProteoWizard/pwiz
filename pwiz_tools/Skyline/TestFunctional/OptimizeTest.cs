@@ -24,6 +24,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -54,8 +55,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-//            CEOptimizationTest();
-//            OptLibNeutralLossTest();
+            CEOptimizationTest();
+            OptLibNeutralLossTest();
             CovOptimizationTest();
         }
 
@@ -165,7 +166,7 @@ namespace pwiz.SkylineTestFunctional
                 addOptDbDlgSkip.SetLibrary(existingLibName);
             });
             var addOptDlgAskSkip = ShowDialog<AddOptimizationsDlg>(addOptDbDlgSkip.OkDialog);
-            Assert.AreEqual(1, addOptDlgAskSkip.OptimizationsCount);
+            Assert.AreEqual(0, addOptDlgAskSkip.OptimizationsCount);
             Assert.AreEqual(1, addOptDlgAskSkip.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskSkip.Action = AddOptimizationsAction.skip);
             OkDialog(addOptDlgAskSkip, addOptDlgAskSkip.OkDialog);
@@ -178,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
                 addOptDbDlgAvg.FilePath = TestFilesDir.GetTestPath("Duplicates.optdb");
             });
             var addOptDlgAskAvg = ShowDialog<AddOptimizationsDlg>(addOptDbDlgAvg.OkDialog);
-            Assert.AreEqual(1, addOptDlgAskAvg.OptimizationsCount);
+            Assert.AreEqual(0, addOptDlgAskAvg.OptimizationsCount);
             Assert.AreEqual(1, addOptDlgAskAvg.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskAvg.Action = AddOptimizationsAction.average);
             OkDialog(addOptDlgAskAvg, addOptDlgAskAvg.OkDialog);
@@ -191,7 +192,7 @@ namespace pwiz.SkylineTestFunctional
                 addOptDbDlgReplace.FilePath = TestFilesDir.GetTestPath("Duplicates.optdb");
             });
             var addOptDlgAskReplace = ShowDialog<AddOptimizationsDlg>(addOptDbDlgReplace.OkDialog);
-            Assert.AreEqual(1, addOptDlgAskReplace.OptimizationsCount);
+            Assert.AreEqual(0, addOptDlgAskReplace.OptimizationsCount);
             Assert.AreEqual(1, addOptDlgAskReplace.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskReplace.Action = AddOptimizationsAction.replace);
             OkDialog(addOptDlgAskReplace, addOptDlgAskReplace.OkDialog);
@@ -422,6 +423,7 @@ namespace pwiz.SkylineTestFunctional
             string outTransitionsFine = TestFilesDir.GetTestPath(@"covdata\cov_fine.csv");
             string outTransitionsFinal = TestFilesDir.GetTestPath(@"covdata\cov_final.csv");
             string outTransitionsFinalWithOptLib = TestFilesDir.GetTestPath(@"covdata\cov_final2.csv");
+            string outTransitionsFinalWithOptLib2 = TestFilesDir.GetTestPath(@"covdata\cov_final3.csv");
 
             var doc = SkylineWindow.Document;
 
@@ -466,7 +468,30 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportRoughTune.OkDialog(outTransitionsRough);
             });
             AssertEx.FileEquals(outTransitionsRough, TestFilesDir.GetTestPath(@"covdata\cov_rough_expected.csv"));
-            
+
+            // Add a transition for which there are no results
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.Nodes[0].ExpandAll();
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0];
+            });
+            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
+            RunUI(() =>
+            {
+                pickList1.ToggleFind();
+                pickList1.SearchString = "y4 ++";
+                pickList1.SetItemChecked(0, true);
+            });
+            RunUI(pickList1.OnOk);
+            // Try to export and check for warning about top ranked transition (will not occur after import results)
+            var dlgExportNoTopRank = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            RunUI(() => dlgExportNoTopRank.OptimizeType = ExportOptimize.COV_ROUGH);
+            var warnNoTopRank = ShowDialog<MultiButtonMsgDlg>(dlgExportNoTopRank.OkDialog);
+            RunUI(() => Assert.IsTrue(warnNoTopRank.Message.Contains(
+                Resources.ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_)));
+            OkDialog(warnNoTopRank, warnNoTopRank.BtnCancelClick);
+            OkDialog(dlgExportNoTopRank, dlgExportNoTopRank.CancelDialog);
+
             // Import rough tune
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
@@ -532,7 +557,7 @@ namespace pwiz.SkylineTestFunctional
                 };
             });
             OkDialog(importResultsDlgMedium, importResultsDlgMedium.OkDialog);
-            WaitForDocumentChangeLoaded(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
 
             var dlgExportFineTune = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             // Try to export without optimizing and check for error message
@@ -563,6 +588,17 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(importResultsDlgFine, importResultsDlgFine.OkDialog);
             WaitForDocumentChangeLoaded(doc);
+
+            // Remove the transition we added earlier
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0]);
+            var pickList2 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
+            RunUI(() =>
+            {
+                pickList2.ToggleFind();
+                pickList2.SearchString = "y4 ++";
+                pickList2.SetItemChecked(0, false);
+            });
+            RunUI(pickList2.OnOk);
 
             var dlgExportFinal = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             // Export and verify against expected results
@@ -631,6 +667,15 @@ namespace pwiz.SkylineTestFunctional
                 dlgExportFinal2.OkDialog(outTransitionsFinalWithOptLib);
             });
             AssertEx.FileEquals(outTransitionsFinalWithOptLib, TestFilesDir.GetTestPath(@"covdata\cov_final_expected2.csv"));
+
+            // Remove all results and export again, relying on the values in the library (3 values will be missing)
+            RunUI(() => SkylineWindow.ModifyDocument("Remove results", document => document.ChangeMeasuredResults(null)));
+            var dlgExportFinal3 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            RunUI(() => dlgExportFinal3.OptimizeType = ExportOptimize.NONE);
+            var errorDlgMissingFineCovs = ShowDialog<MultiButtonMsgDlg>(() => dlgExportFinal3.OkDialog(outTransitionsFinalWithOptLib2));
+            RunUI(() => Assert.IsTrue(errorDlgMissingFineCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_)));
+            OkDialog(errorDlgMissingFineCovs, errorDlgMissingFineCovs.BtnYesClick);
+            AssertEx.FileEquals(outTransitionsFinalWithOptLib2, TestFilesDir.GetTestPath(@"covdata\cov_final_expected3.csv"));
 
             RunUI(() => SkylineWindow.SaveDocument());
         }
