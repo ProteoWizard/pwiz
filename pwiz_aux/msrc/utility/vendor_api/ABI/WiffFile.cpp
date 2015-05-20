@@ -555,11 +555,24 @@ int SpectrumImpl::getMSLevel() const
 
 bool SpectrumImpl::getHasIsolationInfo() const
 {
-    return false;
+    return (ExperimentType)this->experiment->msExperiment->Details->ExperimentType == Product &&
+        this->experiment->msExperiment->Details->MassRangeInfo->Length > 0;
 }
 
 void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
 {
+    if (!this->getHasIsolationInfo())
+        return;
+
+    try 
+    {
+        double isolationWidth = ((FragmentBasedScanMassRange ^)(this->experiment->msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
+
+        centerMz = getHasPrecursorInfo() ? this->selectedMz : ((FragmentBasedScanMassRange ^)(this->experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
+        lowerLimit = centerMz - isolationWidth / 2;
+        upperLimit = centerMz + isolationWidth / 2;
+    } 
+    CATCH_AND_FORWARD
 }
 
 bool SpectrumImpl::getHasPrecursorInfo() const

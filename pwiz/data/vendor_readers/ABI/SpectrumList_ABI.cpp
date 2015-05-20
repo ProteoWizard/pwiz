@@ -203,6 +203,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             spectrum->getPrecursorInfo(selectedMz, intensity, charge);
 
             Precursor precursor;
+            if (spectrum->getHasIsolationInfo())
+            {
+                double centerMz, lowerLimit, upperLimit;
+                spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit);
+                precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_lower_offset, lowerLimit, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit, MS_m_z);
+            }
+
             SelectedIon selectedIon;
 
             selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
