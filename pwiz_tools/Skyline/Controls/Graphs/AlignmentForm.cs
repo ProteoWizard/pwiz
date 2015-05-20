@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -294,6 +295,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal struct DataRow
         {
+            [MethodImpl(MethodImplOptions.NoOptimization)] // disable optimizations in hopes of tracking down NullReferenceException
             public DataRow(SrmSettings settings, RetentionTimeSource target, RetentionTimeSource timesToAlign) : this()
             {
                 DocumentRetentionTimes = settings.DocumentRetentionTimes;

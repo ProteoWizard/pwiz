@@ -92,8 +92,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public void Remove()
         {
-            // Make sure this happens on the right thread.
-            BeginInvoke((Action)OnRemove);
+            if (IsHandleCreated)
+            {
+                try
+                {
+                    // Make sure this happens on the right thread.
+                    BeginInvoke((Action) OnRemove);
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
         }
 
         public void OnRemove()
