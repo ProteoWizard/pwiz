@@ -58,12 +58,14 @@ local application-name = "Greazy" ;
 constant MAJOR : 0 ;
 constant MINOR : 1 ;
 
+path-constant GREAZY_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/Greazy ;
+
 
 # set version info (used for tarball filenames)
 import generate-version ;
 local version-file = $(application-name:L)Version.cpp ;
-local revision-info = [ generate-version.cpp $(version-file) : ../freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
-                                             [ path.glob . : *.?pp *.h Jamfile.jam : $(version-file) ] :
+local revision-info = [ generate-version.cpp $(GREAZY_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
+                                             [ path.glob $(GREAZY_PATH) : *.?pp *.h Jamfile.jam : $(version-file) ] :
                                              warn-on-missing ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
@@ -87,7 +89,7 @@ import modules ;
 if [ modules.peek : NT ]
 {
     import path feature svnrev sequence ;
-    path-constant GREAZY_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/Greazy/GUI ;
+    path-constant GUI_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/Greazy/GUI ;
 
     # rule for generating a C# AssemblyInfo file
     rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
@@ -157,8 +159,8 @@ using System.Runtime.InteropServices;
     }
 
     # generate GreazyGUI version header
-    generate-AssemblyInfo.cs $(GREAZY_PATH)/Properties/AssemblyInfo.cs :
-        [ path.glob-tree $(GREAZY_PATH) : *.jam *.cs ]
+    generate-AssemblyInfo.cs $(GUI_PATH)/Properties/AssemblyInfo.cs :
+        [ path.glob-tree $(GUI_PATH) : *.jam *.cs ]
         : #warn-on-missing
         : : "GreazyGUI" "A tool for identifying lipid mass spectrometry data." "Vanderbilt University" "Greazy" ;
 
@@ -185,7 +187,7 @@ using System.Runtime.InteropServices;
     {
         IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
         echo Building GreazyGUI in $(CONFIGURATION:L) configuration...
-        msbuild $(GREAZY_PATH)/greazy.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+        msbuild $(GUI_PATH)/greazy.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     }
 
 
