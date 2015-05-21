@@ -282,6 +282,8 @@ namespace BuildQTRAPMethod
             var templateMassRangeParams = (ParamDataColl)((IMassRange)msExperiment.GetMassRange(0)).MassDepParamTbl;
             short templateCxpParameterIdx;
             var templateCxp = (ParameterData)templateMassRangeParams.FindParameter("CXP", out templateCxpParameterIdx);
+            short templateSvParameterIdx;
+            var templateSv = (ParameterData)templateMassRangeParams.FindParameter("SV", out templateSvParameterIdx);
 
             msExperiment.DeleteAllMasses();
 
@@ -314,6 +316,9 @@ namespace BuildQTRAPMethod
 
                 if (templateCxpParameterIdx > 0 && templateCxp != null)
                     massRangeParams.AddSetParameter("CXP", templateCxp.startVal, templateCxp.stopVal, templateCxp.stepVal, out s);
+
+                if (templateSvParameterIdx > 0 && templateSv != null)
+                    massRangeParams.AddSetParameter("SV", templateSv.startVal, templateSv.stopVal, templateSv.stepVal, out s);
 
                 if(transition.CoV.HasValue)
                     massRangeParams.AddSetParameter("COV", (float)transition.CoV, (float)transition.CoV, 0, out s);
