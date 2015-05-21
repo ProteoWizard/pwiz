@@ -295,7 +295,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal struct DataRow
         {
-            [MethodImpl(MethodImplOptions.NoOptimization)] // disable optimizations in hopes of tracking down NullReferenceException
             public DataRow(SrmSettings settings, RetentionTimeSource target, RetentionTimeSource timesToAlign) : this()
             {
                 DocumentRetentionTimes = settings.DocumentRetentionTimes;
@@ -310,8 +309,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     Assume.IsNotNull(Source, "Source"); // Not L10N
                     Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
                 }
-                TargetTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(target.Name)).GetFirstRetentionTimes();
-                SourceTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(timesToAlign.Name)).GetFirstRetentionTimes();
+                TargetTimes = GetFirstRetentionTimes(settings, target);
+                SourceTimes = GetFirstRetentionTimes(settings, timesToAlign);
             }
 
             internal DocumentRetentionTimes DocumentRetentionTimes { get; private set; }
@@ -432,6 +431,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     return AlignedRetentionTimes.RegressionStatistics.Peptides.Count;
                 }
+            }
+
+            private static IDictionary<string, double> GetFirstRetentionTimes(
+                SrmSettings settings, RetentionTimeSource retentionTimeSource)
+            {
+                var libraryRetentionTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(retentionTimeSource.Name));
+                if (null == libraryRetentionTimes)
+                {
+                    return new Dictionary<string, double>();
+                }
+                return libraryRetentionTimes.GetFirstRetentionTimes();
             }
         }
 
