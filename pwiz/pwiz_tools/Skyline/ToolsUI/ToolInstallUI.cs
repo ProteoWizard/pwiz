@@ -24,7 +24,6 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
-using Ionic.Zip;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Databinding;
