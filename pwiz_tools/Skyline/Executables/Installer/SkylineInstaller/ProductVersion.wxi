@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define ProductVersion="3.1.1.7493" ?>
+  <?if $(sys.BUILDARCH) = x64 ?>
+    <?define UpgradeCode="{AADA455D-DB0C-4245-A844-AB81329B9E4F}"?>
+    <?define ProductName="Skyline (64 bit)"?>
+  <?else?>
+    <?define UpgradeCode="{739F7586-A500-4183-B944-3250AD369F78}"?>
+    <?define ProductName="Skyline (32 bit)"?>
+  <?endif?>
+</Include>

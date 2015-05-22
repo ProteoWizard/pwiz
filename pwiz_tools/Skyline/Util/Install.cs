@@ -30,12 +30,20 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                return
-                    (!ApplicationDeployment.IsNetworkDeployed)
+                return IsDeveloperInstall
                         ? InstallType.developer
                         : (Build == 0)
                               ? InstallType.release
                               : InstallType.daily;
+            }
+        }
+
+        private static bool IsDeveloperInstall
+        {
+            get
+            {
+                return string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion)
+                       && !ApplicationDeployment.IsNetworkDeployed;
             }
         }
 
@@ -74,6 +82,10 @@ namespace pwiz.Skyline.Util
             {
                 try
                 {
+                    if (!string.IsNullOrEmpty(Properties.Settings.Default.InstalledVersion))
+                    {
+                        return Properties.Settings.Default.InstalledVersion;
+                    }
                     return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
                 }
                 catch (Exception)
@@ -109,7 +121,7 @@ namespace pwiz.Skyline.Util
                 return string.Format("{0}{1} {2}", // Not L10N
                                      Program.Name,
                                      (Is64Bit ? " (64-bit)" : string.Empty), // Not L10N
-                                     (ApplicationDeployment.IsNetworkDeployed ? Version : string.Empty));
+                                    (IsDeveloperInstall ? string.Empty : Version));
             } 
         }
     }

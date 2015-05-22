@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+  <?include "$(var.SkylineInstaller.ProjectDir)/ProductVersion.wxi"?>
+	<Bundle Name="$(var.ProductName)" Version="$(var.ProductVersion)" Manufacturer="MacCoss Lab, UW" UpgradeCode="$(var.UpgradeCode)">
+    <WixVariable Id="WixUILicenseRtf" Value="path\License.rtf" />
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <bal:WixStandardBootstrapperApplication
+               LicenseFile="$(var.SkylineInstaller.ProjectDir)/SkylineLicense.rtf"
+               LogoFile="$(var.Skyline.ProjectDir)/Resources/Skyline.bmp"
+            />
+    </BootstrapperApplicationRef>
+		<Chain>
+      <PackageGroupRef Id="NetFx40Redist"/>
+      <PackageGroupRef Id="NetFx451Redist"/>
+      <MsiPackage SourceFile="$(var.SkylineInstaller.TargetPath)" DisplayName="$(var.ProductName)" />
+    </Chain>
+	</Bundle>
+</Wix>

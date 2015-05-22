@@ -172,19 +172,27 @@ namespace pwiz.Skyline
                     }
                 }
 
-                // If this is a new installation copy over installed external tools from previous installation location.
-                var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
-                if (!Directory.Exists(toolsDirectory))
+                try
                 {
-                    using (var longWaitDlg = new LongWaitDlg
+                    // If this is a new installation copy over installed external tools from previous installation location.
+                    var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
+                    if (!Directory.Exists(toolsDirectory))
+                    {
+                        using (var longWaitDlg = new LongWaitDlg
                         {
                             Text = Name,
                             Message = Resources.Program_Main_Copying_external_tools_from_a_previous_installation,
                             ProgressValue = 0
                         })
-                    {
-                        longWaitDlg.PerformWork(null, 1000 * 3, broker => CopyOldTools(toolsDirectory, broker));
+                        {
+                            longWaitDlg.PerformWork(null, 1000*3, broker => CopyOldTools(toolsDirectory, broker));
+                        }
                     }
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                    
                 }
 
                 // Force live reports (though tests may reset this)
