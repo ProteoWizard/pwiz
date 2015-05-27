@@ -1182,6 +1182,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (prediction.DeclusteringPotential != null &&
                         !defSet.DeclusterPotentialList.Contains(prediction.DeclusteringPotential))
                     defSet.DeclusterPotentialList.Add(prediction.DeclusteringPotential);
+                if (prediction.CompensationVoltage != null &&
+                        !defSet.CompensationVoltageList.Contains(prediction.CompensationVoltage))
+                    defSet.CompensationVoltageList.Add(prediction.CompensationVoltage);
                 if (!Equals(prediction.OptimizedLibrary, OptimizationLibrary.NONE) &&
                         Equals(defSet.GetOptimizationLibraryByName(prediction.OptimizedLibrary.Name), OptimizationLibrary.NONE))
                     defSet.OptimizationLibraryList.Add(prediction.OptimizedLibrary);

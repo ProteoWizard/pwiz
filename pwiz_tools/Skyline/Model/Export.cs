@@ -1562,8 +1562,6 @@ namespace pwiz.Skyline.Model
         public AbiMassListExporter(SrmDocument document, DocNode node)
             : base(document, node)
         {
-            _precursorMissingRank =
-                document.GetPrecursorsWithoutTopRank(PrimaryTransitionCount, SchedulingReplicateIndex).ToArray();
         }
 
         public double DwellTime { get; set; }
@@ -1572,8 +1570,6 @@ namespace pwiz.Skyline.Model
         private int OptimizeStepIndex { get; set; }
 
         private readonly Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
-
-        private readonly string[] _precursorMissingRank;
 
         protected override string InstrumentType
         {
@@ -1656,11 +1652,11 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             bool exportCov = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
-            if (exportCov && (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)) && nodeTranGroup.TransitionCount > 1 && !_precursorMissingRank.Any())
+            if (exportCov && (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)) && nodeTranGroup.TransitionCount > 1 && PrimaryTransitionCount > 0)
             {
                 // If we know the top ranked transition for every precursor and this is not it, skip writing it
                 int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
-                if (!rank.HasValue || rank.Value != 1)
+                if (!rank.HasValue || rank.Value > PrimaryTransitionCount)
                     return;
             }
             OptimizeStepIndex = step;
