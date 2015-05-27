@@ -25,20 +25,6 @@ import path ;
 
 if [ modules.peek : NT ] {
 
-project
-    : requirements
-        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
-        <conditional>@msvc-requirement
-        <define>UNICODE
-        <define>_UNICODE
-    : usage-requirements
-        <define>UNICODE
-        <define>_UNICODE
-    : default-build
-        release
-	;
-
-
 # The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
 # the build request. The default is link=static, so the command-line is tested for link=shared.
 local bound_lib_requirements = <link>static/<using-clr>false ;
@@ -119,34 +105,35 @@ SHELL "if not exist \"$(DOC_PATH)\\\" mkdir \"$(DOC_PATH)\"" ;
 path-constant DOC_DATA_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc/data ;
 SHELL "if not exist \"$(DOC_DATA_PATH)\\\" mkdir \"$(DOC_DATA_PATH)\"" ;
 
+local clr-requirement = <conditional>@msvc-requirement <define>UNICODE <define>_UNICODE <toolset>msvc:<using-clr>true ; # requires hacked msvc.jam
 
-obj ParamTypes        : common/ParamTypes.cpp        : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
-obj IterationListener : common/IterationListener.cpp : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
-obj Unimod            : common/Unimod.cpp            : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
+obj ParamTypes        : common/ParamTypes.cpp        : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
+obj IterationListener : common/IterationListener.cpp : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
+obj Unimod            : common/Unimod.cpp            : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
 
-obj MSDataDiff       : msdata/Diff.cpp       : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
-obj MSData           : msdata/MSData.cpp     : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData.xdc" ;
-obj MSDataFile       : msdata/MSDataFile.cpp : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataFile.xdc" ;
-obj MSDataReader     : msdata/Reader.cpp     : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataReader.xdc" ;
-obj MSData_examples  : msdata/examples.cpp   : $(data_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData_examples.xdc" ;
+obj MSDataDiff       : msdata/Diff.cpp       : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
+obj MSData           : msdata/MSData.cpp     : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData.xdc" ;
+obj MSDataFile       : msdata/MSDataFile.cpp : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataFile.xdc" ;
+obj MSDataReader     : msdata/Reader.cpp     : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataReader.xdc" ;
+obj MSData_examples  : msdata/examples.cpp   : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData_examples.xdc" ;
 
-obj spectrum_processing       : analysis/spectrum_processing.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/spectrum_processing.xdc" ;
-obj SpectrumList_PeakFilter   : analysis/SpectrumList_PeakFilter.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/SpectrumList_PeakFilter.xdc" ;
+obj spectrum_processing       : analysis/spectrum_processing.cpp       : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/spectrum_processing.xdc" ;
+obj SpectrumList_PeakFilter   : analysis/SpectrumList_PeakFilter.cpp   : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/SpectrumList_PeakFilter.xdc" ;
 
-obj chemistry              : chemistry/chemistry.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/chemistry.xdc" ;
+obj chemistry              : chemistry/chemistry.cpp       : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/chemistry.xdc" ;
 
-obj proteome               : proteome/proteome.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/proteome.xdc" ;
-obj ProteomeDataDiff       : proteome/Diff.cpp             : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataDiff.xdc" ;
-obj ProteomeData           : proteome/ProteomeData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData.xdc" ;
-obj ProteomeDataFile       : proteome/ProteomeDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataFile.xdc" ;
-obj ProteomeDataReader     : proteome/Reader.cpp           : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataReader.xdc" ;
-obj ProteomeData_examples  : proteome/examples.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData_examples.xdc" ;
+obj proteome               : proteome/proteome.cpp         : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/proteome.xdc" ;
+obj ProteomeDataDiff       : proteome/Diff.cpp             : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataDiff.xdc" ;
+obj ProteomeData           : proteome/ProteomeData.cpp     : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/ProteomeData.xdc" ;
+obj ProteomeDataFile       : proteome/ProteomeDataFile.cpp : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataFile.xdc" ;
+obj ProteomeDataReader     : proteome/Reader.cpp           : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataReader.xdc" ;
+obj ProteomeData_examples  : proteome/examples.cpp         : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/ProteomeData_examples.xdc" ;
 
-obj TraDataDiff       : tradata/Diff.cpp        : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraDataDiff.xdc" ;
-obj TraData           : tradata/TraData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraData.xdc" ;
-obj TraDataFile       : tradata/TraDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraDataFile.xdc" ;
-obj TraDataReader     : tradata/Reader.cpp      : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraDataReader.xdc" ;
-obj TraData_examples  : tradata/examples.cpp    : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/TraData_examples.xdc" ;
+obj TraDataDiff       : tradata/Diff.cpp        : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/TraDataDiff.xdc" ;
+obj TraData           : tradata/TraData.cpp     : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/TraData.xdc" ;
+obj TraDataFile       : tradata/TraDataFile.cpp : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/TraDataFile.xdc" ;
+obj TraDataReader     : tradata/Reader.cpp      : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/TraDataReader.xdc" ;
+obj TraData_examples  : tradata/examples.cpp    : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_PATH)/TraData_examples.xdc" ;
 
 
 lib pwiz_bindings_cli
@@ -177,6 +164,7 @@ lib pwiz_bindings_cli
         $(bound_libs)
         <link>shared
         <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        $(clr-requirement)
     : # default-build
     : # usage-requirements
         $(bound_libs)
@@ -195,6 +183,7 @@ lib pwiz_data_cli
         $(data_libs)
         <link>shared
         <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        $(clr-requirement)
     : # default-build
     : # usage-requirements
         $(data_libs)

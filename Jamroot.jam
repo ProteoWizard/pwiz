@@ -588,10 +588,14 @@ rule install-type ( properties * )
     return $(result) ;
 }
 
+import string ;
 rule install-vendor-api-dependencies ( properties * )
 {
     properties = $(properties) [ vendor-api-support $(properties) ] ;
-    local location = [ install-location $(properties) ] ;
+    local location = [ feature.get-values <location> : $(properties) ] ;
+    location = [ string.join <location> [ path.make $(location[1]) ] ] ;
+    location ?= [ install-location $(properties) ] ;
+
     local dependencies ;
     if <toolset>msvc in $(properties) && <link>static in $(properties) && ! [ without-binary-msdata ]
     {
@@ -610,9 +614,11 @@ rule install-vendor-api-dependencies ( properties * )
 
 rule install-identdata-dependencies ( properties * )
 {
-    local location = [ install-location $(properties) ] ;
+    local location = [ feature.get-values <location> : $(properties) ] ;
+    location = [ string.join <location> [ path.make $(location[1]) ] ] ;
+    location ?= [ install-location $(properties) ] ;
     local dependencies ;
-    if [ path.exists pwiz/data/identdata ] { dependencies += <dependency>pwiz/data/identdata//install_pwiz_identdata/$(location) ; }
+    if [ path.exists pwiz/data/identdata ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//install_pwiz_identdata/$(location) ; }
     return $(dependencies) ;
 }
 
@@ -633,8 +639,8 @@ rule dotNET-dependencies ( properties * )
     if <toolset-msvc:version>12.0 in $(properties)
     {
         local location = [ install-location $(properties) ] ;
-        return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
-               <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
+        return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
+               <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS//seems.exe/$(location) ;
     }
 }
 
