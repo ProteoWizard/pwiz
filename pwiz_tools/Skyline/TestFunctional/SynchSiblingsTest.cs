@@ -89,8 +89,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 pickList0.ApplyFilter(false);
-                pickList0.SetItemChecked(5, true);
                 pickList0.SetItemChecked(6, true);
+                pickList0.SetItemChecked(7, true);
                 pickList0.AutoManageChildren = false;
             });
             OkDialog(pickList0, pickList0.OnOk);
@@ -103,16 +103,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 pickList1.ApplyFilter(false);
-                pickList1.SetItemChecked(5, false);
+                pickList1.SetItemChecked(6, false);
                 pickList1.IsSynchSiblings = false;
             });
             OkDialog(pickList1, pickList1.OnOk);
             WaitForClosedForm(pickList1);
 
             var nodes = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes;
-            Assert.AreEqual(6, nodes[0].Nodes.Count);
-            Assert.AreEqual(7, nodes[1].Nodes.Count);
-            Assert.AreEqual(7, nodes[2].Nodes.Count);
+            Assert.AreEqual(7, nodes[0].Nodes.Count);
+            Assert.AreEqual(8, nodes[1].Nodes.Count);
+            Assert.AreEqual(8, nodes[2].Nodes.Count);
 
             // Now synchronize the other two
             var pickList2 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
@@ -181,6 +181,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Make sure nodes have been added with siblings synchronized
             Assert.AreEqual(3, nodes.Count);
+            // Match "D [y8] - 931.5095+ (rank 18)"
             var regexTran = new Regex(string.Format(@"[A-Z] \[([^\]]+)\]? - [^+]*(\++) (\({0}\))",
                                                     string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, @"\d+")));
             for (int i = 0; i < nodes[0].Nodes.Count; i++)
@@ -199,6 +200,12 @@ namespace pwiz.SkylineTestFunctional
         private static Match MatchTransitionText(TreeNode nodeTreeTran, Regex regexTran)
         {
             var match = regexTran.Match(nodeTreeTran.Text);
+            if (match.Success)
+                return match;
+            // Match "iTRAQ-114 - 114.1107+"
+            var matchItraq = new Regex(@"(iTRAQ-)(\d+)( - )(\d+\.\d+)(\++)").Match(nodeTreeTran.Text);
+            if (matchItraq.Success)
+                return matchItraq;
             Assert.IsTrue(match.Success, string.Format("The transition node text '{0}' did not match the expected pattern.", nodeTreeTran.Text));
             return match;
         }

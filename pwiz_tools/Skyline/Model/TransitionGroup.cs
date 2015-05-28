@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model
                 transition.MassIndex,
                 transition.Charge,
                 decoyMassShift,
-                Peptide.CustomIon);
+                transition.CustomIon ?? Peptide.CustomIon); // Handle reporter ions as well as small molecules
             var isotopeDist = nodeGroupMatching.IsotopeDist;
             double massH;
             if (tranNew.IsCustom())

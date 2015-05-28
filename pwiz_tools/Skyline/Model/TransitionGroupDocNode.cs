@@ -2243,7 +2243,9 @@ namespace pwiz.Skyline.Model
                                             tranMatch.IonType,
                                             tranMatch.CleavageOffset,
                                             tranMatch.MassIndex,
-                                            tranMatch.Charge);
+                                            tranMatch.Charge,
+                                            tranMatch.DecoyMassShift,
+                                            tranMatch.CustomIon);
                 var losses = nodeTran.Losses;
                 // m/z, isotope distribution and library info calculated later
                 var nodeTranNew = new TransitionDocNode(tran, losses, 0, null, null);
