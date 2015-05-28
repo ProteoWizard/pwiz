@@ -593,7 +593,7 @@ rule install-vendor-api-dependencies ( properties * )
 {
     properties = $(properties) [ vendor-api-support $(properties) ] ;
     local location = [ feature.get-values <location> : $(properties) ] ;
-    location = [ string.join <location> [ path.make $(location[1]) ] ] ;
+    if $(location) { location = [ string.join <location> [ path.make $(location[1]) ] ] ; }
     location ?= [ install-location $(properties) ] ;
 
     local dependencies ;
@@ -615,7 +615,7 @@ rule install-vendor-api-dependencies ( properties * )
 rule install-identdata-dependencies ( properties * )
 {
     local location = [ feature.get-values <location> : $(properties) ] ;
-    location = [ string.join <location> [ path.make $(location[1]) ] ] ;
+    if $(location) { location = [ string.join <location> [ path.make $(location[1]) ] ] ; }
     location ?= [ install-location $(properties) ] ;
     local dependencies ;
     if [ path.exists pwiz/data/identdata ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//install_pwiz_identdata/$(location) ; }
