@@ -262,6 +262,7 @@ enum XcaliburVersion
     XcaliburVersion_1_4,
     XcaliburVersion_2_0,
     XcaliburVersion_2_0_5,
+    XcaliburVersion_2_2,
     XcaliburVersion_2_5_5
 };
 
@@ -281,6 +282,8 @@ XcaliburVersion interpretVersion(short versionNumber)
             return XcaliburVersion_2_0_5;
         case 0x40:
             return XcaliburVersion_2_5_5;
+        case 0x42:
+            return XcaliburVersion_2_2;
         default:
             throw runtime_error("Invalid version number.  Tell Darren.");
     }
