@@ -1246,7 +1246,13 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             var startingDocument = Document;
-            var pepMatcher = new ViewLibraryPepMatching(startingDocument,
+            // Open m/z limitations without allowing doc node tree to change, since that can take
+            // seconds to achieve in a large document.
+            var broadRangeDocument = startingDocument.ChangeSettingsNoDiff(startingDocument.Settings
+                .ChangeTransitionInstrument(i => i.ChangeMinMz(TransitionInstrument.MIN_MEASUREABLE_MZ).ChangeMaxMz(TransitionInstrument.MAX_MEASURABLE_MZ))
+                .ChangeTransitionFullScan(fs => fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.None, null)));
+                
+            var pepMatcher = new ViewLibraryPepMatching(broadRangeDocument,
                                                         _selectedLibrary,
                                                         _selectedSpec,
                                                         _lookupPool, 
@@ -1258,11 +1264,28 @@ namespace pwiz.Skyline.SettingsUI
 
             var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
             var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo);
-            if (nodePepMatched == null)
+            if (nodePepMatched == null || nodePepMatched.Children.Count == 0)
             {
                 MessageDlg.Show(this, Resources.ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings);
                 return;
             }
+            double precursorMz = nodePepMatched.TransitionGroups.First().PrecursorMz;
+            double minMz = startingDocument.Settings.TransitionSettings.Instrument.MinMz;
+            double maxMz = startingDocument.Settings.TransitionSettings.Instrument.MaxMz;
+            if (minMz > precursorMz || precursorMz > maxMz)
+            {
+                MessageDlg.Show(this, string.Format(Resources.ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__,
+                                                    precursorMz, minMz, maxMz));
+                return;
+            }
+            var isolationScheme = startingDocument.Settings.TransitionSettings.FullScan.IsolationScheme;
+            if (isolationScheme != null && !isolationScheme.IsInRangeMz(precursorMz))
+            {
+                MessageDlg.Show(this, string.Format(Resources.ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_,
+                                                    precursorMz));
+                return;
+            }
+
             if (nodePepMatched.Children.Count > 0)
             {
                 var keyMatched = nodePepMatched.SequenceKey;

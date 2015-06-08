@@ -25223,6 +25223,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The precursor m/z {0:F04} is not measured by the current DIA isolation scheme..
+        /// </summary>
+        public static string ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_curren" +
+                        "t_DIA_isolation_scheme_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The precursor m/z {0:F04} is outside the instrument range {1} to {2}..
+        /// </summary>
+        public static string ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_ran" +
+                        "ge__1__to__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add Library.
         /// </summary>
         public static string ViewLibraryDlg_CheckLibraryInSettings_Add_Library {

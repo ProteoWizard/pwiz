@@ -8425,4 +8425,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" xml:space="preserve">
     <value>Provide transition ranking information through imported results, a spectral library, or choose only one target transition per precursor.</value>
   </data>
+    <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
+    <value>The precursor m/z {0:F04} is outside the instrument range {1} to {2}.</value>
+  </data>
+    <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_" xml:space="preserve">
+    <value>The precursor m/z {0:F04} is not measured by the current DIA isolation scheme.</value>
+  </data>
 </root>
