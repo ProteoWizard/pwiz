@@ -982,17 +982,30 @@ namespace pwiz.Skyline
             // exist on disk
             var document = Document;
             if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                && File.Exists(oldDocLibFile) && File.Exists(oldRedundantDocLibFile))
+                && File.Exists(oldDocLibFile))
             {
                 string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-                string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
                 using (var saverLib = new FileSaver(newDocLibFile))
-                using (var saverRedundant = new FileSaver(newRedundantDocLibFile))
                 {
-                    CopyFile(oldDocLibFile, saverLib);
-                    CopyFile(oldRedundantDocLibFile, saverRedundant);
-                    saverLib.Commit();
-                    saverRedundant.Commit();
+                    FileSaver saverRedundant = null;
+                    if (File.Exists(oldRedundantDocLibFile))
+                    {
+                        string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
+                        saverRedundant = new FileSaver(newRedundantDocLibFile);
+                    }
+                    using (saverRedundant)
+                    {
+                        CopyFile(oldDocLibFile, saverLib);
+                        if (saverRedundant != null)
+                        {
+                            CopyFile(oldRedundantDocLibFile, saverRedundant);
+                        }
+                        saverLib.Commit();
+                        if (saverRedundant != null)
+                        {
+                            saverRedundant.Commit();
+                        }
+                    }
                 }
 
                 // Update the document library settings to point to the new library.
