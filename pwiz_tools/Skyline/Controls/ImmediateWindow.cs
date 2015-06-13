@@ -371,27 +371,20 @@ namespace pwiz.Skyline.Controls
         {
             RunUIAction(WriteLineHelper, s);
         }
-        
-        private void WriteLineHelper(string s)
-        {
-            try
-            {
-                _box.AppendText(s + Environment.NewLine);
-            }
-            catch (Exception)
-            {
-                // ignored : may be disposed
-            }
-        }
 
         /// <summary>
         /// Writes an NewLine character to the end of the text in the text box.
         /// </summary>
         public override void WriteLine()
         {
-            RunUIAction(_box.AppendText, Environment.NewLine);            
+            RunUIAction(WriteLineHelper, string.Empty);
         }
- 
+
+        private void WriteLineHelper(string s)
+        {
+            BoxAppendText(s + Environment.NewLine);
+        }
+
         /// <summary>
         /// Writes to the current line of the textbox, if there is text on the current line, it first writes a newline character.
         /// </summary>  
@@ -408,17 +401,41 @@ namespace pwiz.Skyline.Controls
             {
                 WriteLine();    
             }
-            _box.AppendText(text);            
+            BoxAppendText(text);            
         }
 
         public override void Write(string s)
         {
-            RunUIAction(str => _box.AppendText(str), s);              
+            RunUIAction(BoxAppendText, s);              
         }
 
-        public void WriteStringToCursor (string s)
+        private void BoxAppendText(string s)
         {
-            RunUIAction(str=> _box.Text = _box.Text.Insert(_box.SelectionStart, str), s);
+            try
+            {
+                _box.AppendText(s);
+            }
+            catch (Exception)
+            {
+                // ignored : may be disposed
+            }
+        }
+
+        public void WriteStringToCursor(string s)
+        {
+            RunUIAction(BoxInsertText, s);
+        }
+
+        private void BoxInsertText(string s)
+        {
+            try
+            {
+                _box.Text = _box.Text.Insert(_box.SelectionStart, s);
+            }
+            catch (Exception)
+            {
+                // ignored : may be disposed
+            }
         }
 
         private void RunUIAction<TArg>(Action<TArg> act, TArg arg)

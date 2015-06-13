@@ -508,7 +508,7 @@ namespace SkylineTester
                     ColorMatch match = null;
                     foreach (var colorMatch in _colorMatchList)
                     {
-                        var lineStart = text.Substring(startIndex, colorMatch.LineStart.Length);
+                        var lineStart = text.Substring(startIndex, Math.Min(colorMatch.LineStart.Length, text.Length - startIndex));
                         if (lineStart == colorMatch.LineStart)
                         {
                             if (colorMatch.LineContains != null)

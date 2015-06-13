@@ -261,8 +261,10 @@ namespace SkylineTester
 
             MainWindow.RunCommands();
 
-            _updateTimer.Start();
-            _stopTimer.Start();
+            if (_updateTimer != null)
+                _updateTimer.Start();
+            if (_stopTimer != null)
+                _stopTimer.Start();
         }
 
         private int _architecture;

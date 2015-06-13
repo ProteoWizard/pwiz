@@ -59,6 +59,11 @@ namespace SkylineTester
 
             // Update elapsed time display.
             _runStartTime = DateTime.Now;
+            if (_runTimer != null)
+            {
+                _runTimer.Stop();
+                _runTimer.Dispose();
+            }
             _runTimer = new Timer { Interval = 1000 };
             _runTimer.Tick += (s, a) =>
             {
@@ -469,6 +474,9 @@ namespace SkylineTester
         {
             if (delayMsec == 0)
             {
+                if (!IsHandleCreated)
+                    return;
+
                 try
                 {
                     Invoke(action);
@@ -491,6 +499,9 @@ namespace SkylineTester
 
         private void RunUI(Action action)
         {
+            if (!IsHandleCreated)
+                return;
+
             try
             {
                 Invoke(action);

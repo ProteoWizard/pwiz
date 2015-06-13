@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -129,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
                 databoundGridForm.BindingListSource.Count,
                 databoundGridForm.IsComplete,
                 databoundGridForm.DataGridView.ColumnCount);
-            Console.Out.WriteLine(message);
+//            Console.Out.WriteLine(message);
             Assert.AreEqual(expectedRowCount, databoundGridForm.BindingListSource.Count, message);
         }
     }
