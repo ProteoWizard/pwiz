@@ -374,7 +374,14 @@ namespace pwiz.Skyline.Controls
         
         private void WriteLineHelper(string s)
         {
-            _box.AppendText(s + Environment.NewLine);
+            try
+            {
+                _box.AppendText(s + Environment.NewLine);
+            }
+            catch (Exception)
+            {
+                // ignored : may be disposed
+            }
         }
 
         /// <summary>
