@@ -163,7 +163,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value)));}
+            set { ChangeDocNode(EditDescription.SetColumn("TransitionNote", value), // Not L10N
+                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value)));}
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? LibraryRank

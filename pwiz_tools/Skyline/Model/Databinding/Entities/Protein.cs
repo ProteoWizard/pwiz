@@ -74,13 +74,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Name
         {
             get { return DocNode.Name; }
-            set { ChangeDocNode(DocNode.ChangeName(value)); } // the user can ovveride this label
+            set { ChangeDocNode(EditDescription.SetColumn("ProteinName", value), // Not L10N
+                DocNode.ChangeName(value)); } // the user can overide this label
         }
         [InvariantDisplayName("ProteinDescription")]
         public string Description
         {
             get { return DocNode.Description; }
-            set { ChangeDocNode(DocNode.ChangeDescription(value)); } // the user can ovveride this label
+            set { ChangeDocNode(EditDescription.SetColumn("ProteinDescription", value), // Not L10N
+                DocNode.ChangeDescription(value)); } // the user can ovveride this label
         }
         [InvariantDisplayName("ProteinAccession")]
         public string Accession
@@ -122,7 +124,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value)));}
+            set { ChangeDocNode(EditDescription.SetColumn("ProteinNote", value), // Not L10N
+                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value)));}
         }
         public override string ToString()
         {

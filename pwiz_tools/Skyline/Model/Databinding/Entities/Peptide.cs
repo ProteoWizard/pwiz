@@ -210,10 +210,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ThrowIfNotSmallMolecule();  // Only settable for custom ions
-                if (value.HasValue)
-                    ChangeDocNode(DocNode.ChangeExplicitRetentionTime(value));
-                else
-                    ChangeDocNode(DocNode.ChangeExplicitRetentionTime((ExplicitRetentionTimeInfo)null));
+                ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTime", value), // Not L10N
+                    DocNode.ChangeExplicitRetentionTime(value));
             }
         }
 
@@ -237,7 +235,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 else
                 {
-                    ChangeDocNode(DocNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(DocNode.ExplicitRetentionTime.RetentionTime, value)));
+                    ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTimeWindow", value), // Not L10N
+                        DocNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(DocNode.ExplicitRetentionTime.RetentionTime, value)));
                 }
             }
         }
@@ -249,7 +248,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 var docNode = DocNode;
-                ChangeDocNode(docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
+                ChangeDocNode(EditDescription.SetColumn("PeptideNote", value), // Not L10N
+                    docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
             }
         }
 

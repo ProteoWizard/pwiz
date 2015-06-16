@@ -8431,4 +8431,8 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_" xml:space="preserve">
     <value>The precursor m/z {0:F04} is not measured by the current DIA isolation scheme.</value>
   </data>
+  <data name="EditDescription_GetUndoText_Set__0__to___1__" xml:space="preserve">
+    <value>Set {0} to '{1}'</value>
+    <comment>Example: Set Protein Name to 'foobar'</comment>
+  </data>
 </root>

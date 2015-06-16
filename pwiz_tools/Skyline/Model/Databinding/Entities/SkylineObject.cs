@@ -45,14 +45,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public virtual void SetAnnotation(AnnotationDef annotationDef, object value)
         {
         }
-        protected void ModifyDocument(Func<SrmDocument, SrmDocument> action)
+        protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action)
         {
             var skylineWindow = DataSchema.SkylineWindow;
             if (skylineWindow == null)
             {
                 throw new InvalidOperationException();
             }
-            skylineWindow.ModifyDocument("Edit", action); // Not L10N
+            skylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchema.DataSchemaLocalizer), action);
         }
     }
 }

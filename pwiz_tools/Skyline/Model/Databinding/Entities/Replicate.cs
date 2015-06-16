@@ -45,9 +45,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [Browsable(false)]
         public ChromatogramSet ChromatogramSet { get { return _chromatogramSet.Value; } }
-        public void ChangeChromatogramSet(ChromatogramSet chromatogramSet)
+        public void ChangeChromatogramSet(EditDescription editDescription, ChromatogramSet chromatogramSet)
         {
-            ModifyDocument(document =>
+            ModifyDocument(editDescription, document =>
                 {
                     var measuredResults = document.Settings.MeasuredResults;
                     var chromatograms = measuredResults.Chromatograms.ToArray();
@@ -86,7 +86,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            ChangeChromatogramSet(ChromatogramSet.ChangeAnnotations(ChromatogramSet.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeChromatogramSet(EditDescription.SetAnnotation(annotationDef, value), 
+                ChromatogramSet.ChangeAnnotations(ChromatogramSet.Annotations.ChangeAnnotation(annotationDef, value)));
         }
 
         private void LinkValueOnClick(object sender, EventArgs args)

@@ -41,10 +41,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
         public TransitionGroupChromInfo ChromInfo { get { return _chromInfo.Value; } }
-        public void ChangeChromInfo(TransitionGroupChromInfo newChromInfo)
+        public void ChangeChromInfo(EditDescription editDescription, TransitionGroupChromInfo newChromInfo)
         {
             var newDocNode = Precursor.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Precursor.DocNode.Results, newChromInfo));
-            Precursor.ChangeDocNode(newDocNode);
+            Precursor.ChangeDocNode(editDescription, newDocNode);
         }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double PrecursorPeakFoundRatio { get { return ChromInfo.PeakCountRatio; } }
@@ -128,19 +128,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return SrmDocument.GetOptimizedCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode);
             }
         }
-        [InvariantDisplayName("PrecursorReplicateNote")] // Not L10N
+        [InvariantDisplayName("PrecursorReplicateNote")]
         public string Note 
         { 
             get { return ChromInfo.Annotations.Note; } 
             set
             {
-                ChangeChromInfo(ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeNote(value)));
+                ChangeChromInfo(
+                    EditDescription.SetColumn("PrecursorReplicateNote", value), // Not L10N
+                    ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeNote(value)));
             }
         }
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            ChangeChromInfo(ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
+                ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

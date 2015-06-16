@@ -135,9 +135,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         /// </summary>
         protected abstract TDocNode CreateEmptyNode();
 
-        public void ChangeDocNode(DocNode newDocNode)
+        public void ChangeDocNode(EditDescription editDescription, DocNode newDocNode)
         {
-            ModifyDocument(document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode));
+            ModifyDocument(editDescription, document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)
@@ -147,7 +147,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            ChangeDocNode(DocNode.ChangeAnnotations(DocNode.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeDocNode(EditDescription.SetAnnotation(annotationDef, value), 
+                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeAnnotation(annotationDef, value)));
         }
         public override string ToString()
         {

@@ -38,10 +38,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Browsable(false)]
         public TransitionChromInfo ChromInfo { get { return _chromInfo.Value; } }
 
-        public void ChangeChromInfo(TransitionChromInfo newChromInfo)
+        public void ChangeChromInfo(EditDescription editDescription, TransitionChromInfo newChromInfo)
         {
             var newDocNode = Transition.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Transition.DocNode.Results, newChromInfo));
-            Transition.ChangeDocNode(newDocNode);
+            Transition.ChangeDocNode(editDescription, newDocNode);
         }
         [HideWhen(AncestorOfType = typeof(Transition))]
         public Transition Transition { get { return (Transition)SkylineDocNode; } }
@@ -81,13 +81,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; }
             set
             {
-                ChangeChromInfo(ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeNote(value)));
+                ChangeChromInfo(EditDescription.SetColumn("TransitionReplicateNote", value), // Not L10N
+                    ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeNote(value)));
             }
         }
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            ChangeChromInfo(ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
+                ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

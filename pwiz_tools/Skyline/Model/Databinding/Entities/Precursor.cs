@@ -176,7 +176,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ThrowIfNotCustomMolecule();  // Only settable for custom ions
                 var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value);
-                ChangeDocNode(DocNode.ChangeExplicitValues(values));
+                ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionEnergy", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
             }
         }
 
@@ -192,7 +193,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ThrowIfNotCustomMolecule(); // Only settable for custom ions
                 var values = DocNode.ExplicitValues.ChangeDriftTime(value);
-                ChangeDocNode(DocNode.ChangeExplicitValues(values));
+                ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
             }
         }
 
@@ -208,7 +210,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ThrowIfNotCustomMolecule(); // Only settable for custom ions
                 var values = DocNode.ExplicitValues.ChangeDriftTimeHighEnergyOffsetMsec(value);
-                ChangeDocNode(DocNode.ChangeExplicitValues(values));
+                ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeHighEnergyOffsetMsec", value), // Not L10N
+                    DocNode.ChangeExplicitValues(values));
             }
         }
 
@@ -216,7 +219,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value))); }
+            set { ChangeDocNode(EditDescription.SetColumn("PrecursorNote", value), // Not L10N
+                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value))); }
         }
 
         public string LibraryName
