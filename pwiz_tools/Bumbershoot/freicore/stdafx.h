@@ -121,9 +121,7 @@
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include <boost/random.hpp>
 #include <boost/tokenizer.hpp>
-#ifdef USE_BOOST_REGEX
 #include <boost/regex.hpp>
-#endif
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>

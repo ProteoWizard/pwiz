@@ -58,6 +58,7 @@ lib freicore
      <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
      <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
      <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+     <library>/ext/boost//regex
      <warnings>all
  : # default-build
      <link>static
@@ -69,6 +70,7 @@ lib freicore
      <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
      <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
      <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+     <library>/ext/boost//regex
      <include>.
  ;
 

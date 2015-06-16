@@ -96,7 +96,7 @@ namespace myrimatch
         bool automaticDecoys;
 
         CVID cleavageAgent;
-        boost::regex cleavageAgentRegex;
+        string cleavageAgentRegex;
         Digestion::Config digestionConfig;
 
         FragmentTypesBitset defaultFragmentTypes;
@@ -154,7 +154,7 @@ namespace myrimatch
             {
                 // first try to parse the token as the name of an agent
                 cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
-                cleavageAgentRegex = boost::regex();
+                cleavageAgentRegex.clear();
 
                 if (cleavageAgent != CVID_Unknown || CleavageRules.find(' ') == string::npos)
                 {
@@ -181,7 +181,7 @@ namespace myrimatch
                             // this will catch most bad cleavage agent names (e.g. "tripsen")
                             if( CleavageRules.find('(') == string::npos )
                                 throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
-                            cleavageAgentRegex = boost::regex(CleavageRules);
+                            cleavageAgentRegex = CleavageRules;
                         }
                         catch (boost::bad_expression&)
                         {
@@ -192,7 +192,7 @@ namespace myrimatch
                     else
                     {
                         // use regex for predefined cleavage agent
-                        cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
+                        cleavageAgentRegex = Digestion::getCleavageAgentRegex(cleavageAgent);
                     }
                 }
                 else if (cleavageAgent == CVID_Unknown)
@@ -201,7 +201,7 @@ namespace myrimatch
                     CleavageRuleSet tmpRuleSet;
                     stringstream CleavageRulesStream( CleavageRules );
                     CleavageRulesStream >> tmpRuleSet;
-                    cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
+                    cleavageAgentRegex = tmpRuleSet.asCleavageAgentRegex();
                 }
             }
 

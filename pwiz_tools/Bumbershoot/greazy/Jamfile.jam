@@ -58,7 +58,7 @@ local application-name = "Greazy" ;
 constant MAJOR : 0 ;
 constant MINOR : 1 ;
 
-path-constant GREAZY_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/Greazy ;
+path-constant GREAZY_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/greazy ;
 
 
 # set version info (used for tarball filenames)
@@ -254,6 +254,7 @@ install install
     : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
+      <conditional>@install-identdata-dependencies
       <conditional>@gcc-install-dll-path
       <conditional>@dotNET-dependencies
     ;
