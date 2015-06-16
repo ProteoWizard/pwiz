@@ -73,25 +73,10 @@ path-constant MYRIMATCH_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/myrimatc
 import generate-version ;
 local version-file = $(application-name:L)Version.cpp ;
 local revision-info = [ generate-version.cpp $(MYRIMATCH_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
-                                             [ path.glob . : *.?pp *.h Jamfile.jam : $(version-file) ] :
+                                             [ path.glob $(MYRIMATCH_PATH) : *.?pp *.h Jamfile.jam : $(version-file) ] :
                                              warn-on-missing ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
-
-local year = $(revision-info[2]) ;
-local month = $(revision-info[3]) ;
-local day = $(revision-info[4]) ;
-
-constant SVNREV : $(revision-info[1]) ;
-constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
-
-
-version-tag = $(MAJOR) $(MINOR) $(SVNREV) ;
-
-if $(revision-info[5]) > 0
-{
-    version-tag += "modified" ;
-}
 
 rule with-mpi ( properties * )
 {

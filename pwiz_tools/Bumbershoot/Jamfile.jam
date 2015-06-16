@@ -33,6 +33,8 @@ import option ;
 import property ;
 import feature ;
 
+version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
+
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
 make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;
 actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
