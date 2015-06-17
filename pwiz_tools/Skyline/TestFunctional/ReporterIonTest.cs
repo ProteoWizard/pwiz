@@ -25,6 +25,15 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // These are some tiny molecules, drop the low end of the instrument mz filter
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Instrument;
+                transitionSettingsUI.MinMz = 10;
+            });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
             TestPreloadedMeasuredIons();
             TestCustomIonMz();
             TestSettingIonsUI();

@@ -757,7 +757,10 @@ namespace pwiz.Skyline.Model
                     }
 
                     if (nodeTranResult != null)
+                    {
+                        Assume.IsTrue(settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTranResult.Mz, precursorMz));
                         childrenNew.Add(nodeTranResult);
+                    }
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
@@ -784,12 +787,14 @@ namespace pwiz.Skyline.Model
                     var modsOld = diff.SettingsOld.PeptideSettings.Modifications;
                     var modsLossOld = modsOld.NeutralLossModifications.ToArray();
                     if (modsNew.MaxNeutralLosses < modsOld.MaxNeutralLosses ||
-                        !ArrayUtil.EqualsDeep(modsLossNew, modsLossOld))
+                        !ArrayUtil.EqualsDeep(modsLossNew, modsLossOld) ||
+                        !Equals(settingsNew.TransitionSettings.Instrument, diff.SettingsOld.TransitionSettings.Instrument))
                     {
                         IList<DocNode> childrenNew = new List<DocNode>();
                         foreach (TransitionDocNode nodeTransition in nodeResult.Children)
                         {
-                            if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew))
+                            if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
+                                settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
                                 childrenNew.Add(nodeTransition);
                         }
 
@@ -828,7 +833,8 @@ namespace pwiz.Skyline.Model
                             massH, isotopeDistInfo, info, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
-                        childrenNew.Add(nodeNew);
+                        if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz))
+                            childrenNew.Add(nodeNew);
                     }
 
                     // Change as little as possible

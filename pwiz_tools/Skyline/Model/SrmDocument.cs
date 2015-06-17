@@ -1017,6 +1017,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// For automated test of custom molecules in tests that aren't originally designed to test that at all
         /// Creates a peptide group with a custom molecule, and two transitions - precursor and a custom fragment
+        /// Custom fragment mass needs to be large enough to avoid the default 50 mz lower cutoff in instrument settings
         /// </summary>
         public PeptideGroupDocNode CreateNonProteomicTestPeptideGroupDocNode(IEnumerable<PeptideGroupDocNode> existingPeptideGroups)
         {
@@ -1026,7 +1027,7 @@ namespace pwiz.Skyline.Model
             var tranGroup = new TransitionGroup(pep, charge, IsotopeLabelType.light);
             var tranPrecursor = new Transition(tranGroup, IonType.precursor, 0, 0, charge);
             // Specify formula
-            var tranFragment = new Transition(tranGroup, charge, 0, new DocNodeCustomIon("H2O2", TestingNonProteomicFragmentName)); // Not L10N
+            var tranFragment = new Transition(tranGroup, charge, 0, new DocNodeCustomIon("C2H2O2", TestingNonProteomicFragmentName)); // Not L10N
             // Specify mass
             var tranFragment2 = new Transition(tranGroup, charge, 0, new DocNodeCustomIon(tranFragment.CustomIon.MonoisotopicMass, tranFragment.CustomIon.AverageMass, TestingNonProteomicFragment2Name)); // Not L10N
 

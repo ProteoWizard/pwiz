@@ -370,7 +370,7 @@ namespace pwiz.SkylineTest
             CheckMasses(docFasta, docFasta2, (before, after) => Assert.IsTrue(before < after), Assert.AreEqual);
 
             // Use average fragment masses
-            settings = docFasta2.Settings;
+            settings = docFasta2.Settings.ChangeTransitionInstrument(instrument => instrument.ChangeMaxMz(1501)); // Keep all the new heavy transitions
             SrmDocument docFasta3 = docFasta2.ChangeSettings(settings.ChangeTransitionPrediction(
                 p => p.ChangeFragmentMassType(MassType.Average)));
             // Precursor masses should not have changed, and transitions should be heavier

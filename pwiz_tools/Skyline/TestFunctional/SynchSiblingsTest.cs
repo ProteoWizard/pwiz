@@ -202,8 +202,8 @@ namespace pwiz.SkylineTestFunctional
             var match = regexTran.Match(nodeTreeTran.Text);
             if (match.Success)
                 return match;
-            // Match "iTRAQ-114 - 114.1107+"
-            var matchItraq = new Regex(@"(iTRAQ-)(\d+)( - )(\d+\.\d+)(\++)").Match(nodeTreeTran.Text);
+            // Match "iTRAQ-114 - 114.1107+" (or "iTRAQ-114 - 114,1107+")
+            var matchItraq = new Regex(@"(iTRAQ-)(\d+)( - )(\d+[\.\,]\d+)(\++)").Match(nodeTreeTran.Text);
             if (matchItraq.Success)
                 return matchItraq;
             Assert.IsTrue(match.Success, string.Format("The transition node text '{0}' did not match the expected pattern.", nodeTreeTran.Text));

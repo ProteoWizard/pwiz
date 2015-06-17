@@ -69,6 +69,15 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
             Settings.Default.StaticModList.Add(variableLossMod);
 
+            // Bump up the max mz a bit
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Instrument;
+                transitionSettingsUI.MaxMz = 1510; 
+            });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
             // Bring up add modification dialog
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(() =>
                 SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Modifications));

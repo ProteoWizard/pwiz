@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("C5C'H13N2", BioMassCalc.AddH("C5C'H12N2"));
             Assert.AreEqual("CO2H", BioMassCalc.AddH("CO2"));
 
-            var docOriginal = new SrmDocument(SrmSettingsList.GetDefault());
+            var docOriginal = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(instrument => instrument.ChangeMinMz(10)));  // H2O2 is not very heavy!
             IdentityPath path;
             SrmDocument docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
                 true, IdentityPath.ROOT, out path);
@@ -108,20 +108,22 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(4, docPeptide.PeptideTransitionCount);
             Assert.IsTrue(docPeptide.PeptideTransitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8));
 
-            var reporterIons = new[] { new MeasuredIon("Water", "H2O", null, null, 1), new MeasuredIon("Water", "H2O", null, null, 2), new MeasuredIon("Water", "H2O", null, null, 3), MeasuredIonList.NTERM_PROLINE };
+            const string formula = "H2O2";  // This was H2O, but that falls below mz=10 at z > 1
+            const string hydrogenPeroxide = "Hydrogen Perxoide";
+            var reporterIons = new[] { new MeasuredIon(hydrogenPeroxide, formula, null, null, 1), new MeasuredIon(hydrogenPeroxide, formula, null, null, 2), new MeasuredIon(hydrogenPeroxide, formula, null, null, 3), MeasuredIonList.NTERM_PROLINE };
             SrmDocument docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(reporterIons)));
             AssertEx.IsDocumentTransitionCount(docReporterIon, 7);
 
             //Check With Monoisotopic
-            double mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H2O");
+            double mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formula);
             for (int i = 0; i < 3; i ++)
             {
                 TransitionDocNode tranNode = docReporterIon.MoleculeTransitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateIonMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron/100);
+                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateIonMz(formula, i + 1), tranNode.Mz, BioMassCalc.MassElectron/100);
                 Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
@@ -131,14 +133,14 @@ namespace pwiz.SkylineTestA
             TransitionSettings tranSettings = docReporterIon.Settings.TransitionSettings.ChangePrediction(predSettings);
             SrmSettings srmSettings = docReporterIon.Settings.ChangeTransitionSettings(tranSettings);
             SrmDocument averageDocument = docReporterIon.ChangeSettings(srmSettings);
-            mass = BioMassCalc.AVERAGE.CalculateMassFromFormula("H2O");
+            mass = BioMassCalc.AVERAGE.CalculateMassFromFormula(formula);
             for (int i = 0; i < 3; i++)
             {
                 TransitionDocNode tranNode = averageDocument.MoleculeTransitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateIonMz("H2O", i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateIonMz(formula, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
                 Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
@@ -148,7 +150,7 @@ namespace pwiz.SkylineTestA
                 Transition tran = docReporterIon.MoleculeTransitions.ElementAt(i).Transition;
                 Assert.AreNotEqual(tran.CustomIon, reporterIons);
             }
-            var optionalIon = new MeasuredIon("Water", "H2O", null, null,1, true);
+            var optionalIon = new MeasuredIon(hydrogenPeroxide, formula, null, null,1, true);
             SrmDocument optionalDoc = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] {optionalIon})));
             Assert.AreEqual(3, optionalDoc.PeptideTransitionCount);

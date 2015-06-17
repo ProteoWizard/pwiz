@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestA
         public void TestPaste()
         {
             ClearDefaultModifications();
-            _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault());
+            _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(instrument => instrument.ChangeMaxMz(1600)));
             _yeastDoc = _yeastDoc.ChangeSettings(_yeastDoc.Settings.ChangeTransitionFilter(filter =>
                                                                                            filter.ChangeMeasuredIons(new MeasuredIon[0])));
             IdentityPath path;

@@ -249,7 +249,10 @@ namespace pwiz.Skyline.Model
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
                 foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict,
                         precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
-                    yield return nodeTran;
+                {
+                    if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
+                        yield return nodeTran;
+                }
             }
 
             // Return special ions from settings, if this is a peptide
@@ -262,15 +265,20 @@ namespace pwiz.Skyline.Model
                         continue;
                     var tran = new Transition(this, measuredIon.Charge, null, measuredIon.CustomIon);
                     double mass = settings.GetFragmentMass(IsotopeLabelType.light, null, tran, null);
-                    yield return new TransitionDocNode(tran, null, mass, null, null);
+                    var nodeTran = new TransitionDocNode(tran, null, mass, null, null);
+                    if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
+                        yield return nodeTran;
                 }
             }
 
             foreach (var nodeTran in groupDocNode.Transitions.Where(tran => tran.Transition.IsCustomAndEditable()))
             {
                 double massH = settings.GetFragmentMass(IsotopeLabelType.light, null, nodeTran.Transition, null);
-                yield return CreateTransitionNode(nodeTran.Transition.IonType, 0, nodeTran.Transition.Charge, massH,
+                var nodeTran2 = CreateTransitionNode(nodeTran.Transition.IonType, 0, nodeTran.Transition.Charge, massH,
                     nodeTran.Losses, transitionRanks, nodeTran.Transition.CustomIon);
+                if (minMz <= nodeTran2.Mz && nodeTran2.Mz <= maxMz)
+                    yield return nodeTran2;
+
             }
 
             if (sequence == null) // Completely custom
@@ -396,6 +404,7 @@ namespace pwiz.Skyline.Model
                                 {
                                     continue;
                                 }
+                                Assume.IsTrue(minMz <= nodeTranReturn.Mz && nodeTranReturn.Mz <= maxMz);
                                 yield return nodeTranReturn;
                             }
                         }
