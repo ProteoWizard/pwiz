@@ -33,12 +33,12 @@ namespace SkylineRunner
         public static readonly object SERVER_CONNECTION_LOCK = new object();
         private bool _connected;
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            new Program(args);
+            return new Program().run(args);
         }
 
-        public Program(IEnumerable<string> args)
+        private int run(IEnumerable<string> args)
         {
             const string skylineAppName = "Skyline"; // Not L10N
             string[] possibleSkylinePaths = ListPossibleSkylineShortcutPaths(skylineAppName);
@@ -50,7 +50,7 @@ namespace SkylineRunner
                 {
                     Console.WriteLine(path);
                 }
-                return;
+                return 1;
             }
             string guidSuffix = string.Format("-{0}", Guid.NewGuid()); // Not L10N
             var psiExporter = new ProcessStartInfo(@"cmd.exe") // Not L10N
@@ -68,7 +68,7 @@ namespace SkylineRunner
                 {
                     Console.WriteLine(Resources.Program_Program_Error__Could_not_connect_to_Skyline_);
                     Console.WriteLine(Resources.Program_Program_Make_sure_you_have_a_valid__0__installation_, skylineAppName);
-                    return;
+                    return 1;
                 }
 
                 using (StreamWriter sw = new StreamWriter(serverStream))
@@ -91,11 +91,11 @@ namespace SkylineRunner
                 {
                     pipeStream.Connect(5 * 1000);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Console.WriteLine(Resources.Program_Program_Error__Could_not_connect_to_Skyline_);
-                    Console.WriteLine(Resources.Program_Program_Make_sure_you_have_a_valid__0__installation_, skylineAppName);
-                    return;
+                    Console.Write(e.Message);
+                    return 1;
                 }
 
                 using (StreamReader sr = new StreamReader(pipeStream))
@@ -108,6 +108,7 @@ namespace SkylineRunner
                     }
                 }
             }
+            return 0;
         }
 
         private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)
@@ -142,7 +143,8 @@ namespace SkylineRunner
                     }
                     return false;
                 }
-                catch (Exception)
+                // ReSharper disable once UnusedVariable
+                catch (Exception ignored)
                 {
                     return false;
                 }

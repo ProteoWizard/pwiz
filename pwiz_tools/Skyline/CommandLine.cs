@@ -119,6 +119,10 @@ namespace pwiz.Skyline
         public bool PublishingToPanorama { get; private set; }
         public Server PanoramaServer { get; private set; }
 
+        // For sharing zip file
+        public bool SharingZipFile { get; private set; }
+        public string SharedFile { get; private set; }
+
         // For importing a tool.
         public string ToolName { get; private set; }
         public string ToolCommand { get; private set; }
@@ -971,6 +975,15 @@ namespace pwiz.Skyline
                 {
                     PanoramaFolder = pair.Value;
                 }
+                else if (IsName(pair, "share-zip"))
+                {
+                    SharingZipFile = true;
+                    RequiresSkylineDocument = true;
+                    if (!string.IsNullOrEmpty(pair.Value))
+                    {
+                        SharedFile = pair.Value;   
+                    }
+                }
             }
 
             if (!string.IsNullOrEmpty(PanoramaServerUri) || !string.IsNullOrEmpty(PanoramaFolder))
@@ -1057,6 +1070,11 @@ namespace pwiz.Skyline
             if (string.IsNullOrEmpty(pair.Value))
                 throw new ValueMissingException(name);
             return true;
+        }
+
+        private static bool IsName(NameValuePair pair, string name)
+        {
+            return pair.Name.Equals(name);
         }
 
         private bool PanoramaArgsComplete()
@@ -1170,7 +1188,7 @@ namespace pwiz.Skyline
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        "An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.\n{2}",  // Not L10N
+                        Resources.PanoramaHelper_ValidateFolder_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1187,6 +1205,9 @@ namespace pwiz.Skyline
         private string _skylineFile;
 
         private ExportCommandProperties _exportProperties;
+
+        // Number of results files imported
+        private int _importCount;
 
         public CommandLine(CommandStatusWriter output)
         {
@@ -1259,7 +1280,9 @@ namespace pwiz.Skyline
                     if (!ImportResultsFile(MsDataFileUri.Parse(commandArgs.ReplicateFile),
                                            commandArgs.ReplicateName,
                                            optimize,
-                                           commandArgs.ImportAppend))
+                                           commandArgs.ImportAppend,
+                                           commandArgs.ImportBeforeDate,
+                                           commandArgs.ImportOnOrAfterDate))
                         return;
                 }
                 else if(commandArgs.ImportingSourceDirectory)
@@ -1329,11 +1352,40 @@ namespace pwiz.Skyline
                     ExportInstrumentFile(ExportFileType.Method, commandArgs);
                 }
             }
+            if (commandArgs.SharingZipFile)
+            {
+                string sharedFileName;
+                var sharedFileDir = Path.GetDirectoryName(_skylineFile) ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(commandArgs.SharedFile))
+                {
+                    sharedFileName = Path.GetFileName(commandArgs.SharedFile.Trim());
+                    if (!PathEx.HasExtension(sharedFileName, SrmDocumentSharing.EXT_SKY_ZIP))
+                    {
+                        sharedFileName = Path.GetFileNameWithoutExtension(sharedFileName) + SrmDocumentSharing.EXT_SKY_ZIP;
+                    }
+                    var dir = Path.GetDirectoryName(commandArgs.SharedFile);
+                    sharedFileDir = string.IsNullOrEmpty(dir) ? sharedFileDir : dir;
+                }
+                else
+                {
+                    sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
+                }
+                var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
+                ShareDocument(_doc, _skylineFile, sharedFilePath, _out);
+            }
             if (commandArgs.PublishingToPanorama)
             {
-                // Publish document to the given folder on the Panorama Server
-                var panoramaHelper = new PanoramaPublishHelper(_out);
-                panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile, commandArgs.PanoramaFolder);
+                if (_importCount > 0)
+                {
+                    // Publish document to the given folder on the Panorama Server
+                    var panoramaHelper = new PanoramaPublishHelper(_out);
+                    panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
+                        commandArgs.PanoramaFolder);
+                }
+                else
+                {
+                    _out.WriteLine(Resources.CommandLine_Run_No_new_results_added__Skipping_Panorama_import_);  
+                }
             }
         }
 
@@ -1588,21 +1640,7 @@ namespace pwiz.Skyline
                 var files = namedPaths.Value;
                 foreach (var file in files)
                 {
-                    // Skip if file write time is after importBefore or before importAfter
-                    try
-                    {
-                        if ((importBefore != null && importBefore < file.GetFileLastWriteTime()) ||
-                            (importOnOrAfter != null && importOnOrAfter >= file.GetFileLastWriteTime()))
-                            continue;
-                    }
-                    catch (Exception e)
-                    {
-                        _out.WriteLine(Resources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, file);
-                        _out.WriteLine(e);
-                        return false;
-                    }
-
-                    if (!ImportResultsFile(file, replicateName, optimize))
+                    if (!ImportResultsFile(file, replicateName, optimize, importBefore, importOnOrAfter))
                         return false;
                 }
             }
@@ -1785,7 +1823,8 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize, bool append)
+        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize,
+            bool append, DateTime? importBefore, DateTime? importOnOrAfter)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = replicateFile.GetFileNameWithoutExtension();
@@ -1815,11 +1854,35 @@ namespace pwiz.Skyline
                 }
             }
 
-            return ImportResultsFile(replicateFile, replicateName, optimize);
+            return ImportResultsFile(replicateFile, replicateName, optimize, importBefore, importOnOrAfter);
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize)
+        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize,
+            DateTime? importBefore, DateTime? importOnOrAfter)
         {
+            // Skip if file write time is after importBefore or before importAfter
+            try
+            {
+                var fileLastWriteTime = replicateFile.GetFileLastWriteTime();
+                if (importBefore != null && importBefore < fileLastWriteTime)
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___,
+                        fileLastWriteTime, importBefore);
+                    return true;
+                }
+                else if (importOnOrAfter != null && importOnOrAfter >= fileLastWriteTime)
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___, fileLastWriteTime, importOnOrAfter);
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                _out.WriteLine(Resources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, replicateFile);
+                _out.WriteLine(e);
+                return false;
+            }
+
             _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
 
             // Hack for un-readable RAW files from Thermo instruments.
@@ -1868,6 +1931,7 @@ namespace pwiz.Skyline
 
             _out.WriteLine(Resources.CommandLine_ImportResultsFile_Results_added_from__0__to_replicate__1__, replicateFile.GetFileName(), replicateName);
             //the file was imported successfully
+            _importCount++;
             return true;
         }
 
@@ -1875,6 +1939,11 @@ namespace pwiz.Skyline
         {
             _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.ToShortDateString() + "..."); // Not L10N
             var filteredChroms = new List<ChromatogramSet>();
+            if (_doc.Settings.MeasuredResults == null)
+            {
+                // No imported results in the document.
+                return;
+            }
             foreach (var chromSet in _doc.Settings.MeasuredResults.Chromatograms)
             {
                 var listFileInfos = chromSet.MSDataFileInfos.Where(fileInfo =>
@@ -2848,6 +2917,24 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, CommandStatusWriter statusWriter)
+        {
+            var waitBroker = new CommandWaitBroker(statusWriter,
+                new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
+            var sharing = new SrmDocumentSharing(document, documentPath, fileDest, false);
+            try
+            {
+                sharing.Share(waitBroker);
+                return true;
+            }
+            catch (Exception x)
+            {
+                statusWriter.WriteLine(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
+                statusWriter.WriteLine(x.Message);
+            }
+            return false;
+        }
+
         public void Dispose()
         {
             _out.Close();
@@ -2865,10 +2952,12 @@ namespace pwiz.Skyline
             public void PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
             {
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
-                if (ShareDocument(document, documentPath, zipFilePath))
+                if (ShareDocument(document, documentPath, zipFilePath, _statusWriter))
                 {
                     PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
                 }
+                // Delete the zip file after it has been published to Panorama.
+                FileEx.SafeDelete(zipFilePath, true);
             }
 
             private void PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
@@ -2897,24 +2986,6 @@ namespace pwiz.Skyline
                             new Uri(panoramaEx.ServerUrl, panoramaEx.JobUrlPart));
                     }
                 }
-            }
-
-            private bool ShareDocument(SrmDocument document, string documentPath, string fileDest)
-            {
-                var waitBroker = new CommandWaitBroker(_statusWriter,
-                    new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
-                var sharing = new SrmDocumentSharing(document, documentPath, fileDest, false);
-                try
-                {
-                    sharing.Share(waitBroker);
-                    return true;
-                }
-                catch (Exception x)
-                {
-                    _statusWriter.WriteLine(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
-                    _statusWriter.WriteLine(x.Message);
-                }
-                return false;
             }
         }
 

@@ -8435,4 +8435,17 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>Set {0} to '{1}'</value>
     <comment>Example: Set Protein Name to 'foobar'</comment>
   </data>
+  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
+    <value>No new results added. Skipping Panorama import.</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___" xml:space="preserve">
+    <value>File write date {0} is after --import-before date {1}. Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
+    <value>File write date {0} is before --import-on-or-after date {1}. Ignoring...</value>
+  </data>
+  <data name="PanoramaHelper_ValidateFolder_" xml:space="preserve">
+    <value>An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.
+{2}</value>
+  </data>
 </root>
