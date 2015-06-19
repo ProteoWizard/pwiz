@@ -6,8 +6,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <ProjectView>ShowAllFiles</ProjectView>
-    <PublishUrlHistory>publish\</PublishUrlHistory>
-    <InstallUrlHistory />
+    <PublishUrlHistory>Z:\software\test\vsharma\AutoQC\|publish\</PublishUrlHistory>
+    <InstallUrlHistory>http://proteome.gs.washington.edu/software/test/vsharma/AutoQC/</InstallUrlHistory>
     <SupportUrlHistory />
     <UpdateUrlHistory />
     <BootstrapperUrlHistory />

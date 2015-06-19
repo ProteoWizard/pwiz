@@ -121,18 +121,17 @@
     <value>17, 17</value>
   </metadata>
   <data name="richTextBox1.Text" xml:space="preserve">
-    <value>To begin using AutoQC you must install Skyline and the appropriate SkylineRunner.exe file. The SkylineRunner.exe can be downloaded from the "Attached Files" section at the bottom of the download page for a specific build of Skyline.  If you are running Skyline-daily, you must install SkylineDailyRunner.exe, available on the download page for Skyline-daily.
+    <value>To begin using AutoQC you must install Skyline and the appropriate SkylineRunner.exe file. The SkylineRunner.exe can be downloaded from the "Attached Files" section at the bottom of the download page for a specific build of Skyline.  If you are running Skyline-daily, you must install SkylineDailyRunner.exe, available on the download page for Skyline-daily. SkylineRunner.ext must be installed in the same directory as AutoQC.
 
-Before running AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC acquisition files, as well as the path to a Skyline document where results will get imported.  Any new files added to the folder will automatically get imported to the Skyline document. 
+Before running AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC acquisition files, as well as the path to a Skyline document where results will get imported.  Any new data files added to the folder will automatically get imported to the given Skyline document. 
 
-If you would like to run SProCoP, check the box in the "SProCoP Settings" tab and configure the available SProCoP settings. 
+AutoQC allows the user to set an accumulation time window for the acquired results.  The minimum value for this setting is 31 days. The current Skyline document will contain results acquired only within the accumulation window.  When a new data files is added to the folder any results older than the current accumulation window, ending on the current day, will be discarded.  
+AutoQC also creates an archive (.sky.zip file) of the current Skyline document when data files are added to the folder in a new month. The archive contains data imported in the last accumulation window.
 
-If you would like to publish the Skyline document to Panorama, check the box in the "Panorama Settings" tab and configure the details of the Panorama server.  
-
-</value>
+If you would like to publish the Skyline document to Panorama, check the box in the "Panorama Settings" tab and configure the details of the Panorama server. The document is published to Panorama after each data file import. </value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>25</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

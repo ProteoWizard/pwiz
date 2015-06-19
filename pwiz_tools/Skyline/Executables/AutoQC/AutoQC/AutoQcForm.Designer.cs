@@ -1,6 +1,6 @@
 ﻿namespace AutoQC
 {
-    partial class AutoQc
+    partial class AutoQCForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,10 +29,13 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AutoQc));
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AutoQCForm));
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.textFolderToWatchPath = new System.Windows.Forms.TextBox();
+            this.textSkylinePath = new System.Windows.Forms.TextBox();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.tabControl = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.buttonRun = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.labelDays = new System.Windows.Forms.Label();
             this.textAccumulationTimeWindow = new System.Windows.Forms.TextBox();
@@ -40,15 +43,10 @@
             this.cbImportExistingFiles = new System.Windows.Forms.CheckBox();
             this.labelInstrumentType = new System.Windows.Forms.Label();
             this.comboBoxInstrumentType = new System.Windows.Forms.ComboBox();
-            this.skylineRunnerPathLabel = new System.Windows.Forms.Label();
             this.btnFolderToWatch = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.textFolderToWatchPath = new System.Windows.Forms.TextBox();
-            this.textSkylineRunnerPath = new System.Windows.Forms.TextBox();
             this.btnSkylineFilePath = new System.Windows.Forms.Button();
-            this.textSkylinePath = new System.Windows.Forms.TextBox();
-            this.btnSkylingRunnerPath = new System.Windows.Forms.Button();
             this.tabSprocopSettings = new System.Windows.Forms.TabPage();
             this.cbRunsprocop = new System.Windows.Forms.CheckBox();
             this.groupBoxSprocop = new System.Windows.Forms.GroupBox();
@@ -72,14 +70,18 @@
             this.lblPanoramaEmail = new System.Windows.Forms.Label();
             this.textPanoramaEmail = new System.Windows.Forms.TextBox();
             this.tabOutput = new System.Windows.Forms.TabPage();
-            this.labelStatusRunning = new System.Windows.Forms.Label();
-            this.buttonStop = new System.Windows.Forms.Button();
-            this.statusImg = new System.Windows.Forms.PictureBox();
             this.textOutput = new System.Windows.Forms.RichTextBox();
             this.tabInstructions = new System.Windows.Forms.TabPage();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.tabControl1.SuspendLayout();
+            this.labelStatusRunning = new System.Windows.Forms.Label();
+            this.btnStartStop = new System.Windows.Forms.Button();
+            this.statusImg = new System.Windows.Forms.PictureBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.tabControl.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabSprocopSettings.SuspendLayout();
@@ -89,48 +91,73 @@
             this.tabPanoramaSettings.SuspendLayout();
             this.groupBoxPanorama.SuspendLayout();
             this.tabOutput.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).BeginInit();
             this.tabInstructions.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).BeginInit();
             this.SuspendLayout();
             // 
-            // tabControl1
+            // textFolderToWatchPath
             // 
-            this.tabControl1.Controls.Add(this.tabSettings);
-            this.tabControl1.Controls.Add(this.tabSprocopSettings);
-            this.tabControl1.Controls.Add(this.tabPanoramaSettings);
-            this.tabControl1.Controls.Add(this.tabOutput);
-            this.tabControl1.Controls.Add(this.tabInstructions);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.Location = new System.Drawing.Point(0, 0);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.Padding = new System.Drawing.Point(20, 6);
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(645, 572);
-            this.tabControl1.TabIndex = 0;
+            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 105);
+            this.textFolderToWatchPath.Name = "textFolderToWatchPath";
+            this.textFolderToWatchPath.Size = new System.Drawing.Size(514, 20);
+            this.textFolderToWatchPath.TabIndex = 30;
+            this.toolTip1.SetToolTip(this.textFolderToWatchPath, "Path to the folder where the instrument will write QC acquisition files");
+            // 
+            // textSkylinePath
+            // 
+            this.textSkylinePath.Location = new System.Drawing.Point(21, 49);
+            this.textSkylinePath.Name = "textSkylinePath";
+            this.textSkylinePath.Size = new System.Drawing.Size(514, 20);
+            this.textSkylinePath.TabIndex = 32;
+            this.toolTip1.SetToolTip(this.textSkylinePath, "Path to a Skyline docuement where results will be imported");
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.tabControl);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.labelStatusRunning);
+            this.splitContainer1.Panel2.Controls.Add(this.btnStartStop);
+            this.splitContainer1.Panel2.Controls.Add(this.statusImg);
+            this.splitContainer1.Panel2.Controls.Add(this.groupBox1);
+            this.splitContainer1.Size = new System.Drawing.Size(645, 572);
+            this.splitContainer1.SplitterDistance = 480;
+            this.splitContainer1.TabIndex = 0;
+            // 
+            // tabControl
+            // 
+            this.tabControl.Controls.Add(this.tabSettings);
+            this.tabControl.Controls.Add(this.tabSprocopSettings);
+            this.tabControl.Controls.Add(this.tabPanoramaSettings);
+            this.tabControl.Controls.Add(this.tabOutput);
+            this.tabControl.Controls.Add(this.tabInstructions);
+            this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl.Location = new System.Drawing.Point(0, 0);
+            this.tabControl.Name = "tabControl";
+            this.tabControl.Padding = new System.Drawing.Point(20, 6);
+            this.tabControl.SelectedIndex = 0;
+            this.tabControl.Size = new System.Drawing.Size(645, 480);
+            this.tabControl.TabIndex = 1;
             // 
             // tabSettings
             // 
-            this.tabSettings.BackColor = System.Drawing.Color.Transparent;
-            this.tabSettings.Controls.Add(this.buttonRun);
+            this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabSettings.Controls.Add(this.groupBox2);
             this.tabSettings.Location = new System.Drawing.Point(4, 28);
             this.tabSettings.Margin = new System.Windows.Forms.Padding(4);
             this.tabSettings.Name = "tabSettings";
             this.tabSettings.Padding = new System.Windows.Forms.Padding(4);
-            this.tabSettings.Size = new System.Drawing.Size(637, 540);
+            this.tabSettings.Size = new System.Drawing.Size(637, 448);
             this.tabSettings.TabIndex = 1;
             this.tabSettings.Text = "Settings";
-            // 
-            // buttonRun
-            // 
-            this.buttonRun.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonRun.Location = new System.Drawing.Point(243, 437);
-            this.buttonRun.Name = "buttonRun";
-            this.buttonRun.Size = new System.Drawing.Size(148, 27);
-            this.buttonRun.TabIndex = 56;
-            this.buttonRun.Text = "Run AutoQC";
-            this.buttonRun.UseVisualStyleBackColor = true;
-            this.buttonRun.Click += new System.EventHandler(this.btnRunAutoQC_Click);
             // 
             // groupBox2
             // 
@@ -140,25 +167,22 @@
             this.groupBox2.Controls.Add(this.cbImportExistingFiles);
             this.groupBox2.Controls.Add(this.labelInstrumentType);
             this.groupBox2.Controls.Add(this.comboBoxInstrumentType);
-            this.groupBox2.Controls.Add(this.skylineRunnerPathLabel);
             this.groupBox2.Controls.Add(this.btnFolderToWatch);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.label3);
             this.groupBox2.Controls.Add(this.textFolderToWatchPath);
-            this.groupBox2.Controls.Add(this.textSkylineRunnerPath);
             this.groupBox2.Controls.Add(this.btnSkylineFilePath);
             this.groupBox2.Controls.Add(this.textSkylinePath);
-            this.groupBox2.Controls.Add(this.btnSkylingRunnerPath);
-            this.groupBox2.Location = new System.Drawing.Point(8, 16);
+            this.groupBox2.Location = new System.Drawing.Point(8, 15);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(621, 390);
+            this.groupBox2.Size = new System.Drawing.Size(621, 314);
             this.groupBox2.TabIndex = 53;
             this.groupBox2.TabStop = false;
             // 
             // labelDays
             // 
             this.labelDays.AutoSize = true;
-            this.labelDays.Location = new System.Drawing.Point(128, 263);
+            this.labelDays.Location = new System.Drawing.Point(128, 203);
             this.labelDays.Name = "labelDays";
             this.labelDays.Size = new System.Drawing.Size(29, 13);
             this.labelDays.TabIndex = 56;
@@ -166,7 +190,7 @@
             // 
             // textAccumulationTimeWindow
             // 
-            this.textAccumulationTimeWindow.Location = new System.Drawing.Point(21, 260);
+            this.textAccumulationTimeWindow.Location = new System.Drawing.Point(21, 200);
             this.textAccumulationTimeWindow.Name = "textAccumulationTimeWindow";
             this.textAccumulationTimeWindow.Size = new System.Drawing.Size(100, 20);
             this.textAccumulationTimeWindow.TabIndex = 55;
@@ -174,7 +198,7 @@
             // labelAccumulationTimeWindow
             // 
             this.labelAccumulationTimeWindow.AutoSize = true;
-            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 244);
+            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 184);
             this.labelAccumulationTimeWindow.Name = "labelAccumulationTimeWindow";
             this.labelAccumulationTimeWindow.Size = new System.Drawing.Size(135, 13);
             this.labelAccumulationTimeWindow.TabIndex = 54;
@@ -183,9 +207,7 @@
             // cbImportExistingFiles
             // 
             this.cbImportExistingFiles.AutoSize = true;
-            this.cbImportExistingFiles.Checked = true;
-            this.cbImportExistingFiles.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbImportExistingFiles.Location = new System.Drawing.Point(21, 194);
+            this.cbImportExistingFiles.Location = new System.Drawing.Point(21, 134);
             this.cbImportExistingFiles.Name = "cbImportExistingFiles";
             this.cbImportExistingFiles.Size = new System.Drawing.Size(210, 17);
             this.cbImportExistingFiles.TabIndex = 53;
@@ -195,7 +217,7 @@
             // labelInstrumentType
             // 
             this.labelInstrumentType.AutoSize = true;
-            this.labelInstrumentType.Location = new System.Drawing.Point(20, 310);
+            this.labelInstrumentType.Location = new System.Drawing.Point(20, 250);
             this.labelInstrumentType.Name = "labelInstrumentType";
             this.labelInstrumentType.Size = new System.Drawing.Size(82, 13);
             this.labelInstrumentType.TabIndex = 52;
@@ -207,25 +229,14 @@
             this.comboBoxInstrumentType.FormattingEnabled = true;
             this.comboBoxInstrumentType.Items.AddRange(new object[] {
             "Thermo"});
-            this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 326);
+            this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 266);
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
             this.comboBoxInstrumentType.Size = new System.Drawing.Size(163, 21);
             this.comboBoxInstrumentType.TabIndex = 51;
             // 
-            // skylineRunnerPathLabel
-            // 
-            this.skylineRunnerPathLabel.AutoSize = true;
-            this.skylineRunnerPathLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.skylineRunnerPathLabel.ForeColor = System.Drawing.SystemColors.Desktop;
-            this.skylineRunnerPathLabel.Location = new System.Drawing.Point(20, 35);
-            this.skylineRunnerPathLabel.Name = "skylineRunnerPathLabel";
-            this.skylineRunnerPathLabel.Size = new System.Drawing.Size(117, 15);
-            this.skylineRunnerPathLabel.TabIndex = 27;
-            this.skylineRunnerPathLabel.Text = "SkylineRunner path:";
-            // 
             // btnFolderToWatch
             // 
-            this.btnFolderToWatch.Location = new System.Drawing.Point(555, 162);
+            this.btnFolderToWatch.Location = new System.Drawing.Point(555, 102);
             this.btnFolderToWatch.Name = "btnFolderToWatch";
             this.btnFolderToWatch.Size = new System.Drawing.Size(29, 23);
             this.btnFolderToWatch.TabIndex = 50;
@@ -237,7 +248,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(20, 91);
+            this.label2.Location = new System.Drawing.Point(20, 31);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(92, 15);
             this.label2.TabIndex = 28;
@@ -247,31 +258,15 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(20, 147);
+            this.label3.Location = new System.Drawing.Point(20, 87);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(90, 15);
             this.label3.TabIndex = 29;
             this.label3.Text = "Folder to watch";
             // 
-            // textFolderToWatchPath
-            // 
-            this.textFolderToWatchPath.Location = new System.Drawing.Point(21, 165);
-            this.textFolderToWatchPath.Name = "textFolderToWatchPath";
-            this.textFolderToWatchPath.Size = new System.Drawing.Size(514, 20);
-            this.textFolderToWatchPath.TabIndex = 30;
-            this.toolTip1.SetToolTip(this.textFolderToWatchPath, "Path to the folder where the instrument will write QC acquisition files");
-            // 
-            // textSkylineRunnerPath
-            // 
-            this.textSkylineRunnerPath.Location = new System.Drawing.Point(21, 53);
-            this.textSkylineRunnerPath.Name = "textSkylineRunnerPath";
-            this.textSkylineRunnerPath.Size = new System.Drawing.Size(514, 20);
-            this.textSkylineRunnerPath.TabIndex = 31;
-            this.toolTip1.SetToolTip(this.textSkylineRunnerPath, "Path to the SkylineRunner executable\r\n");
-            // 
             // btnSkylineFilePath
             // 
-            this.btnSkylineFilePath.Location = new System.Drawing.Point(555, 108);
+            this.btnSkylineFilePath.Location = new System.Drawing.Point(555, 48);
             this.btnSkylineFilePath.Name = "btnSkylineFilePath";
             this.btnSkylineFilePath.Size = new System.Drawing.Size(29, 23);
             this.btnSkylineFilePath.TabIndex = 46;
@@ -279,35 +274,17 @@
             this.btnSkylineFilePath.UseVisualStyleBackColor = true;
             this.btnSkylineFilePath.Click += new System.EventHandler(this.btnSkylineFilePath_Click);
             // 
-            // textSkylinePath
-            // 
-            this.textSkylinePath.Location = new System.Drawing.Point(21, 109);
-            this.textSkylinePath.Name = "textSkylinePath";
-            this.textSkylinePath.Size = new System.Drawing.Size(514, 20);
-            this.textSkylinePath.TabIndex = 32;
-            this.toolTip1.SetToolTip(this.textSkylinePath, "Path to a Skyline docuement where results will be imported");
-            // 
-            // btnSkylingRunnerPath
-            // 
-            this.btnSkylingRunnerPath.Location = new System.Drawing.Point(555, 52);
-            this.btnSkylingRunnerPath.Name = "btnSkylingRunnerPath";
-            this.btnSkylingRunnerPath.Size = new System.Drawing.Size(29, 23);
-            this.btnSkylingRunnerPath.TabIndex = 45;
-            this.btnSkylingRunnerPath.Text = "...";
-            this.btnSkylingRunnerPath.UseVisualStyleBackColor = true;
-            this.btnSkylingRunnerPath.Click += new System.EventHandler(this.btnSkylingRunnerPath_Click);
-            // 
             // tabSprocopSettings
             // 
+            this.tabSprocopSettings.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabSprocopSettings.Controls.Add(this.cbRunsprocop);
             this.tabSprocopSettings.Controls.Add(this.groupBoxSprocop);
             this.tabSprocopSettings.Location = new System.Drawing.Point(4, 28);
             this.tabSprocopSettings.Name = "tabSprocopSettings";
             this.tabSprocopSettings.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSprocopSettings.Size = new System.Drawing.Size(637, 540);
+            this.tabSprocopSettings.Size = new System.Drawing.Size(637, 448);
             this.tabSprocopSettings.TabIndex = 3;
             this.tabSprocopSettings.Text = "SProCoP Settings";
-            this.tabSprocopSettings.UseVisualStyleBackColor = true;
             // 
             // cbRunsprocop
             // 
@@ -411,15 +388,15 @@
             // 
             // tabPanoramaSettings
             // 
+            this.tabPanoramaSettings.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabPanoramaSettings.Controls.Add(this.cbPublishToPanorama);
             this.tabPanoramaSettings.Controls.Add(this.groupBoxPanorama);
             this.tabPanoramaSettings.Location = new System.Drawing.Point(4, 28);
             this.tabPanoramaSettings.Name = "tabPanoramaSettings";
             this.tabPanoramaSettings.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPanoramaSettings.Size = new System.Drawing.Size(637, 540);
+            this.tabPanoramaSettings.Size = new System.Drawing.Size(637, 448);
             this.tabPanoramaSettings.TabIndex = 4;
             this.tabPanoramaSettings.Text = "Panorama Settings";
-            this.tabPanoramaSettings.UseVisualStyleBackColor = true;
             // 
             // cbPublishToPanorama
             // 
@@ -523,56 +500,23 @@
             // 
             // tabOutput
             // 
-            this.tabOutput.Controls.Add(this.labelStatusRunning);
-            this.tabOutput.Controls.Add(this.buttonStop);
-            this.tabOutput.Controls.Add(this.statusImg);
+            this.tabOutput.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabOutput.Controls.Add(this.textOutput);
             this.tabOutput.Location = new System.Drawing.Point(4, 28);
             this.tabOutput.Name = "tabOutput";
             this.tabOutput.Padding = new System.Windows.Forms.Padding(3);
-            this.tabOutput.Size = new System.Drawing.Size(637, 540);
+            this.tabOutput.Size = new System.Drawing.Size(637, 448);
             this.tabOutput.TabIndex = 5;
             this.tabOutput.Text = "Output";
-            this.tabOutput.UseVisualStyleBackColor = true;
-            // 
-            // labelStatusRunning
-            // 
-            this.labelStatusRunning.AutoSize = true;
-            this.labelStatusRunning.Location = new System.Drawing.Point(68, 464);
-            this.labelStatusRunning.Name = "labelStatusRunning";
-            this.labelStatusRunning.Size = new System.Drawing.Size(95, 13);
-            this.labelStatusRunning.TabIndex = 64;
-            this.labelStatusRunning.Text = "AutoQC is stopped";
-            // 
-            // buttonStop
-            // 
-            this.buttonStop.Enabled = false;
-            this.buttonStop.Location = new System.Drawing.Point(531, 454);
-            this.buttonStop.Name = "buttonStop";
-            this.buttonStop.Size = new System.Drawing.Size(75, 23);
-            this.buttonStop.TabIndex = 63;
-            this.buttonStop.Text = "Stop";
-            this.buttonStop.UseVisualStyleBackColor = true;
-            this.buttonStop.Click += new System.EventHandler(this.btnStopAutoQC_Click);
-            // 
-            // statusImg
-            // 
-            this.statusImg.Image = global::AutoQC.Properties.Resources.redstatus;
-            this.statusImg.Location = new System.Drawing.Point(32, 447);
-            this.statusImg.Name = "statusImg";
-            this.statusImg.Size = new System.Drawing.Size(30, 30);
-            this.statusImg.TabIndex = 61;
-            this.statusImg.TabStop = false;
             // 
             // textOutput
             // 
-            this.textOutput.Location = new System.Drawing.Point(25, 32);
+            this.textOutput.Location = new System.Drawing.Point(25, 27);
             this.textOutput.Name = "textOutput";
             this.textOutput.ReadOnly = true;
-            this.textOutput.Size = new System.Drawing.Size(581, 390);
+            this.textOutput.Size = new System.Drawing.Size(581, 397);
             this.textOutput.TabIndex = 0;
             this.textOutput.Text = "";
-            this.textOutput.TextChanged += new System.EventHandler(this.textOutput_TextChanged);
             // 
             // tabInstructions
             // 
@@ -580,7 +524,7 @@
             this.tabInstructions.Location = new System.Drawing.Point(4, 28);
             this.tabInstructions.Name = "tabInstructions";
             this.tabInstructions.Padding = new System.Windows.Forms.Padding(3);
-            this.tabInstructions.Size = new System.Drawing.Size(637, 540);
+            this.tabInstructions.Size = new System.Drawing.Size(637, 448);
             this.tabInstructions.TabIndex = 2;
             this.tabInstructions.Text = "Instructions";
             this.tabInstructions.UseVisualStyleBackColor = true;
@@ -595,20 +539,64 @@
             this.richTextBox1.Size = new System.Drawing.Size(587, 498);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = resources.GetString("richTextBox1.Text");
-            this.richTextBox1.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
             // 
-            // AutoQc
+            // labelStatusRunning
+            // 
+            this.labelStatusRunning.AutoSize = true;
+            this.labelStatusRunning.BackColor = System.Drawing.SystemColors.InactiveCaption;
+            this.labelStatusRunning.Location = new System.Drawing.Point(65, 38);
+            this.labelStatusRunning.Name = "labelStatusRunning";
+            this.labelStatusRunning.Size = new System.Drawing.Size(95, 13);
+            this.labelStatusRunning.TabIndex = 64;
+            this.labelStatusRunning.Text = "AutoQC is stopped";
+            // 
+            // btnStartStop
+            // 
+            this.btnStartStop.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnStartStop.Location = new System.Drawing.Point(462, 28);
+            this.btnStartStop.Name = "btnStartStop";
+            this.btnStartStop.Size = new System.Drawing.Size(148, 27);
+            this.btnStartStop.TabIndex = 56;
+            this.btnStartStop.Text = "Run AutoQC";
+            this.btnStartStop.UseVisualStyleBackColor = true;
+            this.btnStartStop.Click += new System.EventHandler(this.btnStartStopAutoQC_Click);
+            // 
+            // statusImg
+            // 
+            this.statusImg.BackColor = System.Drawing.SystemColors.InactiveCaption;
+            this.statusImg.Image = global::AutoQC.Properties.Resources.redstatus;
+            this.statusImg.Location = new System.Drawing.Point(29, 22);
+            this.statusImg.Name = "statusImg";
+            this.statusImg.Size = new System.Drawing.Size(30, 30);
+            this.statusImg.TabIndex = 61;
+            this.statusImg.TabStop = false;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.BackColor = System.Drawing.SystemColors.InactiveCaption;
+            this.groupBox1.Location = new System.Drawing.Point(4, -3);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(637, 85);
+            this.groupBox1.TabIndex = 65;
+            this.groupBox1.TabStop = false;
+            // 
+            // AutoQCForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(645, 572);
-            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.splitContainer1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "AutoQc";
+            this.Name = "AutoQCForm";
             this.Text = " AutoQC";
-            this.tabControl1.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.tabControl.ResumeLayout(false);
             this.tabSettings.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
@@ -623,63 +611,60 @@
             this.groupBoxPanorama.ResumeLayout(false);
             this.groupBoxPanorama.PerformLayout();
             this.tabOutput.ResumeLayout(false);
-            this.tabOutput.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).EndInit();
             this.tabInstructions.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.statusImg)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label skylineRunnerPathLabel;
+        private System.Windows.Forms.Label labelDays;
+        internal System.Windows.Forms.TextBox textAccumulationTimeWindow;
+        private System.Windows.Forms.Label labelAccumulationTimeWindow;
+        internal System.Windows.Forms.CheckBox cbImportExistingFiles;
+        private System.Windows.Forms.Label labelInstrumentType;
+        internal System.Windows.Forms.ComboBox comboBoxInstrumentType;
         private System.Windows.Forms.Button btnFolderToWatch;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textFolderToWatchPath;
-        private System.Windows.Forms.TextBox textSkylineRunnerPath;
+        internal System.Windows.Forms.TextBox textFolderToWatchPath;
         private System.Windows.Forms.Button btnSkylineFilePath;
-        private System.Windows.Forms.TextBox textSkylinePath;
-        private System.Windows.Forms.Button btnSkylingRunnerPath;
-        private System.Windows.Forms.TabPage tabInstructions;
+        internal System.Windows.Forms.TextBox textSkylinePath;
         private System.Windows.Forms.TabPage tabSprocopSettings;
-        private System.Windows.Forms.GroupBox groupBoxSprocop;
+        internal System.Windows.Forms.CheckBox cbRunsprocop;
+        internal System.Windows.Forms.GroupBox groupBoxSprocop;
+        private System.Windows.Forms.Button btnRScriptPath;
+        private System.Windows.Forms.Label label10;
+        internal System.Windows.Forms.TextBox textRScriptPath;
         private System.Windows.Forms.CheckBox checkBoxIsHighRes;
         private System.Windows.Forms.NumericUpDown numericUpDownMMA;
         private System.Windows.Forms.Label labelMMA;
         private System.Windows.Forms.Label labelThreshold;
         private System.Windows.Forms.NumericUpDown numericUpDownThreshold;
-        private System.Windows.Forms.Button buttonRun;
         private System.Windows.Forms.TabPage tabPanoramaSettings;
-        private System.Windows.Forms.GroupBox groupBoxPanorama;
+        internal System.Windows.Forms.CheckBox cbPublishToPanorama;
+        internal System.Windows.Forms.GroupBox groupBoxPanorama;
         private System.Windows.Forms.Label labelPanoramaFolder;
-        private System.Windows.Forms.TextBox textPanoramaFolder;
+        internal System.Windows.Forms.TextBox textPanoramaFolder;
         private System.Windows.Forms.Label lblPanoramaUrl;
-        private System.Windows.Forms.TextBox textPanoramaUrl;
+        internal System.Windows.Forms.TextBox textPanoramaUrl;
         internal System.Windows.Forms.TextBox textPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaEmail;
         internal System.Windows.Forms.TextBox textPanoramaEmail;
         private System.Windows.Forms.TabPage tabOutput;
         private System.Windows.Forms.RichTextBox textOutput;
-        private System.Windows.Forms.Button buttonStop;
-        private System.Windows.Forms.PictureBox statusImg;
+        private System.Windows.Forms.TabPage tabInstructions;
         private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.CheckBox cbRunsprocop;
-        private System.Windows.Forms.CheckBox cbPublishToPanorama;
         private System.Windows.Forms.Label labelStatusRunning;
-        private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button btnRScriptPath;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox textRScriptPath;
-        private System.Windows.Forms.Label labelInstrumentType;
-        private System.Windows.Forms.ComboBox comboBoxInstrumentType;
-        private System.Windows.Forms.CheckBox cbImportExistingFiles;
-        private System.Windows.Forms.Label labelDays;
-        private System.Windows.Forms.TextBox textAccumulationTimeWindow;
-        private System.Windows.Forms.Label labelAccumulationTimeWindow;
+        private System.Windows.Forms.Button btnStartStop;
+        private System.Windows.Forms.PictureBox statusImg;
+        private System.Windows.Forms.GroupBox groupBox1;
     }
 }

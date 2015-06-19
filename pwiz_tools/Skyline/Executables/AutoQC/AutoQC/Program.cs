@@ -9,10 +9,10 @@ namespace AutoQC
         [STAThread]
         public static void Main(string[] args)
         {
-            log4net.GlobalContext.Properties["WorkingDirectory"] = Directory.GetCurrentDirectory();
-            log4net.Config.XmlConfigurator.Configure();
+//            log4net.GlobalContext.Properties["WorkingDirectory"] = Directory.GetCurrentDirectory();
+//            log4net.Config.XmlConfigurator.Configure();
 
-            var form = new AutoQc();
+            var form = new AutoQCForm();
             Application.Run(form); 
             
         }
