@@ -820,6 +820,7 @@ namespace freicore
 
 				SpectrumType* s = new SpectrumType();
                 s->nativeID = spectrum->id;
+                s->title = spectrum->cvParam(MS_spectrum_title).value;
                 try 
                 {
                     if( !spectrum->precursors.empty() &&

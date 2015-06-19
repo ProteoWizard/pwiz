@@ -440,6 +440,7 @@ namespace freicore
                     sirPtr->spectrumID = s->nativeID;
                     sirPtr->spectraDataPtr = spectraData;
                     sirPtr->set(MS_scan_start_time, s->retentionTime, UO_minute);
+                    if (!s->title.empty()) sirPtr->set(MS_spectrum_title, s->title);
                 }
                 else
                 {

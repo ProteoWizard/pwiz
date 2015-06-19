@@ -45,6 +45,7 @@ namespace freicore
 		SpectrumId				id;						    // source.index.charge
         string                  nativeID;                   // exact native identifier
 		string					fileName;					// name of file the spectrum was read from
+        string                  title;                      // MGF-style spectrum title
 
 		int						peakPreCount;				// number of peaks prior to preprocessing
 		int						peakCount;					// number of peaks after preprocessing
@@ -55,6 +56,7 @@ namespace freicore
 			ar & id;
             ar & nativeID;
 			ar & fileName;
+            ar & title;
 			ar & peakPreCount;
 			ar & peakCount;
 			ar & numFragmentChargeStates;
