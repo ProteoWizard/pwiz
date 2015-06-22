@@ -7,17 +7,20 @@ namespace AutoQC
 {
     public class ImportContext
     {
-        private int _tryCount;
         private int _currentIndex;
-        private readonly List<FileInfo> _resultsFileList; 
+        private readonly List<FileInfo> _resultsFileList;
+        public bool ImportExisting { get; private set; }
+        // Total results files imported since AutoQC startup
+        internal int TotalImportCount { get; set; }
 
         public ImportContext(FileInfo resultsFile) 
         {
             if (resultsFile == null)
             {
-                throw new ArgumentException("Cannot initialize ImportContext with a null resultsFile.");
+                throw new ArgumentException("Cannot initialize ImportContext with a null resultsFile");
             }
             _resultsFileList = new List<FileInfo> {resultsFile};
+            ImportExisting = false;
         }
 
         public ImportContext(List<FileInfo> resultsFiles)
@@ -31,21 +34,7 @@ namespace AutoQC
             {
                 _resultsFileList = _resultsFileList.OrderBy(f => f.LastWriteTime).ToList();
             }
-        }
-
-        public int GetTryCount()
-        {
-            return _tryCount;
-        }
-
-        public void incrementTryCount()
-        {
-            _tryCount++;
-        }
-
-        public bool canRetry()
-        {
-            return _tryCount < AutoQCForm.MAX_TRY_COUNT;
+            ImportExisting = true;
         }
 
         public string GetResultsFilePath()
@@ -62,11 +51,6 @@ namespace AutoQC
         public FileInfo getCurrentFile()
         {
             return _currentIndex < _resultsFileList.Count ? _resultsFileList[_currentIndex] : null; 
-        }
-
-        public bool ImportExisting()
-        {
-            return _resultsFileList.Count > 1;
         }
 
         public bool ImportingLast()

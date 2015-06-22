@@ -642,11 +642,11 @@
         private System.Windows.Forms.Button btnRScriptPath;
         private System.Windows.Forms.Label label10;
         internal System.Windows.Forms.TextBox textRScriptPath;
-        private System.Windows.Forms.CheckBox checkBoxIsHighRes;
-        private System.Windows.Forms.NumericUpDown numericUpDownMMA;
+        internal System.Windows.Forms.CheckBox checkBoxIsHighRes;
+        internal System.Windows.Forms.NumericUpDown numericUpDownMMA;
         private System.Windows.Forms.Label labelMMA;
         private System.Windows.Forms.Label labelThreshold;
-        private System.Windows.Forms.NumericUpDown numericUpDownThreshold;
+        internal System.Windows.Forms.NumericUpDown numericUpDownThreshold;
         private System.Windows.Forms.TabPage tabPanoramaSettings;
         internal System.Windows.Forms.CheckBox cbPublishToPanorama;
         internal System.Windows.Forms.GroupBox groupBoxPanorama;

@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using AutoQC.Properties;
 
 namespace AutoQC
 {
-    public class PanoramaSettings: TabSettings
+    public class PanoramaSettings: SettingsTab
     {
-        static readonly byte[] entropy = System.Text.Encoding.Unicode.GetBytes("Encrypt Panorama password");
+        static readonly byte[] entropy = Encoding.Unicode.GetBytes("Encrypt Panorama password");
 
         private bool PublishToPanorama { get; set; }
         private string PanoramaServerUrl { get; set; }
@@ -149,12 +148,13 @@ namespace AutoQC
             Settings.Default.PublishToPanorama = PublishToPanorama;
         }
 
-        public override IEnumerable<string> SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
+        public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
-            if (!IsSelected() || (importContext.ImportExisting() && !importContext.ImportingLast()))
+            if (!IsSelected() || (importContext.ImportExisting && !importContext.ImportingLast()))
             {
-                // Upload to Panorama if this is the last file being added to the Skyline document.
-                return Enumerable.Empty<string>();
+                // Do not upload to Panorama if this we are importing existing documents and this is not the 
+                // last file being imported.
+                return string.Empty;
             }
 
             var passwdArg = toPrint ? "" : string.Format("--panorama-password=\"{0}\"", DecryptPassword(PanoramaPassword));
@@ -164,7 +164,17 @@ namespace AutoQC
                     PanoramaFolder,
                     PanoramaUserName,
                     passwdArg);
-            return new List<string> { uploadArgs };
+            return uploadArgs;
+        }
+
+        public override ProcessInfo RunBefore(ImportContext importContext)
+        {
+            return null;
+        }
+
+        public override ProcessInfo RunAfter(ImportContext importContext)
+        {
+            return null;
         }
 
         public string EncryptPassword(String password)
@@ -177,7 +187,7 @@ namespace AutoQC
             try
             {
                 byte[] encrypted = ProtectedData.Protect(
-                    System.Text.Encoding.Unicode.GetBytes(password),
+                    Encoding.Unicode.GetBytes(password),
                     entropy,
                     DataProtectionScope.CurrentUser);
                 return Convert.ToBase64String(encrypted);
@@ -202,7 +212,7 @@ namespace AutoQC
                     Convert.FromBase64String(encryptedPassword),
                     entropy,
                     DataProtectionScope.CurrentUser);
-                return System.Text.Encoding.Unicode.GetString(decrypted);
+                return Encoding.Unicode.GetString(decrypted);
             }
             catch (Exception e)
             {

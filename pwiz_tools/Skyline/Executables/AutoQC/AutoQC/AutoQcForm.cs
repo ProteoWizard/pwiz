@@ -33,7 +33,7 @@ namespace AutoQC
         private const string THERMO_EXT = ".raw";
 
         // Path to SkylineRunner.exe
-        private readonly string _skylineRunnerPath;
+        public string SkylineRunnerPath { get; private set; }
 
         // Collection of new mass spec files to be processed.
         private readonly ConcurrentQueue<FileInfo> _dataFiles;
@@ -44,10 +44,10 @@ namespace AutoQC
         private BackgroundWorker _worker;
 
         public const int MAX_TRY_COUNT = 2;
-        private Boolean _tryAgain;
+        private bool _tryAgain;
 
-        private readonly MainSettings _mainSettings;
-        private readonly List<TabSettings> _settingsTabs; 
+        private readonly List<SettingsTab> _settingsTabs;
+        private int _totalImportCount;
 
         private static readonly ILog LOG = LogManager.GetLogger(typeof(AutoQCForm).Name);
 
@@ -59,14 +59,12 @@ namespace AutoQC
             tabControl.TabPages.Remove(tabSprocopSettings);
 
             // Expect SkylineRunner to be in the same directory as AutoQC
-            _skylineRunnerPath = Path.Combine(Directory.GetCurrentDirectory(), SKYLINE_RUNNER);
+            SkylineRunnerPath = Path.Combine(Directory.GetCurrentDirectory(), SKYLINE_RUNNER);
 
-            TabSettings.MainForm = this;
-            _mainSettings = new MainSettings();
-            _settingsTabs = new List<TabSettings> {new PanoramaSettings()};
+            SettingsTab.MainForm = this;
+            _settingsTabs = new List<SettingsTab> {new MainSettings(), new PanoramaSettings()};
 
             // Initialize the tabs from default settings.
-            _mainSettings.InitializeFromDefaultSettings();
             foreach(var settings in _settingsTabs)
             {
                 settings.InitializeFromDefaultSettings();    
@@ -76,6 +74,11 @@ namespace AutoQC
 
             _fileWatcher = new FileSystemWatcher {Filter = "*" + THERMO_EXT };
             _fileWatcher.Created += (s, e) => FileAdded(e, this);
+        }
+
+        private MainSettings GetMainSettings()
+        {
+            return (MainSettings) _settingsTabs[0];
         }
 
         private void OpenFile(string filter, TextBox textbox)
@@ -89,37 +92,32 @@ namespace AutoQC
       
         private async void Run()
         {
-            textOutput.Text = string.Empty;
             LogOutput("Starting AutoQC...");
 
             SetValidatingControls();
 
-            if (!File.Exists(_skylineRunnerPath))
+            if (!File.Exists(SkylineRunnerPath))
             {
-                LogError(string.Format("Could not find {0} at this path {1}. {0} should be in the same directory as AutoQC.", SKYLINE_RUNNER, _skylineRunnerPath));
+                LogError(string.Format("Could not find {0} at this path {1}. {0} should be in the same directory as AutoQC.", SKYLINE_RUNNER, SkylineRunnerPath));
                 SetStoppedControls();
                 return;
             }
 
-            bool validSettings = false;
-            await Task.Run(() => validSettings = _mainSettings.ValidateSettings());
-
-            if (!validSettings)
+            var mainSettings = GetMainSettings();
+            if (!mainSettings.ValidateSettings())
             {
                 SetStoppedControls();
                 return;
             }
             
+            // Initialize logging to log in the folder where results files will be written.
             GlobalContext.Properties["WorkingDirectory"] = textFolderToWatchPath.Text;
             XmlConfigurator.Configure();
-//            var fileAppender =
-//                LogManager.GetRepository().GetAppenders().First(/*appender => appender is RollingFileAppender*/);
             
-
             Log("Watching folder " + textFolderToWatchPath.Text);
             Log("Mass spec. files will be imported to " + textSkylinePath.Text);
 
-            await Task.Run(() => validSettings = ValidateForm());
+            var validSettings = await Task.Run(() => ValidateForm());
             if (!validSettings)
             {
                 SetStoppedControls();
@@ -131,25 +129,32 @@ namespace AutoQC
             SetRunningControls();
 
             // Import existing data files in the directory, if required
-            if (_mainSettings.ImportExistingFiles)
+            if (mainSettings.ImportExistingFiles)
             {
                 ProcessExistingFiles();
             }
             else
             {
-                ProcessFiles();
+                ProcessNewFiles();
             }
 
-            _fileWatcher.Path = _mainSettings.FolderToWatch;
+            _fileWatcher.Path = mainSettings.FolderToWatch;
             _fileWatcher.EnableRaisingEvents = true; // Enables events on the _fileWatcher
         }
 
         private void Stop()
         {
-            Log("Cancelling...");
+            Log("Stopping AutoQC...\n");
             _fileWatcher.EnableRaisingEvents = false;
-            _worker.CancelAsync();
-            SetWaitingControls();
+            if (_worker != null && _worker.IsBusy)
+            {
+                _worker.CancelAsync();
+                SetWaitingControls();
+            }
+            else
+            {
+                SetStoppedControls();
+            }
         }
         
         private void SetValidatingControls()
@@ -193,9 +198,14 @@ namespace AutoQC
         private bool ValidateForm()
         {
             var validated = true;
-            foreach (var settingsTab in _settingsTabs.Where(settingsTab => !settingsTab.ValidateSettings()))
+            // MainSettings tab is the first tab in _settingsTabs.  It has already been validated. Don't re-validate.
+            for (var i = 1; i < _settingsTabs.Count; i++)
             {
-                validated = false;
+                var settingsTab = _settingsTabs[i];
+                if (!settingsTab.ValidateSettings())
+                {
+                    validated = false;
+                }
             }
             return validated;
         }
@@ -231,14 +241,14 @@ namespace AutoQC
         public void LogError(Exception ex, bool logToFile = true)
         {
             LogError(ex.Message, false);
-            LOG.Error(ex.Message, ex);
+            LOG.Error(ex.Message, ex); // Include stacktrace of the exception.
         }
 
         public void LogError(string line, bool logToFile = true)
         {
-            line = "ERROR: " + line;
             RunUI(() =>
             {
+                line = "ERROR: " + line;
                 textOutput.SelectionStart = textOutput.TextLength;
                 textOutput.SelectionLength = 0;
                 textOutput.SelectionColor = Color.Red;
@@ -255,7 +265,6 @@ namespace AutoQC
 
         private void SaveSettings()
         {
-            _mainSettings.SaveSettings();
             _settingsTabs.ForEach(settingsTab => settingsTab.SaveSettings());
 
             Settings.Default.Save();
@@ -264,38 +273,28 @@ namespace AutoQC
         private void ProcessExistingFiles()
         {
             Log("Processing existing files...");
-            
-            if (_worker != null && _worker.IsBusy)
-            {
-                // TODO: Make sure this does not happen?
-                LogError("Working is running!!!");
-                return;
-            }
-            _worker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
-            _worker.DoWork += BackgroundWorker_DoWorkProcessExisting;
-            _worker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompletedProcessExisting;
-            _worker.RunWorkerAsync(); 
+            RunBackgroundWorker(BackgroundWorker_DoWorkProcessExisting,
+                BackgroundWorker_RunWorkerCompletedProcessExisting); 
         }
 
-        private void ProcessFiles()
+        private void ProcessNewFiles()
         {
             Log("Processing new files...");
+            RunBackgroundWorker(BackgroundWorker_DoWork, BackgroundWorker_RunWorkerCompleted);
+        }
+
+        private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
+        {
             if (_worker != null && _worker.IsBusy)
             {
-                // TODO: Make sure this does not happen!
-                LogError("Working is running!!!");
+                LogError("Background worker is running!!!");
+                Stop();
                 return;
             }
             _worker = new BackgroundWorker {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
-            _worker.DoWork += BackgroundWorker_DoWork;
-            _worker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
-            _worker.RunWorkerAsync();
-        }
-
-        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            SetStoppedControls();
-            Log("Stopping AutoQC.\n\n\n");
+            _worker.DoWork += doWork;
+            _worker.RunWorkerCompleted += doOnComplete;
+            _worker.RunWorkerAsync(); 
         }
 
         private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -322,7 +321,7 @@ namespace AutoQC
 
                     if (fileInfo != null)
                     {
-                        ImportContext importContext = new ImportContext(fileInfo);
+                        var importContext = new ImportContext(fileInfo);
                         ProcessFile(importContext);    
                     }
                     inWait = false;
@@ -342,16 +341,28 @@ namespace AutoQC
 
         private void BackgroundWorker_RunWorkerCompletedProcessExisting(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (!e.Cancelled)
+            if (e.Cancelled)
             {
-                Log("Finished processing existing files.\n\n");
-                ProcessFiles(); // Start processing new files.
+                Log("Cancelled processing files.");
+                Stop();
             }
             else
             {
-                Log("Cancelled processing files.");
+                Log("Finished processing existing files.\n");
+                ProcessNewFiles(); // Start processing new files.
+            }
+        }
+
+        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
                 SetStoppedControls();
-                Log("Stopping AutoQC.\n\n\n");
+                Log("AutoQC stopped.");
+            }
+            else
+            {
+                Stop();
             }
         }
 
@@ -369,13 +380,14 @@ namespace AutoQC
                 return;
             }
 
-            // Queue up any existing data (e.g. *.raw) files in the folder
+            // Queue up any existing data files in the folder
             var files =
-                new DirectoryInfo(_mainSettings.FolderToWatch).GetFiles("*" + THERMO_EXT).OrderBy(f => f.LastWriteTime).ToList();
+                new DirectoryInfo(GetMainSettings().FolderToWatch).GetFiles(GetFileFilter()).OrderBy(f => f.LastWriteTime).ToList();
 
             Log(string.Format("Found {0} files.", files.Count));
 
             var importContext = new ImportContext(files);
+            importContext.TotalImportCount = _totalImportCount;
             while (importContext.GetNextFile() != null)
             {
                 ProcessFile(importContext);
@@ -387,6 +399,11 @@ namespace AutoQC
             }  
         }
 
+        private string GetFileFilter()
+        {
+            // TODO: We need to support other instrument vendors
+            return "*" + THERMO_EXT;
+        }
 
         void FileAdded(FileSystemEventArgs e, AutoQCForm autoQcForm)
         {
@@ -399,7 +416,7 @@ namespace AutoQC
 
         void ProcessFile(ImportContext importContext)
         {
-            FileInfo file = importContext.getCurrentFile();
+            var file = importContext.getCurrentFile();
             var counter = 0;
             while (true)
             {
@@ -427,8 +444,6 @@ namespace AutoQC
 
         static bool IsFileReady(FileInfo file)
         {
-            // Log(string.Format("File size is {0}", file.Length));
-
             IXRawfile rawFile = null;
             try
             {
@@ -459,74 +474,112 @@ namespace AutoQC
 
         private void ProcessOneFile(ImportContext importContext)
         {
-            var args = GetArgs(importContext);
+            var processInfos = GetProcessInfos(importContext);
 
-            var argsToPrint = GetArgs(importContext, true);
-            Log("Running SkylineRunner with args: ");
-            Log(argsToPrint);
+            foreach (var procInfo in processInfos)
+            {
+                RunProcess(procInfo);
+            }
+            _totalImportCount++;
+        }
+
+        private List<ProcessInfo> GetProcessInfos(ImportContext importContext)
+        {
+            var processInfos = new List<ProcessInfo>();
+
+            foreach (var settingsTab in _settingsTabs)
+            {
+                var runBefore = settingsTab.RunBefore(importContext);
+                if (runBefore != null)
+                {
+                    processInfos.Add(runBefore);
+                }
+            }
+
+            var skylineRunnerArgs = GetSkylineRunnerArgs(importContext);
+            var argsToPrint = GetSkylineRunnerArgs(importContext, true);
+            var skylineRunner = new ProcessInfo(SkylineRunnerPath, SKYLINE_RUNNER, skylineRunnerArgs, argsToPrint);
+            skylineRunner.allowRetry();
+            processInfos.Add(skylineRunner);
+
+            foreach (var settingsTab in _settingsTabs)
+            {
+                var runAfter = settingsTab.RunAfter(importContext);
+                if (runAfter != null)
+                {
+                    processInfos.Add(runAfter);
+                }
+            }
+            return processInfos;
+        }
+
+        private void RunProcess(ProcessInfo procInfo)
+        {
+            Log(string.Format("Running {0} with args: ", procInfo.ExeName));
+            Log(procInfo.ArgsToPrint);
 
             while (true)
             {
-                importContext.incrementTryCount();
-                
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        WindowStyle = ProcessWindowStyle.Hidden, 
-                        FileName = _skylineRunnerPath, 
-                        Arguments = args,
-                        UseShellExecute = false, 
-                        CreateNoWindow = true, 
-                        RedirectStandardOutput = true, 
-                        RedirectStandardError = true
-                    },
-                    EnableRaisingEvents = true
-                };
+                procInfo.incrementTryCount();
 
-                process.StartInfo.WorkingDirectory = _mainSettings.FolderToWatch;
+                var process = CreateProcess(procInfo);
+                process.StartInfo.WorkingDirectory = GetMainSettings().FolderToWatch;
                 process.OutputDataReceived += WriteToLog;
                 process.ErrorDataReceived += WriteToLog;
                 process.Exited += ProcessExit;
                 process.Start();
                 process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
+                process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
                 if (_tryAgain)
                 {
-                    if (importContext.canRetry())
+                    if (procInfo.canRetry())
                     {
                         LogOutput("\n");
-                        LogError("SkylineRunner returned an error. Trying again...");
+                        LogError(string.Format("{0} returned an error. Trying again...", procInfo.Executable));
                         LogOutput("\n");
                         continue;
                     }
 
-                    // TODO: Consider stopping AutoQC?
                     LogOutput("\n");
-                    LogError("SkylineRunner returned an error. Exceeded maximum try count.  Giving up...");
+                    LogError(string.Format("{0} returned an error. Exceeded maximum try count.  Giving up...", procInfo.ExeName));
                     LogOutput("\n");
+                    Stop();
                 }
                 break;
             }
             _tryAgain = false;
         }
 
-        private string GetArgs(ImportContext importContext, bool toPrint = false)
+        private static Process CreateProcess(ProcessInfo procInfo)
         {
-            StringBuilder args = new StringBuilder();
-            foreach (var arg in _mainSettings.SkylineRunnerArgs(importContext, toPrint))
+            var process = new Process
             {
-                args.Append(arg).Append(" ");
-            }
+                StartInfo = new ProcessStartInfo
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = procInfo.Executable,
+                    Arguments = procInfo.Args,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                },
+                EnableRaisingEvents = true
+            };
+            return process;
+        }
 
+        private string GetSkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
+        {
+            var args = new StringBuilder();
+            args.Append(GetMainSettings().SkylineRunnerArgs(importContext, toPrint));
+        
             foreach (var settingsTab in _settingsTabs)
             {
-                foreach (var arg in settingsTab.SkylineRunnerArgs(importContext, toPrint))
-                {
-                    args.Append(arg).Append(" ");
-                }
+                args.AppendLine();
+                args.Append(settingsTab.SkylineRunnerArgs(importContext, toPrint));
             }
 
             return args.ToString();
@@ -572,6 +625,7 @@ namespace AutoQC
             if (process == null)
             {
                 LogError("!!!Process cannot be null!!!");
+                Stop();
                 return;
             }
 
@@ -584,7 +638,7 @@ namespace AutoQC
             else
             {
 
-                LogError(string.Format("{0} exited with errors.  Stopping AutoQC...\n\n", SKYLINE_RUNNER));
+                LogError(string.Format("{0} exited with errors.", SKYLINE_RUNNER));
                 Stop();
             }
         }

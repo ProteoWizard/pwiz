@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AutoQC
 {
-    public class MainSettings: TabSettings
+    public class MainSettings: SettingsTab
     {
         private const int ACCUM_TIME_WINDOW = 31;
 
@@ -113,7 +114,7 @@ namespace AutoQC
             Properties.Settings.Default.ImportExistingFiles = ImportExistingFiles;
         }
 
-        public override IEnumerable<string> SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
+        public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
             // Get the current accumulation window
             var currentDate = DateTime.Today;
@@ -121,41 +122,73 @@ namespace AutoQC
             Log("Current accumulation window is {0} TO {1}",
                 accumulationWindow.StartDate.ToShortDateString(), accumulationWindow.EndDate.ToShortDateString());
 
+            StringBuilder args = new StringBuilder();
             // Input Skyline file
-            var argLines = new List<string> { string.Format("--in=\"{0}\"", SkylineFilePath) };
+            args.Append(string.Format(" --in=\"{0}\"", SkylineFilePath));
 
-            if (importContext.ImportExisting())
+            // var shareArgs = string.Format(" --in=\"{0}\"", SkylineFilePath) + " --share-zip=Test.sky.zip";
+            var otherArgs = string.Format(" --in=\"{0}\"", SkylineFilePath);
+            otherArgs += string.Format(" --import-file=\"{0}\"", importContext.GetResultsFilePath());
+            otherArgs += string.Format(" --remove-before={0}", accumulationWindow.StartDate.Date);
+            otherArgs += " --save";
+            // return new List<string> {shareArgs, otherArgs};
+            return otherArgs;
+
+//            if (importContext.ImportExisting())
+//            {
+//                // We are importing existing files in the folder, import regardless of when the file was created.
+//                args.Append(string.Format(" --import-file=\"{0}\"", importContext.GetResultsFilePath()));
+//            }
+//            else
+//            {
+//                // Add arguments to roll over
+//                // Add arguments to remove files older than the start of the rolling window.   
+//                args.Append(string.Format(" --remove-before={0}", accumulationWindow.StartDate.Date));
+//
+//                // Add arguments to import the results file
+//                args.Append(string.Format(" --import-on-or-after={1} --import-file=\"{0}\"", importContext.GetResultsFilePath(),
+//                    accumulationWindow.StartDate.ToShortDateString()));
+//            }
+//            
+//            // Save the Skyline file
+//            args.Append(" --save");
+//
+//            return args.ToString();
+        }
+
+        public override ProcessInfo RunBefore(ImportContext importContext)
+        {
+            string archiveArgs = null;
+            var currentDate = DateTime.Today;
+            if (importContext.ImportExisting)
             {
-                // We are importing existing files in the folder, import regardless of when the file was created.
-                argLines.Add(string.Format("--import-file=\"{0}\"", importContext.GetResultsFilePath()));
-
+                // We are importing existing files in the folder 
                 if (importContext.ImportingLast())
                 {
-                    DateTime oldestFileDate = importContext.GetOldestFileDate();
-                    DateTime today = DateTime.Today;
+                    var oldestFileDate = importContext.GetOldestFileDate();
+                    var today = DateTime.Today;
                     if (oldestFileDate.AddMonths(1).CompareTo(today) < 0)
                     {
-                        AddArchiveArgs(argLines, currentDate.AddMonths(-1), currentDate);
+                        archiveArgs = GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
                     }
                 }
             }
             else
             {
                 // Add arguments to archive, if required
-                AddArchiveArgs(argLines, GetLastArchivalDate(), DateTime.Today);
-
-                // Add arguments to roll over
-                AddRollOverArgs(argLines, accumulationWindow);
-
-                // Add arguments to import the results file
-                argLines.Add(string.Format("--import-on-or-after={1} --import-file=\"{0}\"", importContext.GetResultsFilePath(),
-                    accumulationWindow.StartDate.ToShortDateString()));
+                archiveArgs = GetArchiveArgs(GetLastArchivalDate(), DateTime.Today);
             }
-            
-            // Save the Skyline file
-            argLines.Add("--save");
+            if (String.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", SkylineFilePath, archiveArgs);
+            return new ProcessInfo(MainForm.SkylineRunnerPath, args);
+        }
 
-            return argLines;
+        public override ProcessInfo RunAfter(ImportContext importContext)
+        {
+            return null;
         }
 
         private DateTime GetLastArchivalDate()
@@ -171,7 +204,7 @@ namespace AutoQC
                 var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
                 var regex = new Regex(pattern);
 
-                var skylineFileDir = Path.GetFileNameWithoutExtension(SkylineFilePath);
+                var skylineFileDir = Path.GetDirectoryName(SkylineFilePath);
                 Debug.Assert(skylineFileDir != null);
 
                 // Look at any existing .sky.zip files to determine the last archival date
@@ -207,30 +240,26 @@ namespace AutoQC
             }
         }
 
-        public void AddArchiveArgs(ICollection<string> argLines, DateTime archiveDate, DateTime currentDate)
+        public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
         {
-            if (archiveDate.CompareTo(currentDate) > 0)
-                return;
+//            if (currentDate.CompareTo(archiveDate) < 0)
+//                return null;
+//
+//            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
+//            {
+//                return null;
+//            }
 
-            if (currentDate.Year > archiveDate.Year || currentDate.Month > archiveDate.Month)
-            {
-                // Add args to archive the file: create a shared zip
-                var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
-                    Path.GetFileNameWithoutExtension(SkylineFilePath),
-                    archiveDate.Year,
-                    archiveDate.Month);
+            // Return args to archive the file: create a shared zip
+            var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
+                Path.GetFileNameWithoutExtension(SkylineFilePath),
+                archiveDate.Year,
+                archiveDate.Month);
 
-                // Archive file will be written in the same directory as the Skyline file.
-                argLines.Add(string.Format("--share-zip --share-file={0}", archiveFileName));       
+            LastArchivalDate = currentDate;
 
-                LastArchivalDate = currentDate;
-            }
-        }
-
-        private void AddRollOverArgs(ICollection<string> argLines, Window accumulationWindow)
-        {
-            // Add arguments to remove files older than the start of the rolling window.   
-            argLines.Add((string.Format("--remove-before={0}", accumulationWindow.StartDate.Date)));
+            // Archive file will be written in the same directory as the Skyline file.
+            return string.Format("--share-zip={0}", archiveFileName);
         }
 
         private class Window

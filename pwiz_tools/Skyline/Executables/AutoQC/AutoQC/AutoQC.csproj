@@ -27,8 +27,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>13</ApplicationRevision>
-    <ApplicationVersion>1.0.0.13</ApplicationVersion>
+    <ApplicationRevision>18</ApplicationRevision>
+    <ApplicationVersion>1.0.0.18</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -72,9 +72,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
-  <PropertyGroup>
-    <NoWin32Manifest>true</NoWin32Manifest>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
@@ -102,7 +100,7 @@
     <Compile Include="ImportContext.cs" />
     <Compile Include="PanoramaSettings.cs" />
     <Compile Include="SprocopSettings.cs" />
-    <Compile Include="TabSettings.cs" />
+    <Compile Include="SettingsTab.cs" />
     <Compile Include="MainSettings.cs" />
     <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -125,10 +123,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="SkylineRunner, Version=2.6.1.4481, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\SkylineRunner\bin\Release\SkylineRunner.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
@@ -155,6 +149,10 @@
     <None Include="Resources\greenstatus.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\SkylineRunner\bin\Release\SkylineRunner.exe">
+      <Link>SkylineRunner.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="AutoQC.ico" />
     <Content Include="Resources\AutoQC.ico" />
     <Content Include="Resources\orangestatus.png" />

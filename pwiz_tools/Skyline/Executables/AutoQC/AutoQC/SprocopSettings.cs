@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using AutoQC.Properties;
 
 namespace AutoQC
 {
-    public class SprocopSettings: TabSettings
+    public class SprocopSettings: SettingsTab
     {
         private bool RunSprocop { get; set; }
         public string RScriptPath { get; set; }
@@ -64,32 +63,33 @@ namespace AutoQC
             Settings.Default.RScriptPath = RScriptPath;
         }
 
-        public override IEnumerable<string> SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
+        public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
-            string exportReportPath = Path.GetDirectoryName(ReportFilePath) + "\\" + "report.csv";
+            var exportReportPath = Path.GetDirectoryName(ReportFilePath) + "\\" + "report.csv";
             var args =
                 String.Format(
                     @""" --report-conflict-resolution=overwrite --report-add=""{0}"" --report-name=""{1}"" --report-file=""{2}""",
                     ReportFilePath, "SProCoP Input", exportReportPath);
 
-            return new List<string> { args };
+            return args;
 
         }
 
-//        public override Process GetProcess()
-//        {
-//            // string saveQcPath = Path.GetDirectoryName(importContext.GetResultsFilePath()) + "\\QC.pdf";
-//            //                        var process2 = new Process();
-//            //                        var startInfo2 = new ProcessStartInfo
-//            //                        {
-//            //                            FileName = config.RScriptPath,
-//            //                            Arguments = String.Format(@"""{0}"" ""{1}"" {2} {3} 1 {4} ""{5}""", config.SProCoPrScript, exportReportPath, numericUpDownThreshold.Value, checkBoxIsHighRes.Checked ? 1:0, numericUpDownMMA.Value,saveQcPath),
-//            //                            UseShellExecute = false
-//            //                        };
-//            //                        process2.StartInfo = startInfo2;
-//            //                        process2.Start();
-//            return null;
-//
-//        }
+        public override ProcessInfo RunBefore(ImportContext importContext)
+        {
+            return null;
+        }
+
+        public override ProcessInfo RunAfter(ImportContext importContext)
+        {
+            var saveQcPath = Path.GetDirectoryName(importContext.GetResultsFilePath()) + "\\QC.pdf";
+            var args = String.Format(@"""{0}"" ""{1}"" {2} {3} 1 {4} ""{5}""",
+                SProCoPrScript,
+                ReportFilePath,
+                MainForm.numericUpDownThreshold.Value,
+                MainForm.checkBoxIsHighRes.Checked ? 1 : 0,
+                MainForm.numericUpDownMMA.Value, saveQcPath);
+            return new ProcessInfo(RScriptPath, args);
+        }
     }
 }
