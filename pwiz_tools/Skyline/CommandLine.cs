@@ -975,7 +975,7 @@ namespace pwiz.Skyline
                 {
                     PanoramaFolder = pair.Value;
                 }
-                else if (IsName(pair, "share-zip"))
+                else if (IsName(pair, "share-zip")) // Not L10N
                 {
                     SharingZipFile = true;
                     RequiresSkylineDocument = true;
