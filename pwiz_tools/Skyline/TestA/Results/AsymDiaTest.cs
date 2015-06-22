@@ -210,6 +210,8 @@ namespace pwiz.SkylineTestA.Results
                 Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
                 FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
             }
+
+            testFilesDir.Dispose();
         }
     }
 }

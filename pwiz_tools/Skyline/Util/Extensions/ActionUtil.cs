@@ -18,6 +18,8 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Util.Extensions
 {
@@ -38,9 +40,27 @@ namespace pwiz.Skyline.Util.Extensions
         /// For methods with arguments, use a lambda:  ActionUtil.RunAsync(() => MyMethodWithArgs(1, true));
         /// </summary>
         /// <param name="action">Action to be executed on a thread from the thread pool</param>
-        public static void RunAsync(Action action)
+        public static void RunAsyncNoExceptionHandling(Action action)
         {
             action.BeginInvoke(action.EndInvoke, null);
+        }
+
+        public static void RunAsync(Action action, string threadName = null)
+        {
+            RunAsyncNoExceptionHandling(() =>
+            {
+                try
+                {
+                    LocalizationHelper.InitThread(threadName ?? "Unnamed"); // Not L10N
+                    action();
+                }
+                catch (OperationCanceledException) {}
+                catch (LoadCanceledException) {}
+                catch (Exception e)
+                {
+                    Program.ReportException(e);
+                }
+            });
         }
     }
 }

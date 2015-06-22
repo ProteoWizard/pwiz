@@ -1494,7 +1494,7 @@ namespace pwiz.Skyline.Model.Results
     public struct ChromKey : IComparable<ChromKey>
     {
         public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0,
-            0, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false);
+            0, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false, null, null);
 
         public ChromKey(byte[] textIdBytes,
                         int textIdIndex,
@@ -1507,7 +1507,9 @@ namespace pwiz.Skyline.Model.Results
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs,
-                        bool hasScanIds)
+                        bool hasScanIds,
+                        double? optionalMinTime,
+                        double? optionalMaxTime)
             : this(textIdIndex != -1 ? Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen) : null,
                    precursor,
                    ionMobilityValue,
@@ -1518,7 +1520,9 @@ namespace pwiz.Skyline.Model.Results
                    source,
                    extractor,
                    calculatedMzs,
-                   hasScanIds)
+                   hasScanIds,
+                   optionalMinTime,
+                   optionalMaxTime)
         {
         }
 
@@ -1532,7 +1536,9 @@ namespace pwiz.Skyline.Model.Results
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs,
-                        bool hasScanIds)
+                        bool hasScanIds,
+                        double? optionalMinTime,
+                        double? optionalMaxTime)
             : this()
         {
             TextId = textId;
@@ -1546,6 +1552,8 @@ namespace pwiz.Skyline.Model.Results
             Extractor = extractor;
             HasCalculatedMzs = calculatedMzs;
             HasScanIds = hasScanIds;
+            OptionalMinTime = optionalMinTime;
+            OptionalMaxTime = optionalMaxTime;
         }
 
         public string TextId { get; private set; }  // Modified sequence or custom ion id
@@ -1559,6 +1567,10 @@ namespace pwiz.Skyline.Model.Results
         public ChromExtractor Extractor { get; private set; }
         public bool HasCalculatedMzs { get; private set; }
         public bool HasScanIds { get; private set; }
+        public double? OptionalMinTime { get; private set; }
+        public double? OptionalMaxTime { get; private set; }
+
+        public bool IsEmpty { get { return Precursor == 0 && Product == 0 && Source == ChromSource.unknown; } }
 
         /// <summary>
         /// Adjust the product m/z to look like it does for vendors that allow
@@ -1578,7 +1590,9 @@ namespace pwiz.Skyline.Model.Results
                                 Source,
                                 Extractor,
                                 HasCalculatedMzs,
-                                HasScanIds);
+                                HasScanIds,
+                                OptionalMinTime,
+                                OptionalMaxTime);
         }
 
         /// <summary>
@@ -1603,8 +1617,28 @@ namespace pwiz.Skyline.Model.Results
 
         private int CompareTo(ChromKey key, Func<double, double, int> compareMz)
         {
+            int c;
+
+            // First deal with empty keys sorting to the end
+            if (IsEmpty && key.IsEmpty)
+                return 0;
+            if (IsEmpty)
+                return 1;
+            if (key.IsEmpty)
+                return -1;
+
+            // Order by maximum retention time.
+            if (OptionalMaxTime.HasValue != key.OptionalMaxTime.HasValue)
+                return OptionalMaxTime.HasValue ? -1 : 1;
+            if (OptionalMaxTime.HasValue && key.OptionalMaxTime.HasValue)
+            {
+                c = OptionalMaxTime.Value.CompareTo(key.OptionalMaxTime.Value);
+                if (c != 0)
+                    return c;
+            }
+
             // Order by precursor values
-            int c = ComparePrecursors(key, compareMz);
+            c = ComparePrecursors(key, compareMz);
             if (c != 0)
                 return c;
             // Order by scan-type source, product m/z, extraction width
@@ -1742,13 +1776,61 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, precursor, 0, 0, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true);
+                return new ChromKey(null, precursor, 0, 0, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false, true, null, null);
             }
             catch (FormatException)
             {
                 throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, id));
             }
         }
+
+        #region object overrides
+
+        public bool Equals(ChromKey other)
+        {
+            return string.Equals(TextId, other.TextId) &&
+                Precursor.Equals(other.Precursor) &&
+                IonMobilityValue.Equals(other.IonMobilityValue) &&
+                IonMobilityExtractionWidth.Equals(other.IonMobilityExtractionWidth) &&
+                Product.Equals(other.Product) &&
+                CollisionEnergy.Equals(other.CollisionEnergy) &&
+                ExtractionWidth.Equals(other.ExtractionWidth) &&
+                Source == other.Source &&
+                Extractor == other.Extractor &&
+                HasCalculatedMzs.Equals(other.HasCalculatedMzs) &&
+                HasScanIds.Equals(other.HasScanIds) &&
+                OptionalMinTime.Equals(other.OptionalMinTime) &&
+                OptionalMaxTime.Equals(other.OptionalMaxTime);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is ChromKey && Equals((ChromKey) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (TextId != null ? TextId.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ Precursor.GetHashCode();
+                hashCode = (hashCode*397) ^ IonMobilityValue.GetHashCode();
+                hashCode = (hashCode*397) ^ IonMobilityExtractionWidth.GetHashCode();
+                hashCode = (hashCode*397) ^ Product.GetHashCode();
+                hashCode = (hashCode*397) ^ CollisionEnergy.GetHashCode();
+                hashCode = (hashCode*397) ^ ExtractionWidth.GetHashCode();
+                hashCode = (hashCode*397) ^ (int) Source;
+                hashCode = (hashCode*397) ^ (int) Extractor;
+                hashCode = (hashCode*397) ^ HasCalculatedMzs.GetHashCode();
+                hashCode = (hashCode*397) ^ HasScanIds.GetHashCode();
+                hashCode = (hashCode*397) ^ OptionalMinTime.GetHashCode();
+                hashCode = (hashCode*397) ^ OptionalMaxTime.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>

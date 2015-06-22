@@ -2,7 +2,7 @@
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2013 University of Washington - Seattle, WA
+ * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 
@@ -49,12 +48,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() => SkylineWindow.OpenFile(SKY_FILE));
             WaitForDocumentLoaded();
 
-            Stopwatch loadStopwatch = new Stopwatch();
-            loadStopwatch.Start();
             ImportResultsFile(DATA_FILE, 10 * 24 * 60 * 60);    // Allow 10 days for loading.
-            loadStopwatch.Stop();
-
-            // Console.WriteLine("{0} load time = {1}", DATA_FILE, loadStopwatch.Elapsed); // Not L10N
         }
     }
 }

@@ -57,7 +57,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="initParameters">Initial model parameters</param>
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning?</param>
-        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true);
+        /// <param name="progressMonitor">Progress monitor for displaying progress to the user</param>
+        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+            bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null);
 
         /// <summary>
         /// Scoring function for the model
@@ -96,7 +98,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
-        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true);
+        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+            bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null);
         public double Score(IList<double> features)
         {
             return Parameters.Score(features);

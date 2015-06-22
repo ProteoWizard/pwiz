@@ -18,33 +18,980 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
     internal sealed class SpectraChromDataProvider : ChromDataProvider
     {
-        private struct ChromKeyAndCollector
-        {
-            public ChromKey Key;
-            public int StatusId;
-            public ChromCollector Collector;
-        }
-        private List<ChromKeyAndCollector> _chromatograms =
-            new List<ChromKeyAndCollector>();
-        private List<string> _scanIdList =
-            new List<string>();
-
+        private readonly string _filePath;
+        private Chromatograms _chromatograms;
+        private Spectra _spectra;
+        private IDemultiplexer _demultiplexer;
+        private readonly IRetentionTimePredictor _retentionTimePredictor;
+        private List<string> _scanIdList = new List<string>();
         private readonly bool _isProcessedScans;
-        private readonly bool _isSingleMzMatch;
-        private readonly ChromCollector.Allocator _allocator;
+        private bool _isSingleMzMatch;
+
+        private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
+
+        /// <summary>
+        /// The number of chromatograms read so far.
+        /// </summary>
+        private int _readChromatograms;
+
+        private readonly SrmDocument _document;
+        private SpectrumFilter _filter;
+
+        private const int LOAD_PERCENT = 10;
+        private const int BUILD_PERCENT = 70 - LOAD_PERCENT;
+        private const int READ_PERCENT = 96 - LOAD_PERCENT - BUILD_PERCENT; // Leave 4% empty until the very end
+
+        private const int MAX_FULL_GRADIENT_TRANSITIONS = 20*1000;
+
+        public SpectraChromDataProvider(MsDataFileImpl dataFile,
+            ChromFileInfo fileInfo,
+            SrmDocument document,
+            IRetentionTimePredictor retentionTimePredictor,
+            string cachePath, // We'll write tempfiles in this directory
+            ProgressStatus status,
+            int startPercent,
+            int endPercent,
+            IProgressMonitor loader)
+            : base(fileInfo, status, startPercent, endPercent, loader)
+        {
+            _document = document;
+            _filePath = dataFile.FilePath;
+
+            // If no SRM spectra, then full-scan filtering must be enabled
+            bool isSrm = dataFile.HasSrmSpectra;
+            if (!isSrm)
+            {
+                if (!document.Settings.TransitionSettings.FullScan.IsEnabled)
+                    throw new NoFullScanFilteringException(dataFile.FilePath);
+
+                // Only use the retention time predictor on non-SRM data, and only when
+                // there are enough transitions to cause performance issues with extracting
+                // full-gradient in a single pass, and then trimming.
+                if (_document.MoleculeTransitionCount > MAX_FULL_GRADIENT_TRANSITIONS)
+                    _retentionTimePredictor = retentionTimePredictor;
+            }
+
+            // Only mzXML from mzWiff requires the introduction of zero values
+            // during interpolation.
+            _isProcessedScans = dataFile.IsMzWiffXml;
+
+            UpdatePercentComplete();
+
+            // Create the filter responsible for chromatogram extraction
+            bool firstPass = (_retentionTimePredictor != null);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
+                _retentionTimePredictor, firstPass);
+
+            // Get data object used to graph all of the chromatograms.
+            if (_loader.HasUI)
+            {
+                _allChromData = LoadingStatus.Transitions;
+                _allChromData.FilterCount = _filter.FilterPairs != null ? _filter.FilterPairs.Count() : 0;
+            }
+
+            try
+            {
+                InitSpectrumReader(dataFile);
+                InitChromatogramExtraction(isSrm);
+            }
+            catch(Exception)
+            {
+                // If exception thrown before construction is complete than Dispose will not be called.
+                if (_spectra == null)
+                    dataFile.Dispose();
+                else
+                    _spectra.Dispose();
+
+                throw;
+            }
+        }
+
+        private void InitSpectrumReader(MsDataFileImpl dataFile)
+        {
+            // Create the spectra object responsible for delivering spectra for extraction
+            _spectra = new Spectra(_document, _filter, _allChromData, dataFile);
+
+            // Determine what type of demultiplexer, if any, to use based on settings in the
+            // IsolationScheme menu
+            _demultiplexer = _spectra.CreateDemultiplexer();
+
+            if (_demultiplexer == null)
+            {
+                _spectra.RunAsync();
+            }
+        }
+
+        private void InitChromatogramExtraction(bool isSrm)
+        {
+            // Load SRM chromatograms synchronously.
+            if (isSrm)
+            {
+                _chromatograms = new Chromatograms();
+                ExtractChromatograms();
+            }
+            // Load non-SRM chromatograms asynchronously.
+            else
+            {
+                var keys = _filter.ProductChromKeys;
+                bool runAsync = _retentionTimePredictor != null || keys.Any(k => k.OptionalMaxTime.HasValue);
+                _chromatograms = new Chromatograms(_filter.ProductChromKeys, runAsync);
+                if (!runAsync)
+                    ExtractChromatograms();
+                else
+                {
+                    ActionUtil.RunAsync(() =>
+                    {
+                        try
+                        {
+                            ExtractChromatograms();
+                        }
+                        catch (Exception ex)
+                        {
+                            _chromatograms.SetException(ex);
+                        }
+                    }, "Chromatogram extractor"); // Not L10N
+                }
+            }
+        }
+
+        public override bool CompleteFirstPass()
+        {
+            // Ignore this notification, if there is no retention time predictor
+            if (_retentionTimePredictor == null)
+                return false;
+
+            ExtractionComplete();
+            var dataFile = _spectra.Detach();
+
+            // Start the second pass
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _retentionTimePredictor);
+
+            InitSpectrumReader(dataFile);
+            InitChromatogramExtraction(false);
+            return true;
+        }
+
+        private void ExtractionComplete()
+        {
+            if (_chromatograms != null)
+                _chromatograms.ExtractionComplete();
+        }
+
+        /// <summary>
+        /// Process spectra, gathering chromatogram information, synchronously for
+        /// SRM spectra, or on an async thread for other cases.
+        /// </summary>
+        private void ExtractChromatograms()
+        {
+            // First read all of the spectra, building chromatogram time, intensity lists
+            var fragmentTimeSharing = _spectra.HasSrmSpectra ? TimeSharing.single : TimeSharing.grouped;
+            var chromMap = new ChromDataCollectorSet(ChromSource.fragment, fragmentTimeSharing, _allChromData);
+            var ms1TimeSharing = _filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped;
+            var chromMapMs1 = new ChromDataCollectorSet(ChromSource.ms1, ms1TimeSharing, _allChromData);
+            var chromMapSim = new ChromDataCollectorSet(ChromSource.sim, TimeSharing.grouped, _allChromData);
+            var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1};
+
+            var dictPrecursorMzToIndex = new Dictionary<double, int>(); // For SRM processing
+
+            var peptideFinder = _spectra.HasSrmSpectra ? new PeptideFinder(_document) : null;
+
+            while (_spectra.NextSpectrum())
+            {
+                UpdatePercentComplete();
+
+                if (_spectra.HasSrmSpectra)
+                {
+                    var dataSpectrum = _spectra.CurrentSpectrum;
+
+                    double precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? 0;
+                    int filterIndex;
+                    if (!dictPrecursorMzToIndex.TryGetValue(precursorMz, out filterIndex))
+                    {
+                        filterIndex = dictPrecursorMzToIndex.Count;
+                        dictPrecursorMzToIndex.Add(precursorMz, filterIndex);
+                    }
+
+                    // Process the one SRM spectrum
+                    var colorSeed = peptideFinder != null ? peptideFinder.GetColorSeed(precursorMz) : string.Empty; // Keep ReSharper happy
+                    ProcessSrmSpectrum(
+                        dataSpectrum.RetentionTime.Value,
+                        colorSeed,
+                        precursorMz,
+                        filterIndex,
+                        dataSpectrum.Mzs,
+                        dataSpectrum.Intensities,
+                        0, 0, // ion mobility unknown
+                        chromMap);
+                }
+                else if (_filter.EnabledMsMs || _filter.EnabledMs)
+                {
+                    var dataSpectrum = _spectra.CurrentSpectrum;
+                    var spectra = _spectra.CurrentSpectra;
+
+                    // Full-scan filtering should always match a single precursor
+                    // m/z value to a single precursor node in the document tree,
+                    // because that is the way the filters are constructed in the
+                    // first place.
+                    _isSingleMzMatch = true;
+
+                    float rt = _spectra.CurrentTime;
+                    if (_allChromData != null)
+                        _allChromData.CurrentTime = rt;
+
+                    if (_filter.IsMsSpectrum(dataSpectrum))
+                    {
+                        var chromMapMs = _filter.IsSimSpectrum(dataSpectrum) ? chromMapSim : chromMapMs1;
+                        string scanId = dataSpectrum.Id;
+
+                        // Process all SRM spectra that can be generated by filtering this full-scan MS1
+                        if (chromMapMs.IsSharedTime)
+                        {
+                            chromMapMs.AddSharedTime(rt, (short)GetScanIdIndex(scanId));
+                        }
+                        foreach (var spectrum in _filter.SrmSpectraFromMs1Scan(rt, dataSpectrum.Precursors, spectra))
+                        {
+                            chromMapMs.ProcessExtractedSpectrum(rt, GetScanIdIndex(scanId), spectrum);
+                        }
+                    }
+                    if (_filter.IsMsMsSpectrum(dataSpectrum))
+                    {
+                        // Process all SRM spectra that can be generated by filtering this full-scan MS/MS
+                        if (_demultiplexer == null)
+                        {
+                            ProcessSpectrumList(spectra, chromMap, rt, _filter, dataSpectrum.Id);
+                        }
+                        else
+                        {
+                            int i = _spectra.CurrentIndex;
+                            foreach (var deconvSpectrum in _demultiplexer.GetDeconvolvedSpectra(i, dataSpectrum))
+                            {
+                                ProcessSpectrumList(new [] { deconvSpectrum }, chromMap, rt, _filter, dataSpectrum.Id);
+                            }
+                        }
+                    }
+
+                    // Complete any chromatograms with filter pairs with a maximum time earlier
+                    // than the current retention time.
+                    CompleteChromatograms(chromMaps, rt);
+                }
+            }
+
+            string log = _spectra.GetLog();
+            if (log != null) // in case perf logging is enabled
+                DebugLog.Info(log);
+
+            if (_spectra.HasSrmSpectra)
+            {
+                foreach (var map in chromMaps)
+                    AddChromatograms(map);
+            }
+            else
+            {
+                CompleteChromatograms(chromMaps);
+                ExtractionComplete();
+            }
+
+            if (chromMap.Count == 0 && chromMapMs1.Count == 0 && chromMapSim.Count == 0)
+                throw new NoFullScanDataException(_filePath);
+        }
+
+        private void CompleteChromatograms(ChromDataCollectorSet[] chromMaps, double retentionTime = -1)
+        {
+            var finishedFilterPairs = _filter.RemoveFinishedFilterPairs(retentionTime);
+            foreach (var filterPair in finishedFilterPairs)
+                AddChromatogramsForFilterPair(chromMaps, filterPair);
+        }
+
+        private void AddChromatogramsForFilterPair(ChromDataCollectorSet[] chromMaps, SpectrumFilterPair filterPair)
+        {
+            // First mark everything as empty
+            foreach (var productFilterId in filterPair.ProductFilterIds)
+            {
+                _chromatograms.AddChromatogram(productFilterId);
+            }
+            // Then fill the chromatograms that were actually extracted
+            foreach (var chromMap in chromMaps)
+            {
+                if (filterPair.Id >= chromMap.PrecursorCollectorMap.Count ||
+                    chromMap.PrecursorCollectorMap[filterPair.Id] == null)
+                    continue;
+
+                var pairPrecursor = chromMap.PrecursorCollectorMap[filterPair.Id];
+                chromMap.PrecursorCollectorMap[filterPair.Id] = null;
+                var collector = pairPrecursor.Item2;
+                var scanIdCollector = chromMap.ScanIdsCollector;
+                var timesCollector = chromMap.SharedTimesCollector;
+                if (chromMap.IsGroupedTime)
+                {
+                    scanIdCollector = collector.ScansCollector;
+                    timesCollector = collector.GroupedTimesCollector;
+                }
+                    
+                foreach (var pairProduct in collector.ProductIntensityMap)
+                {
+                    var chromCollector = pairProduct.Value;
+                    if (timesCollector != null)
+                    {
+                        chromCollector.Scans = scanIdCollector;
+                        chromCollector.Times = timesCollector;
+                    }
+
+                    _chromatograms.AddChromatogram(pairProduct.Key.FilterId, chromCollector);
+                }
+            }
+
+            // Reader can access completed chromatograms.
+            _chromatograms.AddComplete();
+        }
+
+        private int GetScanIdIndex(string id)
+        {
+            if (_scanIdList.Count > 0)
+            {
+                if (id == _scanIdList[_scanIdList.Count - 1])
+                {
+                    return _scanIdList.Count - 1;
+                }
+            }
+            int nextIndex = _scanIdList.Count;
+            _scanIdList.Add(id);
+            return nextIndex;
+        }
+
+        private void AddChromatograms(ChromDataCollectorSet chromMap)
+        {
+            var scanIdCollector = chromMap.ScanIdsCollector;
+            var timesCollector = chromMap.SharedTimesCollector;
+            foreach (var pairPrecursor in chromMap.PrecursorCollectorMap)
+            {
+                if (pairPrecursor == null)
+                    continue;
+                var modSeq = pairPrecursor.Item1;
+                var collector = pairPrecursor.Item2;
+                if (chromMap.IsGroupedTime)
+                {
+                    scanIdCollector = collector.ScansCollector;
+                    timesCollector = collector.GroupedTimesCollector;
+                }
+
+                foreach (var pairProduct in collector.ProductIntensityMap)
+                {
+                    var chromCollector = pairProduct.Value;
+                    if (timesCollector != null)
+                    {
+                        chromCollector.Scans = scanIdCollector;
+                        chromCollector.Times = timesCollector;
+                    }
+                    var key = new ChromKey(
+                        collector.ModifiedSequence,
+                        collector.PrecursorMz,
+                        collector.IonMobilityValue,
+                        collector.IonMobilityExtractionWidth,
+                        pairProduct.Key.TargetMz,
+                        0,
+                        pairProduct.Key.FilterWidth,
+                        chromMap.ChromSource,
+                        modSeq.Extractor,
+                        true,
+                        true,
+                        null,
+                        null);
+
+                    _chromatograms.AddSrmChromatogram(key, chromCollector);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Process a list of spectra - typically of length one,
+        /// but possibly a set of drift bins all with same retention time,
+        /// or a set of Agilent ramped-CE Mse scans to be averaged
+        /// </summary>
+        private void ProcessSpectrumList(MsDataSpectrum[] spectra,
+                                     ChromDataCollectorSet chromMap,
+                                     double rt,
+                                     SpectrumFilter filter,
+                                     string scanId)
+        {
+            foreach (var spectrum in filter.Extract(rt, spectra))
+            {
+                if (_loader.IsCanceled)
+                    throw new LoadCanceledException(Status);
+
+                chromMap.ProcessExtractedSpectrum(rt, GetScanIdIndex(scanId), spectrum);
+            }
+        }
+
+        private static void ProcessSrmSpectrum(double time,
+                                               string modifiedSequence,
+                                               double precursorMz,
+                                               int filterIndex,
+                                               double[] mzs,
+                                               double[] intensities,
+                                               double ionMobilityValue,
+                                               double ionMobilityExtractionWidth,
+                                               ChromDataCollectorSet chromMap)
+        {
+            float[] intensityFloats = new float[intensities.Length];
+            for (int i = 0; i < intensities.Length; i++)
+                intensityFloats[i] = (float) intensities[i];
+            var productFilters = mzs.Select(mz => new SpectrumProductFilter(mz, 0)).ToArray();
+            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
+                ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
+            chromMap.ProcessExtractedSpectrum(time, -1, spectrum);
+        }
+
+        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+        {
+            get
+            {
+                var chromIds = new KeyValuePair<ChromKey, int>[_chromatograms.ChromKeys.Count];
+                for (int i = 0; i < chromIds.Length; i++)
+                    chromIds[i] = new KeyValuePair<ChromKey, int>(_chromatograms.ChromKeys[i], i); 
+                return chromIds;
+            }
+        }
+
+        public override byte[] ScanIdBytes
+        {
+            get { return DataFileScanIds.ToBytes(_scanIdList); }
+        }
+
+        public override bool GetChromatogram(
+            int id, string modifiedSequence,
+            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+        {
+            var statusId = _chromatograms.ReleaseChromatogram(id, out times, out intensities, out massErrors, out scanIds);
+
+            extra = new ChromExtra(statusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
+
+            // Assume that each chromatogram will be read once, though this may
+            // not always be completely true.
+            _readChromatograms++;
+
+            UpdatePercentComplete();
+            return times.Length > 0;
+        }
+
+        private void UpdatePercentComplete()
+        {
+            int basePercent = LOAD_PERCENT;
+            if (_retentionTimePredictor != null && !_filter.IsFirstPass)
+                basePercent += BUILD_PERCENT / 2;
+
+            int percentComplete = 0;
+            if (_spectra != null)
+                percentComplete = _spectra.PercentComplete * BUILD_PERCENT / 100;
+            if (_retentionTimePredictor != null)
+                percentComplete /= 2;
+
+            int chromPercent = 0;
+            if (_chromatograms != null && _chromatograms.Count > 0)
+                chromPercent = Math.Min(_readChromatograms, _chromatograms.Count) * READ_PERCENT / _chromatograms.Count;
+
+            SetPercentComplete(basePercent + percentComplete + chromPercent);
+        }
+
+        public override double? MaxRetentionTime
+        {
+            get { return LoadingStatus.Transitions.MaxRetentionTime; }
+        }
+
+        public override double? MaxIntensity
+        {
+            get { return LoadingStatus.Transitions.MaxIntensity; }
+        }
+
+        public override bool IsProcessedScans
+        {
+            get { return _isProcessedScans; }
+        }
+
+        public override bool IsSingleMzMatch
+        {
+            get { return _isSingleMzMatch; }
+        }
+
+        public override void ReleaseMemory()
+        {
+            ExtractionComplete();
+        }
+
+        public override void Dispose()
+        {
+            _spectra.Dispose();
+            _scanIdList = null;
+            _chromatograms = null;
+        }
+
+        public static bool HasSpectrumData(MsDataFileImpl dataFile)
+        {
+            return dataFile.SpectrumCount > 0;
+        }
+
+        private class Spectra : IDisposable
+        {
+            private bool _runningAsync;
+            private readonly SrmDocument _document;
+            private readonly SpectrumFilter _filter;
+            private MsDataFileImpl _dataFile;
+            private LookaheadContext _lookaheadContext;
+            private readonly int _countSpectra;
+            private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
+            private Exception _exception;
+
+            /// <summary>
+            /// The numbr of chromatograms the reader thread is allowed to read ahead. This number is important.
+            /// If it is too small, then the spectrum reader will end up waiting for spectra to be processed in
+            /// cases where a lot of precursors need to be extracted. Though, overall, spectrum reading is the
+            /// slowest part of the pipeline, and processing will eventually catch up when scans are seen that
+            /// require less extraction. It should also stay small enough to ensure scans in memory are never
+            /// an important memory burden.
+            /// </summary>
+            private const int READ_BUFFER_SIZE = 100;
+            private readonly BlockingCollection<SpectrumInfo> _pendingInfoList =
+                new BlockingCollection<SpectrumInfo>(READ_BUFFER_SIZE);
+            private SpectrumInfo _currentInfo;
+
+            public Spectra(SrmDocument document, SpectrumFilter filter, ChromatogramLoadingStatus.TransitionData allChromData, MsDataFileImpl dataFile)
+            {
+                _document = document;
+                _filter = filter;
+                _dataFile = dataFile;
+
+                _allChromData = allChromData;
+                
+                _lookaheadContext = new LookaheadContext(_filter, _dataFile);
+                _countSpectra = dataFile.SpectrumCount;
+
+                HasSrmSpectra = dataFile.HasSrmSpectra;
+                
+                // If possible, find the maximum retention time in order to scale the chromatogram graph.
+                if (_allChromData != null && (_filter.EnabledMsMs || _filter.EnabledMs))
+                {
+                    var retentionTime = _dataFile.GetStartTime(_countSpectra - 1);
+                    if (retentionTime.HasValue)
+                    {
+                        _allChromData.MaxRetentionTime = (float)retentionTime.Value;
+                        _allChromData.MaxRetentionTimeKnown = true;
+                        _allChromData.Progressive = true;
+                    }
+                }
+            }
+
+            public bool HasSrmSpectra { get; private set; }
+
+            public bool IsRunningAsync { get {  return _runningAsync; } }
+
+            public int CurrentIndex { get { return _currentInfo != null ? _currentInfo.Index : -1; } }
+
+            public MsDataSpectrum CurrentSpectrum
+            {
+                get { return _currentInfo != null ? _currentInfo.DataSpectrum : null; }
+            }
+
+            public MsDataSpectrum[] CurrentSpectra
+            {
+                get { return _currentInfo != null ? _currentInfo.AllSpectra : null; }                
+            }
+
+            public float CurrentTime
+            {
+                get { return (float)(_currentInfo != null ? _currentInfo.RetentionTime : 0); }
+            }
+
+            public void RunAsync()
+            {
+                _runningAsync = true;
+
+                ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        Read();
+                    }
+                    catch (Exception ex)
+                    {
+                        SetException(ex);
+                    }
+                }, "Spectrum reader"); // Not L10N
+            }
+
+            /// <summary>
+            /// Releases and returns the data file associated with this instance, ending any asynchronous processing
+            /// </summary>
+            public MsDataFileImpl Detach()
+            {
+                MsDataFileImpl dataFile;
+
+                lock (_dataFile)
+                {
+                    dataFile = _dataFile;
+                    _dataFile = null;
+                }
+
+                if (_runningAsync)
+                {
+                    // Just in case the Read thread is waiting to add a spectrum to a full pening list
+                    SpectrumInfo info;
+                    _pendingInfoList.TryTake(out info);
+                }
+                return dataFile;
+            }
+
+            /// <summary>
+            /// Detaches and disposes the data file associated with this instance
+            /// </summary>
+            public void Dispose()
+            {
+                var dataFile = Detach();
+                if (dataFile != null)
+                    dataFile.Dispose();
+            }
+
+            public int PercentComplete
+            {
+                get
+                {
+                    // If the data file has been disposed, then count this as 100% complete
+                    if (_currentInfo.IsLast)
+                        return 100;
+                    return Math.Max(0, CurrentIndex)*100/_countSpectra;
+                }
+            }
+
+            public IDemultiplexer CreateDemultiplexer()
+            {
+                switch (HandlingType)
+                {
+                    case IsolationScheme.SpecialHandlingType.OVERLAP:
+                        return new OverlapDemultiplexer(_dataFile, _filter);
+                    case IsolationScheme.SpecialHandlingType.MULTIPLEXED:
+                        return new MsxDemultiplexer(_dataFile, _filter);
+                    case IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED:
+                        return new MsxOverlapDemultiplexer(_dataFile, _filter);
+                    default:
+                        return null;
+                }
+            }
+
+            private string HandlingType
+            {
+                get
+                {
+                    var isoScheme = _document.Settings.TransitionSettings.FullScan.IsolationScheme;
+                    return isoScheme != null ? isoScheme.SpecialHandling : IsolationScheme.SpecialHandlingType.NONE;
+                }
+            }
+
+            public string GetLog()
+            {
+                lock (_dataFile)
+                {
+                    return _dataFile.GetLog();
+                }
+            }
+
+            private void SetException(Exception exception)
+            {
+                _exception = exception;
+                _pendingInfoList.Add(SpectrumInfo.LAST);
+            }
+
+            public bool NextSpectrum()
+            {
+                if (_runningAsync)
+                {
+                    _currentInfo = _pendingInfoList.Take();
+                    if (_exception != null)
+                        throw _exception;
+                }
+                else
+                {
+                    lock (_dataFile)
+                    {
+                        int i = _currentInfo != null ? _currentInfo.Index : -1;
+                        _currentInfo = ReadSpectrum(ref i);
+                    }
+                }
+                return !_currentInfo.IsLast;
+            }
+
+            /// <summary>
+            /// Method for asynchronous reading of spectra
+            /// </summary>
+            private void Read()
+            {
+                int i = -1; // First call to ReadSpectrum will advance this to zero
+                SpectrumInfo nextInfo;
+                do
+                {
+                    lock (_dataFile)
+                    {
+                        // Check to see if disposed by another thread
+                        if (_dataFile == null)
+                            return;
+
+                        nextInfo = ReadSpectrum(ref i);
+                    }
+                    _pendingInfoList.Add(nextInfo);
+                }
+                while (!nextInfo.IsLast);
+            }
+
+            private SpectrumInfo ReadSpectrum(ref int i)
+            {
+                while ((i = _lookaheadContext.NextIndex(i)) < _countSpectra)
+                {
+                    if (_filter.GetMseLevel() > 2)
+                    {
+                        // We're into the Waters function 3 in Mse data - leave this loop
+                        _lookaheadContext.NextIndex(_countSpectra);
+                        continue;
+                    }
+
+                    if (HasSrmSpectra)
+                    {
+                        var nextSpectrum = _dataFile.GetSrmSpectrum(i);
+                        if (nextSpectrum.Level != 2)
+                            continue;
+
+                        if (!nextSpectrum.RetentionTime.HasValue)
+                        {
+                            throw new InvalidDataException(
+                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
+                                    _dataFile.GetSpectrumId(i)));
+                        }
+                        var precursors = nextSpectrum.Precursors;
+                        if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
+                        {
+                            throw new InvalidDataException(
+                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
+                                    _dataFile.GetSpectrumId(i)));
+                        }
+                        return new SpectrumInfo(i, nextSpectrum, new []{nextSpectrum},
+                            (float) nextSpectrum.RetentionTime.Value);
+                    }
+                    else
+                    {
+                        // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
+                        var msLevel = _lookaheadContext.GetMsLevel(i);
+                        if (!_filter.EnabledMsMs && msLevel != 1)
+                            continue;
+
+                        // Skip quickly through the chromatographic lead-in and tail when possible 
+                        if (msLevel > 1) // We need all MS1 for TIC and BPC
+                        {
+                            double? rtCheck = _lookaheadContext.GetRetentionTime(i);
+                            if (_filter.IsOutsideRetentionTimeRange(rtCheck))
+                            {
+                                // Leave an update cue for the chromatogram painter then move on
+                                if (_allChromData != null)
+                                    _allChromData.CurrentTime = (float)rtCheck.Value;
+                                continue;
+                            }
+                        }
+                        // Inexpensive checks are complete, now actually get the spectrum data
+                        var nextSpectrum = _lookaheadContext.GetSpectrum(i);
+                        // Assertion for testing ID to spectrum index support
+                        //                        int iFromId = dataFile.GetScanIndex(dataSpectrum.Id);
+                        //                        Assume.IsTrue(i == iFromId);
+                        if (nextSpectrum.Mzs.Length == 0)
+                            continue;
+
+                        double? rt = nextSpectrum.RetentionTime;
+                        if (!rt.HasValue)
+                            continue;
+
+                        // Deal with ion mobility data - look ahead for a run of scans all 
+                        // with the same retention time.  For non-IMS data we'll just get
+                        // a single "drift bin" with no drift time.
+                        //
+                        // Also for Agilent ramped-CE msE, gather MS2 scans together
+                        // so they get averaged.
+                        //
+
+                        var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
+                        if (!_filter.ContainsTime(rt.Value))
+                            continue;
+
+                        return new SpectrumInfo(i, nextSpectrum, nextSpectra, rt.Value);
+                    }
+                }
+                return SpectrumInfo.LAST;
+            }
+
+            private class SpectrumInfo
+            {
+                public static readonly SpectrumInfo LAST = new SpectrumInfo(-1, null, null, 0);
+
+                public SpectrumInfo(int index, MsDataSpectrum dataSpectrum, MsDataSpectrum[] allSpectra, double retentionTime)
+                {
+                    Index = index;
+                    DataSpectrum = dataSpectrum;
+                    AllSpectra = allSpectra;
+                    RetentionTime = retentionTime;
+                }
+
+                public int Index { get; private set; }
+                public MsDataSpectrum DataSpectrum { get; private set; }
+                public MsDataSpectrum[] AllSpectra { get; private set; }
+                public double RetentionTime { get; private set; }
+
+                public bool IsLast { get { return DataSpectrum == null; } }
+            }
+        }
+
+        private class Chromatograms
+        {
+            private readonly bool _runningAsync;
+            private readonly List<ChromKey> _chromKeys;
+            private readonly List<ChromCollector> _chromList;
+            private readonly int[] _chromKeyLookup;
+            private readonly AutoResetEvent _chromatogramAvailable = new AutoResetEvent(false);
+            private Exception _exception;
+
+            public Chromatograms()
+            {
+                _chromKeys = new List<ChromKey>();
+                _chromList = new List<ChromCollector>();
+            }
+
+            public Chromatograms(ICollection<ChromKey> chromKeys, bool runningAsync)
+            {
+                _runningAsync = runningAsync;
+
+                // Sort ChromKeys in order of max retention time, and note the sort order.
+                var chromKeyArray = chromKeys.ToArray();
+                int[] sortIndexes;
+                ArrayUtil.Sort(chromKeyArray, out sortIndexes);
+                // The sort indexes tell use where the keys used to live. For lookup, we need
+                // to go the other way. Chromatograms will come in indexed by where they used to
+                // be, and we need to put them into the _chromList array in the new location of
+                // the ChromKey.
+                _chromKeyLookup = new int[sortIndexes.Length];
+                for (int i = 0; i < sortIndexes.Length; i++)
+                {
+                    _chromKeyLookup[sortIndexes[i]] = i;
+                }
+                _chromKeys = chromKeyArray.ToList();
+
+                // Create empty chromatograms for each ChromKey.
+                _chromList = new List<ChromCollector>(chromKeys.Count);
+                for (int i = 0; i < _chromKeys.Count; i++)
+                    _chromList.Add(null);
+            }
+
+            public bool IsRunningAsync { get {  return _runningAsync; } }
+
+            public List<ChromKey> ChromKeys
+            {
+                get { return _chromKeys; }
+            }
+
+            public int Count
+            {
+                get { return _chromList.Count; }
+            }
+
+            /// <summary>
+            /// Add key and collector for an SRM chromatogram.
+            /// </summary>
+            public void AddSrmChromatogram(ChromKey chromKey, ChromCollector collector)
+            {
+                // Not allowed to use this method in the async case
+                Assume.IsFalse(_runningAsync);
+
+                _chromKeys.Add(chromKey);
+                // ReSharper disable once InconsistentlySynchronizedField
+                _chromList.Add(collector);
+            }
+
+            /// <summary>
+            /// Add a collector (possibly empty) for a non-SRM chromatogram.
+            /// </summary>
+            public void AddChromatogram(int productFilterId, ChromCollector collector = null)
+            {
+                int index = _chromKeyLookup[productFilterId];
+
+                lock (_chromList)
+                {
+                    Assume.IsTrue(_chromList[index] == null || ReferenceEquals(_chromList[index], ChromCollector.EMPTY));
+                    _chromList[index] = collector ?? ChromCollector.EMPTY;
+                }
+            }
+
+            public void ExtractionComplete()
+            {
+                lock (_chromList)
+                {
+                    for (int i = 0; i < _chromList.Count; i++)
+                    {
+                        if (_chromList[i] == null)
+                            _chromList[i] = ChromCollector.EMPTY;
+                    }
+                }
+                AddComplete();
+            }
+
+            public void AddComplete()
+            {
+                _chromatogramAvailable.Set();                
+            }
+
+            /// <summary>
+            /// Called from the reader thread to get a chromatogram. May have to wait until the chromatogram
+            /// extraction thread has completed the requested chromatogram.
+            /// </summary>
+            public int ReleaseChromatogram(int index, out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
+            {
+                while (_exception == null)
+                {
+                    lock (_chromList)
+                    {
+                        // This is the only way out of this call. The provider will eventually
+                        // set every value in the list to non-NULL (or set the exception)
+                        if (_chromList[index] != null)
+                        {
+                            var chrom = _chromList[index];
+                            chrom.ReleaseChromatogram(out times, out intensities, out massErrors, out scanIds);
+                            _chromList[index] = ChromCollector.EMPTY;   // Actually release the chromatogram collector
+                            return chrom.StatusId;
+                        }
+                    }
+
+                    _chromatogramAvailable.WaitOne();
+                }
+
+                // Propagate exception from provider thread.
+                throw _exception;
+            }
+
+            public void SetException(Exception exception)
+            {
+                if (!_runningAsync)
+                    throw exception;
+
+                _exception = exception;
+                AddComplete();
+            }
+        }
 
         /// <summary>
         /// Helper class for lookahead necessary for ion mobility and 
@@ -140,7 +1087,7 @@ namespace pwiz.Skyline.Model.Results
                 _previousDriftTime = -1;
                 double rtTotal = 0;
                 double? rtFirst = null;
-                _lookAheadDataSpectrum = null;  
+                _lookAheadDataSpectrum = null;
                 while (_lookAheadIndex++ < _lenSpectra)
                 {
                     _rt = dataSpectrum.RetentionTime;
@@ -166,7 +1113,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 if (spectrumList.Any()) // Should have at least one non-empty scan at this drift time
-                    _rt = _filter.IsAgilentMse ? (rtTotal/spectrumList.Count()) : rtFirst;
+                    _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count()) : rtFirst;
                 else
                     _rt = null;
                 rt = _rt;
@@ -181,414 +1128,18 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        /// <summary>
-        /// The number of chromatograms read so far.
-        /// </summary>
-        private int _readChromatograms;
-
-        private const int LOAD_PERCENT = 10;
-        private const int BUILD_PERCENT = 60;
-        private const int READ_PERCENT = 96 - LOAD_PERCENT - BUILD_PERCENT; // Leave 4% empty until the very end
-
-        public SpectraChromDataProvider(MsDataFileImpl dataFile,
-                                        ChromFileInfo fileInfo,
-                                        SrmDocument document,
-                                        string cachePath, // We'll write tempfiles in this directory
-                                        ProgressStatus status,
-                                        int startPercent,
-                                        int endPercent,
-                                        IProgressMonitor loader)
-            : base(fileInfo, status, startPercent, endPercent, loader)
+        private class DataFileInstrumentInfo : IFilterInstrumentInfo
         {
-            // Create allocator used by all ChromCollectors to store transition times and intensities.
-            _allocator = new ChromCollector.Allocator(cachePath);
+            private readonly MsDataFileImpl _dataFile;
 
-            using (dataFile)
+            public DataFileInstrumentInfo(MsDataFileImpl dataFile)
             {
-                SetPercentComplete(LOAD_PERCENT);
-
-                // If no SRM spectra, then full-scan filtering must be enabled
-                bool isSrm = dataFile.HasSrmSpectra;
-                if (!isSrm && !document.Settings.TransitionSettings.FullScan.IsEnabled)
-                    throw new NoFullScanFilteringException(dataFile.FilePath);
-
-                PeptideFinder peptideFinder = isSrm ? new PeptideFinder(document) : null;
-                    
-                // Only mzXML from mzWiff requires the introduction of zero values
-                // during interpolation.
-                _isProcessedScans = dataFile.IsMzWiffXml;
-
-                // Create a spectrum filter data structure, in case it is needed
-                // This could be done lazily, but does not seem worth it, given the file reading
-                var filter = new SpectrumFilter(document, fileInfo.FilePath, dataFile);
-
-                // Get data object used to graph all of the chromatograms.
-                ChromatogramLoadingStatus.TransitionData allChromData = null;
-                if (loader.HasUI)
-                {
-                    allChromData = LoadingStatus.Transitions;
-                    allChromData.FilterCount = filter.FilterPairs != null ? filter.FilterPairs.Count() : 0;
-                }
-
-                // First read all of the spectra, building chromatogram time, intensity lists
-                var chromMap = new ChromDataCollectorSet(ChromSource.fragment, isSrm ? TimeSharing.single : TimeSharing.grouped, allChromData);
-                var chromMapMs1 = new ChromDataCollectorSet(ChromSource.ms1, filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped, allChromData);
-                var chromMapSim = new ChromDataCollectorSet(ChromSource.sim, TimeSharing.grouped, allChromData);
-                int lenSpectra = dataFile.SpectrumCount;
-                int statusPercent = 0;
-
-                var dictPrecursorMzToIndex = new Dictionary<double, int>(); // For SRM processing
-
-                // If possible, find the maximum retention time in order to scale the chromatogram graph.
-                if (allChromData != null && (filter.EnabledMsMs || filter.EnabledMs))
-                {
-                    var retentionTime = dataFile.GetStartTime(lenSpectra - 1);
-                    if (retentionTime.HasValue)
-                    {
-                        allChromData.MaxRetentionTime = (float) retentionTime.Value;
-                        allChromData.MaxRetentionTimeKnown = true;
-                        allChromData.Progressive = true;
-                    }
-                }
-
-                // Determine what type of demultiplexer, if any, to use based on settings in the
-                // IsolationScheme menu
-                IsolationScheme isoScheme = document.Settings.TransitionSettings.FullScan.IsolationScheme;
-                var handlingType = isoScheme == null
-                    ? IsolationScheme.SpecialHandlingType.NONE
-                    : isoScheme.SpecialHandling;
-                IDemultiplexer demultiplexer = null;
-                switch (handlingType)
-                {
-                    case IsolationScheme.SpecialHandlingType.OVERLAP:
-                        demultiplexer = new OverlapDemultiplexer(dataFile, filter);
-                        break;
-                    case IsolationScheme.SpecialHandlingType.MULTIPLEXED:
-                        demultiplexer = new MsxDemultiplexer(dataFile, filter);
-                        break;
-                    case IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED:
-                        demultiplexer = new MsxOverlapDemultiplexer(dataFile, filter);
-                        break;
-                }
-
-                var lookaheadContext = new LookaheadContext(filter, dataFile);
-
-                for (int i = 0; i < lenSpectra; i = lookaheadContext.NextIndex(i))
-                {
-                    // Update progress indicator
-                    int currentPercent = i*BUILD_PERCENT/lenSpectra;
-                    if (currentPercent > statusPercent)
-                    {
-                        statusPercent = currentPercent;
-                        SetPercentComplete(LOAD_PERCENT + statusPercent);
-                    }
-
-                    if (chromMap.IsSingleTime)
-                    {
-                        var dataSpectrum = dataFile.GetSrmSpectrum(i);
-                        if (dataSpectrum.Level != 2)
-                            continue;
-
-                        if (!dataSpectrum.RetentionTime.HasValue)
-                        {
-                            throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
-                                    dataFile.GetSpectrumId(i)));
-                        }
-                        if (dataSpectrum.Precursors.Length < 1 || !dataSpectrum.Precursors[0].PrecursorMz.HasValue)
-                        {
-                            throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
-                                    dataFile.GetSpectrumId(i)));
-                        }
-
-                        double precursorMz = dataSpectrum.Precursors[0].PrecursorMz.Value;
-                        int filterIndex;
-                        if (!dictPrecursorMzToIndex.TryGetValue(precursorMz, out filterIndex))
-                        {
-                            filterIndex = dictPrecursorMzToIndex.Count;
-                            dictPrecursorMzToIndex.Add(precursorMz, filterIndex);
-                        }
-
-                        // Process the one SRM spectrum
-                        var colorSeed = peptideFinder.GetColorSeed(precursorMz);
-                        ProcessSrmSpectrum(
-                            dataSpectrum.RetentionTime.Value,
-                            colorSeed,
-                            precursorMz,
-                            filterIndex,
-                            dataSpectrum.Mzs,
-                            dataSpectrum.Intensities,
-                            0, 0, // ion mobility unknown
-                            chromMap);
-                    }
-
-                    else if (filter.EnabledMsMs || filter.EnabledMs)
-                    {
-                        // Full-scan filtering should always match a single precursor
-                        // m/z value to a single precursor node in the document tree,
-                        // because that is the way the filters are constructed in the
-                        // first place.
-                        _isSingleMzMatch = true;
-
-                        // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                        var msLevel = lookaheadContext.GetMsLevel(i);
-                        if (!filter.EnabledMsMs && msLevel != 1)
-                            continue;
-
-                        // Skip quickly through the chromatographic lead-in and tail when possible 
-                        if (msLevel > 1) // We need all MS1 for TIC and BPC
-                        {
-                            double? rtCheck = lookaheadContext.GetRetentionTime(i);
-                            if (filter.IsOutsideRetentionTimeRange(rtCheck))
-                            {
-                                // Leave an update cue for the chromatogram painter then move on
-                                if (allChromData != null)
-                                    allChromData.CurrentTime = (float)rtCheck.Value;
-                                continue;
-                            }
-                        }
-                        // Inexpensive checks are complete, now actually get the spectrum data
-                        var dataSpectrum = lookaheadContext.GetSpectrum(i);
-                        // Assertion for testing ID to spectrum index support
-//                        int iFromId = dataFile.GetScanIndex(dataSpectrum.Id);
-//                        Assume.IsTrue(i == iFromId);
-                        if (dataSpectrum.Mzs.Length == 0)
-                            continue;
-
-                        double? rt = dataSpectrum.RetentionTime;
-                        if (!rt.HasValue)
-                            continue;
-                        if (allChromData != null)
-                            allChromData.CurrentTime = (float)rt.Value;
-
-                        // Deal with ion mobility data - look ahead for a run of scans all 
-                        // with the same retention time.  For non-IMS data we'll just get
-                        // a single "drift bin" with no drift time.
-                        //
-                        // Also for Agilent ramped-CE msE, gather MS2 scans together
-                        // so they get averaged.
-                        //
-                        var spectra = lookaheadContext.Lookahead(dataSpectrum, out rt);
-                        if (!filter.ContainsTime(rt.Value))
-                            continue;
-
-                        if (filter.IsMsSpectrum(dataSpectrum))
-                        {
-                            var chromMapMs = filter.IsSimSpectrum(dataSpectrum) ? chromMapSim : chromMapMs1;
-                            string scanId = dataSpectrum.Id;
-
-                            // Process all SRM spectra that can be generated by filtering this full-scan MS1
-                            if (chromMapMs.IsSharedTime)
-                            {
-                                chromMapMs.AddSharedTime((float)rt.Value, GetScanIdIndex(scanId));
-                            }
-                            foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt, dataSpectrum.Precursors,
-                                spectra))
-                            {
-                                chromMapMs.ProcessExtractedSpectrum(rt.Value, GetScanIdIndex(scanId), spectrum);
-                            }
-                        }
-                        if (filter.IsMsMsSpectrum(dataSpectrum))
-                        {
-                            // Process all SRM spectra that can be generated by filtering this full-scan MS/MS
-                            if (demultiplexer == null)
-                            {
-                                ProcessSpectrumList(spectra, chromMap, rt.Value, filter, dataSpectrum.Id);
-                            }
-                            else
-                            {
-                                foreach (var deconvSpectrum in demultiplexer.GetDeconvolvedSpectra(i, dataSpectrum))
-                                {
-                                    ProcessSpectrumList(new [] { deconvSpectrum }, chromMap, rt.Value, filter, dataSpectrum.Id);
-                                }
-                            }
-                        }
-                        if (filter.GetMseLevel() > 2)
-                        {
-                            // We're into the Waters function 3 in Mse data - leave this loop
-                            lookaheadContext.NextIndex(lenSpectra);
-                        }        
-                    }
-                }
-
-                if (chromMap.Count == 0 && chromMapMs1.Count == 0 && chromMapSim.Count == 0)
-                    throw new NoFullScanDataException(dataFile.FilePath);
-
-                AddChromatograms(chromMap, ChromSource.fragment);
-                AddChromatograms(chromMapSim, ChromSource.sim);
-                AddChromatograms(chromMapMs1, ChromSource.ms1);
-
-                if (dataFile.GetLog() != null) // in case perf logging is enabled
-                    DebugLog.Info(dataFile.GetLog());
+                _dataFile = dataFile;
             }
-        }
 
-        private int GetScanIdIndex(string id)
-        {
-            if (_scanIdList.Count > 0)
-            {
-                if (id == _scanIdList[_scanIdList.Count - 1])
-                {
-                    return _scanIdList.Count - 1;
-                }
-            }
-            int nextIndex = _scanIdList.Count;
-            _scanIdList.Add(id);
-            return nextIndex;
-        }
+            public bool IsWatersFile { get { return _dataFile.IsWatersFile; } }
 
-        private void AddChromatograms(ChromDataCollectorSet chromMap, ChromSource source)
-        {
-            var scanIdCollector = chromMap.ScanIdsCollector;
-            var timesCollector = chromMap.SharedTimesCollector;
-            foreach (var pairPrecursor in chromMap.PrecursorCollectorMap)
-            {
-                if (pairPrecursor == null)
-                    continue;
-                var modSeq = pairPrecursor.Item1;
-                var collector = pairPrecursor.Item2;
-                if (chromMap.IsGroupedTime)
-                {
-                    scanIdCollector = collector.GroupedTimesCollector.ScanIdCollector;
-                    timesCollector = collector.GroupedTimesCollector;
-                }
-
-                foreach (var pairProduct in collector.ProductIntensityMap)
-                {
-                    var chromCollector = pairProduct.Value;
-                    if (timesCollector != null)
-                    {
-                        chromCollector.ScanIdCollector = scanIdCollector;
-                        chromCollector.TimesCollector = timesCollector;
-                    }
-                    var key = new ChromKey(collector.ModifiedSequence,
-                        collector.PrecursorMz,
-                        collector.IonMobilityValue,
-                        collector.IonMobilityExtractionWidth,
-                        pairProduct.Key.ProductMz,
-                        0,
-                        pairProduct.Key.ExtractionWidth,
-                        source,
-                        modSeq.Extractor,
-                        true,
-                        true);
-                    _chromatograms.Add(new ChromKeyAndCollector
-                        {
-                            Key = key,
-                            StatusId = collector.StatusId,
-                            Collector = chromCollector
-                        });
-                }
-            }
-        }
-
-        /// <summary>
-        /// Process a list of spectra - typically of length one,
-        /// but possibly a set of drift bins all with same retention time,
-        /// or a set of Agilent ramped-CE Mse scans to be averaged
-        /// </summary>
-        private void ProcessSpectrumList(MsDataSpectrum[] spectra,
-                                     ChromDataCollectorSet chromMap,
-                                     double rt,
-                                     SpectrumFilter filter,
-                                     string scanId)
-        {
-            foreach (var spectrum in filter.Extract(rt, spectra))
-            {
-                if (_loader.IsCanceled)
-                    throw new LoadCanceledException(Status);
-
-                chromMap.ProcessExtractedSpectrum(rt, GetScanIdIndex(scanId), spectrum);
-            }
-        }
-
-        private static void ProcessSrmSpectrum(double time,
-                                               string modifiedSequence,
-                                               double precursorMz,
-                                               int filterIndex,
-                                               double[] mzs,
-                                               double[] intensities,
-                                               double ionMobilityValue,
-                                               double ionMobilityExtractionWidth,
-                                               ChromDataCollectorSet chromMap)
-        {
-            float[] intensityFloats = new float[intensities.Length];
-            for (int i = 0; i < intensities.Length; i++)
-                intensityFloats[i] = (float) intensities[i];
-            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
-                ChromExtractor.summed, filterIndex, mzs, null, intensityFloats, null);
-            chromMap.ProcessExtractedSpectrum(time, -1, spectrum);
-        }
-
-        public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
-        {
-            get
-            {
-                for (int i = 0; i < _chromatograms.Count; i++)
-                    yield return new KeyValuePair<ChromKey, int>(_chromatograms[i].Key, i);
-            }
-        }
-
-        public override byte[] ScanIdBytes
-        {
-            get { return DataFileScanIds.ToBytes(_scanIdList); }
-        }
-
-        public override bool GetChromatogram(
-            int id, string modifiedSequence,
-            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
-        {
-            var keyAndCollector = _chromatograms[id];
-            keyAndCollector.Collector.ReleaseChromatogram(out times, out scanIds, out intensities, out massErrors);
-
-            extra = new ChromExtra(keyAndCollector.StatusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
-
-            // Assume that each chromatogram will be read once, though this may
-            // not always be completely true.
-            _readChromatograms++;
-
-            if (_readChromatograms < _chromatograms.Count)
-                SetPercentComplete(LOAD_PERCENT + BUILD_PERCENT + _readChromatograms * READ_PERCENT / _chromatograms.Count);
-            return true;
-        }
-
-        public override double? MaxRetentionTime
-        {
-            get { return LoadingStatus.Transitions.MaxRetentionTime; }
-        }
-
-        public override double? MaxIntensity
-        {
-            get { return LoadingStatus.Transitions.MaxIntensity; }
-        }
-
-        public override bool IsProcessedScans
-        {
-            get { return _isProcessedScans; }
-        }
-
-        public override bool IsSingleMzMatch
-        {
-            get { return _isSingleMzMatch; }
-        }
-
-        public override void ReleaseMemory()
-        {
-            Dispose();
-        }
-
-        public override void Dispose()
-        {
-            ChromCollector.ReleaseStatics();
-            _scanIdList = null;
-            _chromatograms = null;
-            _allocator.Dispose();
-        }
-
-        public static bool HasSpectrumData(MsDataFileImpl dataFile)
-        {
-            return dataFile.SpectrumCount > 0;
+            public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
         }
     }
 
@@ -604,13 +1155,13 @@ namespace pwiz.Skyline.Model.Results
             PrecursorCollectorMap = new List<Tuple<PrecursorTextId, ChromDataCollector>>();
             if (timeSharing == TimeSharing.shared)
             {
-                SharedTimesCollector = new ChromCollector();
-                ScanIdsCollector = new ChromCollector();
+                SharedTimesCollector = new SortedBlockedList<float>();
+                ScanIdsCollector = new BlockedList<int>();
             }
             _allChromData = allChromData;
         }
 
-        private ChromSource ChromSource { get; set; }
+        public ChromSource ChromSource { get; private set; }
 
         private TimeSharing TypeOfScans { get; set; }
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
@@ -619,10 +1170,10 @@ namespace pwiz.Skyline.Model.Results
         public bool IsGroupedTime { get { return TypeOfScans == TimeSharing.grouped; } }
         public bool IsSharedTime { get { return TypeOfScans == TimeSharing.shared; } }
 
-        public ChromCollector SharedTimesCollector { get; private set; }
-        public ChromCollector ScanIdsCollector { get; private set; }
+        public SortedBlockedList<float> SharedTimesCollector { get; private set; }
+        public BlockedList<int> ScanIdsCollector { get; private set; }
 
-        public void AddSharedTime(float time, int scanId)
+        public void AddSharedTime(float time, short scanId)
         {
             SharedTimesCollector.Add(time);
             ScanIdsCollector.Add(scanId);
@@ -639,7 +1190,7 @@ namespace pwiz.Skyline.Model.Results
             double ionMobilityExtractionWidth = spectrum.IonMobilityExtractionWidth;
             string textId = spectrum.TextId;
             ChromExtractor extractor = spectrum.Extractor;
-            int ionScanCount = spectrum.Mzs.Length;
+            int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
             var key = new PrecursorTextId(precursorMz, textId, extractor);
             int index = spectrum.FilterIndex;
@@ -662,42 +1213,35 @@ namespace pwiz.Skyline.Model.Results
             int lenTimes = collector.TimeCount;
             if (IsGroupedTime)
             {
-                collector.AddScanId(scanId);
-                lenTimes = collector.AddGroupedTime((float)time);
+                collector.AddScanId((short)scanId);
+                collector.AddGroupedTime((float)time);
+                lenTimes = collector.GroupedTimesCollector.Length;
             }
 
             // Add intensity values to ion scans
 
             for (int j = 0; j < ionScanCount; j++)
             {
-                double productMz = spectrum.Mzs[j];
-                double extractionWidth = spectrum.ExtractionWidths != null
-                                             ? spectrum.ExtractionWidths[j]
-                                             : 0;
-                var productKey = new ProductExtractionWidth(productMz, extractionWidth);
+                var productFilter = spectrum.ProductFilters[j];
 
-                ChromCollector tis;
-                if (!collector.ProductIntensityMap.TryGetValue(productKey, out tis))
+                ChromCollector chromCollector;
+                if (!collector.ProductIntensityMap.TryGetValue(productFilter, out chromCollector))
                 {
-                    tis = new ChromCollector();
-                    if (IsSingleTime)
-                        tis.TimesCollector = new ChromCollector();
-                    if (spectrum.MassErrors != null)
-                        tis.MassErrorCollector = new ChromCollector();
+                    chromCollector = new ChromCollector(index, IsSingleTime, spectrum.MassErrors != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
                     if (ionScanCount > 1)
                     {
                         for (int k = 0; k < lenTimes - 1; k++)
-                            tis.Add(0);
+                            chromCollector.Intensities.Add(0);
                     }
-                    collector.ProductIntensityMap.Add(productKey, tis);
+                    collector.ProductIntensityMap.Add(productFilter, chromCollector);
                 }
                 if (IsSingleTime)
-                    tis.AddTime((float)time);
+                    chromCollector.Times.Add((float)time);
                 if (spectrum.MassErrors != null)
-                    tis.AddMassError(spectrum.MassErrors[j]);
-                tis.Add(spectrum.Intensities[j]);
+                    chromCollector.MassErrors.Add(spectrum.MassErrors[j]);
+                chromCollector.Intensities.Add(spectrum.Intensities[j]);
             }
 
             // Add data for chromatogram graph.
@@ -712,9 +1256,9 @@ namespace pwiz.Skyline.Model.Results
                 // Times should have gotten one longer
                 foreach (var tis in collector.ProductIntensityMap.Values)
                 {
-                    if (tis.Length < lenTimes)
+                    if (tis.Intensities.Length < lenTimes)
                     {
-                        tis.Add(0);
+                        tis.Intensities.Add(0);
                     }
                 }
             }
@@ -730,9 +1274,12 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityValue = ionMobilityValue;
             IonMobilityExtractionWidth = ionMobilityExtractionWidth;
             StatusId = statusId;
-            ProductIntensityMap = new Dictionary<ProductExtractionWidth, ChromCollector>();
+            ProductIntensityMap = new Dictionary<SpectrumProductFilter, ChromCollector>();
             if (isGroupedTime)
-                GroupedTimesCollector = new ChromCollector();
+            {
+                GroupedTimesCollector = new SortedBlockedList<float>();
+                ScansCollector = new BlockedList<int>();
+            }
         }
 
         public string ModifiedSequence { get; private set; }
@@ -740,17 +1287,18 @@ namespace pwiz.Skyline.Model.Results
         public double? IonMobilityValue { get; private set; }
         public double IonMobilityExtractionWidth { get; private set; }
         public int StatusId { get; private set; }
-        public Dictionary<ProductExtractionWidth, ChromCollector> ProductIntensityMap { get; private set; }
-        public readonly ChromCollector GroupedTimesCollector;
+        public Dictionary<SpectrumProductFilter, ChromCollector> ProductIntensityMap { get; private set; }
+        public readonly SortedBlockedList<float> GroupedTimesCollector;
+        public readonly BlockedList<int> ScansCollector;
 
-        public int AddGroupedTime(float time)
+        public void AddGroupedTime(float time)
         {
-            return GroupedTimesCollector.Add(time);
+            GroupedTimesCollector.Add(time);
         }
 
-        public void AddScanId(int scanId)
+        public void AddScanId(short scanId)
         {
-            GroupedTimesCollector.AddScanId(scanId);
+            ScansCollector.Add(scanId);
         }
 
         public int TimeCount
@@ -759,45 +1307,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Return the length of any existing time list (in case there are no shared times)
                 foreach (var tis in ProductIntensityMap.Values)
-                    return tis.Length;
+                    return tis.Intensities.Length;
                 return 0;
             }
         }
-    }
-
-    internal struct ProductExtractionWidth
-    {
-        public ProductExtractionWidth(double productMz, double extractionWidth)
-            : this()
-        {
-            ProductMz = productMz;
-            ExtractionWidth = extractionWidth;
-        }
-
-        public double ProductMz { get; private set; }
-        public double ExtractionWidth { get; private set; }
-
-        #region object overrides
-
-        public bool Equals(ProductExtractionWidth other)
-        {
-            return ProductMz.Equals(other.ProductMz) && ExtractionWidth.Equals(other.ExtractionWidth);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is ProductExtractionWidth && Equals((ProductExtractionWidth)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (ProductMz.GetHashCode() * 397) ^ ExtractionWidth.GetHashCode();
-            }
-        }
-
-        #endregion
     }
 }

@@ -132,7 +132,6 @@
   <ItemGroup>
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
-    <Compile Include="ChromCollectorTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
@@ -184,6 +183,7 @@
     <Compile Include="UniModTest.cs" />
     <Compile Include="MProphetResultsHandlerTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
+    <Compile Include="BlockedListTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>

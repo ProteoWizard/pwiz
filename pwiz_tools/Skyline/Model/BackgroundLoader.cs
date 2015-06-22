@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 // Made on a new thread.
-                LocalizationHelper.InitThread();
+                LocalizationHelper.InitThread("Chromatogram loader"); // Not L10N
                 SrmDocument docCurrent = container.Document;
                 // If the document identity has changed, or the current document is loaded,
                 // then end the processing.

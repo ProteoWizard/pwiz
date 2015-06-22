@@ -58,6 +58,16 @@ namespace pwiz.Skyline.Model.Results
             _loader.UpdateProgress(Status = Status.ChangePercentComplete(percent));
         }
 
+        /// <summary>
+        /// Notify the provider that the first pass is complete and determine whether the chromatogram
+        /// list needs to be reloaded.
+        /// </summary>
+        /// <returns>True if the chromatogram list needs to be reloaded</returns>
+        public virtual bool CompleteFirstPass()
+        {
+            return false;  // Do nothing by default.
+        }
+
         public ChromFileInfo FileInfo { get; private set; }
 
         public ProgressStatus Status { get; private set; }

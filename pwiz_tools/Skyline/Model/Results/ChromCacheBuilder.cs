@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -120,11 +121,14 @@ namespace pwiz.Skyline.Model.Results
 
         private void RemoveTempFile()
         {
-            if (_tempFileSubsitute != null)
+            lock (this)
             {
-                FileEx.SafeDelete(_tempFileSubsitute, true);
-                _tempFileSubsitute = null;
-                _tempFileWriteStarted = false;
+                if (_tempFileSubsitute != null)
+                {
+                    FileEx.SafeDelete(_tempFileSubsitute, true);
+                    _tempFileSubsitute = null;
+                    _tempFileWriteStarted = false;
+                }
             }
         }
 
@@ -237,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
                 //
                 // This does not actually start the loop, but calling the function once,
                 // seems to reserve a thread somehow, so that the next call works.
-                ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, true));
+                ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, true), "Init write loop"); // Not L10N
 
                 // Read the instrument data indexes
                 int sampleIndex = dataFilePath.GetSampleIndex();
@@ -427,67 +431,66 @@ namespace pwiz.Skyline.Model.Results
                 _readCompleted = false;
             }
 
-            var dictPeptideChromData = new Dictionary<PeptideSequenceModKey, PeptideChromDataSets>();
-            var listChromData = new List<PeptideChromDataSets>();
-
             var listMzPrecursors = new List<PeptidePrecursorMz>(Precursors);
             listMzPrecursors.Sort((p1, p2) => p1.PrecursorMz.CompareTo(p2.PrecursorMz));
 
-            bool singleMatch = provider.IsSingleMzMatch;
             var setInternalStandards = new HashSet<IsotopeLabelType>(
                 _document.Settings.PeptideSettings.Modifications.InternalStandardTypes);
 
-            foreach (var chromDataSet in GetChromDataSets(provider))
-            {
-                foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch))
-                {
-                    var peptidePercursor = matchingGroup.Key;
-                    var chromDataSetMatch = matchingGroup.Value;
-                    chromDataSetMatch.IsStandard = peptidePercursor != null &&
-                        setInternalStandards.Contains(peptidePercursor.NodeGroup.TransitionGroup.LabelType);
+            var listChromData = CalcPeptideChromDataSets(provider, listMzPrecursors, setInternalStandards);
 
-                    AddChromDataSet(provider.IsProcessedScans,
-                                    chromDataSetMatch,
-                                    peptidePercursor,
-                                    dictPeptideChromData,
-                                    listChromData,
-                                    provider.FileInfo);
+            // Create IRT prediction if we don't already have it.
+            var predict = _document.Settings.PeptideSettings.Prediction;
+            if (predict.RetentionTime != null && predict.RetentionTime.IsAutoCalculated)
+            {
+                for (int i = 0; i < listChromData.Count; i++)
+                {
+                    var pepChromData = listChromData[i];
+                    if (pepChromData.NodePep != null && _retentionTimePredictor.IsFirstPassPeptide(pepChromData.NodePep))
+                    {
+                        if (pepChromData.Load(provider))
+                            PostChromDataSet(pepChromData, false);
+
+                        // Release the reference to the chromatogram data set so that
+                        // it can be garbage collected after it has been written
+                        listChromData[i] = null;
+                    }
+                }
+                // When we finished with the standard peptides, we need to wait until the writer thread is
+                // finished processing _chromDataSets so that _retentionTimePredictor can provide
+                // times for the rest of the peptides.
+                lock (_chromDataSets)
+                {
+                    while (_chromDataSets.Any() || (_writerStarted && !_writerIsWaitingForChromDataSets))
+                    {
+                        Monitor.Wait(_chromDataSets, 100);
+                    }
+                }
+                // Let the provider know that it is now safe to use retention time prediction
+                if (provider.CompleteFirstPass())
+                {
+                    // Then refresh the chrom data list if indicated by provider, as it should now contain more than first-pass peptides
+                    listChromData = CalcPeptideChromDataSets(provider, listMzPrecursors, setInternalStandards);
                 }
             }
 
-            listChromData.AddRange(dictPeptideChromData.Values);
-            listChromData.Sort(ComparePeptideChromDataSets);
-
-            // Avoid holding onto chromatogram data sets for entire read
-            dictPeptideChromData.Clear();
-            bool wasFirstPass = true;
+            // Load scan data.
             for (int i = 0; i < listChromData.Count; i++)
             {
                 var pepChromData = listChromData[i];
-                bool firstPass = null != pepChromData.NodePep && _retentionTimePredictor.IsFirstPassPeptide(pepChromData.NodePep);
-                if (wasFirstPass && !firstPass)
-                {
-                    // When we finished with the standard peptides, we need to wait until the writer thread is
-                    // finished processing _chromDataSets so that _retentionTimePredictor can provide
-                    // times for the rest of the peptides.
-                    lock (_chromDataSets)
-                    {
-                        while (_chromDataSets.Any() || (_writerStarted && !_writerIsWaitingForChromDataSets))
-                        {
-                            Monitor.Wait(_chromDataSets, 100);
-                        }
-                    }
-                }
-                wasFirstPass = firstPass;
-                if (!pepChromData.Load(provider))
+                if (pepChromData == null)
                     continue;
-
-                PostChromDataSet(pepChromData, false);
+                if (pepChromData.NodePep == null || !_retentionTimePredictor.IsFirstPassPeptide(pepChromData.NodePep))
+                {
+                    if (pepChromData.Load(provider))
+                        PostChromDataSet(pepChromData, false);
+                }
 
                 // Release the reference to the chromatogram data set so that
                 // it can be garbage collected after it has been written
                 listChromData[i] = null;
             }
+
             // Write scan ids
             var scanIdBytes = provider.ScanIdBytes;
             if (scanIdBytes.Length > 0)
@@ -500,6 +503,53 @@ namespace pwiz.Skyline.Model.Results
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
             PostChromDataSet(null, true);
+        }
+
+        private List<PeptideChromDataSets> CalcPeptideChromDataSets(ChromDataProvider provider,
+            List<PeptidePrecursorMz> listMzPrecursors, HashSet<IsotopeLabelType> setInternalStandards)
+        {
+            bool singleMatch = provider.IsSingleMzMatch;
+
+            var dictPeptideChromData = new Dictionary<PeptideSequenceModKey, PeptideChromDataSets>();
+            var listChromData = new List<PeptideChromDataSets>();
+
+            foreach (var chromDataSet in GetChromDataSets(provider))
+            {
+                if (chromDataSet == null)
+                    continue;
+                foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch))
+                {
+                    var peptidePercursor = matchingGroup.Key;
+                    var chromDataSetMatch = matchingGroup.Value;
+                    chromDataSetMatch.IsStandard = peptidePercursor != null &&
+                                                   setInternalStandards.Contains(
+                                                       peptidePercursor.NodeGroup.TransitionGroup.LabelType);
+
+                    AddChromDataSet(provider.IsProcessedScans,
+                        chromDataSetMatch,
+                        peptidePercursor,
+                        dictPeptideChromData,
+                        listChromData,
+                        provider.FileInfo);
+                }
+            }
+
+            listChromData.AddRange(dictPeptideChromData.Values);
+            listChromData.Sort(CompareKeys);
+
+            // Avoid holding onto chromatogram data sets for entire read
+            dictPeptideChromData.Clear();
+            return listChromData;
+        }
+
+        /// <summary>
+        /// Compare data sets by maximum retention time.
+        /// </summary>
+        private int CompareKeys(PeptideChromDataSets p1, PeptideChromDataSets p2)
+        {
+            var key1 = p1.FirstKey;
+            var key2 = p2.FirstKey;
+            return key1.CompareTo(key2);
         }
 
         private int ComparePeptideChromDataSets(PeptideChromDataSets p1, PeptideChromDataSets p2)
@@ -581,6 +631,38 @@ namespace pwiz.Skyline.Model.Results
 
             yield return chromDataSet;
         }
+//        public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
+//        {
+//            var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
+//            listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
+//           
+//            List<ChromDataSet> chromDataSets = new List<ChromDataSet>();
+//            ChromKey lastKey = ChromKey.EMPTY;
+//            ChromDataSet chromDataSet = null;
+//
+//            foreach (var keyIndex in listKeyIndex)
+//            {
+//                var key = keyIndex.Key;
+//                var chromData = new ChromData(key, keyIndex.Value);
+//
+//                if (chromDataSet != null && key.ComparePrecursors(lastKey) == 0)
+//                {
+//                    chromDataSet.Add(chromData);
+//                }
+//                else
+//                {
+//                    if (chromDataSet != null)
+//                        chromDataSets.Add(chromDataSet);
+//
+//                    chromDataSet = new ChromDataSet(isTimeNormalArea, chromData);
+//                }
+//                lastKey = key;
+//            }
+//
+//            Assume.IsNotNull(chromDataSet);
+//            chromDataSets.Add(chromDataSet);
+//            return chromDataSets;
+//        }
 
         private void AddChromDataSet(bool isProcessedScans,
                                             ChromDataSet chromDataSet,
@@ -961,24 +1043,23 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < listMatchingData.Count; i++)
             {
                 var match = listMatchingData[i];
-                match.Item1.DocNode = match.Item2;
-                result[i] = match.Item1;
+                match.Chrom.DocNode = match.Trans;
+                result[i] = match.Chrom;
             }
             return result;
         }
 
-        private static List<Tuple<ChromData, TransitionDocNode>> GetBestMatching(
+        private static List<ChromDataTrans> GetBestMatching(
             IEnumerable<ChromData> chromatograms, IEnumerable<TransitionDocNode> transitions)
         {
-            var listMatchingData = new List<Tuple<int, ChromData, TransitionDocNode>>();
+            var listMatchingData = new List<IndexChromDataTrans>();
             const float tolerance = (float)TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
             // Create lists of elements sorted by m/z
             var listMzIndexChromatograms =
-                chromatograms.Select((c, i) => new Tuple<double, int, ChromData>(c.Key.Product, i, c)).ToList();
-            listMzIndexChromatograms.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
-            var listMzTrans =
-                transitions.Select(t => new Tuple<double, TransitionDocNode>(t.Mz, t)).ToList();
-            listMzTrans.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
+                chromatograms.Select((c, i) => new MzIndexChromData(c.Key.Product, i, c)).ToList();
+            listMzIndexChromatograms.Sort((t1, t2) => Comparer.Default.Compare(t1.Mz, t2.Mz));
+            var listMzTrans = transitions.Select(t => new MzTrans(t.Mz, t)).ToList();
+            listMzTrans.Sort((t1, t2) => Comparer.Default.Compare(t1.Mz, t2.Mz));
             // Find best matches between chromatograms and transitions by walking the ordered lists
             int ic = 0, it = 0;
             int cc = listMzIndexChromatograms.Count, ct = listMzTrans.Count;
@@ -986,50 +1067,129 @@ namespace pwiz.Skyline.Model.Results
             {
                 var tc = listMzIndexChromatograms[ic];
                 var tt = listMzTrans[it];
-                if (ChromKey.CompareTolerant(tc.Item1, tt.Item1, tolerance) != 0)
+                int icNext = ic + 1, itNext = it + 1;
+                if (ChromKey.CompareTolerant(tc.Mz, tt.Mz, tolerance) != 0)
                 {
                     // Advance in the list with the smaller m/z
-                    if (tc.Item1 > tt.Item1)
-                        it++;
+                    if (tc.Mz > tt.Mz)
+                        it = itNext;
                     else
-                        ic = NextChrom(ic, tc, null, listMatchingData);
+                        ic = NextChrom(ic, tc, null, null, listMatchingData);
                 }
                 else
                 {
                     // If next chromatogram matches better, just advance and continue
-                    double delta = Math.Abs(tc.Item1 - tt.Item1);
-                    if (ic < cc - 1 && delta > Math.Abs(listMzIndexChromatograms[ic + 1].Item1 - tt.Item1))
-                        ic = NextChrom(ic, tc, null, listMatchingData);
+                    double delta = Math.Abs(tc.Mz - tt.Mz);
+                    MzIndexChromData tc2 = null;
+                    // Handle the case where there are both ms1 and sim chromatograms
+                    if (icNext < cc)
+                    {
+                        var tcNext = listMzIndexChromatograms[icNext];
+                        if (AreMatchingPrecursors(tc, tcNext))
+                        {
+                            tc2 = tcNext;
+                            icNext++;
+                        }
+                    }
+                    if (icNext < cc && delta > Math.Abs(listMzIndexChromatograms[icNext].Mz - tt.Mz))
+                    {
+                        ic = NextChrom(ic, tc, tc2, null, listMatchingData);
+                    }
                     // or next transition matches better, just advance and continue
-                    else if (it < ct - 1 && delta > Math.Abs(tc.Item1 - listMzTrans[it + 1].Item1))
-                        it++;
+                    else if (itNext < ct && delta > Math.Abs(tc.Mz - listMzTrans[itNext].Mz))
+                        it = itNext;
                     // otherwise, this is the best match, so add it
                     else
                     {
-                        ic = NextChrom(ic, tc, tt, listMatchingData);
-                        it++;
+                        ic = NextChrom(ic, tc, tc2, tt, listMatchingData);
+                        it = itNext;
                     }
                 }
             }
             // Advance through remaining chromatograms
             while (ic < cc)
-                ic = NextChrom(ic, listMzIndexChromatograms[ic], null, listMatchingData);
+                ic = NextChrom(ic, listMzIndexChromatograms[ic], null, null, listMatchingData);
 
-            listMatchingData.Sort((t1, t2) => Comparer.Default.Compare(t1.Item1, t2.Item1));
-            return listMatchingData.Select(t => new Tuple<ChromData, TransitionDocNode>(t.Item2, t.Item3)).ToList();
+            // Sort back into original order
+            listMatchingData.Sort((t1, t2) => Comparer.Default.Compare(t1.Index, t2.Index));
+            return listMatchingData.Select(t => new ChromDataTrans(t.Chrom, t.Trans)).ToList();
         }
 
-        private static int NextChrom(int ic, Tuple<double, int, ChromData> tc, Tuple<double, TransitionDocNode> tt,
-                                     ICollection<Tuple<int, ChromData, TransitionDocNode>> listMatchingData)
+        private static bool AreMatchingPrecursors(MzIndexChromData tc, MzIndexChromData tc2)
+        {
+            return tc.Mz == tc2.Mz &&
+                   tc.Chrom.Key.Source != ChromSource.fragment &&
+                   tc2.Chrom.Key.Source != ChromSource.fragment;
+        }
+
+        private static int NextChrom(int ic, MzIndexChromData tc, MzIndexChromData tc2, MzTrans tt,
+                                     ICollection<IndexChromDataTrans> listMatchingData)
         {
             // Make sure all chromatograms extracted from MS1 stay with the group regardless of whether
             // they actually match transitions
-            var nodeTran = tt != null ? tt.Item2 : null;
-            if (nodeTran != null || tc.Item3.Key.Source != ChromSource.fragment)
+            var nodeTran = tt != null ? tt.Trans : null;
+            if (nodeTran != null || tc.Chrom.Key.Source != ChromSource.fragment)
             {
-                listMatchingData.Add(new Tuple<int, ChromData, TransitionDocNode>(tc.Item2, tc.Item3, nodeTran));
+                listMatchingData.Add(new IndexChromDataTrans(tc.Index, tc.Chrom, nodeTran));
+
+                // If there are two precursor chromatograms matching the same transition, add them
+                // both. One will probably fail to load. At some point, we will make Transitions contain
+                // a ChromSource, and then we will only match the right ChromSource.
+                if (tc2 != null)
+                {
+                    listMatchingData.Add(new IndexChromDataTrans(tc2.Index, tc2.Chrom, nodeTran));
+                }
             }
-            return ic+1;
+            return ic + (tc2 != null ? 2 : 1);
+        }
+
+        private class MzIndexChromData
+        {
+            public MzIndexChromData(double mz, int index, ChromData chrom)
+            {
+                Mz = mz;
+                Index = index;
+                Chrom = chrom;
+            }
+
+            public double Mz { get; private set; }
+            public int Index { get; private set; }
+            public ChromData Chrom { get; private set; }
+        }
+
+        private class MzTrans
+        {
+            public MzTrans(double mz, TransitionDocNode trans)
+            {
+                Mz = mz;
+                Trans = trans;
+            }
+
+            public double Mz { get; private set; }
+            public TransitionDocNode Trans { get; private set; }
+        }
+
+        private class ChromDataTrans
+        {
+            public ChromDataTrans(ChromData chrom, TransitionDocNode trans)
+            {
+                Chrom = chrom;
+                Trans = trans;
+            }
+
+            public ChromData Chrom { get; private set; }
+            public TransitionDocNode Trans { get; private set; }
+        }
+
+        private class IndexChromDataTrans : ChromDataTrans
+        {
+            public IndexChromDataTrans(int index, ChromData chrom, TransitionDocNode trans)
+                : base(chrom, trans)
+            {
+                Index = index;
+            }
+
+            public int Index { get; private set; }
         }
 
         private static readonly MzComparer MZ_COMPARER = new MzComparer();
@@ -1087,7 +1247,15 @@ namespace pwiz.Skyline.Model.Results
             // If this is a performance work-around, then make sure the progress indicator
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
-            return new SpectraChromDataProvider(dataFile, fileInfo, _document, CachePath, _status, startPercent, EndPercent, _loader);
+
+            // Give retention time predictor to provider if it may be necessary for 2 phase extraction
+            IRetentionTimePredictor retentionTimePredictor = null;
+            var predict = _document.Settings.PeptideSettings.Prediction;
+            if (predict.RetentionTime != null && predict.RetentionTime.IsAutoCalculated)
+                retentionTimePredictor = _retentionTimePredictor;
+
+            return new SpectraChromDataProvider(dataFile, fileInfo, _document, retentionTimePredictor,
+                CachePath, _status, startPercent, EndPercent, _loader);
         }
 
         private const int MAX_CHROM_READ_AHEAD = 20;
@@ -1120,7 +1288,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // Start the writer thread
                         _writerStarted = true;
-                        ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, false));
+                        ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, false), "Write loop"); // Not L10N
                     }
 
                     // If this is the last read, then wait for the
@@ -1139,7 +1307,7 @@ namespace pwiz.Skyline.Model.Results
                                 // Wait 10 seconds for some work to complete.  In debug mode,
                                 // a shorter time may not be enough to load DLLs necessary
                                 // for the first iteration.
-                                completed = Monitor.Wait(_chromDataSets, 10*1000);
+                                completed = Monitor.Wait(_chromDataSets, Debugger.IsAttached ? -1 : 10*1000);
                             }
                             while (!completed && countSets != _chromDataSets.Count);
 

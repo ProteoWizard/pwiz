@@ -2004,8 +2004,9 @@ namespace pwiz.Skyline.Properties
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)
         {
-            using (var editModel = new EditPeakScoringModelDlg(existing ?? this) {PeakScoringModel = item})
+            using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
             {
+                editModel.SetScoringModel(item);
                 if (editModel.ShowDialog(owner) == DialogResult.OK)
                     return (PeakScoringModelSpec) editModel.PeakScoringModel;
 
