@@ -283,8 +283,8 @@ project pwiz
         # allow "long long" even with -pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
         <toolset>darwin:<cxxflags>-Wno-long-long
-	<toolset>darwin:<cxxflags>-std=c++11
-	<toolset>clang:<cxxflags>-std=c++11
+        <toolset>darwin:<cxxflags>-std=c++11
+        <toolset>clang:<cxxflags>-std=c++11
 
         # any GCC executable that uses shared libraries must have all its code built with -fPIC
         <conditional>@static-with-fpic
@@ -873,7 +873,7 @@ rule mhdac-dll-location ( api-path : properties * )
     }
 
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-	   $(result) &&
+       $(result) &&
        [ path.exists $(result)\\MassSpecDataReader.dll ]            
     {
         return $(result) ;
@@ -1034,10 +1034,10 @@ rule msparser-usage-requirements ( properties * )
     local result = <include>$(msparser_path)/include ;
     if <toolset>msvc in $(properties)
     {
-    		result += <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd ;
+        result += <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd ;
         if <runtime-debugging>on in $(properties)
         {
-            result += <name>msparserD <assembly-dependency>$(msparser_path)/lib/msparserD.dll ;
+            result += <assembly-dependency>$(msparser_path)/lib/msparserD.dll ;
         }
         else
         {
