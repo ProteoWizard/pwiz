@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -35,6 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private MsDataFileUri _currentFilePath;
         private readonly int _adjustLayoutForMultifile;
+        private readonly Stopwatch _stopwatch;
 
         //private static readonly Log LOG = new Log<AllChromatogramsGraph>();
 
@@ -83,6 +85,9 @@ namespace pwiz.Skyline.Controls.Graphs
             panelFileProgress.Top = panelMultifileProgress.Top;
             panelGraph.Height += _adjustLayoutForMultifile;
             btnCancelFile.Visible = false;
+
+            _stopwatch = new Stopwatch();
+            _stopwatch.Start();
         }
 
         public bool Canceled { get; private set; }
@@ -166,6 +171,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 progressBarAllFiles.Value = status.PercentComplete;
             }
+
+            lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss");
         }
 
         // Close the window.

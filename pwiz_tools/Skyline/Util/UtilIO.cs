@@ -1148,6 +1148,40 @@ namespace pwiz.Skyline.Util
                 WriteBytes(file, (byte*)p, itemCount * sizeof(float));
             }
         }
+
+        /// <summary>
+        /// Write an array of ints to a file using p-invoke of Win32 WriteFile.
+        /// This might seem like a good candidate for a generic template, but C# can't
+        /// "fix" the address of a managed type.
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="data">Array of ints to be written</param>
+        /// <param name="index">Index in data array to write from</param>
+        /// <param name="itemCount">Number of elements to write</param>
+        public static unsafe void WriteInts(SafeHandle file, int[] data, int index, int itemCount)
+        {
+            fixed (int* p = &data[index])
+            {
+                WriteBytes(file, (byte*)p, itemCount * sizeof(int));
+            }
+        }
+
+        /// <summary>
+        /// Write an array of shorts to a file using p-invoke of Win32 WriteFile.
+        /// This might seem like a good candidate for a generic template, but C# can't
+        /// "fix" the address of a managed type.
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="data">Array of shorts to be written</param>
+        /// <param name="index">Index in data array to write from</param>
+        /// <param name="itemCount">Number of elements to write</param>
+        public static unsafe void WriteShorts(SafeHandle file, short[] data, int index, int itemCount)
+        {
+            fixed (short* p = &data[index])
+            {
+                WriteBytes(file, (byte*)p, itemCount * sizeof(short));
+            }
+        }
     }
 
     public class NamedPipeServerConnector

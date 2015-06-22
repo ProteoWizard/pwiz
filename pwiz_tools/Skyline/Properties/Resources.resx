@@ -8448,4 +8448,18 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.
 {2}</value>
   </data>
+    <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model" xml:space="preserve">
+    <value>Training peak scoring model</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_TrainModel_Training" xml:space="preserve">
+    <value>Training</value>
+    <comment>trainng the scoring model</comment>
+  </data>
+    <data name="EditPeakScoringModelDlg_TrainModelClick_Scoring" xml:space="preserve">
+    <value>Scoring</value>
+    <comment>scoring peaks</comment>
+  </data>
+  <data name="Block_VerifySort_Expected_sorted_data" xml:space="preserve">
+    <value>Expected sorted data</value>
+  </data>
 </root>

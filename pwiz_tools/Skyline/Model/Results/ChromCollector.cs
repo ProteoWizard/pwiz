@@ -16,11 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -35,478 +34,582 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class ChromCollector
     {
-        private float[] _buffer;
-        private int _startIndex;
-        private int _endIndex;
-        private int _index;
-        private int _length;
-        private List<Block> _blocks;
+        public int StatusId { get; private set; }
+        private BlockedList<float> Intensities { get; set; }
+        private SortedBlockedList<float> Times { get; set; }
+        private BlockedList<float> MassErrors { get; set; }
+        private BlockedList<int> Scans { get; set; }
 
-        /// <summary>
-        /// Collect chromatogram times and intensities for one transition.
-        /// </summary>
-        public ChromCollector()
+        public ChromCollector(int statusId, bool hasTimes, bool hasMassErrors)
         {
-            // Allocate a memory slot for this ChromCollector. 
-            Allocator.Instance.AllocateBuffer(this);
+            StatusId = statusId;
+            Intensities = new BlockedList<float>();
+            if (hasTimes)
+                Times = new SortedBlockedList<float>();
+            if (hasMassErrors)
+                MassErrors = new BlockedList<float>();
         }
 
-        // Private constructor used by Allocator.
-        private ChromCollector(int dummy)
+        public void SetTimes(SortedBlockedList<float> times)
         {
-            _startIndex = -1;
-            _endIndex = int.MaxValue;
+            Times = times;
         }
 
-        public int Length
+        public void SetScans(BlockedList<int> scans)
         {
-            get { return _length; }
+            Scans = scans;
         }
 
-        /// <summary>
-        /// Add a value directly to this data collector.
-        /// </summary>
-        public int Add(float val)
+        public void AddIntensity(float intensity, BlockWriter writer, int chromatogramIndex)
         {
-            if (_index == _endIndex)
-                Save();
-            _buffer[_index++] = val;
-            return ++_length;
+            Intensities.Add(intensity, writer, chromatogramIndex);
         }
 
-        /// <summary>
-        /// Add a time.
-        /// </summary>
-        public void AddTime(float time)
+        public void FillIntensities(int count, BlockWriter writer, int chromatogramIndex)
         {
-            TimesCollector.Add(time);
+            Intensities.FillZeroes(count, writer, chromatogramIndex);
         }
 
-        /// <summary>
-        /// Add a scan id.
-        /// </summary>
-        public void AddScanId(int scanId)
+        public void AddTime(float time, BlockWriter writer, int chromatogramIndex)
         {
-            if (ScanIdCollector == null)
-                ScanIdCollector = new ChromCollector();
-            ScanIdCollector.Add(scanId);
+            Times.Add(time, writer, chromatogramIndex);
         }
 
-        /// <summary>
-        /// Add a time.
-        /// </summary>
-        public void AddMassError(float error)
+        public void AddMassError(float massError, BlockWriter writer, int chromatogramIndex)
         {
-            // TODO: This currently stores floats, because the collector is designed for that,
-            //       but these could be 16-bit values which would reduce memory / disk space needs.
-            MassErrorCollector.Add(error);
+            MassErrors.Add(massError, writer, chromatogramIndex);
         }
 
-        /// <summary>
-        /// Return collected data (could be time or intensity values).
-        /// </summary>
-        public float[] GetData()
-        {
-            // Allocate array of correct size.
-            var data = new float[_length];
-
-            // Read arrays from each block on disk.
-            var offset = 0;
-            if (_blocks != null)
-            {
-                foreach (var block in _blocks)
-                    block.Read(data, ref offset);
-            }
-
-            // Copy data still in memory.
-            Array.Copy(_buffer, _startIndex, data, offset, _index - _startIndex);
-
-            return data;
-        }
-
-        /// <summary>
-        /// This collector holds time values, which might be shared among all chromatograms, shared
-        /// among groups, or used only by this chromatogram.
-        /// </summary>
-        public ChromCollector TimesCollector { private get; set; }
-
-        /// <summary>
-        /// This collector holds scan ids.
-        /// </summary>
-        public ChromCollector ScanIdCollector { get; set; }
-
-        /// <summary>
-        /// This collector holds mass error values for high res chromatograms.
-        /// </summary>
-        public ChromCollector MassErrorCollector { private get; set; }
-
-        private static ChromCollector _lastTimesCollector;
-        private static float[] _lastTimes;
-        private static int[] _sortIndexes;
-
-        public static void ReleaseStatics()
-        {
-            _lastTimesCollector = null;
-            _lastTimes = null;
-            _sortIndexes = null;
-        }
+        public int Count { get { return Intensities.Count; } }
 
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
-        public void ReleaseChromatogram(out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+        public void ReleaseChromatogram(byte[] bytesFromDisk, out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
         {
-            if (!ReferenceEquals(_lastTimesCollector, TimesCollector))
-            {
-                _lastTimesCollector = TimesCollector;
-                _lastTimes = _lastTimesCollector.GetData();
-                _sortIndexes = null;
-                if (ArrayUtil.NeedsSort(_lastTimes))
-                    ArrayUtil.Sort(_lastTimes, out _sortIndexes);
-            }
-
-            times = _lastTimes;
-            intensities = GetData();
-            massErrors = MassErrorCollector != null
-                ? MassErrorCollector.GetData()
+            times = Times.ToArray(bytesFromDisk);
+            intensities = Intensities.ToArray(bytesFromDisk);
+            massErrors = MassErrors != null
+                ? MassErrors.ToArray(bytesFromDisk)
                 : null;
-            // We store scanIds as floats in the ChromCollector, which is okay because floats have enough precision to
-            // hold as many unique scanIds as we can imagine.
-            scanIds = null;
-            if (ScanIdCollector != null)
-            {
-                scanIds = ScanIdCollector.GetData().Select(f => (int) f).ToArray();
-            }
+            scanIds = Scans != null
+                ? Scans.ToArray(bytesFromDisk)
+                : null;
+            
+            // Release memory.
+            Times = null;
+            Intensities = null;
+            MassErrors = null;
+            Scans = null;
 
-            // Intensities may need to be sorted if the corresponding times
-            // were out of order.
-            if (_sortIndexes != null)
-            {
-                intensities = ArrayUtil.ApplyOrder(_sortIndexes, intensities);
-                if (massErrors != null)
-                    massErrors = ArrayUtil.ApplyOrder(_sortIndexes, massErrors);
-                if (scanIds != null)
-                    scanIds = ArrayUtil.ApplyOrder(_sortIndexes, scanIds);
-            }
-
-            // Make sure times and intensities match in length
+            // Make sure times and intensities match in length.
             if (times.Length != intensities.Length)
             {
-                throw new InvalidDataException(string.Format(Resources.ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count,
+                throw new InvalidDataException(
+                    string.Format(Resources.ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count,
                     times.Length, intensities.Length));
             }
         }
+    }
 
-        /// <summary>
-        /// Save a block of time/intensities to disk when a memory slot is full.
-        /// </summary>
-        private void Save()
+    public interface IBlockedList
+    {
+        void WriteBlocks(FileStream fileStream);
+    }
+
+    public class BlockedList<TData> : IBlockedList
+    {
+        private const int BLOCK_SIZE_FOR_64_BIT = 16;
+        private const int BLOCK_SIZE_FOR_32_BIT = 16;
+
+        protected Block _block;
+        protected int _blockIndex;
+        private readonly int _blockSize;
+        private int _blocksInMemory;
+        private int _blocksOnDisk;
+        private int _filePosition;
+
+        public BlockedList()
         {
-            if (_blocks == null)
-                _blocks = new List<Block>();
-            _blocks.Add(new Block(_buffer, _startIndex, _index - _startIndex));
-            _index = _startIndex;   // Now start over in the memory slot.
+            _blockSize = Environment.Is64BitProcess ? BLOCK_SIZE_FOR_64_BIT : BLOCK_SIZE_FOR_32_BIT;
         }
 
-        public override string ToString()
+        protected class Block
         {
-            return _startIndex + ", " + _endIndex;  // Not L10N
-        }
+            public readonly Block _previousBlock;
+            public readonly TData[] _data;
 
-        /// <summary>
-        /// Internal class that contains time/intensity values and can be
-        /// paged to and from disk.
-        /// </summary>
-        private class Block
-        {
-            private readonly int _length;
-            private readonly long _fileOffset;
-
-            /// <summary>
-            /// Save a block to disk.
-            /// </summary>
-            /// <param name="data">Data array to save.</param>
-            /// <param name="index">First element index to save.</param>
-            /// <param name="length">Number of elements to save.</param>
-            public Block(float[] data, int index, int length)
+            public Block(TData[] data, Block previousBlock)
             {
-                _length = length;
-                _fileOffset = Allocator.Instance.Write(data, index, _length);
-            }
-
-            /// <summary>
-            /// Read the block from disk.
-            /// </summary>
-            /// <param name="data">Destination array.</param>
-            /// <param name="offset">Array index that gets loaded data (updated to new index when Read returns).</param>
-            public void Read(float[] data, ref int offset)
-            {
-                Allocator.Instance.Read(data, _length, offset, _fileOffset);
-                offset += _length;
+                _data = data;
+                _previousBlock = previousBlock;
             }
         }
 
-        /// <summary>
-        /// Memory allocator shared by all instances of ChromCollector.
-        /// </summary>
-        public sealed class Allocator : IDisposable
+        private void NewBlock()
         {
-            public static Allocator Instance;
+            _block = new Block(new TData[_blockSize], _block);
+            _blocksInMemory++;
+        }
 
-            private const int MEGABYTES = 1024 * 1024;
-
-            /// <summary>
-            /// Maximum memory size (in bytes) used by chromatogram buffers for 32-bit Skyline.
-            /// </summary>
-            private const int CHROMATOGRAM_BUFFER_SIZE = 500 * MEGABYTES;
-
-            /// <summary>
-            /// Number of individual buffers allocated within CHROMATOGRAM_BUFFER_SIZE.
-            /// </summary>
-            private const int BUFFER_PARTS = 16;
-
-            /// <summary>
-            /// Initial number of intensities of a single chromatogram
-            /// </summary>
-            private const int MAX_BLOCK = 1000;
-
-            // Paging file variables.
-            private readonly string _dataFilePath;
-            private FileSaver _pagingFileSaver;
-            private FileStream _pagingFileStream;
-            private SafeHandle _pagingFile;
-            private long _fileLength;
-            private int _blocksSaved;
-
-            // Buffer variables
-            private float[][] _buffers;
-            private readonly long _bufferSize;
-            private int _bufferIndex;
-            private int _blockSize;
-            private bool _subdividingBlocks;
-            private int _collectorIndex;
-            private List<ChromCollector>[] _collectors;
-
-            public Allocator(
-                string dataFilePath, 
-                long bufferSize = 0, 
-                long bufferParts = BUFFER_PARTS, 
-                int maxBlock = MAX_BLOCK)
+        public void Add(TData data, BlockWriter writer, int chromatogramIndex)
+        {
+            // Spill data to disk at block boundaries, if necessary.
+            if (_blockIndex == 0)
             {
-                if (bufferSize == 0)
-                    bufferSize = Environment.Is64BitProcess ? GetTotalMemoryInBytes() / 3 * 2 : CHROMATOGRAM_BUFFER_SIZE;
-                long minBlocksPerBuffer;
-                _dataFilePath = dataFilePath;
-                _blockSize = maxBlock;
-                
-                while (true)
+                if (_blocksInMemory == 0 || !writer.WriteBlocks(this, chromatogramIndex))
+                    NewBlock();
+            }
+
+            // Store data.
+            _block._data[_blockIndex] = data;
+
+            // Wrap index to next block.
+            if (++_blockIndex == _blockSize)
+                _blockIndex = 0;
+        }
+
+        public void AddShared(TData data)
+        {
+            // Spill data to disk at block boundaries, if necessary.
+            if (_blockIndex == 0)
+                NewBlock();
+
+            // Store data.
+            _block._data[_blockIndex] = data;
+
+            // Wrap index to next block.
+            if (++_blockIndex == _blockSize)
+                _blockIndex = 0;
+        }
+
+        public void FillZeroes(int count, BlockWriter writer, int chromatogramIndex)
+        {
+            if (count < 1)
+                return;
+
+            // Fill remainder of current block.
+            if (_blockIndex > 0)
+            {
+                while (count > 0 && _blockIndex < _blockSize)
                 {
-                    minBlocksPerBuffer = bufferSize / bufferParts / (_blockSize * sizeof(float));
-                    if (minBlocksPerBuffer > 0)
-                        break;
-                    _blockSize /= 2;
-                    Assume.IsTrue(_blockSize >= 2, "ChromCollector.Allocator buffer is not set up correctly"); // Not L10N
+                    _block._data[_blockIndex++] = default(TData);
+                    count--;
                 }
-                
-                _bufferSize = minBlocksPerBuffer * _blockSize;
-                _buffers = new float[bufferParts][];
-                _collectors = new List<ChromCollector>[bufferParts];
-                Instance = this;
+                if (_blockIndex == _blockSize)
+                    _blockIndex = 0;
+                if (count == 0)
+                    return;
             }
 
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-            private class MEMORYSTATUSEX
+            // Create new pre-zeroed blocks.
+            while (count >= _blockSize)
             {
-                // ReSharper disable MemberCanBePrivate.Local
-                // ReSharper disable once NotAccessedField.Local
-                public uint dwLength;
-#pragma warning disable 169
-#pragma warning disable 649
-                public uint dwMemoryLoad;
-                public ulong ullTotalPhys;
-                public ulong ullAvailPhys;
-                public ulong ullTotalPageFile;
-                public ulong ullAvailPageFile;
-                public ulong ullTotalVirtual;
-                public ulong ullAvailVirtual;
-                public ulong ullAvailExtendedVirtual;
-#pragma warning restore 649
-#pragma warning restore 169
-                // ReSharper restore MemberCanBePrivate.Local
-                public MEMORYSTATUSEX()
+                NewBlock();
+                count -= _blockSize;
+            }
+
+            // Spill blocks to disk.
+            writer.WriteBlocks(this, chromatogramIndex);
+
+            // Final partial block.
+            while (count > 0)
+            {
+                _block._data[_blockIndex++] = default(TData);
+                count--;
+            }
+        }
+
+        public void WriteBlocks(FileStream fileStream)
+        {
+            if (_blocksInMemory == 1)
+            {
+                WriteData(_block, fileStream);
+                _blocksOnDisk++;
+                return;
+            }
+
+            // Write each block to file stream.
+            var blockList = new Block[_blocksInMemory];
+            for (int i = _blocksInMemory - 1; i >= 0; i--)
+            {
+                blockList[i] = _block;
+                _block = _block._previousBlock;
+            }
+            for (int i = 0; i < _blocksInMemory; i++)
+            {
+                WriteData(blockList[i], fileStream);
+            }
+            _blocksOnDisk += _blocksInMemory;
+
+            // Reuse first block
+            _block = blockList[0];
+            _blocksInMemory = 1;
+        }
+
+        private void WriteData(Block block, FileStream fileStream)
+        {
+            // Create back link to previous spilled block.
+            var lastFilePosition = new[] {_filePosition};
+            _filePosition = (int) fileStream.Position;
+            FastWrite.WriteInts(fileStream.SafeFileHandle, lastFilePosition, 0, 1);
+
+            // Write one data block.
+            if (typeof (TData) == typeof (short))
+                FastWrite.WriteShorts(fileStream.SafeFileHandle, (short[]) (object) block._data, 0, _blockSize);
+            else if (typeof (TData) == typeof (int))
+                FastWrite.WriteInts(fileStream.SafeFileHandle, (int[])(object) block._data, 0, _blockSize);
+            else if (typeof (TData) == typeof (float))
+                FastWrite.WriteFloats(fileStream.SafeFileHandle, (float[])(object) block._data, 0, _blockSize);
+            else
+                Assume.Fail();
+        }
+
+        public int Count
+        {
+            get
+            {
+                if (_blockIndex < 0)
+                    return _block._data.Length;
+                int count = (_blocksOnDisk + _blocksInMemory)*_blockSize;
+                if (_blockIndex > 0)
+                    count -= _blockSize - _blockIndex;
+                return count;
+            }
+        }
+
+        public TData[] ToArray(byte[] bytes)
+        {
+            // Return final cached array.
+            if (_blockIndex < 0)
+                return _block._data;
+
+            // Allocate final array.
+            int dest = Count;
+            var array = new TData[dest];
+            if (dest == 0)
+                return array;
+            int length = (_blockIndex > 0) ? _blockIndex : _blockSize;
+
+            // Copy data from memory blocks.
+            while (_block != null)
+            {
+                dest -= length;
+                Array.Copy(_block._data, 0, array, dest, length);
+                _block = _block._previousBlock;
+                length = _blockSize;
+            }
+
+            Assume.IsTrue(bytes != null || _blocksOnDisk == 0);
+
+            // Copy data that was spilled.
+            while (_blocksOnDisk > 0)
+            {
+                dest -= _blockSize;
+                int source = _filePosition;
+                // ReSharper disable once AssignNullToNotNullAttribute
+                _filePosition = BitConverter.ToInt32(bytes, source);
+                source += sizeof (int);
+                int dest2 = dest;
+
+                // Convert byte data.
+                if (typeof (TData) == typeof (short))
                 {
-                    dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+                    for (int j = 0; j < _blockSize; j++)
+                    {
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        array[dest2++] = (TData) (object) BitConverter.ToInt16(bytes, source);
+                        source += sizeof (short);
+                    }
+                }
+                else if (typeof (TData) == typeof (int))
+                {
+                    for (int j = 0; j < _blockSize; j++)
+                    {
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        array[dest2++] = (TData)(object)BitConverter.ToInt32(bytes, source);
+                        source += sizeof (int);
+                    }
+                }
+                else if (typeof (TData) == typeof (float))
+                {
+                    for (int j = 0; j < _blockSize; j++)
+                    {
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        array[dest2++] = (TData)(object)BitConverter.ToSingle(bytes, source);
+                        source += sizeof (float);
+                    }
+                }
+                else
+                {
+                    Assume.Fail();
+                }
+                _blocksOnDisk--;
+            }
+
+            // Cache the final array in case this collector is shared (i.e., shared times).
+            _block = new Block(array, null);
+            _blockIndex = -1;
+            
+            return array;
+        }
+    }
+
+    public class SortedBlockedList<TData> : BlockedList<TData>
+    {
+        public new void Add(TData data, BlockWriter writer, int groupIndex)
+        {
+            if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex-1], data) > 0)
+                throw new InvalidDataException(Resources.Block_VerifySort_Expected_sorted_data);
+            base.Add(data, writer, groupIndex);
+        }
+
+        public new void AddShared(TData data)
+        {
+            if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex-1], data) > 0)
+                throw new InvalidDataException(Resources.Block_VerifySort_Expected_sorted_data);
+            base.AddShared(data);
+        }
+    }
+
+    public class BlockWriter
+    {
+        private readonly ChromGroups _chromGroups;
+
+        public BlockWriter(ChromGroups chromGroups)
+        {
+            _chromGroups = chromGroups;
+        }
+
+        public float RetentionTime { get; set; }
+
+        public bool WriteBlocks(IBlockedList blockedList, int chromatogramIndex)
+        {
+            if (_chromGroups != null)
+            {
+                var fileStream = _chromGroups.GetFileStream(chromatogramIndex);
+                blockedList.WriteBlocks(fileStream);
+                return true;
+            }
+            return false;
+        }
+
+        public int ReleaseChromatogram(int index, ChromCollector collector, out float[] times, out float[] intensities, out float[] massErrors,
+            out int[] scanIds)
+        {
+            if (_chromGroups != null)
+                return _chromGroups.ReleaseChromatogram(index, RetentionTime, collector, out times, out intensities, out massErrors, out scanIds);
+            collector.ReleaseChromatogram(null, out times, out intensities, out massErrors, out scanIds);
+            return collector.StatusId;
+        }
+    }
+
+    public class ChromGroups : IDisposable
+    {
+        private const int MAX_SPILL_FILE_SIZE = 200 * 1024 * 1024;
+        private const int SPILL_FILE_OVER_ESTIMATION_FACTOR = 4;
+        private static readonly float[] EMPTY_FLOAT_ARRAY = new float[0];
+
+        private readonly IList<ChromKey> _chromKeys;
+        private readonly float _maxRetentionTime;
+        private readonly string _cachePath;
+        private readonly SpillFile[] _spillFiles;
+        private readonly int[] _idToGroupId;
+        private SpillFile _cachedSpillFile;
+        private byte[] _bytesFromSpillFile;
+
+        public ChromGroups(
+            IList<IList<int>> chromatogramRequestOrder,
+            IList<ChromKey> chromKeys,
+            float maxRetentionTime,
+            string cachePath)
+        {
+            RequestOrder = chromatogramRequestOrder;
+            _chromKeys = chromKeys;
+            _maxRetentionTime = maxRetentionTime;
+            _cachePath = cachePath;
+            if (RequestOrder == null)
+                return;
+
+            // Sanity check.
+            foreach (var group in RequestOrder)
+            {
+                foreach (var chromIndex in group)
+                    Assume.IsTrue(chromIndex >= 0 && chromIndex < _chromKeys.Count);
+            }
+
+            // Create array to map a provider id back to the peptide group that contains it.
+            _idToGroupId = new int[_chromKeys.Count];
+            for (int groupId = 0; groupId < chromatogramRequestOrder.Count; groupId++)
+            {
+                foreach (var id in chromatogramRequestOrder[groupId])
+                {
+                    _idToGroupId[id] = groupId;
                 }
             }
-            [return: MarshalAs(UnmanagedType.Bool)]
-            [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-            static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 
-            static long GetTotalMemoryInBytes()
+            // Decide how groups will be allocated to spill files.
+            int spillFileSize = 0;
+            SpillFile spillFile = new SpillFile();
+            _spillFiles = new SpillFile[chromatogramRequestOrder.Count];
+            for (int groupId = 0; groupId < _spillFiles.Length; groupId++)
             {
-                MEMORYSTATUSEX statEX = new MEMORYSTATUSEX();
-                if (GlobalMemoryStatusEx(statEX))
-                    return (long) statEX.ullTotalPhys;
+                int groupSize = GetMaxSize(groupId);
+                spillFileSize += groupSize;
+                if (spillFileSize > MAX_SPILL_FILE_SIZE * SPILL_FILE_OVER_ESTIMATION_FACTOR)
+                {
+                    spillFile = new SpillFile();
+                    spillFileSize = groupSize;
+                }
+                _spillFiles[groupId] = spillFile;
+                spillFile.MaxTime = Math.Max(spillFile.MaxTime, GetMaxTime(groupId));
+            }
+        }
+
+        public IList<IList<int>> RequestOrder { get; private set; }
+
+        public void Dispose()
+        {
+            if (_spillFiles != null)
+            {
+                string cachePath = null;
+                for (int i = 0; i < _spillFiles.Length; i++)
+                {
+                    var stream = _spillFiles[i].Stream;
+                    if (stream != null)
+                    {
+                        cachePath = stream.Name;
+                        stream.Dispose();
+                    }
+                }
+
+                if (cachePath != null)
+                    DirectoryEx.SafeDelete(Path.GetDirectoryName(cachePath));
+            }
+        }
+
+        public int GetGroupIndex(int chromatogramIndex)
+        {
+            return chromatogramIndex < _idToGroupId.Length ? _idToGroupId[chromatogramIndex] : 0;
+        }
+
+        public float GetMaxTime(int groupIndex)
+        {
+            float maxTime = 0;
+            foreach (var index in RequestOrder[groupIndex])
+            {
+                var key = _chromKeys[index];
+                if (!key.OptionalMaxTime.HasValue)
+                    return float.MaxValue;
+                maxTime = Math.Max(maxTime, (float) key.OptionalMaxTime.Value);
+            }
+            return maxTime;
+        }
+
+        public FileStream GetFileStream(int chromIndex)
+        {
+            int groupIndex = GetGroupIndex(chromIndex);
+            return _spillFiles[groupIndex].CreateFileStream(_cachePath);
+        }
+
+        public int ReleaseChromatogram(
+            int index, float retentionTime, ChromCollector collector,
+            out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
+        {
+            int groupIndex = GetGroupIndex(index);
+            var spillFile = _spillFiles[groupIndex];
+
+            // Not done reading yet.
+            if (retentionTime < spillFile.MaxTime)
+            {
+                times = null;
+                intensities = null;
+                massErrors = null;
+                scanIds = null;
+                return -1;
+            }
+
+            // No chromatogram information collected.
+            if (collector == null)
+            {
+                times = EMPTY_FLOAT_ARRAY;
+                intensities = EMPTY_FLOAT_ARRAY;
+                massErrors = null;
+                scanIds = null;
                 return 0;
             }
 
-            private readonly ChromCollector _endCollector = new ChromCollector(-1);
-
-            /// <summary>
-            /// Allocate a block in the chromatogram buffer for a new ChromCollector.
-            /// </summary>
-            public void AllocateBuffer(ChromCollector collector)
+            if (!ReferenceEquals(_cachedSpillFile, spillFile))
             {
-                // Find a block for a new collector.
-                while (true)
+                _cachedSpillFile = spillFile;
+                _bytesFromSpillFile = null;
+                var fileStream = spillFile.Stream;
+                if (fileStream != null)
                 {
-                    var collectors = _collectors[_bufferIndex];
-                    if (collectors == null)
-                    {
-                        // Create a new buffer and its list of collectors.
-                        collector._endIndex = _blockSize;
-                        collector._buffer = _buffers[_bufferIndex] = new float[_bufferSize];
-                        _collectors[_bufferIndex] = new List<ChromCollector> {collector, _endCollector};
-                        break;
-                    }
-
-                    // Create a new block or subdivide an existing block.
-                    var previousCollector = collectors[_collectorIndex];
-                    var endIndex = (_subdividingBlocks) ? previousCollector._endIndex : previousCollector._endIndex + _blockSize;
-
-                    // When we reach the end of this buffer, move to the next one.
-                    if (endIndex > _bufferSize)
-                    {
-                        _collectorIndex = 0;
-
-                        // At the end of the last buffer, go back to the first buffer and reduce the block size.
-                        if (++_bufferIndex == _buffers.Length)
-                        {
-                            _bufferIndex = 0;
-                            _subdividingBlocks = true;
-                            _blockSize /= 2;
-                            if (_blockSize < 2)
-                                throw new OutOfMemoryException("Chromatogram buffer size must be increased"); // Not L10N
-                        }
-
-                        // Continue in the next buffer.
-                        continue;
-                    }
-
-                    // Create a new block and record the collector which owns it.
-                    collector._startIndex = collector._index = endIndex - _blockSize;
-                    collector._endIndex = endIndex;
-                    collector._buffer = _buffers[_bufferIndex];
-                    collectors.Insert(++_collectorIndex, collector);
-
-                    if (_subdividingBlocks)
-                    {
-                        // Reduce size of previous block by half, and page to disk if the data doesn't fit.
-                        previousCollector._endIndex = collector._startIndex;
-                        if (previousCollector._index > previousCollector._endIndex)
-                            previousCollector.Save();
-                        
-                        // If we're subdividing blocks, the next block to be divided is the one after the new collector.
-                        _collectorIndex++;
-                    }
-
-                    break;
+                    fileStream.Seek(0, SeekOrigin.Begin);
+                    _bytesFromSpillFile = new byte[fileStream.Length];
+                    int bytesRead = fileStream.Read(_bytesFromSpillFile, 0, _bytesFromSpillFile.Length);
+                    Assume.IsTrue(bytesRead == _bytesFromSpillFile.Length);
+                    // TODO: Would be nice to have something that releases spill files progressively, as they are
+                    //       no longer needed.
+                    // spillFile.CloseStream();
                 }
             }
+            collector.ReleaseChromatogram(_bytesFromSpillFile, out times, out intensities, out massErrors, out scanIds);
+                
+            return collector.StatusId;
+        }
 
-            public void Dispose()
+        public int GetMaxSize(int groupIndex)
+        {
+            int maxSize = 0;
+            foreach (var index in RequestOrder[groupIndex])
             {
-                if (Instance == null)
-                    return;
-                Instance = null;
-                if (_pagingFileSaver != null)
+                var key = _chromKeys[index];
+                double duration = key.OptionalMaxTime.HasValue && key.OptionalMinTime.HasValue
+                    ? key.OptionalMaxTime.Value - key.OptionalMinTime.Value
+                    : _maxRetentionTime;
+                maxSize += (int) Math.Ceiling(duration/PeptideChromDataSets.TIME_MIN_DELTA);
+            }
+            maxSize *= sizeof (float) + sizeof (float) + sizeof (int); // Size of intensity, mass error, scan id
+            return maxSize;
+        }
+
+        private class SpillFile
+        {
+            public FileStream Stream { get; private set; }
+            public float MaxTime { get; set; }
+            
+            public FileStream CreateFileStream(string cachePath)
+            {
+                if (Stream == null)
                 {
-                    // Close paging file.
-                    _pagingFileStream.Dispose();
-                    _pagingFileSaver.Dispose();
-                    _pagingFileSaver = null;
+                    var xicDir = GetSpillDirectory(cachePath);
+                    Directory.CreateDirectory(xicDir);
+                    string fileName = Path.Combine(xicDir,
+                        "xic" + "_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + "_" + Guid.NewGuid() + ".tmp"); // Not L10N
+                    Stream = File.Create(fileName, ushort.MaxValue, FileOptions.DeleteOnClose);
                 }
-
-                // Log some interesting stats.
-                LogStats();
-
-                _buffers = null;
-                _collectors = null;
+                return Stream;
             }
 
-// ReSharper disable UnusedMember.Local
-            private void LogStats()
-// ReSharper restore UnusedMember.Local
+            public void CloseStream()
             {
-                long memoryUsedForBuffers = 0;
-                foreach (var buffer in _buffers)
-                    memoryUsedForBuffers += (buffer != null) ? _bufferSize : 0;
-
-                var log = log4net.LogManager.GetLogger(typeof (Allocator).Name);
-                log.InfoFormat("Length of buffers for chrom data: {0:0.0} MB", (double) memoryUsedForBuffers*sizeof (float)/MEGABYTES); // Not L10N
-                log.InfoFormat("Length of paging file: {0:0.0} MB", (double) _fileLength/MEGABYTES); // Not L10N
-
-                var collectorCount = 0;
-                var maxCollectorLength = 0;
-                var averageCollectorLength = 0;
-                foreach (var collectorList in _collectors)
-                {
-                    if (collectorList != null)
-                    {
-                        foreach (var collector in collectorList)
-                        {
-                            if (collector != _endCollector)
-                            {
-                                collectorCount++;
-                                averageCollectorLength += collector.Length;
-                                maxCollectorLength = Math.Max(maxCollectorLength, collector.Length);
-                            }
-                        }
-                    }
-                }
-
-                log.InfoFormat("Collector count: {0}", collectorCount); // Not L10N
-                log.InfoFormat("Average collector length: {0}", collectorCount == 0 ? 0 : averageCollectorLength/collectorCount);   // Not L10N
-                log.InfoFormat("Max. collector length: {0}", maxCollectorLength); // Not L10N
-                log.InfoFormat("Collector buffer length (in floats) at end: {0}", _blockSize); // Not L10N
-                log.InfoFormat("Average size of block write to paging file: {0} bytes", AverageBytesPerPagedBlock); // Not L10N
+                Stream.Dispose();
+                Stream = null;
             }
 
-            public long Write(float[] data, int index, int length)
+            private static string GetSpillDirectory(string cachePath)
             {
-                if (_pagingFileSaver == null)
-                {
-                    // Set up chromatogram paging file.
-                    _pagingFileSaver = new FileSaver(_dataFilePath + ".chrom");  // Not L10N
-                    _pagingFileStream = new FileStream(_pagingFileSaver.SafeName, FileMode.Create, FileAccess.ReadWrite);
-                    _pagingFile = _pagingFileStream.SafeFileHandle;
-                    _fileLength = 0;
-                    _blocksSaved = 0;
-                }
-
-                var fileOffset = _fileLength;
-                _fileLength += length * sizeof(float);
-                _blocksSaved++;
-
-                // Write directly to disk.
-                FastWrite.WriteFloats(_pagingFile, data, index, length);
-
-                return fileOffset;
+                string cacheDir = Path.GetDirectoryName(cachePath) ?? string.Empty;
+                return Path.Combine(cacheDir, "xic"); // Not L10N
             }
 
-            public void Read(float[] data, int length, int offset, long fileOffset)
+            public override string ToString()
             {
-                // Read directly from disk.
-                FastRead.SetFilePointer(_pagingFile, fileOffset);
-                FastRead.ReadFloats(_pagingFile, data, length, offset);
-            }
-
-            /// <summary>
-            /// Average number of bytes written per block written to paging file.
-            /// </summary>
-            public int AverageBytesPerPagedBlock
-            {
-                get { return _blocksSaved == 0 ? 0 : (int)(_fileLength / _blocksSaved); }
+                return Stream == null
+                    ? "(none)" // Not L10N
+                    : Stream.Name.Substring(Stream.Name.Length - 8);
             }
         }
     }

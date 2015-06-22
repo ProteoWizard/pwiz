@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override bool GetChromatogram(
-            int id, string modifiedSequence, 
+            int id, string modifiedSequence,
             out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             return _cachedChromatogramDataProvider.GetChromatogram(

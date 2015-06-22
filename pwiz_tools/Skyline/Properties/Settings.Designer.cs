@@ -2016,5 +2016,17 @@ namespace pwiz.Skyline.Properties {
                 this["ChromatogramMinIntensity"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.5")]
+        public double MemoryFractionForImport {
+            get {
+                return ((double)(this["MemoryFractionForImport"]));
+            }
+            set {
+                this["MemoryFractionForImport"] = value;
+            }
+        }
     }
 }

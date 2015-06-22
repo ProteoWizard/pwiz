@@ -55,7 +55,8 @@ namespace pwiz.Skyline.Model.Results
         public bool Load(ChromDataProvider provider, string modifiedSequence)
         {
             ChromExtra extra;
-            float[] times, intensities, massErrors;
+            float[] times, intensities;
+            float[] massErrors;
             int[] scanIds;
             bool result = provider.GetChromatogram(
                 ProviderId, modifiedSequence, 
@@ -167,7 +168,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromKey Key { get; private set; }
         public ChromExtra Extra { get; private set; }
         public TransitionDocNode DocNode { get; set; }
-        private int ProviderId { get; set; }
+        public int ProviderId { get; private set; }
         public float[] RawTimes { get; private set; }
         private float[] RawIntensities { get; set; }
         private float[] RawMassErrors { get; set; }

@@ -320,8 +320,11 @@ namespace pwiz.Skyline.Controls
             {
                 // Cover the tree with a transparent control during document changes,
                 // since they can be large, BeginUpdate can fail to hide scrollbar updates.
+                bool changeAll = false;
                 if (e.DocumentPrevious != null && !ReferenceEquals(e.DocumentPrevious.Id, document.Id))
                 {
+                    changeAll = true; // Help UpdateNodes remove nodes quickly during a full docment change
+
                     _resultsIndex = 0;
                     _ratioIndex = 0;
 
@@ -342,7 +345,7 @@ namespace pwiz.Skyline.Controls
                 BeginUpdateMS();
 
                 SrmTreeNodeParent.UpdateNodes(this, Nodes, document.Children,
-                    true, PeptideGroupTreeNode.CreateInstance);
+                    true, PeptideGroupTreeNode.CreateInstance, changeAll);
             }
             finally
             {

@@ -58,6 +58,16 @@ namespace pwiz.Skyline.Model.Results
             _loader.UpdateProgress(Status = Status.ChangePercentComplete(percent));
         }
 
+        /// <summary>
+        /// Notify the provider that the first pass is complete and determine whether the chromatogram
+        /// list needs to be reloaded.
+        /// </summary>
+        /// <returns>True if the chromatogram list needs to be reloaded</returns>
+        public virtual bool CompleteFirstPass()
+        {
+            return false;  // Do nothing by default.
+        }
+
         public ChromFileInfo FileInfo { get; private set; }
 
         public ProgressStatus Status { get; private set; }
@@ -67,6 +77,8 @@ namespace pwiz.Skyline.Model.Results
         public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
 
         public virtual byte[] ScanIdBytes { get { return new byte[0]; } }
+
+        public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 
         public abstract bool GetChromatogram(int id, string modifiedSequence, out ChromExtra extra,
             out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors);

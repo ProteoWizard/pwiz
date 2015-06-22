@@ -2890,6 +2890,7 @@
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
     <Compile Include="Util\Log.cs" />
+    <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\PanoramaUtil.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />

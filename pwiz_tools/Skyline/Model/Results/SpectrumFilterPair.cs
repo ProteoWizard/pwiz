@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,6 +28,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
+        private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
+
         public SpectrumFilterPair(PrecursorTextId precursorTextId, int id, double? minTime, double? maxTime,
             double? minDriftTimeMsec, double? maxDriftTimeMsec, double highEnergyDriftTimeOffsetMsec, bool highAccQ1, bool highAccQ3)
         {
@@ -42,9 +45,11 @@ namespace pwiz.Skyline.Model.Results
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
+            Ms1ProductFilters = SimProductFilters = Ms2ProductFilters = EMPTY_FILTERS;
+
             if (Q1 == 0)
             {
-                ArrayQ1 = ArrayQ1Window = new[] {0.0};
+                Ms1ProductFilters = new[] {new SpectrumProductFilter(0, 0)};
             }
         }
 
@@ -72,13 +77,13 @@ namespace pwiz.Skyline.Model.Results
             switch (requestGroup.Source)
             {
                 case RemoteApi.GeneratedCode.ChromSource.Ms1:
-                    ArrayQ1 = requestGroup.Chromatogram.Select(product => product.ProductMz).ToArray();
-                    ArrayQ1Window = requestGroup.Chromatogram.Select(product => product.MzWindow).ToArray();
+                    Ms1ProductFilters = requestGroup.Chromatogram.Select(
+                        product => new SpectrumProductFilter(product.ProductMz, product.MzWindow)).ToArray();
                     HighAccQ1 = requestGroup.MassErrors;
                     break;
                 case RemoteApi.GeneratedCode.ChromSource.Ms2:
-                    ArrayQ3 = requestGroup.Chromatogram.Select(product => product.ProductMz).ToArray();
-                    ArrayQ3Window = requestGroup.Chromatogram.Select(product => product.MzWindow).ToArray();
+                    Ms2ProductFilters = requestGroup.Chromatogram.Select(
+                        product => new SpectrumProductFilter(product.ProductMz, product.MzWindow)).ToArray();
                     HighAccQ3 = requestGroup.MassErrors;
                     break;
             }
@@ -95,47 +100,46 @@ namespace pwiz.Skyline.Model.Results
         private double? MinDriftTimeMsec { get; set; }
         private double? MaxDriftTimeMsec { get; set; }
         private double? HighEnergyDriftTimeOffsetMsec { get; set; }
-        // Q1 values for when precursor ions are filtered from MS1
-        private double[] ArrayQ1 { get; set; }
-        private double[] ArrayQ1Window { get; set; }
-        // Q3 values for product ions filtered in MS/MS
-        public double[] ArrayQ3 { get; private set; }
-        public double[] ArrayQ3Window { get; private set; }
+        private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
+        private SpectrumProductFilter[] SimProductFilters { get; set; }
+        public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
 
         public void AddQ1FilterValues(IEnumerable<double> filterValues, Func<double, double> getFilterWindow)
         {
-            AddFilterValues(MergeFilters(ArrayQ1, filterValues).Distinct(), getFilterWindow,
-                centers => ArrayQ1 = centers, windows => ArrayQ1Window = windows);
+            AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues).Distinct(), getFilterWindow,
+                filters => Ms1ProductFilters = filters);
+            // Make complete copies for SIM scans. Some day these may be different.
+            SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth)).ToArray();
         }
 
         public void AddQ3FilterValues(IEnumerable<double> filterValues, Func<double, double> getFilterWindow)
         {
-            AddFilterValues(MergeFilters(ArrayQ3, filterValues).Distinct(), getFilterWindow,
-                centers => ArrayQ3 = centers, windows => ArrayQ3Window = windows);
+            AddFilterValues(MergeFilters(Ms2ProductFilters, filterValues).Distinct(), getFilterWindow,
+                filters => Ms2ProductFilters = filters);
         }
 
-        private static IEnumerable<double> MergeFilters(IEnumerable<double> existing, IEnumerable<double> added)
+        private static IEnumerable<double> MergeFilters(IEnumerable<SpectrumProductFilter> existing, IEnumerable<double> added)
         {
             if (existing == null)
                 return added;
-            return existing.Union(added);
+            return existing.Select(f => f.TargetMz).Union(added);
         }
 
         private static void AddFilterValues(IEnumerable<double> filterValues,
                                             Func<double, double> getFilterWindow,
-                                            Action<double[]> setCenters, Action<double[]> setWindows)
+                                            Action<SpectrumProductFilter[]> setProductFilters)
         {
             var listQ3 = filterValues.ToList();
 
             listQ3.Sort();
 
-            setCenters(listQ3.ToArray());
-            setWindows(listQ3.ConvertAll(mz => getFilterWindow(mz)).ToArray());
+            setProductFilters(listQ3.Select(mz => new SpectrumProductFilter(mz, getFilterWindow(mz))).ToArray());
         }
 
-        public ExtractedSpectrum FilterQ1SpectrumList(MsDataSpectrum[] spectra)
+        public ExtractedSpectrum FilterQ1SpectrumList(MsDataSpectrum[] spectra, bool isSimSpectra = false)
         {
-            return FilterSpectrumList(spectra, ArrayQ1, ArrayQ1Window, HighAccQ1, false);
+            var filters = isSimSpectra ? SimProductFilters : Ms1ProductFilters;
+            return FilterSpectrumList(spectra, filters, HighAccQ1, false);
         }
 
         public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra, bool useDriftTimeHighEnergyOffset)
@@ -144,7 +148,7 @@ namespace pwiz.Skyline.Model.Results
             if (Q1 == 0)
                 return null;
 
-            return FilterSpectrumList(spectra, ArrayQ3, ArrayQ3Window, HighAccQ3, useDriftTimeHighEnergyOffset);
+            return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useDriftTimeHighEnergyOffset);
         }
 
         /// <summary>
@@ -159,16 +163,16 @@ namespace pwiz.Skyline.Model.Results
         /// trying to measure ions per injection, basically).
         /// </summary>
         private ExtractedSpectrum FilterSpectrumList(IEnumerable<MsDataSpectrum> spectra,
-            double[] centerArray, double[] windowArray, bool highAcc, bool useDriftTimeHighEnergyOffset)
+            SpectrumProductFilter[] productFilters, bool highAcc, bool useDriftTimeHighEnergyOffset)
         {
             int targetCount = 1;
             if (Q1 == 0)
                 highAcc = false;    // No mass error for all-ions extraction
             else
             {
-                if (centerArray.Length == 0)
+                if (productFilters.Length == 0)
                     return null;
-                targetCount = centerArray.Length;
+                targetCount = productFilters.Length;
             }
 
             float[] extractedIntensities = new float[targetCount];
@@ -201,7 +205,8 @@ namespace pwiz.Skyline.Model.Results
                 // It's not unusual for mzarray and centerArray to have no overlap, esp. with drift time data
                 if (Q1 != 0)
                 {
-                    if ((centerArray[targetCount - 1] + windowArray[targetCount - 1]/2) < mzArray[0])
+                    var lastProductFilter = productFilters[targetCount - 1];
+                    if ((lastProductFilter.TargetMz + lastProductFilter.FilterWidth/2) < mzArray[0])
                         continue;
                 }
 
@@ -219,8 +224,9 @@ namespace pwiz.Skyline.Model.Results
                     double targetMz = 0, endFilter = double.MaxValue;
                     if (Q1 != 0)
                     {
-                        targetMz = centerArray[targetIndex];
-                        double filterWindow = windowArray[targetIndex];
+                        var productFilter = productFilters[targetIndex];
+                        targetMz = productFilter.TargetMz;
+                        double filterWindow = productFilter.FilterWidth;
                         double startFilter = targetMz - filterWindow / 2;
                         endFilter = startFilter + filterWindow;
 
@@ -270,7 +276,7 @@ namespace pwiz.Skyline.Model.Results
             if (meanErrors != null)
             {
                 for (int i = 0; i < targetCount; i++)
-                    massErrors[i] = (float)SequenceMassCalc.GetPpm(centerArray[i], meanErrors[i]);
+                    massErrors[i] = (float)SequenceMassCalc.GetPpm(productFilters[i].TargetMz, meanErrors[i]);
             }
 
             // If we summed across spectra of different retention times, scale per
@@ -289,8 +295,7 @@ namespace pwiz.Skyline.Model.Results
                 dtWidth,
                 Extractor,
                 Id,
-                centerArray,
-                windowArray,
+                productFilters,
                 extractedIntensities,
                 massErrors);
         }
@@ -308,15 +313,15 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<ChromatogramRequestDocumentChromatogramGroup> ToChromatogramRequestDocumentChromatogramGroups()
         {
-            if (null != ArrayQ1)
+            if (null != Ms1ProductFilters)
             {
                 var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
-                for (int i = 0; i < ArrayQ1.Length; i++)
+                foreach (var spectrumProductFilter in Ms1ProductFilters)
                 {
                     var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
                     {
-                        ProductMz = ArrayQ1[i],
-                        MzWindow = ArrayQ1Window[i],
+                        ProductMz = spectrumProductFilter.TargetMz,
+                        MzWindow = spectrumProductFilter.FilterWidth,
                     };
                     chromatograms.Add(product);
                 }
@@ -325,15 +330,15 @@ namespace pwiz.Skyline.Model.Results
                     yield return MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.ms1, HighAccQ1 && 0 != Q1, chromatograms);
                 }
             }
-            if (null != ArrayQ3)
+            if (null != Ms2ProductFilters)
             {
                 var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
-                for (int i = 0; i < ArrayQ3.Length; i++)
+                foreach (var spectrumProductFilter in Ms2ProductFilters)
                 {
                     var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
                     {
-                        ProductMz = ArrayQ3[i],
-                        MzWindow = ArrayQ3Window[i],
+                        ProductMz = spectrumProductFilter.TargetMz,
+                        MzWindow = spectrumProductFilter.FilterWidth,
                     };
                     chromatograms.Add(product);
                 }
@@ -341,6 +346,57 @@ namespace pwiz.Skyline.Model.Results
                 {
                     yield return
                         MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.fragment, HighAccQ3, chromatograms);
+                }
+            }
+        }
+
+        public IEnumerable<int> ProductFilterIds
+        {
+            get
+            {
+                foreach (var filters in new[] {Ms1ProductFilters, SimProductFilters, Ms2ProductFilters})
+                {
+                    foreach (var spectrumProductFilter in filters)
+                    {
+                        yield return spectrumProductFilter.FilterId;
+                    }
+                }
+            }
+        }
+
+        public void AddChromKeys(List<ChromKey> listChromKeys)
+        {
+            AddChromKeys(ChromSource.ms1, Ms1ProductFilters, false, listChromKeys);
+            AddChromKeys(ChromSource.sim, SimProductFilters, false, listChromKeys);
+            AddChromKeys(ChromSource.fragment, Ms2ProductFilters, true, listChromKeys);
+        }
+
+        private void AddChromKeys(ChromSource source, SpectrumProductFilter[] productFilters, bool highEnergy,
+                                  List<ChromKey> listChromKeys)
+        {
+            if (null != productFilters)
+            {
+                double? imCenterOpt = null;
+                double imCenter, imWidth;
+                if (GetDriftTimeWindow(out imCenter, out imWidth, highEnergy))
+                    imCenterOpt = imCenter;
+                foreach (var spectrumProductFilter in productFilters)
+                {
+                    spectrumProductFilter.FilterId = listChromKeys.Count;
+                    var key = new ChromKey(ModifiedSequence,
+                        Q1,
+                        imCenterOpt,
+                        imWidth,
+                        spectrumProductFilter.TargetMz,
+                        0,  // CE value (Shimadzu SRM only)
+                        spectrumProductFilter.FilterWidth,
+                        source,
+                        Extractor,
+                        true,
+                        true,
+                        MinTime,
+                        MaxTime);
+                    listChromKeys.Add(key);
                 }
             }
         }
@@ -398,7 +454,7 @@ namespace pwiz.Skyline.Model.Results
                 (!MaxDriftTimeMsec.HasValue || MaxDriftTimeMsec.Value+offset >= driftTimeMsec);
         }
 
-        public void GetDriftTimeWindow(out double center, out double width, bool highEnergy)
+        public bool GetDriftTimeWindow(out double center, out double width, bool highEnergy)
         {
             if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
             {
@@ -406,12 +462,55 @@ namespace pwiz.Skyline.Model.Results
                 double offset = (highEnergy ? HighEnergyDriftTimeOffsetMsec ?? 0 : 0);
                 width = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
                 center = offset + MinDriftTimeMsec.Value + 0.5*width;
+                return true;
             }
             else
             {
                 width = 0;
                 center = 0;
+                return false;
             }
         }
+    }
+
+    public class SpectrumProductFilter
+    {
+        public SpectrumProductFilter(double targetMz, double filterWidth)
+        {
+            TargetMz = targetMz;
+            FilterWidth = filterWidth;
+        }
+
+        public double TargetMz { get; private set; }
+        public double FilterWidth { get; private set; }
+        public int FilterId { get; set; }
+
+        #region object overrides
+
+        protected bool Equals(SpectrumProductFilter other)
+        {
+            return TargetMz.Equals(other.TargetMz) && FilterWidth.Equals(other.FilterWidth) && FilterId == other.FilterId;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((SpectrumProductFilter) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = TargetMz.GetHashCode();
+                hashCode = (hashCode*397) ^ FilterWidth.GetHashCode();
+                hashCode = (hashCode*397) ^ FilterId;
+                return hashCode;
+            }
+        }
+
+        #endregion
     }
 }

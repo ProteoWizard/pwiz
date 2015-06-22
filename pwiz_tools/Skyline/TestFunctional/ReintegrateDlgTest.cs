@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                     else
                     {
-                        Assert.AreEqual(chromInfo.Annotations.ListAnnotations().Count(), 1);
+                        Assert.AreEqual(chromInfo.Annotations.ListAnnotations().Count(), 2);
                         Assert.AreEqual(chromInfo.Annotations.ListAnnotations().First().Key, MProphetResultsHandler.AnnotationName);
                     }
 

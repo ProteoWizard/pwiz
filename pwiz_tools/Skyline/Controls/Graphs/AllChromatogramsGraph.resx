@@ -207,6 +207,33 @@
   <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
+  <data name="lblDuration.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblDuration.Location" type="System.Drawing.Point, System.Drawing">
+    <value>1, 5</value>
+  </data>
+  <data name="lblDuration.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 13</value>
+  </data>
+  <data name="lblDuration.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblDuration.Text" xml:space="preserve">
+    <value>00:00:00</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
+    <value>lblDuration</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnCancelFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Right</value>
   </data>
@@ -235,7 +262,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnCancelFile.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Right</value>
@@ -265,7 +292,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Right</value>
@@ -295,7 +322,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 413</value>
@@ -327,23 +354,11 @@
   <data name="panelGraph.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
   </data>
-  <data name="asyncGraph.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="asyncGraph.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="asyncGraph.Size" type="System.Drawing.Size, System.Drawing">
-    <value>607, 319</value>
-  </data>
-  <data name="asyncGraph.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
   <data name="&gt;&gt;asyncGraph.Name" xml:space="preserve">
     <value>asyncGraph</value>
   </data>
   <data name="&gt;&gt;asyncGraph.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;asyncGraph.Parent" xml:space="preserve">
     <value>panelGraph</value>
@@ -372,8 +387,77 @@
   <data name="&gt;&gt;panelGraph.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="asyncGraph.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="asyncGraph.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="asyncGraph.Size" type="System.Drawing.Size, System.Drawing">
+    <value>607, 319</value>
+  </data>
+  <data name="asyncGraph.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;asyncGraph.Name" xml:space="preserve">
+    <value>asyncGraph</value>
+  </data>
+  <data name="&gt;&gt;asyncGraph.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;asyncGraph.Parent" xml:space="preserve">
+    <value>panelGraph</value>
+  </data>
+  <data name="&gt;&gt;asyncGraph.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="panelFileProgress.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;progressBarFile.Name" xml:space="preserve">
+    <value>progressBarFile</value>
+  </data>
+  <data name="&gt;&gt;progressBarFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressBarFile.Parent" xml:space="preserve">
+    <value>panelFileProgress</value>
+  </data>
+  <data name="&gt;&gt;progressBarFile.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lblFileName.Name" xml:space="preserve">
+    <value>lblFileName</value>
+  </data>
+  <data name="&gt;&gt;lblFileName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFileName.Parent" xml:space="preserve">
+    <value>panelFileProgress</value>
+  </data>
+  <data name="&gt;&gt;lblFileName.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelFileProgress.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 326</value>
+  </data>
+  <data name="panelFileProgress.Size" type="System.Drawing.Size, System.Drawing">
+    <value>589, 36</value>
+  </data>
+  <data name="panelFileProgress.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panelFileProgress.Name" xml:space="preserve">
+    <value>panelFileProgress</value>
+  </data>
+  <data name="&gt;&gt;panelFileProgress.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelFileProgress.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelFileProgress.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="progressBarFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -432,27 +516,6 @@
   <data name="&gt;&gt;lblFileName.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panelFileProgress.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 326</value>
-  </data>
-  <data name="panelFileProgress.Size" type="System.Drawing.Size, System.Drawing">
-    <value>589, 36</value>
-  </data>
-  <data name="panelFileProgress.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panelFileProgress.Name" xml:space="preserve">
-    <value>panelFileProgress</value>
-  </data>
-  <data name="&gt;&gt;panelFileProgress.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelFileProgress.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelFileProgress.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -472,6 +535,6 @@
     <value>AllChromatogramsGraph</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

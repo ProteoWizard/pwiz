@@ -653,7 +653,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         ///     false allows a dummy node to be used, if appropriate</param>
         /// <param name="create">Node creation function used to supply tree nodes for new doc nodes</param>
         public static void UpdateNodes<TNode>(SequenceTree tree, TreeNodeCollection treeNodes,
-                IList<DocNode> docNodes, bool materialize, CreateTreeNode<TNode> create)
+                IList<DocNode> docNodes, bool materialize, CreateTreeNode<TNode> create, bool changeAll = false)
             where TNode : SrmTreeNode
         {
             // This code is highly optimized to make as few modifications to the
@@ -664,7 +664,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             // First short-cut all the complexity, if the end result will be an
             // empty list.  This is way faster at removing all the proteins in the
             // File/New case.
-            if (docNodes.Count == 0)
+            if (docNodes.Count == 0 || changeAll)
             {
                 for (int iNode = treeNodes.Count - 1; iNode >= 0; iNode--)
                 {

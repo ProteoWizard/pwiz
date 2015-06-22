@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             times = tranInfo.Times;
             if (null != tranInfo.ScanIds)
             {
-                scanIds = tranInfo.ScanIds[(int) chromKeyIndices.Key.Source];
+                scanIds = tranInfo.ScanIds[(short) chromKeyIndices.Key.Source];
             }
             else
             {

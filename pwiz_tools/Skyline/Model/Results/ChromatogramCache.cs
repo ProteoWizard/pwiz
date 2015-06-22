@@ -1184,7 +1184,9 @@ namespace pwiz.Skyline.Model.Results
                     float extractionWidth = tranInfo.ExtractionWidth;
                     ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_textIdBytes, groupInfo.TextIdIndex, groupInfo.TextIdLen,
-                        groupInfo.Precursor, product, extractionWidth, tranInfo.IonMobilityValue, tranInfo.IonMobilityExtractionWidth,  source, groupInfo.Extractor, true, true);
+                        groupInfo.Precursor, product, extractionWidth, tranInfo.IonMobilityValue, 
+                        tranInfo.IonMobilityExtractionWidth,  source, groupInfo.Extractor, true, true,
+                        null, null);    // this provider can't provide these optional times
 
                     int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
                     int rank = groupInfo.HasStatusRank ? groupInfo.StatusRank : -1;

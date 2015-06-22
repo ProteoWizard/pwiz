@@ -92,7 +92,7 @@ namespace pwiz.Skyline.EditUI
                                 throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_);
                             }
                             // TODO: Add a checkbox for including decoys.  Probably most of the time real users won't want to bother with reintegrating decoys
-                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, true, checkBoxAnnotation.Checked, _scoreAnnotation, pm);
+                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, true, checkBoxAnnotation.Checked, checkBoxAnnotation.Checked, pm);
                         });
                     if (longWaitDlg.IsCanceled)
                         return;

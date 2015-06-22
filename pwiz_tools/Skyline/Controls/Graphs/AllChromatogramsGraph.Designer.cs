@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panelFileProgress = new System.Windows.Forms.Panel();
             this.progressBarFile = new System.Windows.Forms.ProgressBar();
             this.lblFileName = new System.Windows.Forms.Label();
+            this.lblDuration = new System.Windows.Forms.Label();
             this.panelMultifileProgress.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panelGraph.SuspendLayout();
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // panel2
             // 
             resources.ApplyResources(this.panel2, "panel2");
+            this.panel2.Controls.Add(this.lblDuration);
             this.panel2.Controls.Add(this.btnCancelFile);
             this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.btnHide);
@@ -124,6 +126,11 @@ namespace pwiz.Skyline.Controls.Graphs
             resources.ApplyResources(this.lblFileName, "lblFileName");
             this.lblFileName.Name = "lblFileName";
             // 
+            // lblDuration
+            // 
+            resources.ApplyResources(this.lblDuration, "lblDuration");
+            this.lblDuration.Name = "lblDuration";
+            // 
             // AllChromatogramsGraph
             // 
             resources.ApplyResources(this, "$this");
@@ -140,6 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panelMultifileProgress.ResumeLayout(false);
             this.panelMultifileProgress.PerformLayout();
             this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.panelGraph.ResumeLayout(false);
             this.panelFileProgress.ResumeLayout(false);
             this.panelFileProgress.PerformLayout();
@@ -161,5 +169,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.ProgressBar progressBarFile;
         private System.Windows.Forms.Label lblFileName;
         private AsyncChromatogramsGraph asyncGraph;
+        private System.Windows.Forms.Label lblDuration;
     }
 }

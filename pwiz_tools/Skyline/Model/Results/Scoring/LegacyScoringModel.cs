@@ -22,6 +22,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -117,7 +118,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestRetentionTimePredictionCalc(),
         };
 
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+            bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
         {
             return ChangeProp(ImClone(this), im =>
             {

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -157,8 +158,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="initParameters">Initial model parameters (weights and bias)</param>
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning.</param>
+        /// <param name="progressMonitor"></param>
         /// <returns>Immutable model with new weights.</returns>
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters,
+            bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
         {
             if(initParameters == null)
                 initParameters = new LinearModelParams(_peakFeatureCalculators.Count);
@@ -179,8 +182,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                 preTrainedWeights[i] = double.NaN;
                             }
                         }
-                        int standardIndex = PeakFeatureCalculators.IndexOf(calc => calc.GetType() == typeof (MQuestStandardIntensityCalc));
-                        bool hasStandards = !double.IsNaN(initParameters.Weights[standardIndex]);
+                        int standardEnabledCount = GetEnabledCount(LegacyScoringModel.StandardFeatureCalculators, initParameters.Weights);
+                        int analyteEnabledCount = GetEnabledCount(LegacyScoringModel.AnalyteFeatureCalculators, initParameters.Weights);
+                        bool hasStandards = standardEnabledCount >= analyteEnabledCount;
                         var calculators = hasStandards ? LegacyScoringModel.StandardFeatureCalculators : LegacyScoringModel.AnalyteFeatureCalculators;
                         for (int i = 0; i < calculators.Length; ++i)
                         {
@@ -198,11 +202,21 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     double decoyMean = 0;
                     double decoyStdev = 0;
                     bool colinearWarning = false;
+                    // This may take a long time between progress updates, but just measure progress by cycles through the training
+                    var status = new ProgressStatus(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model);
+                    if (progressMonitor != null)
+                        progressMonitor.UpdateProgress(status);
                     for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++)
                     {
+                        // CONSIDER: Support cancelling
+                        if (progressMonitor != null)
+                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete((iteration + 1) * 100 / (MAX_ITERATIONS + 1)));
+
                         im.CalculateWeights(iteration, targetTransitionGroups, decoyTransitionGroups,
                                             includeSecondBest, calcWeights, out decoyMean, out decoyStdev, ref colinearWarning);
                     }
+                    if (progressMonitor != null)
+                        progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
 
                     var parameters = new LinearModelParams(calcWeights);
                     parameters = parameters.RescaleParameters(decoyMean, decoyStdev);
@@ -211,6 +225,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     im.UsesSecondBest = includeSecondBest;
                     im.UsesDecoys = decoys.Count > 0;
                 });
+        }
+
+        private int GetEnabledCount(IPeakFeatureCalculator[] featureCalculators, IList<double> weights)
+        {
+            int enabledCount = 0;
+            foreach (var calculator in featureCalculators)
+            {
+                var calculatorType = calculator.GetType();
+                int indexWeight = PeakFeatureCalculators.IndexOf(calc => calc.GetType() == calculatorType);
+                if (!double.IsNaN(weights[indexWeight]))
+                    enabledCount++;
+            }
+            return enabledCount;
         }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
     internal sealed class PeptideChromDataSets
     {
         private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
-        private const double TIME_MIN_DELTA = 0.2/60;
+        public const double TIME_MIN_DELTA = 0.2 / 60;
 
         // No longer necessary, since mzWiff mzXML is the only thing marked
         // as IsProcessedScans
@@ -72,6 +72,11 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsAlignedTimes { set { _isAlignedTimes = value; } }
 
+        public ChromKey FirstKey
+        {
+            get { return DataSets.Count > 0 ? DataSets[0].FirstKey : ChromKey.EMPTY; }
+        }
+
         private IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
         {
             get
@@ -111,15 +116,19 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; } 
+        private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
+
+        public IEnumerable<int> ProviderIds { get { return _dataSets.SelectMany(d => d.ProviderIds); } }
 
         public bool Load(ChromDataProvider provider)
         {
+            //Console.Out.WriteLine("Starting {0} {1} {2}", this.NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));
             foreach (var set in _dataSets.ToArray())
             {
                 if (!set.Load(provider, NodePep != null ? NodePep.RawTextId : null))
                     _dataSets.Remove(set);
             }
+            //Console.Out.WriteLine("Ending {0} {1} {2}", NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));
             return _dataSets.Count > 0;
         }
 
@@ -696,15 +705,21 @@ namespace pwiz.Skyline.Model.Results
             // a merged copy of the PeptideDocNode needs to be created that includes
             // this new precursor.
             if (ReferenceEquals(nodePep, NodePep))
-                DataSets.Add(chromDataSet);
+                AddDataSet(chromDataSet);
             // Unless we already have one of these
             else if (!HasEquivalentGroupNode(chromDataSet.NodeGroup))
             {
                 if (!FindAndMerge(chromDataSet))
-                    DataSets.Add(chromDataSet);
+                    AddDataSet(chromDataSet);
                 var childrenNew = DataSets.Select(d => d.NodeGroup).ToArray();
                 NodePep = (PeptideDocNode)NodePep.ChangeChildren(childrenNew);
             }
+        }
+
+        private void AddDataSet(ChromDataSet chromDataSet)
+        {
+            Assume.IsTrue(DataSets.Count == 0 || DataSets[0].FirstKey.OptionalMaxTime == chromDataSet.FirstKey.OptionalMaxTime);
+            DataSets.Add(chromDataSet);
         }
 
         private bool FindAndMerge(ChromDataSet chromDataSet)

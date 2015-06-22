@@ -500,5 +500,8 @@
     <Setting Name="ChromatogramMinIntensity" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="MemoryFractionForImport" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

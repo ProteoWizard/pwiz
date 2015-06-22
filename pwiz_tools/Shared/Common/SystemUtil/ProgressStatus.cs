@@ -103,7 +103,7 @@ namespace pwiz.Common.SystemUtil
             if (percent != -1)
                 percent = Math.Min(100, Math.Max(0, percent));
             // If this percent complete value has already been set, then do nothing.
-            if (percent == PercentComplete)
+            if (IsPercentComplete(percent))
                 return this;
 
             return ChangeProp(ImClone(this), s =>

@@ -28,7 +28,13 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class SpectrumFilter
+    public interface IFilterInstrumentInfo
+    {
+        bool IsWatersFile { get; }
+        bool IsAgilentFile { get; }
+    }
+
+    public sealed class SpectrumFilter : IFilterInstrumentInfo
     {
         private readonly TransitionFullScan _fullScan;
         private readonly TransitionInstrument _instrument;
@@ -38,9 +44,13 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isSharedTime;
         private readonly double? _minTime;  // Copied from _instrument.MinTime
         private readonly double? _maxTime;  // Copied from _instrument.MaxTime
-        private readonly double _minFilterPairsRT; // Min of range of RT filter values across FilterPairs 
-        private readonly double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
+        private double _minFilterPairsRT; // Min of range of RT filter values across FilterPairs 
+        private double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
         private readonly SpectrumFilterPair[] _filterMzValues;
+        private readonly SpectrumFilterPair[] _filterRTValues;
+        private readonly ChromKey[] _productChromKeys;
+        private int _retentionTimeIndex;
+        private readonly bool _isWatersFile;
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
         private int _mseLevel;
@@ -49,16 +59,15 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
-        public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, MsDataFileImpl dataFile) 
-            : this(document, msDataFileUri, dataFile, null)
-        {
-        }
-
-        public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, MsDataFileImpl dataFile, IRetentionTimePredictor retentionTimePredictor)
+        public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
+            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
             _acquisitionMethod = _fullScan.AcquisitionMethod;
+            if (instrumentInfo != null)
+                _isWatersFile = instrumentInfo.IsWatersFile;
+            IsFirstPass = firstPass;
 
             var comparer = PrecursorTextId.PrecursorTextIdComparerInstance;
             var dictPrecursorMzToFilter = new SortedDictionary<PrecursorTextId, SpectrumFilterPair>(comparer);
@@ -70,12 +79,15 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-                    var key = new PrecursorTextId(0, null, ChromExtractor.summed);  // TIC
-                    dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
-                        _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
-                    key = new PrecursorTextId(0, null, ChromExtractor.base_peak);   // BPC
-                    dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
-                        _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                    if (!firstPass)
+                    {
+                        var key = new PrecursorTextId(0, null, ChromExtractor.summed);  // TIC
+                        dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
+                            _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                        key = new PrecursorTextId(0, null, ChromExtractor.base_peak);   // BPC
+                        dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
+                            _instrument.MinTime, _instrument.MaxTime, null, null, 0, _isHighAccMsFilter, _isHighAccProductFilter));
+                    }
                 }
                 if (EnabledMsMs)
                 {
@@ -85,10 +97,10 @@ namespace pwiz.Skyline.Model.Results
                     if (_fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
                         _fullScan.IsolationScheme.IsAllIons)
                     {
-                        if (null != dataFile)
+                        if (instrumentInfo != null)
                         {
-                            _isWatersMse = dataFile.IsWatersFile;
-                            _isAgilentMse = dataFile.IsAgilentFile;
+                            _isWatersMse = _isWatersFile;
+                            _isAgilentMse = instrumentInfo.IsAgilentFile;
                         }
                         _mseLevel = 1;
                     }
@@ -98,19 +110,7 @@ namespace pwiz.Skyline.Model.Results
                 Func<double, double> calcWindowsQ3 = _fullScan.GetProductFilterWindow;
                 _minTime = _instrument.MinTime;
                 _maxTime = _instrument.MaxTime;
-                bool canSchedule;
-                if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
-                {
-                    canSchedule = document.Settings.PeptideSettings.Prediction.CanSchedule(document, PeptidePrediction.SchedulingStrategy.any) || null != retentionTimePredictor;
-                }
-                else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
-                {
-                    canSchedule = true;
-                }
-                else
-                {
-                    canSchedule = false;
-                }
+                bool canSchedule = CanSchedule(document, retentionTimePredictor);
                 // TODO: Figure out a way to turn off time sharing on first SIM scan so that
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule;
@@ -122,6 +122,9 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (var nodePep in document.Molecules)
                 {
+                    if (firstPass && !retentionTimePredictor.IsFirstPassPeptide(nodePep))
+                        continue;
+
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
                         if (nodeGroup.Children.Count == 0)
@@ -159,6 +162,9 @@ namespace pwiz.Skyline.Model.Results
                                             document, nodePep, nodeGroup, out windowRT);
                                     }
                                 }
+                                // Force the center time to be at least zero
+                                if (centerTime.HasValue && centerTime.Value < 0)
+                                    centerTime = 0;
                                 if (_fullScan.RetentionTimeFilterLength != 0)
                                 {
                                     windowRT = _fullScan.RetentionTimeFilterLength * 2;
@@ -213,13 +219,53 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
+
+                var listChromKeyFilterIds = new List<ChromKey>();
+                foreach (var spectrumFilterPair in _filterMzValues)
+                {
+                    spectrumFilterPair.AddChromKeys(listChromKeyFilterIds);
+                }
+                _productChromKeys = listChromKeyFilterIds.ToArray();
+
+                // Sort a copy of the filter pairs by maximum retention time so that we can detect when
+                // filters are no longer active.
+                _filterRTValues = new SpectrumFilterPair[_filterMzValues.Length];
+                Array.Copy(_filterMzValues, _filterRTValues, _filterMzValues.Length);
+                Array.Sort(_filterRTValues, CompareByRT);
             }
 
-            // Determine min and max range across all retention time filters, if any
+            InitRTLimits();
+        }
+
+        private bool CanSchedule(SrmDocument document, IRetentionTimePredictor retentionTimePredictor)
+        {
+            bool canSchedule;
+            if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
+            {
+                canSchedule =
+                    document.Settings.PeptideSettings.Prediction.CanSchedule(document, PeptidePrediction.SchedulingStrategy.any) ||
+                    null != retentionTimePredictor;
+            }
+            else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
+            {
+                canSchedule = true;
+            }
+            else
+            {
+                canSchedule = false;
+            }
+            return canSchedule;
+        }
+
+        /// <summary>
+        /// Determine min and max range across all retention time filters, if any
+        /// </summary>
+        private void InitRTLimits()
+        {
             _maxFilterPairsRT = double.MaxValue;
             _minFilterPairsRT = double.MinValue;
             if (FilterPairs != null)
-            { 
+            {
                 double? maxRT = null;
                 double? minRT = null;
                 foreach (var fp in FilterPairs)
@@ -233,13 +279,50 @@ namespace pwiz.Skyline.Model.Results
                     if (fp.MaxTime.Value > (maxRT ?? double.MinValue))
                         maxRT = fp.MaxTime.Value;
                     if (fp.MinTime.Value < (minRT ?? double.MaxValue))
-                        minRT = fp.MinTime.Value;  
+                        minRT = fp.MinTime.Value;
                 }
                 if (maxRT.HasValue)
                     _maxFilterPairsRT = maxRT.Value;
                 if (minRT.HasValue && !IsMseData()) // For MSe data, just start from the beginning lest we drop in mid-cycle
                     _minFilterPairsRT = minRT.Value;
             }
+        }
+
+        /// <summary>
+        /// Compare filter pairs by maximum retention time.
+        /// </summary>
+        private int CompareByRT(SpectrumFilterPair x, SpectrumFilterPair y)
+        {
+            return 
+                !x.MaxTime.HasValue ? 1 :
+                !y.MaxTime.HasValue ? -1 :
+                x.MaxTime.Value.CompareTo(y.MaxTime.Value);
+        }
+
+        public bool IsFirstPass { get; private set; }
+
+        public bool IsWatersFile
+        {
+            get { return _isWatersFile; }
+        }
+
+        public bool IsAgilentFile
+        {
+            get { return _isAgilentMse; }
+        }
+
+        /// <summary>
+        /// Until ProteoWizard implementation of Waters spectrum list can be fixed, it does not
+        /// support time ordered extraction. First MS1 then MS/MS scans are traversed.
+        /// </summary>
+        public bool IsTimeOrderedExtraction
+        {
+            get { return !_isWatersFile; }
+        }
+
+        public IList<ChromKey> ProductChromKeys
+        {
+            get { return _productChromKeys; }
         }
 
         public bool IsOutsideRetentionTimeRange(double? rtCheck)
@@ -399,11 +482,12 @@ namespace pwiz.Skyline.Model.Results
                 yield break;
 
             // All filter pairs have a shot at filtering the MS1 scans
+            bool isSimSpectra = spectra.Any(IsSimSpectrum);
             foreach (var filterPair in FindMs1FilterPairs(precursors))
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
-                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra);
+                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra, isSimSpectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
             }
@@ -498,18 +582,18 @@ namespace pwiz.Skyline.Model.Results
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(IsolationWindowFilter isoWin,
                                                                 FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)
         {
-            List<SpectrumFilterPair> filterPairs = new List<SpectrumFilterPair>();
-            
             if (!isoWin.IsolationMz.HasValue)
-                return filterPairs; // empty
+                return new SpectrumFilterPair[0]; // empty
 
             // Return cached value from dictionary if we've seen this target previously.
+            var isoWinKey = isoWin;
             IList<SpectrumFilterPair> filterPairsCached;
-            if (_filterPairDictionary.TryGetValue(isoWin, out filterPairsCached))
+            if (_filterPairDictionary.TryGetValue(isoWinKey, out filterPairsCached))
             {
                 return filterPairsCached;
             }
 
+            var filterPairs = new List<SpectrumFilterPair>();
             if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
                 double isoTargMz = isoWin.IsolationMz.Value;
@@ -517,21 +601,18 @@ namespace pwiz.Skyline.Model.Results
                 if (!ignoreIsolationScheme)
                 {
                     CalcDiaIsolationValues(ref isoTargMz, ref isoTargWidth);
-                    isoWin = new IsolationWindowFilter(isoTargMz, isoTargWidth);
                 }
-                if (!isoTargWidth.HasValue)
+                if (isoTargWidth.HasValue)
                 {
-                    return filterPairs; // empty
-                }
-
-                // For multiple case, find the first possible value, and iterate until
-                // no longer matching or the end of the array is encountered
-                int iFilter = IndexOfFilter(isoTargMz, isoTargWidth.Value);
-                if (iFilter != -1)
-                {
-                    while (iFilter < _filterMzValues.Length && CompareMz(isoTargMz,
-                        _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
-                        filterPairs.Add(_filterMzValues[iFilter++]);
+                    // For multiple case, find the first possible value, and iterate until
+                    // no longer matching or the end of the array is encountered
+                    int iFilter = IndexOfFilter(isoTargMz, isoTargWidth.Value);
+                    if (iFilter != -1)
+                    {
+                        while (iFilter < _filterMzValues.Length && CompareMz(isoTargMz,
+                            _filterMzValues[iFilter].Q1, isoTargWidth.Value) == 0)
+                            filterPairs.Add(_filterMzValues[iFilter++]);
+                    }
                 }
             }
             else
@@ -542,36 +623,36 @@ namespace pwiz.Skyline.Model.Results
                 // if more than one match at this m/z value return a list
 
                 double minMzDelta = double.MaxValue;
-                double mzDeltaEpsilon = Math.Min(_instrument.MzMatchTolerance,.0001); 
+                double mzDeltaEpsilon = Math.Min(_instrument.MzMatchTolerance, .0001);
 
                 // Isolation width for single is based on the instrument m/z match tolerance
                 double isoTargMz = isoWin.IsolationMz.Value;
-                isoWin = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance*2);
+                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2);
 
-                foreach (var filterPair in FindFilterPairs(isoWin, FullScanAcquisitionMethod.DIA, true))
+                foreach (var filterPair in FindFilterPairs(isoWinSingle, FullScanAcquisitionMethod.DIA, true))
                 {
                     double mzDelta = Math.Abs(isoTargMz - filterPair.Q1);
                     if (mzDelta < minMzDelta) // new best match
                     {
                         minMzDelta = mzDelta;
                         // are any existing matches no longer within epsilion of new best match?
-                        for (int n= filterPairs.Count; n-->0;)
+                        for (int n = filterPairs.Count; n-- > 0; )
                         {
                             if ((Math.Abs(isoTargMz - filterPairs[n].Q1) - minMzDelta) > mzDeltaEpsilon)
                             {
                                 filterPairs.RemoveAt(n);  // no longer a match by our new standard
                             }
                         }
-                        filterPairs.Add(filterPair);  
+                        filterPairs.Add(filterPair);
                     }
-                    else if ((mzDelta - minMzDelta) <= mzDeltaEpsilon) 
+                    else if ((mzDelta - minMzDelta) <= mzDeltaEpsilon)
                     {
                         filterPairs.Add(filterPair);  // not the best, but close to it
                     }
                 }
             }
 
-            _filterPairDictionary[isoWin] = filterPairs;
+            _filterPairDictionary[isoWinKey] = filterPairs;
             return filterPairs;
         }
 
@@ -646,6 +727,35 @@ namespace pwiz.Skyline.Model.Results
         {
             return GetIsolationWindows(precursors).SelectMany(isoWin =>
                 FindFilterPairs(isoWin, FullScanAcquisitionMethod.DIA, true));  // SIM scan
+        }
+
+
+        public SpectrumFilterPair[] RemoveFinishedFilterPairs(double retentionTime)
+        {
+            int startIndex = _retentionTimeIndex;
+            if (retentionTime < 0)
+                _retentionTimeIndex = _filterRTValues.Length;
+            else if (!IsTimeOrderedExtraction)
+            {
+                // Wait until the end to release chromatograms, when we can't be sure
+                // that all chromatograms for a peptide have been seen just because a
+                // spectrum with a later time has been seen.
+                _retentionTimeIndex = 0;
+            }
+            else
+            {
+                while (_retentionTimeIndex < _filterRTValues.Length)
+                {
+                    var maxTime = _filterRTValues[_retentionTimeIndex].MaxTime;
+                    if (!maxTime.HasValue || maxTime > retentionTime)
+                        break;
+                    _retentionTimeIndex++;
+                }
+            }
+            var donePairs = new SpectrumFilterPair[_retentionTimeIndex - startIndex];
+            for (int i = 0; i < donePairs.Length; i++)
+                donePairs[i] = _filterRTValues[startIndex++];
+            return donePairs;
         }
 
         private int IndexOfFilter(double precursorMz, double window)

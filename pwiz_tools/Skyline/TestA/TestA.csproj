@@ -132,7 +132,6 @@
   <ItemGroup>
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
-    <Compile Include="ChromCollectorTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />

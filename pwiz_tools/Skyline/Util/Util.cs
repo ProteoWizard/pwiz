@@ -651,12 +651,13 @@ namespace pwiz.Skyline.Util
 
         public static TItem[] ToArrayStd<TItem>(this IList<TItem> list)
         {
-            if (list is TItem[])
-                return (TItem[]) list;
-
-            TItem[] a = new TItem[list.Count];
-            for (int i = 0; i < a.Length; i++)
-                a[i] = list[i];
+            var a = list as TItem[];
+            if (a == null)
+            {
+                a = new TItem[list.Count];
+                for (int i = 0; i < a.Length; i++)
+                    a[i] = list[i];
+            }
             return a;
         }
 
