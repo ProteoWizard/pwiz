@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             _retentionTimePredictor = retentionTimePredictor;
             _firstPass = firstPass;
             // Create a SpectrumFilter without an IRetentionTimeProvider in order to get the list of ChromKeys that we will eventually provide.
-            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null);
+            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null, null);
             _chromKeys = ImmutableList.ValueOf(ListChromKeys(GetChromatogramRequestDocument(spectrumFilter)));
         }
 
@@ -121,9 +121,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
                 foreach (var chromatogram in chromatogramGroup.Chromatogram)
                 {
-                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, null, 0,
-                        chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
-                        chromatogramGroup.MinTime, chromatogramGroup.MaxTime);
+                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, null, 0, chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false);
                 }
             }
         }

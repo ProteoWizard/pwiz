@@ -32,9 +32,9 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     class AsyncChromatogramsGraph : AsyncRenderControl
     {
-        private const int MAX_FRAMES_PER_SECOND = 5;           // target animation speed
-        private const int STEPS_FOR_INTENSITY_ANIMATION = 2;    // half a second for growing peaks and adjusting intensity axis
-        private const int STEPS_FOR_TIME_AXIS_ANIMATION = 5;   // one second for adjusting time axis
+        private const int MAX_FRAMES_PER_SECOND = 10;           // target animation speed
+        private const int STEPS_FOR_INTENSITY_ANIMATION = 5;    // half a second for growing peaks and adjusting intensity axis
+        private const int STEPS_FOR_TIME_AXIS_ANIMATION = 10;   // one second for adjusting time axis
         private const double MINUTES_PER_BIN = 0.5;             // resolution for intensity averaging
         private const int MAX_PEAKS_PER_BIN = 4;                // how many peaks to graph per bin
         private const double DISPLAY_FILTER_PERCENT = 0.005;    // filter peaks less than this percentage of maximum intensity
@@ -350,7 +350,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add new peak to display list.
-            var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0, STEPS_FOR_INTENSITY_ANIMATION) };
+            var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0, STEPS_FOR_INTENSITY_ANIMATION, 1000 / MAX_FRAMES_PER_SECOND) };
             peak.CurveInfo = curveInfo;
             _animatingCurves.Add(curveInfo);
             NewCurve(curveInfo, zIndex);
@@ -536,7 +536,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax, STEPS_FOR_TIME_AXIS_ANIMATION);
+                    _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax, STEPS_FOR_TIME_AXIS_ANIMATION, 1000 / MAX_FRAMES_PER_SECOND);
                 }
 
                 render = true;
@@ -555,7 +555,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax, STEPS_FOR_INTENSITY_ANIMATION);
+                    _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax, STEPS_FOR_INTENSITY_ANIMATION, 1000 / MAX_FRAMES_PER_SECOND);
                 }
 
                 render = true;

@@ -27,7 +27,8 @@ namespace pwiz.Skyline.Model.Results
                                  double ionMobilityExtractionWidth,
                                  ChromExtractor chromExtractor,
                                  int filterIndex,
-                                 SpectrumProductFilter[] productFilters,
+                                 double[] mzs,
+                                 double[] extractionWidths,
                                  float[] intensities,
                                  float[] massErrors)
         {
@@ -37,7 +38,8 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityExtractionWidth = ionMobilityExtractionWidth;
             Extractor = chromExtractor;
             FilterIndex = filterIndex;
-            ProductFilters = productFilters;
+            Mzs = mzs;
+            ExtractionWidths = extractionWidths;
             Intensities = intensities;
             MassErrors = massErrors;
         }
@@ -47,7 +49,8 @@ namespace pwiz.Skyline.Model.Results
         public double IonMobilityValue { get; private set; }
         public double IonMobilityExtractionWidth { get; private set; }
         public int FilterIndex { get; private set; }
-        public SpectrumProductFilter[] ProductFilters { get; private set; }
+        public double[] Mzs { get; private set; }
+        public double[] ExtractionWidths { get; private set; }
         public float[] Intensities { get; private set; }
         public float[] MassErrors { get; private set; }
         public ChromExtractor Extractor { get; private set; }

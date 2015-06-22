@@ -31,11 +31,9 @@ namespace pwiz.Common.SystemUtil
 //            CurrentCulture = CurrentUICulture = new CultureInfo("ja");
         }
 
-        public static void InitThread(string threadName = null)
+        public static void InitThread()
         {
             InitThread(Thread.CurrentThread);
-            if (threadName != null)
-                Thread.CurrentThread.Name = threadName;
         }
 
         public static void InitThread(Thread thread)

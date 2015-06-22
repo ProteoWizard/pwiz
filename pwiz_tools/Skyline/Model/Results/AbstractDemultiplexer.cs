@@ -1023,9 +1023,9 @@ namespace pwiz.Skyline.Model.Results
                 // isolation windows
                 if (!_isoMapper.TryGetDeconvFromMz(precursorMz, out deconvIndex))
                     continue;
-                foreach (var spectrumProductFilter in filterPair.Ms2ProductFilters)
+                for (int i = 0; i < filterPair.ArrayQ3.Length; ++i)
                 {
-                    AddTransition(deconvIndex, spectrumProductFilter.TargetMz, spectrumProductFilter.FilterWidth);                    
+                    AddTransition(deconvIndex, filterPair.ArrayQ3[i], filterPair.ArrayQ3Window[i]);
                 }
             }
             // Populate _allTransitions and precursor->transition map

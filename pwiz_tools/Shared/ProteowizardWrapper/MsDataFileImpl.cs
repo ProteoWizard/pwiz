@@ -59,6 +59,10 @@ namespace pwiz.ProteowizardWrapper
         private ChromatogramList _chromatogramList;
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
+        /// <summary>
+        /// is the file multiplexed DIA?
+        /// </summary>
+        private readonly bool _isMsx;
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
@@ -94,6 +98,7 @@ namespace pwiz.ProteowizardWrapper
                 _msDataFile = new MSData();
                 _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra, acceptZeroLengthSpectra = acceptZeroLengthSpectra};
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
+                _isMsx = CheckMsx();
             }
         }
 
@@ -334,6 +339,99 @@ namespace pwiz.ProteowizardWrapper
         public bool IsShimadzuFile
         {
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Shimadzu_Biotech_nativeID_format)); }
+        }
+
+        public bool IsMsx
+        {
+            get { return _isMsx; }
+        }
+
+        /// <summary>
+        /// Checks the file to determine if it is MSX by analyzing the
+        /// placement of DIA windows for now the criteria is fairly loose:
+        /// MSX has: MS/MS scans w/ > 1 precursor isolation window in
+        /// one of the first 500 scans MS/MS scans after this one all have
+        /// the same number of precursors
+        /// </summary>
+        private bool CheckMsx()
+        {
+            if (!IsThermoFile)
+                return false;
+
+            // is there MS/MS w/ > 1 precursor in the first 500 scans?
+            int i;
+            int maxIndex = Math.Min(500, SpectrumCount);
+            int precursorsPerScan = 0;
+            int furthestPrecursorDistance = 0;
+            double? prevMax = null;
+            for (i = 1; i < maxIndex; ++i )
+            {
+                if (GetMsLevel(i) != 2)
+                    continue;
+                var precursors = GetPrecursors(i);
+                // if MS/MS spectrum only has a single precursor, this data
+                // is assumed to not be multiplexed
+                if (precursors.Length < 2)
+                    return false;
+                // all of the precursors should have m/z values associated with them
+                if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
+                    return false;
+                precursorsPerScan = precursors.Length;
+                // The null condition for PrecursorMz below should never happen, due to the
+                // above if statement, but it keeps ReSharper from complaining
+                furthestPrecursorDistance = (int)precursors.Max(prec => prec.PrecursorMz ?? 0) -
+                                            (int)precursors.Min(prec => prec.PrecursorMz ?? 0);
+                prevMax = precursors.Select(p => p.PrecursorMz).Max();
+                break;
+            }
+            if (precursorsPerScan == 0)
+                return false;
+
+            // there was an MS/MS in the first 500 scans w/ multiple precursors
+            // check that the next 20 MS/MS scans have the same number of precursors
+            // additionally check if two furthest precursors remain the same distance apart
+            // for 10 scans... if they do, this is indicative of a multi-fill technique that is not MSX
+            // because MSX scans have randomly-chosen precursors 
+            int msMsChecked = 1;
+            bool distanceChange = false;
+            // rangeOverlap counts the number of times the lowest m/z precursor of Scan N is
+            // less than the maximum m/z precursor of Scan N-1
+            // if the precursors are selected randomly, this should happen a lot
+            // if the scans are just progressing sequentially through a sorted inclusion list
+            // this will happen rarely
+            int rangeOverlap = 0;
+            for (; i < SpectrumCount && msMsChecked <=10; ++i )
+            {
+                if (GetMsLevel(i) != 2)
+                    continue;
+                var precursors = GetPrecursors(i);
+                if (precursors.Length != precursorsPerScan)
+                    return false;
+                if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
+                    return false;
+                var precMzs = precursors.Select(p => p.PrecursorMz).ToList();
+                var currentPrecursorsMax = precMzs.Max();
+                var currentPrecursorsMin = precMzs.Min();
+                if (currentPrecursorsMin < prevMax)
+                    ++rangeOverlap;
+                prevMax = currentPrecursorsMax;
+                if (!distanceChange)
+                {
+                    // The null condition for PrecursorMz below should never happen, due to the
+                    // above if statement, but it keeps ReSharper from complaining
+                    var farPrecDistance = (int)precursors.Max(prec => prec.PrecursorMz ?? 0) -
+                                          (int) precursors.Min(prec => prec.PrecursorMz ?? 0);
+                    if (farPrecDistance != furthestPrecursorDistance)
+                        distanceChange = true;
+                }
+                ++msMsChecked;
+            }
+            // the file needs to have at least 11 ms/ms spectra to be multiplexed
+            // the distance between isolated precursors should change from scan to scan
+            // the windows isolated in one scan should be interspersed with those isolated
+            // in the previous scan
+            return msMsChecked == 11 && distanceChange && (rangeOverlap/10.0 > 0.79);
+            // return false; // for testing -- import MSX data with out applying de-multiplexing
         }
 
         private ChromatogramList ChromatogramList

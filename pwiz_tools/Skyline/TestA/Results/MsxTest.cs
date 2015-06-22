@@ -138,6 +138,8 @@ namespace pwiz.SkylineTestA.Results
             // Load the file and check MsDataFileImpl
             using (var file = new MsDataFileImpl(dataPath))
             {
+                Assert.IsTrue(file.IsMsx);
+
                 var filter = new SpectrumFilter(doc, null, null);
                 Assert.IsTrue(filter.EnabledMsMs);
                 var demultiplexer = new MsxDemultiplexer(file, filter);

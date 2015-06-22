@@ -200,7 +200,6 @@ namespace pwiz.Skyline.Model.Results
 
         private void FinishWrite(IAsyncResult ar)
         {
-            
             try
             {
                 _fs.Stream.EndWrite(ar);

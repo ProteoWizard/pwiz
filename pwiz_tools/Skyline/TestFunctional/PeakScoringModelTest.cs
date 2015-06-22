@@ -55,8 +55,8 @@ namespace pwiz.SkylineTestFunctional
 
         private readonly string[] SCORES_AND_WEIGHTS =
         {
-            "-16.0207431181424",
-            "True|0.3796|12.9%;False||;False||;True|3.9077|5.4%;True|1.4851|7.3%;True|-0.3235|19.1%;True|0.3322|7.0%;False||;False||;True|4.4983|11.6%;True|10.5468|48.8%;True|0.2756|-20.5%;True|0.3645|7.1%;True|0.1209|3.7%;True|-1.4313|-2.4%;False||;False||;False||;False||;False||;False||;False||;False||;",
+            "-15.8236249860979",
+            "True|0.3767|12.7%;False||;False||;True|3.7516|5.3%;True|1.4242|7.1%;True|-0.3264|19.2%;True|0.3413|7.1%;False||;False||;True|4.6044|11.9%;True|10.3736|48.0%;True|0.2640|-19.6%;True|0.3579|6.9%;True|0.1218|3.8%;True|-1.3395|-2.2%;False||;False||;False||;False||;False||;False||;False||;False||;",
             "True|0.7234|25.4%;False||;False||;False||;True|2.4381|11.6%;True|-0.3471|18.3%;False||;False||;False||;True|5.1112|12.6%;True|9.9052|44.3%;True|0.2960|-20.4%;True|0.3108|6.2%;True|-0.0103|-0.3%;True|1.9136|2.4%;False||;False||;False||;False||;False||;False||;False||;False||;",
             "-16.3243929682775",
             "-9.37936230823946",
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
             "-11.6384433498956",
             "True|1.1144|79.9%;True|1.1144|18.5%;False||;True|3.3433|1.6%;False||;False||;False||;",
             "True|0.8633|31.5%;True|2.0177|3.5%;True|6.2170|27.4%;False||;False||;False||;True|7.5352|31.7%;True|-0.1277|5.8%;False||;False||;",
-            "True|0.5606|19.4%;False||;False||;True|4.2627|5.9%;False||;True|-0.3570|21.2%;True|0.3287|7.0%;False||;False||;True|4.6915|12.6%;True|10.8650|52.1%;True|0.2813|-21.6%;True|0.3696|7.7%;True|-0.0418|-1.3%;True|-1.5876|-2.8%;False||;False||;False||;False||;False||;False||;False||;False||;",
+            "True|0.6802|24.1%;False||;False||;True|4.1924|5.9%;False||;True|-0.3666|22.2%;True|0.3248|6.9%;False||;False||;True|4.8695|13.0%;True|10.3904|52.3%;True|0.2883|-23.1%;True|0.3836|8.4%;True|-0.2256|-7.5%;True|-1.2320|-2.2%;False||;False||;False||;False||;False||;False||;False||;False||;",
             "True|0.5322|;False|-1.0352|;False||;False||;True|1.4744|;True|0.0430|;True|0.0477|;False|-0.2740|;False||;True|2.0096|;True|7.7726|;True|-0.0566|;True|0.4751|;True|0.5000|;True|0.5000|;False||;False||;False||;False||;False||;False||;False||;False||;",
         };
 

@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Find;
@@ -111,46 +110,43 @@ namespace pwiz.Skyline.SettingsUI
         public IPeakScoringModel PeakScoringModel
         {
             get { return _peakScoringModel; }
+            set
+            {
+                // Scoring model is null if we're creating a new model from scratch (default to mProphet).
+                SetScoringModel(value ?? new MProphetPeakScoringModel(UNNAMED));
+            }
         }
 
-        public void SetScoringModel(IPeakScoringModel scoringModel, IProgressMonitor progressMonitor = null)
+        private void SetScoringModel(IPeakScoringModel scoringModel)
         {
-            // Scoring model is null if we're creating a new model from scratch (default to mProphet).
-            if (scoringModel == null)
-                 scoringModel = new MProphetPeakScoringModel(UNNAMED);
+            InitializeGraphPanes();
+            _peakScoringModel = scoringModel;
+            ModelName = _peakScoringModel.Name;
+            if (_originalName == null)
+                _originalName = _peakScoringModel.Name;
 
-            _targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, progressMonitor);
+            _targetDecoyGenerator = new TargetDecoyGenerator(_peakScoringModel);
 
-            // Make sure this part happens on the UI thread
-            Program.MainWindow.Invoke(new Action(() =>
+            var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
+            if (mProphetModel != null)
             {
-                InitializeGraphPanes();
-                _peakScoringModel = scoringModel;
-                ModelName = _peakScoringModel.Name;
-                if (_originalName == null)
-                    _originalName = _peakScoringModel.Name;
+                comboModel.SelectedIndex = _selectedIndex = MPROPHET_MODEL_INDEX;
+                lblColinearWarning.Visible = mProphetModel.ColinearWarning;
+            }
+            else
+            {
+                comboModel.SelectedIndex = _selectedIndex = SKYLINE_LEGACY_MODEL_INDEX;
+            }
 
-                var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
-                if (mProphetModel != null)
-                {
-                    comboModel.SelectedIndex = _selectedIndex = MPROPHET_MODEL_INDEX;
-                    lblColinearWarning.Visible = mProphetModel.ColinearWarning;
-                }
-                else
-                {
-                    comboModel.SelectedIndex = _selectedIndex = SKYLINE_LEGACY_MODEL_INDEX;
-                }
+            InitializeCalculatorGrid();
 
-                InitializeCalculatorGrid();
+            if (_lastTrainedScoringModel == null)
+                _lastTrainedScoringModel = _peakScoringModel;
 
-                if (_lastTrainedScoringModel == null)
-                    _lastTrainedScoringModel = _peakScoringModel;
-
-                decoyCheckBox.Checked = _peakScoringModel.UsesDecoys;
-                secondBestCheckBox.Checked = _peakScoringModel.UsesSecondBest;
-                UpdateCalculatorGraph(0);
-                UpdateModelGraph();
-            }));
+            decoyCheckBox.Checked = _peakScoringModel.UsesDecoys;
+            secondBestCheckBox.Checked = _peakScoringModel.UsesSecondBest;
+            UpdateCalculatorGraph(0);
+            UpdateModelGraph();
         }
 
         /// <summary>
@@ -177,12 +173,7 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 TrainModel(true);
-
-                using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring})
-                {
-                    longWaitDlg.PerformWork(this, 800,
-                        progressMonitor => SetScoringModel(_peakScoringModel, progressMonitor)); // update graphs and grid
-                }
+                SetScoringModel(_peakScoringModel);   // update graphs and grid
             }
             catch (InvalidDataException x)
             {
@@ -250,15 +241,8 @@ namespace pwiz.Skyline.SettingsUI
             var initialParams = new LinearModelParams(initialWeights);
 
             // Train the model.
-            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModel_Training})
-            {
-                longWaitDlg.PerformWork(this, 800, progressMonitor => 
-                {
-                    _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams,
-                        secondBestCheckBox.Checked, true, progressMonitor);                    
-                });
-            }
-            
+            _peakScoringModel = _peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams, secondBestCheckBox.Checked);
+
             // Copy weights to grid.
             for (int i = 0; i < _gridViewDriver.Items.Count; i++)
             {
@@ -1172,12 +1156,12 @@ namespace pwiz.Skyline.SettingsUI
             private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
 
             public Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
-            public TargetDecoyGenerator(IPeakScoringModel scoringModel, IProgressMonitor progressMonitor = null)
+            public TargetDecoyGenerator(IPeakScoringModel scoringModel)
             {
                 // Determine which calculators will be used to score peaks in this document.
-                var document = Program.ActiveDocument;
+                var document = Program.ActiveDocumentUI;
                 FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
-                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators, progressMonitor)
+                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators)
                     .Where(feature => feature.PeakGroupFeatures.Any())
                     .ToArray();
                 PopulateDictionary();

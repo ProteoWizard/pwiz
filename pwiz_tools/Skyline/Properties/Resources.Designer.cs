@@ -7963,24 +7963,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Training.
-        /// </summary>
-        public static string EditPeakScoringModelDlg_TrainModel_Training {
-            get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModel_Training", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Scoring.
-        /// </summary>
-        public static string EditPeakScoringModelDlg_TrainModelClick_Scoring {
-            get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModelClick_Scoring", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to unknown.
         /// </summary>
         public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown {
@@ -13605,15 +13587,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_on" +
                         "e_peak_feature_calculator_with_a_weight_value", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Training peak scoring model.
-        /// </summary>
-        public static string MProphetPeakScoringModel_Train_Training_peak_scoring_model {
-            get {
-                return ResourceManager.GetString("MProphetPeakScoringModel_Train_Training_peak_scoring_model", resourceCulture);
             }
         }
         

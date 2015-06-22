@@ -189,15 +189,16 @@ namespace pwiz.Skyline.Model.Results
                 var listScanIds = new int[Helpers.CountEnumValues<ChromSource>() - 1][];
                 foreach (var chromData in _listChromData)
                 {
-                    int source = (int) chromData.PrimaryKey.Source;
-                    if (source == (int) ChromSource.unknown)
+                    var source = chromData.PrimaryKey.Source;
+                    if (source == ChromSource.unknown)
                         continue;
-                    if (listScanIds[source] != null)
+                    if (listScanIds[(int) source] != null)
                     {
-//                        Assume.IsTrue(!ArrayUtil.EqualsDeep(chromData.ScanIds, listScanIds[source]));
+                        if (!ArrayUtil.EqualsDeep(chromData.ScanIds, listScanIds[(int) source]))
+                            Assume.Fail();
                         continue;
                     }
-                    listScanIds[source] = chromData.ScanIds;
+                    listScanIds[(int) source] = chromData.ScanIds;
                 }
                 return listScanIds;
             }
@@ -277,11 +278,6 @@ namespace pwiz.Skyline.Model.Results
                 }
                 return min;
             }
-        }
-
-        public ChromKey FirstKey
-        {
-            get { return _listChromData.Count > 0 ? _listChromData[0].Key : ChromKey.EMPTY; }
         }
 
         /// <summary>
@@ -427,7 +423,6 @@ namespace pwiz.Skyline.Model.Results
 
             // Inspect 20 most intense peak regions
             var listRank = new List<double>();
-            Assume.IsTrue(_listPeakSets.Count == 0);
             for (int i = 0; i < 20 || retentionTimes.Length > 0; i++)
             {
                 if (allPeaks.Count == 0)
@@ -462,7 +457,6 @@ namespace pwiz.Skyline.Model.Results
             // Keep at least 3 peaks
             listRank.RemoveRange(0, Math.Min(MINIMUM_PEAKS, listRank.Count));
             listAreas.RemoveRange(0, Math.Min(MINIMUM_PEAKS, listAreas.Count));
-            Assume.IsTrue(listRank.Count == listAreas.Count);
             int iRemove = 0;
             // Keep all peaks for summary chromatograms
             if (PrecursorMz != 0)

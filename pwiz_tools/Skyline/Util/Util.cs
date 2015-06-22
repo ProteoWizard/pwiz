@@ -943,67 +943,6 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class BlockedList<TItem>
-    {
-        protected readonly List<TItem[]> _blocks;
-        protected TItem[] _lastBlock;
-        protected int _index;
-
-        public BlockedList(int blockSize = 1024)
-        {
-            _lastBlock = new TItem[blockSize];
-            _blocks = new List<TItem[]>(50) {_lastBlock};
-        }
-
-        public void Add(TItem item)
-        {
-            if (_index == _lastBlock.Length)
-            {
-                _index = 0;
-                _lastBlock = new TItem[_lastBlock.Length];
-                _blocks.Add(_lastBlock);
-            }
-            _lastBlock[_index++] = item;
-        }
-
-        public int Length
-        {
-            get { return (_blocks.Count - 1) * _blocks[0].Length + _index; }
-        }
-
-        public TItem[] ToArray()
-        {
-            int blockSize = _blocks[0].Length;
-            var array = new TItem[(_blocks.Count - 1)*blockSize + _index];
-            for (int i = 0; i < _blocks.Count - 1; i++)
-                Array.Copy(_blocks[i], 0, array, i*blockSize, blockSize);
-            Array.Copy(_lastBlock, 0, array, array.Length-_index, _index);
-            return array;
-        }
-    }
-
-    public class SortedBlockedList<TItem> : BlockedList<TItem>
-    {
-        public SortedBlockedList(int blockSize = 1024)
-            : base(blockSize)
-        {
-        }
-
-        public new void Add(TItem item)
-        {
-            if (_index > 0)
-            {
-                if (Comparer<TItem>.Default.Compare(_lastBlock[_index - 1], item) > 0)
-                    throw new InvalidDataException("Expected sorted data"); // Not L10N
-            }
-            else if (_blocks.Count > 1 && Comparer<TItem>.Default.Compare(_lastBlock[_lastBlock.Length - 1], item) > 0)
-            {
-                throw new InvalidDataException("Expected sorted data"); // Not L10N
-            }
-            base.Add(item);
-        }
-    }
-
     /// <summary>
     /// Read a potentially large array into a list of arrays in order to avoid very large memory allocations.
     /// We are trying to avoid not only memory fragmentation issues, but also the size limit of 2 gigabytes.
