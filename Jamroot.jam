@@ -1031,7 +1031,18 @@ rule msparser-requirements ( properties * )
 rule msparser-usage-requirements ( properties * )
 {
     local msparser_path = [ msparser-path $(properties) ] ;
-    local result = <include>$(msparser_path)/include ;
+    local result = <include>$(msparser_path)/include <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd ;
+    if <toolset>msvc in $(properties)
+    {
+        if <runtime-debugging>on in $(properties)
+        {
+            result += <name>msparserD <assembly-dependency>$(msparser_path)/lib/msparserD.dll ;
+        }
+        else
+        {
+            result += <assembly-dependency>$(msparser_path)/lib/msparser.dll ;
+        }
+    }
     return $(result) ;
 }
 

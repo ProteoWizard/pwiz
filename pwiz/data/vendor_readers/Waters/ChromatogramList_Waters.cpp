@@ -214,6 +214,9 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         vector<float> precursorMZs, productMZs, intensities;
         rawdata_->ScanReader.readSpectrum(function, 1, precursorMZs, intensities, productMZs);
 
+        if (spectrumType == MS_SRM_spectrum && productMZs.size() != precursorMZs.size())
+            throw runtime_error("[ChromatogramList_Waters::createIndex] MRM function " + lexical_cast<string>(function+1) + " has mismatch between product m/z count (" + lexical_cast<string>(productMZs.size()) + ") and precursor m/z count (" + lexical_cast<string>(precursorMZs.size()) + ")");
+
         for (size_t i=0; i < precursorMZs.size(); ++i)
         {
             index_.push_back(IndexEntry());

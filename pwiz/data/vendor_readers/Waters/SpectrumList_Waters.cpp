@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "Reader_Waters_Detail.hpp"
 #include <boost/spirit/include/karma.hpp>
+#include "boost/foreach_field.hpp"
 
 
 namespace pwiz {
@@ -227,6 +228,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
             if (detailLevel == DetailLevel_FullMetadata)
             {
+                result->defaultArrayLength = nonZeroDataPoints;
                 if (nonZeroDataPoints > 0)
                 {
                     result->defaultArrayLength = 2; // flanking zero samples
@@ -245,6 +247,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
             // get actual data arrays
             vector<double> masses, intensities;
 
+            result->defaultArrayLength = nonZeroDataPoints;
             if (nonZeroDataPoints > 0)
             {
                 masses.resize(2 + (nonZeroDataPoints * 3)); // worst case size
@@ -285,7 +288,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
 	    vector<double> mzArray(masses.begin(), masses.end());
         vector<double> intensityArray(intensities.begin(), intensities.end());
-	    result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors// Donate mass and intensity buffers to result vectors
+	    result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
     }
 
     return result;
@@ -410,6 +413,13 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
 
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
+    using namespace boost::spirit::karma;
+
+    map<double, std::pair<int, int> > functionAndScanByRetentionTime;
+
+    int numScansInBlock = 0;   // number of scans per compressed block
+    int numBlocks = 0;         // number of blocks
+
     BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
     {
         int msLevel;
@@ -428,14 +438,9 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             spectrumType == MS_constant_neutral_gain_spectrum)
             continue;
 
-        using namespace boost::spirit::karma;
-
         if (!config_.combineIonMobilitySpectra && rawdata_->IonMobilityByFunctionIndex()[function])
         {
             const CompressedDataCluster& cdc = rawdata_->GetCompressedDataClusterForBlock(function, 0);
-
-            int numScansInBlock;   // number of scans per compressed block
-            int numBlocks;         // number of blocks
 
 	        cdc.getNumberOfBlocks(numBlocks);
             cdc.getScansInBlock(numScansInBlock);
@@ -443,44 +448,56 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             scanTimeToFunctionAndBlockMap_.reserve(numBlocks);
 
             for (int i=0; i < numBlocks; ++i)
-            {
                 scanTimeToFunctionAndBlockMap_[rawdata_->GetScanStats(function, i).rt * 60].push_back(make_pair(function, i));
-
-                for (int j=0; j < numScansInBlock; ++j)
-                {
-                    index_.push_back(IndexEntry());
-                    IndexEntry& ie = index_.back();
-                    ie.function = function;
-                    ie.process = 0;
-                    ie.block = i;
-                    ie.scan = j;
-                    ie.index = index_.size()-1;
-
-                    std::back_insert_iterator<std::string> sink(ie.id);
-                    generate(sink,
-                                "function=" << int_ << " process=" << int_ << " scan=" << int_,
-                                (ie.function+1), ie.process, ((numScansInBlock*ie.block)+ie.scan+1));
-                    idToIndexMap_[ie.id] = ie.index;
-                }
-            }
         }
         else
         {
             int scanCount = rawdata_->Info.GetScansInFunction(function);
+            const vector<MSScanStats>& scanStats = rawdata_->GetAllScanStatsForFunction(function);
+            if (scanStats.size() != scanCount)
+                throw runtime_error("[SpectrumList_Waters::createIndex] scanStats.size() not equal to scanCount");
+
             for (int i=0; i < scanCount; ++i)
+                functionAndScanByRetentionTime[scanStats[i].rt] = make_pair(function, i);
+        }
+    }
+
+    typedef pair<int, int> FunctionScanPair;
+    BOOST_FOREACH_FIELD((double rt)(const FunctionScanPair& functionScanPair), functionAndScanByRetentionTime)
+    {
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.function = functionScanPair.first;
+        ie.process = 0;
+        ie.block = -1; // block < 0 is not ion mobility
+        ie.scan = functionScanPair.second;
+        ie.index = index_.size() - 1;
+
+        std::back_insert_iterator<std::string> sink(ie.id);
+        generate(sink,
+                 "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                 (ie.function + 1), ie.process, (ie.scan + 1));
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
+    BOOST_FOREACH_FIELD((double rt)(const vector<FunctionScanPair>& functionBlockPairs), scanTimeToFunctionAndBlockMap_)
+    {
+        BOOST_FOREACH(const FunctionScanPair& functionBlockPair, functionBlockPairs)
+        {
+            for (int j = 0; j < numScansInBlock; ++j)
             {
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
-                ie.function = function;
+                ie.function = functionBlockPair.first;
                 ie.process = 0;
-                ie.block = -1; // block < 0 is not ion mobility
-                ie.scan = i;
-                ie.index = index_.size()-1;
+                ie.block = functionBlockPair.second;
+                ie.scan = j;
+                ie.index = index_.size() - 1;
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink,
-                            "function=" << int_ << " process=" << int_ << " scan=" << int_,
-                            (ie.function+1), ie.process, (ie.scan+1));
+                         "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                         (ie.function + 1), ie.process, ((numScansInBlock*ie.block) + ie.scan + 1));
                 idToIndexMap_[ie.id] = ie.index;
             }
         }

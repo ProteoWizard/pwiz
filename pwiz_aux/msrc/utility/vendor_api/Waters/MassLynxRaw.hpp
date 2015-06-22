@@ -78,9 +78,7 @@ struct PWIZ_API_DECL RawData
           ScanReader(Reader),
           ChromatogramReader(Reader),
           rawpath_(rawpath),
-          scanStatsInitialized(init_once_flag_proxy),
-          cdcFunctionIndex(-1),
-          cdcBlockIndex(-1)
+          scanStatsInitialized(init_once_flag_proxy)
     {
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
 		// For functions over 100, the names become _FUNC0100.DAT
@@ -100,8 +98,12 @@ struct PWIZ_API_DECL RawData
         ionMobilityByFunctionIndex.resize(functionIndexList.size(), false);
         for (size_t i=0; i < functionIndexList.size(); ++i)
         {
-            CDC.Initialise(rawpath.c_str(), functionIndexList[i]+1); // 1-based
-            ionMobilityByFunctionIndex[i] = CDC.isInitialised();
+            shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[i];
+            cdc.reset(new CachedCompressedDataCluster());
+            cdc->Initialise(rawpath.c_str(), functionIndexList[i]+1); // 1-based
+            ionMobilityByFunctionIndex[i] = cdc->isInitialised();
+            if (!cdc->isInitialised())
+                cdc.reset();
         }
 
         initHeaderProps(rawpath);
@@ -109,17 +111,18 @@ struct PWIZ_API_DECL RawData
 
     const CompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
     {
-        if (functionIndex == cdcFunctionIndex && blockIndex == cdcBlockIndex)
-            return CDC;
+        shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[functionIndex];
 
-        if (functionIndex != cdcFunctionIndex)
-            CDC.Initialise(rawpath_.c_str(), functionIndex+1); // 1-based
+        if (!cdc)
+            throw std::runtime_error("[MassLynxRaw::GetCompressedDataClusterForBlock] function " + lexical_cast<string>(functionIndex + 1) + " does not have ion mobility data");
 
-        CDC.loadDataBlock(blockIndex);
+        if (cdc->currentBlock != blockIndex)
+        {
+            cdc->loadDataBlock(blockIndex);
+            cdc->currentBlock = blockIndex;
+        }
 
-        cdcFunctionIndex = functionIndex;
-        cdcBlockIndex = blockIndex;
-        return CDC;
+        return *cdc;
     }
 
     double GetDriftTime(int functionIndex, int blockIndex, int scanIndex) const
@@ -142,6 +145,12 @@ struct PWIZ_API_DECL RawData
 		return scanStatsByFunction[functionIndex][scanIndex];
 	}
 
+    const vector<MSScanStats>& GetAllScanStatsForFunction(int functionIndex) const
+    {
+        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        return scanStatsByFunction[functionIndex];
+    }
+
 	const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
 	{
 		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
@@ -162,13 +171,12 @@ struct PWIZ_API_DECL RawData
     vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
 
+    struct CachedCompressedDataCluster : public CompressedDataCluster { int currentBlock; };
+    mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
+
 	mutable once_flag_proxy scanStatsInitialized;
     mutable vector<vector<MSScanStats>> scanStatsByFunction;
     mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
-
-    mutable int cdcFunctionIndex;
-    mutable int cdcBlockIndex;
-    mutable CompressedDataCluster CDC;
 
     void initHeaderProps(const string& rawpath)
     {
