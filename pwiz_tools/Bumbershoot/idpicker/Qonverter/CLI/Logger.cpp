@@ -1,5 +1,5 @@
 //
-// $Id: SVMQonverter.cpp 380 2012-01-26 21:51:47Z chambm $
+// $Id$
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
