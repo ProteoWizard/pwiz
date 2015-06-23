@@ -416,7 +416,7 @@ generate-rc Resources/Resources.rc :
                              *.R
                              #*.html
                              #*.vdproj
-            : freicore* build-*-* _Resharper.* Version.cpp idp*.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
+            : freicore* build-*-* _Resharper.* Version.cpp idp*.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs bin obj waffles* ]
         App.config
     : warn-on-missing : : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
     : IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
@@ -430,7 +430,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties/AssemblyInfo.cs :
                              *.R
                              #*.html
                              #*.vdproj
-            : freicore* build-*-* _Resharper.* Version.cpp idp*.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
+            : freicore* build-*-* _Resharper.* Version.cpp idp*.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs bin obj waffles* ]
         App.config
     : : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
@@ -461,6 +461,7 @@ actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 path-constant PNG_SOURCE : $(png_src) ;
+
 local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
 if ! $(.has-boost)
 {

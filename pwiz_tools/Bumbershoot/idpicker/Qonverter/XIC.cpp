@@ -26,6 +26,7 @@
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
 #include "Interpolator.hpp"
+#include "Logger.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
@@ -892,8 +893,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
                 if (scanInfo.precursorIntensity == 0)
                 {
-                    //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
-                    //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "no precursor intensity for MS2 " << spectrum->id;
                     ++missingPrecursorIntensities;
 
                     // fall back on MS2 TIC
@@ -952,8 +952,8 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 //        if (g_numWorkers == 1)
 //            cout << endl;
 
-        /*if (missingPrecursorIntensities)
-            cerr << "Warning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;*/
+        if (missingPrecursorIntensities)
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC is being used as a substitute." << endl;
 
         if (MS1Count == 0)
             throw runtime_error("no MS1 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
@@ -1039,7 +1039,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             cout<<"number of regdefined precursors are "<<RegDefinedPrecursors.size()<<endl;
         }
         // Going through all spectra once more to get intensities/retention times to build chromatograms
-        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rReading " + lexical_cast<string>(spectrumList.size()) + " peaks... ");
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Reading " + lexical_cast<string>(spectrumList.size()) + " peaks... ");
         map<double, double > peakMap;
         
         for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex )
@@ -1137,17 +1137,17 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         size_t i = 0;
         size_t windowBestPeaks = 0;
         size_t regBestPeaks = 0;
-        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding distinct match peaks...");
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Finding distinct match peaks...");
         BOOST_FOREACH(const XICWindow& window, pepWindow)
         {
             ++i;
             if (window.MS1RT.empty())
             {
-                /*cerr << "Warning: distinct match window for " << window.peptide
-                     << " (id: " << window.PSMs[0].peptide
-                     << "; m/z: " << window.preMZ
-                     << "; time: " << window.preRT
-                     << ") has no chromatogram data points!" << endl;*/
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "Warning: distinct match window for " << window.peptideId
+                                                                              << " (id: " << window.PSMs[0].peptide
+                                                                              << "; m/z: " << window.preMZ
+                                                                              << "; time: " << window.preRT
+                                                                              << ") has no chromatogram data points";
                 continue;
             }
 
@@ -1253,31 +1253,32 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             if(window.bestPeak)
                 windowBestPeaks++;
 
-            /*if (!window.bestPeak)
+            if (!window.bestPeak)
             {
-                cerr << "Warning: unable to select the best Crawdad peak for distinct match! " << window.peptide
-                     << " (id: " << window.PSMs[0].peptide
-                     << "; m/z: " << window.preMZ
-                     << "; time: " << window.preRT
-                     << ")" << endl;
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "Warning: unable to select the best Crawdad peak for distinct match! " << window.peptideId
+                                                                                                                                                        << " (id: " << window.PSMs[0].peptide
+                                                                                                                                                        << "; m/z: " << window.preMZ
+                                                                                                                                                        << "; time: " << window.preRT
+                                                                                                                                                        << ")" << endl;
             }
-            else
-                cout << "\n" << firstMS2.nativeID << "\t" << window.peptide << "\t" << window.bestPeak->intensity << "\t" << window.bestPeak->peakTime << "\t" << firstMS2.precursorIntensity << "\t" << (window.bestPeak->intensity / firstMS2.precursorIntensity);*/
+            //else
+            //    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << firstMS2.nativeID << "\t" << window.peptide << "\t" << window.bestPeak->intensity << "\t" << window.bestPeak->peakTime << "\t" << firstMS2.precursorIntensity << "\t" << (window.bestPeak->intensity / firstMS2.precursorIntensity);
         }
         i = 0;
         //cycle through all regression defined precursors, passing each one to crawdad
-        ITERATION_UPDATE(ilr, currentFile, totalFiles, "\rFinding regression defined peptide peaks...");
-            BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+        ITERATION_UPDATE(ilr, currentFile, totalFiles, "Finding regression defined peptide peaks...");
+
+        BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
         {
 
             ++i;
             LocalChromatogram& lc = info.chromatogram;
             if (lc.MS1RT.empty())
             {
-                /*cerr << "Warning: regression defined precursor m/z " << info.exactMZ
-                     << " (m/z: " << info.mzWindow
-                     << "; time: " << info.scanTimeWindow
-                     << ") has no chromatogram data points!" << endl;*/
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "Warning: regression defined precursor m/z " << info.exactMZ
+                                                                              << " (m/z: " << info.mzWindow
+                                                                              << "; time: " << info.scanTimeWindow
+                                                                              << ") has no chromatogram data points";
                 continue;
             }
 

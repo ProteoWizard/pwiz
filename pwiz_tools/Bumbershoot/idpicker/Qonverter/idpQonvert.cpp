@@ -30,10 +30,18 @@
 #include "boost/foreach_field.hpp"
 #include "boost/thread/mutex.hpp"
 #include "boost/range/algorithm/remove_if.hpp"
+#include "boost/make_shared.hpp"
+#include "boost/core/null_deleter.hpp"
+#include "boost/range/algorithm_ext/insert.hpp"
 
 #include "Parser.hpp"
 #include "Embedder.hpp"
 #include "idpQonvert.hpp"
+#include "Logger.hpp"
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include "sqlite3pp.h"
 #include <iomanip>
 #include "CoreVersion.hpp"
@@ -46,7 +54,24 @@ namespace sqlite = sqlite3pp;
 using std::setw;
 using std::setfill;
 using boost::format;
+namespace expr = boost::log::expressions;
+namespace sinks = boost::log::sinks;
 
+BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", MessageSeverity::domain)
+
+struct severity_tag;
+// The operator is used when putting the severity level to log
+boost::log::formatting_ostream& operator<<
+(
+    boost::log::formatting_ostream& strm,
+    const boost::log::to_log_manip< MessageSeverity::domain, severity_tag>& manip
+)
+{
+    if (manip.get() >= MessageSeverity::Warning)
+        strm << '\n' << MessageSeverity::get_by_value(manip.get()).get().str() << ": ";
+    return strm;
+}
 
 BEGIN_IDPICKER_NAMESPACE
 
@@ -69,6 +94,7 @@ int InitProcess( argList_t& args )
                     "-dump                         : show runtime configuration settings before starting the run\n";
 
 	bool ignoreConfigErrors = false;
+    string logFilepath;
 	g_numWorkers = GetNumProcessors();
 
 	// First set the working directory, if provided
@@ -88,6 +114,11 @@ int InitProcess( argList_t& args )
 		{
 			ignoreConfigErrors = true;
 		}
+        else if (args[i] == "-LogFilepath")
+        {
+            logFilepath = args[i+1];
+            continue;
+        }
         else
 			continue;
 
@@ -97,6 +128,23 @@ int InitProcess( argList_t& args )
 
 	g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
 	g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+    g_rtConfig->LogFilepath = logFilepath;
+
+    boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
+
+    // Initialize sinks
+    typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+    boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
+
+    // errors always go to console
+    sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cerr, boost::null_deleter()));
+    sink->set_formatter(fmt);
+    sink->set_filter(severity >= MessageSeverity::Error);
+    boost::log::core::get()->add_sink(sink);
+    sink->locked_backend()->auto_flush(true);
+
+    // Add attributes
+    boost::log::add_common_attributes();
 
     vector<string> extraFilepaths;
 
@@ -106,7 +154,7 @@ int InitProcess( argList_t& args )
 		{
 			if( g_rtConfig->initializeFromFile( args[i+1] ) )
 			{
-				cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+				BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
 				return QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE;
 			}
 			args.erase( args.begin() + i );
@@ -117,7 +165,7 @@ int InitProcess( argList_t& args )
             // read filepaths from file
             if( !bfs::exists(args[i+1]) )
             {
-                cerr << "Could not find list file at \"" << args[i+1] << "\"." << endl;
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "could not find list file at \"" << args[i + 1] << "\"." << endl;
                 return QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE;
             }
 
@@ -136,8 +184,8 @@ int InitProcess( argList_t& args )
 	}
 
 	if( g_rtConfig->inputFilepaths.empty() && args.size() < 2 )
-	{
-		cerr << "Not enough arguments.\n\n" << usage << endl;
+    {
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "not enough arguments.\n\n" << usage << endl;
 		return QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS;
 	}
 
@@ -145,7 +193,7 @@ int InitProcess( argList_t& args )
 	{
 		if( g_rtConfig->initializeFromFile() )
 		{
-			cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "could not find the default configuration file (hard-coded defaults in use)." << endl;
 		}
 	}
 
@@ -169,7 +217,30 @@ int InitProcess( argList_t& args )
 		}
 	}
 
-	g_rtConfig->setVariables( vars );
+    try
+    {
+        g_rtConfig->setVariables(vars);
+    }
+    catch (runtime_error& e)
+    {
+        string error = bal::replace_all_copy(string(e.what()), "Error! ", "");
+        throw runtime_error(error);
+    }
+
+    sink = boost::make_shared<text_sink>();
+    if (g_rtConfig->LogFilepath.empty())
+    {
+        sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&cout, boost::null_deleter())); // if no logfile is set, send messages to console
+        sink->set_filter(severity < MessageSeverity::Error); // but don't send errors to the console twice
+    }
+    else
+    {
+        sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(g_rtConfig->LogFilepath));
+        sink->set_filter(severity >= g_rtConfig->LogLevel.index()); // NOTE: use index() to avoid delayed evaluation of expression
+    }
+    fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
+    sink->set_formatter(fmt);
+    boost::log::core::get()->add_sink(sink);
 
 	for( size_t i=1; i < args.size(); ++i )
 	{
@@ -187,11 +258,11 @@ int InitProcess( argList_t& args )
 		{
             if (!ignoreConfigErrors)
             {
-                cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "unrecognized parameter \"" << args[i] << "\"" << endl;
                 return 1;
             }
 
-			cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
 			args.erase( args.begin() + i );
 			--i;
 		}
@@ -199,7 +270,7 @@ int InitProcess( argList_t& args )
 
     if (args.size() == 1)
     {
-        if( g_pid == 0 ) cerr << "No data sources specified.\n\n" << usage << endl;
+        if (g_pid == 0) BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "no data sources specified.\n\n" << usage << endl;
         return 1;
     }
 
@@ -218,7 +289,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
         if (distinctAnalyses.size() > 1)
         {
             ostringstream error;
-            error << "\nWarning: multiple distinct analyses detected in the input files. IdpQonvert settings apply to every analysis." << endl;
+            error << "multiple distinct analyses detected in the input files. IdpQonvert settings apply to every analysis." << endl;
 
             for (size_t i=0; i < distinctAnalyses.size(); ++i)
             {
@@ -234,7 +305,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                 else
                     error << "\tInputFilepath: " << analysis.filepaths[0] << endl;
             }
-            cerr << error.str() << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << error.str() << endl;
         }
 
         // verify the protein database from the imported files matches ProteinDatabase
@@ -250,8 +321,8 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             {
                 if (!bal::iequals(proteinDatabaseFilepath.replace_extension("").filename().string(),
                                   bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename().string()))
-                   cerr << "\nWarning: ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
-                        << " does not match " << proteinDatabaseFilepath.filename();
+                   BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
+                                                                             << " does not match " << proteinDatabaseFilepath.filename();
                 analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             }
             else
@@ -301,15 +372,23 @@ struct UserFeedbackIterationListener : public IterationListener
     boost::mutex mutex;
     map<string, PersistentUpdateMessage> lastUpdateByFilepath;
     string currentMessage; // when the message changes, make a new line
+    size_t longestLine;
 
+    UserFeedbackIterationListener() : longestLine(0)
+    {
+    }
+
+    // if logging to console, use carriage returns to update the current line
+    // if logging to file, at verbose level create a new line for every update, at brief level only report the finished count (i.e. iterationIndex+1 == iterationCount)
     virtual Status update(const UpdateMessage& updateMessage)
     {
+        // lack of '*' means the message only has 1 part, rather than <filepath>*<message>
         if (!bal::contains(updateMessage.message, "*"))
         {
             // when the message changes, make a new line
             if (currentMessage.empty() || currentMessage != updateMessage.message)
             {
-                if (!currentMessage.empty())
+                if (!currentMessage.empty() && g_rtConfig->LogFilepath.empty() && !IsStdOutRedirected())
                     cout << endl;
                 currentMessage = updateMessage.message;
             }
@@ -317,14 +396,33 @@ struct UserFeedbackIterationListener : public IterationListener
             int index = updateMessage.iterationIndex;
             int count = updateMessage.iterationCount;
 
-            cout << "\r";
-            if (index == 0 && count == 0)
-                cout << updateMessage.message;
-            else if (count > 0)
-                cout << updateMessage.message << ": " << (index+1) << "/" << count;
-            else
-                cout << updateMessage.message << ": " << (index+1);
-            cout << flush;
+            if (g_rtConfig->LogFilepath.empty() && !IsStdOutRedirected())
+            {
+                cout << "\r";
+                if (index == 0 && count <= 1)
+                    cout << updateMessage.message;
+                else if (count > 1)
+                    cout << updateMessage.message << ": " << (index+1) << "/" << count;
+                else
+                    cout << updateMessage.message << ": " << (index+1);
+                cout << flush;
+            }
+            else if (g_rtConfig->LogLevel == MessageSeverity::VerboseInfo)
+            {
+                if (index == 0 && count <= 1)
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message;
+                else if (count > 1)
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message << ": " << (index + 1) << "/" << count;
+                else
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << updateMessage.message << ": " << (index + 1);
+            }
+            else if (g_rtConfig->LogLevel == MessageSeverity::BriefInfo)
+            {
+                if (index == 0 && count <= 1)
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << updateMessage.message;
+                else if (index+1 == count)
+                    BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << updateMessage.message << ": " << (index + 1) << "/" << count;
+            }
 
             return Status_Ok;
         }
@@ -335,7 +433,7 @@ struct UserFeedbackIterationListener : public IterationListener
         // parts[0] must be filepath, parts[1] must be original update message
         if (parts.size() != 2)
         {
-            cerr << "Invalid update message: " << updateMessage.message << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "invalid update message: " << updateMessage.message << endl;
             return Status_Cancel;
         }
 
@@ -346,7 +444,7 @@ struct UserFeedbackIterationListener : public IterationListener
         // when the message changes, clear lastUpdateByFilepath and make a new line
         if (currentMessage.empty() || currentMessage != originalMessage)
         {
-            if (!currentMessage.empty())
+            if (!currentMessage.empty() && g_rtConfig->LogFilepath.empty() && !IsStdOutRedirected())
                 cout << endl;
             lastUpdateByFilepath.clear();
             currentMessage = originalMessage;
@@ -364,12 +462,15 @@ struct UserFeedbackIterationListener : public IterationListener
             int count = updateMessage.iterationCount;
             const string& message = originalMessage;
 
-            if (index == 0 && count == 0)
+            if (message.empty())
+                continue;
+
+            if (index == 0 && count <= 1)
             {
                 updateStrings.push_back((boost::format("%1% (%2%)")
                                          % source % message).str());
             }
-            else if (count > 0)
+            else if ((count > 1 && g_rtConfig->LogLevel == MessageSeverity::VerboseInfo) || (index + 1 == count && g_rtConfig->LogLevel == MessageSeverity::BriefInfo))
             {
                 updateStrings.push_back((boost::format("%1% (%2%: %3%/%4%)")
                                          % source % message % (index+1) % count).str());
@@ -379,7 +480,29 @@ struct UserFeedbackIterationListener : public IterationListener
                                          % source % message % (index+1)).str());
         }
 
-        cout << "\r" << bal::join(updateStrings, "; ") << flush;
+        if (updateStrings.empty())
+            return Status_Ok;
+
+        if (g_rtConfig->LogFilepath.empty() && !IsStdOutRedirected())
+        {
+            string fullLine = bal::join(updateStrings, "; ");
+            cout << "\r" << fullLine;
+
+            if (fullLine.length() > longestLine)
+                longestLine = fullLine.length();
+            else
+                for(size_t i=longestLine - fullLine.length(); i > 0; --i)
+                    cout << ' ';
+            cout << flush;
+        }
+        else if (g_rtConfig->LogLevel == MessageSeverity::VerboseInfo)
+        {
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << bal::join(updateStrings, "; ");
+        }
+        else if (g_rtConfig->LogLevel == MessageSeverity::BriefInfo)
+        {
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << bal::join(updateStrings, "; ");
+        }
 
         return Status_Ok;
     }
@@ -389,8 +512,13 @@ struct UserFeedbackProgressMonitor : public IterationListener
 {
     UserFeedbackProgressMonitor(const string& idpDbFilepath) : source(Parser::sourceNameFromFilename(bfs::path(idpDbFilepath).filename().string()))
     {
+        pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
+        tabulationWidth = (boost::format("%%|%1%t|")
+                           % consoleBounds.first).str();
     }
 
+    // if logging to console, use carriage returns to update the current line
+    // if logging to file, at verbose level create a new line for every update, at brief level only report the finished count (i.e. iterationIndex+1 == iterationCount)
     virtual Status update(const UpdateMessage& updateMessage)
     {
         // create a message for each file like "source (message: index/count)"
@@ -399,47 +527,95 @@ struct UserFeedbackProgressMonitor : public IterationListener
         string message = updateMessage.message;
         bool isError = bal::contains(message, "error:");
 
+        if (message.empty())
+            return Status_Ok;
+
         if (isError)
         {
             bal::replace_all(message, "error: ", "");
-            cout << endl;
+
+            if (index == 0 && count <= 1)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << (boost::format("%1% (%2%)")
+                                                                            % source % message).str();
+            else if (count > 1)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << (boost::format("%1% (%2%: %3%/%4%)")
+                                                                            % source % message % (index + 1) % count).str();
+            else
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << (boost::format("%1% (%2%: %3%)")
+                                                                            % source % message % (index + 1)).str();
+
+            if (g_rtConfig->LogFilepath.empty() && !IsStdOutRedirected())
+                cout << endl;
         }
 
-        if (index == 0 && count == 0)
-            cout << (boost::format("%1% (%2%)%|80t|")
-                     % source % message).str();
-        else if (count > 0)
-            cout << (boost::format("%1% (%3%/%4%: %2%)%|80t|")
-                     % source % message % (index+1) % count).str();
-        else
-            cout << (boost::format("%1% (%3%: %2%)%|80t|")
-                     % source % message % (index+1)).str();
+        if (g_rtConfig->LogFilepath.empty() && !IsStdOutRedirected())
+        {
+            if (index == 0 && count <= 1 && !message.empty())
+                cout << (boost::format("%1% (%2%)" + tabulationWidth)
+                         % source % message).str();
+            else if (count > 1)
+                cout << (boost::format("%1% (%2%: %3%/%4%)" + tabulationWidth)
+                         % source % message % (index+1) % count).str();
+            else
+                cout << (boost::format("%1% (%2%: %3%)" + tabulationWidth)
+                         % source % message % (index+1)).str();
 
-        if (isError)
-            cout << endl;
-        else
-            cout << "\r" << flush;
+            if (isError)
+                cout << endl;
+            else
+                cout << "\r" << flush;
+        }
+        else if (g_rtConfig->LogLevel == MessageSeverity::VerboseInfo)
+        {
+            if (index == 0 && count <= 1 && !message.empty())
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << (boost::format("%1% (%2%)")
+                                                                                  % source % message).str();
+            else if (count > 1)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << (boost::format("%1% (%2%: %3%/%4%)")
+                                                                                  % source % message % (index+1) % count).str();
+            else
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << (boost::format("%1% (%2%: %3%)")
+                                                                                  % source % message % (index+1)).str();
+        }
+        else if (g_rtConfig->LogLevel == MessageSeverity::BriefInfo)
+        {
+            if (index == 0 && count <= 1)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << (boost::format("%1% (%2%)")
+                                                                                % source % message).str();
+            else if (index+1 == count)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << (boost::format("%1% (%2%: %3%/%4%)")
+                                                                                % source % message % (index+1) % count).str();
+        }
 
         return Status_Ok;
     }
 
     private:
     string source;
+    string tabulationWidth;
 };
 
 END_IDPICKER_NAMESPACE
 
 
-pair<int, int> summarizeQonversion(const string& filepath)
+struct QonversionSummary
 {
-    pair<int, int> result(0, 0);
+    string source;
+    string analysis;
+    int spectra;
+    int peptides;
+};
+
+vector<QonversionSummary> summarizeQonversion(const string& filepath)
+{
+    vector<QonversionSummary> results;
 
     if (!bfs::exists(filepath))
     {
-        cout << left << setw(8) << 0
-             << left << setw(9) << 0
-             << "file does not exist" << " / " << filepath << endl;
-        return result;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << left << setw(8) << 0
+                                                      << left << setw(9) << 0
+                                                      << "file does not exist" << " / " << filepath << endl;
+        return results;
     }
 
     sqlite::database idpDb(filepath);
@@ -456,31 +632,23 @@ pair<int, int> summarizeQonversion(const string& filepath)
 
     BOOST_FOREACH(sqlite::query::rows row, summaryQuery)
     {
-        string source, analysis;
-        int spectra, peptides;
-        boost::tie(source, analysis, spectra, peptides) = row.get_columns<string, string, int, int>(0, 1, 2, 3);
+        results.push_back(QonversionSummary());
+        QonversionSummary& result = results.back();
 
-        string sourceTitle;
-        if (bfs::path(filepath).replace_extension("").filename() == source)
-            sourceTitle = source;
-        else
-            sourceTitle = filepath + ":" + source;
+        boost::tie(result.source, result.analysis, result.spectra, result.peptides) = row.get_columns<string, string, int, int>(0, 1, 2, 3);
 
-        cout << left << setw(8) << spectra
-             << left << setw(9) << peptides
-             << analysis << " / " << sourceTitle << endl;
-        result.first += spectra;
-        result.second += peptides;
+        if (bfs::path(filepath).replace_extension("").filename() != result.source)
+            result.source = filepath + ":" + result.source;
     }
 
-    return result;
+    return results;
 }
 
 
 bool outputFilepathExists(const string& filepath) {return bfs::exists(Parser::outputFilepath(filepath));}
 
 
-int main( int argc, char* argv[] )
+int run( int argc, char* argv[] )
 {
     try
     {
@@ -495,7 +663,7 @@ int main( int argc, char* argv[] )
 
 	    if( g_rtConfig->inputFilepaths.empty() )
 	    {
-		    cout << "Error: no files found matching input filemasks." << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "no files found matching input filemasks." << endl;
 		    return QONVERT_ERROR_NO_INPUT_FILES_FOUND;
 	    }
 
@@ -516,7 +684,7 @@ int main( int argc, char* argv[] )
             if (g_rtConfig->OverwriteExistingFiles)
                 bfs::remove(outputFilepath);
             else
-                cerr << "Skipping existing file \"" << outputFilepath << "\"" << endl;
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "skipping existing file \"" << outputFilepath << "\"" << endl;
         }
 
         if (!g_rtConfig->OverwriteExistingFiles) // don't parse paths that already exist
@@ -524,8 +692,7 @@ int main( int argc, char* argv[] )
 
         Parser parser;
 
-        // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-        const size_t iterationPeriod = 100;
+        // update at least once a second
         IterationListenerRegistry ilr;
         ilr.addListenerWithTimer(IterationListenerPtr(new UserFeedbackIterationListener), 1.0);
 
@@ -535,17 +702,14 @@ int main( int argc, char* argv[] )
         
         if (!g_rtConfig->EmbedOnly)
         {
-            // output summary statistics for each input file
-            cout << "\nSpectra Peptides Analysis/Source\n"
-                    "--------------------------------\n";
-
-            int totalSpectra = 0, totalPeptides = 0;
+            vector<QonversionSummary> summaries;
             BOOST_FOREACH(const string& filepath, parserFilepaths)
             {
-                pair<int, int> spectraPeptidesPair = summarizeQonversion(Parser::outputFilepath(filepath).string());
-                totalSpectra += spectraPeptidesPair.first;
-                totalPeptides += spectraPeptidesPair.second;
+                boost::range::insert(summaries, summaries.end(), summarizeQonversion(Parser::outputFilepath(filepath).string()));
             }
+
+            if (!parserFilepaths.empty())
+                cout << endl;
 
             BOOST_FOREACH(const string& filepath, idpDbFilepaths)
             {
@@ -560,17 +724,34 @@ int main( int argc, char* argv[] )
                 qonverter.reset(filepath, &ilr);
                 qonverter.qonvert(filepath, &ilr);
 
-                pair<int, int> spectraPeptidesPair = summarizeQonversion(filepath);
-
-                totalSpectra += spectraPeptidesPair.first;
-                totalPeptides += spectraPeptidesPair.second;
+                boost::range::insert(summaries, summaries.end(), summarizeQonversion(filepath));
             }
 
-            if (parserFilepaths.size() + idpDbFilepaths.size() > 1)
-                cout << "--------------------------------\n"
-                     << left << setw(8) << totalSpectra
-                     << left << setw(9) << totalPeptides
-                     << "Total\n" << endl;
+            // output summary statistics for each input file
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "\nSpectra Peptides Analysis/Source\n"
+                                                                           "--------------------------------";
+
+            MessageSeverity::domain perSummarySeverity = summaries.size() > 1 ? MessageSeverity::VerboseInfo : MessageSeverity::BriefInfo;
+
+            int totalSpectra = 0, totalPeptides = 0;
+            BOOST_FOREACH(const QonversionSummary& summary, summaries)
+            {
+                totalSpectra += summary.spectra;
+                totalPeptides += summary.peptides;
+
+                BOOST_LOG_SEV(logSource::get(), perSummarySeverity)
+                    << left << setw(8) << summary.spectra
+                    << left << setw(9) << summary.peptides
+                    << summary.analysis << " / " << summary.source;
+            }
+
+            if (summaries.size() > 1 && g_rtConfig->LogLevel == MessageSeverity::VerboseInfo)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "--------------------------------";
+
+            if (summaries.size() > 1 || g_rtConfig->LogLevel == MessageSeverity::VerboseInfo)
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << left << setw(8) << totalSpectra
+                                                                            << left << setw(9) << totalPeptides
+                                                                            << "Total" << endl;
         }
         
         BOOST_FOREACH(const string& filepath, parserFilepaths)
@@ -587,15 +768,15 @@ int main( int argc, char* argv[] )
                                                                      g_rtConfig->LabelFreeLowerScanTimeLimit, g_rtConfig->LabelFreeUpperScanTimeLimit,
                                                                      g_rtConfig->LabelFreeLowerMzLimit, g_rtConfig->LabelFreeUpperMzLimit);
 
-            for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
+            for (size_t i=0, end=idpDbFilepaths.size(); i < end; ++i)
             {
-                cout << "\rEmbedding subset spectra" << (g_rtConfig->EmbedSpectrumSources ? "" : " scan times")
-                     << (g_rtConfig->QuantitationMethod == QuantitationMethod::None ? ": " : " and quantitation data: ")
-                     << (i+1) << "/" << idpDbFilepaths.size()
-                     << flush;
+                bfs::path idpDbFilepath = idpDbFilepaths[i];
+                string sourceName = Parser::sourceNameFromFilename(idpDbFilepath.filename().string());
+                PWIZ_LOG_ITER(logSource::get(), i, end) << sourceName << " (embedding subset spectra" << (g_rtConfig->EmbedSpectrumSources ? "" : " scan times")
+                                                        << (g_rtConfig->QuantitationMethod == QuantitationMethod::None ? ": " : " and quantitation data: ")
+                                                        << (i + 1) << "/" << end << ")";
 
                 string sourceSearchPath = g_rtConfig->SourceSearchPath;
-                bfs::path idpDbFilepath = idpDbFilepaths[i];
                 if (idpDbFilepath.has_parent_path())
                     sourceSearchPath += ";" + idpDbFilepath.parent_path().string();
 
@@ -622,23 +803,31 @@ int main( int argc, char* argv[] )
                 IterationListenerPtr il(new UserFeedbackProgressMonitor(idpDbFilepaths[i]));
                 ilr.addListener(il, 1);
 
-                il->update(IterationListener::UpdateMessage(i, idpDbFilepaths.size(), "embedding gene metadata\n"));
+                il->update(IterationListener::UpdateMessage(i, idpDbFilepaths.size(), "embedding gene metadata"));
                 Embedder::embedGeneMetadata(bfs::absolute(idpDbFilepaths[i], currentPath).string(), &ilr);
             }
 
     }
     catch (exception& e)
     {
-        cerr << "\nError: " << e.what() << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << e.what() << endl;
         if (bal::contains(e.what(), "no filepath could be found"))
-            cerr << "Find the file and add its parent directory to SourceSearchPath (a semicolon delimited list)." << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "find the file and add its parent directory to SourceSearchPath (a semicolon delimited list)." << endl;
         return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
     catch (...)
     {
-        cerr << "\nError: unhandled exception." << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "unhandled exception." << endl;
         return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
 
 	return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    int result = run(argc, argv);
+    boost::log::core::get()->flush();
+    boost::log::core::get()->remove_all_sinks();
+    return result;
 }

@@ -59,15 +59,17 @@ namespace IDPicker
             // must be before any calls to Console.WriteLine()
             AttachConsole(ATTACH_PARENT_PROCESS);
 
-            // Add the event handler for handling UI thread exceptions to the event.
-            Application.ThreadException += new ThreadExceptionEventHandler(UIThread_UnhandledException);
+            if (!args.Contains("--test-ui-layout"))
+            {
+                // Add the event handler for handling UI thread exceptions to the event.
+                Application.ThreadException += UIThread_UnhandledException;
 
-            // Set the unhandled exception mode to force all Windows Forms errors to go through
-            // our handler.
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                // Set the unhandled exception mode to force all Windows Forms errors to go through our handler.
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 
-            // Add the event handler for handling non-UI thread exceptions to the event. 
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+                // Add the event handler for handling non-UI thread exceptions to the event. 
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            }
 
             var singleInstanceHandler = new SingleInstanceHandler(Application.ExecutablePath) { Timeout = 200 };
             singleInstanceHandler.Launching += (sender, e) =>

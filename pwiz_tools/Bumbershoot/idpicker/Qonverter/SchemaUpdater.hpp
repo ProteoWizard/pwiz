@@ -72,12 +72,12 @@ void createUserSQLiteFunctions(sqlite3* idpDbConnection);
 
 /// update IDPicker database to the current schema version, or throw an exception if updating is impossible;
 /// returns true iff the database schema was updated
-bool update(const std::string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
+bool update(const std::string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr = 0);
 
 
 /// update IDPicker database connection to the current schema version, or throw an exception if updating is impossible;
 /// returns true iff the database schema was updated
-bool update(sqlite3* idpDbConnection, pwiz::util::IterationListenerRegistry* ilr = 0);
+bool update(sqlite3* idpDbConnection, const pwiz::util::IterationListenerRegistry* ilr = 0);
 
 
 /// returns true iff the idpDB has an IntegerSet table (which is the last table to be created)

@@ -30,6 +30,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "Logger.hpp"
 
 #define IDPQONVERT_RUNTIME_CONFIG \
     RTCONFIG_VARIABLE( string,   OutputSuffix,               ""     ) \
@@ -77,7 +78,9 @@
     RTCONFIG_VARIABLE( int, LabelFreeUpperScanTimeLimit, 30 ) \
     RTCONFIG_VARIABLE( MZTolerance, LabelFreeLowerMzLimit, "10ppm" ) \
     RTCONFIG_VARIABLE( MZTolerance, LabelFreeUpperMzLimit, "10ppm" ) \
-    RTCONFIG_VARIABLE( MZTolerance, ReporterIonMzTolerance, string("0.015mz") )
+    RTCONFIG_VARIABLE( MZTolerance, ReporterIonMzTolerance, string("0.015mz") ) \
+    RTCONFIG_VARIABLE( IDPICKER_NAMESPACE::MessageSeverity, LogLevel, "BriefInfo" ) \
+    RTCONFIG_VARIABLE( string, LogFilepath, "" )
 
 
 BEGIN_IDPICKER_NAMESPACE
@@ -161,7 +164,7 @@ private:
             string name = bal::join(boost::make_iterator_range(tokens2.begin()+2, tokens2.end()), " ");
 
             Qonverter::Settings::ScoreInfo& scoreInfo = scoreInfoByName[name];
-            scoreInfo.weight = lexical_cast<double>(weight);
+            try { scoreInfo.weight = lexical_cast<double>(weight); } catch (bad_lexical_cast&) { m_warnings << "Invalid score weight \"" << weight << "\"\n"; }
             scoreInfo.order = scoreInfo.weight >= 0 ? Qonverter::Settings::Order::Ascending
                                                     : Qonverter::Settings::Order::Descending;
             scoreInfo.weight = std::abs(scoreInfo.weight);
@@ -173,7 +176,7 @@ private:
                 scoreInfo.normalizationMethod = Qonverter::Settings::NormalizationMethod::Linear;
             else if (normalization != "off")
             {
-                m_warnings << "Invalid normalization method (must be 'off', 'quantile', or 'linear')\n";
+                m_warnings << "Invalid normalization method \"" << normalization << "\" (must be 'off', 'quantile', or 'linear')\n";
                 break;
             }
         }

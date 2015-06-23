@@ -31,6 +31,7 @@
 #include "Qonverter.hpp"
 #include "Embedder.hpp"
 #include "CoreVersion.hpp"
+#include "Logger.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/assert.hpp"
 #include "boost/atomic.hpp"
@@ -967,7 +968,7 @@ void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQue
     }
     catch (exception& e)
     {
-        cerr << "[executePairwiseFileMergerTask] " << boost::this_thread::get_id() << " error merging \"" + sourceFilepaths[0] + "\" and \"" + sourceFilepaths[1] + "\": " + e.what() << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "[executePairwiseFileMergerTask] " << boost::this_thread::get_id() << " error merging \"" + sourceFilepaths[0] + "\" and \"" + sourceFilepaths[1] + "\": " + e.what();
         status = boost::copy_exception(runtime_error("[executePairwiseFileMergerTask] error merging \"" + sourceFilepaths[0] + "\" and \"" + sourceFilepaths[1] + "\": " + e.what()));
     }
     catch (...)

@@ -309,7 +309,7 @@ namespace Test
             item.Click();
             waitOnWindow.Mouse.Location = waitOnWindow.TitleBar.Location;
             waitOnWindow.WaitWhileBusy();
-            Thread.Sleep(200);
+            Thread.Sleep(500);
         }
 
         /// <summary>

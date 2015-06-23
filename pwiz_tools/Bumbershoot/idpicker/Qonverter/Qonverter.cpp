@@ -237,7 +237,7 @@ Qonverter::Qonverter()
     logQonversionDetails = false;
 }
 
-void Qonverter::qonvert(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
+void Qonverter::qonvert(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
@@ -249,7 +249,7 @@ void Qonverter::qonvert(const string& idpDbFilepath, pwiz::util::IterationListen
     qonvert(db.connected(), ilr);
 }
 
-void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* ilr)
+void Qonverter::qonvert(sqlite3* dbPtr, const pwiz::util::IterationListenerRegistry* ilr)
 {
     // do not disconnect on close
     sqlite::database db(dbPtr, false);
@@ -538,12 +538,13 @@ void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* i
 
         handledAnalyses.insert(analysisId);
 
-        ITERATION_UPDATE(ilr, ++finishedAnalyses, analysisSourcePairs.size(), "")
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "")
+        ++finishedAnalyses;
     }
 }
 
 
-void Qonverter::reset(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
+void Qonverter::reset(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr)
 {
     SchemaUpdater::update(idpDbFilepath, ilr);
 
@@ -557,7 +558,7 @@ void Qonverter::reset(const string& idpDbFilepath, pwiz::util::IterationListener
     reset(db.connected(), ilr);
 }
 
-void Qonverter::reset(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr)
+void Qonverter::reset(sqlite3* idpDb, const pwiz::util::IterationListenerRegistry* ilr)
 {
     // drop FilterHistory
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DELETE FROM FilterHistory", NULL, NULL, &errorBuf));
@@ -575,7 +576,7 @@ void Qonverter::reset(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr
 }
 
 
-void Qonverter::dropFilters(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
+void Qonverter::dropFilters(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr)
 {
     SchemaUpdater::update(idpDbFilepath, ilr);
 
@@ -590,7 +591,7 @@ void Qonverter::dropFilters(const string& idpDbFilepath, pwiz::util::IterationLi
 }
 
 
-void Qonverter::dropFilters(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr)
+void Qonverter::dropFilters(sqlite3* idpDb, const pwiz::util::IterationListenerRegistry* ilr)
 {
     // drop Filtered* tables
     string dropFilteredTables = "DROP TABLE IF EXISTS FilteredProtein;"

@@ -40,12 +40,14 @@ obj SchemaUpdater : SchemaUpdater.cpp
                       <library>$(PWIZ_SOURCE)/pwiz/utility/misc//pwiz_utility_misc
                       <address-model>64:<define>IDPICKER_SQLITE_64
                   ;
+using ext-png : 1.5.6 : $(PNG_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 
 lib Qonverter
     : # sources
         [ glob *Qonverter.cpp ]
         SchemaUpdater
         CoreVersion
+        Logger.cpp
         Embedder.cpp
         XIC.cpp 
         Parser.cpp
@@ -56,16 +58,19 @@ lib Qonverter
     : # requirements
         <library>..//svm
         <library>/ext/boost//thread
+        <library>/ext/boost//log
         <library>waffles//waffles
         <library>crawdad//crawdad
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+        <toolset>msvc:<cxxflags>/bigobj
     : # default-build
     : # usage-requirements
         <library>..//svm
         <library>/ext/boost//thread
+        <library>/ext/boost//log
         <library>waffles//waffles
         <library>crawdad//crawdad
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
@@ -92,6 +97,7 @@ import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
+unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 
 make gene2protein.db3 : ../gene2protein.db3 : @common.copy ;
 explicit gene2protein.db3 ;

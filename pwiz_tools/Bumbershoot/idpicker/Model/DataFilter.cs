@@ -533,6 +533,11 @@ namespace IDPicker.DataModel
             {
                 filter.Filter(session.Connection.GetDataSource(), ilr);
 
+                // read log for non-fatal errors
+                //string log = Logger.Reader.ReadToEnd().Trim();
+                //if (log.Length > 0)
+                //    UserDialog.Show(null, "Log Messages", new System.Windows.Forms.TextBox { Multiline = true, Text = log, ReadOnly = true, Size = new System.Drawing.Size(800, 600) }, System.Windows.Forms.MessageBoxButtons.OK);
+
                 TotalCounts = new TotalCounts(session);
             }
             catch(Exception e)

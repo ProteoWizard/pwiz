@@ -224,8 +224,8 @@ namespace IDPicker
 
                 if (kvp.Key != "Summary")
                 {
-                    newWorksheet.get_Range("A1", Missing.Value).EntireRow.Font.Bold = true;
-                    newWorksheet.Activate();
+                    newWorksheet.Range["A1", Missing.Value].EntireRow.Font.Bold = true;
+                    ((Microsoft.Office.Interop.Excel._Worksheet) newWorksheet).Activate();
                     if (freezeFirstColumn)
                         newWorksheet.Application.ActiveWindow.SplitColumn = 1;
                     newWorksheet.Application.ActiveWindow.SplitRow = 1;

@@ -372,7 +372,7 @@ namespace IDPicker.Controls
             this.optimizeAtFdrTextBox.TabIndex = 121;
             this.optimizeAtFdrTextBox.Text = "2";
             this.optimizeAtFdrTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.optimizeAtFdrTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.doubleTextBox_KeyDown);
+            this.optimizeAtFdrTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.doubleTextBox_KeyPress);
             // 
             // label8
             // 

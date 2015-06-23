@@ -43,6 +43,7 @@
 #include "boost/atomic.hpp"
 #include "boost/exception/all.hpp"
 #include "boost/range/algorithm/set_algorithm.hpp"
+#include "Logger.hpp"
 
 
 using namespace pwiz::identdata;
@@ -333,8 +334,10 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
         }
         catch (exception &e)
         {
-            if (skipSourceOnError) // TODO: log instead of write to console
-                cerr << "Error parsing \"" << filepath << "\": " << e.what() << endl;
+            if (skipSourceOnError)
+            {
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "parsing \"" << filepath << "\": " << e.what() << endl;
+            }
             else
                 throw runtime_error("parsing \"" + filepath + "\": " + e.what());
         }
@@ -831,7 +834,7 @@ struct ParserImpl
         Qonverter qonverter;
         qonverter.logQonversionDetails = analysis.importSettings.logQonversionDetails;
         qonverter.settingsByAnalysis[0] = settings;
-        qonverter.qonvert(idpDb.connected());
+        qonverter.qonvert(idpDb.connected(), ilr);
 
         if (analysis.importSettings.maxQValue == 1 && analysis.importSettings.maxResultRank == 0)
             return;
@@ -864,9 +867,12 @@ struct ParserImpl
             "DELETE FROM ProteinMetadata WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);";
 
         sql = (boost::format(sql) % analysis.importSettings.maxQValue % maxResultRank).str();
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << sql;
         idpDb.execute(sql.c_str());
 
         transaction.commit();
+        
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Spectra after import FDR score filter: " << sqlite::query(idpDb, "SELECT COUNT(*) FROM Spectrum").begin()->get<int>(0);
 
         idpDb.execute("VACUUM");
     }
@@ -908,7 +914,7 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
 
     if (inputFilepathsByProteinDatabase.empty())
     {
-        cerr << "[createTasksPerProteinDatabase] no tasks created" << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "[createTasksPerProteinDatabase] no tasks created";
         return taskGroups;
     }
 
@@ -987,7 +993,7 @@ struct ParserTask
     boost::shared_ptr<IdentDataFile> mzid;
     boost::shared_ptr<ParserImpl> parser;
     AnalysisPtr analysis;
-    const IterationListenerRegistry* ilr;
+    boost::shared_ptr<IterationListenerRegistry> ilr;
     boost::mutex* ioMutex;
 };
 
@@ -997,23 +1003,16 @@ typedef boost::shared_ptr<ParserTask> ParserTaskPtr;
 void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
 {
     const string& inputFilepath = parserTask->inputFilepath;
-    const IterationListenerRegistry* ilr = parserTask->ilr;
+    const IterationListenerRegistry* ilr = parserTask->ilr.get();
     //boost::mutex& ioMutex = *peptideFinderTask->ioMutex;
 
     try
     {
-        boost::scoped_ptr<IterationListenerRegistry> threadILR;
-        if (ilr)
-        {
-            threadILR.reset(new IterationListenerRegistry);
-            threadILR->addListener(IterationListenerPtr(new ParserForwardingIterationListener(*ilr, inputFilepath)), 10);
-        }
-
         // read the mzid document into memory
-        ITERATION_UPDATE(ilr, 0, 0, inputFilepath + "*opening file");
+        ITERATION_UPDATE(ilr, 0, 0, "opening file");
         {
             //boost::mutex::scoped_lock ioLock(ioMutex);
-            parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, threadILR.get()));
+            parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, ilr));
         }
 
         // create parser instance
@@ -1021,7 +1020,7 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
                                                 *parserTask->analysis,
                                                 *parserTask->idpDb,
                                                 *parserTask->mzid,
-                                                threadILR.get()));
+                                                ilr));
 
         parserTask->parser->insertAnalysisMetadata();
 
@@ -1391,8 +1390,8 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
 
             if (!parser.analysis.importSettings.ignoreUnmappedPeptides)
                 throw runtime_error(unmappedPeptideMessage);
-            //else
-            // TODO: log warning
+            else
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << unmappedPeptideMessage << endl;
         }
 
         if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(proteinReaderTask.proteinCount-1, proteinReaderTask.proteinCount, parserTask.inputFilepath + "*finding peptides in proteins")) == IterationListener::Status_Cancel)
@@ -1423,7 +1422,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         catch (exception& e)
         {
             // failure to create indexes is not fatal (need to check the database for the error)
-            cerr << "\n[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to create indexes: " << e.what() << endl;
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to create indexes: " << e.what();
         }
 
         try
@@ -1435,7 +1434,8 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         catch (exception& e)
         {
             // failure during qonversion is not fatal
-			ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*failed to apply Q value filter: " + e.what());
+            //ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*failed to apply Q value filter: " + e.what());
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "[executePeptideFinderTask] failed to apply Q value filter: " << e.what();
         }
 
         ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*waiting");
@@ -1490,7 +1490,11 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
             ParserTaskPtr parserTask(new ParserTask(inputFilepath));
             parserTask->analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
             parserTask->idpDb = memoryDatabases[i];
-            parserTask->ilr = ilr;
+            if (ilr)
+            {
+                parserTask->ilr.reset(new IterationListenerRegistry);
+                parserTask->ilr->addListener(IterationListenerPtr(new ParserForwardingIterationListener(*ilr, inputFilepath)), 10);
+            }
             parserTask->ioMutex = &ioMutex;
             parserTasks.push_back(parserTask);
 
@@ -1507,9 +1511,9 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
 
                 if (status.exception)
                 {
-                    if (skipSourceOnError) // TODO: log instead of write to console
+                    if (skipSourceOnError)
                         try { boost::rethrow_exception(status.exception); }
-                        catch (exception& e) { cerr << e.what() << endl; }
+                        catch (exception& e) { BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << e.what() << endl; }
                         catch (...) { boost::rethrow_exception(status.exception); }
                     else
                         boost::rethrow_exception(status.exception);
@@ -1560,9 +1564,9 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
 
                 if (status.exception)
                 {
-                    if (skipSourceOnError) // TODO: log instead of write to console
+                    if (skipSourceOnError)
                         try { boost::rethrow_exception(status.exception); }
-                        catch (exception& e) { cerr << e.what() << endl; }
+                        catch (exception& e) { BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << e.what() << endl; }
                         catch (...) { boost::rethrow_exception(status.exception); }
                     else
                         boost::rethrow_exception(status.exception);
@@ -1593,6 +1597,9 @@ void Parser::ImportSettingsCallback::operator() (const vector<ConstAnalysisPtr>&
 {
     throw runtime_error("[Parser::parse()] no import settings handler set");
 }
+
+
+Parser::Parser() : skipSourceOnError(false) {}
 
 
 void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, IterationListenerRegistry* ilr) const

@@ -25,6 +25,7 @@
 #include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "Logger.hpp"
 #include "SchemaUpdater.hpp"
 #include "Filter.hpp"
 #include "Qonverter.hpp"
@@ -358,7 +359,7 @@ struct Filter::Impl
         initializeSqlFormats();
     }
 
-    void filter(const Config& config, IterationListenerRegistry* ilr = 0)
+    void filter(const Config& config, const IterationListenerRegistry* ilr = 0)
     {
         this->config = config;
         this->ilr = ilr;
@@ -477,12 +478,14 @@ struct Filter::Impl
             ITERATION_UPDATE(ilr, FilterStep_AnalyzeUnfilteredDatabase, FilterStep_Count, "analyzing unfiltered database")
             idpDb.execute("ANALYZE");
 
-            createFilteredSpectrumTable(idpDb);
-            createFilteredPSMTable(idpDb);
+            int filteredSpectra = createFilteredSpectrumTable(idpDb);
+            int filteredPSMs = createFilteredPSMTable(idpDb);
             deleteFilteredPSMsUnderMatchCount(idpDb);
-            createFilteredProteinTable(idpDb);
+            int filteredProteins = createFilteredProteinTable(idpDb);
             createFilteredPeptideTable(idpDb);
-            createFilteredPeptideInstanceTable(idpDb);
+            int filteredPeptideInstances = createFilteredPeptideInstanceTable(idpDb);
+
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "First filter results: " << filteredSpectra << " spectra; " << filteredPSMs << " PSMs; " << filteredProteins << " proteins; " << filteredPeptideInstances << " peptide instances";
 
             renameFilteredTables(idpDb);
 
@@ -1118,7 +1121,7 @@ struct Filter::Impl
     }
 
 
-    IterationListenerRegistry* ilr;
+    const IterationListenerRegistry* ilr;
 
     Config config;
     sqlite3* idpDbConnection;
@@ -1179,13 +1182,13 @@ Filter::Filter()
 Filter::~Filter()
 {}
 
-void Filter::filter(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
+void Filter::filter(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr)
 {
     _impl.reset(new Impl(idpDbFilepath));
     _impl->filter(config, ilr);
 }
 
-void Filter::filter(sqlite3* idpDbConnection, pwiz::util::IterationListenerRegistry* ilr)
+void Filter::filter(sqlite3* idpDbConnection, const pwiz::util::IterationListenerRegistry* ilr)
 {
     _impl.reset(new Impl(idpDbConnection));
     _impl->filter(config, ilr);

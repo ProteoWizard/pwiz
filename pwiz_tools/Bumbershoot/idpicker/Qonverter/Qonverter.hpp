@@ -234,14 +234,14 @@ struct Qonverter
 
     Qonverter();
 
-    void qonvert(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
-    void qonvert(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr = 0);
+    void qonvert(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr = 0);
+    void qonvert(sqlite3* idpDb, const pwiz::util::IterationListenerRegistry* ilr = 0);
 
-    static void reset(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
-    static void reset(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr = 0);
+    static void reset(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr = 0);
+    static void reset(sqlite3* idpDb, const pwiz::util::IterationListenerRegistry* ilr = 0);
 
-    static void dropFilters(const string& idpFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
-    static void dropFilters(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr = 0);
+    static void dropFilters(const string& idpFilepath, const pwiz::util::IterationListenerRegistry* ilr = 0);
+    static void dropFilters(sqlite3* idpDb, const pwiz::util::IterationListenerRegistry* ilr = 0);
 };
 
 

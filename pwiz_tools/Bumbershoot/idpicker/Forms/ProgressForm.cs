@@ -57,7 +57,6 @@ namespace IDPicker
             }
         }
 
-        public EventHandler NonFatalErrorCaught;
         public IterationListener.Status update (IterationListener.UpdateMessage updateMessage)
         {
             if (InvokeRequired)
@@ -74,13 +73,6 @@ namespace IDPicker
             string message = parts.Length > 1 ? parts[1] : parts[0];
             int index = updateMessage.iterationIndex;
             int count = updateMessage.iterationCount;
-
-            //Check for Qonverter failure
-            if (message.StartsWith("failed to apply"))
-            {
-                NonFatalErrorCaught(new[] { message, taskName }, null);
-                return IterationListener.Status.Ok;
-            }
 
             // if the update is not row-specific, update the window title
             string[] parts2 = Text.Split(':');

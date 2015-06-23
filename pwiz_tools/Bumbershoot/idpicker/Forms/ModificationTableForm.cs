@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -130,7 +131,7 @@ namespace IDPicker.Forms
             get
             {
                 if (DistinctModificationFormat.ModificationMassRoundToNearest.HasValue)
-                    return String.Format("ROUND(pm.Modification.MonoMassDelta/{0}, 0)*{0}", DistinctModificationFormat.ModificationMassRoundToNearest.Value);
+                    return String.Format("ROUND(pm.Modification.MonoMassDelta/{0}, 0)*{0}", DistinctModificationFormat.ModificationMassRoundToNearest.Value.ToString(CultureInfo.InvariantCulture));
                 return "pm.Modification.MonoMassDelta";
             }
         }
@@ -911,7 +912,7 @@ namespace IDPicker.Forms
             var rowFilter = new StringBuilder();
             rowFilter.AppendFormat("[{0}] = 'Infinity' OR Total >= {1}", deltaMassColumnName, minRows);
             if (unimodFilter)
-                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o)).ToArray()));
+                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o.ToString(CultureInfo.InvariantCulture))).ToArray()));
             (dataGridView.DataSource as DataTable).DefaultView.RowFilter = rowFilter.ToString();
 
             var unimodRowStyle = new DataGridViewCellStyle(dataGridView.RowHeadersDefaultCellStyle)
@@ -972,7 +973,7 @@ namespace IDPicker.Forms
             var rowFilter = new StringBuilder();
             rowFilter.AppendFormat("Matches >= {0}", minMatches);
             if (!unimodMasses.IsNullOrEmpty())
-                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o))));
+                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o.ToString(CultureInfo.InvariantCulture)))));
             if (!unimodSites.IsNullOrEmpty())
                 rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodSites.Select(o => String.Format("(Site = '{0}')", o))));
 
@@ -1382,8 +1383,8 @@ namespace IDPicker.Forms
         {
             if (roundToNearestUpDownChanging)
             {
-                if (!System.Text.RegularExpressions.Regex.IsMatch(roundToNearestUpDown.Value.ToString(), @"^10*\.?0*$") &&
-                !System.Text.RegularExpressions.Regex.IsMatch(roundToNearestUpDown.Value.ToString(), @"^0?\.0*10*$"))
+                if (!System.Text.RegularExpressions.Regex.IsMatch(roundToNearestUpDown.Value.ToString(), "^10*" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + "?0*$") &&
+                    !System.Text.RegularExpressions.Regex.IsMatch(roundToNearestUpDown.Value.ToString(), "^0?" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + "0*10*$"))
                     roundToNearestUpDown.Value = roundToNearestValue;
                 return;
             }
@@ -1393,10 +1394,10 @@ namespace IDPicker.Forms
             decimal oldValue = DistinctModificationFormat.ModificationMassRoundToNearest.Value;
             roundToNearestUpDownChanging = true;
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(valueAsString, @"^10*\.?0*$") &&
-                !System.Text.RegularExpressions.Regex.IsMatch(valueAsString, @"^0?\.0*10*$") &&
-                (System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), @"^10*\.?0*$") ||
-                System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), @"^0?\.0*10*$")))
+            if (!System.Text.RegularExpressions.Regex.IsMatch(valueAsString, "^10*" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + "?0*$") &&
+                !System.Text.RegularExpressions.Regex.IsMatch(valueAsString, "^0?" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + "0*10*$") &&
+                (System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), "^10*" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + "?0*$") ||
+                System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), "^0?" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + "0*10*$")))
             {
                 roundToNearestUpDown.Value = roundToNearestUpDown.Value < oldValue
                                            ? Math.Max(roundToNearestUpDown.NumericUpDownControl.Minimum, oldValue / 10)

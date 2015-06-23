@@ -23,6 +23,7 @@
 //
 
 #include "SchemaUpdater.hpp"
+#include "Logger.hpp"
 
 #pragma unmanaged
 #include "../SchemaUpdater.hpp"
@@ -43,6 +44,8 @@ int SchemaUpdater::CurrentSchemaRevision::get() { return NativeIDPicker::CURRENT
 
 bool SchemaUpdater::Update(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         return NativeSchemaUpdater::update(ToStdString(idpDbFilepath),

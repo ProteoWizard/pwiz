@@ -136,6 +136,7 @@ namespace IDPicker.Controls
                     row.DecoyPrefix = a.parameters["DecoyPrefix"];
 
                 row.ImportSettings.qonverterSettings.DecoyPrefix = row.DecoyPrefix;
+                //row.ImportSettings.logQonversionDetails = true;
 
                 rows.Add(row);
             }

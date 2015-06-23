@@ -38,9 +38,9 @@ namespace IDPicker
     /// </summary>
     public partial class UserDialog : Form
     {
-        public UserDialog (Control content) : this(null, content) { }
+        public UserDialog (Control content) : this(null, content, MessageBoxButtons.OKCancel) { }
 
-        public UserDialog (IWin32Window owner, Control content)
+        public UserDialog (IWin32Window owner, Control content, MessageBoxButtons buttons)
         {
             InitializeComponent();
 
@@ -50,6 +50,21 @@ namespace IDPicker
             content.Dock = DockStyle.Fill;
 
             StartPosition = owner == null ? FormStartPosition.CenterScreen : FormStartPosition.CenterParent;
+
+            if (buttons == MessageBoxButtons.OK)
+            {
+                okButton.Visible = true;
+                cancelButton.Visible = false;
+            }
+            else if (buttons == MessageBoxButtons.OKCancel)
+            {
+                okButton.Visible = true;
+                cancelButton.Visible = true;
+            }
+            else
+            {
+                throw new NotImplementedException("UserDialog currently only supports OK and OKCancel values for MessageBoxButtons");
+            }
         }
 
         private void cancelButton_Click (object sender, EventArgs e)
@@ -64,19 +79,19 @@ namespace IDPicker
             Close();
         }
 
-        public static DialogResult Show (string caption, Control content)
+        public static DialogResult Show (string caption, Control content, MessageBoxButtons buttons = MessageBoxButtons.OKCancel)
         {
             return new UserDialog(content) { Text = caption }.ShowDialog();
         }
 
-        public static DialogResult Show (IWin32Window owner, string caption, Control content)
+        public static DialogResult Show (IWin32Window owner, string caption, Control content, MessageBoxButtons buttons = MessageBoxButtons.OKCancel)
         {
-            return new UserDialog(owner, content) { Text = caption }.ShowDialog(owner);
+            return new UserDialog(owner, content, buttons) { Text = caption }.ShowDialog(owner);
         }
 
-        public static DialogResult Show (IWin32Window owner, string caption, Control content, FormBorderStyle borderStyle)
+        public static DialogResult Show (IWin32Window owner, string caption, Control content, FormBorderStyle borderStyle, MessageBoxButtons buttons = MessageBoxButtons.OKCancel)
         {
-            return new UserDialog(owner, content) { Text = caption, FormBorderStyle = borderStyle }.ShowDialog(owner);
+            return new UserDialog(owner, content, buttons) { Text = caption, FormBorderStyle = borderStyle }.ShowDialog(owner);
         }
     }
 }

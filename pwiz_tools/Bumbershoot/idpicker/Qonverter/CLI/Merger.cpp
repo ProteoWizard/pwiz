@@ -23,6 +23,7 @@
 //
 
 #include "Merger.hpp"
+#include "Logger.hpp"
 
 #pragma unmanaged
 #include "../Merger.hpp"
@@ -58,6 +59,8 @@ void ToStdStringVector(IList<String^>^ managedList, std::vector<std::string>& st
 
 void Merger::Merge(String^ mergeTargetFilepath, IList<String^>^ mergeSourceFilepaths, int maxThreads, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         vector<string> nativeMergeSourceFilepaths;
@@ -78,6 +81,8 @@ void Merger::Merge(String^ mergeTargetFilepath, IList<String^>^ mergeSourceFilep
 
 void Merger::Merge(String^ mergeTargetFilepath, IntPtr mergeSourceConnection, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         sqlite3* foo = (sqlite3*) mergeSourceConnection.ToPointer();

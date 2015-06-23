@@ -26,6 +26,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestStack.White;
 using TestStack.White.Factory;
@@ -132,17 +133,17 @@ namespace Test
                 Assert.AreEqual(12, columns.Count);
                 Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                 Assert.AreEqual("Total 1375 271 198 140 149 191 81 36 55 126 60 68", getRowString(rows[row++], "0"));
-                Assert.AreEqual("79.9663\nPhospho 230 0 0 0 0 0 0 0 0 126 60 44", getRowString(rows[row++], "0"));
-                Assert.AreEqual("57.0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 198 0 198 0 0 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("44.9851\nNitro 24 0 0 0 0 0 0 0 0 0 0 24", getRowString(rows[row++], "0"));
-                Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 337 271 0 0 0 66 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("37.9559\nCation:K 75 0 0 44 31 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("28.0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 87 0 0 0 0 57 0 0 30 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("21.9819\nCation:Na 205 0 0 96 109 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("15.9949\nOxidation\nAla->Ser\nPhe->Tyr 81 0 0 0 0 0 81 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("14.0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 93 0 0 0 0 68 0 0 25 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("-17.0265\nGln->pyro-Glu\nAmmonia-loss 36 0 0 0 0 0 0 36 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 9 0 0 0 9 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
+                Assert.AreEqual("79#9663\nPhospho 230 0 0 0 0 0 0 0 0 126 60 44".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("57#0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 198 0 198 0 0 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("44#9851\nNitro 24 0 0 0 0 0 0 0 0 0 0 24".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 337 271 0 0 0 66 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("37#9559\nCation:K 75 0 0 44 31 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("28#0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 87 0 0 0 0 57 0 0 30 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("21#9819\nCation:Na 205 0 0 96 109 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("15#9949\nOxidation\nAla->Ser\nPhe->Tyr 81 0 0 0 0 0 81 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("14#0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 93 0 0 0 0 68 0 0 25 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("-17#0265\nGln->pyro-Glu\nAmmonia-loss 36 0 0 0 0 0 0 36 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 9 0 0 0 9 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
 
                 // test pivot combo box (distinct matches)
                 // Mass     Total N-t C   D   E   K   M   Q   R   S   T   Y 
@@ -168,17 +169,17 @@ namespace Test
                 Assert.AreEqual(12, columns.Count);
                 Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                 Assert.AreEqual("Total 1348 168 186 182 249 273 69 29 60 56 30 46", getRowString(rows[row++], "0"));
-                Assert.AreEqual("79.9663\nPhospho 104 0 0 0 0 0 0 0 0 56 30 18", getRowString(rows[row++], "0"));
-                Assert.AreEqual("57.0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 186 0 186 0 0 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("44.9851\nNitro 28 0 0 0 0 0 0 0 0 0 0 28", getRowString(rows[row++], "0"));
-                Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 234 168 0 0 0 66 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("37.9559\nCation:K 125 0 0 61 64 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("28.0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 94 0 0 0 0 62 0 0 32 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("21.9819\nCation:Na 300 0 0 121 179 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("15.9949\nOxidation\nAla->Ser\nPhe->Tyr 69 0 0 0 0 0 69 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("14.0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 173 0 0 0 0 145 0 0 28 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("-17.0265\nGln->pyro-Glu\nAmmonia-loss 29 0 0 0 0 0 0 29 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 6 0 0 0 6 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
+                Assert.AreEqual("79#9663\nPhospho 104 0 0 0 0 0 0 0 0 56 30 18".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("57#0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 186 0 186 0 0 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("44#9851\nNitro 28 0 0 0 0 0 0 0 0 0 0 28".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 234 168 0 0 0 66 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("37#9559\nCation:K 125 0 0 61 64 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("28#0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 94 0 0 0 0 62 0 0 32 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("21#9819\nCation:Na 300 0 0 121 179 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("15#9949\nOxidation\nAla->Ser\nPhe->Tyr 69 0 0 0 0 0 69 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("14#0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 173 0 0 0 0 145 0 0 28 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("-17#0265\nGln->pyro-Glu\nAmmonia-loss 29 0 0 0 0 0 0 29 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 6 0 0 0 6 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
 
                 // test pivot combo box (distinct peptides)
                 // Mass    Total N-t C   D   E   K   M   Q   R   S   T   Y 
@@ -204,17 +205,17 @@ namespace Test
                 Assert.AreEqual(12, columns.Count);
                 Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                 Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                Assert.AreEqual("57.0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 149 0 149 0 0 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("44.9851\nNitro 11 0 0 0 0 0 0 0 0 0 0 11", getRowString(rows[row++], "0"));
-                Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("37.9559\nCation:K 53 0 0 31 22 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("28.0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 49 0 0 0 0 34 0 0 15 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("21.9819\nCation:Na 133 0 0 64 69 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("15.9949\nOxidation\nAla->Ser\nPhe->Tyr 55 0 0 0 0 0 55 0 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("14.0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 57 0 0 0 0 39 0 0 18 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("-17.0265\nGln->pyro-Glu\nAmmonia-loss 29 0 0 0 0 0 0 29 0 0 0 0", getRowString(rows[row++], "0"));
-                Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
+                Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("57#0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 149 0 149 0 0 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("44#9851\nNitro 11 0 0 0 0 0 0 0 0 0 0 11".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("37#9559\nCation:K 53 0 0 31 22 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("28#0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 49 0 0 0 0 34 0 0 15 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("21#9819\nCation:Na 133 0 0 64 69 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("15#9949\nOxidation\nAla->Ser\nPhe->Tyr 55 0 0 0 0 0 55 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("14#0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 57 0 0 0 0 39 0 0 18 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("-17#0265\nGln->pyro-Glu\nAmmonia-loss 29 0 0 0 0 0 0 29 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
 
                 // test sorting options
                 {
@@ -228,8 +229,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     // test reversal of row sort order by total column (number of modifications at a mass)
                     columns[0].ClickAndWaitWhileBusy(window);
@@ -239,8 +240,8 @@ namespace Test
                     row = 0;
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     // test sorting by per-site total (delta mass is tie-breaker)
                     columns[1].ClickAndWaitWhileBusy(window);
@@ -252,9 +253,9 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     // test returning to sort by delta-mass by clicking on top-left cell
                     var topLeftCellClickablePoint = new System.Windows.Point(rows[0].GetHeaderCell().ClickablePoint.X, columns[0].Bounds.Y + columns[0].Bounds.Height / 2);
@@ -269,8 +270,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     // test column sorting by total row (number of total modified spectra/matches/peptides at each site)
                     rows[0].GetHeaderCell().ClickAndWaitWhileBusy(window);
@@ -282,8 +283,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total C N-term K E D M R Q S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 149 134 116 95 95 55 33 29 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     // test reversal of column sort order by total row (number of total modified spectra/matches/peptides at each site)
                     rows[0].GetHeaderCell().ClickAndWaitWhileBusy(window);
@@ -295,8 +296,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total Y T S Q R M D E K N-term C", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 19 20 23 29 33 55 95 95 116 134 149", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 8 20 23 0 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 0 0 0 0 4 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 8 20 23 0 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 0 0 0 0 4 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     // test that right-clicking on top-left cell sorts by site
                     window.Mouse.Location = topLeftCellClickablePoint;
@@ -310,8 +311,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
                 }
 
                 // get bounds for a cell outside the grid content and test that clicking there does not change sort order (this point is also used for committing changes from the other toolbar controls and Unimod filter)
@@ -329,8 +330,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
                 }
 
                 // test round to nearest (and test that rows are merged as expected)
@@ -347,8 +348,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.966\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.011\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#966\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#011\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     roundToNearestUpDown.Increment();
                     window.WaitWhileBusy();
@@ -362,8 +363,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.97\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.01\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#97\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#01\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     roundToNearestUpDown.Increment();
                     window.WaitWhileBusy();
@@ -378,7 +379,7 @@ namespace Test
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
                     Assert.AreEqual("80\n(4 Unimod matches) 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18\n(5 Unimod matches) 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("-18\n(6 Unimod matches) 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
 
                     roundToNearestUpDown.Increment();
                     window.WaitWhileBusy();
@@ -393,7 +394,7 @@ namespace Test
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
                     Assert.AreEqual("80\n(5 Unimod matches) 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18\n(7 Unimod matches) 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("-18\n(8 Unimod matches) 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
 
                     roundToNearestUpDown.Increment();
                     window.WaitWhileBusy();
@@ -408,12 +409,12 @@ namespace Test
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
                     Assert.AreEqual("80\n(38 Unimod matches) 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-20\n(56 Unimod matches) 33 0 0 0 4 0 0 29 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("-20\n(57 Unimod matches) 33 0 0 0 4 0 0 29 0 0 0 0", getRowString(rows.Last(), "0"));
 
                     // enter rounding value manually
                     roundToNearestUpDown.DoubleClick();
                     roundToNearestUpDown.KeyIn(TestStack.White.WindowsAPI.KeyboardInput.SpecialKeys.DELETE);
-                    roundToNearestUpDown.Enter("0.0001");
+                    roundToNearestUpDown.Enter(0.0001m.ToString(CultureInfo.CurrentCulture));
                     window.Mouse.Click(pointOutsideGridViewContent); // click outside the spinner to commit the changed value
                     window.WaitWhileBusy();
                     Assert.AreEqual(0.0001, roundToNearestUpDown.Value);
@@ -426,8 +427,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
                 }
 
                 // test column and row minimum filters
@@ -443,8 +444,8 @@ namespace Test
                     Assert.AreEqual(4, columns.Count);
                     Assert.AreEqual("Total N-term C K", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 116", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     minColumnTextBox.ClearAndEnter("1");
                     minRowTextBox.ClearAndEnter("100");
@@ -460,9 +461,9 @@ namespace Test
 
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("57.0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 149 0 149 0 0 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("21.9819\nCation:Na 133 0 0 64 69 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
+                    Assert.AreEqual("57#0215\nCarbamidomethyl\nAla->Gln\nGly->Asn\nGly 149 0 149 0 0 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("21#9819\nCation:Na 133 0 0 64 69 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
 
                     // test that invalid values fall back to a safe default
                     minRowTextBox.ClearAndEnter("0");
@@ -518,8 +519,8 @@ namespace Test
                     Assert.AreEqual(12, columns.Count);
                     Assert.AreEqual("Total N-term C D E K M Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 55 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0", getRowString(rows.Last(), "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows.Last(), "0"));
 
                     allModsNode.SelectAndToggle();
                     var ptModsNode = selectedMassesTree.Node("Unimod Modifications", "PostTranslational");
@@ -543,13 +544,13 @@ namespace Test
                     Assert.AreEqual(11, columns.Count);
                     Assert.AreEqual("Total N-term C D E K Q R S T Y", String.Join(" ", columns.Select(o => o.Name)));
                     Assert.AreEqual("Total 768 134 149 95 95 116 29 33 23 20 19", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("79.9663\nPhospho 51 0 0 0 0 0 0 0 23 20 8", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("42.0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("28.0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 49 0 0 0 0 34 0 15 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("15.9949\nOxidation\nAla->Ser\nPhe->Tyr 55 0 0 0 0 0 0 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("14.0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 57 0 0 0 0 39 0 18 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-17.0265\nGln->pyro-Glu\nAmmonia-loss 29 0 0 0 0 0 29 0 0 0 0", getRowString(rows[row++], "0"));
-                    Assert.AreEqual("-18.0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0", getRowString(rows[row++], "0"));
+                    Assert.AreEqual("79#9663\nPhospho 51 0 0 0 0 0 0 0 23 20 8".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("42#0106\nAcetyl\nSer->Glu 177 134 0 0 0 43 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("28#0313\nDimethyl\nDelta:H(4)C(2)\nEthyl\nAla->Val\nCys->Met 49 0 0 0 0 34 0 15 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("15#9949\nOxidation\nAla->Ser\nPhe->Tyr 55 0 0 0 0 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("14#0157\nMethyl\nAsp->Glu\nGly->Ala\nSer->Thr\nVal->Xle\nAsn->Gln 57 0 0 0 0 39 0 18 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-17#0265\nGln->pyro-Glu\nAmmonia-loss 29 0 0 0 0 0 29 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
+                    Assert.AreEqual("-18#0106\nDehydrated\nGlu->pyro-Glu 4 0 0 0 4 0 0 0 0 0 0".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++], "0"));
                 }
 
                 // test export (to clipboard, to file, and to excel)
@@ -565,13 +566,14 @@ namespace Test
 
                     string expectedTsvText = "Delta Mass\tTotal\tN-term\tC\tD\tE\tK\tQ\tR\tS\tT\tY\n" +
                                              "Total\t768\t134\t149\t95\t95\t116\t29\t33\t23\t20\t19\n" +
-                                             "79.9663 ; Phospho\t51\t\t\t\t\t\t\t\t23\t20\t8\n" +
-                                             "42.0106 ; Acetyl ; Ser->Glu\t177\t134\t\t\t\t43\t\t\t\t\t\n" +
-                                             "28.0313 ; Dimethyl ; Delta:H(4)C(2) ; Ethyl ; Ala->Val ; Cys->Met\t49\t\t\t\t\t34\t\t15\t\t\t\n" +
-                                             "15.9949 ; Oxidation ; Ala->Ser ; Phe->Tyr\t55\t\t\t\t\t\t\t\t\t\t\n" +
-                                             "14.0157 ; Methyl ; Asp->Glu ; Gly->Ala ; Ser->Thr ; Val->Xle ; Asn->Gln\t57\t\t\t\t\t39\t\t18\t\t\t\n" +
-                                             "-17.0265 ; Gln->pyro-Glu ; Ammonia-loss\t29\t\t\t\t\t\t29\t\t\t\t\n" +
-                                             "-18.0106 ; Dehydrated ; Glu->pyro-Glu\t4\t\t\t\t4";
+                                             "79#9663 ; Phospho\t51\t\t\t\t\t\t\t\t23\t20\t8\n" +
+                                             "42#0106 ; Acetyl ; Ser->Glu\t177\t134\t\t\t\t43\t\t\t\t\t\n" +
+                                             "28#0313 ; Dimethyl ; Delta:H(4)C(2) ; Ethyl ; Ala->Val ; Cys->Met\t49\t\t\t\t\t34\t\t15\t\t\t\n" +
+                                             "15#9949 ; Oxidation ; Ala->Ser ; Phe->Tyr\t55\t\t\t\t\t\t\t\t\t\t\n" +
+                                             "14#0157 ; Methyl ; Asp->Glu ; Gly->Ala ; Ser->Thr ; Val->Xle ; Asn->Gln\t57\t\t\t\t\t39\t\t18\t\t\t\n" +
+                                             "-17#0265 ; Gln->pyro-Glu ; Ammonia-loss\t29\t\t\t\t\t\t29\t\t\t\t\n" +
+                                             "-18#0106 ; Dehydrated ; Glu->pyro-Glu\t4\t\t\t\t4";
+                    expectedTsvText = expectedTsvText.Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
 
                     IDPicker.Util.TryRepeatedly<Exception>(() =>
                     {
@@ -594,7 +596,7 @@ namespace Test
                     window.WaitWhileBusy();
                     saveButton.ClickAndWaitWhileBusy(window);
 
-                    var exportedText = File.ReadAllText(saveFilepath);
+                    var exportedText = File.ReadAllText(saveFilepath).Replace("\"", "");
                     expectedTsvText.AssertMultilineStringEquals(exportedText, "exportToTsvTest");
 
                     // TODO: how to test Excel if it's not necessarily installed on the test agent?
@@ -675,24 +677,24 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("( 42.0106 134 168 271 Acetyl", getRowString(rows[row++]));
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
-                Assert.AreEqual("D 21.9819 64 121 96 Cation:Na", getRowString(rows[row++]));
-                Assert.AreEqual("D 37.9559 31 61 44 Cation:K", getRowString(rows[row++]));
-                Assert.AreEqual("E -18.0106 4 6 9 Glu->pyro-Glu", getRowString(rows[row++]));
-                Assert.AreEqual("E 21.9819 69 179 109 Cation:Na", getRowString(rows[row++]));
-                Assert.AreEqual("E 37.9559 22 64 31 Cation:K", getRowString(rows[row++]));
-                Assert.AreEqual("K 14.0157 39 145 68 Methyl", getRowString(rows[row++]));
-                Assert.AreEqual("K 28.0313 34 62 57 Dimethyl  Delta:H(4)C(2)  Ethyl", getRowString(rows[row++])); // semicolons are used as separators in getRowString
-                Assert.AreEqual("K 42.0106 43 66 66 Acetyl", getRowString(rows[row++]));
-                Assert.AreEqual("M 15.9949 55 69 81 Oxidation", getRowString(rows[row++]));
-                Assert.AreEqual("Q -17.0265 29 29 36 Gln->pyro-Glu", getRowString(rows[row++]));
-                Assert.AreEqual("R 14.0157 18 28 25 Methyl", getRowString(rows[row++]));
-                Assert.AreEqual("R 28.0313 15 32 30 Dimethyl", getRowString(rows[row++]));
-                Assert.AreEqual("S 79.9663 23 56 126 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("T 79.9663 20 30 60 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("Y 44.9851 11 28 24 Nitro", getRowString(rows[row++]));
-                Assert.AreEqual("Y 79.9663 8 18 44 Phospho", getRowString(rows[row++]));
+                Assert.AreEqual("( 42#0106 134 168 271 Acetyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("D 21#9819 64 121 96 Cation:Na".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("D 37#9559 31 61 44 Cation:K".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("E -18#0106 4 6 9 Glu->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("E 21#9819 69 179 109 Cation:Na".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("E 37#9559 22 64 31 Cation:K".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("K 14#0157 39 145 68 Methyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("K 28#0313 34 62 57 Dimethyl  Delta:H(4)C(2)  Ethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++])); // semicolons are used as separators in getRowString
+                Assert.AreEqual("K 42#0106 43 66 66 Acetyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("M 15#9949 55 69 81 Oxidation".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Q -17#0265 29 29 36 Gln->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("R 14#0157 18 28 25 Methyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("R 28#0313 15 32 30 Dimethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("S 79#9663 23 56 126 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("T 79#9663 20 30 60 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 44#9851 11 28 24 Nitro".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 79#9663 8 18 44 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
 
                 // test sorting by delta mass (site is tie-breaker)
                 columns[1].ClickAndWaitWhileBusy(window);
@@ -703,13 +705,13 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("E -18.0106 4 6 9 Glu->pyro-Glu", getRowString(rows[row++]));
-                Assert.AreEqual("Q -17.0265 29 29 36 Gln->pyro-Glu", getRowString(rows[row++]));
+                Assert.AreEqual("E -18#0106 4 6 9 Glu->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Q -17#0265 29 29 36 Gln->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
                 row = rows.Count - 4;
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
-                Assert.AreEqual("S 79.9663 23 56 126 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("T 79.9663 20 30 60 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("Y 79.9663 8 18 44 Phospho", getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("S 79#9663 23 56 126 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("T 79#9663 20 30 60 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 79#9663 8 18 44 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
 
                 // test reversal of sort order
                 columns[1].ClickAndWaitWhileBusy(window);
@@ -720,13 +722,13 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("S 79.9663 23 56 126 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("T 79.9663 20 30 60 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("Y 79.9663 8 18 44 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
+                Assert.AreEqual("S 79#9663 23 56 126 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("T 79#9663 20 30 60 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 79#9663 8 18 44 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
                 row = rows.Count - 2;
-                Assert.AreEqual("Q -17.0265 29 29 36 Gln->pyro-Glu", getRowString(rows[row++]));
-                Assert.AreEqual("E -18.0106 4 6 9 Glu->pyro-Glu", getRowString(rows[row++]));
+                Assert.AreEqual("Q -17#0265 29 29 36 Gln->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("E -18#0106 4 6 9 Glu->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
 
                 // test returning to sort by site (delta mass is tie-breaker)
                 columns[0].ClickAndWaitWhileBusy(window);
@@ -737,12 +739,12 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("( 42.0106 134 168 271 Acetyl", getRowString(rows[row++]));
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
+                Assert.AreEqual("( 42#0106 134 168 271 Acetyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
                 row = rows.Count - 3;
-                Assert.AreEqual("T 79.9663 20 30 60 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("Y 44.9851 11 28 24 Nitro", getRowString(rows[row++]));
-                Assert.AreEqual("Y 79.9663 8 18 44 Phospho", getRowString(rows[row++]));
+                Assert.AreEqual("T 79#9663 20 30 60 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 44#9851 11 28 24 Nitro".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 79#9663 8 18 44 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
 
                 // test reversal of sort by site (delta mass is tie-breaker)
                 columns[0].ClickAndWaitWhileBusy(window);
@@ -753,12 +755,12 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("Y 44.9851 11 28 24 Nitro", getRowString(rows[row++]));
-                Assert.AreEqual("Y 79.9663 8 18 44 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("T 79.9663 20 30 60 Phospho", getRowString(rows[row++]));
+                Assert.AreEqual("Y 44#9851 11 28 24 Nitro".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 79#9663 8 18 44 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("T 79#9663 20 30 60 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
                 row = rows.Count - 2;
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
-                Assert.AreEqual("( 42.0106 134 168 271 Acetyl", getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("( 42#0106 134 168 271 Acetyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
 
                 // test sorting by spectral count
                 columns[4].ClickAndWaitWhileBusy(window);
@@ -769,12 +771,12 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("E -18.0106 4 6 9 Glu->pyro-Glu", getRowString(rows[row++]));
-                Assert.AreEqual("Y 44.9851 11 28 24 Nitro", getRowString(rows[row++]));
+                Assert.AreEqual("E -18#0106 4 6 9 Glu->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("Y 44#9851 11 28 24 Nitro".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
                 row = rows.Count - 3;
-                Assert.AreEqual("S 79.9663 23 56 126 Phospho", getRowString(rows[row++]));
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
-                Assert.AreEqual("( 42.0106 134 168 271 Acetyl", getRowString(rows[row++]));
+                Assert.AreEqual("S 79#9663 23 56 126 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("( 42#0106 134 168 271 Acetyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
 
                 // test reversal of sort by spectral count
                 columns[4].ClickAndWaitWhileBusy(window);
@@ -785,12 +787,12 @@ namespace Test
                 Assert.AreEqual(18, rows.Count);
                 Assert.AreEqual(6, columns.Count);
                 Assert.AreEqual("Site ΔMass Peptides Matches Spectra Description", String.Join(" ", columns.Select(o => o.Name)));
-                Assert.AreEqual("( 42.0106 134 168 271 Acetyl", getRowString(rows[row++]));
-                Assert.AreEqual("C 57.0215 149 186 198 Carbamidomethyl", getRowString(rows[row++]));
-                Assert.AreEqual("S 79.9663 23 56 126 Phospho", getRowString(rows[row++]));
+                Assert.AreEqual("( 42#0106 134 168 271 Acetyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("C 57#0215 149 186 198 Carbamidomethyl".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("S 79#9663 23 56 126 Phospho".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
                 row = rows.Count - 2;
-                Assert.AreEqual("Y 44.9851 11 28 24 Nitro", getRowString(rows[row++]));
-                Assert.AreEqual("E -18.0106 4 6 9 Glu->pyro-Glu", getRowString(rows[row++]));
+                Assert.AreEqual("Y 44#9851 11 28 24 Nitro".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
+                Assert.AreEqual("E -18#0106 4 6 9 Glu->pyro-Glu".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]));
             },
             closeAppOnError: true);
         }

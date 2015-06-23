@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using IDPicker.DataModel;
@@ -180,7 +181,7 @@ namespace IDPicker.DataModel
                 var modifications = tokens[modsIndex].Split(' ').Last()
                                                      .Split(',')
                                                      .Select(o => o.Split('@'))
-                                                     .Select(o => new { Offset = Convert.ToInt32(o[1]), DeltaMass = Convert.ToDouble(o[0]) })
+                                                     .Select(o => new { Offset = Convert.ToInt32(o[1]), DeltaMass = Convert.ToDouble(o[0], CultureInfo.InvariantCulture) })
                                                      .OrderByDescending(o => o.Offset);
 
                 string formatString = "[{0}]";

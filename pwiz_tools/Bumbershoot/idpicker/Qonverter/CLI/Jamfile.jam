@@ -37,13 +37,14 @@ RESCAN ;
 
 # separate library needed because native code uses the native IDPICKER_NAMESPACE
 lib NativeQonverter
- : [ glob ../*Qonverter.cpp ] ../SchemaUpdater.cpp
+ : [ glob ../*Qonverter.cpp ] ../SchemaUpdater.cpp ../Logger.cpp
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <link>static
    <library>../../freicore/libraries/SQLite//sqlite3pp
    <library>../..//svm
    <library>/ext/boost//thread
    <library>/ext/boost//filesystem
+   <library>/ext/boost//log
    <library>../waffles//waffles
    <toolset>msvc:<using-clr>false
  :
@@ -51,6 +52,7 @@ lib NativeQonverter
    <library>../..//svm
    <library>/ext/boost//thread
    <library>/ext/boost//filesystem
+   <library>/ext/boost//log
    <library>../waffles//waffles
  ;
  
@@ -64,6 +66,7 @@ lib NativeParserEmbedderMergerFilter
    <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
    <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
    <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+   <toolset>msvc:<cxxflags>/bigobj
    <toolset>msvc:<using-clr>false
    <conditional>@pwiz-bindings-dependency
  :
@@ -77,7 +80,7 @@ lib NativeParserEmbedderMergerFilter
  ;
 
 lib InteropQonverter
- : Qonverter.cpp Parser.cpp Embedder.cpp SchemaUpdater.cpp Filter.cpp Merger.cpp NativeParserEmbedderMergerFilter
+ : Qonverter.cpp Parser.cpp Embedder.cpp SchemaUpdater.cpp Filter.cpp Merger.cpp Logger.cpp NativeParserEmbedderMergerFilter
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <toolset>msvc:<using-clr>true
    <toolset>msvc:<link>shared

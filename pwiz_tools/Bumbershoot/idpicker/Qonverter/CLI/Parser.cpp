@@ -25,6 +25,7 @@
 
 #include "Parser.hpp"
 #include "../Parser.hpp"
+#include "Logger.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/foreach_field.hpp"
@@ -147,6 +148,8 @@ void Parser::Parse(IEnumerable<String^>^ inputFilepaths, int maxThreads, pwiz::C
     vector<string> nativeInputFilepaths;
     for each (String^ filepath in inputFilepaths)
         nativeInputFilepaths.push_back(ToStdString(filepath));
+
+    Logger::Initialize(); // make sure the logger is initialized
 
     NativeIDPicker::Parser parser;
 

@@ -26,6 +26,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestStack.White;
 using TestStack.White.Factory;
@@ -141,10 +142,10 @@ namespace Test
                 Assert.AreEqual("Group/Source/Spectrum Distinct Peptides Distinct Matches Filtered Spectra Distinct Charges Protein Groups Scan Time Precursor m/z Observed Mass Exact Mass Mass Error Charge Q Value Sequence", String.Join(" ", columns.Select(o => o.Name)));
                 Assert.AreEqual("129 191 207 3 9", getRowString(rows[row++]).Trim());
                 Assert.AreEqual("201203-624176-12 129 191 207 3 9", getRowString(rows[row++]).Trim());
-                Assert.AreEqual("0.1.171      8.4650 831.3822 830.3749 830.3770 -0.0021 1 0.00 EDVPSER", getRowString(rows[row++]).Trim());
-                Assert.AreEqual("0.1.207      9.6810 818.4236 817.4163 817.4181 -0.0018 1 0.00 GASIVEDK", getRowString(rows[row++]).Trim());
+                Assert.AreEqual("0.1.171      8#4650 831#3822 830#3749 830#3770 -0#0021 1 0#00 EDVPSER".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]).Trim());
+                Assert.AreEqual("0.1.207      9#6810 818#4236 817#4163 817#4181 -0#0018 1 0#00 GASIVEDK".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]).Trim());
                 row = rows.Count - 1;
-                Assert.AreEqual("0.1.1374      39.9247 1199.6108 1198.6036 1198.6063 -0.0027 1 0.00 FFVAPFPEVF", getRowString(rows[row++]).Trim());
+                Assert.AreEqual("0.1.1374      39#9247 1199#6108 1198#6036 1198#6063 -0#0027 1 0#00 FFVAPFPEVF".Replace("#", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), getRowString(rows[row++]).Trim());
             },
             closeAppOnError: true);
         }

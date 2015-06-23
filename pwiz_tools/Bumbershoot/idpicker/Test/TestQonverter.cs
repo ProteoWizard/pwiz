@@ -291,7 +291,7 @@ namespace Test
                 else
                     Assert.IsTrue(eventArgs.QonvertedAnalyses < CancelAtCount);
 
-                if (eventArgs.Message == ("updating Q values"))
+                if (eventArgs.Message == "")
                     ++ExpectedQonvertedAnalyses;
             }
         }

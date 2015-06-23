@@ -24,6 +24,7 @@
 
 
 #include "Qonverter.hpp"
+#include "Logger.hpp"
 
 #pragma unmanaged
 #include "../Qonverter.hpp"
@@ -91,6 +92,8 @@ Qonverter::Qonverter()
 
 void Qonverter::Qonvert(String^ idpDbFilepath)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     NativeQonverter qonverter;
     qonverter.logQonversionDetails = LogQonversionDetails;
 
@@ -134,6 +137,8 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
 
 void Qonverter::Qonvert(System::IntPtr idpDb)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     NativeQonverter qonverter;
     qonverter.logQonversionDetails = LogQonversionDetails;
 
@@ -180,6 +185,8 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
 
 void Qonverter::Reset(String^ idpDbFilepath)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     NativeQonverter qonverter;
     QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
     ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
@@ -193,6 +200,8 @@ void Qonverter::Reset(String^ idpDbFilepath)
 
 void Qonverter::Reset(System::IntPtr idpDb)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     NativeQonverter qonverter;
     QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
     ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(

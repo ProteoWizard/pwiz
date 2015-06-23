@@ -1187,20 +1187,18 @@ namespace IDPicker
                             Text = "Import Progress",
                             StartPosition = FormStartPosition.CenterParent,
                         };
-                        progressForm.NonFatalErrorCaught +=
-                            (rawMessage, emptyargs) =>
-                            {
-                                var message = rawMessage as string[];
-                                if (message == null || message.Length < 2)
-                                    return;
-                                delayedMessages.Add(new[] { message[0], message[1] });
-                            };
 
                         Invoke(new MethodInvoker(() => progressForm.Show(this)));
 
                         try
                         {
                             parser.Parse(xml_filepaths, ilr);
+
+                            // read log for non-fatal errors
+                            //string log = Logger.Reader.ReadToEnd().Trim();
+                            //if (log.Length > 0)
+                            //    Invoke(new MethodInvoker(() => UserDialog.Show(this, "Log Messages", new TextBox {Multiline = true, Text = log.Replace("\n", "\r\n"), ReadOnly = true, Size = new Size(800, 600),  ScrollBars = ScrollBars.Both}, MessageBoxButtons.OK)));
+
                             break; // no fatal errors, break the loop
                         }
                         catch (Exception ex)
@@ -2034,10 +2032,18 @@ namespace IDPicker
             if (File.Exists(g2pPath))
             {
                 // if the file exists, check its timestamp and compare it to the timestamp on the server
-                var con = new SQLiteConnection(@"Data Source=" + g2pPath + ";Version=3");
-                con.Open();
-                g2pTimestamp = con.ExecuteQuery("SELECT Timestamp FROM About").Single().GetString(0);
-                con.Close();
+                using (var con = new SQLiteConnection(@"Data Source=" + g2pPath + ";Version=3"))
+                {
+                    try
+                    {
+                        con.Open();
+                        g2pTimestamp = con.ExecuteQuery("SELECT Timestamp FROM About").Single().GetString(0);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Exception("error getting timestamp of current gene2protein database (\"" + g2pPath + "\"): " + e.Message, e);
+                    }
+                }
 
                 string g2pURL = "http://fenchurch.mc.vanderbilt.edu/bin/g2p";
                 string g2pTimestampURL = String.Format("{0}/G2P_TIMESTAMP", g2pURL);

@@ -101,10 +101,10 @@ struct Parser
 
     typedef boost::shared_ptr<ImportSettingsCallback> ImportSettingsCallbackPtr;
 
-
     ImportSettingsCallbackPtr importSettingsCallback;
     bool skipSourceOnError;
 
+    Parser();
 
     void parse(const vector<string>& inputFilepaths, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;
 

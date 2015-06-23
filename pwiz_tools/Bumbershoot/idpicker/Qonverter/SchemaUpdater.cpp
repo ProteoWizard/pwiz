@@ -109,7 +109,7 @@ struct DistinctDoubleArraySum
     }
 };
 
-void update_12_to_13(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_12_to_13(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 12, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -118,7 +118,7 @@ void update_12_to_13(sqlite::database& db, IterationListenerRegistry* ilr, bool&
     //update_13_to_14(db, ilr, vacuumNeeded);
 }
 
-void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_11_to_12(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 11, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -145,7 +145,7 @@ void update_11_to_12(sqlite::database& db, IterationListenerRegistry* ilr, bool&
     update_12_to_13(db, ilr, vacuumNeeded);
 }
 
-void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_10_to_11(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 10, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -171,7 +171,7 @@ void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr, bool&
 }
 
 
-void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_9_to_10(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 9, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -184,7 +184,7 @@ void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr, bool& 
 }
 
 
-void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_8_to_9(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 8, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -209,7 +209,7 @@ void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_9_to_10(db, ilr, vacuumNeeded);
 }
 
-void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_7_to_8(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 7, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -236,7 +236,7 @@ void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_8_to_9(db, ilr, vacuumNeeded);
 }
 
-void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_6_to_7(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 6, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -369,7 +369,7 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_7_to_8(db, ilr, vacuumNeeded);
 }
 
-void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_5_to_6(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 5, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -379,7 +379,7 @@ void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_6_to_7(db, ilr, vacuumNeeded);
 }
 
-void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_4_to_5(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 4, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -392,7 +392,7 @@ void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_5_to_6(db, ilr, vacuumNeeded);
 }
 
-void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_3_to_4(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 3, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -416,7 +416,7 @@ void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_4_to_5(db, ilr, vacuumNeeded);
 }
 
-void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_2_to_3(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 2, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -435,7 +435,7 @@ void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_3_to_4(db, ilr, vacuumNeeded);
 }
 
-void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_1_to_2(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 1, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -468,7 +468,7 @@ void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
     update_2_to_3(db, ilr, vacuumNeeded);
 }
 
-void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr, bool& vacuumNeeded)
+void update_0_to_1(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 0, CURRENT_SCHEMA_REVISION, "updating schema version")
 
@@ -545,7 +545,7 @@ void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr, bool& v
 } // namespace
 
 
-bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
+bool update(const string& idpDbFilepath, const IterationListenerRegistry* ilr)
 {
     sqlite::database db(idpDbFilepath);
 
@@ -557,7 +557,7 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
     return update(db.connected());
 }
 
-bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
+bool update(sqlite3* idpDbConnection, const IterationListenerRegistry* ilr)
 {
     int schemaRevision;
     sqlite::database db(idpDbConnection, false);

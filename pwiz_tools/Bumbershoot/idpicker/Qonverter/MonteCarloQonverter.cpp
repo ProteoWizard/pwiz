@@ -25,10 +25,26 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "MonteCarloQonverter.hpp"
 #include "waffles/GVec.h"
+#include "Logger.hpp"
 
 
 using namespace GClasses;
 using namespace IDPICKER_NAMESPACE;
+
+
+namespace std
+{
+    ostream& operator<< (ostream& os, const vector<double>& v)
+    {
+        if (v.empty())
+            return os;
+        ostringstream oss; // use C locale for output; i.e. no thousands separators, period as decimal separator, so we can use space as a number separator
+        oss << v[0];
+        for (int i = 1; i < v.size(); ++i)
+            oss << " " << v[i];
+        return os << oss.str();
+    }
+}
 
 
 BEGIN_IDPICKER_NAMESPACE
@@ -120,6 +136,8 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
                     break;
             }
 
+            BOOST_LOG_SEV(logSource::get(), MessageSeverity::VerboseInfo) << "For PSMs of charge " << range.front().chargeState << " and terminal specificity " << range.front().bestSpecificity << ", Monte Carlo score optimization with weights (" << scorePermutation << ") produced " << passedPSMs << " ids.";
+
             // save the solution if this is best we have seen so far
             if(passingPSMs <= passedPSMs)
             {
@@ -127,6 +145,8 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
                 bestSolution = &scorePermutation;
             }
         }
+
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "The best Monte Carlo weights for PSMs of charge " << range.front().chargeState << " and terminal specificity " << range.front().bestSpecificity << " are (" << bestSolution << "), producing " << passingPSMs << " ids.";
 
         if (monteCarloWeightsByChargeAndBestSpecificity)
             BOOST_FOREACH(const PeptideSpectrumMatch& psm, range)

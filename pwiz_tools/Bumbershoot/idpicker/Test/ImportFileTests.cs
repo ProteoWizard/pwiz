@@ -26,6 +26,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
@@ -155,7 +156,7 @@ namespace Test
 
                     var firstRow = settingsTable.Rows[0];
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", "cow.protein.PRG2012-subset.fasta", "XXX_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "MyriMatch optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
                     // with this workaround, be careful while debugging around this code because the keyboard input might be sent to the debugger!
@@ -295,10 +296,10 @@ namespace Test
                     Assert.AreEqual(4, settingsTable.Rows.Count);
 
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", FilepathOrFilename(settingsTable.Rows[0].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", FilepathOrFilename(settingsTable.Rows[1].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", FilepathOrFilename(settingsTable.Rows[2].Cells[1].Value.ToString()), "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", FilepathOrFilename(settingsTable.Rows[0].Cells[1].Value.ToString()), "XXX_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", FilepathOrFilename(settingsTable.Rows[1].Cells[1].Value.ToString()), "XXX_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", FilepathOrFilename(settingsTable.Rows[2].Cells[1].Value.ToString()), "XXX", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
                     // with this workaround, be careful while debugging around this code because the keyboard input might be sent to the debugger!
@@ -461,10 +462,10 @@ namespace Test
                     Assert.AreEqual(4, settingsTable.Rows.Count);
 
                     Assert.AreEqual(7, settingsTable.Rows[0].Cells.Count);
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", FilepathOrFilename(settingsTable.Rows[0].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", FilepathOrFilename(settingsTable.Rows[1].Cells[1].Value.ToString()), "XXX_", "2", "0.1", "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", FilepathOrFilename(settingsTable.Rows[2].Cells[1].Value.ToString()), "XXX", "2", "0.1", "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
-                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", "0.1", "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Comet 2014.02", FilepathOrFilename(settingsTable.Rows[0].Cells[1].Value.ToString()), "XXX_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "Comet optimized" }, settingsTable.Rows[0].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MyriMatch 2.2.140", FilepathOrFilename(settingsTable.Rows[1].Cells[1].Value.ToString()), "XXX_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "MyriMatch optimized" }, settingsTable.Rows[1].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "MS-GF+ Beta (v10072)", FilepathOrFilename(settingsTable.Rows[2].Cells[1].Value.ToString()), "XXX", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "MS-GF+" }, settingsTable.Rows[2].Cells.Select(o => o.Value).ToArray());
+                    UnitTestExtensions.AssertSequenceEquals(new Object[] { "Mascot 2.2.06", "cow.protein.PRG2012-subset.fasta", "DECOY_", "2", 0.1m.ToString(CultureInfo.CurrentCulture), "False", "Mascot ionscore" }, settingsTable.Rows[3].Cells.Select(o => o.Value).ToArray());
 
                     // HACK: for some reason White's TableCell.Value property isn't sending keyboard input correctly;
                     // with this workaround, be careful while debugging around this code because the keyboard input might be sent to the debugger!

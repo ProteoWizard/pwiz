@@ -108,8 +108,8 @@ struct Filter
 
     Config config;
 
-    void filter(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
-    void filter(sqlite3* idpDbConnection, pwiz::util::IterationListenerRegistry* ilr = 0);
+    void filter(const string& idpDbFilepath, const pwiz::util::IterationListenerRegistry* ilr = 0);
+    void filter(sqlite3* idpDbConnection, const pwiz::util::IterationListenerRegistry* ilr = 0);
 
     static boost::optional<Config> currentConfig(const string& idpDbFilepath);
     static boost::optional<Config> currentConfig(sqlite3* idpDbConnection);

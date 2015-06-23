@@ -24,6 +24,7 @@
 
 
 #include "Embedder.hpp"
+#include "Logger.hpp"
 
 #pragma unmanaged
 #include "../Embedder.hpp"
@@ -166,6 +167,8 @@ void Embedder::Embed(String^ idpDbFilepath,
                      IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                      pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         map<int, NativeIDPicker::Embedder::QuantitationConfiguration> nativeQuantitationMethodBySource;
@@ -186,6 +189,8 @@ void Embedder::Embed(String^ idpDbFilepath,
                      IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                      pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         map<int, NativeIDPicker::Embedder::QuantitationConfiguration> nativeQuantitationMethodBySource;
@@ -207,6 +212,8 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
                              IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                              pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         map<int, NativeIDPicker::Embedder::QuantitationConfiguration> nativeQuantitationMethodBySource;
@@ -227,6 +234,8 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
                              IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                              pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         map<int, NativeIDPicker::Embedder::QuantitationConfiguration> nativeQuantitationMethodBySource;
@@ -245,6 +254,8 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
 
 bool Embedder::HasGeneMetadata(String^ idpDbFilepath)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         return NativeEmbedder::hasGeneMetadata(ToStdString(idpDbFilepath));
@@ -256,6 +267,8 @@ bool Embedder::HasGeneMetadata(String^ idpDbFilepath)
 
 void Embedder::EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         String^ currentDirectory = Directory::GetCurrentDirectory();
@@ -271,6 +284,8 @@ void Embedder::EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::Iterati
 
 void Embedder::DropGeneMetadata(String^ idpDbFilepath)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         return NativeEmbedder::dropGeneMetadata(ToStdString(idpDbFilepath));
@@ -281,6 +296,8 @@ void Embedder::DropGeneMetadata(String^ idpDbFilepath)
 
 void Embedder::Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         NativeEmbedder::extract(ToStdString(idpDbFilepath), ToStdString(sourceName), ToStdString(outputFilepath));
@@ -296,6 +313,8 @@ void Embedder::EmbedMS1Metrics(String^ idpDbFilepath,
                      IDictionary<int, XICConfiguration^>^ xicConfigurationBySource,
                      pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
+    Logger::Initialize(); // make sure the logger is initialized
+
     try
     {
         map<int, NativeIDPicker::Embedder::QuantitationConfiguration> nativeQuantitationMethodBySource;

@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -65,7 +66,7 @@ namespace IDPicker.Controls
                 missedCleavagesComboBox.SelectedIndex = (int) value.MissedCleavagesHandling;
                 kernelComboBox.SelectedIndex = (int) value.Kernel;
                 rerankingCheckbox.Checked = value.RerankMatches;
-                optimizeAtFdrTextBox.Text = (value.MaxFDR * 100).ToString("f4");
+                optimizeAtFdrTextBox.Text = (value.MaxFDR * 100).ToString("f4", CultureInfo.CurrentCulture);
 
                 scoreGridView.Rows.Clear();
                 foreach (var kvp in value.ScoreInfoByName)
@@ -91,7 +92,7 @@ namespace IDPicker.Controls
                     MissedCleavagesHandling = (Qonverter.MissedCleavagesHandling) missedCleavagesComboBox.SelectedIndex,
                     Kernel = (Qonverter.Kernel) kernelComboBox.SelectedIndex,
                     RerankMatches = rerankingCheckbox.Checked,
-                    MaxFDR = Convert.ToDouble(optimizeAtFdrTextBox.Text) / 100,
+                    MaxFDR = Convert.ToDouble(optimizeAtFdrTextBox.Text, CultureInfo.CurrentCulture) / 100,
                     ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
                 };
 
@@ -156,18 +157,25 @@ namespace IDPicker.Controls
             }
         }
 
-        private void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
+        private void doubleTextBox_KeyPress (object sender, KeyPressEventArgs e)
         {
-            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
+            var textBox = sender as TextBoxBase;
+            if (textBox == null)
+                return;
+
+            if (e.KeyChar.ToString() == CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
             {
-                if ((sender as Control).Text.Length == 0 || (sender as Control).Text.Contains('.'))
-                    e.SuppressKeyPress = true;
+                if (textBox.Text.Length == 0)
+                {
+                    textBox.Text = "0" + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+                    e.Handled = true;
+                    textBox.SelectionStart = textBox.TextLength;
+                }
+                else if (textBox.Text.Contains(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator))
+                    e.Handled = true;
             }
-            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
-                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
-                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
-                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
-                e.SuppressKeyPress = true;
+            else if (e.KeyChar != '\b' && (e.KeyChar < '0' || e.KeyChar > '9'))
+                e.Handled = true;
         }
 
         private void flowLayoutPanel_Resize (object sender, EventArgs e)

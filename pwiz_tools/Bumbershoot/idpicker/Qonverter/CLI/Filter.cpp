@@ -103,6 +103,9 @@ void Filterer::Filter(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerR
     {
         NativeFilter filter;
         filter.config = makeNativeFilterConfig(Config);
+
+        Logger::Initialize(); // make sure the logger is initialized
+
         filter.filter(ToStdString(idpDbFilepath), ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
         System::GC::KeepAlive(ilr);
     }
@@ -115,6 +118,8 @@ void Filterer::Filter(System::IntPtr idpDb, pwiz::CLI::util::IterationListenerRe
     {
         NativeFilter filter;
         filter.config = makeNativeFilterConfig(Config);
+
+        Logger::Initialize(); // make sure the logger is initialized
 
         sqlite3* foo = (sqlite3*)idpDb.ToPointer();
         pin_ptr<sqlite3> idpDbPtr = foo;

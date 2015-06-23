@@ -404,7 +404,7 @@ namespace IDPicker.DataModel
                     conn.ExecuteNonQuery("CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY)");
                 }
             }
-            catch (Exception e)
+            catch (SQLiteException e)
             {
                 if (e.Message.Contains("already exists"))
                     return true;

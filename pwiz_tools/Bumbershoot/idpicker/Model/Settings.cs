@@ -29,6 +29,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.IO;
 using System.Data;
+using System.Globalization;
 using NHibernate;
 using NHibernate.Linq;
 using Iesi.Collections.Generic;
@@ -145,7 +146,7 @@ namespace IDPicker.DataModel
                                                               kvp.Value.MissedCleavagesHandling,
                                                               kvp.Value.TerminalSpecificityHandling,
                                                               kvp.Value.ChargeStateHandling,
-                                                              kvp.Value.MaxFDR,
+                                                              kvp.Value.MaxFDR.ToString(CultureInfo.InvariantCulture),
                                                               assembleScoreInfo(kvp.Value.ScoreInfoByName)));
 
             Properties.Settings.Default.QonverterSettings = qonverterSettingsCollection;
@@ -159,7 +160,7 @@ namespace IDPicker.DataModel
             var scoreInfoStrings = new List<string>();
             foreach (var scoreInfoPair in scoreInfoByName)
                 scoreInfoStrings.Add(String.Format("{0} {1} {2} {3}",
-                                                   scoreInfoPair.Value.Weight,
+                                                   scoreInfoPair.Value.Weight.ToString(CultureInfo.InvariantCulture),
                                                    scoreInfoPair.Value.Order,
                                                    scoreInfoPair.Value.NormalizationMethod,
                                                    scoreInfoPair.Key));
@@ -176,7 +177,7 @@ namespace IDPicker.DataModel
                     continue;
 
                 string[] scoreInfoTokens = scoreInfoString.Trim().Split(' ');
-                var weight = Convert.ToDouble(scoreInfoTokens[0]);
+                var weight = Convert.ToDouble(scoreInfoTokens[0], CultureInfo.InvariantCulture);
                 var order = (Qonverter.Settings.Order) Enum.Parse(typeof(Qonverter.Settings.Order), scoreInfoTokens[1]);
                 var normalizationMethod = (Qonverter.Settings.NormalizationMethod) Enum.Parse(typeof(Qonverter.Settings.NormalizationMethod), scoreInfoTokens[2]);
                 var name = String.Join(" ", scoreInfoTokens, 3, scoreInfoTokens.Length - 3);
@@ -214,7 +215,7 @@ namespace IDPicker.DataModel
                     MissedCleavagesHandling = (Qonverter.MissedCleavagesHandling) Enum.Parse(typeof(Qonverter.MissedCleavagesHandling), tokens[5]),
                     TerminalSpecificityHandling = (Qonverter.TerminalSpecificityHandling) Enum.Parse(typeof(Qonverter.TerminalSpecificityHandling), tokens[6]),
                     ChargeStateHandling = (Qonverter.ChargeStateHandling) Enum.Parse(typeof(Qonverter.ChargeStateHandling), tokens[7]),
-                    MaxFDR = Convert.ToDouble(tokens[8]),
+                    MaxFDR = Convert.ToDouble(tokens[8], CultureInfo.InvariantCulture),
                     ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
                 };
 
