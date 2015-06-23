@@ -149,8 +149,6 @@ namespace pwiz.Skyline.Model.Results
             if (_isSrm)
             {
                 _collectors = new Collectors();
-                _blockWriter = new BlockWriter(null);
-
                 ExtractChromatograms();
             }
             // Load non-SRM chromatograms asynchronously.
@@ -301,7 +299,6 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 CompleteChromatograms(chromMaps);
-                ExtractionComplete();
             }
 
             if (chromMap.Count == 0 && chromMapMs1.Count == 0 && chromMapSim.Count == 0)
@@ -319,9 +316,8 @@ namespace pwiz.Skyline.Model.Results
             foreach (var filterPair in finishedFilterPairs)
                 AddChromatogramsForFilterPair(chromMaps, filterPair);
 
-            // Update time for which chromatograms are available
-            _blockWriter.RetentionTime = retentionTime >= 0 ? (float) retentionTime : float.MaxValue;
-            _collectors.AddComplete();
+            // Update time for which chromatograms are available.
+            _collectors.AddComplete(retentionTime >= 0 ? (float)retentionTime : float.MaxValue);
         }
 
         private void AddChromatogramsForFilterPair(ChromDataCollectorSet[] chromMaps, SpectrumFilterPair filterPair)
@@ -507,7 +503,8 @@ namespace pwiz.Skyline.Model.Results
             int id, string modifiedSequence,
             out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
-            var statusId = _collectors.ReleaseChromatogram(id, _blockWriter, out times, out intensities, out massErrors, out scanIds);
+            var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
+                out times, out intensities, out massErrors, out scanIds);
             extra = new ChromExtra(statusId, LoadingStatus.Transitions.GetRank(id));  // TODO: Get rank
 
             // Each chromatogram will be read only once!
@@ -563,7 +560,6 @@ namespace pwiz.Skyline.Model.Results
 
         public override void ReleaseMemory()
         {
-            ExtractionComplete();
         }
 
         public override void Dispose()
@@ -903,6 +899,7 @@ namespace pwiz.Skyline.Model.Results
         {
             private readonly List<ChromCollector> _collectors;
             private readonly int[] _chromKeyLookup;
+            private float _retentionTime;
             private Exception _exception;
 
             public Collectors()
@@ -987,14 +984,16 @@ namespace pwiz.Skyline.Model.Results
             {
                 lock (this)
                 {
+                    _retentionTime = float.MaxValue;
                     Monitor.Pulse(this);
                 }
             }
 
-            public void AddComplete()
+            public void AddComplete(float retentionTime)
             {
                 lock (this)
                 {
+                    _retentionTime = retentionTime;
                     Monitor.Pulse(this);
                 }
             }
@@ -1003,17 +1002,34 @@ namespace pwiz.Skyline.Model.Results
             /// Called from the reader thread to get a chromatogram. May have to wait until the chromatogram
             /// extraction thread has completed the requested chromatogram.
             /// </summary>
-            public int ReleaseChromatogram(int index, BlockWriter blockWriter, out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
+            public int ReleaseChromatogram(
+                int chromatogramIndex,
+                ChromGroups chromGroups,
+                out float[] times,
+                out float[] intensities,
+                out float[] massErrors,
+                out int[] scanIds)
             {
                 lock (this)
                 {
                     while (_exception == null)
                     {
                         // Copy chromatogram data to output arrays and release memory.
-                        int status = blockWriter.ReleaseChromatogram(index, _collectors[index], out times, out intensities, out massErrors, out scanIds);
+                        var collector = _collectors[chromatogramIndex];
+                        int status;
+                        if (chromGroups != null)
+                        {
+                            status = chromGroups.ReleaseChromatogram(chromatogramIndex, _retentionTime, collector,
+                                out times, out intensities, out massErrors, out scanIds);
+                        }
+                        else
+                        {
+                            collector.ReleaseChromatogram(null, out times, out intensities, out massErrors, out scanIds);
+                            status = collector.StatusId;
+                        }
                         if (status >= 0)
                         {
-                            _collectors[index] = null;
+                            _collectors[chromatogramIndex] = null;
                             return status;
                         }
                         Monitor.Wait(this);
@@ -1030,7 +1046,7 @@ namespace pwiz.Skyline.Model.Results
                     throw exception;
 
                 _exception = exception;
-                AddComplete();
+                ExtractionComplete();
             }
         }
 
@@ -1279,17 +1295,17 @@ namespace pwiz.Skyline.Model.Results
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
                     if (ionScanCount > 1 && lenTimes > 1)
-                        chromCollector.FillIntensities(lenTimes - 1, _blockWriter, chromIndex);
+                        chromCollector.FillIntensities(chromIndex, lenTimes - 1, _blockWriter);
                     collector.ProductIntensityMap.Add(productFilter, chromCollector);
 
                     if (addCollector != null)
                         addCollector(productFilter.FilterId, chromCollector);
                 }
                 if (IsSingleTime)
-                    chromCollector.AddTime(time, _blockWriter, chromIndex);
+                    chromCollector.AddTime(chromIndex, time, _blockWriter);
                 if (spectrum.MassErrors != null)
-                    chromCollector.AddMassError(spectrum.MassErrors[j], _blockWriter, chromIndex);
-                chromCollector.AddIntensity(spectrum.Intensities[j], _blockWriter, chromIndex);
+                    chromCollector.AddMassError(chromIndex, spectrum.MassErrors[j], _blockWriter);
+                chromCollector.AddIntensity(chromIndex, spectrum.Intensities[j], _blockWriter);
             }
 
             // Add data for chromatogram graph.
@@ -1308,7 +1324,7 @@ namespace pwiz.Skyline.Model.Results
                     var chromCollector = item.Value;
                     var chromIndex = chromatograms.ProductFilterIdToId(productFilter.FilterId);
                     if (chromCollector.Count < lenTimes)
-                        chromCollector.AddIntensity(0, _blockWriter, chromIndex);
+                        chromCollector.AddIntensity(chromIndex, 0, _blockWriter);
                 }
             }
         }

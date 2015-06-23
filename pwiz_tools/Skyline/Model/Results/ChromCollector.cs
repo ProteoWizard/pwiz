@@ -28,9 +28,8 @@ namespace pwiz.Skyline.Model.Results
 
     /// <summary>
     /// This class stores chromatogram intensity (and optional time) values for one transition.
-    /// Memory is allocated in large-ish chunks and shared between various instances of ChromCollector.
-    /// Blocks are paged out to a disk file if the data grows too large to fit in pre-allocated
-    /// slots.
+    /// Memory is allocated in linked lists of blocks, which are written to disk "spill files" to
+    /// reduce memory load (which makes everything slow, and risks out of memory exceptions).
     /// </summary>
     public sealed class ChromCollector
     {
@@ -50,34 +49,52 @@ namespace pwiz.Skyline.Model.Results
                 MassErrors = new BlockedList<float>();
         }
 
+        /// <summary>
+        /// Set a shared reference to a list of Times that is allocated independently.
+        /// </summary>
         public void SetTimes(SortedBlockedList<float> times)
         {
             Times = times;
         }
 
+        /// <summary>
+        /// Set optional list of scans.
+        /// </summary>
         public void SetScans(BlockedList<int> scans)
         {
             Scans = scans;
         }
 
-        public void AddIntensity(float intensity, BlockWriter writer, int chromatogramIndex)
+        /// <summary>
+        /// Add an intensity value to the given chromatogram.
+        /// </summary>
+        public void AddIntensity(int chromatogramIndex, float intensity, BlockWriter writer)
         {
-            Intensities.Add(intensity, writer, chromatogramIndex);
+            Intensities.Add(chromatogramIndex, intensity, writer);
         }
 
-        public void FillIntensities(int count, BlockWriter writer, int chromatogramIndex)
+        /// <summary>
+        /// Fill a number of intensity values for the given chromatogram with zeroes.
+        /// </summary>
+        public void FillIntensities(int chromatogramIndex, int count, BlockWriter writer)
         {
-            Intensities.FillZeroes(count, writer, chromatogramIndex);
+            Intensities.FillZeroes(chromatogramIndex, count, writer);
         }
 
-        public void AddTime(float time, BlockWriter writer, int chromatogramIndex)
+        /// <summary>
+        /// Add a time value to the given chromatogram.
+        /// </summary>
+        public void AddTime(int chromatogramIndex, float time, BlockWriter writer)
         {
-            Times.Add(time, writer, chromatogramIndex);
+            Times.Add(chromatogramIndex, time, writer);
         }
 
-        public void AddMassError(float massError, BlockWriter writer, int chromatogramIndex)
+        /// <summary>
+        /// Add a mass error to the given chromatogram.
+        /// </summary>
+        public void AddMassError(int chromatogramIndex, float massError, BlockWriter writer)
         {
-            MassErrors.Add(massError, writer, chromatogramIndex);
+            MassErrors.Add(chromatogramIndex, massError, writer);
         }
 
         public int Count { get { return Intensities.Count; } }
@@ -112,13 +129,21 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    /// <summary>
+    /// Generic interface for BlockedList templates for different data types.
+    /// </summary>
     public interface IBlockedList
     {
-        void WriteBlocks(FileStream fileStream);
+        void WriteBlock(FileStream fileStream);
     }
 
+    /// <summary>
+    /// A list of data values stored in small arrays that are linked together in memory (and possibly on disk).
+    /// </summary>
+    /// <typeparam name="TData"></typeparam>
     public class BlockedList<TData> : IBlockedList
     {
+        // Different block sizes could be used for 32- and 64-bit OS.
         private const int BLOCK_SIZE_FOR_64_BIT = 16;
         private const int BLOCK_SIZE_FOR_32_BIT = 16;
 
@@ -134,6 +159,9 @@ namespace pwiz.Skyline.Model.Results
             _blockSize = Environment.Is64BitProcess ? BLOCK_SIZE_FOR_64_BIT : BLOCK_SIZE_FOR_32_BIT;
         }
 
+        /// <summary>
+        /// A Block is just a fixed-size array of data and a link to a previous Block.
+        /// </summary>
         protected class Block
         {
             public readonly Block _previousBlock;
@@ -152,13 +180,19 @@ namespace pwiz.Skyline.Model.Results
             _blocksInMemory++;
         }
 
-        public void Add(TData data, BlockWriter writer, int chromatogramIndex)
+        /// <summary>
+        /// Add a data element to the list for a given chromatogram, and write the block
+        /// to disk if it is complete.
+        /// </summary>
+        public void Add(int chromatogramIndex, TData data, BlockWriter writer)
         {
             // Spill data to disk at block boundaries, if necessary.
             if (_blockIndex == 0)
             {
-                if (_blocksInMemory == 0 || !writer.WriteBlocks(this, chromatogramIndex))
+                if (_blocksInMemory == 0 || writer == null)
                     NewBlock();
+                else
+                    writer.WriteBlock(chromatogramIndex, this);
             }
 
             // Store data.
@@ -169,9 +203,12 @@ namespace pwiz.Skyline.Model.Results
                 _blockIndex = 0;
         }
 
+        /// <summary>
+        /// Add a data element to the list, no disk write.
+        /// </summary>
         public void AddShared(TData data)
         {
-            // Spill data to disk at block boundaries, if necessary.
+            // Create a new block, if necessary.
             if (_blockIndex == 0)
                 NewBlock();
 
@@ -183,7 +220,11 @@ namespace pwiz.Skyline.Model.Results
                 _blockIndex = 0;
         }
 
-        public void FillZeroes(int count, BlockWriter writer, int chromatogramIndex)
+        /// <summary>
+        /// Add a specified number of zero intensities to the given chromatogram, possibly
+        /// writing finished blocks to disk.
+        /// </summary>
+        public void FillZeroes(int chromatogramIndex, int count, BlockWriter writer)
         {
             if (count < 1)
                 return;
@@ -202,49 +243,40 @@ namespace pwiz.Skyline.Model.Results
                     return;
             }
 
-            // Create new pre-zeroed blocks.
-            while (count >= _blockSize)
+            if (writer != null)
             {
-                NewBlock();
-                count -= _blockSize;
+                // Clear out re-used block.
+                for (int i = 0; i < _blockSize; i++)
+                    _block._data[i] = default(TData);
+
+                // Write zeroed blocks to disk.
+                while (count >= _blockSize)
+                {
+                    writer.WriteBlock(chromatogramIndex, this);
+                    count -= _blockSize;
+                }
+            }
+            else
+            {
+                // Create new pre-zeroed blocks.
+                while (count >= _blockSize)
+                {
+                    NewBlock();
+                    count -= _blockSize;
+                }
             }
 
-            // Spill blocks to disk.
-            writer.WriteBlocks(this, chromatogramIndex);
-
-            // Final partial block.
-            while (count > 0)
-            {
-                _block._data[_blockIndex++] = default(TData);
-                count--;
-            }
+            _blockIndex = count;
         }
 
-        public void WriteBlocks(FileStream fileStream)
+        /// <summary>
+        /// Write finished block to disk.
+        /// </summary>
+        public void WriteBlock(FileStream fileStream)
         {
-            if (_blocksInMemory == 1)
-            {
-                WriteData(_block, fileStream);
-                _blocksOnDisk++;
-                return;
-            }
-
-            // Write each block to file stream.
-            var blockList = new Block[_blocksInMemory];
-            for (int i = _blocksInMemory - 1; i >= 0; i--)
-            {
-                blockList[i] = _block;
-                _block = _block._previousBlock;
-            }
-            for (int i = 0; i < _blocksInMemory; i++)
-            {
-                WriteData(blockList[i], fileStream);
-            }
-            _blocksOnDisk += _blocksInMemory;
-
-            // Reuse first block
-            _block = blockList[0];
-            _blocksInMemory = 1;
+            Assume.IsTrue(_blocksInMemory == 1);
+            WriteData(_block, fileStream);
+            _blocksOnDisk++;
         }
 
         private void WriteData(Block block, FileStream fileStream)
@@ -265,6 +297,9 @@ namespace pwiz.Skyline.Model.Results
                 Assume.Fail();
         }
 
+        /// <summary>
+        /// Return count of all data items (in memory and on disk).
+        /// </summary>
         public int Count
         {
             get
@@ -278,6 +313,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Reconstitute data from memory and disk.
+        /// </summary>
         public TData[] ToArray(byte[] bytes)
         {
             // Return final cached array.
@@ -355,23 +393,33 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    /// <summary>
+    /// Do fast (but not necessarily complete) checks to make sure data items
+    /// are added in sort order.
+    /// </summary>
+    /// <typeparam name="TData"></typeparam>
     public class SortedBlockedList<TData> : BlockedList<TData>
     {
-        public new void Add(TData data, BlockWriter writer, int groupIndex)
+        public new void Add(int chromatogramIndex, TData data, BlockWriter writer)
         {
+            // Check sort ordering within blocks.  Checking across blocks is too time consuming.
             if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex-1], data) > 0)
                 throw new InvalidDataException(Resources.Block_VerifySort_Expected_sorted_data);
-            base.Add(data, writer, groupIndex);
+            base.Add(chromatogramIndex, data, writer);
         }
 
         public new void AddShared(TData data)
         {
-            if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex-1], data) > 0)
+            // Check sort ordering within blocks.  Checking across blocks is too time consuming.
+            if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex - 1], data) > 0)
                 throw new InvalidDataException(Resources.Block_VerifySort_Expected_sorted_data);
             base.AddShared(data);
         }
     }
 
+    /// <summary>
+    /// Optional object to write blocks to disk.
+    /// </summary>
     public class BlockWriter
     {
         private readonly ChromGroups _chromGroups;
@@ -381,29 +429,21 @@ namespace pwiz.Skyline.Model.Results
             _chromGroups = chromGroups;
         }
 
-        public float RetentionTime { get; set; }
-
-        public bool WriteBlocks(IBlockedList blockedList, int chromatogramIndex)
+        /// <summary>
+        /// Write a block from a blocked list to disk for the given chromatogram.
+        /// </summary>
+        public void WriteBlock(int chromatogramIndex, IBlockedList blockedList)
         {
-            if (_chromGroups != null)
-            {
-                var fileStream = _chromGroups.GetFileStream(chromatogramIndex);
-                blockedList.WriteBlocks(fileStream);
-                return true;
-            }
-            return false;
-        }
-
-        public int ReleaseChromatogram(int index, ChromCollector collector, out float[] times, out float[] intensities, out float[] massErrors,
-            out int[] scanIds)
-        {
-            if (_chromGroups != null)
-                return _chromGroups.ReleaseChromatogram(index, RetentionTime, collector, out times, out intensities, out massErrors, out scanIds);
-            collector.ReleaseChromatogram(null, out times, out intensities, out massErrors, out scanIds);
-            return collector.StatusId;
+            var fileStream = _chromGroups.GetFileStream(chromatogramIndex);
+            blockedList.WriteBlock(fileStream);
         }
     }
 
+    /// <summary>
+    /// Keep track of groups of chromatograms that the reader wants to read together.
+    /// These are kept together in spill files that are written to disk and then
+    /// read back into memory in one big gulp.
+    /// </summary>
     public class ChromGroups : IDisposable
     {
         private const int MAX_SPILL_FILE_SIZE = 200 * 1024 * 1024;
@@ -443,9 +483,7 @@ namespace pwiz.Skyline.Model.Results
             for (int groupId = 0; groupId < chromatogramRequestOrder.Count; groupId++)
             {
                 foreach (var id in chromatogramRequestOrder[groupId])
-                {
                     _idToGroupId[id] = groupId;
-                }
             }
 
             // Decide how groups will be allocated to spill files.
@@ -466,6 +504,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// This is the order and grouping that the reader will use when reading
+        /// chromatograms.  We exploit this information for speed and memory use.
+        /// </summary>
         public IList<IList<int>> RequestOrder { get; private set; }
 
         public void Dispose()
@@ -488,11 +530,17 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Return the group that a given chromatogram belongs to.
+        /// </summary>
         public int GetGroupIndex(int chromatogramIndex)
         {
             return chromatogramIndex < _idToGroupId.Length ? _idToGroupId[chromatogramIndex] : 0;
         }
 
+        /// <summary>
+        /// Get the maximum retention time for all the chromatograms in a given group.
+        /// </summary>
         public float GetMaxTime(int groupIndex)
         {
             float maxTime = 0;
@@ -506,17 +554,24 @@ namespace pwiz.Skyline.Model.Results
             return maxTime;
         }
 
+        /// <summary>
+        /// Return (or possibly create) a spill file stream for the given group.
+        /// </summary>
         public FileStream GetFileStream(int chromIndex)
         {
             int groupIndex = GetGroupIndex(chromIndex);
             return _spillFiles[groupIndex].CreateFileStream(_cachePath);
         }
 
+        /// <summary>
+        /// Release a chromatogram if its collector is complete (indicated by retention time).
+        /// </summary>
+        /// <returns>-1 if chromatogram is not finished yet.</returns>
         public int ReleaseChromatogram(
-            int index, float retentionTime, ChromCollector collector,
+            int chromatogramIndex, float retentionTime, ChromCollector collector,
             out float[] times, out float[] intensities, out float[] massErrors, out int[] scanIds)
         {
-            int groupIndex = GetGroupIndex(index);
+            int groupIndex = GetGroupIndex(chromatogramIndex);
             var spillFile = _spillFiles[groupIndex];
 
             // Not done reading yet.
@@ -560,6 +615,10 @@ namespace pwiz.Skyline.Model.Results
             return collector.StatusId;
         }
 
+        /// <summary>
+        /// Get the maximum possible size (in bytes) of a group, including all the chromatograms that are 
+        /// included in the group.
+        /// </summary>
         public int GetMaxSize(int groupIndex)
         {
             int maxSize = 0;
@@ -575,6 +634,12 @@ namespace pwiz.Skyline.Model.Results
             return maxSize;
         }
 
+        /// <summary>
+        /// A file that contains "spilled" chromatogram data. We can't keep all the
+        /// data resident in memory for very large raw data files, so we group chromatograms
+        /// together (respecting an order defined by the reader) and store their data in
+        /// a file that can then be read back into memory in largish chunks.
+        /// </summary>
         private class SpillFile
         {
             public FileStream Stream { get; private set; }
@@ -584,6 +649,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (Stream == null)
                 {
+                    // We make some effort to generate unique file names so that more than one instance
+                    // of Skyline can load the same raw data file simultaneously.
                     var xicDir = GetSpillDirectory(cachePath);
                     Directory.CreateDirectory(xicDir);
                     string fileName = Path.Combine(xicDir,
