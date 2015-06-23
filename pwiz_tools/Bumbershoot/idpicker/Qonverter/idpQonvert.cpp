@@ -235,7 +235,7 @@ int InitProcess( argList_t& args )
     }
     else
     {
-        sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(g_rtConfig->LogFilepath));
+        sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>(g_rtConfig->LogFilepath.c_str()));
         sink->set_filter(severity >= g_rtConfig->LogLevel.index()); // NOTE: use index() to avoid delayed evaluation of expression
     }
     fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;

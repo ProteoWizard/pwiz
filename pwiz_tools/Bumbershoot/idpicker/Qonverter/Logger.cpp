@@ -24,13 +24,23 @@
 
 
 #include "Logger.hpp"
+
+#ifdef WIN32
 #include <io.h>
+#else
+#include <unistd.h>
+#include <stdio.h>
+#endif
 
 BEGIN_IDPICKER_NAMESPACE
 
 bool IsStdOutRedirected()
 {
+#ifdef WIN32
     return _isatty(_fileno(stdout)) == 0;
+#else
+    return isatty(fileno(stdout)) == 0;
+#endif
 }
 
 BOOST_LOG_GLOBAL_LOGGER_DEFAULT(logSource, boost::log::sources::severity_logger_mt<MessageSeverity::domain>)
