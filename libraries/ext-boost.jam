@@ -621,7 +621,7 @@ rule init ( version : location : options * )
         lib ws2_32 ;
 
         lib log
-            :   [ path.glob $(location)/libs/log/src : *.cpp : event_log_backend.cpp debug_output_backend.cpp light_rw_mutex.cpp ]
+            :   [ path.glob $(location)/libs/log/src : *.cpp : event_log_backend.cpp debug_output_backend.cpp light_rw_mutex.cpp dump_ssse3.cpp dump_avx2.cpp ]
             :   $(requirements)
                 <location-prefix>system-$(version-tokens:J=_)
                 <use>boost
