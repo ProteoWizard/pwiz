@@ -248,6 +248,11 @@ namespace pwiz.Skyline
 
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
+            // Remove any extraneous temporary chromatogram spill files.
+            var spillDirectory = Path.Combine(Path.GetDirectoryName(path) ?? "", "xic");    // Not L10N
+            if (Directory.Exists(spillDirectory))
+                DirectoryEx.SafeDelete(spillDirectory);
+
             Exception exception = null;
             SrmDocument document = null;
 
