@@ -71,6 +71,7 @@ bool seqsILEquivalent(string seq1, string seq2);
 class BuildParser : protected SAXHandler{
 
  private:
+  sqlite3_stmt* insertSpectrumStmt_;
   string fullFilename_;   ///< path to name of the file we are parsing
   string filepath_;       ///< path stripped from full name
   string fileroot_;       ///< filename stripped of path and extension
@@ -124,7 +125,6 @@ class BuildParser : protected SAXHandler{
   string getFilenameFromID(const string& idStr); // spectrum source file from spectrum ID
 
   static bool validInts(vector<string>::const_iterator begin, vector<string>::const_iterator end);
-  static double precisionRound(double f);
 
  public:
   BuildParser(BlibBuilder& maker,
@@ -138,24 +138,6 @@ class BuildParser : protected SAXHandler{
 };
 
 } // namespace
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
  * Local Variables:

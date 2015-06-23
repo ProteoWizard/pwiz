@@ -46,6 +46,14 @@ BuildParser::BuildParser(BlibBuilder& maker,
     this->specProgress_ = NULL;
     this->curPSM_ = NULL;
     this->specReader_ = new PwizReader();
+
+    sqlite3_prepare(maker.getDb(),
+      "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+      "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
+      "ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, fileID, specIDinFile, "
+      "score, scoreType) "
+      "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ",
+      LARGE_BUFFER_SIZE, &insertSpectrumStmt_, NULL);
 }
 
 BuildParser::~BuildParser() {
@@ -53,6 +61,7 @@ BuildParser::~BuildParser() {
     delete fileProgress_;
     delete specProgress_;
     delete specReader_;
+    sqlite3_finalize(insertSpectrumStmt_);
 }
 
 
@@ -409,31 +418,31 @@ void BuildParser::insertSpectrum(PSM* psm,
     }
     
     // construct insert statement for RefSpectra
-    sprintf(sql_statement_buf,
-            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
-            "ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, fileID, specIDinFile, "
-            "score, scoreType) "
-            "VALUES('%s', %f, %d, '%s', '%s', '%s', 1, %d, %f, %d, %f, %f, %lld, '%s', "
-            "%f, %d)",
-            psm->unmodSeq.c_str(),
-            curSpectrum.mz,
-            psm->charge,
-            psm->modifiedSeq.c_str(),
-            "-", "-", // don't add flanking AA
-            curSpectrum.numPeaks,
-            curSpectrum.ionMobility,
-            curSpectrum.ionMobilityType,
-            curSpectrum.getIonMobilityHighEnergyDriftTimeOffsetMsec(),
-            curSpectrum.retentionTime,
-            fileId,
-            specIdStr.c_str(),
-            precisionRound(psm->score),
-            scoreType);
+    // "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+    // "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
+    // "ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec, retentionTime, fileID, specIDinFile, "
+    // "score, scoreType) "
+    // "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    sqlite3_bind_text(insertSpectrumStmt_, 1, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(insertSpectrumStmt_, 2, curSpectrum.mz);
+    sqlite3_bind_int(insertSpectrumStmt_, 3, psm->charge);
+    sqlite3_bind_text(insertSpectrumStmt_, 4, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, 5, "-", -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(insertSpectrumStmt_, 6, "-", -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(insertSpectrumStmt_, 7, 1);
+    sqlite3_bind_int(insertSpectrumStmt_, 8, curSpectrum.numPeaks);
+    sqlite3_bind_double(insertSpectrumStmt_, 9, curSpectrum.ionMobility);
+    sqlite3_bind_int(insertSpectrumStmt_, 10, curSpectrum.ionMobilityType);
+    sqlite3_bind_double(insertSpectrumStmt_, 11, curSpectrum.getIonMobilityHighEnergyDriftTimeOffsetMsec());
+    sqlite3_bind_double(insertSpectrumStmt_, 12, curSpectrum.retentionTime);
+    sqlite3_bind_int(insertSpectrumStmt_, 13, fileId);
+    sqlite3_bind_text(insertSpectrumStmt_, 14, specIdStr.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(insertSpectrumStmt_, 15, psm->score);
+    sqlite3_bind_int(insertSpectrumStmt_, 16, scoreType);
     
     // submit
-    blibMaker_.sql_stmt(sql_statement_buf);
-    sql_statement_buf[0]='\0';
+    sqlite3_step(insertSpectrumStmt_);
+    sqlite3_reset(insertSpectrumStmt_);
     
     // get library's ID for the spectrum
     int libSpecId = (int)sqlite3_last_insert_rowid(blibMaker_.getDb());
@@ -905,15 +914,6 @@ bool BuildParser::validInts(vector<string>::const_iterator begin, vector<string>
         }
     }
     return true;
-}
-
-double BuildParser::precisionRound(double f) {
-    // have to use this to eliminate rounding differences between platforms
-    // e.g. sprintf(buf, "%f", 0.0010485) gives 0.001048 on gcc, 0.001049 on msvc
-    const int factor = 1000000;
-    return f > 0
-        ? floor(f * factor + 0.5) / factor
-        : ceil(f * factor - 0.5) / factor;
 }
 
 } // namespace
