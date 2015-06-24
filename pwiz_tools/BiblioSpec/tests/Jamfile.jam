@@ -201,7 +201,7 @@ blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : input
 # Test other xml formats (idpicker, xtandem)
 
 blib-test-build idpicker : -o : output/idpicker.blib : idpicker.check zbuild.skip-lines : inputs/orbi-small-eg.idpXML ;
-blib-test-build tandem : -o : output/tandem.blib : tandem.check zbuild.skip-lines : inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
+blib-test-build tandem : -o : output/tandem.blib : tandem.check zbuild-rt.skip-lines : inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
 blib-test-build pride-mascot : -o : output/pride.mascot.blib : pride.mascot.check zbuild.skip-lines : inputs/test.mascot.pride.xml ;
 blib-test-build pride-xcorr : -o : output/pride.xcorr.blib : pride.xcorr.check zbuild.skip-lines : inputs/test.xcorr.pride.xml ;
 blib-test-build pride-bytes : -o : output/pride.xcorr.bytes.blib : pride.xcorr.bytes.check zbuild.skip-lines : inputs/test.bytes.pride.xml ;
@@ -242,7 +242,7 @@ blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/s
 
 # Test mzid format from ByOnic
 
-blib-test-build byonic : -o : output/byonic.blib : byonic.check zbuild.skip-lines : inputs/byonic-test.mzid ;
+blib-test-build byonic : -o : output/byonic.blib : byonic.check zbuild-score.skip-lines : inputs/byonic-test.mzid ;
 
 # Test mzid format from MSGF+
 
