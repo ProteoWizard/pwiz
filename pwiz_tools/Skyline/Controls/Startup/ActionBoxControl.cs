@@ -58,8 +58,9 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void ControlMouseEnter(object sender, EventArgs e)
         {
+            Cursor = Cursors.Hand;
             if (!string.IsNullOrEmpty(Description))
-            {
+            {               
                 BackColor = LIGHT_HOVER_COLOR;
             }
         }
@@ -74,6 +75,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void ControlClick(object sender, EventArgs e)
         {
+            Cursor.Current = Cursors.WaitCursor;
             if (EventAction != null)
             {
                 EventAction();
