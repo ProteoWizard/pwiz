@@ -189,7 +189,7 @@ blib-test-build perc-bracket-xml : -o : output/perc-bracket.blib : perc-bracket-
 
 # Test building with .pep.xml from various pipelines
 
-blib-test-build omssa : -o : output/omssa.blib : omssa.check : inputs/OMSSA.pep.xml ;
+blib-test-build omssa : -o : output/omssa.blib : omssa.check zbuild.skip-lines : inputs/OMSSA.pep.xml ;
 blib-test-build pep-proph : -o : output/pep-proph.blib : pep-proph.check : inputs/CAexample.pep.xml ;
 blib-test-build morpheus : -o : output/morpheus.blib : morpheus.check : inputs/test-morpheus.pep.xml ;
 blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb.pepXML ;
@@ -200,7 +200,7 @@ blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : input
 
 # Test other xml formats (idpicker, xtandem)
 
-blib-test-build idpicker : -o : output/idpicker.blib : idpicker.check : inputs/orbi-small-eg.idpXML ;
+blib-test-build idpicker : -o : output/idpicker.blib : idpicker.check zbuild.skip-lines : inputs/orbi-small-eg.idpXML ;
 blib-test-build tandem : -o : output/tandem.blib : tandem.check zbuild.skip-lines : inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
 blib-test-build pride-mascot : -o : output/pride.mascot.blib : pride.mascot.check zbuild.skip-lines : inputs/test.mascot.pride.xml ;
 blib-test-build pride-xcorr : -o : output/pride.xcorr.blib : pride.xcorr.check zbuild.skip-lines : inputs/test.xcorr.pride.xml ;
@@ -242,7 +242,7 @@ blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/s
 
 # Test mzid format from ByOnic
 
-blib-test-build byonic : -o : output/byonic.blib : byonic.check : inputs/byonic-test.mzid ;
+blib-test-build byonic : -o : output/byonic.blib : byonic.check zbuild.skip-lines : inputs/byonic-test.mzid ;
 
 # Test mzid format from MSGF+
 
