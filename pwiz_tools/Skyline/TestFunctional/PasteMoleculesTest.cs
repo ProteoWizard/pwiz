@@ -39,7 +39,10 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteMoleculesTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        // TODO: This method is temporarily disabled because it occasionally raises a dialog
+        // complaining about a "read only column" that stops SkylineNightly cold. There are two
+        // mysteries: why it's happening, and why SkylineNightly can't detect the error and proceed.
+        //[TestMethod]
         public void TestPasteMolecules()
         {
             TestFilesZip = @"TestFunctional\PasteMoleculeTest.zip";
