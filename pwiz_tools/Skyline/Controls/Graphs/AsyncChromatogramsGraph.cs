@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using ZedGraph;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -39,7 +38,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private const int MAX_PEAKS_PER_BIN = 4;                // how many peaks to graph per bin
         private const double DISPLAY_FILTER_PERCENT = 0.005;    // filter peaks less than this percentage of maximum intensity
         
-        private const float CURVE_LINE_WIDTH = 1.0f;            // width of line used to graph peaks
         private const float PROGRESS_LINE_WIDTH = 2.0f;         // width of line to show current progress for progressive graphs
         private const double X_AXIS_START = 1.0;                // initial value for time axis
         private const double Y_AXIS_START = 1.0;                // initial value for intensity axis
@@ -391,18 +389,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void NewCurve(CurveInfo curveInfo, int zIndex)
         {
-            const int lineTransparency = 200;
-            const int fillTransparency = 90;
-
             var peak = curveInfo.Peak;
             int peakId = peak.FilterIndex;
-            var color = ColorGenerator.GetColor(peak.ModifiedSequence);
-            var curve = curveInfo.Curve = new LineItem(peakId + string.Empty, new PointPairList(), color, SymbolType.None);
+            var fillColor = ColorGenerator.GetColor(peak.ModifiedSequence);
+            var curve = curveInfo.Curve = new LineItem(peakId + string.Empty, new PointPairList(), fillColor, SymbolType.None);
             curve.Label.IsVisible = false;
-            curve.Line.Color = Color.FromArgb(peakId == 0 ? 70 : lineTransparency, color);
-            curve.Line.Width = CURVE_LINE_WIDTH;
-            curve.Line.Style = DashStyle.Solid;
-            var fillColor = Color.FromArgb(peakId == 0 ? 50 : fillTransparency, color);
+            curve.Line.Width = 0;
             curve.Line.Fill = new Fill(fillColor);
             curve.Line.IsAntiAlias = true;
 

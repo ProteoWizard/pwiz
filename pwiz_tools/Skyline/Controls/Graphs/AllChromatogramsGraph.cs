@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressBarAllFiles.Value = status.PercentComplete;
             }
 
-            lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss");
+            lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss"); // Not L10N
         }
 
         // Close the window.

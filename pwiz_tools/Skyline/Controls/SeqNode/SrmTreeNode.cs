@@ -652,6 +652,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <param name="materialize">True forces doc nodes to materialize into tree node,
         ///     false allows a dummy node to be used, if appropriate</param>
         /// <param name="create">Node creation function used to supply tree nodes for new doc nodes</param>
+        /// <param name="changeAll"></param>
         public static void UpdateNodes<TNode>(SequenceTree tree, TreeNodeCollection treeNodes,
                 IList<DocNode> docNodes, bool materialize, CreateTreeNode<TNode> create, bool changeAll = false)
             where TNode : SrmTreeNode

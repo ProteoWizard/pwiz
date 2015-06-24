@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.progressBarAllFiles = new System.Windows.Forms.ProgressBar();
             this.lblFileCount = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.lblDuration = new System.Windows.Forms.Label();
             this.btnCancelFile = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnHide = new System.Windows.Forms.Button();
@@ -43,7 +44,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panelFileProgress = new System.Windows.Forms.Panel();
             this.progressBarFile = new System.Windows.Forms.ProgressBar();
             this.lblFileName = new System.Windows.Forms.Label();
-            this.lblDuration = new System.Windows.Forms.Label();
             this.panelMultifileProgress.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panelGraph.SuspendLayout();
@@ -75,6 +75,11 @@ namespace pwiz.Skyline.Controls.Graphs
             this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.btnHide);
             this.panel2.Name = "panel2";
+            // 
+            // lblDuration
+            // 
+            resources.ApplyResources(this.lblDuration, "lblDuration");
+            this.lblDuration.Name = "lblDuration";
             // 
             // btnCancelFile
             // 
@@ -126,11 +131,6 @@ namespace pwiz.Skyline.Controls.Graphs
             resources.ApplyResources(this.lblFileName, "lblFileName");
             this.lblFileName.Name = "lblFileName";
             // 
-            // lblDuration
-            // 
-            resources.ApplyResources(this.lblDuration, "lblDuration");
-            this.lblDuration.Name = "lblDuration";
-            // 
             // AllChromatogramsGraph
             // 
             resources.ApplyResources(this, "$this");
@@ -141,6 +141,8 @@ namespace pwiz.Skyline.Controls.Graphs
             this.Controls.Add(this.panelGraph);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panelMultifileProgress);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "AllChromatogramsGraph";
             this.ShowInTaskbar = false;
             this.Resize += new System.EventHandler(this.WindowResize);

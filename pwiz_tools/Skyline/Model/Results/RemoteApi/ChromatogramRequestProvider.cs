@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             _retentionTimePredictor = retentionTimePredictor;
             _firstPass = firstPass;
             // Create a SpectrumFilter without an IRetentionTimeProvider in order to get the list of ChromKeys that we will eventually provide.
-            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null, null);
+            SpectrumFilter spectrumFilter = new SpectrumFilter(_srmDocument, _chorusUrl, null);
             _chromKeys = ImmutableList.ValueOf(ListChromKeys(GetChromatogramRequestDocument(spectrumFilter)));
         }
 
