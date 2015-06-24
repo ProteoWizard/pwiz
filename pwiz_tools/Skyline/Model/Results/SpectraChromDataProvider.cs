@@ -793,12 +793,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 while ((i = _lookaheadContext.NextIndex(i)) < _countSpectra)
                 {
-                    if (_filter.GetMseLevel() > 2)
-                    {
-                        // We're into the Waters function 3 in Mse data - leave this loop
-                        _lookaheadContext.NextIndex(_countSpectra);
-                        continue;
-                    }
 
                     if (HasSrmSpectra)
                     {

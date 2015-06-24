@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -195,6 +196,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Filter on drift time, if any
+                Assume.IsTrue(!useDriftTimeHighEnergyOffset || spectrum.Id.StartsWith("2")); // Not L10N
                 if (!ContainsDriftTime(spectrum.DriftTimeMsec, useDriftTimeHighEnergyOffset))
                     continue;
 

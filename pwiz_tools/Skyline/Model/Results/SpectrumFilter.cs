@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Model.Results
             int returnval; 
             if ((_mseLastSpectrum == null) || !ReferenceEquals(dataSpectrum, _mseLastSpectrum)) // is this the same one we were just asked about?
             {
-                // Waters MSe is enumerated in two separate runs ("functions" in the raw data), first MS1 and then MS/MS
+                // Waters MSe is enumerated in interleaved scans ("functions" in the raw data) 1==MS 2==MSMS 3=ignore
                 // Bruker MSe is enumerated in interleaved MS1 and MS/MS scans
                 // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...) 
                 //    but with ion mobility, as of June 2014, it's just a series of MS2 scans with a single nonzero CE, or MS1 scans with 0 CE
@@ -454,15 +454,11 @@ namespace pwiz.Skyline.Model.Results
                     _mseLevel = (_mseLevel % 2) + 1;
                     returnval = _mseLevel;
                 }
-                else if ((dataSpectrum.RetentionTime ?? 0) < ((_mseLastSpectrum==null) ? 0 :(_mseLastSpectrum.RetentionTime ?? 0)))
-                {
-                    // Waters - level 1 in raw data "function 1", followed by level 2 in raw data "function 2", followed by data that should be ignored
-                    _mseLevel++;
-                    returnval = _mseLevel;
-                }
                 else
                 {
-                    // Waters - still in the same raw data function
+                    // Waters - mse level 1 in raw data "function 1", mse level 2 in raw data "function 2", and "function 3" which we ignore (lockmass?)
+                    // All are declared mslevel=1, but we can tell these apart by inspecting the Id which is formatted as <function>.<process>.<scan>
+                    _mseLevel = int.Parse(dataSpectrum.Id.Split('.')[0]);
                     returnval = _mseLevel; 
                 }
                 _mseLastSpectrumLevel = returnval;
