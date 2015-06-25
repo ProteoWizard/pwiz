@@ -118,7 +118,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             if (_chromKeyIndiceses != null)
             {
                 var tolerance = (float)ChromTaskList.SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                keyIndex = _chromKeyIndiceses.IndexOf(entry => entry.Key.CompareTolerant(chromKey, tolerance) == 0);
+                // Null out the OptionalMinTime and OptionalMaxTime of the ChromKey we are looking for.
+                var chromKeyToFind = new ChromKey(chromKey.TextId, chromKey.Precursor, chromKey.IonMobilityValue,
+                    chromKey.IonMobilityExtractionWidth, chromKey.Product, chromKey.CollisionEnergy,
+                    chromKey.ExtractionWidth, chromKey.Source, chromKey.Extractor, chromKey.HasCalculatedMzs,
+                    chromKey.HasScanIds, null, null);
+                keyIndex = _chromKeyIndiceses.IndexOf(entry => entry.Key.CompareTolerant(chromKeyToFind, tolerance) == 0);
             }
             if (keyIndex == -1 || _chromKeyIndiceses == null)   // Keep ReSharper from complaining
             {
