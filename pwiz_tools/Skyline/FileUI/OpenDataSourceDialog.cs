@@ -311,7 +311,7 @@ namespace pwiz.Skyline.FileUI
                                 label = Resources.OpenDataSourceDialog_populateListViewFromDirectory_Network_Share;
                                 break;
                         }
-                        _driveReadiness[sublabel] = driveInfo.IsReady;
+                        _driveReadiness[sublabel] = IsDriveReady(driveInfo);
                     }
                     catch (Exception)
                     {
@@ -327,7 +327,7 @@ namespace pwiz.Skyline.FileUI
                         type = DataSourceUtil.FOLDER_TYPE,
                         imageIndex = imageIndex,
                         name = name,
-                        dateModified = GetSafeDateModified(driveInfo.RootDirectory)
+                        dateModified = GetDriveModifiedTime(driveInfo)
                     });
                 }
             }
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.FileUI
                             label = Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share;
                             break;
                     }
-                    _driveReadiness[sublabel] = driveInfo.IsReady;
+                    _driveReadiness[sublabel] = IsDriveReady(driveInfo);
                 }
                 catch (Exception)
                 {
@@ -1097,5 +1097,24 @@ namespace pwiz.Skyline.FileUI
         }
 
         public bool WaitingForData { get { return _waitingForData; } }
+
+        private static bool DriveMightBeSlow(DriveInfo driveInfo)
+        {
+            return driveInfo.DriveType == DriveType.Network;
+        }
+
+        private static bool IsDriveReady(DriveInfo driveInfo)
+        {
+            return DriveMightBeSlow(driveInfo) || driveInfo.IsReady;
+        }
+
+        private static DateTime? GetDriveModifiedTime(DriveInfo driveInfo)
+        {
+            if (DriveMightBeSlow(driveInfo))
+            {
+                return null;
+            }
+            return GetSafeDateModified(driveInfo.RootDirectory);
+        }
     }
 }
