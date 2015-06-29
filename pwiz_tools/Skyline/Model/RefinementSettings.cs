@@ -830,10 +830,17 @@ namespace pwiz.Skyline.Model
                     // Decoys should not be based on standard peptides
                     if (nodePep.GlobalStandardType != null)
                         continue;
+                    // If the non-terminal end of the peptide sequence is all a single character, skip this peptide,
+                    // since it can't support decoy generation.
+                    var sequence = nodePep.Peptide.Sequence;
+                    if (genDecoySequence != null && sequence.Substring(0, sequence.Length - 1).Distinct().Count() == 1)
+                        continue;
 
                     var seqMods = new SequenceMods(nodePep);
                     if (genDecoySequence != null)
+                    {
                         seqMods = genDecoySequence(seqMods);
+                    }
                     var peptide = nodePep.Peptide;
                     var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, enzyme.CountCleavagePoints(seqMods.Sequence), true);
                     if (seqMods.Mods != null)

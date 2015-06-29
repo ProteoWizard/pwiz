@@ -926,8 +926,14 @@ namespace pwiz.Skyline.Model
             MassListImporter importer = new MassListImporter(this, provider, separator);
             IdentityPath nextAdd;
             peptideGroups = importer.Import(reader, longWaitBroker, lines, out irtPeptides, out librarySpectra, out errorList).ToList();
-            return AddPeptideGroups(peptideGroups, false,
-                to, out firstAdded, out nextAdd);
+            var docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
+            var pepModsNew = importer.GetModifications(docNew);
+            if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))
+            {
+                docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
+                docNew.Settings.UpdateDefaultModifications(false);
+            }
+            return docNew;
         }
 
         public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgressMonitor progressMonitor)

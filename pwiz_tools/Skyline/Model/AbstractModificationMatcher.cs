@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
@@ -443,8 +444,16 @@ namespace pwiz.Skyline.Model
             if (peptide == null)
             {
                 string seqUnmod = FastaSequence.StripModifications(seq);
-                peptide = new Peptide(null, seqUnmod, null, null,
-                    Settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
+                try
+                {
+                    peptide = new Peptide(null, seqUnmod, null, null,
+                        Settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
+                }
+                catch (InvalidDataException)
+                {
+                    nodeGroupMatched = null;
+                    return null;
+                }
             }
 
             // Use the number of modifications as the maximum, if it is less than the current
@@ -563,7 +572,7 @@ namespace pwiz.Skyline.Model
                     listLightMods != null && listLightMods.Contains(mod => mod.Modification.IsVariable))
                 : null;
             hasHeavy = dictHeavyMods.Keys.Count > 0;
-            return nodePep.ChangeExplicitMods(mods);
+            return nodePep.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.PROPS);
         }
 
         public virtual PeptideModifications GetDocModifications(SrmDocument document)

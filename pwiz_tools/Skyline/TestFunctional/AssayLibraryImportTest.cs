@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -166,9 +167,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                     "YVPIHTIDDGYSVIK", 864.458, 49.8, 50.2);
-                Assert.AreEqual(messageDlg.ErrorList.Count, 1);
+                Assert.AreEqual(1, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.CancelDialog();
             });
             WaitForDocumentLoaded();
@@ -178,11 +179,20 @@ namespace pwiz.SkylineTestFunctional
             string textIrtGroupConflict = TestFilesDir.GetTestPath("InterleavedInconsistentIrt.csv");
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(textIrtGroupConflict), messageDlg =>
             {
+                Assert.AreEqual(59, messageDlg.ErrorList.Count);
+                messageDlg.CancelDialog();
+            });
+            WaitForDocumentLoaded();
+            Assert.AreSame(docOldIrt, SkylineWindow.Document);
+            // Now remove the modified column which is bogus and causing errors
+            RemoveColumn(textIrtGroupConflict, 22);
+            RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(textIrtGroupConflict), messageDlg =>
+            {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                             "AAAAAAAAAAAAAAAGAAGK", 492.9385,  53, 54);
-                Assert.AreEqual(messageDlg.ErrorList.Count, 2);
+                Assert.AreEqual(2, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.CancelDialog();
             });
             WaitForDocumentLoaded();
@@ -194,9 +204,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                             "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54);
-                Assert.AreEqual(messageDlg.ErrorList.Count, 2);
+                Assert.AreEqual(2, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.AcceptButton.PerformClick();
             });
             var confirmIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -233,9 +243,9 @@ namespace pwiz.SkylineTestFunctional
                 var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
                                                                         728.88, 
                                                                         "ADSTGTLVITDPTR");
-                Assert.AreEqual(messageDlg.ErrorList.Count, 1);
+                Assert.AreEqual(1, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.AcceptButton.PerformClick();
             });
             WaitForDocumentLoaded();
@@ -249,9 +259,9 @@ namespace pwiz.SkylineTestFunctional
                 var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_,
                                                         728.88,
                                                         "ADSTGTLVITDPTR");
-                Assert.AreEqual(messageDlg.ErrorList.Count, 1);
+                Assert.AreEqual(1, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.AcceptButton.PerformClick();
             });
             WaitForDocumentLoaded();
@@ -265,9 +275,9 @@ namespace pwiz.SkylineTestFunctional
                 var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
                                                         728.88,
                                                         "ADSTGTLVITDPTR");
-                Assert.AreEqual(messageDlg.ErrorList.Count, 1);
+                Assert.AreEqual(1, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.AcceptButton.PerformClick();
             });
             WaitForDocumentLoaded();
@@ -281,9 +291,9 @@ namespace pwiz.SkylineTestFunctional
                 var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
                                                         728.88,
                                                         "ADSTGTLVITDPTR");
-                Assert.AreEqual(messageDlg.ErrorList.Count, 1);
+                Assert.AreEqual(1, messageDlg.ErrorList.Count);
                 var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
+                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
                 messageDlg.AcceptButton.PerformClick();
             });
             WaitForDocumentLoaded();
@@ -767,6 +777,7 @@ namespace pwiz.SkylineTestFunctional
             // Tests mixing of transition groups within a peptide
             var documentInterleaved = TestFilesDir.GetTestPath("Consensus_Dario_iRT_new_blank.sky");
             var textInterleaved = TestFilesDir.GetTestPath("Interleaved.csv");
+            RemoveColumn(textInterleaved, 22);
             RunUI(() => SkylineWindow.OpenFile(documentInterleaved));
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleaved), addIrtDlg => addIrtDlg.Btn0Click());
             var libraryInterleaved = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -807,6 +818,7 @@ namespace pwiz.SkylineTestFunctional
             // 34. Interleaved transition groups within a peptide can have different iRT's, and they will be averaged together
             var documentInterleavedIrt = TestFilesDir.GetTestPath("Consensus_Dario_iRT_new_blank.sky");
             var textInterleavedIrt = TestFilesDir.GetTestPath("InterleavedDiffIrt.csv");
+            RemoveColumn(textInterleavedIrt, 22);
             RunUI(() => SkylineWindow.OpenFile(documentInterleavedIrt));
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleavedIrt), addIrtDlg => addIrtDlg.Btn0Click());
             var irtOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -832,6 +844,20 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(irtValueNoLib);
             Assert.AreEqual(irtValueNoLib.Value, 52.407, 1e-3);
 
+        }
+
+        private static void RemoveColumn(string textIrtGroupConflict, int columnIndex)
+        {
+            // Now Skyline will choose the modified column which causes different errors. So we remove it.
+            string[] lines = File.ReadAllLines(textIrtGroupConflict);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i] =
+                    string.Join(TextUtil.SEPARATOR_TSV.ToString(),
+                        lines[i].ParseDsvFields(TextUtil.SEPARATOR_TSV)
+                            .Where((s, j) => j != columnIndex).ToArray());
+            }
+            File.WriteAllLines(textIrtGroupConflict, lines);
         }
 
         public void TestModificationMatcher()
@@ -949,6 +975,17 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(importResultsDlg, importResultsDlg.OkDialog);
             WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 2 minutes
             RunUI(() => SkylineWindow.SaveDocument());
+
+            // Show data can be imported with modified sequence column following bare sequence column
+            var skyChooseSeqCol = TestFilesDir.GetTestPath("AutoDetectModColumn.sky");
+            string pathChooseSeqCol = TestFilesDir.GetTestPath("phl004_canonical_s64_osw-small-all.tsv");
+            LoadDocument(skyChooseSeqCol);
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(pathChooseSeqCol), addIrtDlg => addIrtDlg.Btn1Click());
+            var addLibraryDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(() => addLibraryDlg.Btn1Click());
+            RunUI(() => SkylineWindow.SaveDocument());
+            // Reload to test that appropriate modifications have actually been added to the document
+            LoadDocument(skyChooseSeqCol);
         }
 
         protected void TestBlankDocScenario()
@@ -978,6 +1015,7 @@ namespace pwiz.SkylineTestFunctional
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             LoadDocument(documentBlank);
             string textEmbedded = TestFilesDir.GetTestPath("OpenSWATH_SM4_Combined.csv");
+            RemoveColumn(textEmbedded, 11); // Remove bad modified sequence column that import would use
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textEmbedded), importIrt => importIrt.Btn0Click());
             var createIrtDlg = WaitForOpenForm<CreateIrtCalculatorDlg>();
             string newDatabase = TestFilesDir.GetTestPath("irtEmbedded.irtdb");
