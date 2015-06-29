@@ -428,7 +428,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         protected void OnUpdateChildren(bool expandDefault)
         {
             int countChildNodes = Nodes.Count;
-            UpdateChildren(IsExpanded || expandDefault);
+            // Only update children tree nodes if expanded or expanding by default and there are zero children now
+            UpdateChildren(IsExpanded || (expandDefault && countChildNodes == 0));
             if (countChildNodes == 0 && Nodes.Count > 0 && expandDefault)
                 Expand();
         }
