@@ -1077,11 +1077,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (proteinNode != null)
                 {
                     peptidesAndTransitionGroups.ProteinSelected = true;
-                    foreach (var treeNode in proteinNode.Nodes)
+                    foreach (var nodePep in proteinNode.DocNode.Peptides)
                     {
-                        var pepTreeNode = treeNode as PeptideTreeNode;
-                        if (pepTreeNode != null)
-                            peptidesAndTransitionGroups.Add(pepTreeNode);
+                        peptidesAndTransitionGroups.Add(new IdentityPath(proteinNode.Path, nodePep.Id), nodePep);
                     }
                 }
                 else
@@ -1090,8 +1088,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     var node = (TreeNode) selectedNode;
                     while (node != null && !(node is PeptideTreeNode))
                         node = node.Parent;
-                    if (node != null)
-                        peptidesAndTransitionGroups.Add((PeptideTreeNode)node);
+                    var nodePepTree = node as PeptideTreeNode;
+                    if (nodePepTree != null)
+                        peptidesAndTransitionGroups.Add(nodePepTree.Path, nodePepTree.DocNode);
                 }
             }
 
@@ -1106,8 +1105,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (node != null)
                     {
                         var groupTreeNode = (TransitionGroupTreeNode) node;
-                        peptidesAndTransitionGroups.Add(
-                            (PeptideTreeNode)groupTreeNode.Parent,
+                        var pepTreeNode = (PeptideTreeNode) groupTreeNode.Parent;
+                        peptidesAndTransitionGroups.Add(pepTreeNode.Path,
+                            pepTreeNode.DocNode,
                             groupTreeNode.DocNode);
                     }
                 }
@@ -2242,26 +2242,26 @@ namespace pwiz.Skyline.Controls.Graphs
             public bool ShowPeptideTotals {get { return ProteinSelected || _peptideCount > 1; }}
             private int _peptideCount;
 
-            public void Add(PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeGroup)
+            public void Add(IdentityPath pathPep, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
             {
                 if (!_setGlobalIndices.Contains(nodeGroup.TransitionGroup.GlobalIndex))
                 {
                     _setGlobalIndices.Add(nodeGroup.TransitionGroup.GlobalIndex);
                     NodeGroups.Add(nodeGroup);
-                    if (!_setGlobalIndices.Contains(nodePepTree.DocNode.Peptide.GlobalIndex))
+                    if (!_setGlobalIndices.Contains(nodePep.Peptide.GlobalIndex))
                     {
-                        _setGlobalIndices.Add(nodePepTree.DocNode.Peptide.GlobalIndex);
+                        _setGlobalIndices.Add(nodePep.Peptide.GlobalIndex);
                         _peptideCount++;
                     }
-                    NodePep.Add(nodePepTree.DocNode);
-                    GroupPaths.Add(new IdentityPath(nodePepTree.Path, nodeGroup.Id));
+                    NodePep.Add(nodePep);
+                    GroupPaths.Add(new IdentityPath(pathPep, nodeGroup.Id));
                 }
             }
 
-            public void Add(PeptideTreeNode nodePepTree)
+            public void Add(IdentityPath pathPep, PeptideDocNode nodePep)
             {
-                foreach (TransitionGroupDocNode nodeGroups in nodePepTree.ChildDocNodes)
-                    Add(nodePepTree, nodeGroups);
+                foreach (var nodeGroups in nodePep.TransitionGroups)
+                    Add(pathPep, nodePep, nodeGroups);
             }
         }
 
