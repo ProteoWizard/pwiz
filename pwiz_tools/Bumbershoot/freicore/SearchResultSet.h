@@ -80,13 +80,13 @@ struct BaseSearchResult : public DigestedPeptide
     SearchScoreList getScoreList() const {return emptyScoreList;}
     bool isDecoy() const {return false;}
 
-	template<typename Archive>
-	void serialize(Archive& ar, const unsigned int version)
-	{
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
         ar & boost::serialization::base_object<DigestedPeptide>(*this);
         ar & precursorMassHypothesis & proteins;
         ar & fragmentsMatched & fragmentsUnmatched;
-	}
+    }
 
     static SearchScoreList emptyScoreList;
 };
@@ -97,7 +97,7 @@ template<typename SearchResultType, typename SearchResultLessThan = std::less<Se
 class SearchResultSet
 {
     public:
-	typedef SearchResultType SearchResult;
+    typedef SearchResultType SearchResult;
     typedef boost::shared_ptr<SearchResult> SearchResultPtr;
     typedef std::map<int, std::vector<SearchResultPtr> > RankMap;
 
@@ -122,10 +122,10 @@ class SearchResultSet
 
 
     public:
-	typedef typename _MainSet::iterator iterator;
-	typedef typename _MainSet::const_iterator const_iterator;
-	typedef typename _MainSet::reverse_iterator reverse_iterator;
-	typedef typename _MainSet::const_reverse_iterator const_reverse_iterator;
+    typedef typename _MainSet::iterator iterator;
+    typedef typename _MainSet::const_iterator const_iterator;
+    typedef typename _MainSet::reverse_iterator reverse_iterator;
+    typedef typename _MainSet::const_reverse_iterator const_reverse_iterator;
 
     SearchResultSet(size_t maxRanks = 0) : _maxRanks(maxRanks), _currentRanks(0) {}
 
@@ -174,7 +174,7 @@ class SearchResultSet
     }
 
     void add(const SearchResultPtr& result)
-	{
+    {
         if(!result.get())
             throw runtime_error("result pointer is null");
 
@@ -332,18 +332,18 @@ class SearchResultSet
         return rankMap;
     }
 
-	template<typename Archive>
-	void serialize(Archive& ar, const unsigned int version)
-	{
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
         ar & _maxRanks & _currentRanks;
-		ar & _mainSet;
+        ar & _mainSet;
         ar & _bestFullySpecificTarget;
         ar & _bestFullySpecificDecoy;
         ar & _bestSemiSpecificTarget;
         ar & _bestSemiSpecificDecoy;
         ar & _bestNonSpecificTarget;
         ar & _bestNonSpecificDecoy;
-	}
+    }
 
 
     private:
@@ -414,7 +414,7 @@ namespace std
 
     template<typename SearchResultType, typename SearchResultLessThan>
     ostream& operator<< (ostream& o, const freicore::SearchResultSet<SearchResultType, SearchResultLessThan>& rhs)
-	{
+    {
         typedef typename freicore::SearchResultSet<SearchResultType, SearchResultLessThan>::RankMap RankMap;
         RankMap rankMap = rhs.byRank();
         BOOST_FOREACH(const typename RankMap::value_type& rank, rankMap)
@@ -427,7 +427,7 @@ namespace std
             o << "(" << rank.first << ": " << sequence << " " << resultPtr->getScoreList() << " " << resultPtr->protein << ")\n";
         }
         return o;
-	}
+    }
 }
 
 

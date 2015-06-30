@@ -125,27 +125,27 @@ public :
   }
 
   virtual void set_chrom (const vector<float> & f, 
-			  int mz_idx);
+              int mz_idx);
 
   void clear();
 
   void delimit_by_minimum_level( uint & lh_valley_idx ,
-				 uint & rh_valley_idx ,
-				 int peak_loc );
+                 uint & rh_valley_idx ,
+                 int peak_loc );
 
   void init_smoothers();
 
   bool passes_min_len ( int lh_valley,
-			int rh_valley );
+            int rh_valley );
   
   void get_2d_chrom( const std::vector<float> & in_chrom,
-		     std::vector<float> & out_chrom );
+             std::vector<float> & out_chrom );
   void get_2d_chrom( std::vector<float> & in_chrom );
   void get_1d_chrom( const std::vector<float> & in_chrom,
-		     std::vector<float> & out_chrom );
+             std::vector<float> & out_chrom );
   void get_1d_chrom( std::vector<float> & in_chrom );
   void get_0d_chrom( const std::vector<float> & in_chrom,
-		     std::vector<float> & out_chrom );
+             std::vector<float> & out_chrom );
   void get_0d_chrom( std::vector<float> & in_chrom );
 
   void set_weights_2d();
@@ -187,9 +187,9 @@ public :
   ///delimits the peak based upon the nearest lh and rh points that fall below a minimum level
   
   bool consistent_gte( const std::vector<float> & c , int idx,
-		       float threshold=0.0f, int len=2);
+               float threshold=0.0f, int len=2);
   bool consistent_lte( const std::vector<float> & c , int idx,
-		       float threshold=0.0f, int len=2);
+               float threshold=0.0f, int len=2);
 
   /*! get_area -- gets area under a range of points
     \@param start_idx

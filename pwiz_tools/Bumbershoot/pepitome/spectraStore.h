@@ -65,16 +65,14 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach_field.hpp>
-#include <boost/interprocess/containers/container/flat_map.hpp>
+#include <boost/interprocess/containers/flat_map.hpp>
 
-#include <iostream>
 #include <ctype.h>
-#include <fstream>
-#include <strstream>
+#include <sstream>
 
 using namespace boost::assign;
 using namespace boost::algorithm;
-using std::strstream;
+using std::stringstream;
 using boost::container::flat_map;
 using boost::container::flat_multimap;
 namespace sqlite = sqlite3pp;
@@ -353,7 +351,7 @@ namespace pepitome
             for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
             {
                 (*qItr).getter() >> numPeaks >> data;
-                strstream dataStream(&data[0], data.length());
+                stringstream dataStream(data);
                 eos::portable_iarchive packArchive(dataStream);
                 packArchive & *this;
             }
@@ -442,7 +440,7 @@ namespace pepitome
 
                 double relativeIntensity = 0.0f;
                 IntenSortedPeakPreData::reverse_iterator r_iItr;
-                for(	r_iItr = intenSortedPeakPreData.rbegin();
+                for(    r_iItr = intenSortedPeakPreData.rbegin();
                     relativeIntensity < ticCutoffPercentage && r_iItr != intenSortedPeakPreData.rend();
                     ++r_iItr )
                 {
@@ -455,11 +453,11 @@ namespace pepitome
 
                 peakPreData.clear();
 
-                for(	IntenSortedPeakPreData::iterator iItr = intenSortedPeakPreData.lower_bound( r_iItr->first );
+                for(    IntenSortedPeakPreData::iterator iItr = intenSortedPeakPreData.lower_bound( r_iItr->first );
                     iItr != intenSortedPeakPreData.end();
                     ++iItr )
                 {
-                    PeakPreData::iterator itr = peakPreData.insert( make_pair( iItr->second, iItr->second ) ).first;
+                    PeakPreData::iterator itr = peakPreData.insert(make_pair(iItr->second, (float)iItr->second)).first;
                     itr->second = iItr->first;
                 }
             }
@@ -482,7 +480,7 @@ namespace pepitome
                 peakPreData.clear();
 
                 size_t peakCount = 0;
-                for(	IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
+                for(    IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
                     r_iItr != intenSortedPeakPreData.rend() && peakCount < maxPeakCount;
                     ++r_iItr, ++peakCount )
                 {
@@ -582,7 +580,7 @@ namespace pepitome
             BaseLibrarySpectrum::clearSpectrum();
         }
 
-		string _attribute;
+        string _attribute;
         string _value;
         string _peakAnn;
         void readPeaks(NativeFileReader& library)
@@ -609,32 +607,32 @@ namespace pepitome
                 string peakAnn;
                 //Skip the peak annotations if they exist
                 try
-				{
-					if(++itr != parser.end())
-						peakAnn = *itr;
-					if(isdigit(attribute[0]))
-					{
-						double peakMass = lexical_cast<double>(attribute);
-						float intensity = lexical_cast<float>(value);
-						peakPreData[peakMass] = intensity;
-						peakAnns.insert(pair<float,string>(peakMass,peakAnn));
-					}
-				}
-				catch( std::exception& e )
-				{
-					//cout << "'" << itr << "'";
-					//cout << "'" << parser.end() << "'";
-					cout << "'" << *itr << "'";
-					cout << "'" << _attribute << "' -> '"  << attribute << "'"<< endl;
-					cout << "'" << _value << "' -> '"  << value << "'"<< endl;
-					cout << "'" << _peakAnn << "' -> '"  << peakAnn << "'"<< endl;
-					stringstream msg;
-					msg << "Error caught! " << e.what();
-					throw runtime_error( msg.str() );
-				}
-				_attribute = attribute;
-				_value = value;
-				_peakAnn = peakAnn;
+                {
+                    if(++itr != parser.end())
+                        peakAnn = *itr;
+                    if(isdigit(attribute[0]))
+                    {
+                        double peakMass = lexical_cast<double>(attribute);
+                        float intensity = lexical_cast<float>(value);
+                        peakPreData[peakMass] = intensity;
+                        peakAnns.insert(pair<float,string>(peakMass,peakAnn));
+                    }
+                }
+                catch( std::exception& e )
+                {
+                    //cout << "'" << itr << "'";
+                    //cout << "'" << parser.end() << "'";
+                    cout << "'" << *itr << "'";
+                    cout << "'" << _attribute << "' -> '"  << attribute << "'"<< endl;
+                    cout << "'" << _value << "' -> '"  << value << "'"<< endl;
+                    cout << "'" << _peakAnn << "' -> '"  << peakAnn << "'"<< endl;
+                    stringstream msg;
+                    msg << "Error caught! " << e.what();
+                    throw runtime_error( msg.str() );
+                }
+                _attribute = attribute;
+                _value = value;
+                _peakAnn = peakAnn;
             }
         }
         
@@ -752,14 +750,11 @@ namespace pepitome
                     {
                         if(position < 0)
                         {
-                            DynamicMod mod('(','(',modMass);
-                            modMap.insert(make_pair<int,DynamicMod>(modMap.NTerminus(),mod));
+                            modMap[modMap.NTerminus()].push_back(Modification(modMass, modMass));
                         } 
                         else
                         {
-                            char aa = matchedPeptide->sequence().at(position);
-                            DynamicMod mod(aa,aa,modMass);
-                            modMap.insert(make_pair<int,DynamicMod>(position,mod));
+                            modMap[position].push_back(Modification(modMass, modMass));
                         }
                         //cout << position << "," << modName << "," << aa << "," << modMass << endl;
                     }
@@ -859,10 +854,10 @@ namespace pepitome
                     peakAnn = *itr;
                 if(isdigit(attribute[0]))
                 {
-                    float peakMass = lexical_cast<float>(attribute);
+                    double peakMass = lexical_cast<double>(attribute);
                     float intensity = lexical_cast<float>(value);
-                    peakPreData.insert(pair<float,float>(peakMass,intensity));
-                    peakAnns.insert(pair<float,string>(peakMass,peakAnn));
+                    peakPreData.insert(make_pair(peakMass,intensity));
+                    peakAnns.insert(make_pair(peakMass, peakAnn));
                 }
             }
         }
@@ -946,14 +941,11 @@ namespace pepitome
                     {
                         if(position < 0)
                         {
-                            DynamicMod mod('(','(',modMass);
-                            modMap.insert(make_pair<int,DynamicMod>(modMap.NTerminus(),mod));
+                            modMap[modMap.NTerminus()].push_back(Modification(modMass, modMass));
                         } 
                         else
                         {
-                            char aa = matchedPeptide->sequence().at(position);
-                            DynamicMod mod(aa,aa,modMass);
-                            modMap.insert(make_pair<int,DynamicMod>(position,mod));
+                            modMap[position].push_back(Modification(modMass, modMass));
                         }
                         //cout << position << "," << modName << "," << aa << "," << modMass << endl;
                     }
@@ -1127,8 +1119,8 @@ namespace pepitome
                 else if(bal::starts_with(buf, "NumPeaks"))
                 {
                     bal::split(tokens, buf, bal::is_any_of(":"));
-					string peakInput = tokens[1];
-					peakInput.erase(peakInput.begin(), std::find_if(peakInput.begin(), peakInput.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+                    string peakInput = tokens[1];
+                    peakInput.erase(peakInput.begin(), std::find_if(peakInput.begin(), peakInput.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
                     numPeaks = lexical_cast<size_t>(peakInput);
                 }
                 else if(bal::starts_with(buf, "PrecursorMZ"))
@@ -1250,34 +1242,34 @@ namespace pepitome
                 sqlite::database db(libraryName.c_str(), sqlite::full_mutex, sqlite::read_only);
 
                 flat_map<sqlite3_int64, shared_ptr<string> > spectraData;
-				int stack = 0;
+                int stack = 0;
                 try
                 {
                     //cout << boost::this_thread::get_id() << "fetching data" << endl;
                     START_PROFILER(0)
-					stack = 1;
+                    stack = 1;
                     sqlite::query qry(db, queryStr.c_str());
-					stack = 2;
+                    stack = 2;
                     for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
                     {
-						stack = 3;
+                        stack = 3;
                         sqlite3_int64 index;
                         int numPeaks;
-						stack = 4;
+                        stack = 4;
                         qItr->getter() >> index >> numPeaks;
-						stack = 5;
+                        stack = 5;
                         const void* data = qItr->get<const void*>(2);
-						stack = 6;
+                        stack = 6;
                         int dataLength = qItr->column_bytes(2);
-						stack = 7;
+                        stack = 7;
                         char* dataString = const_cast<char*>(static_cast<const char*>(data));
-						stack = 8;
+                        stack = 8;
                         spectraData[index] = shared_ptr<string>(new string(dataString, dataLength));
-						stack = 9;
+                        stack = 9;
                     }
-					stack = 10;
+                    stack = 10;
                     STOP_PROFILER(0)
-					stack = 11;
+                    stack = 11;
                     //cout << boost::this_thread::get_id() << "finished fetching data :" << spectraData.size() << endl;
                 }
                 catch(exception& e)

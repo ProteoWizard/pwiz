@@ -255,14 +255,14 @@ void initFeatureDetails(const string& sourceName,
                 << setw(9) << left << "Spectrum"
 #endif
                 << setw(8) << left << "Rank"
-	            << setw(8) << left << "Charge"
+                << setw(8) << left << "Charge"
                 << setw(8) << left << "NET"
                 << setw(8) << left << "NMC"
                 << setw(12) << left << "MassError"
-			    << setw(8) << left << "Decoy"
-			    << setw(17) << left << "BestSingleScore"
-			    << setw(8) << left << "QValue"
-			    << endl;
+                << setw(8) << left << "Decoy"
+                << setw(17) << left << "BestSingleScore"
+                << setw(8) << left << "QValue"
+                << endl;
 
     int featureIndex = 0;
     psmFeatures << "IsTrue";
@@ -314,9 +314,9 @@ void writePsmDetails(ostream& psmDetails, ostream& psmFeatures,
                 << setw(8) << left << unscaledMissedCleavages
                 << setw(12) << left << unscaledMassError
                 << setw(8) << left << DecoyState::Symbol[decoyState]
-		        << setw(17) << left << psm.totalScore
-		        << setw(8) << left << psm.qValue
-		        << "\n";
+                << setw(17) << left << psm.totalScore
+                << setw(8) << left << psm.qValue
+                << "\n";
 
     int featureIndex = 0;
     psmFeatures << truePositive ? "+1" : "-1";
@@ -466,25 +466,25 @@ svm_model* trainModel(const Qonverter::Settings& settings,
     trainingParameters.svm_type = settings.svmType.index();
     trainingParameters.kernel_type = settings.kernel.index();
     trainingParameters.cache_size = 100;
-	trainingParameters.degree = settings.degree;//3;
-	trainingParameters.gamma = settings.gamma; //1.0 / (numFeatures - 1);
-	trainingParameters.coef0 = 0;
-	trainingParameters.nu = settings.nu;//0.5;
-	trainingParameters.C = 1;
-	trainingParameters.eps = 1e-3;
-	trainingParameters.p = 0.1;
-	trainingParameters.shrinking = 1;
+    trainingParameters.degree = settings.degree;//3;
+    trainingParameters.gamma = settings.gamma; //1.0 / (numFeatures - 1);
+    trainingParameters.coef0 = 0;
+    trainingParameters.nu = settings.nu;//0.5;
+    trainingParameters.C = 1;
+    trainingParameters.eps = 1e-3;
+    trainingParameters.p = 0.1;
+    trainingParameters.shrinking = 1;
     trainingParameters.probability = settings.predictProbability ? 1 : 0;
-	trainingParameters.nr_weight = 0;
-	trainingParameters.weight_label = NULL;
-	trainingParameters.weight = NULL;
+    trainingParameters.nr_weight = 0;
+    trainingParameters.weight_label = NULL;
+    trainingParameters.weight = NULL;
 
     // weight the classes according to the relative size of the ranges (doesn't help)
     /*int weightLabels[] = {-1, 1};
     double weightValues[] = {1, (double) truePositiveRange.size() / falsePositiveRange.size()};
-	trainingParameters.nr_weight = 2;
-	trainingParameters.weight_label = &weightLabels[0];
-	trainingParameters.weight = &weightValues[0];*/
+    trainingParameters.nr_weight = 2;
+    trainingParameters.weight_label = &weightLabels[0];
+    trainingParameters.weight = &weightValues[0];*/
 
     svm_model* trainedModel = svm_train(&trainingData, &trainingParameters);
 

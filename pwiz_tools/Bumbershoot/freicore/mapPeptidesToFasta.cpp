@@ -59,7 +59,7 @@ simplethread_handle_array_t NETWorkerHandles;
 size_t numNETWorkers;
 typedef map<simplethread_id_t, NETWorkerInfo*> NETWorkerThreadMap;
 NETWorkerThreadMap NETWorkerThreads;
-simplethread_mutex_t	    resourceMutex;
+simplethread_mutex_t        resourceMutex;
 CVID cleavageAgent;
 boost::regex cleavageAgentRegex;
 Digestion::Specificity specificity;
@@ -76,7 +76,7 @@ simplethread_return_t ExecuteNETThread(simplethread_arg_t threadArg)
     // Find the data structure that is supposed to store the thread information.
     NETWorkerInfo* threadInfo = reinterpret_cast< NETWorkerInfo* >( threadMap->find( threadId )->second );
     // Realease the semaphore
-	simplethread_unlock_mutex( &resourceMutex );
+    simplethread_unlock_mutex( &resourceMutex );
 
     cout << "Accumulating peptide termini stats..." << endl;
     for(size_t index=threadInfo->start; index <= threadInfo->end; ++index)

@@ -31,25 +31,26 @@
 #include "WuManber.h"
 #include "LibraryBabelFish.h"
 #include "boost/tuple/tuple.hpp"
-#include "boost/lockfree/fifo.hpp"
+#include "boost/lockfree/queue.hpp"
 #include "boost/exception/all.hpp"
+#include "boost/xpressive/xpressive.hpp"
 #include "pepitomeVersion.hpp"
 
 namespace freicore
 {
-    namespace pepitome
-    {
-        proteinStore					proteins;
-		proteinStore					originalProteins;
-        boost::lockfree::fifo<size_t>   libraryTasks;
-        SearchStatistics                searchStatistics;
+namespace pepitome
+{
+    proteinStore                    proteins;
+    proteinStore                    originalProteins;
+    boost::lockfree::queue<size_t>  libraryTasks;
+    SearchStatistics                searchStatistics;
 
-    SpectraList						spectra;
-    SpectraMassMapList				avgSpectraByChargeState;
-    SpectraMassMapList				monoSpectraByChargeState;
+    SpectraList                        spectra;
+    SpectraMassMapList                avgSpectraByChargeState;
+    SpectraMassMapList                monoSpectraByChargeState;
         
     SpectraStore                    librarySpectra;
-    RunTimeConfig*					g_rtConfig;
+    RunTimeConfig*                    g_rtConfig;
 
 
     int InitProcess( argList_t& args )
@@ -68,35 +69,35 @@ namespace freicore
                        "-ignoreConfigErrors           : ignore errors in configuration file or the command-line\n"
                        "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
                        "-dump                         : show runtime configuration settings before starting the run\n"
-					   "-preplib                      : (Beta) append contaminants (if provided) and decoys to spectral library then exit\n";
+                       "-preplib                      : (Beta) append contaminants (if provided) and decoys to spectral library then exit\n";
 
-	    bool ignoreConfigErrors = false;
+        bool ignoreConfigErrors = false;
         g_endianType = GetHostEndianType();
         g_numWorkers = GetNumProcessors();
 
         // First set the working directory, if provided
         for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-workdir" && i+1 <= args.size() )
-			{
-				chdir( args[i+1].c_str() );
-				args.erase( args.begin() + i );
-			} else if( args[i] == "-cpus" && i+1 <= args.size() )
-			{
-				g_numWorkers = atoi( args[i+1].c_str() );
-				args.erase( args.begin() + i );
-			} else if( args[i] == "-ignoreConfigErrors" )
-			{
-				ignoreConfigErrors = true;
-			} else
-				continue;
+        {
+            if( args[i] == "-workdir" && i+1 <= args.size() )
+            {
+                chdir( args[i+1].c_str() );
+                args.erase( args.begin() + i );
+            } else if( args[i] == "-cpus" && i+1 <= args.size() )
+            {
+                g_numWorkers = atoi( args[i+1].c_str() );
+                args.erase( args.begin() + i );
+            } else if( args[i] == "-ignoreConfigErrors" )
+            {
+                ignoreConfigErrors = true;
+            } else
+                continue;
 
-			args.erase( args.begin() + i );
-			--i;
-		}
+            args.erase( args.begin() + i );
+            --i;
+        }
 
-		g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
-		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+        g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+        g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
 
         for( size_t i=1; i < args.size(); ++i )
         {
@@ -117,10 +118,10 @@ namespace freicore
         }
 
         if( args.size() < 2 )
-		{
-			cerr << "Not enough arguments.\n\n" << usage << endl;
-			return 1;
-		}
+        {
+            cerr << "Not enough arguments.\n\n" << usage << endl;
+            return 1;
+        }
 
         if( !g_rtConfig->initialized() )
         {
@@ -151,139 +152,139 @@ namespace freicore
         g_rtConfig->setVariables( vars );
 
         for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-dump" )
-			{
-				g_rtConfig->dump();
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
+        {
+            if( args[i] == "-dump" )
+            {
+                g_rtConfig->dump();
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
-		bool preplib = false;
-		bool iTraqMode = false;
-		bool hcdMode = false;
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i][0] == '-' )
-			{
-				if( args[i] == "-preplib")
-					preplib = true;				
-				else if( args[i] == "-prephcd")
-				{
-					preplib = true;
-					hcdMode = true;
-				}
-				else if( args[i] == "-itraq4plex")
-				{
-					preplib = true;
-					hcdMode = true;
-					iTraqMode = true;
-				}
+        bool preplib = false;
+        bool iTraqMode = false;
+        bool hcdMode = false;
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i][0] == '-' )
+            {
+                if( args[i] == "-preplib")
+                    preplib = true;                
+                else if( args[i] == "-prephcd")
+                {
+                    preplib = true;
+                    hcdMode = true;
+                }
+                else if( args[i] == "-itraq4plex")
+                {
+                    preplib = true;
+                    hcdMode = true;
+                    iTraqMode = true;
+                }
                 else if (!ignoreConfigErrors)
                 {
                     cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
                     return 1;
                 }
-				else
-					cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
+                else
+                    cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
         
         if( g_rtConfig->ProteinDatabase.empty() )
         {
             cerr << "No FASTA protein database specified.\n\n" << usage << endl;
             return 1;
-        }		
+        }        
 
         if( g_rtConfig->SpectralLibrary.empty() )
         {
             cerr << "No spectral library specified.\n\n" << usage << endl;
             return 1;
-        }		
-		if (preplib)
-		{
-			if (iTraqMode)
-				cout << "Using iTRAQ library preparation mode; peak mz values will be shifted to match iTRAQ 4plex modifications" << endl;
-			else if (hcdMode)
-				cout << "Using HCD library preparation mode; peak mz values will be shifted to match theoretical location" << endl;
-			else
-				cout << "Using library preparation mode" << endl;
-			if (!bfs::exists(g_rtConfig->ContamDatabase) && g_rtConfig->ContamDatabase != "")
-			{
-				string temp = g_rtConfig->ContamDatabase;
-				//if (std::string::npos != temp.find("default"))
-				boost::filesystem::path p(args[0]);
-				boost::filesystem::path dir = p.parent_path();
-				dir /= "contams.fasta";
-				if (boost::iequals(temp, "default"))
-					g_rtConfig->ContamDatabase = dir.string();
-				else
-				{
-					cerr << "Specified contaminant FASTA protein database not found or cannot be read." << endl << g_rtConfig->ContamDatabase << endl << endl;
-					return 1;
-				}
-			}
-			if (!bfs::exists(g_rtConfig->ContamLibrary) && g_rtConfig->ContamLibrary != "")
-			{
-				string temp = g_rtConfig->ContamLibrary;
-				//if (std::string::npos != temp.find("default"))
-				boost::filesystem::path p(args[0]);
-				boost::filesystem::path dir = p.parent_path();
-				dir /= "contams.sptxt";
-				if (boost::iequals(temp, "default"))
-					g_rtConfig->ContamLibrary = dir.string();
-				else
-				{
-					cerr << "Specified contaminant spectral library not found or cannot be read.\n\n" << endl;
-					return 1;			
-				}
-			}
+        }        
+        if (preplib)
+        {
+            if (iTraqMode)
+                cout << "Using iTRAQ library preparation mode; peak mz values will be shifted to match iTRAQ 4plex modifications" << endl;
+            else if (hcdMode)
+                cout << "Using HCD library preparation mode; peak mz values will be shifted to match theoretical location" << endl;
+            else
+                cout << "Using library preparation mode" << endl;
+            if (!bfs::exists(g_rtConfig->ContamDatabase) && g_rtConfig->ContamDatabase != "")
+            {
+                string temp = g_rtConfig->ContamDatabase;
+                //if (std::string::npos != temp.find("default"))
+                boost::filesystem::path p(args[0]);
+                boost::filesystem::path dir = p.parent_path();
+                dir /= "contams.fasta";
+                if (boost::iequals(temp, "default"))
+                    g_rtConfig->ContamDatabase = dir.string();
+                else
+                {
+                    cerr << "Specified contaminant FASTA protein database not found or cannot be read." << endl << g_rtConfig->ContamDatabase << endl << endl;
+                    return 1;
+                }
+            }
+            if (!bfs::exists(g_rtConfig->ContamLibrary) && g_rtConfig->ContamLibrary != "")
+            {
+                string temp = g_rtConfig->ContamLibrary;
+                //if (std::string::npos != temp.find("default"))
+                boost::filesystem::path p(args[0]);
+                boost::filesystem::path dir = p.parent_path();
+                dir /= "contams.sptxt";
+                if (boost::iequals(temp, "default"))
+                    g_rtConfig->ContamLibrary = dir.string();
+                else
+                {
+                    cerr << "Specified contaminant spectral library not found or cannot be read.\n\n" << endl;
+                    return 1;            
+                }
+            }
 
-			//Create merged database and library
-			string newDatabase = LibraryBabelFish::mergeDatabaseWithContam(g_rtConfig->ProteinDatabase, g_rtConfig->ContamDatabase);
-			string newLibrary = LibraryBabelFish::mergeLibraryWithContam(g_rtConfig->SpectralLibrary, g_rtConfig->ContamLibrary);
+            //Create merged database and library
+            string newDatabase = LibraryBabelFish::mergeDatabaseWithContam(g_rtConfig->ProteinDatabase, g_rtConfig->ContamDatabase);
+            string newLibrary = LibraryBabelFish::mergeLibraryWithContam(g_rtConfig->SpectralLibrary, g_rtConfig->ContamLibrary);
 
-			// Read the protein database
-			cout << "Reading \"" << newDatabase << "\"" << endl;
-			Timer readTime(true);
-			try
-			{
-				originalProteins = proteinStore( g_rtConfig->DecoyPrefix );
-				originalProteins.readFASTA( newDatabase );
-			}
-			catch (std::exception& e)
-			{
-				cout << "Error loading protein database: " << e.what() << endl;
-				return 1;
-			}
-			cout << "Read " << originalProteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl << endl;
+            // Read the protein database
+            cout << "Reading \"" << newDatabase << "\"" << endl;
+            Timer readTime(true);
+            try
+            {
+                originalProteins = proteinStore( g_rtConfig->DecoyPrefix );
+                originalProteins.readFASTA( newDatabase );
+            }
+            catch (std::exception& e)
+            {
+                cout << "Error loading protein database: " << e.what() << endl;
+                return 1;
+            }
+            cout << "Read " << originalProteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl << endl;
 
 
 
-			//refresh library against database
-			{
-				//LibraryBabelFish converter(newLibrary);
-				LibraryBabelFish::refreshLibrary(newLibrary, originalProteins, hcdMode, iTraqMode,g_rtConfig->DecoyPrefix);
-			}
+            //refresh library against database
+            {
+                //LibraryBabelFish converter(newLibrary);
+                LibraryBabelFish::refreshLibrary(newLibrary, originalProteins, hcdMode, iTraqMode,g_rtConfig->DecoyPrefix);
+            }
 
-			cout << endl << "Library refreshed and decoys created..." << endl;
+            cout << endl << "Library refreshed and decoys created..." << endl;
 
-			//Set merged database as new g_rtConfig->ProteinDatabase
-			//Set decoyed library as new g_rtConfig->SpectralLibrary
-			g_rtConfig->SpectralLibrary = newLibrary;
-			g_rtConfig->ProteinDatabase = newDatabase;
+            //Set merged database as new g_rtConfig->ProteinDatabase
+            //Set decoyed library as new g_rtConfig->SpectralLibrary
+            g_rtConfig->SpectralLibrary = newLibrary;
+            g_rtConfig->ProteinDatabase = newDatabase;
 
-			cout << "New Database: " + g_rtConfig->ProteinDatabase << endl;
-			cout << "New Library: " + g_rtConfig->SpectralLibrary << endl << endl;
+            cout << "New Database: " + g_rtConfig->ProteinDatabase << endl;
+            cout << "New Library: " + g_rtConfig->SpectralLibrary << endl << endl;
 
-			cout << "Library preparation complete." << endl << endl;
-			return 1;
-			//Note: currently exit program after library prep is complete. Errors sometimes occur in searching when
-			//preparation and searching is done in the same run of Pepitome. Best guess at the moment is memory allocation issue
-		}
+            cout << "Library preparation complete." << endl << endl;
+            return 1;
+            //Note: currently exit program after library prep is complete. Errors sometimes occur in searching when
+            //preparation and searching is done in the same run of Pepitome. Best guess at the moment is memory allocation issue
+        }
 
         if (args.size() == 1)
         {
@@ -303,9 +304,9 @@ namespace freicore
 
         // Determine the maximum seen charge state
         BOOST_FOREACH(Spectrum* s, spectra)
-		    g_rtConfig->maxChargeStateFromSpectra = max(s->possibleChargeStates.back(), g_rtConfig->maxChargeStateFromSpectra);
+            g_rtConfig->maxChargeStateFromSpectra = max(s->possibleChargeStates.back(), g_rtConfig->maxChargeStateFromSpectra);
 
-		g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
+        g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
 
         g_rtConfig->monoPrecursorMassTolerance.clear();
         g_rtConfig->avgPrecursorMassTolerance.clear();
@@ -341,7 +342,7 @@ namespace freicore
              << "Average mass precursor hypotheses: " << avgPrecursorHypotheses << endl;
 
         g_rtConfig->curMinPeptideMass = spectra.front()->precursorMassHypotheses.front().mass;
-		g_rtConfig->curMaxPeptideMass = 0;
+        g_rtConfig->curMaxPeptideMass = 0;
 
         // find the smallest and largest precursor masses
         size_t maxPeakBins = (size_t) spectra.front()->totalPeakSpace;
@@ -403,7 +404,7 @@ namespace freicore
     {
     }
 
-    void WriteOutputToFile(	const string& dataFilename,
+    void WriteOutputToFile(    const string& dataFilename,
                             string startTime,
                             string startDate,
                             float totalSearchTime,
@@ -413,7 +414,7 @@ namespace freicore
     {
         int numSpectra = 0;
 
-        string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
+        string filenameAsScanName = basename(bfs::path(dataFilename));
         BOOST_FOREACH(Spectrum* s, spectra)
         {
             ++ numSpectra;
@@ -444,10 +445,10 @@ namespace freicore
         fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
             
         string extension = g_rtConfig->outputFormat == pwiz::identdata::IdentDataFile::Format_pepXML ? ".pepXML" : ".mzid";
-		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
-		cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
+        string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
+        cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
 
-		spectra.write( dataFilename, 
+        spectra.write( dataFilename, 
                         g_rtConfig->outputFormat,
                         g_rtConfig->OutputSuffix,
                         "Pepitome", 
@@ -476,42 +477,42 @@ namespace freicore
         cout << "Preprocessing " << numSpectra << " spectra." << endl;
             
         timer.Begin();
-		BOOST_FOREACH(Spectrum* s, spectra)
-		{
-			try
-			{
-				s->Preprocess();
-			} catch( std::exception& e )
-			{
-				stringstream msg;
-				msg << "preprocessing spectrum " << s->id << ": " << e.what();
-				throw runtime_error( msg.str() );
-			} catch( ... )
-			{
-				stringstream msg;
-				msg << "preprocessing spectrum " << s->id;
-				throw runtime_error( msg.str() );
-			}
-		}
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            try
+            {
+                s->Preprocess();
+            } catch( std::exception& e )
+            {
+                stringstream msg;
+                msg << "preprocessing spectrum " << s->id << ": " << e.what();
+                throw runtime_error( msg.str() );
+            } catch( ... )
+            {
+                stringstream msg;
+                msg << "preprocessing spectrum " << s->id;
+                throw runtime_error( msg.str() );
+            }
+        }
 
-		// Trim spectra that have observed precursor masses outside the user-configured range
-		// (erase the peak list and the trim 0 peaks out)
-		BOOST_FOREACH(Spectrum* s, spectra)
-		{
-			if( s->precursorMassHypotheses.back().mass < g_rtConfig->MinPeptideMass ||
-				s->precursorMassHypotheses.front().mass > g_rtConfig->MaxPeptideMass )
-			{
-				s->peakPreData.clear();
-				s->peakData.clear();
-			}
-		}
+        // Trim spectra that have observed precursor masses outside the user-configured range
+        // (erase the peak list and the trim 0 peaks out)
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            if( s->precursorMassHypotheses.back().mass < g_rtConfig->MinPeptideMass ||
+                s->precursorMassHypotheses.front().mass > g_rtConfig->MaxPeptideMass )
+            {
+                s->peakPreData.clear();
+                s->peakData.clear();
+            }
+        }
 
         cout << "Finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
         cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
         cout << "Trimming spectra with precursors too small or large: " <<
             g_rtConfig->MinPeptideMass << " - " << g_rtConfig->MaxPeptideMass << endl;
 
-		int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
+        int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
         cout << "Trimmed " << postTrimCount << " spectra." << endl;
 
     }
@@ -606,7 +607,7 @@ namespace freicore
             ++searchStatistics.numSpectraQueried;
             int z = librarySpectra[libSpectrumIndex]->id.charge-1;
             BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
-			{
+            {
                 ++numComparisonsDone;
                 if( estimateComparisonsOnly )
                     continue;
@@ -618,9 +619,11 @@ namespace freicore
                 SearchResult& result = *resultPtr;
                 START_PROFILER(5)
                 spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
-                if( result.mvh >= g_rtConfig->MinResultScore )
+                if (result.mvh >= g_rtConfig->MinResultScore)
+                {
                     BOOST_FOREACH(const Protein& protein, librarySpectra[libSpectrumIndex]->matchedProteins)
                         result.proteins.insert(protein.first);
+                }
                 STOP_PROFILER(5)
                     
                 START_PROFILER(4);
@@ -662,7 +665,7 @@ namespace freicore
             size_t libraryTask;
             while( true )
             {
-                if (!libraryTasks.dequeue(&libraryTask))
+                if (!libraryTasks.pop(libraryTask))
                     break;
                     
                 boost::int64_t numComps = QueryLibraryBatch(libraryTask);
@@ -715,7 +718,7 @@ namespace freicore
         }
 
         for (size_t i=0; i < libBatchValues.size(); ++i)
-			libraryTasks.enqueue(i);
+            libraryTasks.push(i);
 
         bpt::ptime start = bpt::microsec_clock::local_time();
 
@@ -739,7 +742,7 @@ namespace freicore
                 if (t->timed_join(bpt::milliseconds(round(g_rtConfig->StatusUpdateFrequency * 1000))))
                     finishedThreads.insert(t);
 
-                if (status.exception.get())
+                if (status.exception)
                 {
                     //boost::rethrow_exception(status.exception);
                     cerr << boost::to_string(status.exception) << endl;
@@ -777,23 +780,26 @@ namespace freicore
     */
     DigestionSites digestProtein(const string& sequence)
     {
+        using namespace boost::xpressive;
+        using namespace boost::xpressive::regex_constants;
+
         DigestionSites sites_;
+        sregex cleavageAgentRegex = sregex::compile(g_rtConfig->cleavageAgentRegex);
         if(!g_rtConfig->cleavageAgentRegex.empty())
         {
             // Get the bounding iterators
             std::string::const_iterator start = sequence.begin();
             std::string::const_iterator end = sequence.end();
-            boost::smatch what;
-            boost::match_flag_type flags = boost::match_default;
+            smatch what;
+            match_flag_type flags = match_default;
             // Find a possible cleavage site from last match to the end of the sequence
-            while (regex_search(start, end, what, g_rtConfig->cleavageAgentRegex, flags))
+            while (regex_search(start, end, what, cleavageAgentRegex, flags))
             {
                 sites_.insert(int(what[0].first-sequence.begin()-1));
 
                 // update search position and flags
                 start = what[0].second;
-                flags |= boost::match_prev_avail;
-                flags |= boost::match_not_bob;
+                flags = flags | match_prev_avail |  match_not_bol;
             }
 
             // if regex didn't match n-terminus, insert it
@@ -887,7 +893,7 @@ namespace freicore
                         oldPep = newPep;
                     }
                     if((*rItr)->mvh >= g_rtConfig->MinResultScore) 
-                        (*rItr)->proteins.insert( proteins[i].getName() );	
+                        (*rItr)->proteins.insert( proteins[i].getName() );    
                 }
             }
         }
@@ -1005,7 +1011,7 @@ namespace freicore
             return 1;
 
         // Read the protein database
-		cout << "Reading \"" << g_dbFilename << "\"" << endl;
+        cout << "Reading \"" << g_dbFilename << "\"" << endl;
         Timer readTime(true);
         try
         {
@@ -1148,7 +1154,7 @@ namespace freicore
                         startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
                         ExecuteSearch();
                         cout << "Finished library search; " << searchTime.End() << " seconds elapsed." << endl;
-						cout << "Overall stats: " << (string) searchStatistics << endl;
+                        cout << "Overall stats: " << (string) searchStatistics << endl;
                     } else
                     {
                         cout << "Estimating the count of sequence comparisons to be done." << endl;
@@ -1187,7 +1193,7 @@ namespace freicore
 
 int main( int argc, char* argv[] )
 {
-	char buf[256];
+    char buf[256];
     GetHostname( buf, sizeof(buf) );
 
     g_numProcesses = 1;

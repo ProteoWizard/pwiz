@@ -257,17 +257,17 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         countColumn = "COUNT(DISTINCT s.Id)";
     else
     {
-		string whereConstraint;
-		if (bal::contains(pivotMode, "ITRAQ"))
-		{
-			countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)";
-			whereConstraint = "WHERE QuantitationMethod BETWEEN 2 AND 3 ";
-		}
-		else if (bal::contains(pivotMode, "TMT"))
-		{
-			countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)";
-			whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 6 ";
-		}
+        string whereConstraint;
+        if (bal::contains(pivotMode, "ITRAQ"))
+        {
+            countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)";
+            whereConstraint = "WHERE QuantitationMethod BETWEEN 2 AND 3 ";
+        }
+        else if (bal::contains(pivotMode, "TMT"))
+        {
+            countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)";
+            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 6 ";
+        }
         else if (bal::contains(pivotMode, "PrecursorIntensity"))
             countColumn = "IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)";
         else if (bal::contains(pivotMode, "PrecursorArea"))
@@ -291,7 +291,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                      "JOIN Protein pro ON pi.Protein=pro.Id "
                      "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id "
                      "LEFT JOIN XICMetrics xic ON dm.DistinctMatchId=xic.DistinctMatch AND s.Source=xic.SpectrumSource " +
-					 whereConstraint +
+                     whereConstraint +
                      "GROUP BY " + groupByString + ", " + pivotColumn;
         cout << sql << endl;
         sqlite::query q(idpDB, sql.c_str());
@@ -840,7 +840,7 @@ int main(int argc, const char* argv[])
 
     try
     {
-	    return query(groupBy, args);
+        return query(groupBy, args);
     }
     catch (exception& e)
     {

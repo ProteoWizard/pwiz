@@ -116,9 +116,9 @@ class CrawdadPeakFinder
                                     int minPeaks, int calls, float& cutoff, int& len);
     static int FilterPeaks(const vector<CrawdadPeakPtr>& listPeaks, float intensityCutoff);
 
-	// Padding data added before and after real data to ensure peaks
-	// near the edges get detected.
-	int _widthDataWings;
+    // Padding data added before and after real data to ensure peaks
+    // near the edges get detected.
+    int _widthDataWings;
     vector<float> _wingData;
     float _baselineIntensity;
 

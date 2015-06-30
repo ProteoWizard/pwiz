@@ -27,11 +27,11 @@ namespace crawpeaks {
 PeaksUsedOrNot::PeaksUsedOrNot() { 
          p= NULL;
          used = false;
-	  }
+      }
 PeaksUsedOrNot::PeaksUsedOrNot( SlimCrawPeakPtr * in_p ) {
-	   p = in_p;
+       p = in_p;
        used = false;
-	  }
+      }
       float PeaksUsedOrNot::get_peak_rt() const {
           if ( p == NULL ) {
               return -1.0f;
@@ -452,7 +452,7 @@ void CrawPeakAnnotator::set_bg_scratch ( int start_idx, int stop_idx ) {
   /param bg_sub_height - bg subtracted height
 */
 void CrawPeakAnnotator::get_all_areas( int start_idx, int stop_idx, int peak_idx,
-				      float & raw_area, float & bg_area , float & bg_sub_area , float & bg_sub_height, float & raw_height ) {
+                      float & raw_area, float & bg_area , float & bg_sub_area , float & bg_sub_height, float & raw_height ) {
 
   raw_area = (float)get_area(start_idx,stop_idx);
   int len = stop_idx - start_idx + 1;
@@ -469,7 +469,7 @@ void CrawPeakAnnotator::get_all_areas( int start_idx, int stop_idx, int peak_idx
 void CrawPeakAnnotator::set_peak_bg_subtracted_area ( SlimCrawPeak & peak ) {
   // float total_area;
   get_all_areas( peak.start_rt_idx, peak.stop_rt_idx, peak.peak_rt_idx,
-		 peak.raw_area, peak.bg_area, peak.peak_area, peak.peak_height, peak.raw_height );
+         peak.raw_area, peak.bg_area, peak.peak_area, peak.peak_height, peak.raw_height );
 
 }
 
@@ -650,22 +650,22 @@ void CrawPeakAnnotator::ratchet_back_to_frac_maxval( SlimCrawPeak & peak , float
 }
 
 void CrawPeakAnnotator::extend_to_1d_zero ( SlimCrawPeak & peak, bool start_at_peak ) {
-  /*	if ( blip_len == - 1 ) {
+  /*    if ( blip_len == - 1 ) {
       blip_len = this->pf->method.switch_len;
-	}
+    }
   */
-	int delta_to_lh, delta_to_rh;
+    int delta_to_lh, delta_to_rh;
     int lh_start, rh_start;
     if ( start_at_peak ) 
       lh_start = rh_start = peak.peak_rt_idx;
-	else {
+    else {
       lh_start = peak.start_rt_idx;
       rh_start = peak.stop_rt_idx;
-	}
+    }
 
     //find crossing point in the 1st derivative
-	std::vector<int> c1d_plus_crosses;
-	std::vector<int> c1d_minus_crosses;
+    std::vector<int> c1d_plus_crosses;
+    std::vector<int> c1d_minus_crosses;
 
     this->pf->find_cross_points( this->pf->chrom_1d, c1d_plus_crosses , c1d_minus_crosses );
 
@@ -680,82 +680,82 @@ void CrawPeakAnnotator::extend_to_1d_zero ( SlimCrawPeak & peak, bool start_at_p
     -- it may be best later on, after peak_tweak or whatever the heck it is is called, to trim peaks back, rather than rejecting them... hmmm..
 */
     //extend left hand
-	if ( ! (lh_start < c1d_plus_crosses[0]) )  {
-		std::vector<int>::const_iterator lh_it = std::lower_bound( c1d_plus_crosses.begin(), 
+    if ( ! (lh_start < c1d_plus_crosses[0]) )  {
+        std::vector<int>::const_iterator lh_it = std::lower_bound( c1d_plus_crosses.begin(), 
               c1d_plus_crosses.end(), lh_start);
         lh_it--;
-		if ( lh_it == c1d_plus_crosses.end() ) {
-		}
-		int leftmost_c1d_plus_cross = *lh_it; 
+        if ( lh_it == c1d_plus_crosses.end() ) {
+        }
+        int leftmost_c1d_plus_cross = *lh_it; 
         //since the cross is defined as going left-to-right, nudge to the other side
         leftmost_c1d_plus_cross++;
         delta_to_lh = lh_start - leftmost_c1d_plus_cross;
-	}
-	else {
+    }
+    else {
         delta_to_lh = 0;
-	}
+    }
 
 #if 0    
     //extend right hand
-	if ( ! (rh_start > c1d_plus_crosses.back() ) )  {
-		std::vector<int>::const_iterator rh_it = std::lower_bound( c1d_plus_crosses.begin(), c1d_plus_crosses.end(), rh_start);
-		if ( rh_it == c1d_plus_crosses.end() - 1 ) {
+    if ( ! (rh_start > c1d_plus_crosses.back() ) )  {
+        std::vector<int>::const_iterator rh_it = std::lower_bound( c1d_plus_crosses.begin(), c1d_plus_crosses.end(), rh_start);
+        if ( rh_it == c1d_plus_crosses.end() - 1 ) {
            
-		}
-		else {
+        }
+        else {
            //rh_it++;
-		}
-		int rightmost_c1d_plus_cross = *(rh_it);
+        }
+        int rightmost_c1d_plus_cross = *(rh_it);
         delta_to_rh = rightmost_c1d_plus_cross - rh_start;
-	}
-	else {
+    }
+    else {
         delta_to_rh = 0;
-	}
+    }
 #endif // 0
     //extend right hand
-	if ( ! (rh_start > c1d_plus_crosses.back() ) )  {
-		std::vector<int>::const_iterator rh_it = std::lower_bound( c1d_plus_crosses.begin(), c1d_plus_crosses.end(), rh_start);
-		if ( rh_it == c1d_plus_crosses.end() - 1 ) {
+    if ( ! (rh_start > c1d_plus_crosses.back() ) )  {
+        std::vector<int>::const_iterator rh_it = std::lower_bound( c1d_plus_crosses.begin(), c1d_plus_crosses.end(), rh_start);
+        if ( rh_it == c1d_plus_crosses.end() - 1 ) {
            
-		}
-		else {
+        }
+        else {
            //rh_it++;
-		}
-		int rightmost_c1d_plus_cross = *(rh_it);
+        }
+        int rightmost_c1d_plus_cross = *(rh_it);
         delta_to_rh = rightmost_c1d_plus_cross - rh_start;
-	}
-	else {
+    }
+    else {
         delta_to_rh = 0;
-	}
+    }
 
 
 
     //for now, extend boundaries by delta_to_lh, delta_to_rh - note that we can also use those to enforce some peak asymmetry
   
-	if ( start_at_peak ) {
+    if ( start_at_peak ) {
         peak.start_rt_idx = peak.peak_rt_idx - delta_to_lh;
         peak.stop_rt_idx  = peak.peak_rt_idx + delta_to_rh;
-	}
-	else {
-		peak.start_rt_idx -= delta_to_lh;
-		peak.stop_rt_idx  += delta_to_rh;
-	}
+    }
+    else {
+        peak.start_rt_idx -= delta_to_lh;
+        peak.stop_rt_idx  += delta_to_rh;
+    }
     //this->reannotate_peak(peak,peak.start_rt_idx,peak.stop_rt_idx);
 
 }
 void CrawPeakAnnotator::extend_to_1d_zero_local_minimum( SlimCrawPeak & peak,  bool start_at_peak) {
-	int delta_to_lh, delta_to_rh;
+    int delta_to_lh, delta_to_rh;
     int lh_start, rh_start;
     if ( start_at_peak ) 
       lh_start = rh_start = peak.peak_rt_idx;
-	else {
+    else {
       lh_start = peak.start_rt_idx;
       rh_start = peak.stop_rt_idx;
-	}
+    }
 
     //find crossing point in the 1st derivative
-	std::vector<int> c1d_plus_crosses;
-	std::vector<int> c1d_minus_crosses;
+    std::vector<int> c1d_plus_crosses;
+    std::vector<int> c1d_minus_crosses;
 
     this->pf->find_cross_points( this->pf->chrom_1d, c1d_plus_crosses , c1d_minus_crosses );
 
@@ -764,77 +764,77 @@ void CrawPeakAnnotator::extend_to_1d_zero_local_minimum( SlimCrawPeak & peak,  b
     int peak_intensity = (int)this->active_chrom->at(peak.peak_rt_idx);
     int last_minimum_intensity = peak_intensity;
    
-	if ( ! (lh_start < c1d_plus_crosses[0]) )  {
-		std::vector<int>::const_iterator lh_it = std::lower_bound( c1d_plus_crosses.begin(), c1d_plus_crosses.end(), lh_start);
-		if ( lh_it == c1d_plus_crosses.end() ) {
+    if ( ! (lh_start < c1d_plus_crosses[0]) )  {
+        std::vector<int>::const_iterator lh_it = std::lower_bound( c1d_plus_crosses.begin(), c1d_plus_crosses.end(), lh_start);
+        if ( lh_it == c1d_plus_crosses.end() ) {
             throw("makes no sense");
-		}
+        }
    
         //walk leftwards
-		do {
-			if ( lh_it == c1d_plus_crosses.begin() ) {
+        do {
+            if ( lh_it == c1d_plus_crosses.begin() ) {
                break;
-			}
+            }
             int this_valley_intensity = (int)this->active_chrom->at(*lh_it);
-			if ( this_valley_intensity > last_minimum_intensity ) {
+            if ( this_valley_intensity > last_minimum_intensity ) {
                  //the last valley was the local minimum
                  lh_it++;
                  break;
-			}
+            }
             last_minimum_intensity = this_valley_intensity;
             lh_it--;
-		} while ( lh_it != c1d_plus_crosses.begin() );
+        } while ( lh_it != c1d_plus_crosses.begin() );
 
-		int leftmost_c1d_plus_cross = *lh_it; 
+        int leftmost_c1d_plus_cross = *lh_it; 
         //since the cross is defined as going left-to-right, nudge to the other side
         leftmost_c1d_plus_cross++;
         delta_to_lh = lh_start - leftmost_c1d_plus_cross;
-	}
-	else {
+    }
+    else {
         delta_to_lh = 0;
-	}
+    }
     
     //extend right hand
-	last_minimum_intensity = peak_intensity;
+    last_minimum_intensity = peak_intensity;
 
-	if ( ! (rh_start > c1d_minus_crosses.back() ) )  {
-		std::vector<int>::const_iterator rh_it = std::lower_bound( c1d_minus_crosses.begin(), c1d_minus_crosses.end(), rh_start);
-		if ( rh_it == c1d_minus_crosses.end() - 1 ) {
+    if ( ! (rh_start > c1d_minus_crosses.back() ) )  {
+        std::vector<int>::const_iterator rh_it = std::lower_bound( c1d_minus_crosses.begin(), c1d_minus_crosses.end(), rh_start);
+        if ( rh_it == c1d_minus_crosses.end() - 1 ) {
            
-		}
+        }
 
-		do {
-			if ( rh_it == c1d_minus_crosses.end() ) {
+        do {
+            if ( rh_it == c1d_minus_crosses.end() ) {
                rh_it--;
                break;
-			}
+            }
             int this_valley_intensity = (int)this->active_chrom->at(*rh_it);
-			if ( this_valley_intensity > last_minimum_intensity ) {
+            if ( this_valley_intensity > last_minimum_intensity ) {
                  //the last valley was the local minimum
                  rh_it--;
                  break;
-			}
+            }
             last_minimum_intensity = this_valley_intensity;
             rh_it++;
-		} while ( rh_it != c1d_plus_crosses.end() );
+        } while ( rh_it != c1d_plus_crosses.end() );
 
-		int rightmost_c1d_minus_cross = *(rh_it);
+        int rightmost_c1d_minus_cross = *(rh_it);
         delta_to_rh = rightmost_c1d_minus_cross - rh_start;
-	}
-	else {
+    }
+    else {
         delta_to_rh = 0;
-	}
+    }
 
     //for now, extend boundaries by delta_to_lh, delta_to_rh - note that we can also use those to enforce some peak asymmetry
   
-	if ( start_at_peak ) {
+    if ( start_at_peak ) {
         peak.start_rt_idx = peak.peak_rt_idx - delta_to_lh;
         peak.stop_rt_idx  = peak.peak_rt_idx + delta_to_rh;
-	}
-	else {
-		peak.start_rt_idx -= delta_to_lh;
-		peak.stop_rt_idx  += delta_to_rh;
-	}
+    }
+    else {
+        peak.start_rt_idx -= delta_to_lh;
+        peak.stop_rt_idx  += delta_to_rh;
+    }
     //this->reannotate_peak(peak,peak.start_rt_idx,peak.stop_rt_idx);
 
 
@@ -843,31 +843,31 @@ void CrawPeakAnnotator::extend_to_1d_zero_local_minimum( SlimCrawPeak & peak,  b
 
 void CrawPeakAnnotator::extend_peak_set ( const std::vector<SlimCrawPeakPtr> & in_peaks, std::vector<SlimCrawPeakPtr> & out_peaks, bool start_at_peak ) {
 
-	if ( in_peaks.size() == 0  ) {
-	   return;
-	}
+    if ( in_peaks.size() == 0  ) {
+       return;
+    }
 
-	std::vector<SlimCrawPeakPtr> peak_ptrs_by_rt(in_peaks.begin(), in_peaks.end());
-	//std::cerr << peak_ptrs_by_rt.size() << std::endl;
+    std::vector<SlimCrawPeakPtr> peak_ptrs_by_rt(in_peaks.begin(), in_peaks.end());
+    //std::cerr << peak_ptrs_by_rt.size() << std::endl;
 
-	std::sort(peak_ptrs_by_rt.begin(),peak_ptrs_by_rt.end(), CompSlimCrawPeakPtrByPeakRTIdx() );
-	std::vector<PeaksUsedOrNot*> peaks_by_rt;
-	for ( int i = 0 ; i < (int)peak_ptrs_by_rt.size(); i++ ) {
+    std::sort(peak_ptrs_by_rt.begin(),peak_ptrs_by_rt.end(), CompSlimCrawPeakPtrByPeakRTIdx() );
+    std::vector<PeaksUsedOrNot*> peaks_by_rt;
+    for ( int i = 0 ; i < (int)peak_ptrs_by_rt.size(); i++ ) {
         PeaksUsedOrNot * p = new PeaksUsedOrNot( &(peak_ptrs_by_rt[i]) );
-	    peaks_by_rt.push_back(p);
-	}
+        peaks_by_rt.push_back(p);
+    }
     std::vector<PeaksUsedOrNot*> peaks_by_I(peaks_by_rt.size());
     std::copy(peaks_by_rt.begin(), peaks_by_rt.end(), peaks_by_I.begin());
     std::sort(peaks_by_I.begin(), peaks_by_I.end(), CompPeaksUsedOrNotDumbPtrByPeakRawHeightIdx() );
     PeakCoordSet peak_coords(peak_ptrs_by_rt);
-	std::vector<PeaksUsedOrNot*>::iterator intensity_iterator = peaks_by_I.end();
-	do {
+    std::vector<PeaksUsedOrNot*>::iterator intensity_iterator = peaks_by_I.end();
+    do {
        intensity_iterator--;
-	   if ( (*intensity_iterator)->used  ) {
+       if ( (*intensity_iterator)->used  ) {
           continue;
           //TODO check behavior of this in debugger, see if while condition is checked
-	   }
-	   else {
+       }
+       else {
           //extend peak
           //iterator->SlimCrawPeakPtr->SlimCrawPeak. blech.
           this->extend_to_1d_zero( *(*(**intensity_iterator).p), this->pf->method.extend_from_peak_rt );
@@ -885,8 +885,8 @@ void CrawPeakAnnotator::extend_peak_set ( const std::vector<SlimCrawPeakPtr> & i
           out_peaks.push_back(*((**intensity_iterator).p));
           (**intensity_iterator).used = true;
           
-	   }
-	} while ( ! (intensity_iterator == peaks_by_I.begin() ) );
+       }
+    } while ( ! (intensity_iterator == peaks_by_I.begin() ) );
 
 
 }

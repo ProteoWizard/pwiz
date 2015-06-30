@@ -36,97 +36,97 @@ namespace freicore
 {
 namespace tagrecon
 {
-    proteinStore			        proteins;
+    proteinStore                    proteins;
     boost::lockfree::fifo<size_t>   proteinTasks;
     SearchStatistics                searchStatistics;
 
-    SpectraList			            spectra;
+    SpectraList                        spectra;
     SpectraTagTrie                  spectraTagTrie;
     // These lists hold precursor masses for "untagged" spectra.
-    SpectraMassMapList				untaggedSpectraByChargeState;
+    SpectraMassMapList                untaggedSpectraByChargeState;
 
     RunTimeConfig*                  g_rtConfig;
 
-    modMap_t					    knownModifications;
-    UniModXMLParser*			    unimodXMLParser;
-    DeltaMasses*				    deltaMasses;
-    BlosumMatrix*				    blosumMatrix;
+    modMap_t                        knownModifications;
+    UniModXMLParser*                unimodXMLParser;
+    DeltaMasses*                    deltaMasses;
+    BlosumMatrix*                    blosumMatrix;
 
 
-	/**!
-		WriteOutputToFile writes the results of TagRecon to an XML file. The XML file is formatted as
-		PepXML. The function first computes the e-values of the peptide hits, computes the ranks of
-		peptide hits for each spectrum, and converts the protein indices of each petpide hit to its
-		corresponding protein annotation. The function also write out an SVG file for each top hit of 
-		the spectrum. The function also write out auxillary files that are used to asses the performance
-		of the deisotoping and precursor m/z adjustment. 
-	*/
-	void WriteOutputToFile(	const string& dataFilename,
-							string startTime,
-							string startDate,
-							float totalSearchTime,
-							vector< size_t > opcs,
-							vector< size_t > fpcs,
-							SearchStatistics& overallStats )
-	{
-		int numSpectra = 0;
+    /**!
+        WriteOutputToFile writes the results of TagRecon to an XML file. The XML file is formatted as
+        PepXML. The function first computes the e-values of the peptide hits, computes the ranks of
+        peptide hits for each spectrum, and converts the protein indices of each petpide hit to its
+        corresponding protein annotation. The function also write out an SVG file for each top hit of 
+        the spectrum. The function also write out auxillary files that are used to asses the performance
+        of the deisotoping and precursor m/z adjustment. 
+    */
+    void WriteOutputToFile(    const string& dataFilename,
+                            string startTime,
+                            string startDate,
+                            float totalSearchTime,
+                            vector< size_t > opcs,
+                            vector< size_t > fpcs,
+                            SearchStatistics& overallStats )
+    {
+        int numSpectra = 0;
 
-		string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
+        string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
 
-		// Make histograms of scores by charge state
-		map< int, Histogram<float> > meanScoreHistogramsByChargeState;
-		for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-			meanScoreHistogramsByChargeState[ z ] = Histogram<float>( g_rtConfig->NumScoreHistogramBins, g_rtConfig->MaxScoreHistogramValues );
+        // Make histograms of scores by charge state
+        map< int, Histogram<float> > meanScoreHistogramsByChargeState;
+        for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
+            meanScoreHistogramsByChargeState[ z ] = Histogram<float>( g_rtConfig->NumScoreHistogramBins, g_rtConfig->MaxScoreHistogramValues );
 
-		BOOST_FOREACH(Spectrum* s, spectra)
-		{
-			++ numSpectra;
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            ++ numSpectra;
 
-			// Set the spectrum id as the scan number
-			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.nativeID, s->id.charge ) );
+            // Set the spectrum id as the scan number
+            spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.nativeID, s->id.charge ) );
 
-			// Compute score histograms
-			if( g_rtConfig->MakeScoreHistograms )
-			{
-				s->scoreHistogram.smooth();
-				for( map<float,int>::iterator itr = s->scores.begin(); itr != s->scores.end(); ++itr )
-					cout << itr->first << "\t" << itr->second << "\n";
-				//cout << std::keys( s->scores ) << endl;
-				//cout << std::values( s->scores ) << endl;
-				//cout << std::keys( s->scoreHistogram.m_bins ) << endl;
-				//cout << std::values( s->scoreHistogram.m_bins ) << endl;
-				//s->scoreHistogram.writeToSvgFile( string( s->id ) + "-histogram.svg", "MVH score", "Density", 800, 600 );
-				meanScoreHistogramsByChargeState[ s->id.charge ] += s->scoreHistogram;
-			}
-		}
+            // Compute score histograms
+            if( g_rtConfig->MakeScoreHistograms )
+            {
+                s->scoreHistogram.smooth();
+                for( map<float,int>::iterator itr = s->scores.begin(); itr != s->scores.end(); ++itr )
+                    cout << itr->first << "\t" << itr->second << "\n";
+                //cout << std::keys( s->scores ) << endl;
+                //cout << std::values( s->scores ) << endl;
+                //cout << std::keys( s->scoreHistogram.m_bins ) << endl;
+                //cout << std::values( s->scoreHistogram.m_bins ) << endl;
+                //s->scoreHistogram.writeToSvgFile( string( s->id ) + "-histogram.svg", "MVH score", "Density", 800, 600 );
+                meanScoreHistogramsByChargeState[ s->id.charge ] += s->scoreHistogram;
+            }
+        }
 
-		// Write the score histograms to the SVG file
-		if( g_rtConfig->MakeScoreHistograms )
-			for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-				meanScoreHistogramsByChargeState[ z ].writeToSvgFile( filenameAsScanName + g_rtConfig->OutputSuffix + "_+" + lexical_cast<string>(z) + "_histogram.svg", "MVH score", "Density", g_rtConfig->ScoreHistogramWidth, g_rtConfig->ScoreHistogramHeight );
+        // Write the score histograms to the SVG file
+        if( g_rtConfig->MakeScoreHistograms )
+            for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
+                meanScoreHistogramsByChargeState[ z ].writeToSvgFile( filenameAsScanName + g_rtConfig->OutputSuffix + "_+" + lexical_cast<string>(z) + "_histogram.svg", "MVH score", "Density", g_rtConfig->ScoreHistogramWidth, g_rtConfig->ScoreHistogramHeight );
 
-		// Get some stats and program parameters
-		RunTimeVariableMap vars = g_rtConfig->getVariables();
-		RunTimeVariableMap fileParams;
-		for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
-			fileParams[ string("Config: ") + itr->first ] = itr->second;
-		fileParams["SearchEngine: Name"] = "TagRecon";
-		fileParams["SearchEngine: Version"] = Version::str();
-		fileParams["SearchTime: Started"] = startTime + " on " + startDate;
-		fileParams["SearchTime: Stopped"] = GetTimeString() + " on " + GetDateString();
-		fileParams["SearchTime: Duration"] = lexical_cast<string>( totalSearchTime ) + " seconds";
-		fileParams["SearchStats: Nodes"] = lexical_cast<string>( g_numProcesses );
-		fileParams["SearchStats: Overall"] = (string) overallStats;
-		fileParams["PeakCounts: Mean: Original"] = lexical_cast<string>( opcs[5] );
-		fileParams["PeakCounts: Mean: Filtered"] = lexical_cast<string>( fpcs[5] );
-		fileParams["PeakCounts: Min/Max: Original"] = lexical_cast<string>( opcs[0] ) + " / " + lexical_cast<string>( opcs[1] );
-		fileParams["PeakCounts: Min/Max: Filtered"] = lexical_cast<string>( fpcs[0] ) + " / " + lexical_cast<string>( fpcs[1] );
-		fileParams["PeakCounts: 1stQuartile: Original"] = lexical_cast<string>( opcs[2] );
-		fileParams["PeakCounts: 1stQuartile: Filtered"] = lexical_cast<string>( fpcs[2] );
-		fileParams["PeakCounts: 2ndQuartile: Original"] = lexical_cast<string>( opcs[3] );
-		fileParams["PeakCounts: 2ndQuartile: Filtered"] = lexical_cast<string>( fpcs[3] );
-		fileParams["PeakCounts: 3rdQuartile: Original"] = lexical_cast<string>( opcs[4] );
-		fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
+        // Get some stats and program parameters
+        RunTimeVariableMap vars = g_rtConfig->getVariables();
+        RunTimeVariableMap fileParams;
+        for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
+            fileParams[ string("Config: ") + itr->first ] = itr->second;
+        fileParams["SearchEngine: Name"] = "TagRecon";
+        fileParams["SearchEngine: Version"] = Version::str();
+        fileParams["SearchTime: Started"] = startTime + " on " + startDate;
+        fileParams["SearchTime: Stopped"] = GetTimeString() + " on " + GetDateString();
+        fileParams["SearchTime: Duration"] = lexical_cast<string>( totalSearchTime ) + " seconds";
+        fileParams["SearchStats: Nodes"] = lexical_cast<string>( g_numProcesses );
+        fileParams["SearchStats: Overall"] = (string) overallStats;
+        fileParams["PeakCounts: Mean: Original"] = lexical_cast<string>( opcs[5] );
+        fileParams["PeakCounts: Mean: Filtered"] = lexical_cast<string>( fpcs[5] );
+        fileParams["PeakCounts: Min/Max: Original"] = lexical_cast<string>( opcs[0] ) + " / " + lexical_cast<string>( opcs[1] );
+        fileParams["PeakCounts: Min/Max: Filtered"] = lexical_cast<string>( fpcs[0] ) + " / " + lexical_cast<string>( fpcs[1] );
+        fileParams["PeakCounts: 1stQuartile: Original"] = lexical_cast<string>( opcs[2] );
+        fileParams["PeakCounts: 1stQuartile: Filtered"] = lexical_cast<string>( fpcs[2] );
+        fileParams["PeakCounts: 2ndQuartile: Original"] = lexical_cast<string>( opcs[3] );
+        fileParams["PeakCounts: 2ndQuartile: Filtered"] = lexical_cast<string>( fpcs[3] );
+        fileParams["PeakCounts: 3rdQuartile: Original"] = lexical_cast<string>( opcs[4] );
+        fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
 
         // SearchSpectraList::write() expects MyriMatch 2.0 tolerances (with a unit suffix)
         string precursorMassType = g_rtConfig->UseAvgMassOfSequences ? "Avg" : "Mono";
@@ -135,10 +135,10 @@ namespace tagrecon
         fileParams["Config: FragmentMzTolerance"] += "mz";
 
         string extension = g_rtConfig->outputFormat == pwiz::identdata::IdentDataFile::Format_pepXML ? ".pepXML" : ".mzid";
-		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
-		cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
+        string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
+        cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
 
-		spectra.write(dataFilename,
+        spectra.write(dataFilename,
                       g_rtConfig->outputFormat,
                       g_rtConfig->OutputSuffix,
                       "TagRecon",
@@ -149,26 +149,26 @@ namespace tagrecon
                       g_rtConfig->cleavageAgentRegex,
                       g_rtConfig->decoyPrefix,
                       fileParams);
-	}
+    }
 
-	/**! 
-	  InitProcess (argsList) loacates the working directory if present, detects the number of cpus
-	  available for the process, loads the default or user given parameters and amino acid residue
-	  masses for the search. The default values are overridden by command line arguments. The
-	  function also transmits or receives the configs depending upon whether it is a root process
-	  or a child process.
-	*/
-	int InitProcess( vector <std::string> & args ) {
+    /**! 
+      InitProcess (argsList) loacates the working directory if present, detects the number of cpus
+      available for the process, loads the default or user given parameters and amino acid residue
+      masses for the search. The default values are overridden by command line arguments. The
+      function also transmits or receives the configs depending upon whether it is a root process
+      or a child process.
+    */
+    int InitProcess( vector <std::string> & args ) {
 
-		//cout << g_hostString << " is initializing." << endl;
-		if( g_pid == 0 )
-		{
+        //cout << g_hostString << " is initializing." << endl;
+        if( g_pid == 0 )
+        {
           cout << "TagRecon " << Version::str() << " (" << Version::LastModified() << ")\n" <<
                   "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
                   "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
                   "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
-					TAGRECON_LICENSE << endl;
-		}
+                    TAGRECON_LICENSE << endl;
+        }
 
         string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <input tags/spectra filemask 1> [input tags/spectra filemask 2] ...\n"
                        "Optional arguments:\n"
@@ -179,152 +179,152 @@ namespace tagrecon
                        "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
                        "-dump                         : show runtime configuration settings before starting the run\n";
 
-		bool ignoreConfigErrors = false;
-		g_numWorkers = GetNumProcessors();
+        bool ignoreConfigErrors = false;
+        g_numWorkers = GetNumProcessors();
 
-		// First set the working directory, if provided
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-workdir" && i+1 <= args.size() )
-			{
-				chdir( args[i+1].c_str() );
-				args.erase( args.begin() + i );
-			} else if( args[i] == "-cpus" && i+1 <= args.size() )
-			{
-				//Get the number of cpus
-				g_numWorkers = atoi( args[i+1].c_str() );
-				args.erase( args.begin() + i );
-			} else if( args[i] == "-ignoreConfigErrors" )
-			{
-				ignoreConfigErrors = true;
-			} else
-				continue;
+        // First set the working directory, if provided
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i] == "-workdir" && i+1 <= args.size() )
+            {
+                chdir( args[i+1].c_str() );
+                args.erase( args.begin() + i );
+            } else if( args[i] == "-cpus" && i+1 <= args.size() )
+            {
+                //Get the number of cpus
+                g_numWorkers = atoi( args[i+1].c_str() );
+                args.erase( args.begin() + i );
+            } else if( args[i] == "-ignoreConfigErrors" )
+            {
+                ignoreConfigErrors = true;
+            } else
+                continue;
 
-			args.erase( args.begin() + i );
-			--i;
-		}
+            args.erase( args.begin() + i );
+            --i;
+        }
 
-		g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+        g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
         g_rtConfig->executableFilepath = args[0];
-		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+        g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
 
-		//Read the parameters if this process is a master process.
-		if( g_pid == 0 )
-		{
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i] == "-cfg" && i+1 <= args.size() )
-				{
-					//Initialize the parameters from .cfg file.
-					if( g_rtConfig->initializeFromFile( args[i+1] ) )
-					{
-						cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
-						return 1;
-					}
-					args.erase( args.begin() + i );
+        //Read the parameters if this process is a master process.
+        if( g_pid == 0 )
+        {
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                if( args[i] == "-cfg" && i+1 <= args.size() )
+                {
+                    //Initialize the parameters from .cfg file.
+                    if( g_rtConfig->initializeFromFile( args[i+1] ) )
+                    {
+                        cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+                        return 1;
+                    }
+                    args.erase( args.begin() + i );
 
-				} else
-					continue;
+                } else
+                    continue;
 
-				args.erase( args.begin() + i );
-				--i;
-			}
+                args.erase( args.begin() + i );
+                --i;
+            }
 
-			// Make sure the user gave at least one input file (tags or spectra)
-			if( args.size() < 2 )
-			{
-				cerr << "Not enough arguments.\n\n" << usage << endl;
-				return 1;
-			}
-		
-			//Check to see if the search parameters have been initialized
-			if( !g_rtConfig->initialized() )
-			{
-				if( g_rtConfig->initializeFromFile() )
-				{
-					cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
-				}
-			}
+            // Make sure the user gave at least one input file (tags or spectra)
+            if( args.size() < 2 )
+            {
+                cerr << "Not enough arguments.\n\n" << usage << endl;
+                return 1;
+            }
+        
+            //Check to see if the search parameters have been initialized
+            if( !g_rtConfig->initialized() )
+            {
+                if( g_rtConfig->initializeFromFile() )
+                {
+                    cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
+                }
+            }
 
-			//If running on a cluster as a parent process then transmit the 
-			//search parameters and residue masses to the child processes.
-			#ifdef USE_MPI
-				if( g_numChildren > 0 )
-					TransmitConfigsToChildProcesses();
-			#endif
+            //If running on a cluster as a parent process then transmit the 
+            //search parameters and residue masses to the child processes.
+            #ifdef USE_MPI
+                if( g_numChildren > 0 )
+                    TransmitConfigsToChildProcesses();
+            #endif
 
-		} else // child process
-		{
-			#ifdef USE_MPI
-				ReceiveConfigsFromRootProcess();
-			#endif
-		}
+        } else // child process
+        {
+            #ifdef USE_MPI
+                ReceiveConfigsFromRootProcess();
+            #endif
+        }
 
-		// Command line overrides happen after config file has been distributed but before PTM parsing
-		RunTimeVariableMap vars = g_rtConfig->getVariables();
-		// Run through each of the variable and check if a new value has been specified for it 
-		// using a command line option
-		for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
-		{
-			string varName;
-			varName += "-" + itr->first;
+        // Command line overrides happen after config file has been distributed but before PTM parsing
+        RunTimeVariableMap vars = g_rtConfig->getVariables();
+        // Run through each of the variable and check if a new value has been specified for it 
+        // using a command line option
+        for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
+        {
+            string varName;
+            varName += "-" + itr->first;
 
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i].find( varName ) == 0 && i+1 <= args.size() )
-				{
-					//cout << varName << " " << itr->second << " " << args[i+1] << endl;
-					itr->second = args[i+1];
-					args.erase( args.begin() + i );
-					args.erase( args.begin() + i );
-					--i;
-				}
-			}
-		}
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                if( args[i].find( varName ) == 0 && i+1 <= args.size() )
+                {
+                    //cout << varName << " " << itr->second << " " << args[i+1] << endl;
+                    itr->second = args[i+1];
+                    args.erase( args.begin() + i );
+                    args.erase( args.begin() + i );
+                    --i;
+                }
+            }
+        }
 
-		// Set the variables
-		g_rtConfig->setVariables( vars );
+        // Set the variables
+        g_rtConfig->setVariables( vars );
 
-		if( g_pid == 0 )
-		{
-		    // Dump the parameters if the user opts for it
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i] == "-dump" )
-				{
-					g_rtConfig->dump();
-					args.erase( args.begin() + i );
-					--i;
-				}
-			}
+        if( g_pid == 0 )
+        {
+            // Dump the parameters if the user opts for it
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                if( args[i] == "-dump" )
+                {
+                    g_rtConfig->dump();
+                    args.erase( args.begin() + i );
+                    --i;
+                }
+            }
 
             // Either warn or error out on unrecognized parameters
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i][0] == '-' )
-				{
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                if( args[i][0] == '-' )
+                {
                     if (!ignoreConfigErrors)
                     {
                         cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
                         return 1;
                     }
 
-					cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-					args.erase( args.begin() + i );
-					--i;
-				}
-			}
-		}
+                    cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+                    args.erase( args.begin() + i );
+                    --i;
+                }
+            }
+        }
 
-	
-		// Parse out the unimod xml document for modifications
-		unimodXMLParser = new UniModXMLParser(g_rtConfig->UnimodXML);
-		unimodXMLParser->parseDocument();
+    
+        // Parse out the unimod xml document for modifications
+        unimodXMLParser = new UniModXMLParser(g_rtConfig->UnimodXML);
+        unimodXMLParser->parseDocument();
 
-		deltaMasses = new DeltaMasses(unimodXMLParser->getModifications());
-		deltaMasses->buildDeltaMassLookupTables();
-		//deltaMasses->printMassToAminoAcidMap();
-		//deltaMasses->printInterpretationMap();
+        deltaMasses = new DeltaMasses(unimodXMLParser->getModifications());
+        deltaMasses->buildDeltaMassLookupTables();
+        //deltaMasses->printMassToAminoAcidMap();
+        //deltaMasses->printInterpretationMap();
 
         if (args.size() == 1)
         {
@@ -332,27 +332,27 @@ namespace tagrecon
             return 1;
         }
 
-		return 0;
-	}
+        return 0;
+    }
 
-	
-	/**! 
-		InitWorkerGlobals() sorts the spectra by their ID, create a map of tags and spectra
-		containing the tags, pre-computes the ln(x!) table where x is number of m/z bins.
-		The precomputed ln factorial table is used in MVH scoring.
-	*/
-	int InitWorkerGlobals()
-	{
-		// Sort the spectra by their ID
-		spectra.sort( spectraSortByID() );
+    
+    /**! 
+        InitWorkerGlobals() sorts the spectra by their ID, create a map of tags and spectra
+        containing the tags, pre-computes the ln(x!) table where x is number of m/z bins.
+        The precomputed ln factorial table is used in MVH scoring.
+    */
+    int InitWorkerGlobals()
+    {
+        // Sort the spectra by their ID
+        spectra.sort( spectraSortByID() );
 
-		if( spectra.empty() )
-			return 0;
+        if( spectra.empty() )
+            return 0;
 
-		// Determine the maximum seen charge state
+        // Determine the maximum seen charge state
         g_rtConfig->maxChargeStateFromSpectra = 1;
-		BOOST_FOREACH(Spectrum* s, spectra)
-		    g_rtConfig->maxChargeStateFromSpectra = max(s->id.charge, g_rtConfig->maxChargeStateFromSpectra);
+        BOOST_FOREACH(Spectrum* s, spectra)
+            g_rtConfig->maxChargeStateFromSpectra = max(s->id.charge, g_rtConfig->maxChargeStateFromSpectra);
         
         g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
         //Set the mass tolerances according to the charge state.
@@ -371,18 +371,18 @@ namespace tagrecon
         }
         //for(size_t index = 0; index < g_rtConfig->PrecursorMassTolerance.size(); ++index)
         //    cout << index << "," << g_rtConfig->PrecursorMassTolerance[index];
-   		// Locate all tags with same amino acid sequence to a single location.        
+           // Locate all tags with same amino acid sequence to a single location.        
         typedef set< shared_ptr<AATagToSpectraMap>, AATagToSpectraMapCompare > UniqueTags;
         UniqueTags  uniqueTags;
         // Process the untagged spectra
         size_t untaggedPrecursorHypothesis = 0;
         // Create a map of precursor masses to the spectrum indices
         untaggedSpectraByChargeState.clear();
-		untaggedSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
+        untaggedSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
         for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
         {
             size_t numHighQualityTags = 0;
-			for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) 
+            for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) 
             {
                 // Generate the tag-spectrum structure
                 TagSpectrumInfo  tagInfo(sItr, tItr->tag, tItr->nTerminusMass, tItr->cTerminusMass);
@@ -397,7 +397,7 @@ namespace tagrecon
                 ret = uniqueTags.insert(tagMap);
                 // Update the map
                 const_cast< shared_ptr<AATagToSpectraMap>&>((*ret.first))->addTag(tagInfo);
-			}
+            }
             if(g_rtConfig->SearchUntaggedSpectra && (numHighQualityTags <= 1 || (*sItr)->tagList.size()==0))
             {
                 ++untaggedPrecursorHypothesis;
@@ -408,34 +408,34 @@ namespace tagrecon
                 p.charge = (*sItr)->id.charge;
                 untaggedSpectraByChargeState[p.charge-1].insert(make_pair(p.mass, make_pair((*sItr), p)));
             }
-		}
+        }
         // Initialize a tag trie for rapid tag location of tags in the protein sequence.
         spectraTagTrie.clear();
         spectraTagTrie.insert(uniqueTags.begin(),uniqueTags.end());
         
         if( !g_numChildren && g_rtConfig->SearchUntaggedSpectra )
             cout << "Found " << untaggedPrecursorHypothesis << " spectra with low quality tags." << endl;
-		// Get minimum and maximum peptide masses observed in the dataset
-		// and determine the number of peak bins required. This 
-		double minPrecursorMass = spectra.front()->mOfPrecursor;
-		double maxPrecursorMass = 0;
+        // Get minimum and maximum peptide masses observed in the dataset
+        // and determine the number of peak bins required. This 
+        double minPrecursorMass = spectra.front()->mOfPrecursor;
+        double maxPrecursorMass = 0;
 
-		size_t maxPeakBins = (size_t) spectra.front()->totalPeakSpace;
-		BOOST_FOREACH(Spectrum* s, spectra)
-		{
-			if( s->mOfPrecursor < minPrecursorMass )
-				minPrecursorMass = s->mOfPrecursor;
+        size_t maxPeakBins = (size_t) spectra.front()->totalPeakSpace;
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            if( s->mOfPrecursor < minPrecursorMass )
+                minPrecursorMass = s->mOfPrecursor;
 
-			if( s->mOfPrecursor > maxPrecursorMass )
-				maxPrecursorMass = s->mOfPrecursor;
+            if( s->mOfPrecursor > maxPrecursorMass )
+                maxPrecursorMass = s->mOfPrecursor;
 
-			size_t totalPeakBins = (size_t) round( s->totalPeakSpace / ( g_rtConfig->FragmentMzTolerance * 2.0 ) );
-			if( totalPeakBins > maxPeakBins )
-				maxPeakBins = totalPeakBins;
-		}
+            size_t totalPeakBins = (size_t) round( s->totalPeakSpace / ( g_rtConfig->FragmentMzTolerance * 2.0 ) );
+            if( totalPeakBins > maxPeakBins )
+                maxPeakBins = totalPeakBins;
+        }
 
-		g_rtConfig->curMinPeptideMass = minPrecursorMass - g_rtConfig->PrecursorMassTolerance.back() - g_rtConfig->MaxModificationMassPlus;
-		g_rtConfig->curMaxPeptideMass = maxPrecursorMass + g_rtConfig->PrecursorMassTolerance.back() + g_rtConfig->MaxModificationMassMinus;
+        g_rtConfig->curMinPeptideMass = minPrecursorMass - g_rtConfig->PrecursorMassTolerance.back() - g_rtConfig->MaxModificationMassPlus;
+        g_rtConfig->curMaxPeptideMass = maxPrecursorMass + g_rtConfig->PrecursorMassTolerance.back() + g_rtConfig->MaxModificationMassMinus;
 
         // set the effective minimum and maximum sequence masses based on config and precursors
         g_rtConfig->curMinPeptideMass = max( g_rtConfig->curMinPeptideMass, g_rtConfig->MinPeptideMass );
@@ -460,37 +460,37 @@ namespace tagrecon
                                                          curMaxPeptideLength,
                                                          specificity );
 
-		
-		// Calculate the ln(x!) table where x= number of m/z spaces.
-		// This table is used in MVH scoring.
-		g_lnFactorialTable.resize( maxPeakBins );
-		//cout << g_hostString << " finished precaching factorials." << endl;
+        
+        // Calculate the ln(x!) table where x= number of m/z spaces.
+        // This table is used in MVH scoring.
+        g_lnFactorialTable.resize( maxPeakBins );
+        //cout << g_hostString << " finished precaching factorials." << endl;
 
-		if( !g_numChildren )
-		{
-			cout << "Smallest observed precursor is " << minPrecursorMass << " Da." << endl;
-			cout << "Largest observed precursor is " << maxPrecursorMass << " Da." << endl;
+        if( !g_numChildren )
+        {
+            cout << "Smallest observed precursor is " << minPrecursorMass << " Da." << endl;
+            cout << "Largest observed precursor is " << maxPrecursorMass << " Da." << endl;
             cout << "Min. effective sequence mass is " << g_rtConfig->curMinPeptideMass << endl;
             cout << "Max. effective sequence mass is " << g_rtConfig->curMaxPeptideMass << endl;
             cout << "Min. effective sequence length is " << curMinPeptideLength << endl;
             cout << "Max. effective sequence length is " << curMaxPeptideLength << endl;
-		}
+        }
 
         //cout << "tagMapSize:" << spectraTagMapsByChargeState.size() << endl;
 
-		return 0;
-	}
+        return 0;
+    }
 
-	void DestroyWorkerGlobals()
-	{
-	}
+    void DestroyWorkerGlobals()
+    {
+    }
 
     void ComputeXCorrs()
     {        
         Timer timer;
         timer.Begin();
 
-		if( g_numChildren == 0 )
+        if( g_numChildren == 0 )
             cout << "Computing cross-correlations." << endl;
 
         // For each spectrum, iterate through its result set and compute the XCorr.
@@ -501,168 +501,168 @@ namespace tagrecon
             cout << "Finished computing cross-correlations; " << timer.End() << " seconds elapsed." << endl;
     }
 
-	/**!
-	PrepareSpectra parses out all the spectra in an input file, deterimes the
-	charge states (user configurable), preprocesses the spectra, and trims out
-	the spectra with too few peaks.
-	*/
-	void PrepareSpectra()
-	{
-		// Get total spectra size
-		int numSpectra = (int) spectra.size();
+    /**!
+    PrepareSpectra parses out all the spectra in an input file, deterimes the
+    charge states (user configurable), preprocesses the spectra, and trims out
+    the spectra with too few peaks.
+    */
+    void PrepareSpectra()
+    {
+        // Get total spectra size
+        int numSpectra = (int) spectra.size();
 
-		Timer timer;
+        Timer timer;
 
-		if( g_numChildren == 0 )
-			cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
+        if( g_numChildren == 0 )
+            cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
 
-		int preTrimCount = spectra.filterByPeakCount(g_rtConfig->minIntensityClassCount);
-		numSpectra = (int) spectra.size();
+        int preTrimCount = spectra.filterByPeakCount(g_rtConfig->minIntensityClassCount);
+        numSpectra = (int) spectra.size();
 
-		if( g_numChildren == 0 )
-		{
-			cout << "Trimmed " << preTrimCount << " spectra for being too sparse." << endl;
-			cout << "Determining charge states for " << numSpectra << " spectra." << endl;
-		}
+        if( g_numChildren == 0 )
+        {
+            cout << "Trimmed " << preTrimCount << " spectra for being too sparse." << endl;
+            cout << "Determining charge states for " << numSpectra << " spectra." << endl;
+        }
 
-		timer.Begin();
-		SpectraList duplicates;
-		// Try to determine the charge state for each spectrum
-		// If you can't determine the charge state (i.e if z
-		// state is not +1) then duplicate the spectrum to create
-		// multiple charge states.
-		BOOST_FOREACH(Spectrum* s, spectra)
-		{
-			try
-			{
-				if( !g_rtConfig->UseChargeStateFromMS )
-					spectra.setId( s->id, SpectrumId( s->id.source, s->id.nativeID, 0 ) );
+        timer.Begin();
+        SpectraList duplicates;
+        // Try to determine the charge state for each spectrum
+        // If you can't determine the charge state (i.e if z
+        // state is not +1) then duplicate the spectrum to create
+        // multiple charge states.
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            try
+            {
+                if( !g_rtConfig->UseChargeStateFromMS )
+                    spectra.setId( s->id, SpectrumId( s->id.source, s->id.nativeID, 0 ) );
 
-				if( s->id.charge == 0 )
-				{
-					SpectrumId preChargeId( s->id );
-					// Determine the charge state
-					s->DetermineSpectrumChargeState();
-					SpectrumId postChargeId( s->id );
+                if( s->id.charge == 0 )
+                {
+                    SpectrumId preChargeId( s->id );
+                    // Determine the charge state
+                    s->DetermineSpectrumChargeState();
+                    SpectrumId postChargeId( s->id );
 
-					// If the charge state is not +1
-					if( postChargeId.charge == 0 )
-					{
-						// Duplicate the spectrum and create
-						// spectrum with multiple charge states
-						postChargeId.setCharge(2);
+                    // If the charge state is not +1
+                    if( postChargeId.charge == 0 )
+                    {
+                        // Duplicate the spectrum and create
+                        // spectrum with multiple charge states
+                        postChargeId.setCharge(2);
                         s->possibleChargeStates = vector<int>(1, 2);
 
-						if( g_rtConfig->DuplicateSpectra )
-						{
-							for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
-							{
-								Spectrum* s2 = new Spectrum( *s );
-								s2->id.setCharge(z);
+                        if( g_rtConfig->DuplicateSpectra )
+                        {
+                            for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
+                            {
+                                Spectrum* s2 = new Spectrum( *s );
+                                s2->id.setCharge(z);
                                 s2->mutex.reset(new boost::mutex); // create a separate mutex
                                 s2->possibleChargeStates = vector<int>(1, z);
-								duplicates.push_back(s2);
-							}
-						}
-					}
+                                duplicates.push_back(s2);
+                            }
+                        }
+                    }
                     else
                         s->possibleChargeStates = vector<int>(1, 1);
 
-					spectra.setId( preChargeId, postChargeId );
-				}
+                    spectra.setId( preChargeId, postChargeId );
+                }
 
-			} catch( exception& e )
-			{
-				throw runtime_error( string( "duplicating scan " ) + string( s->id ) + ": " + e.what() );
-			} catch( ... )
-			{
-				throw runtime_error( string( "duplicating scan " ) + string( s->id ) );
-			}
-		}
+            } catch( exception& e )
+            {
+                throw runtime_error( string( "duplicating scan " ) + string( s->id ) + ": " + e.what() );
+            } catch( ... )
+            {
+                throw runtime_error( string( "duplicating scan " ) + string( s->id ) );
+            }
+        }
 
-		try
-		{
-			// Add the created duplicates to the existing spectra list
-			spectra.insert( duplicates.begin(), duplicates.end(), spectra.end() );
-			duplicates.clear(false);
-		} catch( exception& e )
-		{
-			throw runtime_error( string( "adding duplicated spectra: " ) + e.what() );
-		} catch( ... )
-		{
-			throw runtime_error( "adding duplicated spectra" );
-		}
+        try
+        {
+            // Add the created duplicates to the existing spectra list
+            spectra.insert( duplicates.begin(), duplicates.end(), spectra.end() );
+            duplicates.clear(false);
+        } catch( exception& e )
+        {
+            throw runtime_error( string( "adding duplicated spectra: " ) + e.what() );
+        } catch( ... )
+        {
+            throw runtime_error( "adding duplicated spectra" );
+        }
 
-		//int replicateCount = (int) spectra.size() - numSpectra;
-		numSpectra = (int) spectra.size();
+        //int replicateCount = (int) spectra.size() - numSpectra;
+        numSpectra = (int) spectra.size();
 
-		if( g_numChildren == 0 )
-		{
-			cout << "Finished determining charge states for its spectra; " << timer.End() << " seconds elapsed." << endl;
-			cout << "Preprocessing " << numSpectra << " spectra." << endl;
-		}
+        if( g_numChildren == 0 )
+        {
+            cout << "Finished determining charge states for its spectra; " << timer.End() << " seconds elapsed." << endl;
+            cout << "Preprocessing " << numSpectra << " spectra." << endl;
+        }
 
-		timer.Begin();
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-		{
-			try
-			{
-				// Preprocess the spectrum (see the function documentation for further details)
-				(*sItr)->Preprocess();
-			} catch( exception& e )
-			{
-				stringstream msg;
-				msg << "preprocessing spectrum " << (*sItr)->id << ": " << e.what();
-				throw runtime_error( msg.str() );
-			} catch( ... )
-			{
-				stringstream msg;
-				msg << "preprocessing spectrum " << (*sItr)->id;
-				throw runtime_error( msg.str() );
-			}
-		}
+        timer.Begin();
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        {
+            try
+            {
+                // Preprocess the spectrum (see the function documentation for further details)
+                (*sItr)->Preprocess();
+            } catch( exception& e )
+            {
+                stringstream msg;
+                msg << "preprocessing spectrum " << (*sItr)->id << ": " << e.what();
+                throw runtime_error( msg.str() );
+            } catch( ... )
+            {
+                stringstream msg;
+                msg << "preprocessing spectrum " << (*sItr)->id;
+                throw runtime_error( msg.str() );
+            }
+        }
 
-		// Trim spectra that have observed precursor masses outside the user-configured range
-		// (erase the peak list and the trim 0 peaks out)
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-		{
-			if( (*sItr)->mOfPrecursor < g_rtConfig->MinPeptideMass ||
-				(*sItr)->mOfPrecursor > g_rtConfig->MaxPeptideMass )
-			{
-				(*sItr)->peakPreData.clear();
-				(*sItr)->peakData.clear();
-			}
-		}
+        // Trim spectra that have observed precursor masses outside the user-configured range
+        // (erase the peak list and the trim 0 peaks out)
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        {
+            if( (*sItr)->mOfPrecursor < g_rtConfig->MinPeptideMass ||
+                (*sItr)->mOfPrecursor > g_rtConfig->MaxPeptideMass )
+            {
+                (*sItr)->peakPreData.clear();
+                (*sItr)->peakData.clear();
+            }
+        }
 
-		if( g_numChildren == 0 )
-		{
-			cout << "Finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
-			cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
-			cout << "Trimming spectra with precursors too small or large: " <<
-				g_rtConfig->MinPeptideMass << " - " << g_rtConfig->MaxPeptideMass << endl;
-		}
+        if( g_numChildren == 0 )
+        {
+            cout << "Finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
+            cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
+            cout << "Trimming spectra with precursors too small or large: " <<
+                g_rtConfig->MinPeptideMass << " - " << g_rtConfig->MaxPeptideMass << endl;
+        }
 
-		// Filter the spectra by peak count. If a spectrum doesn't have enough peaks to fill
-		// out minimum number of intensity classes (user configurable) then the spectrum is
-		// most likely a noisy spectrum. So, clip it off.
-		int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
+        // Filter the spectra by peak count. If a spectrum doesn't have enough peaks to fill
+        // out minimum number of intensity classes (user configurable) then the spectrum is
+        // most likely a noisy spectrum. So, clip it off.
+        int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
 
-		if( g_numChildren == 0 )
-		{
-			cout << "Trimmed " << postTrimCount << " spectra." << endl;
-		}
-	}
+        if( g_numChildren == 0 )
+        {
+            cout << "Trimmed " << postTrimCount << " spectra." << endl;
+        }
+    }
 
 
-	int numSearched;
-	vector< int > workerNumbers;
-	
+    int numSearched;
+    vector< int > workerNumbers;
+    
     /**!
-		GetTagsFromSequence takes a peptide sequence, its mass, and generates tags of specified length
-		(user configurable) from the sequence. 
-	*/
-	void GetTagsFromSequence(const DigestedPeptide& peptide, int tagLength, double seqMass, vector< TagInfo >& tags )
-	{
+        GetTagsFromSequence takes a peptide sequence, its mass, and generates tags of specified length
+        (user configurable) from the sequence. 
+    */
+    void GetTagsFromSequence(const DigestedPeptide& peptide, int tagLength, double seqMass, vector< TagInfo >& tags )
+    {
         // Get the modification map and the sequence without mods.
         const ModificationMap& mods = peptide.modifications();
         string seq = peptide.sequence();
@@ -688,7 +688,7 @@ namespace tagrecon
         }
 
         size_t seqLength = seq.length();
-		size_t maxTagStartIndex = seqLength - tagLength;
+        size_t maxTagStartIndex = seqLength - tagLength;
         float waterMass = WATER(g_rtConfig->UseAvgMassOfSequences);
         double runningNTerminalMass = residueMasses[0];
         tags.resize(peptide.sequence().length());
@@ -704,25 +704,25 @@ namespace tagrecon
             tags[i] = tag;
             runningNTerminalMass += residueMasses[i]; 
         }
-	}
+    }
 
-	/**
-		ScoreKnownVariants takes a candidate peptide and delta mass. The procedure finds
-		all the substitutions or preferred mass shifts that can fit the delta mass, generates 
+    /**
+        ScoreKnownVariants takes a candidate peptide and delta mass. The procedure finds
+        all the substitutions or preferred mass shifts that can fit the delta mass, generates 
         the variants, scores each of the generated variant against an experimental spectrum 
         and stores the results.
-	*/
-	inline boost::int64_t ScoreKnownModification(const DigestedPeptide& candidate, float mass, float modMass, 
-												size_t locStart, size_t locEnd, Spectrum* spectrum, 
-												const string& proteinId, float massTol, int NTT, bool isDecoy)
+    */
+    inline boost::int64_t ScoreKnownModification(const DigestedPeptide& candidate, float mass, float modMass, 
+                                                size_t locStart, size_t locEnd, Spectrum* spectrum, 
+                                                const string& proteinId, float massTol, int NTT, bool isDecoy)
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
-		boost::int64_t numComparisonsDone = 0;
-		//cout << "\t\t\t\t\t" << candidate.sequence() << "," << modMass << "," << locStart << "," << locEnd << endl;
-		
+        boost::int64_t numComparisonsDone = 0;
+        //cout << "\t\t\t\t\t" << candidate.sequence() << "," << modMass << "," << locStart << "," << locEnd << endl;
+        
         // Get all possible amino acid substitutions that fit the modification mass with in the mass tolerance
-		// Generate variants of the current peptide using the possible substitutions/modifications
+        // Generate variants of the current peptide using the possible substitutions/modifications
         vector <DigestedPeptide> possibleVariants;
         size_t numDynamicMods = candidate.modifications().size();
         // Get all possible amino acid substitutions or preferred mass shifts 
@@ -740,7 +740,7 @@ namespace tagrecon
                 MakePeptideVariants(candidate, possibleVariants, 1, 1, possibleModifications, locStart, locEnd);
         }
         //cout << candidate.sequence() << "," << candidate.modifications().size() << "," << possibleVariants.size() << endl;    
-		if(possibleVariants.size() == 0)
+        if(possibleVariants.size() == 0)
             return numComparisonsDone;
         
         // For each variant
@@ -799,25 +799,25 @@ namespace tagrecon
                     spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
             }
         }
-		return numComparisonsDone;
-	}
+        return numComparisonsDone;
+    }
 
 
-	/**
-		ScoreUnknownModification takes a peptide sequence and localizes an unknown modification mass
-		to a particular residue in the sequence. The number of tested resiudes is defined by locStart
-		and locEnd variables of the procedure.
-	*/
-	inline boost::int64_t ScoreUnknownModification(const DigestedPeptide& candidate, float mass, float modMass, 
-												size_t locStart, size_t locEnd, Spectrum* spectrum, 
-												const string& proteinId, int NTT, bool isDecoy)
+    /**
+        ScoreUnknownModification takes a peptide sequence and localizes an unknown modification mass
+        to a particular residue in the sequence. The number of tested resiudes is defined by locStart
+        and locEnd variables of the procedure.
+    */
+    inline boost::int64_t ScoreUnknownModification(const DigestedPeptide& candidate, float mass, float modMass, 
+                                                size_t locStart, size_t locEnd, Spectrum* spectrum, 
+                                                const string& proteinId, int NTT, bool isDecoy)
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
-		boost::int64_t numComparisonsDone = 0;
-		DynamicModSet possibleInterpretations;
-		string peptideSeq = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
-		multimap<double, SearchResultPtr> localizationPossibilities;
+        boost::int64_t numComparisonsDone = 0;
+        DynamicModSet possibleInterpretations;
+        string peptideSeq = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
+        multimap<double, SearchResultPtr> localizationPossibilities;
         double topMVHScore = 0.0;
         size_t numDynamicMods = candidate.modifications().size();
         
@@ -840,16 +840,16 @@ namespace tagrecon
             DynamicMod mod(peptideSeq[aaIndex],peptideSeq[aaIndex],modMass);
             possibleInterpretations.insert(mod);
         }
-		// Generate peptide variants of the current petpide using possible modifications
-		vector<DigestedPeptide> modificationVariants;
+        // Generate peptide variants of the current petpide using possible modifications
+        vector<DigestedPeptide> modificationVariants;
         //cout << "Making variants" << endl;
         MakePeptideVariants(candidate, modificationVariants, 1, 1, possibleInterpretations, locStart, locEnd);
-		// For each variant
-		for(size_t variantIndex = 0; variantIndex < modificationVariants.size(); variantIndex++)
+        // For each variant
+        for(size_t variantIndex = 0; variantIndex < modificationVariants.size(); variantIndex++)
         {
-			const DigestedPeptide& variant = modificationVariants[variantIndex];
+            const DigestedPeptide& variant = modificationVariants[variantIndex];
             double neutralMass = g_rtConfig->UseAvgMassOfSequences ? variant.molecularWeight() : variant.monoisotopicMass();
-			// Initialize search result
+            // Initialize search result
             SearchResultPtr resultPtr(new SearchResult(variant));
             SearchResult& result = *resultPtr;
             result.numberOfBlindMods = 1;
@@ -858,10 +858,10 @@ namespace tagrecon
             result.precursorMassHypothesis.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
             result.precursorMassHypothesis.charge = spectrum->id.charge;
             vector<double> sequenceIons;
-			// Compute the predicted spectru;m and score it against the experimental spectrum
+            // Compute the predicted spectru;m and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-			spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
-			result.massError = spectrum->mOfPrecursor-neutralMass;
+            spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
+            result.massError = spectrum->mOfPrecursor-neutralMass;
             ++numComparisonsDone;
 
             if(result.mvh < g_rtConfig->MinResultScore)
@@ -875,7 +875,7 @@ namespace tagrecon
             //    cout << tagrecon::getInterpretation(const_cast <DigestedPeptide&>(variant)) << "->" << result.mvh << endl;
             // Save the localization result
             localizationPossibilities.insert(make_pair(result.mvh, resultPtr));
-		}
+        }
 
         {
             boost::mutex::scoped_lock guard(*spectrum->mutex);
@@ -909,9 +909,9 @@ namespace tagrecon
             }
         }
         
-		// Return the number of comparisons performed
-		return numComparisonsDone;
-	}
+        // Return the number of comparisons performed
+        return numComparisonsDone;
+    }
 
     inline bool checkForModificationSanity(const DigestedPeptide& candidate, float modMass,float tolerance)
     {
@@ -940,14 +940,14 @@ namespace tagrecon
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
-		// Search stats
-		boost::int64_t numComparisonsDone = 0;
-		// Candidate peptide sequence and its mass
+        // Search stats
+        boost::int64_t numComparisonsDone = 0;
+        // Candidate peptide sequence and its mass
         const string& aSequence  = candidate.sequence();
         double neutralMass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
                                                                : candidate.monoisotopicMass();
 
-		vector< vector < double > > fragmentIonsByChargeState(g_rtConfig->maxChargeStateFromSpectra);
+        vector< vector < double > > fragmentIonsByChargeState(g_rtConfig->maxChargeStateFromSpectra);
 
         // Number of enzymatic termini
         int NTT = candidate.specificTermini();
@@ -1093,19 +1093,19 @@ namespace tagrecon
     typedef flat_map<size_t, shared_ptr<AATagToSpectraMap> > TagMatches;
 
     /**!
-		QuerySequence function takes a candidate peptide sequence as input. It generates all n length tags from 
-		the peptide sequence. For each of the generated tags, it locates the spectra that contain the tag. It 
-		computes the n-terminal and c-terminal delta masses between the candidate peptide sequence and spectral
-		tag-based sequence sourrounding the tag match. 
-		For example:
-					//    XXXXXXXXNSTXXXXXXXX (peptide sequence)
-					//            |||		  (Tag match)
-					//	  [200.45]NST[400.65] (spectral tag-based sequence)
-		If either n-terminal or c-terminal delta mass is greater than set mass tolerance then the function 
-		interprets either of them using a variable modification list supplied by the user. The function can 
-		also explain the delta mass without the help of a user-supplied	variable modification list. If there
-		are no non-zero delta masses then the function interprets the peptide match as an unmodified peptide.
-	*/
+        QuerySequence function takes a candidate peptide sequence as input. It generates all n length tags from 
+        the peptide sequence. For each of the generated tags, it locates the spectra that contain the tag. It 
+        computes the n-terminal and c-terminal delta masses between the candidate peptide sequence and spectral
+        tag-based sequence sourrounding the tag match. 
+        For example:
+                    //    XXXXXXXXNSTXXXXXXXX (peptide sequence)
+                    //            |||          (Tag match)
+                    //      [200.45]NST[400.65] (spectral tag-based sequence)
+        If either n-terminal or c-terminal delta mass is greater than set mass tolerance then the function 
+        interprets either of them using a variable modification list supplied by the user. The function can 
+        also explain the delta mass without the help of a user-supplied    variable modification list. If there
+        are no non-zero delta masses then the function interprets the peptide match as an unmodified peptide.
+    */
     inline boost::int64_t QueryPeptideTagRecon(const Peptide& protein, const DigestedPeptide& candidate, 
                                                const string& proteinId, bool isDecoy, 
                                                TagMatches::const_iterator tagMatchesBegin, 
@@ -1114,21 +1114,21 @@ namespace tagrecon
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
-		// Search stats
-		boost::int64_t numComparisonsDone = 0;
-		// Candidate peptide sequence and its mass
+        // Search stats
+        boost::int64_t numComparisonsDone = 0;
+        // Candidate peptide sequence and its mass
         const string& aSequence  = candidate.sequence();
         double neutralMass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
                                                                : candidate.monoisotopicMass();
 
         // Predicted spectrum by charge state vector.
         // TODO: Cache the predicted spectrum by charge state and fragment types.
-		vector< vector< double > > fragmentIonsByChargeState(g_rtConfig->maxChargeStateFromSpectra);
+        vector< vector< double > > fragmentIonsByChargeState(g_rtConfig->maxChargeStateFromSpectra);
 
         // Number of enzymatic termini
         int NTT = candidate.specificTermini();
-		// Get tags of length 3 from the candidate peptide sequence
-		vector< TagInfo > candidateTags;
+        // Get tags of length 3 from the candidate peptide sequence
+        vector< TagInfo > candidateTags;
         GetTagsFromSequence( candidate, 3, neutralMass, candidateTags );
         
         // Store all tag matches and their modification specific attributes
@@ -1148,30 +1148,30 @@ namespace tagrecon
             BOOST_FOREACH(const TagSpectrumInfo& tag, matchedTags->tags)
             {
                 float nTerminusDeviation = fabs( tag.nTerminusMass - peptidePrefixMass );
-				float cTerminusDeviation = fabs( tag.cTerminusMass - peptideSuffixMass );
+                float cTerminusDeviation = fabs( tag.cTerminusMass - peptideSuffixMass );
                 //cout << "\t\t" << (nTerminusDeviation+cTerminusDeviation) << "," << tag.candidateTag << endl;               
-				if(nTerminusDeviation+cTerminusDeviation >= g_rtConfig->MaxModificationMassPlus) 
-					continue;
+                if(nTerminusDeviation+cTerminusDeviation >= g_rtConfig->MaxModificationMassPlus) 
+                    continue;
                 // Get the charge state of the fragment ions that gave rise to the tag
                 int tagCharge = tag.tagChargeState;
                 // Figure out if the termini matched
                 TermMassMatch nTermMatch = nTerminusDeviation > g_rtConfig->NTerminalMassTolerance[tagCharge-1] ? MASS_MISMATCH : MASS_MATCH;
                 TermMassMatch cTermMatch = cTerminusDeviation > g_rtConfig->CTerminalMassTolerance[tagCharge-1] ? MASS_MISMATCH : MASS_MATCH;
-				// At least one termini has to match to proceed
-				if( nTermMatch == MASS_MISMATCH && cTermMatch == MASS_MISMATCH )
-					continue;
+                // At least one termini has to match to proceed
+                if( nTermMatch == MASS_MISMATCH && cTermMatch == MASS_MISMATCH )
+                    continue;
                 // If the all the delta mass modes are tuned off then both termini has to match
                 if( g_rtConfig->unknownMassShiftSearchMode == INACTIVE && nTermMatch != MASS_MATCH && cTermMatch != MASS_MATCH)
                     continue;
 
-				// Get the mass spectrum, charge, and the total 
+                // Get the mass spectrum, charge, and the total 
                 // mass difference b/w the spectrum and the candidate
-				Spectrum* spectrum = *tag.sItr;
-				float modMass = spectrum->mOfPrecursor - neutralMass;
+                Spectrum* spectrum = *tag.sItr;
+                float modMass = spectrum->mOfPrecursor - neutralMass;
 
                 // Don't bother interpreting the mod mass if it's outside the user-set limits.
-				if( modMass < -1.0*g_rtConfig->MaxModificationMassMinus || modMass > g_rtConfig->MaxModificationMassPlus )
-					continue;
+                if( modMass < -1.0*g_rtConfig->MaxModificationMassMinus || modMass > g_rtConfig->MaxModificationMassPlus )
+                    continue;
                 //cout << "\t\t" << spectrum->id << "," << modMass << "," << nTermMatch << "," << cTermMatch << endl;
                 // Make a tag match and remember some mod related attributes
                 TagMatchInfo tagMatch(spectrum, modMass, nTermMatch, cTermMatch);
@@ -1235,7 +1235,7 @@ namespace tagrecon
 
                 if( result.mvh >= g_rtConfig->MinResultScore )
                 {
-				    result.proteins.insert(proteinId);
+                    result.proteins.insert(proteinId);
                     result._isDecoy = isDecoy;
                 }
 
@@ -1366,7 +1366,7 @@ namespace tagrecon
                 }
             }
         }
-		return numComparisonsDone;
+        return numComparisonsDone;
     }
 
     void QueryProteinTagReconMode(const proteinData& protein)
@@ -1429,22 +1429,22 @@ namespace tagrecon
         }
     }
 
-	/**!
-		ExecuteSearchThread function takes a thread, figures out which part of the protein database
-		needs to be searched with the thread, generates the peptide sequences for the candidate 
-		protein sequences, and searches them with the tags and the spectra that generated the tags.
-	*/
-	void ExecuteSearchThread()
-	{
+    /**!
+        ExecuteSearchThread function takes a thread, figures out which part of the protein database
+        needs to be searched with the thread, generates the peptide sequences for the candidate 
+        protein sequences, and searches them with the tags and the spectra that generated the tags.
+    */
+    void ExecuteSearchThread()
+    {
         try
         {
             size_t proteinTask;
-		    while( true )
-		    {
+            while( true )
+            {
                 if (!proteinTasks.dequeue(&proteinTask))
-				    break;
+                    break;
 
-			    ++ searchStatistics.numProteinsDigested;
+                ++ searchStatistics.numProteinsDigested;
                 proteinData protein = proteins[proteinTask];
                 if (!g_rtConfig->ProteinListFilters.empty() && g_rtConfig->ProteinListFilters.find(protein.getName()) == string::npos)
                     continue;
@@ -1463,28 +1463,28 @@ namespace tagrecon
         {
             cerr << " terminated with an unknown error." << endl;
         }
-	}
+    }
 
-	/**!
-		ExecuteSearch function determines the number of workers depending
-		on the number of CPUs present in a box and create threads for each
-		of the CPU. This function treats each multi-core CPU as a multi-processor
-		machine.
-	*/
-	void ExecuteSearch()
-	{
-		size_t numProcessors = (size_t) g_numWorkers;
+    /**!
+        ExecuteSearch function determines the number of workers depending
+        on the number of CPUs present in a box and create threads for each
+        of the CPU. This function treats each multi-core CPU as a multi-processor
+        machine.
+    */
+    void ExecuteSearch()
+    {
+        size_t numProcessors = (size_t) g_numWorkers;
         boost::uint32_t numProteins = (boost::uint32_t) proteins.size();
 
-		for (size_t i=0; i < numProteins; ++i)
-			proteinTasks.enqueue(i);
+        for (size_t i=0; i < numProteins; ++i)
+            proteinTasks.enqueue(i);
 
         bpt::ptime start = bpt::microsec_clock::local_time();
 
         boost::thread_group workerThreadGroup;
         vector<boost::thread*> workerThreads;
 
-		for (size_t i = 0; i < numProcessors; ++i)
+        for (size_t i = 0; i < numProcessors; ++i)
             workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteSearchThread));
 
         if (g_numChildren > 0)
@@ -1514,25 +1514,25 @@ namespace tagrecon
                 lastUpdate = current;
                 bpt::time_duration elapsed = current - start;
 
-			    float proteinsPerSec = static_cast<float>(searchStatistics.numProteinsDigested) / elapsed.total_microseconds() * 1e6;
+                float proteinsPerSec = static_cast<float>(searchStatistics.numProteinsDigested) / elapsed.total_microseconds() * 1e6;
                 bpt::time_duration estimatedTimeRemaining(0, 0, round((numProteins - searchStatistics.numProteinsDigested) / proteinsPerSec));
 
-		        cout << "Searched " << searchStatistics.numProteinsDigested << " of " << numProteins << " proteins; "
+                cout << "Searched " << searchStatistics.numProteinsDigested << " of " << numProteins << " proteins; "
                      << round(proteinsPerSec) << " per second, "
                      << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
                      << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
 
-		        //float candidatesPerSec = threadInfo->stats.numComparisonsDone / totalSearchTime;
-		        //float estimatedTimeRemaining = float( numCandidates - threadInfo->stats.numComparisonsDone ) / candidatesPerSec / numThreads;
-		        //cout << threadInfo->workerHostString << " has made " << threadInfo->stats.numComparisonsDone << " of about " << numCandidates << " comparisons; " <<
-		        //		candidatesPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
-		    }
+                //float candidatesPerSec = threadInfo->stats.numComparisonsDone / totalSearchTime;
+                //float estimatedTimeRemaining = float( numCandidates - threadInfo->stats.numComparisonsDone ) / candidatesPerSec / numThreads;
+                //cout << threadInfo->workerHostString << " has made " << threadInfo->stats.numComparisonsDone << " of about " << numCandidates << " comparisons; " <<
+                //        candidatesPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+            }
 
             // compute xcorr for top ranked results
             if( g_rtConfig->ComputeXCorr )
                 ComputeXCorrs();
         }
-	}
+    }
 
     void ExecuteNETThread(size_t start, size_t end, vector<double>& NETStats)
     {
@@ -1576,7 +1576,7 @@ namespace tagrecon
         vector<boost::thread*> workerThreads;
 
         size_t proteinStartIndex = 0;
-		for (size_t i = 0; i < numNETWorkers; ++i)
+        for (size_t i = 0; i < numNETWorkers; ++i)
         {
             workerThreads.push_back(new boost::thread(&ExecuteNETThread,
                                                       proteinStartIndex,
@@ -1650,29 +1650,29 @@ namespace tagrecon
         //    cout << (*bItr)->size() << endl;
         return batches;
     }
-	/**!
-		ProcessHandler function reads the input files and protein database to perform the search.
-		The function preprocess the spectra, splits the protein database according to the number
-		of processors available (including clusters), and executes the search on each of the
-		processor simultaneously. The results are put together if the search has been executed on
-		a multi-core CPU or multi-node cluster.
-	*/
-	int ProcessHandler( int argc, char* argv[] )
-	{
-		//Process the command line arguments
-		vector< string > args;
-		for(int i=0; i < argc; ++i )
-			args.push_back( argv[i] );
+    /**!
+        ProcessHandler function reads the input files and protein database to perform the search.
+        The function preprocess the spectra, splits the protein database according to the number
+        of processors available (including clusters), and executes the search on each of the
+        processor simultaneously. The results are put together if the search has been executed on
+        a multi-core CPU or multi-node cluster.
+    */
+    int ProcessHandler( int argc, char* argv[] )
+    {
+        //Process the command line arguments
+        vector< string > args;
+        for(int i=0; i < argc; ++i )
+            args.push_back( argv[i] );
 
-		if( InitProcess( args ) )
-			return 1;
+        if( InitProcess( args ) )
+            return 1;
 
-		//Get the database file name
-		g_dbFilename = g_rtConfig->ProteinDatabase;
-		//cout << g_dbFilename << "\n";
-		int numSpectra = 0;
+        //Get the database file name
+        g_dbFilename = g_rtConfig->ProteinDatabase;
+        //cout << g_dbFilename << "\n";
+        int numSpectra = 0;
 
-		INIT_PROFILERS(13)
+        INIT_PROFILERS(13)
         
         #ifdef USE_MPI
         // Collect the number of cpus available for the job.
@@ -1685,82 +1685,82 @@ namespace tagrecon
             totalNumCPUs -= g_numWorkers;
         #endif
 
-		//If the process is a master process
-		if( g_pid == 0 )
-		{
-			// Read the the regular exp and locate the input files.
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				//cout << g_hostString << " is reading spectra from files matching mask \"" << args[i] << "\"" << endl;
-				FindFilesByMask( args[i], g_inputFilenames );
-			}
+        //If the process is a master process
+        if( g_pid == 0 )
+        {
+            // Read the the regular exp and locate the input files.
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                //cout << g_hostString << " is reading spectra from files matching mask \"" << args[i] << "\"" << endl;
+                FindFilesByMask( args[i], g_inputFilenames );
+            }
 
-			if( g_inputFilenames.empty() )
-			{
-				cout << "No spectra files found matching given filemasks." << endl;
-				return 1;
-			}
+            if( g_inputFilenames.empty() )
+            {
+                cout << "No spectra files found matching given filemasks." << endl;
+                return 1;
+            }
 
-			// Test for the protein database format
-			if( !TestFileType( g_dbFilename, "fasta" ) )
-				return 1;
+            // Test for the protein database format
+            if( !TestFileType( g_dbFilename, "fasta" ) )
+                return 1;
 
-			cout << "Reading \"" << g_dbFilename << "\"" << endl;
-			Timer readTime(true);
-			// Read the protein database 
-			try
-			{
+            cout << "Reading \"" << g_dbFilename << "\"" << endl;
+            Timer readTime(true);
+            // Read the protein database 
+            try
+            {
                 proteins = proteinStore( g_rtConfig->decoyPrefix );
                 proteins.readFASTA( g_dbFilename );
-			} catch( exception& e )
-			{
-				cout << "Error: " << e.what() << endl;
-				return 1;
-			}
-			cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
+            } catch( exception& e )
+            {
+                cout << "Error: " << e.what() << endl;
+                return 1;
+            }
+            cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
 
-			proteins.random_shuffle(); // randomize order to optimize work distribution
+            proteins.random_shuffle(); // randomize order to optimize work distribution
             if(g_rtConfig->UseNETAdjustment)
                 ComputeNETProbabilities(); // Compute the penalties for a peptide's enzymatic status
-			// Split the database into multiple parts to distrubute it over the cluster
-			#ifdef USE_MPI
-				if( g_numChildren > 0 )
-				{
+            // Split the database into multiple parts to distrubute it over the cluster
+            #ifdef USE_MPI
+                if( g_numChildren > 0 )
+                {
                     g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) totalNumCPUs / (float) g_rtConfig->NumBatches );
-					cout << "Dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
-				}
-			#endif
+                    cout << "Dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
+                }
+            #endif
 
-			// Read the input spectra
-			set<std::string> finishedFiles;
-			set<std::string>::iterator fItr;
-			// For each input file name
-			for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
-			{
-				Timer fileTime(true);
+            // Read the input spectra
+            set<std::string> finishedFiles;
+            set<std::string>::iterator fItr;
+            // For each input file name
+            for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
+            {
+                Timer fileTime(true);
 
-				// Clear the spectra object
-				spectra.clear();
+                // Clear the spectra object
+                spectra.clear();
                 // Clear mass maps associated with untagged spectra.
                 untaggedSpectraByChargeState.clear();
                 searchStatistics = SearchStatistics();
 
-				cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
-				finishedFiles.insert( *fItr );
+                cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
+                finishedFiles.insert( *fItr );
 
-				Timer readTime(true);
+                Timer readTime(true);
 
-				//long long memoryUsageCap = (int) GetAvailablePhysicalMemory() / 4;
-				//int peakCountCap = (float) memoryUsageCap / ( sizeof( peakPreInfo ) + sizeof( peakInfo ) );
-				//cout << g_hostString << " sets memory usage ceiling at " << memoryUsageCap << ", or about " << peakCountCap << " total peaks." << endl;
+                //long long memoryUsageCap = (int) GetAvailablePhysicalMemory() / 4;
+                //int peakCountCap = (float) memoryUsageCap / ( sizeof( peakPreInfo ) + sizeof( peakInfo ) );
+                //cout << g_hostString << " sets memory usage ceiling at " << memoryUsageCap << ", or about " << peakCountCap << " total peaks." << endl;
 
-				// Read source data filepath from tags file (but not the tags)
-				string sourceFilepath;
+                // Read source data filepath from tags file (but not the tags)
+                string sourceFilepath;
                 if( g_rtConfig->MassReconMode )
                     // Treat input files as peak files
                     sourceFilepath = *fItr;
                 else
-				    // Treat input files as tag files:
+                    // Treat input files as tag files:
                     // Read the metadata without the tags (returns the path to peaks file, i.e. mzML)
                     sourceFilepath = spectra.readTags( *fItr, true );
 
@@ -1779,123 +1779,123 @@ namespace tagrecon
                     }
                 }
 
-				// Read peaks from the source data of the tags file
-				spectra.readPeaks( sourceFilepath, 0, -1, 2, g_rtConfig->SpectrumListFilters );
+                // Read peaks from the source data of the tags file
+                spectra.readPeaks( sourceFilepath, 0, -1, 2, g_rtConfig->SpectrumListFilters );
 
-				// Count total number of peaks in all the spectra in the current file
-				int totalPeakCount = 0;
-				for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-					totalPeakCount += (*sItr)->peakPreCount;
+                // Count total number of peaks in all the spectra in the current file
+                int totalPeakCount = 0;
+                for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+                    totalPeakCount += (*sItr)->peakPreCount;
 
-				cout << "Read " << spectra.size() << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
+                cout << "Read " << spectra.size() << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
 
-				// Skip empty spectra
-				int skip = 0;
-				if( spectra.empty() )
-				{
-					cout << "Skipping a file with no spectra." << endl;
-					skip = 1;
-				}
+                // Skip empty spectra
+                int skip = 0;
+                if( spectra.empty() )
+                {
+                    cout << "Skipping a file with no spectra." << endl;
+                    skip = 1;
+                }
 
-				// If the program is running on a cluster then determine
-				// the optimal batch size for sending the spectra over
-				// to the other processors
-				#ifdef USE_MPI
-					if( g_numChildren > 0 )
-					{
-						g_rtConfig->SpectraBatchSize = (int) ceil( (float) spectra.size() / (float) g_numChildren / (float) g_rtConfig->NumBatches );
+                // If the program is running on a cluster then determine
+                // the optimal batch size for sending the spectra over
+                // to the other processors
+                #ifdef USE_MPI
+                    if( g_numChildren > 0 )
+                    {
+                        g_rtConfig->SpectraBatchSize = (int) ceil( (float) spectra.size() / (float) g_numChildren / (float) g_rtConfig->NumBatches );
                         cout << "Dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
-					}
+                    }
 
-					// Send the skip variable to all child processes
-					for( int p=0; p < g_numChildren; ++p )
-						MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
+                    // Send the skip variable to all child processes
+                    for( int p=0; p < g_numChildren; ++p )
+                        MPI_Ssend( &skip,        1,        MPI_INT,    p+1, 0x00, MPI_COMM_WORLD );
                     
                     TransmitNETRewardsToChildProcess();
-				#endif
+                #endif
 
-				Timer searchTime;
-				string startTime;
-				string startDate;
+                Timer searchTime;
+                string startTime;
+                string startDate;
 
-				vector< size_t > opcs; // original peak count statistics
-				vector< size_t > fpcs; // filtered peak count statistics
+                vector< size_t > opcs; // original peak count statistics
+                vector< size_t > fpcs; // filtered peak count statistics
 
-				if( !skip )
-				{
-					// If the current process is a parent process
-					if( g_numProcesses > 1 && !g_rtConfig->EstimateSearchTimeOnly )
-					{
-						#ifdef USE_MPI
-							//Use the child processes to prepare the spectra
-							cout << "Sending spectra to worker nodes to prepare them for search." << endl;
-							Timer prepareTime(true);
-							TransmitUnpreparedSpectraToChildProcesses();
+                if( !skip )
+                {
+                    // If the current process is a parent process
+                    if( g_numProcesses > 1 && !g_rtConfig->EstimateSearchTimeOnly )
+                    {
+                        #ifdef USE_MPI
+                            //Use the child processes to prepare the spectra
+                            cout << "Sending spectra to worker nodes to prepare them for search." << endl;
+                            Timer prepareTime(true);
+                            TransmitUnpreparedSpectraToChildProcesses();
 
-							spectra.clear();
+                            spectra.clear();
                             spectraTagTrie.clear();
 
-							ReceivePreparedSpectraFromChildProcesses();
+                            ReceivePreparedSpectraFromChildProcesses();
 
-							numSpectra = (int) spectra.size();
+                            numSpectra = (int) spectra.size();
 
-							skip = 0;
-							if( numSpectra == 0 )
-							{
-								cout << "Skipping a file with no suitable spectra." << endl;
-								skip = 1;
-							}
+                            skip = 0;
+                            if( numSpectra == 0 )
+                            {
+                                cout << "Skipping a file with no suitable spectra." << endl;
+                                skip = 1;
+                            }
 
-							// Send the message to skip the file to all sub-processes
-							for( int p=0; p < g_numChildren; ++p )
-								MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
+                            // Send the message to skip the file to all sub-processes
+                            for( int p=0; p < g_numChildren; ++p )
+                                MPI_Ssend( &skip,        1,        MPI_INT,    p+1, 0x00, MPI_COMM_WORLD );
 
-							if( !skip )
-							{
-								// Print out some spectra stats
-								opcs = spectra.getOriginalPeakCountStatistics();
-								fpcs = spectra.getFilteredPeakCountStatistics();
-								cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
-								cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-								cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-										opcs[2] << " (" << fpcs[2] << "), " <<
-										opcs[3] << " (" << fpcs[3] << "), " <<
-										opcs[4] << " (" << fpcs[4] << ")" << endl;
+                            if( !skip )
+                            {
+                                // Print out some spectra stats
+                                opcs = spectra.getOriginalPeakCountStatistics();
+                                fpcs = spectra.getFilteredPeakCountStatistics();
+                                cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+                                cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+                                cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+                                        opcs[2] << " (" << fpcs[2] << "), " <<
+                                        opcs[3] << " (" << fpcs[3] << "), " <<
+                                        opcs[4] << " (" << fpcs[4] << ")" << endl;
 
-								float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-								cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
+                                float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
+                                cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
-								cout << "Prepared " << spectra.size() << " spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+                                cout << "Prepared " << spectra.size() << " spectra; " << prepareTime.End() << " seconds elapsed." << endl;
                                 if(!g_rtConfig->MassReconMode) 
                                 {
-								    cout << "Reading tags for " << spectra.size() << " prepared spectra." << endl;
-								    size_t totalTags = 0;
-								    // Read the tags in the input file
-								    spectra.readTags( *fItr, true );
-								    // For each spectrum in the input file
-								    for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-								    {
-									    // Get number of tags in the spectrum
-									    (*sItr)->tagList.max_size( g_rtConfig->MaxTagCount );
-									    // For each tag
-									    for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) {
-										    // Replace the I/L and generate new tags
-										    (*sItr)->tagList.tagExploder( *tItr );
-									    }
-									    totalTags += (*sItr)->tagList.size();
-								    }
-								    cout << "Finished reading " << totalTags << " tags." << endl;
+                                    cout << "Reading tags for " << spectra.size() << " prepared spectra." << endl;
+                                    size_t totalTags = 0;
+                                    // Read the tags in the input file
+                                    spectra.readTags( *fItr, true );
+                                    // For each spectrum in the input file
+                                    for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+                                    {
+                                        // Get number of tags in the spectrum
+                                        (*sItr)->tagList.max_size( g_rtConfig->MaxTagCount );
+                                        // For each tag
+                                        for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) {
+                                            // Replace the I/L and generate new tags
+                                            (*sItr)->tagList.tagExploder( *tItr );
+                                        }
+                                        totalTags += (*sItr)->tagList.size();
+                                    }
+                                    cout << "Finished reading " << totalTags << " tags." << endl;
 
                                     if(!g_rtConfig->SearchUntaggedSpectra)
                                     {
-								        cout << "Trimming spectra with no tags." << endl;
-								        int noTagsCount = spectra.trimByTagCount();
-								        cout << "Trimmed " << noTagsCount << " spectra." << endl;
+                                        cout << "Trimming spectra with no tags." << endl;
+                                        int noTagsCount = spectra.trimByTagCount();
+                                        cout << "Trimmed " << noTagsCount << " spectra." << endl;
                                     }
                                 }
-								// Initialize few global data structures. See function documentation
-								// for details
-								InitWorkerGlobals();
+                                // Initialize few global data structures. See function documentation
+                                // for details
+                                InitWorkerGlobals();
 
                                 // List to store finished spectra
                                 SpectraList finishedSpectra;
@@ -1976,161 +1976,161 @@ namespace tagrecon
                                 // Sort them back by ID.
                                 spectra.sort( spectraSortByID() );
 
-								DestroyWorkerGlobals();
-							}
+                                DestroyWorkerGlobals();
+                            }
 
-						#endif
-					} else
-					{
-						// If total number of process is <=1 then we are executing in non-cluster mode
-						cout << "Preparing " << spectra.size() << " spectra." << endl;
-						Timer prepareTime(true);
-						// Preprocess the spectra
-						PrepareSpectra();
-						cout << "Finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+                        #endif
+                    } else
+                    {
+                        // If total number of process is <=1 then we are executing in non-cluster mode
+                        cout << "Preparing " << spectra.size() << " spectra." << endl;
+                        Timer prepareTime(true);
+                        // Preprocess the spectra
+                        PrepareSpectra();
+                        cout << "Finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
 
-						// Get number of spectra that survived the preprocessing ;-)
-						numSpectra = (int) spectra.size();
+                        // Get number of spectra that survived the preprocessing ;-)
+                        numSpectra = (int) spectra.size();
 
-						skip = 0;
-						if( spectra.empty() )
-						{
-							cout << "Skipping a file with no suitable spectra." << endl;
-							skip = 1;
-						}
+                        skip = 0;
+                        if( spectra.empty() )
+                        {
+                            cout << "Skipping a file with no suitable spectra." << endl;
+                            skip = 1;
+                        }
 
-						if( !skip )
-						{
-							// If the data file has some spectra and if the process is being
-							// run on a single node then perform the search
-							opcs = spectra.getOriginalPeakCountStatistics();
-							fpcs = spectra.getFilteredPeakCountStatistics();
-							cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
-							cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-							cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-									opcs[2] << " (" << fpcs[2] << "), " <<
-									opcs[3] << " (" << fpcs[3] << "), " <<
-									opcs[4] << " (" << fpcs[4] << ")" << endl;
+                        if( !skip )
+                        {
+                            // If the data file has some spectra and if the process is being
+                            // run on a single node then perform the search
+                            opcs = spectra.getOriginalPeakCountStatistics();
+                            fpcs = spectra.getFilteredPeakCountStatistics();
+                            cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+                            cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+                            cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+                                    opcs[2] << " (" << fpcs[2] << "), " <<
+                                    opcs[3] << " (" << fpcs[3] << "), " <<
+                                    opcs[4] << " (" << fpcs[4] << ")" << endl;
 
-							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-							cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
+                            float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
+                            cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
                             if( !g_rtConfig->MassReconMode )
                             {
-							    cout << "Reading tags for " << spectra.size() << " prepared spectra." << endl;
-							    size_t totalTags = 0;
+                                cout << "Reading tags for " << spectra.size() << " prepared spectra." << endl;
+                                size_t totalTags = 0;
                             
-							    // Read the tags from the input file
+                                // Read the tags from the input file
                                 spectra.readTags( *fItr, true );
-							    // For each spectrum
-							    for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-							    {
-								    // Get the number of tags and generate new tags for tags containing I/L
-								    (*sItr)->tagList.max_size( g_rtConfig->MaxTagCount );
-								    for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr )
-									    (*sItr)->tagList.tagExploder( *tItr );
-								    totalTags += (*sItr)->tagList.size();
-							    }
-							    cout << "Finished reading " << totalTags << " tags." << endl;
+                                // For each spectrum
+                                for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+                                {
+                                    // Get the number of tags and generate new tags for tags containing I/L
+                                    (*sItr)->tagList.max_size( g_rtConfig->MaxTagCount );
+                                    for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr )
+                                        (*sItr)->tagList.tagExploder( *tItr );
+                                    totalTags += (*sItr)->tagList.size();
+                                }
+                                cout << "Finished reading " << totalTags << " tags." << endl;
 
                                 if(!g_rtConfig->SearchUntaggedSpectra)
                                 {
-							        cout << "Trimming spectra with no tags." << endl;
-							        // Delete spectra that has no tags
-							        int noTagsCount = spectra.trimByTagCount();
-							        cout << "Trimmed " << noTagsCount << " spectra." << endl;
+                                    cout << "Trimming spectra with no tags." << endl;
+                                    // Delete spectra that has no tags
+                                    int noTagsCount = spectra.trimByTagCount();
+                                    cout << "Trimmed " << noTagsCount << " spectra." << endl;
                                 }
                             }
 
-						    // Initialize global data structures.
+                            // Initialize global data structures.
                             // Must be done after spectra charge states are determined and tags are read
-						    InitWorkerGlobals();
+                            InitWorkerGlobals();
 
-							cout << "Commencing sequence tag search on " << spectra.size() << " spectra." << endl;
-							startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-							// Start the threads
-							ExecuteSearch();
-							cout << "Finished sequence tag search; " << searchTime.End() << " seconds elapsed." << endl;
-							cout << "Overall stats: " << (string) searchStatistics << endl;
+                            cout << "Commencing sequence tag search on " << spectra.size() << " spectra." << endl;
+                            startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
+                            // Start the threads
+                            ExecuteSearch();
+                            cout << "Finished sequence tag search; " << searchTime.End() << " seconds elapsed." << endl;
+                            cout << "Overall stats: " << (string) searchStatistics << endl;
 
-							// Free global variables
-							DestroyWorkerGlobals();
-						}
-					}
+                            // Free global variables
+                            DestroyWorkerGlobals();
+                        }
+                    }
 
-					if( !skip )
-					{
-						// Generate an output file for each input file
-						WriteOutputToFile( sourceFilepath, startTime, startDate, searchTime.End(), opcs, fpcs, searchStatistics );
-						cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-					}
-				}
+                    if( !skip )
+                    {
+                        // Generate an output file for each input file
+                        WriteOutputToFile( sourceFilepath, startTime, startDate, searchTime.End(), opcs, fpcs, searchStatistics );
+                        cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                    }
+                }
 
-				#ifdef USE_MPI
-					// Send a message to all processes about the number of files that
-					// have been processed
-					int done = ( ( g_inputFilenames.size() - finishedFiles.size() ) == 0 ? 1 : 0 );
-					for( int p=0; p < g_numChildren; ++p )
-						MPI_Ssend( &done,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
-				#endif
-			}
-		}
-		#ifdef USE_MPI
-			// If the process is a not a root process and number of child processes is
-			// greater 0 then this a child process.
-			else
-			{
-				// When executing in cluster mode
-				int allDone = 0;
+                #ifdef USE_MPI
+                    // Send a message to all processes about the number of files that
+                    // have been processed
+                    int done = ( ( g_inputFilenames.size() - finishedFiles.size() ) == 0 ? 1 : 0 );
+                    for( int p=0; p < g_numChildren; ++p )
+                        MPI_Ssend( &done,        1,        MPI_INT,    p+1, 0x00, MPI_COMM_WORLD );
+                #endif
+            }
+        }
+        #ifdef USE_MPI
+            // If the process is a not a root process and number of child processes is
+            // greater 0 then this a child process.
+            else
+            {
+                // When executing in cluster mode
+                int allDone = 0;
 
-				// Check to make sure all the child processes are done.
-				while( !allDone )
-				{
-					int skip;
-					MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
+                // Check to make sure all the child processes are done.
+                while( !allDone )
+                {
+                    int skip;
+                    MPI_Recv( &skip,    1,        MPI_INT,    0,    0x00, MPI_COMM_WORLD, &st );
 
                     ReceiveNETRewardsFromRootProcess();
 
-					// If we have spectra in the input file of the root process
-					if( !skip )
-					{
-						// Get unprepared spectra from root process
-						SpectraList preparedSpectra;
+                    // If we have spectra in the input file of the root process
+                    if( !skip )
+                    {
+                        // Get unprepared spectra from root process
+                        SpectraList preparedSpectra;
 
-						while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
-						{
-							// Preprocess them
-							PrepareSpectra();
-							preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
-							spectra.clear( false );
-						}
-						//cout << "totalSpectraReceived:" << preparedSpectra.size() << endl;
+                        while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
+                        {
+                            // Preprocess them
+                            PrepareSpectra();
+                            preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
+                            spectra.clear( false );
+                        }
+                        //cout << "totalSpectraReceived:" << preparedSpectra.size() << endl;
 
-						//for( int i=0; i < (int) preparedSpectra.size(); ++i )
-						//	cout << preparedSpectra[i]->id.nativeID << " " << preparedSpectra[i]->peakData.size() << endl;
+                        //for( int i=0; i < (int) preparedSpectra.size(); ++i )
+                        //    cout << preparedSpectra[i]->id.nativeID << " " << preparedSpectra[i]->peakData.size() << endl;
 
-						// Send them back
-						TransmitPreparedSpectraToRootProcess( preparedSpectra );
+                        // Send them back
+                        TransmitPreparedSpectraToRootProcess( preparedSpectra );
 
-						preparedSpectra.clear();
+                        preparedSpectra.clear();
 
-						// See if we have to do the search
-						MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
+                        // See if we have to do the search
+                        MPI_Recv( &skip,    1,        MPI_INT,    0,    0x00, MPI_COMM_WORLD, &st );
                         
-						// If the root process tell you to perform the search
-						if( !skip )
-						{
+                        // If the root process tell you to perform the search
+                        if( !skip )
+                        {
 
-							int done = 0;
-							do
-							{
-								// Get the processed spectra from the parent.
-								done = ReceiveSpectraFromRootProcess();
+                            int done = 0;
+                            do
+                            {
+                                // Get the processed spectra from the parent.
+                                done = ReceiveSpectraFromRootProcess();
 
-								// Initialize the global variables
-								InitWorkerGlobals();
+                                // Initialize the global variables
+                                InitWorkerGlobals();
 
-								int numBatches = 0;
+                                int numBatches = 0;
                                 try
                                 {
                                     // Get a batch of protein sequences from root process
@@ -2146,7 +2146,7 @@ namespace tagrecon
                                     MPI_Abort( MPI_COMM_WORLD, 1 );
                                 }
 
-								cout << g_hostString << " stats: " << numBatches << " batches; " << (string) searchStatistics << endl;
+                                cout << g_hostString << " stats: " << numBatches << " batches; " << (string) searchStatistics << endl;
                                 try
                                 {
                                     // compute xcorr for top ranked results
@@ -2161,121 +2161,121 @@ namespace tagrecon
                                     MPI_Abort( MPI_COMM_WORLD, 1 );
                                 }
 
-								// Clean up the variables.
-								DestroyWorkerGlobals();
-								spectra.clear();
+                                // Clean up the variables.
+                                DestroyWorkerGlobals();
+                                spectra.clear();
                                 untaggedSpectraByChargeState.clear();
                                 spectraTagTrie.clear();
-							} while( !done );
-						}
-					}
+                            } while( !done );
+                        }
+                    }
 
-					// See if we are all done. Master process sends this signal when there are
-					// no more spectra to search
-					MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-				} // end of while
-			} // end of if
-		#endif
+                    // See if we are all done. Master process sends this signal when there are
+                    // no more spectra to search
+                    MPI_Recv( &allDone,    1,        MPI_INT,    0,    0x00, MPI_COMM_WORLD, &st );
+                } // end of while
+            } // end of if
+        #endif
 
-		return 0;
-	}
+        return 0;
+    }
 }
 }
 
 int main( int argc, char* argv[] )
 {
-	char buf[256];
-	GetHostname( buf, sizeof(buf) );
+    char buf[256];
+    GetHostname( buf, sizeof(buf) );
 
-	// Initialize the message passing interface for the parallel processing system
-	#ifdef MPI_DEBUG
-		cout << buf << " is initializing MPI... " << endl;
-	#endif
+    // Initialize the message passing interface for the parallel processing system
+    #ifdef MPI_DEBUG
+        cout << buf << " is initializing MPI... " << endl;
+    #endif
 
-	#ifdef USE_MPI
-		int threadLevel;
-		MPI_Init_thread( &argc, &argv, MPI_THREAD_MULTIPLE, &threadLevel );
-		if( threadLevel < MPI_THREAD_SINGLE )
-		{
-			cerr << "MPI library is not thread compliant: " << threadLevel << " should be " << MPI_THREAD_MULTIPLE << endl;
-			return 1;
-		}
-		MPI_Buffer_attach( malloc( MPI_BUFFER_SIZE ), MPI_BUFFER_SIZE );
-		//CommitCommonDatatypes();
-	#endif
+    #ifdef USE_MPI
+        int threadLevel;
+        MPI_Init_thread( &argc, &argv, MPI_THREAD_MULTIPLE, &threadLevel );
+        if( threadLevel < MPI_THREAD_SINGLE )
+        {
+            cerr << "MPI library is not thread compliant: " << threadLevel << " should be " << MPI_THREAD_MULTIPLE << endl;
+            return 1;
+        }
+        MPI_Buffer_attach( malloc( MPI_BUFFER_SIZE ), MPI_BUFFER_SIZE );
+        //CommitCommonDatatypes();
+    #endif
 
-	#ifdef MPI_DEBUG
-		cout << buf << " has initialized MPI... " << endl;
-	#endif
+    #ifdef MPI_DEBUG
+        cout << buf << " has initialized MPI... " << endl;
+    #endif
 
-	// Get information on the MPI environment
-	#ifdef MPI_DEBUG
-		cout << buf << " is gathering MPI information... " << endl;
-	#endif
+    // Get information on the MPI environment
+    #ifdef MPI_DEBUG
+        cout << buf << " is gathering MPI information... " << endl;
+    #endif
 
-	// Get the number of total process and the rank the parent process
-	#ifdef USE_MPI
-		MPI_Comm_size( MPI_COMM_WORLD, &g_numProcesses );
-		MPI_Comm_rank( MPI_COMM_WORLD, &g_pid );
-	#else
-		g_numProcesses = 1;
-		g_pid = 0;
-	#endif
+    // Get the number of total process and the rank the parent process
+    #ifdef USE_MPI
+        MPI_Comm_size( MPI_COMM_WORLD, &g_numProcesses );
+        MPI_Comm_rank( MPI_COMM_WORLD, &g_pid );
+    #else
+        g_numProcesses = 1;
+        g_pid = 0;
+    #endif
 
-	g_numChildren = g_numProcesses - 1;
+    g_numChildren = g_numProcesses - 1;
 
-	ostringstream str;
-	str << "Process #" << g_pid << " (" << buf << ")";
-	g_hostString = str.str();
+    ostringstream str;
+    str << "Process #" << g_pid << " (" << buf << ")";
+    g_hostString = str.str();
 
-	#ifdef MPI_DEBUG
-		cout << g_hostString << " has gathered its MPI information." << endl;
-	#endif
+    #ifdef MPI_DEBUG
+        cout << g_hostString << " has gathered its MPI information." << endl;
+    #endif
 
 
-	// Process the data
-	#ifndef MPI_DEBUG
-		cout << g_hostString << " is starting." << endl;
-	#endif
+    // Process the data
+    #ifndef MPI_DEBUG
+        cout << g_hostString << " is starting." << endl;
+    #endif
 
-	int result = 0;
-	try
-	{
-		result = tagrecon::ProcessHandler( argc, argv );
-	} catch( exception& e )
-	{
-		cerr << e.what() << endl;
-		result = 1;
-	} catch( ... )
-	{
-		cerr << "Caught unspecified fatal exception." << endl;
-		result = 1;
-	}
+    int result = 0;
+    try
+    {
+        result = tagrecon::ProcessHandler( argc, argv );
+    } catch( exception& e )
+    {
+        cerr << e.what() << endl;
+        result = 1;
+    } catch( ... )
+    {
+        cerr << "Caught unspecified fatal exception." << endl;
+        result = 1;
+    }
 
-	#ifdef USE_MPI
-		if( g_pid == 0 && g_numChildren > 0 && result > 0 )
-			MPI_Abort( MPI_COMM_WORLD, 1 );
-	#endif
+    #ifdef USE_MPI
+        if( g_pid == 0 && g_numChildren > 0 && result > 0 )
+            MPI_Abort( MPI_COMM_WORLD, 1 );
+    #endif
 
-	#ifdef MPI_DEBUG
-		cout << g_hostString << " has finished." << endl;	
-	#endif
+    #ifdef MPI_DEBUG
+        cout << g_hostString << " has finished." << endl;    
+    #endif
 
-	// Destroy the message passing interface
-	#ifdef MPI_DEBUG
-		cout << g_hostString << " is finalizing MPI... " << endl;
-	#endif
+    // Destroy the message passing interface
+    #ifdef MPI_DEBUG
+        cout << g_hostString << " is finalizing MPI... " << endl;
+    #endif
 
-	#ifdef USE_MPI
-		int size;
-		MPI_Buffer_detach( &g_mpiBuffer, &size );
-		free( g_mpiBuffer );
-		MPI_Finalize();
-	#endif
+    #ifdef USE_MPI
+        int size;
+        MPI_Buffer_detach( &g_mpiBuffer, &size );
+        free( g_mpiBuffer );
+        MPI_Finalize();
+    #endif
 
-	#ifdef MPI_DEBUG
-		cout << g_hostString << " is terminating." << endl;
-	#endif
+    #ifdef MPI_DEBUG
+        cout << g_hostString << " is terminating." << endl;
+    #endif
 
     // HACK: avoid crashing at exit on Windows (probably a conflict between Boost and the .NET vendor DLLs)
     #ifdef WIN32

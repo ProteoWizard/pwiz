@@ -43,7 +43,7 @@
 #include <boost/filesystem/operations.hpp>
 
 
-#define QUAMETER_LICENSE			COMMON_LICENSE
+#define QUAMETER_LICENSE            COMMON_LICENSE
 
 using namespace freicore;
 using namespace pwiz::cv;
@@ -65,8 +65,8 @@ struct QuameterInput
 {
 
     string      sourceID;
-	string      sourceFile;
-	string      idpDBFile;
+    string      sourceFile;
+    string      idpDBFile;
     string      pepXMLFile;
     string      scanRankerFile;
     InputType   type;
@@ -108,7 +108,7 @@ vector<QuameterInput> GetIDPickerSpectraSources(const string& dbFilepath)
     sqlite::database db(dbFilepath);
     sqlite::query q(db, "SELECT Id, Name FROM SpectrumSource");
     vector<QuameterInput> sources;
-	
+    
     BOOST_FOREACH(sqlite::query::rows row, q)
     {
         int sourceId;
@@ -132,7 +132,7 @@ vector<QuameterInput> GetIDPickerSpectraSources(const string& dbFilepath)
         QuameterInput qip(sourceIdStr, sourceFilepath.string(), dbFilepath, "", "", NISTMS);
         sources.push_back(qip);
     }
-    return sources;	
+    return sources;    
 }
 
 }

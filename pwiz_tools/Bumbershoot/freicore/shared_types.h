@@ -32,14 +32,14 @@
 
 namespace freicore
 {
-	class ResidueMap;
-	class lnFactorialTable;
-	//class mzDataReader;
-	struct BaseRunTimeConfig;
-	struct SqtList;
-	
-	// Units of the mass measurements
-	enum MassUnits { THOMSON, PPM, UNKNOWN, DALTONS };
+    class ResidueMap;
+    class lnFactorialTable;
+    //class mzDataReader;
+    struct BaseRunTimeConfig;
+    struct SqtList;
+    
+    // Units of the mass measurements
+    enum MassUnits { THOMSON, PPM, UNKNOWN, DALTONS };
     // Terminal types
     enum TermType {NTERM, CTERM, NONE};
     // Terminal mass match types
@@ -60,225 +60,225 @@ namespace freicore
         bool operator< (const PrecursorMassHypothesis& rhs) const {return mass < rhs.mass;}
 
         template<class Archive>
-		void serialize(Archive& ar, const unsigned int version)
-		{
+        void serialize(Archive& ar, const unsigned int version)
+        {
             ar & mass & massType & charge;
         }
     };
 
-	typedef enum { SYS_BIG_ENDIAN, SYS_LITTLE_ENDIAN, SYS_UNKNOWN_ENDIAN } endianType_t;
+    typedef enum { SYS_BIG_ENDIAN, SYS_LITTLE_ENDIAN, SYS_UNKNOWN_ENDIAN } endianType_t;
 
-	typedef char											AminoAcidResidue;
-	const size_t											AminoAcidResidueSize = sizeof(AminoAcidResidue)*CHAR_BIT;
+    typedef char                                            AminoAcidResidue;
+    const size_t                                            AminoAcidResidueSize = sizeof(AminoAcidResidue)*CHAR_BIT;
     //const double                                            DBL_EPSILON = std::numeric_limits<double>::min();
 
-	typedef unsigned long									ProteinIndex;
-	typedef unsigned short									ProteinOffset;
-	typedef string											ProteinName;
+    typedef unsigned long                                    ProteinIndex;
+    typedef unsigned short                                    ProteinOffset;
+    typedef string                                            ProteinName;
 
-	struct ProteinLocusByIndex
-	{
-		ProteinLocusByIndex( ProteinIndex pIndex = 0, ProteinOffset pOffset = 0 ) : index( pIndex ), offset( pOffset ) {}
-		ProteinIndex	index;
-		ProteinOffset	offset;
+    struct ProteinLocusByIndex
+    {
+        ProteinLocusByIndex( ProteinIndex pIndex = 0, ProteinOffset pOffset = 0 ) : index( pIndex ), offset( pOffset ) {}
+        ProteinIndex    index;
+        ProteinOffset    offset;
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & index & offset;
-		}
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & index & offset;
+        }
 
-		bool operator< ( const ProteinLocusByIndex& rhs ) const
-		{
-			if( index == rhs.index )
-				return offset < rhs.offset;
-			else
-				return index < rhs.index;
-		}
-	};
+        bool operator< ( const ProteinLocusByIndex& rhs ) const
+        {
+            if( index == rhs.index )
+                return offset < rhs.offset;
+            else
+                return index < rhs.index;
+        }
+    };
 
-	struct ProteinLocusByName
-	{
-		ProteinLocusByName( ProteinName pName = "", ProteinOffset pOffset = 0 ) : name( pName ), offset( pOffset ) {}
-		ProteinName		name;
-		ProteinOffset	offset;
-		string			desc;
+    struct ProteinLocusByName
+    {
+        ProteinLocusByName( ProteinName pName = "", ProteinOffset pOffset = 0 ) : name( pName ), offset( pOffset ) {}
+        ProteinName        name;
+        ProteinOffset    offset;
+        string            desc;
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & name & offset;
-		}
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & name & offset;
+        }
 
-		bool operator< ( const ProteinLocusByName& rhs ) const
-		{
-			if( name == rhs.name )
-				return offset < rhs.offset;
-			else
-				return name < rhs.name;
-		}
-	};
+        bool operator< ( const ProteinLocusByName& rhs ) const
+        {
+            if( name == rhs.name )
+                return offset < rhs.offset;
+            else
+                return name < rhs.name;
+        }
+    };
 
-	typedef set< ProteinLocusByIndex >						ProteinLociByIndex;
-	typedef set< ProteinLocusByName >						ProteinLociByName;
-	typedef map< ProteinIndex, vector< ProteinOffset > >	ProteinLociMap;
+    typedef set< ProteinLocusByIndex >                        ProteinLociByIndex;
+    typedef set< ProteinLocusByName >                        ProteinLociByName;
+    typedef map< ProteinIndex, vector< ProteinOffset > >    ProteinLociMap;
 
-	struct CleavageHalfRule : public set< string >
-	{
-		CleavageHalfRule() : hasWildcard( false ), longestCleavageCandidate( 0 ) {}
-		void clear()
-		{
-			set< string >::clear();
-			hasWildcard = false;
-			longestCleavageCandidate = 0;
-		}
+    struct CleavageHalfRule : public set< string >
+    {
+        CleavageHalfRule() : hasWildcard( false ), longestCleavageCandidate( 0 ) {}
+        void clear()
+        {
+            set< string >::clear();
+            hasWildcard = false;
+            longestCleavageCandidate = 0;
+        }
 
-		SetInsertPair( set< string > ) insert( const string& seq )
-		{
-			if( seq == "." )
-			{
-				hasWildcard = true;
-				return SetInsertPair( set< string > )( end(), false );
-			} else
-			{
-				longestCleavageCandidate = max( seq.length(), longestCleavageCandidate );
-				return set< string >::insert( seq );
-			}
-		}
+        SetInsertPair( set< string > ) insert( const string& seq )
+        {
+            if( seq == "." )
+            {
+                hasWildcard = true;
+                return SetInsertPair( set< string > )( end(), false );
+            } else
+            {
+                longestCleavageCandidate = max( seq.length(), longestCleavageCandidate );
+                return set< string >::insert( seq );
+            }
+        }
 
-		bool hasWildcard;
-		size_t longestCleavageCandidate;
-	};
+        bool hasWildcard;
+        size_t longestCleavageCandidate;
+    };
 
-	struct CleavageRule : public pair< CleavageHalfRule, CleavageHalfRule >
-	{
-		CleavageRule() {}
-	};
+    struct CleavageRule : public pair< CleavageHalfRule, CleavageHalfRule >
+    {
+        CleavageRule() {}
+    };
 
-	struct CleavageRuleSet : public vector< CleavageRule >
-	{
-		CleavageRuleSet( const string& cfgStr = "" ) : longestPreCleavageCandidate( 0 ), longestPostCleavageCandidate( 0 )
-		{
-			initialize( cfgStr );
-		}
+    struct CleavageRuleSet : public vector< CleavageRule >
+    {
+        CleavageRuleSet( const string& cfgStr = "" ) : longestPreCleavageCandidate( 0 ), longestPostCleavageCandidate( 0 )
+        {
+            initialize( cfgStr );
+        }
 
-		size_t longestPreCleavageCandidate;
-		size_t longestPostCleavageCandidate;
+        size_t longestPreCleavageCandidate;
+        size_t longestPostCleavageCandidate;
 
-		void initialize( const string& cfgStr );
+        void initialize( const string& cfgStr );
 
         /// returns a string in the PSI-PI zero-width regex syntax
         string asCleavageAgentRegex();
-	};
+    };
 
-	struct ResidueFilter
-	{
-		ResidueFilter() {};
+    struct ResidueFilter
+    {
+        ResidueFilter() {};
 
-		bool testResidue( const AminoAcidResidue& r ) const
-		{
-			return m_filter[r];
-		}
+        bool testResidue( const AminoAcidResidue& r ) const
+        {
+            return m_filter[r];
+        }
 
-		operator string () const;
-		CharIndexedVector<bool> m_filter;
-	};
+        operator string () const;
+        CharIndexedVector<bool> m_filter;
+    };
 
-	/**!
-		DynamicMod represents the meta data about a variable post-translational modification
-	*/
+    /**!
+        DynamicMod represents the meta data about a variable post-translational modification
+    */
     struct DynamicMod : pwiz::proteome::Modification
-	{
-		DynamicMod( char unmodChar = 0, char userModChar = 0, double modMass = 0 )
-			: Modification( modMass, modMass ),
+    {
+        DynamicMod( char unmodChar = 0, char userModChar = 0, double modMass = 0 )
+            : Modification( modMass, modMass ),
               unmodChar( unmodChar ), userModChar( userModChar ), modMass( modMass ) {}
 
-		vector< ResidueFilter > NTerminalFilters;
-		vector< ResidueFilter > CTerminalFilters;
+        vector< ResidueFilter > NTerminalFilters;
+        vector< ResidueFilter > CTerminalFilters;
 
         char unmodChar;
-		char userModChar;
-		char uniqueModChar;
+        char userModChar;
+        char uniqueModChar;
         double modMass;
 
-		bool operator< ( const DynamicMod& rhs ) const
-		{
-			return uniqueModChar < rhs.uniqueModChar;
-		}
-	};
-	
-	/**!
-		StaticMod represents the meta data about a static post-translational modification
-	*/
+        bool operator< ( const DynamicMod& rhs ) const
+        {
+            return uniqueModChar < rhs.uniqueModChar;
+        }
+    };
+    
+    /**!
+        StaticMod represents the meta data about a static post-translational modification
+    */
     struct StaticMod : pwiz::proteome::Modification
-	{
-		StaticMod() {}
-		StaticMod( char r, double m )
+    {
+        StaticMod() {}
+        StaticMod( char r, double m )
             : Modification( m, m ),
               name(r), mass(m) {}
 
-		char name;
-		double mass;
+        char name;
+        double mass;
 
-		bool operator< ( const StaticMod& rhs ) const
-		{
-			if( name == rhs.name )
-				return mass < rhs.mass;
-			return name < rhs.name;
-		}
-	};
+        bool operator< ( const StaticMod& rhs ) const
+        {
+            if( name == rhs.name )
+                return mass < rhs.mass;
+            return name < rhs.name;
+        }
+    };
 
-	/**!
-		DynamicModSet maps the DynamicMod structures to a character
-		used to represent the respective mods
-	*/
-	struct DynamicModSet : public set< DynamicMod >
-	{
-		typedef map< char, vector< DynamicMod > >	UserToUniqueMap;
-		typedef map< char, DynamicMod >				UniqueToUserMap;
+    /**!
+        DynamicModSet maps the DynamicMod structures to a character
+        used to represent the respective mods
+    */
+    struct DynamicModSet : public set< DynamicMod >
+    {
+        typedef map< char, vector< DynamicMod > >    UserToUniqueMap;
+        typedef map< char, DynamicMod >                UniqueToUserMap;
 
-		DynamicModSet( const string& cfgStr = "" )
-		{
-			initialize( cfgStr, false );
-		}
+        DynamicModSet( const string& cfgStr = "" )
+        {
+            initialize( cfgStr, false );
+        }
 
-		UserToUniqueMap	userToUniqueMap;
-		UniqueToUserMap	uniqueToUserMap;
+        UserToUniqueMap    userToUniqueMap;
+        UniqueToUserMap    uniqueToUserMap;
 
-		void clear();
-		void erase( const DynamicMod& mod );
-		SetInsertPair(set< DynamicMod >) insert( const DynamicMod& mod );
+        void clear();
+        void erase( const DynamicMod& mod );
+        SetInsertPair(set< DynamicMod >) insert( const DynamicMod& mod );
 
-		void initialize( const string& cfgStr, bool noUserChar = false);
-		//int size() { return userToUniqueMap.size(); };
-		void parseMotif( const string& motif, char modChar, double modMass );
-		operator string () const;
-	};
+        void initialize( const string& cfgStr, bool noUserChar = false);
+        //int size() { return userToUniqueMap.size(); };
+        void parseMotif( const string& motif, char modChar, double modMass );
+        operator string () const;
+    };
 
-	struct StaticModSet : public set< StaticMod >
-	{
-		StaticModSet( const string& cfgStr = "" )
-		{
-			boost::char_separator<char> delim(" ");
-			stokenizer parser( cfgStr.begin(), cfgStr.begin() + cfgStr.length(), delim );
-			stokenizer::iterator itr = parser.begin();
-			while( itr != parser.end() )
-			{
-				char r = (*itr)[0];
-				double m = lexical_cast<double>( *(++itr) );
-				insert( StaticMod( r, m ) );
-				++itr;
-			}
-		}
+    struct StaticModSet : public set< StaticMod >
+    {
+        StaticModSet( const string& cfgStr = "" )
+        {
+            boost::char_separator<char> delim(" ");
+            stokenizer parser( cfgStr.begin(), cfgStr.begin() + cfgStr.length(), delim );
+            stokenizer::iterator itr = parser.begin();
+            while( itr != parser.end() )
+            {
+                char r = (*itr)[0];
+                double m = lexical_cast<double>( *(++itr) );
+                insert( StaticMod( r, m ) );
+                ++itr;
+            }
+        }
 
-		operator string ()
-		{
-			stringstream modStr;
-			for( iterator itr = begin(); itr != end(); ++itr )
-				modStr << ( itr == begin() ? "" : " " ) << itr->name << " " << itr->mass;
-			return modStr.str();
-		}
-	};
+        operator string ()
+        {
+            stringstream modStr;
+            for( iterator itr = begin(); itr != end(); ++itr )
+                modStr << ( itr == begin() ? "" : " " ) << itr->name << " " << itr->mass;
+            return modStr.str();
+        }
+    };
 
     /**!
     DeltaMassList maps a list of DeltaMassEntry (modification meta-data entries)
@@ -441,13 +441,13 @@ namespace freicore
             return false;
         }
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & _id & _pieces;
-		}
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & _id & _pieces;
+        }
 
-		operator string () { return _id; }
+        operator string () { return _id; }
 
     private:
         string _id;
@@ -455,105 +455,105 @@ namespace freicore
         vector<IdVariantType> _pieces;
     };
 
-	struct SpectrumId
-	{
-		SpectrumId( const string& s = "" )
-			: id(s)
-		{
-			updateFromString();
-		}
+    struct SpectrumId
+    {
+        SpectrumId( const string& s = "" )
+            : id(s)
+        {
+            updateFromString();
+        }
 
-		SpectrumId( const string& source, const string& nativeID, int charge = 0 )
-			: source(source), nativeID(nativeID), charge(charge)
-		{
-			updateFromVars();
-		}
+        SpectrumId( const string& source, const string& nativeID, int charge = 0 )
+            : source(source), nativeID(nativeID), charge(charge)
+        {
+            updateFromVars();
+        }
 
-		SpectrumId( const string& nativeID, int charge )
-			: source(""), nativeID(nativeID), charge(charge)
-		{
-			updateFromVars();
-		}
+        SpectrumId( const string& nativeID, int charge )
+            : source(""), nativeID(nativeID), charge(charge)
+        {
+            updateFromVars();
+        }
 
-		void set( const string& source, const string& nativeID, int charge = 0 )
-		{
-			this->source = source; this->nativeID = NativeID(nativeID); this->charge = charge;
-			updateFromVars();
-		}
+        void set( const string& source, const string& nativeID, int charge = 0 )
+        {
+            this->source = source; this->nativeID = NativeID(nativeID); this->charge = charge;
+            updateFromVars();
+        }
 
-		string toString() {
-			std::ostringstream outString;
-			outString << source << "," << (string) nativeID << "," << charge;
-			return outString.str();
-		}
+        string toString() {
+            std::ostringstream outString;
+            outString << source << "," << (string) nativeID << "," << charge;
+            return outString.str();
+        }
 
-		void setId( const SpectrumId& id )	    { *this = id; }
-		void setId( const string& id )		    { this->id = id; updateFromString(); }
-		void setSource( const string& source )	{ this->source = source; updateFromVars(); }
-		void setNativeID( const string& id )    { this->nativeID = NativeID(id); updateFromVars(); }
-		void setCharge( int charge )            { this->charge = charge; updateFromVars(); }
+        void setId( const SpectrumId& id )        { *this = id; }
+        void setId( const string& id )            { this->id = id; updateFromString(); }
+        void setSource( const string& source )    { this->source = source; updateFromVars(); }
+        void setNativeID( const string& id )    { this->nativeID = NativeID(id); updateFromVars(); }
+        void setCharge( int charge )            { this->charge = charge; updateFromVars(); }
 
-		bool operator< ( const SpectrumId& rhs ) const
-		{
-			if( source == rhs.source )
-				if( nativeID == rhs.nativeID )
-					return charge < rhs.charge;
-				else
-					return nativeID < rhs.nativeID;
-			else
-				return source < rhs.source;
-		}
+        bool operator< ( const SpectrumId& rhs ) const
+        {
+            if( source == rhs.source )
+                if( nativeID == rhs.nativeID )
+                    return charge < rhs.charge;
+                else
+                    return nativeID < rhs.nativeID;
+            else
+                return source < rhs.source;
+        }
 
-		bool operator== ( const SpectrumId& rhs ) const
-		{
-			return source == rhs.source && charge == rhs.charge && nativeID == rhs.nativeID;
-		}
+        bool operator== ( const SpectrumId& rhs ) const
+        {
+            return source == rhs.source && charge == rhs.charge && nativeID == rhs.nativeID;
+        }
 
-		operator string () { return id; }
+        operator string () { return id; }
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & id & source & nativeID & charge;
-		}
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & id & source & nativeID & charge;
+        }
 
-		string      id;
-		string      source;
-		NativeID    nativeID;
-		int         charge;
+        string      id;
+        string      source;
+        NativeID    nativeID;
+        int         charge;
 
-	private:
-		void updateFromVars()
-		{
-			stringstream idStream;
-			if( !source.empty() )
-				idStream << source << '.';
+    private:
+        void updateFromVars()
+        {
+            stringstream idStream;
+            if( !source.empty() )
+                idStream << source << '.';
 
-			idStream << (string) nativeID;
+            idStream << (string) nativeID;
 
-			if( charge > 0 )
-				idStream << '.' << charge;
+            if( charge > 0 )
+                idStream << '.' << charge;
 
-			id = idStream.str();
-		}
+            id = idStream.str();
+        }
 
-		void updateFromString()
-		{
-			size_t firstDot = id.find_first_of( '.' );
-			size_t lastDot = id.find_last_of( '.' );
+        void updateFromString()
+        {
+            size_t firstDot = id.find_first_of( '.' );
+            size_t lastDot = id.find_last_of( '.' );
 
-			source = id.substr( 0, firstDot );
+            source = id.substr( 0, firstDot );
 
-			if( firstDot < lastDot )
-			{
-				nativeID = NativeID(id.substr( firstDot+1, lastDot-firstDot-1 ));
-				charge = lexical_cast<int>( id.substr( lastDot+1 ) );
-			} else if( firstDot != string::npos )
-				nativeID = NativeID(id.substr( firstDot+1 ));
-		}
-	};
+            if( firstDot < lastDot )
+            {
+                nativeID = NativeID(id.substr( firstDot+1, lastDot-firstDot-1 ));
+                charge = lexical_cast<int>( id.substr( lastDot+1 ) );
+            } else if( firstDot != string::npos )
+                nativeID = NativeID(id.substr( firstDot+1 ));
+        }
+    };
     
-	typedef set< string >			fileList_t;
-	typedef vector< string >		argList_t;
+    typedef set< string >            fileList_t;
+    typedef vector< string >        argList_t;
 }
 #endif

@@ -30,48 +30,48 @@
 
 namespace freicore
 {
-	class lnFactorialTable
-	{
-		simplethread_mutex_t mutex;
-	public:
-		lnFactorialTable()
-		{
-			m_table.push_back(0);
-			m_table.push_back(0);
-			simplethread_create_mutex(&mutex);
-		}
+    class lnFactorialTable
+    {
+        simplethread_mutex_t mutex;
+    public:
+        lnFactorialTable()
+        {
+            m_table.push_back(0);
+            m_table.push_back(0);
+            simplethread_create_mutex(&mutex);
+        }
 
-		~lnFactorialTable() 
-		{
-			simplethread_destroy_mutex(&mutex);
-		}
+        ~lnFactorialTable() 
+        {
+            simplethread_destroy_mutex(&mutex);
+        }
 
-		double operator[]( size_t index )
-		{
-			// Is the table big enough?
-			size_t maxIndex = m_table.size() - 1;
-			if( index > maxIndex )
-			{
-				simplethread_lock_mutex(&mutex);
-				while( index > maxIndex )
-				{
-					m_table.push_back( m_table[ maxIndex ] + log( (float) m_table.size() ) );
-					++maxIndex;
-				}
-				simplethread_unlock_mutex(&mutex);
-			}
+        double operator[]( size_t index )
+        {
+            // Is the table big enough?
+            size_t maxIndex = m_table.size() - 1;
+            if( index > maxIndex )
+            {
+                simplethread_lock_mutex(&mutex);
+                while( index > maxIndex )
+                {
+                    m_table.push_back( m_table[ maxIndex ] + log( (float) m_table.size() ) );
+                    ++maxIndex;
+                }
+                simplethread_unlock_mutex(&mutex);
+            }
 
-			return m_table[ index ];
-		}
+            return m_table[ index ];
+        }
 
-		void resize( size_t maxIndex )
-		{
-			this->operator []( maxIndex );
-		}
+        void resize( size_t maxIndex )
+        {
+            this->operator []( maxIndex );
+        }
 
-	private:
-		std::vector< double > m_table;
-	};
+    private:
+        std::vector< double > m_table;
+    };
 }
 
 #endif

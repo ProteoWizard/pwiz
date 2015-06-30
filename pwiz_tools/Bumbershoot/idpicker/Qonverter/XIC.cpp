@@ -409,7 +409,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
             tmpWindow.bestScore = score;
             tmpWindow.bestScoreScanStartTime = scanInfo.scanStartTime;
             tmpWindow.PSMs.clear();
-			psmMap.clear();
+            psmMap.clear();
             tmpWindow.preRT.clear();
             tmpWindow.preMZ.clear();
 
@@ -451,10 +451,10 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
         
         //merge PSMs with identical scan times
         if (psmMap.find(scanInfo.scanStartTime) != psmMap.end())
-		{
-			if (tmpPSM.score < tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]].score)
-				tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]] = tmpPSM;
-		}
+        {
+            if (tmpPSM.score < tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]].score)
+                tmpWindow.PSMs[psmMap[scanInfo.scanStartTime]] = tmpPSM;
+        }
         else
         {
             tmpWindow.PSMs.push_back(tmpPSM);

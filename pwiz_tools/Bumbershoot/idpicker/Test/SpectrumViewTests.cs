@@ -103,22 +103,22 @@ namespace Test
 
                 Assert.AreEqual("Spectrum View: 1 groups, 1 sources, 207 spectra", spectrumTableForm.Name);
 
-                // /							129	191	207	3	9								
-                // 201203-624176-12				129	191	207	3	9								
-                // 	0.1.171						8.465	831.3822	830.3749	830.377		-0.0021	1	0	EDVPSER
-                // 		number of matched peaks = 8													
-                // 		number of unmatched peaks = 3													
-                // 		MyriMatch:MVH = 16.060721755028													
-                // 		MyriMatch:mzFidelity = 29.437343800031													
-                // 		xcorr = 1.18933083362579													
-                // 	0.1.207						9.681	818.4236	817.4163	817.4181	-0.0018	1	0	GASIVEDK
-                // 	...
-                // 	0.1.1374					39.9247	1199.6108	1198.6036	1198.6063	-0.0027	1	0	FFVAPFPEVF
-                // 		number of matched peaks = 11													
-                // 		number of unmatched peaks = 4													
-                // 		MyriMatch:MVH = 33.321454644203													
-                // 		MyriMatch:mzFidelity = 45.387281396128													
-                // 		xcorr = 1.49844166556597
+                // /                            129    191    207    3    9                                
+                // 201203-624176-12                129    191    207    3    9                                
+                //     0.1.171                        8.465    831.3822    830.3749    830.377        -0.0021    1    0    EDVPSER
+                //         number of matched peaks = 8                                                    
+                //         number of unmatched peaks = 3                                                    
+                //         MyriMatch:MVH = 16.060721755028                                                    
+                //         MyriMatch:mzFidelity = 29.437343800031                                                    
+                //         xcorr = 1.18933083362579                                                    
+                //     0.1.207                        9.681    818.4236    817.4163    817.4181    -0.0018    1    0    GASIVEDK
+                //     ...
+                //     0.1.1374                    39.9247    1199.6108    1198.6036    1198.6063    -0.0027    1    0    FFVAPFPEVF
+                //         number of matched peaks = 11                                                    
+                //         number of unmatched peaks = 4                                                    
+                //         MyriMatch:MVH = 33.321454644203                                                    
+                //         MyriMatch:mzFidelity = 45.387281396128                                                    
+                //         xcorr = 1.49844166556597
                 var spectrumView = new FastTable(spectrumTableForm.GetElement(SearchCriteria.ByAutomationId("treeDataGridView")), new NullActionListener());
                 spectrumView.Focus();
                 var rows = spectrumView.Rows;

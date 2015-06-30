@@ -34,80 +34,80 @@ using namespace freicore;
 
 namespace std
 {
-	ostream& operator<< ( ostream& o, const ProteinLocusByIndex& rhs )
-	{
-		return ( o << "(" << rhs.index << ", " << rhs.offset << ")" );
-	}
+    ostream& operator<< ( ostream& o, const ProteinLocusByIndex& rhs )
+    {
+        return ( o << "(" << rhs.index << ", " << rhs.offset << ")" );
+    }
 
-	ostream& operator<< ( ostream& o, const ProteinLocusByName& rhs )
-	{
-		return ( o << "(" << rhs.name << ", " << rhs.offset << ")" );
-	}
+    ostream& operator<< ( ostream& o, const ProteinLocusByName& rhs )
+    {
+        return ( o << "(" << rhs.name << ", " << rhs.offset << ")" );
+    }
 
-	ostream& operator<< ( ostream& o, const CleavageRule& rhs )
-	{
-		return ( o << rhs.first << " " << rhs.second );
-	}
+    ostream& operator<< ( ostream& o, const CleavageRule& rhs )
+    {
+        return ( o << rhs.first << " " << rhs.second );
+    }
 
-	istream& operator>> ( istream& i, CleavageRule& rhs )
-	{
-		static boost::char_separator<char> cleavageCandidatesDelimiter("|");
+    istream& operator>> ( istream& i, CleavageRule& rhs )
+    {
+        static boost::char_separator<char> cleavageCandidatesDelimiter("|");
 
-		rhs.first.clear();
-		rhs.second.clear();
+        rhs.first.clear();
+        rhs.second.clear();
 
-		string preCleavageCandidatesString, postCleavageCandidatesString;
-		i >> preCleavageCandidatesString >> postCleavageCandidatesString;
+        string preCleavageCandidatesString, postCleavageCandidatesString;
+        i >> preCleavageCandidatesString >> postCleavageCandidatesString;
 
-		stokenizer preCleavageCandidatesParser(	preCleavageCandidatesString.begin(),
-			preCleavageCandidatesString.end(),
-			cleavageCandidatesDelimiter );
-		for( stokenizer::iterator itr = preCleavageCandidatesParser.begin(); itr != preCleavageCandidatesParser.end(); ++itr )
-			rhs.first.insert( *itr );
+        stokenizer preCleavageCandidatesParser(    preCleavageCandidatesString.begin(),
+            preCleavageCandidatesString.end(),
+            cleavageCandidatesDelimiter );
+        for( stokenizer::iterator itr = preCleavageCandidatesParser.begin(); itr != preCleavageCandidatesParser.end(); ++itr )
+            rhs.first.insert( *itr );
 
-		stokenizer postCleavageCandidatesParser(postCleavageCandidatesString.begin(),
-			postCleavageCandidatesString.end(),
-			cleavageCandidatesDelimiter );
-		for( stokenizer::iterator itr = postCleavageCandidatesParser.begin(); itr != postCleavageCandidatesParser.end(); ++itr )
-			rhs.second.insert( *itr );
+        stokenizer postCleavageCandidatesParser(postCleavageCandidatesString.begin(),
+            postCleavageCandidatesString.end(),
+            cleavageCandidatesDelimiter );
+        for( stokenizer::iterator itr = postCleavageCandidatesParser.begin(); itr != postCleavageCandidatesParser.end(); ++itr )
+            rhs.second.insert( *itr );
 
-		return i;
-	}
+        return i;
+    }
 
-	istream& operator>> ( istream& i, CleavageRuleSet& rhs )
-	{
-		CleavageRule newRule;
-		while( i >> newRule )
-		{
-			rhs.push_back( newRule );
-			rhs.longestPreCleavageCandidate = max( newRule.first.longestCleavageCandidate, rhs.longestPreCleavageCandidate );
-			rhs.longestPostCleavageCandidate = max( newRule.second.longestCleavageCandidate, rhs.longestPostCleavageCandidate );
-		}
+    istream& operator>> ( istream& i, CleavageRuleSet& rhs )
+    {
+        CleavageRule newRule;
+        while( i >> newRule )
+        {
+            rhs.push_back( newRule );
+            rhs.longestPreCleavageCandidate = max( newRule.first.longestCleavageCandidate, rhs.longestPreCleavageCandidate );
+            rhs.longestPostCleavageCandidate = max( newRule.second.longestCleavageCandidate, rhs.longestPostCleavageCandidate );
+        }
 
-		return i;
-	}
+        return i;
+    }
 
-	ostream& operator<< ( ostream& o, MvIntKey& rhs )
-	{
-		return o << vector<int>( rhs );
-	}
+    ostream& operator<< ( ostream& o, MvIntKey& rhs )
+    {
+        return o << vector<int>( rhs );
+    }
 
-	ostream& operator<< ( ostream& o, MvhTable& rhs )
-	{
-		for( MvhTable::iterator itr = rhs.begin(); itr != rhs.end(); ++itr )
-			o << itr->first << " -> " << itr->second << "\n";
-		return o;
-	}
+    ostream& operator<< ( ostream& o, MvhTable& rhs )
+    {
+        for( MvhTable::iterator itr = rhs.begin(); itr != rhs.end(); ++itr )
+            o << itr->first << " -> " << itr->second << "\n";
+        return o;
+    }
 }
 
 namespace freicore
 {
-	void CleavageRuleSet::initialize( const string& cfgStr )
-	{
-		clear();
-		stringstream CleavageRulesStream( cfgStr );
-		CleavageRulesStream >> *this;
-	}
+    void CleavageRuleSet::initialize( const string& cfgStr )
+    {
+        clear();
+        stringstream CleavageRulesStream( cfgStr );
+        CleavageRulesStream >> *this;
+    }
 
     namespace {
         string cleavageHalfRuleToRegex(const CleavageHalfRule& halfRule)
@@ -175,75 +175,75 @@ namespace freicore
             return regexPieces[0];
     }
 
-	bool	TestPtmSite( const string& seq, const DynamicMod& mod, size_t pos )
-	{
-		if( seq[pos] != mod.unmodChar )
-			return false;
+    bool    TestPtmSite( const string& seq, const DynamicMod& mod, size_t pos )
+    {
+        if( seq[pos] != mod.unmodChar )
+            return false;
 
         if(pos > 0) {
-		    for( size_t i=1; i <= mod.NTerminalFilters.size(); ++i )
-		    {
-			    if( pos-i < 0 )
-				    return false;
+            for( size_t i=1; i <= mod.NTerminalFilters.size(); ++i )
+            {
+                if( pos-i < 0 )
+                    return false;
 
-			    const ResidueFilter& filter = *(mod.NTerminalFilters.rbegin()+(i-1));
-			    if( !filter.testResidue( seq[pos-i] ) )
-				    return false;
-		    }
+                const ResidueFilter& filter = *(mod.NTerminalFilters.rbegin()+(i-1));
+                if( !filter.testResidue( seq[pos-i] ) )
+                    return false;
+            }
         }
 
         if(pos < seq.length()-1) {
-		    for( size_t i=1; i <= mod.CTerminalFilters.size(); ++i )
-		    {
-			    if( pos+i >= seq.length() )
-				    return false;
+            for( size_t i=1; i <= mod.CTerminalFilters.size(); ++i )
+            {
+                if( pos+i >= seq.length() )
+                    return false;
 
-			    const ResidueFilter& filter = mod.CTerminalFilters[i-1];
-			    if( !filter.testResidue( seq[pos+i] ) )
-				    return false;
-		    }
+                const ResidueFilter& filter = mod.CTerminalFilters[i-1];
+                if( !filter.testResidue( seq[pos+i] ) )
+                    return false;
+            }
         }
-		return true;
-	}
+        return true;
+    }
 
-    bool	TestPtmSiteOld( const string& seq, const DynamicMod& mod, size_t pos )
-	{
-		if( seq[pos] != mod.unmodChar )
-			return false;
-
-		for( size_t i=1; i <= mod.NTerminalFilters.size(); ++i )
-		{
-			if( pos-i < 0 )
-				return false;
-
-			const ResidueFilter& filter = *(mod.NTerminalFilters.rbegin()+(i-1));
-			if( !filter.testResidue( seq[pos-i] ) )
-				return false;
-		}
-
-		for( size_t i=1; i <= mod.CTerminalFilters.size(); ++i )
-		{
-			if( pos+i >= seq.length() )
-				return false;
-
-			const ResidueFilter& filter = mod.CTerminalFilters[i-1];
-			if( !filter.testResidue( seq[pos+i] ) )
-				return false;
-		}
-		return true;
-	}
-
-	/**
-		getInterpretation function takes DigestedPeptide and converts it into a string.
-		It uses AminoAcid+ModMass notation to represent the location of mods in the sequence. 
-		An example output for a peptide with an oxidized methonine would look like PVSPLLLASGM+16AR.
-		This string is used for display and sorting purposes.
-	*/
-	string getInterpretation(const DigestedPeptide& peptide)
+    bool    TestPtmSiteOld( const string& seq, const DynamicMod& mod, size_t pos )
     {
-		// Get the peptide sequence and the mods
-		string returnString = "(" + peptide.sequence() + ")";
-		const ModificationMap& modMap = peptide.modifications();
+        if( seq[pos] != mod.unmodChar )
+            return false;
+
+        for( size_t i=1; i <= mod.NTerminalFilters.size(); ++i )
+        {
+            if( pos-i < 0 )
+                return false;
+
+            const ResidueFilter& filter = *(mod.NTerminalFilters.rbegin()+(i-1));
+            if( !filter.testResidue( seq[pos-i] ) )
+                return false;
+        }
+
+        for( size_t i=1; i <= mod.CTerminalFilters.size(); ++i )
+        {
+            if( pos+i >= seq.length() )
+                return false;
+
+            const ResidueFilter& filter = mod.CTerminalFilters[i-1];
+            if( !filter.testResidue( seq[pos+i] ) )
+                return false;
+        }
+        return true;
+    }
+
+    /**
+        getInterpretation function takes DigestedPeptide and converts it into a string.
+        It uses AminoAcid+ModMass notation to represent the location of mods in the sequence. 
+        An example output for a peptide with an oxidized methonine would look like PVSPLLLASGM+16AR.
+        This string is used for display and sorting purposes.
+    */
+    string getInterpretation(const DigestedPeptide& peptide)
+    {
+        // Get the peptide sequence and the mods
+        string returnString = "(" + peptide.sequence() + ")";
+        const ModificationMap& modMap = peptide.modifications();
         stringstream modMass;
         modMass << showpos;
 
@@ -255,11 +255,11 @@ namespace freicore
             returnString.insert(realPosition, modMass.str());
         }
 
-		return returnString;
-	}
+        return returnString;
+    }
 
 
-	CustomBaseNumber::CustomBaseNumber(unsigned int valueAsBase10, size_t base)
+    CustomBaseNumber::CustomBaseNumber(unsigned int valueAsBase10, size_t base)
         : base_(base), nonZeroDigits_(0)
     {
         const static string digits("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -307,33 +307,33 @@ namespace freicore
     }
 
     void CustomBaseNumber::incrementChar( int i )
-	{
+    {
         size_t digitValue = *(digits_.begin()+i) - '0';
-		if( digitValue+1 == base_ )
-		{
-			if( i == 0 )
+        if( digitValue+1 == base_ )
+        {
+            if( i == 0 )
             {
                 nonZeroDigits_ = 1;
                 digits_[0] = '1';
-				digits_.push_back('0');
+                digits_.push_back('0');
             } else
             {
                 --nonZeroDigits_;
-			    digits_[i] = '0';
-				incrementChar(i - 1);
+                digits_[i] = '0';
+                incrementChar(i - 1);
             }
-		} else
+        } else
         {
             if( digitValue == 0 )
                 ++nonZeroDigits_;
-			++digits_[i];
+            ++digits_[i];
         }
-	}
+    }
 
     CustomBaseNumber& CustomBaseNumber::operator++()
     {
-		incrementChar(digits_.size()-1);
-		return *this;
+        incrementChar(digits_.size()-1);
+        return *this;
     }
 
     int CustomBaseNumber::digit(size_t n) const
@@ -346,41 +346,41 @@ namespace freicore
         return nonZeroDigits_;
     }
 
-	void MakePtmVariantsOld( const DigestedPeptide& unmodifiedPeptide,
+    void MakePtmVariantsOld( const DigestedPeptide& unmodifiedPeptide,
                           vector<DigestedPeptide>& ptmPeptides,
                           int maxPtmCount,
                           const DynamicModSet& dynamicMods,
                           const StaticModSet& staticMods )
-	{
-		/*cout << "PTM map: ";
-		for( int i=0; i < (int) dynamicMods.size(); ++i )
-			cout << dynamicMods[i].unmodChar << " -> " << dynamicMods[i].modChar << "; ";
-		cout << endl;*/
+    {
+        /*cout << "PTM map: ";
+        for( int i=0; i < (int) dynamicMods.size(); ++i )
+            cout << dynamicMods[i].unmodChar << " -> " << dynamicMods[i].modChar << "; ";
+        cout << endl;*/
         const string& sequence = unmodifiedPeptide.sequence();
         string sequenceWithTermini = PEPTIDE_N_TERMINUS_STRING + sequence + PEPTIDE_C_TERMINUS_STRING;
         size_t seqLength = sequence.length();
 
-		// Apply static mods to the peptide
-		DigestedPeptide staticPeptide( unmodifiedPeptide );
-		ModificationMap& staticModMap = staticPeptide.modifications();
-		for( size_t i=0; i < seqLength; ++i )
-			for( StaticModSet::const_iterator itr = staticMods.begin(); itr != staticMods.end(); ++itr )
-				if( itr->name == sequence[i] )
+        // Apply static mods to the peptide
+        DigestedPeptide staticPeptide( unmodifiedPeptide );
+        ModificationMap& staticModMap = staticPeptide.modifications();
+        for( size_t i=0; i < seqLength; ++i )
+            for( StaticModSet::const_iterator itr = staticMods.begin(); itr != staticMods.end(); ++itr )
+                if( itr->name == sequence[i] )
                 {
-					staticModMap.insert( make_pair( i, *itr ) );
-					break;
-				}
+                    staticModMap.insert( make_pair( i, *itr ) );
+                    break;
+                }
 
-		// For each amino acid residue test if it can be modified
-		// Store pointers to moddable residues
-		size_t moddableResidues = 0;
+        // For each amino acid residue test if it can be modified
+        // Store pointers to moddable residues
+        size_t moddableResidues = 0;
         size_t maxModsPerResidue = 0;
-		vector< vector<DynamicModSet::const_iterator> > ptmMask(seqLength);
-		for( size_t i=0; i < seqLength; ++i )
+        vector< vector<DynamicModSet::const_iterator> > ptmMask(seqLength);
+        for( size_t i=0; i < seqLength; ++i )
         {
-			for( DynamicModSet::const_iterator itr = dynamicMods.begin(); itr != dynamicMods.end(); ++itr )
+            for( DynamicModSet::const_iterator itr = dynamicMods.begin(); itr != dynamicMods.end(); ++itr )
             {
-				if( TestPtmSiteOld( sequenceWithTermini, *itr, i+1 ) )
+                if( TestPtmSiteOld( sequenceWithTermini, *itr, i+1 ) )
                     ptmMask[i].push_back(itr);
             }
 
@@ -391,15 +391,15 @@ namespace freicore
             }
         }
 
-		// Maximum number of possible PTM interpretations = <max. mods per residue+1> ^ <# moddable residues>
-		// Note: assumes that a dynamic mod may occur either 0 or 1 time
+        // Maximum number of possible PTM interpretations = <max. mods per residue+1> ^ <# moddable residues>
+        // Note: assumes that a dynamic mod may occur either 0 or 1 time
         //int ptmPermutations = 1 << possiblePtmCount;
         int ptmPermutations = (int) pow( (double) maxModsPerResidue+1, (double) moddableResidues );
 
-		// For each possible PTM permutation
+        // For each possible PTM permutation
         CustomBaseNumber permutation(0, maxModsPerResidue+1);
-		for( int p=0; p < ptmPermutations; ++p, ++permutation )
-		{
+        for( int p=0; p < ptmPermutations; ++p, ++permutation )
+        {
             // p is treated as a mask where each non-zero bit is a modified residue;
             // for example, for a peptide SAMIAM with oxidations on M:
             // possiblePtmCount: 2 (equal to length of mask)
@@ -409,21 +409,21 @@ namespace freicore
             // 10: first M modified
             // 11: both Ms modified
 
-			// An awesome function to very quickly count non-zero bits in a 32-bit integer:
-			// http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-			//unsigned int const w = p - ((p >> 1) & 0x55555555);                    // temp
-			//unsigned int const x = (w & 0x33333333) + ((w >> 2) & 0x33333333);     // temp
-			//int ptmCount = ((x + (x >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
+            // An awesome function to very quickly count non-zero bits in a 32-bit integer:
+            // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
+            //unsigned int const w = p - ((p >> 1) & 0x55555555);                    // temp
+            //unsigned int const x = (w & 0x33333333) + ((w >> 2) & 0x33333333);     // temp
+            //int ptmCount = ((x + (x >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
 
             // if too many mods are on this peptide, skip this permutation
-			if( permutation.nonZeroDigits() > maxPtmCount )
-				continue;
+            if( permutation.nonZeroDigits() > maxPtmCount )
+                continue;
 
-			DigestedPeptide ptmPeptide(staticPeptide);
-			ModificationMap& ptmMap = ptmPeptide.modifications();
+            DigestedPeptide ptmPeptide(staticPeptide);
+            ModificationMap& ptmMap = ptmPeptide.modifications();
             int ptmDigit = 0;
-			for( size_t i=0; i < ptmMask.size(); ++i )
-			{
+            for( size_t i=0; i < ptmMask.size(); ++i )
+            {
                 // if the current modifiable residue is a non-zero digit in the current permutation
                 if( !ptmMask[i].empty() )
                 {
@@ -433,13 +433,13 @@ namespace freicore
                         ptmMap[i].push_back( *ptmMask[i][digit-1] );
                     ++ptmDigit;
                 }
-			}
+            }
 
-			// Store the new sequence
-			ptmPeptides.push_back( ptmPeptide );
+            // Store the new sequence
+            ptmPeptides.push_back( ptmPeptide );
             //cout << getInterpretation(ptmPeptide) << endl;
-		}
-	}
+        }
+    }
 
     /**
         This function is part of the combinatorial math that computes the total number of peptide 
@@ -507,7 +507,7 @@ namespace freicore
         string sequenceWithTermini = PEPTIDE_N_TERMINUS_STRING + unmodifiedPeptide.sequence() + PEPTIDE_C_TERMINUS_STRING;
         size_t seqLength = sequenceWithTermini.length();
 
-		// An array of ints to store the index of the amino acid
+        // An array of ints to store the index of the amino acid
         // in the sequence to which a modification corresponds.
         vector <size_t> positions(seqLength);
                 
@@ -540,26 +540,26 @@ namespace freicore
                           int maxPtmCount,
                           const DynamicModSet& dynamicMods,
                           const StaticModSet& staticMods, size_t maxVarIters )
-	{
-		//cout << "PTM map: ";
-		//for( int i=0; i < (int) dynamicMods.size(); ++i )
-		//	cout << dynamicMods[i].unmodChar << " -> " << dynamicMods[i].modChar << "; ";
-		//cout << endl;
+    {
+        //cout << "PTM map: ";
+        //for( int i=0; i < (int) dynamicMods.size(); ++i )
+        //    cout << dynamicMods[i].unmodChar << " -> " << dynamicMods[i].modChar << "; ";
+        //cout << endl;
         string sequenceWithTermini = PEPTIDE_N_TERMINUS_STRING + unmodifiedPeptide.sequence() + PEPTIDE_C_TERMINUS_STRING;
         size_t seqLength = sequenceWithTermini.length();
 
 
-		// Apply static mods to the peptide
-		DigestedPeptide staticPeptide( unmodifiedPeptide );
-		ModificationMap& staticModMap = staticPeptide.modifications();
+        // Apply static mods to the peptide
+        DigestedPeptide staticPeptide( unmodifiedPeptide );
+        ModificationMap& staticModMap = staticPeptide.modifications();
         for( size_t i=0; i < seqLength; ++i ) {
             size_t ptmIndex = (i==0) ? staticModMap.NTerminus() : (i < seqLength-1) ? i-1 : staticModMap.CTerminus();
             for( StaticModSet::const_iterator itr = staticMods.begin(); itr != staticMods.end(); ++itr ) {
-				if( itr->name == sequenceWithTermini[i] )
+                if( itr->name == sequenceWithTermini[i] )
                 {
-					staticModMap.insert( make_pair( ptmIndex, *itr ) );
-					break;
-				}
+                    staticModMap.insert( make_pair( ptmIndex, *itr ) );
+                    break;
+                }
             }
         }
 
@@ -616,7 +616,7 @@ namespace freicore
            //cout << endl;
            // Get a peptide
            DigestedPeptide ptmPeptide(staticPeptide);
-		   ModificationMap& ptmMap = ptmPeptide.modifications();
+           ModificationMap& ptmMap = ptmPeptide.modifications();
            // Figure out which mods to add to which residue
            for(size_t i = 0; i < enumerator.n_; ++i) {
                if(enumerator.a_[i]>0) {
@@ -624,7 +624,7 @@ namespace freicore
                }
            }
            // Store the new sequence
-			ptmPeptides.push_back( ptmPeptide );
+            ptmPeptides.push_back( ptmPeptide );
             //cout << getInterpretation(ptmPeptide) << endl;
         }
        
@@ -632,7 +632,7 @@ namespace freicore
        ptmPeptides.push_back(staticPeptide);
        //cout << "\t" << getInterpretation(staticPeptide) << endl;
        return false;
-	}
+    }
 
     /**
         This function generates variants of a peptide using subset based enumerator
@@ -642,28 +642,28 @@ namespace freicore
                           int maxPtmCount,
                           const DynamicModSet& dynamicMods,
                           const StaticModSet& staticMods, size_t maxVarIters )
-	{
-		/*cout << "PTM map: ";
-		for( DynamicModSet::const_iterator itr = dynamicMods.begin(); itr != dynamicMods.end(); ++itr ) {
-			cout << (*itr).unmodChar << (*itr).modMass << ";";
+    {
+        /*cout << "PTM map: ";
+        for( DynamicModSet::const_iterator itr = dynamicMods.begin(); itr != dynamicMods.end(); ++itr ) {
+            cout << (*itr).unmodChar << (*itr).modMass << ";";
         }
-		cout << endl;
+        cout << endl;
         cout << unmodifiedPeptide.sequence() << endl;*/
 
         string sequenceWithTermini = PEPTIDE_N_TERMINUS_STRING + unmodifiedPeptide.sequence() + PEPTIDE_C_TERMINUS_STRING;
         size_t seqLength = sequenceWithTermini.length();
 
-		// Apply static mods to the peptide
-		DigestedPeptide staticPeptide( unmodifiedPeptide );
-		ModificationMap& staticModMap = staticPeptide.modifications();
+        // Apply static mods to the peptide
+        DigestedPeptide staticPeptide( unmodifiedPeptide );
+        ModificationMap& staticModMap = staticPeptide.modifications();
         for( size_t i=0; i < seqLength; ++i ) {
             size_t ptmIndex = (i==0) ? staticModMap.NTerminus() : (i < seqLength-1) ? i-1 : staticModMap.CTerminus();
             for( StaticModSet::const_iterator itr = staticMods.begin(); itr != staticMods.end(); ++itr ) {
-				if( itr->name == sequenceWithTermini[i] )
+                if( itr->name == sequenceWithTermini[i] )
                 {
-					staticModMap.insert( make_pair( ptmIndex, *itr ) );
-					break;
-				}
+                    staticModMap.insert( make_pair( ptmIndex, *itr ) );
+                    break;
+                }
             }
         }
 
@@ -713,14 +713,14 @@ namespace freicore
            if(enumerator.setFitness) {
                // Get the digested peptide and the mod map
                DigestedPeptide ptmPeptide(staticPeptide);
-		       ModificationMap& ptmMap = ptmPeptide.modifications();
+               ModificationMap& ptmMap = ptmPeptide.modifications();
                // Add the mods
                for(size_t k = 1; k <= enumerator.k_; ++k) {
                    //cout << positions[enumerator.S_[k]-1] <<"-"<< enumerator.S_[k]-1 << ",";
                    ptmMap[positions[enumerator.S_[k]-1]].push_back(*ptms[enumerator.S_[k]-1]);
                }
                // Store the new sequence
-			   ptmPeptides.push_back( ptmPeptide );
+               ptmPeptides.push_back( ptmPeptide );
                /*--maxVarIters;
                if(maxVarIters<0) {
                    ptmPeptides.clear();
@@ -730,13 +730,13 @@ namespace freicore
            }
         }while(enumerator.next());
        return false;
-	}
+    }
 
-	void MakePeptideVariants( const DigestedPeptide& peptide, vector<DigestedPeptide>& subPeptides,
-									size_t minModCount, size_t maxModCount, const DynamicModSet& dynamicSubs, 
+    void MakePeptideVariants( const DigestedPeptide& peptide, vector<DigestedPeptide>& subPeptides,
+                                    size_t minModCount, size_t maxModCount, const DynamicModSet& dynamicSubs, 
                                     size_t locStart, size_t locEnd)
-	{
-		string sequenceWithTermini = PEPTIDE_N_TERMINUS_STRING + peptide.sequence() + PEPTIDE_C_TERMINUS_STRING;
+    {
+        string sequenceWithTermini = PEPTIDE_N_TERMINUS_STRING + peptide.sequence() + PEPTIDE_C_TERMINUS_STRING;
         size_t seqLength = sequenceWithTermini.length();
 
         // An array of ints to store the index of the amino acid
@@ -773,7 +773,7 @@ namespace freicore
            if(enumerator.setFitness) {
                // Get the digested peptide and the mod map
                DigestedPeptide ptmPeptide(peptide);
-		       ModificationMap& ptmMap = ptmPeptide.modifications();
+               ModificationMap& ptmMap = ptmPeptide.modifications();
                // Add the mods
                for(size_t k = 1; k <= enumerator.k_; ++k) {
                    //cout << positions[enumerator.S_[k]-1] <<"-"<< enumerator.S_[k]-1 << ",";
@@ -781,35 +781,35 @@ namespace freicore
                }
                //cout << endl;
                // Store the new sequence
-			   subPeptides.push_back( ptmPeptide );
+               subPeptides.push_back( ptmPeptide );
                //cout << getInterpretation(ptmPeptide) << endl;
            }
         }while(enumerator.next());
-	}
+    }
 
     
 
-	/**
-		AddStaticMods adds the static modifications for a peptide. The static mods are read from
-		the configuration variable "StaticMods" and added to each candidate reside in the peptide.
-	*/
-	DigestedPeptide AddStaticMods( const DigestedPeptide& unmodifiedPeptide, const StaticModSet& staticMods ) {
-		const string& sequence = unmodifiedPeptide.sequence();
-		size_t seqLength = sequence.size();
+    /**
+        AddStaticMods adds the static modifications for a peptide. The static mods are read from
+        the configuration variable "StaticMods" and added to each candidate reside in the peptide.
+    */
+    DigestedPeptide AddStaticMods( const DigestedPeptide& unmodifiedPeptide, const StaticModSet& staticMods ) {
+        const string& sequence = unmodifiedPeptide.sequence();
+        size_t seqLength = sequence.size();
 
-		// Apply static mods to the peptide
-		DigestedPeptide staticPeptide( unmodifiedPeptide );
-		ModificationMap& staticModMap = staticPeptide.modifications();
-		for( size_t i=0; i < seqLength; ++i ) {
-			for( StaticModSet::const_iterator itr = staticMods.begin(); itr != staticMods.end(); ++itr ) {
-				if( itr->name == sequence[i] ) {
-					staticModMap.insert( make_pair( i, *itr ) );
-					break;
-				}
-			}
-		}
-		return staticPeptide;
-	}
+        // Apply static mods to the peptide
+        DigestedPeptide staticPeptide( unmodifiedPeptide );
+        ModificationMap& staticModMap = staticPeptide.modifications();
+        for( size_t i=0; i < seqLength; ++i ) {
+            for( StaticModSet::const_iterator itr = staticMods.begin(); itr != staticMods.end(); ++itr ) {
+                if( itr->name == sequence[i] ) {
+                    staticModMap.insert( make_pair( i, *itr ) );
+                    break;
+                }
+            }
+        }
+        return staticPeptide;
+    }
 
     /*
         This function is a kludge. It takes a protein, one of its peptide, and a possible delta mass.
@@ -914,224 +914,224 @@ namespace freicore
         return true;
     }
 
-	double poz( double z )
-	{
-		double y, x, w;
-		double Z_MAX = 6.0; 
+    double poz( double z )
+    {
+        double y, x, w;
+        double Z_MAX = 6.0; 
 
-		if (z == 0.0) {
-			x = 0.0;
-		} else {
-			y = 0.5 * fabs(z);
-			if (y >= (Z_MAX * 0.5)) {
-				x = 1.0;
-			} else if (y < 1.0) {
-				w = y * y;
-				x = ((((((((0.000124818987 * w
-					- 0.001075204047) * w + 0.005198775019) * w
-					- 0.019198292004) * w + 0.059054035642) * w
-					- 0.151968751364) * w + 0.319152932694) * w
-					- 0.531923007300) * w + 0.797884560593) * y * 2.0;
-			} else {
-				y -= 2.0;
-				x = (((((((((((((-0.000045255659 * y
-					+ 0.000152529290) * y - 0.000019538132) * y
-					- 0.000676904986) * y + 0.001390604284) * y
-					- 0.000794620820) * y - 0.002034254874) * y
-					+ 0.006549791214) * y - 0.010557625006) * y
-					+ 0.011630447319) * y - 0.009279453341) * y
-					+ 0.005353579108) * y - 0.002141268741) * y
-					+ 0.000535310849) * y + 0.999936657524;
-			}
-		}
-		return z > 0.0 ? ((x + 1.0) * 0.5) : ((1.0 - x) * 0.5);
-	}
+        if (z == 0.0) {
+            x = 0.0;
+        } else {
+            y = 0.5 * fabs(z);
+            if (y >= (Z_MAX * 0.5)) {
+                x = 1.0;
+            } else if (y < 1.0) {
+                w = y * y;
+                x = ((((((((0.000124818987 * w
+                    - 0.001075204047) * w + 0.005198775019) * w
+                    - 0.019198292004) * w + 0.059054035642) * w
+                    - 0.151968751364) * w + 0.319152932694) * w
+                    - 0.531923007300) * w + 0.797884560593) * y * 2.0;
+            } else {
+                y -= 2.0;
+                x = (((((((((((((-0.000045255659 * y
+                    + 0.000152529290) * y - 0.000019538132) * y
+                    - 0.000676904986) * y + 0.001390604284) * y
+                    - 0.000794620820) * y - 0.002034254874) * y
+                    + 0.006549791214) * y - 0.010557625006) * y
+                    + 0.011630447319) * y - 0.009279453341) * y
+                    + 0.005353579108) * y - 0.002141268741) * y
+                    + 0.000535310849) * y + 0.999936657524;
+            }
+        }
+        return z > 0.0 ? ((x + 1.0) * 0.5) : ((1.0 - x) * 0.5);
+    }
 
-	static int BIGX = 20;
-	static double LOG_SQRT_PI = 0.5723649429247000870717135; /* log(sqrt(pi)) */
-	static double I_SQRT_PI = 0.5641895835477562869480795;   /* 1 / sqrt(pi) */
+    static int BIGX = 20;
+    static double LOG_SQRT_PI = 0.5723649429247000870717135; /* log(sqrt(pi)) */
+    static double I_SQRT_PI = 0.5641895835477562869480795;   /* 1 / sqrt(pi) */
 
-	double ex( double x )
-	{
-		return (x < -BIGX) ? 0.0 : exp(x);
-	}
+    double ex( double x )
+    {
+        return (x < -BIGX) ? 0.0 : exp(x);
+    }
 
-	double ChiSquaredToPValue( double x, int df )
-	{
-		double a, y=0.0, s;
-		double e, c, z;
-		bool even;
+    double ChiSquaredToPValue( double x, int df )
+    {
+        double a, y=0.0, s;
+        double e, c, z;
+        bool even;
 
 
-		if (x <= 0.0 || df < 1) {
-			return 1.0;
-		}
+        if (x <= 0.0 || df < 1) {
+            return 1.0;
+        }
 
-		a = 0.5 * x;
-		even = !(df & 1);
-		if (df > 1) {
-			y = ex(-a);
-		}
-		s = (even ? y : (2.0 * poz(-sqrt(x))));
-		if (df > 2) {
-			x = 0.5f * double(df - 1.0);
-			z = (even ? 1.0 : 0.5);
-			if (a > BIGX) {
-				e = (even ? 0.0 : LOG_SQRT_PI);
-				c = log(a);
-				while (z <= x) {
-					e = log(z) + e;
-					s += ex(c * z - a - e);
-					z += 1.0;
-				}
-				return s;
-			} else {
-				e = (even ? 1.0 : (I_SQRT_PI / sqrt(a)));
-				c = 0.0;
-				while (z <= x) {
-					e = e * (a / z);
-					c = c + e;
-					z += 1.0;
-				}
-				return double(c * y + s);
-			}
-		} else {
-			return s;
-		}
-	}
+        a = 0.5 * x;
+        even = !(df & 1);
+        if (df > 1) {
+            y = ex(-a);
+        }
+        s = (even ? y : (2.0 * poz(-sqrt(x))));
+        if (df > 2) {
+            x = 0.5f * double(df - 1.0);
+            z = (even ? 1.0 : 0.5);
+            if (a > BIGX) {
+                e = (even ? 0.0 : LOG_SQRT_PI);
+                c = log(a);
+                while (z <= x) {
+                    e = log(z) + e;
+                    s += ex(c * z - a - e);
+                    z += 1.0;
+                }
+                return s;
+            } else {
+                e = (even ? 1.0 : (I_SQRT_PI / sqrt(a)));
+                c = 0.0;
+                while (z <= x) {
+                    e = e * (a / z);
+                    c = c + e;
+                    z += 1.0;
+                }
+                return double(c * y + s);
+            }
+        } else {
+            return s;
+        }
+    }
 
-	void LoadTagInstancesFromIndexFile( const string& tagIndexFilename, const string& tag, tagMetaIndex_t& tagMetaIndex, tagIndex_t& tagIndex )
-	{
-		if( tagMetaIndex.count( tag ) > 0 )
-		{
-			ifstream tagIndexFile( tagIndexFilename.c_str(), ios::binary );
-			tagIndexFile.seekg( (ios::off_type) tagMetaIndex[tag].offset );
+    void LoadTagInstancesFromIndexFile( const string& tagIndexFilename, const string& tag, tagMetaIndex_t& tagMetaIndex, tagIndex_t& tagIndex )
+    {
+        if( tagMetaIndex.count( tag ) > 0 )
+        {
+            ifstream tagIndexFile( tagIndexFilename.c_str(), ios::binary );
+            tagIndexFile.seekg( (ios::off_type) tagMetaIndex[tag].offset );
 
-			tagIndexFile.read( (char*) &tagMetaIndex[tag].size, sizeof( tagMetaIndex[tag].size ) );
+            tagIndexFile.read( (char*) &tagMetaIndex[tag].size, sizeof( tagMetaIndex[tag].size ) );
 
-			ProteinIndex idx;
-			ProteinOffset off;
-			for( int i=0; i < tagMetaIndex[tag].size; ++i )
-			{
-				tagIndexFile.read( (char*) &idx, sizeof( idx ) );
-				tagIndexFile.read( (char*) &off, sizeof( off ) );
-				//cout << string(tag) << " " << (int) instanceCount << " " << idx << " " << off << endl;
-				tagIndex[ tag ].push_back( tagInstance_t( idx, off ) );
-			}
-			tagIndexFile.close();
-		} else
-		{
-			cerr << "Tag \"" << tag << "\" not in index!" << endl;
-		}
-	}
+            ProteinIndex idx;
+            ProteinOffset off;
+            for( int i=0; i < tagMetaIndex[tag].size; ++i )
+            {
+                tagIndexFile.read( (char*) &idx, sizeof( idx ) );
+                tagIndexFile.read( (char*) &off, sizeof( off ) );
+                //cout << string(tag) << " " << (int) instanceCount << " " << idx << " " << off << endl;
+                tagIndex[ tag ].push_back( tagInstance_t( idx, off ) );
+            }
+            tagIndexFile.close();
+        } else
+        {
+            cerr << "Tag \"" << tag << "\" not in index!" << endl;
+        }
+    }
 
-	void LoadIndexFromFile( const string& tagIndexFilename, tagMetaIndex_t& tagMetaIndex )
-	{
-		ifstream tagIndexFile;
+    void LoadIndexFromFile( const string& tagIndexFilename, tagMetaIndex_t& tagMetaIndex )
+    {
+        ifstream tagIndexFile;
 
-		tagIndexFile.open( tagIndexFilename.c_str(), ios::in | ios::binary );
+        tagIndexFile.open( tagIndexFilename.c_str(), ios::in | ios::binary );
 
-		tagIndexFile.seekg( 40 ); // skip the checksum
+        tagIndexFile.seekg( 40 ); // skip the checksum
 
-		int tagCount;
-		tagIndexFile.read( (char*) &tagCount, sizeof( tagCount ) );
-		tagIndexFile.read( (char*) &tagMetaIndex.totalTagInstances, sizeof( tagMetaIndex.totalTagInstances ) );
+        int tagCount;
+        tagIndexFile.read( (char*) &tagCount, sizeof( tagCount ) );
+        tagIndexFile.read( (char*) &tagMetaIndex.totalTagInstances, sizeof( tagMetaIndex.totalTagInstances ) );
 
-		for( int i=0; i < tagCount; ++i )
-		{
-			/* ASCII-style index
-			string tag;
-			tagIndexFile >> tag;
+        for( int i=0; i < tagCount; ++i )
+        {
+            /* ASCII-style index
+            string tag;
+            tagIndexFile >> tag;
 
-			int instanceCount;
-			tagIndexFile >> instanceCount;
+            int instanceCount;
+            tagIndexFile >> instanceCount;
 
-			for( int i=0; i < instanceCount; ++i )
-			{
-			int idx, off;
-			tagIndexFile >> idx >> off;
-			tagIndex[ tag ].push_back( tagInstance_t( idx, off ) );
-			}
-			*/
+            for( int i=0; i < instanceCount; ++i )
+            {
+            int idx, off;
+            tagIndexFile >> idx >> off;
+            tagIndex[ tag ].push_back( tagInstance_t( idx, off ) );
+            }
+            */
 
-			/* Binary-style index */
-			char* tag = new char[ 4 ];
-			tagIndexFile.read( tag, 3 );
-			tag[3] = 0;
+            /* Binary-style index */
+            char* tag = new char[ 4 ];
+            tagIndexFile.read( tag, 3 );
+            tag[3] = 0;
 
-			tagIndexFile.read( (char*) &tagMetaIndex[tag].offset, sizeof( tagMetaIndex[tag].offset ) );
-			ios::pos_type cur = tagIndexFile.tellg();
-			tagIndexFile.seekg( (ios::off_type) tagMetaIndex[tag].offset );
-			tagIndexFile.read( (char*) &tagMetaIndex[tag].size, sizeof( tagMetaIndex[tag].size ) );
-			tagIndexFile.seekg( cur );
-			tagMetaIndex[tag].proportion = (float) tagMetaIndex[tag].size / (float) tagMetaIndex.totalTagInstances;
-			delete tag;
-		}
-		tagIndexFile.close();
-	}
+            tagIndexFile.read( (char*) &tagMetaIndex[tag].offset, sizeof( tagMetaIndex[tag].offset ) );
+            ios::pos_type cur = tagIndexFile.tellg();
+            tagIndexFile.seekg( (ios::off_type) tagMetaIndex[tag].offset );
+            tagIndexFile.read( (char*) &tagMetaIndex[tag].size, sizeof( tagMetaIndex[tag].size ) );
+            tagIndexFile.seekg( cur );
+            tagMetaIndex[tag].proportion = (float) tagMetaIndex[tag].size / (float) tagMetaIndex.totalTagInstances;
+            delete tag;
+        }
+        tagIndexFile.close();
+    }
 
-	void	CalculateSequenceIons(	const Peptide& peptide,
-									int maxIonCharge,
-									vector< double >* sequenceIonMasses,
-									const FragmentTypesBitset& fragmentTypes,
-									bool useSmartPlusThreeModel,
-									vector< string >* sequenceIonLabels,
-									float precursorMass )
-	{
-		if( !sequenceIonMasses )
-			return;
+    void    CalculateSequenceIons(    const Peptide& peptide,
+                                    int maxIonCharge,
+                                    vector< double >* sequenceIonMasses,
+                                    const FragmentTypesBitset& fragmentTypes,
+                                    bool useSmartPlusThreeModel,
+                                    vector< string >* sequenceIonLabels,
+                                    float precursorMass )
+    {
+        if( !sequenceIonMasses )
+            return;
 
         const string& seq = peptide.sequence();
         size_t seqLength = seq.length();
 
-		sequenceIonMasses->clear();
+        sequenceIonMasses->clear();
 
-		if( sequenceIonLabels )
-			sequenceIonLabels->clear();
+        if( sequenceIonLabels )
+            sequenceIonLabels->clear();
 
-		//bool nTerminusIsPartial = ( *seq.begin() == '-' );
-		//bool cTerminusIsPartial = ( *seq.rbegin() == '-' );
+        //bool nTerminusIsPartial = ( *seq.begin() == '-' );
+        //bool cTerminusIsPartial = ( *seq.rbegin() == '-' );
 
         Fragmentation fragmentation = peptide.fragmentation(true, true);
 
-		// calculate y ion MZs
-		if( maxIonCharge > 2 )
-		{
-			if( useSmartPlusThreeModel )
-			{
-				size_t totalStrongBasicCount = 0, totalWeakBasicCount = 0;
-				for( size_t i=0; i < seqLength; ++i )
-					if( seq[i] == 'R' || seq[i] == 'K' || seq[i] == 'H' )
-						++totalStrongBasicCount;
-					else if( seq[i] == 'Q' || seq[i] == 'N' )
-						++totalWeakBasicCount;
-				size_t totalBasicity = totalStrongBasicCount * 4 + totalWeakBasicCount * 2 + seq.length()-2;
+        // calculate y ion MZs
+        if( maxIonCharge > 2 )
+        {
+            if( useSmartPlusThreeModel )
+            {
+                size_t totalStrongBasicCount = 0, totalWeakBasicCount = 0;
+                for( size_t i=0; i < seqLength; ++i )
+                    if( seq[i] == 'R' || seq[i] == 'K' || seq[i] == 'H' )
+                        ++totalStrongBasicCount;
+                    else if( seq[i] == 'Q' || seq[i] == 'N' )
+                        ++totalWeakBasicCount;
+                size_t totalBasicity = totalStrongBasicCount * 4 + totalWeakBasicCount * 2 + seq.length()-2;
 
-				map< double, int > basicityThresholds;
-				basicityThresholds[ 0.0 ] = 1;
-				for( int z = 1; z < maxIonCharge-1; ++z )
-					basicityThresholds[ (double) z / (double) (maxIonCharge-1) ] = z+1;
+                map< double, int > basicityThresholds;
+                basicityThresholds[ 0.0 ] = 1;
+                for( int z = 1; z < maxIonCharge-1; ++z )
+                    basicityThresholds[ (double) z / (double) (maxIonCharge-1) ] = z+1;
 
-				for( size_t c = 0; c <= seqLength; ++c )
-				{
-					size_t bStrongBasicCount = 0, bWeakBasicCount = 0;
-					for( size_t i=0; i < c; ++i )
-						if( seq[i] == 'R' || seq[i] == 'K' || seq[i] == 'H' )
-							++bStrongBasicCount;
-						else if( seq[i] == 'Q' || seq[i] == 'N' )
-							++bWeakBasicCount;
+                for( size_t c = 0; c <= seqLength; ++c )
+                {
+                    size_t bStrongBasicCount = 0, bWeakBasicCount = 0;
+                    for( size_t i=0; i < c; ++i )
+                        if( seq[i] == 'R' || seq[i] == 'K' || seq[i] == 'H' )
+                            ++bStrongBasicCount;
+                        else if( seq[i] == 'Q' || seq[i] == 'N' )
+                            ++bWeakBasicCount;
 
-					size_t bScore = bStrongBasicCount * 4 + bWeakBasicCount * 2 + c;
+                    size_t bScore = bStrongBasicCount * 4 + bWeakBasicCount * 2 + c;
 
-					double basicityRatio = (double) bScore / (double) totalBasicity;
-					map< double, int >::iterator itr = basicityThresholds.upper_bound( basicityRatio );
-					--itr;
-					int bZ = itr->second;
-					int yZ = maxIonCharge - bZ;
+                    double basicityRatio = (double) bScore / (double) totalBasicity;
+                    map< double, int >::iterator itr = basicityThresholds.upper_bound( basicityRatio );
+                    --itr;
+                    int bZ = itr->second;
+                    int yZ = maxIonCharge - bZ;
 
-					//cout << "b" << c+1 << "(+" << bZ << ") <-> y" << seq.length()-(c+3) << "(+" << yZ << ")" << endl;
-					//cout << bSeq << " <-> " << ySeq << endl;
-					//cout << bMass << " <-> " << yMass << endl << endl;
+                    //cout << "b" << c+1 << "(+" << bZ << ") <-> y" << seq.length()-(c+3) << "(+" << yZ << ")" << endl;
+                    //cout << bSeq << " <-> " << ySeq << endl;
+                    //cout << bMass << " <-> " << yMass << endl << endl;
 
                     size_t nLength = c;
                     size_t cLength = seqLength - c;
@@ -1139,518 +1139,518 @@ namespace freicore
                     if( nLength > 0 )
                     {
                         if( fragmentTypes[FragmentType_A] )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("a") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(bZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.a(nLength, bZ) );
-					    }
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("a") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(bZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.a(nLength, bZ) );
+                        }
 
                         if( fragmentTypes[FragmentType_B] )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("b") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(bZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.b(nLength, bZ) );
-					    }
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("b") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(bZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.b(nLength, bZ) );
+                        }
 
-					    if( fragmentTypes[FragmentType_C] && nLength < seqLength )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("c") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(bZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.c(nLength, bZ) );
-					    }
+                        if( fragmentTypes[FragmentType_C] && nLength < seqLength )
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("c") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(bZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.c(nLength, bZ) );
+                        }
                     }
 
                     if( cLength > 0 )
                     {
-					    if( fragmentTypes[FragmentType_X] && cLength < seqLength )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("x") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(yZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.x(cLength, yZ) );
-					    }
+                        if( fragmentTypes[FragmentType_X] && cLength < seqLength )
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("x") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(yZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.x(cLength, yZ) );
+                        }
 
                         if( fragmentTypes[FragmentType_Y] )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("y") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(yZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.y(cLength, yZ) );
-					    }
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("y") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(yZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.y(cLength, yZ) );
+                        }
 
                         if( fragmentTypes[FragmentType_Z] )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(yZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.z(cLength, yZ) + 2*Proton/yZ  );
-					    }
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(yZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.z(cLength, yZ) + 2*Proton/yZ  );
+                        }
 
                         if( fragmentTypes[FragmentType_Z_Radical] )
-					    {
-						    if( sequenceIonLabels )
-							    sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "*(+" + lexical_cast<string>(yZ) + ")" );
-						    sequenceIonMasses->push_back( fragmentation.zRadical(cLength, yZ) );
-					    }
+                        {
+                            if( sequenceIonLabels )
+                                sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "*(+" + lexical_cast<string>(yZ) + ")" );
+                            sequenceIonMasses->push_back( fragmentation.zRadical(cLength, yZ) );
+                        }
                     }
-				}
-			} else
-			{
-				for( int z = 1; z < maxIonCharge; ++z )
-				{
-					for( size_t c = 0; c < seqLength; ++c )
-					{
-						size_t nLength = c;
+                }
+            } else
+            {
+                for( int z = 1; z < maxIonCharge; ++z )
+                {
+                    for( size_t c = 0; c < seqLength; ++c )
+                    {
+                        size_t nLength = c;
                         size_t cLength = seqLength - c;
 
                         if( nLength > 0 )
                         {
                             if( fragmentTypes[FragmentType_A] )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("a") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.a(nLength, z) );
-					        }
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("a") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.a(nLength, z) );
+                            }
 
                             if( fragmentTypes[FragmentType_B] )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("b") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.b(nLength, z) );
-					        }
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("b") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.b(nLength, z) );
+                            }
 
-					        if( fragmentTypes[FragmentType_C] && nLength < seqLength )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("c") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.c(nLength, z) );
+                            if( fragmentTypes[FragmentType_C] && nLength < seqLength )
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("c") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.c(nLength, z) );
 
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("c-1") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("c-1") + lexical_cast<string>(nLength) + "(+" + lexical_cast<string>(z) + ")" );
                                 sequenceIonMasses->push_back( fragmentation.c(nLength, z) - pwiz::chemistry::Proton / z );
-					        }
+                            }
                         }
 
                         if( cLength > 0 )
                         {
-					        if( fragmentTypes[FragmentType_X] && cLength < seqLength )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("x") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.x(cLength, z) );
-					        }
+                            if( fragmentTypes[FragmentType_X] && cLength < seqLength )
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("x") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.x(cLength, z) );
+                            }
 
                             if( fragmentTypes[FragmentType_Y] )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("y") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.y(cLength, z) );
-					        }
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("y") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.y(cLength, z) );
+                            }
 
                             if( fragmentTypes[FragmentType_Z] )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.z(cLength, z) );
-					        }
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.z(cLength, z) );
+                            }
 
                             if( fragmentTypes[FragmentType_Z_Radical] )
-					        {
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "*(+" + lexical_cast<string>(z) + ")" );
-						        sequenceIonMasses->push_back( fragmentation.zRadical(cLength, z) );
+                            {
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "*(+" + lexical_cast<string>(z) + ")" );
+                                sequenceIonMasses->push_back( fragmentation.zRadical(cLength, z) );
 
-						        if( sequenceIonLabels )
-							        sequenceIonLabels->push_back( string("z+1") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
+                                if( sequenceIonLabels )
+                                    sequenceIonLabels->push_back( string("z+1") + lexical_cast<string>(cLength) + "(+" + lexical_cast<string>(z) + ")" );
                                 sequenceIonMasses->push_back( fragmentation.zRadical(cLength, z) + pwiz::chemistry::Proton / z );
-					        }
+                            }
                         }
                     }
-				}
-			}
-		} else
-		{
-			for( size_t c = 0; c < seqLength; ++c )
-			{
+                }
+            }
+        } else
+        {
+            for( size_t c = 0; c < seqLength; ++c )
+            {
                 size_t nLength = c;
                 size_t cLength = seqLength - c;
 
                 if( nLength > 0 )
                 {
                     if( fragmentTypes[FragmentType_A] )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("a") + lexical_cast<string>(nLength) );
-					    sequenceIonMasses->push_back( fragmentation.a(nLength, 1) );
-				    }
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("a") + lexical_cast<string>(nLength) );
+                        sequenceIonMasses->push_back( fragmentation.a(nLength, 1) );
+                    }
 
                     if( fragmentTypes[FragmentType_B] )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("b") + lexical_cast<string>(nLength) );
-					    sequenceIonMasses->push_back( fragmentation.b(nLength, 1) );
-				    }
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("b") + lexical_cast<string>(nLength) );
+                        sequenceIonMasses->push_back( fragmentation.b(nLength, 1) );
+                    }
 
-				    if( fragmentTypes[FragmentType_C] && nLength < seqLength )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("c") + lexical_cast<string>(nLength) );
-					    sequenceIonMasses->push_back( fragmentation.c(nLength, 1) );
-				    }
+                    if( fragmentTypes[FragmentType_C] && nLength < seqLength )
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("c") + lexical_cast<string>(nLength) );
+                        sequenceIonMasses->push_back( fragmentation.c(nLength, 1) );
+                    }
                 }
 
                 if( cLength > 0 )
                 {
-				    if( fragmentTypes[FragmentType_X] && cLength < seqLength )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("x") + lexical_cast<string>(cLength) );
-					    sequenceIonMasses->push_back( fragmentation.x(cLength, 1) );
-				    }
+                    if( fragmentTypes[FragmentType_X] && cLength < seqLength )
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("x") + lexical_cast<string>(cLength) );
+                        sequenceIonMasses->push_back( fragmentation.x(cLength, 1) );
+                    }
 
                     if( fragmentTypes[FragmentType_Y] )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("y") + lexical_cast<string>(cLength) );
-					    sequenceIonMasses->push_back( fragmentation.y(cLength, 1) );
-				    }
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("y") + lexical_cast<string>(cLength) );
+                        sequenceIonMasses->push_back( fragmentation.y(cLength, 1) );
+                    }
 
                     if( fragmentTypes[FragmentType_Z] )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) );
-					    sequenceIonMasses->push_back( fragmentation.z(cLength, 1) );
-				    }
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) );
+                        sequenceIonMasses->push_back( fragmentation.z(cLength, 1) );
+                    }
 
                     if( fragmentTypes[FragmentType_Z_Radical] )
-				    {
-					    if( sequenceIonLabels )
-						    sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "*(+" + lexical_cast<string>(1) + ")" );
-					    sequenceIonMasses->push_back( fragmentation.zRadical(cLength, 1) );
-				    }
+                    {
+                        if( sequenceIonLabels )
+                            sequenceIonLabels->push_back( string("z") + lexical_cast<string>(cLength) + "*(+" + lexical_cast<string>(1) + ")" );
+                        sequenceIonMasses->push_back( fragmentation.zRadical(cLength, 1) );
+                    }
                 }
-			}
-		}
-	}
+            }
+        }
+    }
 
-	void	CreateScoringTableMVH_R(	const int minValue,
-		const int totalValue,
-		const int numClasses,
-		const vector< int >& classCounts,
-		MvhTable& mvTable,
-		MvIntKey& key,
-		lnFactorialTable& lnFT,
-		const MvIntKey* minKey = NULL )
-	{
-		// At the highest degree of variability the key is fully set
-		// Calculate the MVH score and add it to the mvTable
-		if( numClasses == 1 )
-		{
-			key.front() = totalValue;
-			//if( minKey == NULL || !( mvTable.comp( *minKey, key ) ) )
-			//	return;
+    void    CreateScoringTableMVH_R(    const int minValue,
+        const int totalValue,
+        const int numClasses,
+        const vector< int >& classCounts,
+        MvhTable& mvTable,
+        MvIntKey& key,
+        lnFactorialTable& lnFT,
+        const MvIntKey* minKey = NULL )
+    {
+        // At the highest degree of variability the key is fully set
+        // Calculate the MVH score and add it to the mvTable
+        if( numClasses == 1 )
+        {
+            key.front() = totalValue;
+            //if( minKey == NULL || !( mvTable.comp( *minKey, key ) ) )
+            //    return;
 
-			int totalClasses = (int) key.size();
-			double lnP = 0.0f;
-			for( int i=0; i < totalClasses; ++i )
-				lnP += lnCombin( classCounts[i], key[i], lnFT );
-			//float p = 0.0f;
-			//for( int i=0; i < totalClasses; ++i )
-			//	p += lnCombin( classCounts[i], key[i], lnFT );
-			int totalClassCount = accumulate( classCounts.begin(), classCounts.end(), 0 );
-			int totalValueCount = accumulate( key.begin(), key.end(), 0 );
-			lnP -= lnCombin( totalClassCount, totalValueCount, lnFT );
-			//START_PROFILER(9);
-			mvTable[ key ] = lnP;
-			//STOP_PROFILER(9);
+            int totalClasses = (int) key.size();
+            double lnP = 0.0f;
+            for( int i=0; i < totalClasses; ++i )
+                lnP += lnCombin( classCounts[i], key[i], lnFT );
+            //float p = 0.0f;
+            //for( int i=0; i < totalClasses; ++i )
+            //    p += lnCombin( classCounts[i], key[i], lnFT );
+            int totalClassCount = accumulate( classCounts.begin(), classCounts.end(), 0 );
+            int totalValueCount = accumulate( key.begin(), key.end(), 0 );
+            lnP -= lnCombin( totalClassCount, totalValueCount, lnFT );
+            //START_PROFILER(9);
+            mvTable[ key ] = lnP;
+            //STOP_PROFILER(9);
 
-			// Create another level of variability
-		} else
-		{
-			for( int curValue = minValue; (totalValue - curValue) >= minValue ; ++curValue )
-			{
-				key[numClasses-1] = curValue;
-				CreateScoringTableMVH_R( minValue, totalValue - curValue, numClasses-1, classCounts, mvTable, key, lnFT, minKey );
-			}
-		}
-	}
+            // Create another level of variability
+        } else
+        {
+            for( int curValue = minValue; (totalValue - curValue) >= minValue ; ++curValue )
+            {
+                key[numClasses-1] = curValue;
+                CreateScoringTableMVH_R( minValue, totalValue - curValue, numClasses-1, classCounts, mvTable, key, lnFT, minKey );
+            }
+        }
+    }
 
-	void	CreateScoringTableMVH(	const int minValue,
-		const int totalValue,
-		const int numClasses,
-		vector< int > classCounts,
-		MvhTable& mvTable,
-		lnFactorialTable& lnFT,
-		bool normalizeOnMode,
-		bool adjustRareOutcomes,
-		bool convertToPValues,
-		const MvIntKey* minKey )
-	{
-		// Check to see if all classes have a count of at least 1
-		bool allClassesUsed = true;
-		for( int i=0; i < numClasses; ++i )
-		{
-			if( classCounts[i] == 0 )
-			{
-				allClassesUsed = false;
-				break;
-			}
-		}
+    void    CreateScoringTableMVH(    const int minValue,
+        const int totalValue,
+        const int numClasses,
+        vector< int > classCounts,
+        MvhTable& mvTable,
+        lnFactorialTable& lnFT,
+        bool normalizeOnMode,
+        bool adjustRareOutcomes,
+        bool convertToPValues,
+        const MvIntKey* minKey )
+    {
+        // Check to see if all classes have a count of at least 1
+        bool allClassesUsed = true;
+        for( int i=0; i < numClasses; ++i )
+        {
+            if( classCounts[i] == 0 )
+            {
+                allClassesUsed = false;
+                break;
+            }
+        }
 
-		// If any class is not populated, increment each class by one
-		if( !allClassesUsed )
-			for( int i=0; i < numClasses; ++i )
-				++ classCounts[i];
+        // If any class is not populated, increment each class by one
+        if( !allClassesUsed )
+            for( int i=0; i < numClasses; ++i )
+                ++ classCounts[i];
 
-		MvIntKey key;
-		key.resize( numClasses, 0 );
-		//START_PROFILER(10);
-		CreateScoringTableMVH_R( minValue, totalValue, numClasses, classCounts, mvTable, key, lnFT, minKey );
-		//STOP_PROFILER(10);
+        MvIntKey key;
+        key.resize( numClasses, 0 );
+        //START_PROFILER(10);
+        CreateScoringTableMVH_R( minValue, totalValue, numClasses, classCounts, mvTable, key, lnFT, minKey );
+        //STOP_PROFILER(10);
 
-		if( convertToPValues )
-		{
-			mvTable.ConvertToPValues();
-		} else
-			if( normalizeOnMode )
-			{
-				// Normalize on the mode value if desired
-				MvhTable::iterator itr;
-				MvIntKey modeKey = mvTable.begin()->first;
-				double modeValue = mvTable.begin()->second;
+        if( convertToPValues )
+        {
+            mvTable.ConvertToPValues();
+        } else
+            if( normalizeOnMode )
+            {
+                // Normalize on the mode value if desired
+                MvhTable::iterator itr;
+                MvIntKey modeKey = mvTable.begin()->first;
+                double modeValue = mvTable.begin()->second;
 
-				for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
-				{
-					if( modeValue < itr->second )
-					{
-						modeKey = itr->first;
-						modeValue = itr->second;
-					}
-				}
+                for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
+                {
+                    if( modeValue < itr->second )
+                    {
+                        modeKey = itr->first;
+                        modeValue = itr->second;
+                    }
+                }
 
-				for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
-					itr->second -= modeValue;
+                for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
+                    itr->second -= modeValue;
 
-				if( adjustRareOutcomes )
-				{
-					// Prevent rare and undesirable outcomes from having good scores
-					for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
-					{
-						key = itr->first;
-						bool IsRareAndUndesirable = true;
-						int numVarsToAdjust = (int) key.size() - 1;
-						for( int i=0; i < numVarsToAdjust ; ++i )
-						{
-							if( key[i] > modeKey[i] )
-							{
-								IsRareAndUndesirable = false;
-								break;
-							}
-						}
+                if( adjustRareOutcomes )
+                {
+                    // Prevent rare and undesirable outcomes from having good scores
+                    for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
+                    {
+                        key = itr->first;
+                        bool IsRareAndUndesirable = true;
+                        int numVarsToAdjust = (int) key.size() - 1;
+                        for( int i=0; i < numVarsToAdjust ; ++i )
+                        {
+                            if( key[i] > modeKey[i] )
+                            {
+                                IsRareAndUndesirable = false;
+                                break;
+                            }
+                        }
 
-						if( IsRareAndUndesirable )
-							itr->second = - itr->second;
-					}
-				}
-			}
-	}
+                        if( IsRareAndUndesirable )
+                            itr->second = - itr->second;
+                    }
+                }
+            }
+    }
 
-	void	CreateScoringTableMVB_R(	const int minValue,
-		const int totalValue,
-		const int numClasses,
-		const vector< double >& classProbabilities,
-		MvhTable& mvTable,
-		MvIntKey& key,
-		lnFactorialTable& lnFT )
-	{
-		// At the highest degree of variability the key is fully set
-		// Calculate the MVH score and add it to the mvTable
-		if( numClasses == 1 )
-		{
-			key.front() = totalValue;
-			int totalClasses = (int) key.size();
-			int N = accumulate( key.begin(), key.end(), 0 );
-			double sum1 = 0, sum2 = 0;
-			for( int i=0; i < totalClasses; ++i )
-			{
-				sum1 += log( pow( classProbabilities[i], key[i] ) );
-				sum2 += lnFT[ key[i] ];
-			}
-			mvTable[ key ] = ( lnFT[N] - sum2 ) + sum1;
+    void    CreateScoringTableMVB_R(    const int minValue,
+        const int totalValue,
+        const int numClasses,
+        const vector< double >& classProbabilities,
+        MvhTable& mvTable,
+        MvIntKey& key,
+        lnFactorialTable& lnFT )
+    {
+        // At the highest degree of variability the key is fully set
+        // Calculate the MVH score and add it to the mvTable
+        if( numClasses == 1 )
+        {
+            key.front() = totalValue;
+            int totalClasses = (int) key.size();
+            int N = accumulate( key.begin(), key.end(), 0 );
+            double sum1 = 0, sum2 = 0;
+            for( int i=0; i < totalClasses; ++i )
+            {
+                sum1 += log( pow( classProbabilities[i], key[i] ) );
+                sum2 += lnFT[ key[i] ];
+            }
+            mvTable[ key ] = ( lnFT[N] - sum2 ) + sum1;
 
-			// Create another level of variability
-		} else
-		{
-			for( int curValue = minValue; (totalValue - curValue) >= minValue ; ++curValue )
-			{
-				key[numClasses-1] = curValue;
-				CreateScoringTableMVB_R( minValue, totalValue - curValue, numClasses-1, classProbabilities, mvTable, key, lnFT );
-			}
-		}
-	}
+            // Create another level of variability
+        } else
+        {
+            for( int curValue = minValue; (totalValue - curValue) >= minValue ; ++curValue )
+            {
+                key[numClasses-1] = curValue;
+                CreateScoringTableMVB_R( minValue, totalValue - curValue, numClasses-1, classProbabilities, mvTable, key, lnFT );
+            }
+        }
+    }
 
-	void	CreateScoringTableMVB(	const int minValue,
-		const int totalValue,
-		const int numClasses,
-		const vector< double >& classProbabilities,
-		MvhTable& mvTable,
-		lnFactorialTable& lnFT,
-		bool normalizeOnMode,
-		bool adjustRareOutcomes )
-	{
-		MvIntKey key;
-		key.resize( numClasses, 0 );
-		CreateScoringTableMVB_R( minValue, totalValue, numClasses, classProbabilities, mvTable, key, lnFT );
+    void    CreateScoringTableMVB(    const int minValue,
+        const int totalValue,
+        const int numClasses,
+        const vector< double >& classProbabilities,
+        MvhTable& mvTable,
+        lnFactorialTable& lnFT,
+        bool normalizeOnMode,
+        bool adjustRareOutcomes )
+    {
+        MvIntKey key;
+        key.resize( numClasses, 0 );
+        CreateScoringTableMVB_R( minValue, totalValue, numClasses, classProbabilities, mvTable, key, lnFT );
 
-		if( normalizeOnMode )
-		{
-			// Normalize on the mode value if desired
-			MvhTable::iterator itr;
-			MvIntKey modeKey = mvTable.begin()->first;
-			double modeValue = mvTable.begin()->second;
+        if( normalizeOnMode )
+        {
+            // Normalize on the mode value if desired
+            MvhTable::iterator itr;
+            MvIntKey modeKey = mvTable.begin()->first;
+            double modeValue = mvTable.begin()->second;
 
-			for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
-			{
-				if( modeValue < itr->second )
-				{
-					modeKey = itr->first;
-					modeValue = itr->second;
-				}
-			}
+            for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
+            {
+                if( modeValue < itr->second )
+                {
+                    modeKey = itr->first;
+                    modeValue = itr->second;
+                }
+            }
 
-			for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
-				itr->second -= modeValue;
+            for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
+                itr->second -= modeValue;
 
-			if( adjustRareOutcomes )
-			{
-				// Prevent rare and undesirable outcomes from having good scores
-				for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
-				{
-					key = itr->first;
-					bool IsRareAndUndesirable = true;
-					int numVarsToAdjust = (int) key.size() - 1;
-					for( int i=0; i < numVarsToAdjust ; ++i )
-					{
-						if( key[i] > modeKey[i] )
-						{
-							IsRareAndUndesirable = false;
-							break;
-						}
-					}
+            if( adjustRareOutcomes )
+            {
+                // Prevent rare and undesirable outcomes from having good scores
+                for( itr = mvTable.begin(); itr != mvTable.end(); ++itr )
+                {
+                    key = itr->first;
+                    bool IsRareAndUndesirable = true;
+                    int numVarsToAdjust = (int) key.size() - 1;
+                    for( int i=0; i < numVarsToAdjust ; ++i )
+                    {
+                        if( key[i] > modeKey[i] )
+                        {
+                            IsRareAndUndesirable = false;
+                            break;
+                        }
+                    }
 
-					if( IsRareAndUndesirable )
-						itr->second = 0;
-				}
-			}
-		}
-	}
+                    if( IsRareAndUndesirable )
+                        itr->second = 0;
+                }
+            }
+        }
+    }
 
 
-	int	ClassifyError( double error, const vector< double >& mzFidelityThresholds )
-	{
-		for( int i=0; i < (int) mzFidelityThresholds.size(); ++i )
-		{
-			if( error <= mzFidelityThresholds[i] )
-				return i;
-		}
-		return (int) mzFidelityThresholds.size()-1;
+    int    ClassifyError( double error, const vector< double >& mzFidelityThresholds )
+    {
+        for( int i=0; i < (int) mzFidelityThresholds.size(); ++i )
+        {
+            if( error <= mzFidelityThresholds[i] )
+                return i;
+        }
+        return (int) mzFidelityThresholds.size()-1;
 
-		cout.precision(8);
-		cout << "ClassifyError: could not classify error " << error << " in thresholds:\n";
-		for( int i=0; i < (int) mzFidelityThresholds.size(); ++i )
-			cout << mzFidelityThresholds[i] << " ";
-		cout << endl;
-		return 0;
-	}
+        cout.precision(8);
+        cout << "ClassifyError: could not classify error " << error << " in thresholds:\n";
+        for( int i=0; i < (int) mzFidelityThresholds.size(); ++i )
+            cout << mzFidelityThresholds[i] << " ";
+        cout << endl;
+        return 0;
+    }
 
-	double lnCombin( int n, int k, lnFactorialTable& lnTable )
-	{
-		if( n < 0 || k < 0 || n < k )
-			return -1;
+    double lnCombin( int n, int k, lnFactorialTable& lnTable )
+    {
+        if( n < 0 || k < 0 || n < k )
+            return -1;
 
-		try
-		{
-			return lnTable[n] - lnTable[n-k] - lnTable[k];
-		} catch( std::exception& e )
-		{
-			cerr << "lnCombin(): caught exception with n=" << n << " and k=" << k << endl;
-			throw e;
-		}
-	}
+        try
+        {
+            return lnTable[n] - lnTable[n-k] - lnTable[k];
+        } catch( std::exception& e )
+        {
+            cerr << "lnCombin(): caught exception with n=" << n << " and k=" << k << endl;
+            throw e;
+        }
+    }
 
-	float lnOdds( float p )
-	{
-		return log( p / (1 - p) );
-	}
+    float lnOdds( float p )
+    {
+        return log( p / (1 - p) );
+    }
 
-	int paramIndex( const string& param, const char** atts, int attsCount )
-	{
-		for( int i=0; i < attsCount; ++ i )
-		{
-			if( !strcmp( atts[i], param.c_str() ) )
-				return i;
-		}
-		//cerr << "Attribute \"" << param << "\" required but not specified." << endl;
-		return -1;
-	}
+    int paramIndex( const string& param, const char** atts, int attsCount )
+    {
+        for( int i=0; i < attsCount; ++ i )
+        {
+            if( !strcmp( atts[i], param.c_str() ) )
+                return i;
+        }
+        //cerr << "Attribute \"" << param << "\" required but not specified." << endl;
+        return -1;
+    }
 
-	void FindFilesByMask( const string& mask, fileList_t& filenames )
-	{
+    void FindFilesByMask( const string& mask, fileList_t& filenames )
+    {
 #ifdef WIN32
-		string maskPathname = GetPathnameFromFilepath( mask );
-		WIN32_FIND_DATA fdata;
-		HANDLE srcFile = FindFirstFileEx( mask.c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0 );
-		if( srcFile == INVALID_HANDLE_VALUE )
-			return;
+        string maskPathname = GetPathnameFromFilepath( mask );
+        WIN32_FIND_DATA fdata;
+        HANDLE srcFile = FindFirstFileEx( mask.c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0 );
+        if( srcFile == INVALID_HANDLE_VALUE )
+            return;
 
-		do
-		{
-			filenames.insert( maskPathname + fdata.cFileName );
-		} while( FindNextFile( srcFile, &fdata ) );
+        do
+        {
+            filenames.insert( maskPathname + fdata.cFileName );
+        } while( FindNextFile( srcFile, &fdata ) );
 
-		FindClose( srcFile );
+        FindClose( srcFile );
 
 #else
 
-		glob_t globbuf;
-		int rv = glob( mask.c_str(), 0, NULL, &globbuf );
-		if( rv > 0 && rv != GLOB_NOMATCH )
-			throw runtime_error( "FindFilesByMask(): glob() error" );
+        glob_t globbuf;
+        int rv = glob( mask.c_str(), 0, NULL, &globbuf );
+        if( rv > 0 && rv != GLOB_NOMATCH )
+            throw runtime_error( "FindFilesByMask(): glob() error" );
 
-		DIR* curDir = opendir( "." );
-		struct stat curEntryData;
+        DIR* curDir = opendir( "." );
+        struct stat curEntryData;
 
-		for( size_t i=0; i < globbuf.gl_pathc; ++i )
-		{
-			stat( globbuf.gl_pathv[i], &curEntryData );
-			if( S_ISREG( curEntryData.st_mode ) )
-				filenames.insert( globbuf.gl_pathv[i] );
-		}
-		closedir( curDir );
+        for( size_t i=0; i < globbuf.gl_pathc; ++i )
+        {
+            stat( globbuf.gl_pathv[i], &curEntryData );
+            if( S_ISREG( curEntryData.st_mode ) )
+                filenames.insert( globbuf.gl_pathv[i] );
+        }
+        closedir( curDir );
 
-		globfree( &globbuf );
+        globfree( &globbuf );
 
 #endif
-	}
+    }
 
-	string FindFileInSearchPath( const string& filename, vector<string> searchPathList )
-	{
-		BOOST_FOREACH( string searchPath, searchPathList )
-		{
-			path filepath = path(searchPath) / path(filename).leaf();
-			if( exists(filepath) )
-				return filepath.string();
-		}
-		return "";
-	}
+    string FindFileInSearchPath( const string& filename, vector<string> searchPathList )
+    {
+        BOOST_FOREACH( string searchPath, searchPathList )
+        {
+            path filepath = path(searchPath) / path(filename).leaf();
+            if( exists(filepath) )
+                return filepath.string();
+        }
+        return "";
+    }
 
-	endianType_t GetMachineEndianType()
-	{
-		int testInt = 127;
-		char* testIntP = (char*) &testInt;
+    endianType_t GetMachineEndianType()
+    {
+        int testInt = 127;
+        char* testIntP = (char*) &testInt;
 
-		if( testIntP[0] == 127 )
-			return SYS_LITTLE_ENDIAN;
-		else if( testIntP[ sizeof(int)-1 ] == 127 )
-			return SYS_BIG_ENDIAN;
-		else
-			return SYS_UNKNOWN_ENDIAN;
-	}
+        if( testIntP[0] == 127 )
+            return SYS_LITTLE_ENDIAN;
+        else if( testIntP[ sizeof(int)-1 ] == 127 )
+            return SYS_BIG_ENDIAN;
+        else
+            return SYS_UNKNOWN_ENDIAN;
+    }
 }

@@ -38,164 +38,164 @@ namespace freicore
 namespace directag
 {
 
-	typedef set< double >						nodeSet_t;
-	typedef MvhTable				            bgProbabilities_t, bgComplements_t, bgFidelities_t;
-	struct GapInfo;
-	typedef vector< GapInfo >					gapVector_t;
-	typedef map< double, gapVector_t >			gapMap_t;		// peakMz -> vector of TagInfos for individual peaks
+    typedef set< double >                        nodeSet_t;
+    typedef MvhTable                            bgProbabilities_t, bgComplements_t, bgFidelities_t;
+    struct GapInfo;
+    typedef vector< GapInfo >                    gapVector_t;
+    typedef map< double, gapVector_t >            gapMap_t;        // peakMz -> vector of TagInfos for individual peaks
 
-	typedef float								sgNode;
-	struct sgNodeInfo
-	{
-		sgNodeInfo() : nPathSize(0), cPathSize(0) {}
-		vector< GapInfo >	nEdges;			// edges in the N terminus direction
-		vector< GapInfo >	cEdges;			// edges in the C terminus direction
-		set< string >		nPathSequences;
-		set< string >		cPathSequences;
-		set< string >		fullPathSequences;
-		int					nPathSize;
-		int					cPathSize;
-		int					longestPath;
-	};
+    typedef float                                sgNode;
+    struct sgNodeInfo
+    {
+        sgNodeInfo() : nPathSize(0), cPathSize(0) {}
+        vector< GapInfo >    nEdges;            // edges in the N terminus direction
+        vector< GapInfo >    cEdges;            // edges in the C terminus direction
+        set< string >        nPathSequences;
+        set< string >        cPathSequences;
+        set< string >        fullPathSequences;
+        int                    nPathSize;
+        int                    cPathSize;
+        int                    longestPath;
+    };
 
-	typedef map< sgNode, sgNodeInfo >			spectrumGraph;
+    typedef map< sgNode, sgNodeInfo >            spectrumGraph;
 
-	struct PeakInfo
-	{
-		PeakInfo()
-			:	hasComplementAsCharge( 1, false )
-		{}
+    struct PeakInfo
+    {
+        PeakInfo()
+            :    hasComplementAsCharge( 1, false )
+        {}
 
-		template< class Archive >
-		void serialize( Archive& ar, const int unsigned version )
-		{
-			ar & intensityRank;
-			//ar & longestPathRank;
-			ar & hasSomeComplement;
-			ar & hasComplementAsCharge;
-		}
+        template< class Archive >
+        void serialize( Archive& ar, const int unsigned version )
+        {
+            ar & intensityRank;
+            //ar & longestPathRank;
+            ar & hasSomeComplement;
+            ar & hasComplementAsCharge;
+        }
 
-		int		intensityRank;
-		//int		longestPathRank;
-		char	hasSomeComplement;
-		double	intensity;
+        int        intensityRank;
+        //int        longestPathRank;
+        char    hasSomeComplement;
+        double    intensity;
 
-		vector< bool > hasComplementAsCharge;
-	};
+        vector< bool > hasComplementAsCharge;
+    };
 
-	typedef BasePeakData< PeakInfo > PeakData;
+    typedef BasePeakData< PeakInfo > PeakData;
 
-	struct Spectrum : public PeakSpectrum< PeakInfo >, TaggingSpectrum
-	{
-		Spectrum();
-		Spectrum( const Spectrum& old );
+    struct Spectrum : public PeakSpectrum< PeakInfo >, TaggingSpectrum
+    {
+        Spectrum();
+        Spectrum( const Spectrum& old );
         Spectrum( const string& nativeID, size_t charge, double precursorMZ, const flat_map<double, float>& peaks);
 
-		void initialize( int numIntenClasses, int NumMzFidelityClasses )
-		{
-			complementClassCounts.resize( 2 /* binary */, 0 );
-		}
+        void initialize( int numIntenClasses, int NumMzFidelityClasses )
+        {
+            complementClassCounts.resize( 2 /* binary */, 0 );
+        }
 
-		void ClassifyPeakIntensities();
-		double FindComplements( double complementMzTolerance );
-		size_t MakeTagGraph();
-		void MakeProbabilityTables();
-		void FilterPeaks();
-		void Preprocess();
-		size_t Score();
+        void ClassifyPeakIntensities();
+        double FindComplements( double complementMzTolerance );
+        size_t MakeTagGraph();
+        void MakeProbabilityTables();
+        void FilterPeaks();
+        void Preprocess();
+        size_t Score();
         void setTagConfig(shared_ptr<DirecTagAPIConfig> config);
 
-		void findTags_R(	gapMap_t::iterator gapInfoItr,
-							int tagIndex,
-							string& tag,
-							vector< double >& peakErrors,
-							vector< PeakData::iterator >& peakList,
-							int peakChargeState,
-							size_t& numTagsGenerated,
-							IRBins& irBins );
-		size_t findTags();
+        void findTags_R(    gapMap_t::iterator gapInfoItr,
+                            int tagIndex,
+                            string& tag,
+                            vector< double >& peakErrors,
+                            vector< PeakData::iterator >& peakList,
+                            int peakChargeState,
+                            size_t& numTagsGenerated,
+                            IRBins& irBins );
+        size_t findTags();
 
         void processAndTagSpectrum(bool clearPeakData);
         void processAndTagSpectrum(PeakFilteringStatistics& peakStats, TaggingStatistics& stats, bool clearPeakData);
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & boost::serialization::base_object< BaseSpectrum >( *this );
-			ar & boost::serialization::base_object< PeakSpectrum< PeakInfo > >( *this );
-			ar & boost::serialization::base_object< TaggingSpectrum >( *this );
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & boost::serialization::base_object< BaseSpectrum >( *this );
+            ar & boost::serialization::base_object< PeakSpectrum< PeakInfo > >( *this );
+            ar & boost::serialization::base_object< TaggingSpectrum >( *this );
 
-			ar & complementClassCounts & scoreWeights & complementaryTIC;
-			ar & tagGraphPeakCount & tagGraphTIC;
-			ar & complementScoreWeight & intensityScoreWeight & mzFidelityScoreWeight;
-		}
+            ar & complementClassCounts & scoreWeights & complementaryTIC;
+            ar & tagGraphPeakCount & tagGraphTIC;
+            ar & complementScoreWeight & intensityScoreWeight & mzFidelityScoreWeight;
+        }
 
-		map< string, double >	scoreWeights;
-		float					complementScoreWeight;
-		float					intensityScoreWeight;
-		float					mzFidelityScoreWeight;
+        map< string, double >    scoreWeights;
+        float                    complementScoreWeight;
+        float                    intensityScoreWeight;
+        float                    mzFidelityScoreWeight;
         
         shared_ptr<DirecTagAPIConfig>   tagConfig;
 
-		vector< int >			complementClassCounts;
-	
-		//Histogram< int >		intensityScoreHistogram;
+        vector< int >            complementClassCounts;
+    
+        //Histogram< int >        intensityScoreHistogram;
 
         double                   complementaryTIC;
         int                      tagGraphPeakCount;
         double                   tagGraphTIC;
 
-		vector< gapMap_t >		gapMaps;			// a graph of peaks to peaks that are a residue's width away
-		nodeSet_t				nodeSet;			// the set of peaks used to build the residue-width graph
-		TagList					interimTagList;
-		vector< spectrumGraph >	tagGraphs;
-		map< int, double >		complementPDF;
+        vector< gapMap_t >        gapMaps;            // a graph of peaks to peaks that are a residue's width away
+        nodeSet_t                nodeSet;            // the set of peaks used to build the residue-width graph
+        TagList                    interimTagList;
+        vector< spectrumGraph >    tagGraphs;
+        map< int, double >        complementPDF;
 
-		bgComplements_t			bgComplements;
+        bgComplements_t            bgComplements;
 
-		// code for ScanRanker
-		float					bestTagScore;
-		float					bestTagTIC;
-		float					tagMzRange;
-		float					bestTagScoreNorm;
-		float					bestTagTICNorm;
-		float					tagMzRangeNorm;
-		float					qualScore;
-	};
+        // code for ScanRanker
+        float                    bestTagScore;
+        float                    bestTagTIC;
+        float                    tagMzRange;
+        float                    bestTagScoreNorm;
+        float                    bestTagTICNorm;
+        float                    tagMzRangeNorm;
+        float                    qualScore;
+    };
 
-	struct SpectraList : public	PeakSpectraList< Spectrum, SpectraList >,
-								TaggingSpectraList< Spectrum, SpectraList >
-	{
-		typedef BaseSpectraList<Spectrum, SpectraList>::ListConstIterator	ListConstIterator;
-		typedef BaseSpectraList<Spectrum, SpectraList>::ListIterator		ListIterator;
+    struct SpectraList : public    PeakSpectraList< Spectrum, SpectraList >,
+                                TaggingSpectraList< Spectrum, SpectraList >
+    {
+        typedef BaseSpectraList<Spectrum, SpectraList>::ListConstIterator    ListConstIterator;
+        typedef BaseSpectraList<Spectrum, SpectraList>::ListIterator        ListIterator;
 
-		using BaseSpectraList< Spectrum, SpectraList >::ListIndex;
-		using BaseSpectraList< Spectrum, SpectraList >::ListIndexIterator;
-	};
+        using BaseSpectraList< Spectrum, SpectraList >::ListIndex;
+        using BaseSpectraList< Spectrum, SpectraList >::ListIndexIterator;
+    };
 
-	typedef vector< TagInfo >					tagNode_t;
+    typedef vector< TagInfo >                    tagNode_t;
 
-	struct GapInfo
-	{
-		GapInfo( PeakData::iterator itr1, PeakData::iterator itr2, gapMap_t::iterator itr3, double a=0, char r='Z', double b=0, double c=0, double d=0 )
-			: fromPeakItr(itr1), peakItr(itr2), nextGapInfo(itr3), gapMass(a), gapRes(r), error(b), nTermMz(c), cTermMz(d) {}
-		PeakData::iterator fromPeakItr;
-		PeakData::iterator peakItr;
-		gapMap_t::iterator nextGapInfo;
-		double	gapMass;		// Set while processing (for findTags)
-		char	gapRes;
-		double	error;				// Set while processing (for findTags)
-		double	nTermMz, cTermMz;
-	};
+    struct GapInfo
+    {
+        GapInfo( PeakData::iterator itr1, PeakData::iterator itr2, gapMap_t::iterator itr3, double a=0, char r='Z', double b=0, double c=0, double d=0 )
+            : fromPeakItr(itr1), peakItr(itr2), nextGapInfo(itr3), gapMass(a), gapRes(r), error(b), nTermMz(c), cTermMz(d) {}
+        PeakData::iterator fromPeakItr;
+        PeakData::iterator peakItr;
+        gapMap_t::iterator nextGapInfo;
+        double    gapMass;        // Set while processing (for findTags)
+        char    gapRes;
+        double    error;                // Set while processing (for findTags)
+        double    nTermMz, cTermMz;
+    };
 }
 }
 
 namespace std
 {
-	ostream& operator<< ( ostream& o, const freicore::directag::PeakInfo& rhs );
-	ostream& operator<< ( ostream& o, const freicore::directag::GapInfo& rhs );
-	ostream& operator<< ( ostream& o, const freicore::directag::gapVector_t& rhs );
-	ostream& operator<< ( ostream& o, const freicore::directag::gapMap_t& rhs );
+    ostream& operator<< ( ostream& o, const freicore::directag::PeakInfo& rhs );
+    ostream& operator<< ( ostream& o, const freicore::directag::GapInfo& rhs );
+    ostream& operator<< ( ostream& o, const freicore::directag::gapVector_t& rhs );
+    ostream& operator<< ( ostream& o, const freicore::directag::gapMap_t& rhs );
 }
 
 // eliminate serialization overhead at the cost of never being able to increase the version.

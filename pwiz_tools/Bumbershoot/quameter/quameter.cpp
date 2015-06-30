@@ -38,7 +38,7 @@ namespace quameter
 {
     typedef boost::lockfree::queue<size_t, boost::lockfree::capacity<1> > BoostLockFreeQueue;
     RunTimeConfig*                  g_rtConfig;
-	boost::mutex                    msdMutex;
+    boost::mutex                    msdMutex;
     BoostLockFreeQueue              metricsTasks;
     vector<QuameterInput>           allSources;
 
@@ -67,9 +67,9 @@ namespace quameter
                             const XICWindowList& pepWindow,
                             const vector<UnidentifiedPrecursorInfo>& unidentifiedPrecursors)
     {
-	    MSData chromData;
-	    shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
-	    chromData.run.chromatogramListPtr = chromatogramListSimple;
+        MSData chromData;
+        shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
+        chromData.run.chromatogramListPtr = chromatogramListSimple;
         chromData.run.id = bfs::basename(sourceFilename);
 
         // if available, read NIST peaks;
@@ -88,44 +88,44 @@ namespace quameter
             }
         }
 
-	    // Put unique identified peptide chromatograms first in the file
-	    BOOST_FOREACH(const XICWindow& window, pepWindow)
+        // Put unique identified peptide chromatograms first in the file
+        BOOST_FOREACH(const XICWindow& window, pepWindow)
         {
-		    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		    Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		    c.index = chromatogramListSimple->size()-1;
+            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+            Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+            c.index = chromatogramListSimple->size()-1;
             ostringstream oss;
             oss << "distinct match " << window.peptide
                 << " (id: " << window.PSMs[0].peptide
                 << "; m/z: " << window.preMZ
                 << "; time: " << window.preRT << ")";
-		    c.id = "Raw SIC for " + oss.str();
+            c.id = "Raw SIC for " + oss.str();
             c.set(MS_SIC_chromatogram);
-		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
+            c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
 
             // interpolated raw
             /*{
                 interpolate(window.MS1RT, window.MS1Intensity);
                 chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		        Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		        c.index = chromatogramListSimple->size()-1;
+                Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+                c.index = chromatogramListSimple->size()-1;
                 ostringstream oss;
                 oss << "distinct match " << window.peptide
                     << " (id: " << window.PSMs[0].peptide
                     << "; m/z: " << window.preMZ
                     << "; time: " << window.preRT << ")";
-		        c.id = "Raw interpolated SIC for " + oss.str();
+                c.id = "Raw interpolated SIC for " + oss.str();
                 c.set(MS_SIC_chromatogram);
-		        c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
+                c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
             }*/
 
             CrawdadPeakFinder crawdadPeakFinder;
             crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
 
-	        chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	        Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
-	        c3.index = chromatogramListSimple->size()-1;
-	        c3.id = "Smoothed SIC for " + oss.str();
+            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+            Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
+            c3.index = chromatogramListSimple->size()-1;
+            c3.id = "Smoothed SIC for " + oss.str();
             c3.set(MS_SIC_chromatogram);
             double sampleRate = window.MS1RT[1] - window.MS1RT[0];
             size_t wingSize = crawdadPeakFinder.getWingData().size();
@@ -144,10 +144,10 @@ namespace quameter
 
             // output all Crawdad peaks
             {
-	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	            Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-	            c2.index = chromatogramListSimple->size()-1;
-	            c2.id = "Crawdad peaks for " + oss.str();
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                c2.index = chromatogramListSimple->size()-1;
+                c2.id = "Crawdad peaks for " + oss.str();
                 c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                 BOOST_FOREACH(const Peak& peak, window.peaks)
@@ -169,10 +169,10 @@ namespace quameter
             // output only the best peak
             if (window.bestPeak)
             {
-	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	            Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-	            c2.index = chromatogramListSimple->size()-1;
-	            c2.id = "Best Crawdad peak for " + oss.str();
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                c2.index = chromatogramListSimple->size()-1;
+                c2.id = "Best Crawdad peak for " + oss.str();
                 c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                 const Peak& peak = *window.bestPeak;
@@ -188,10 +188,10 @@ namespace quameter
                 map<double, Peak>::const_iterator itr = nistPeakByExactMz.find(round(window.PSMs[0].exactMZ, 4));
                 if (itr != nistPeakByExactMz.end())
                 {
-	                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-	                c2.index = chromatogramListSimple->size()-1;
-	                c2.id = "NIST peak for " + oss.str();
+                    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                    Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                    c2.index = chromatogramListSimple->size()-1;
+                    c2.id = "NIST peak for " + oss.str();
                     c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                     const Peak& peak = itr->second;
@@ -205,11 +205,11 @@ namespace quameter
 
             // output MS2 times as chromatogram spikes
             {
-	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	            Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
-	            ms2Chromatogram.index = chromatogramListSimple->size()-1;
-	            ms2Chromatogram.id = "Identified MS2s for " + oss.str();
-		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
+                ms2Chromatogram.index = chromatogramListSimple->size()-1;
+                ms2Chromatogram.id = "Identified MS2s for " + oss.str();
+                ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 vector<double>& ms2Times = ms2Chromatogram.getTimeArray()->data;
                 vector<double>& ms2Intensities = ms2Chromatogram.getIntensityArray()->data;
                 double epsilon = 1e-14;
@@ -248,11 +248,11 @@ namespace quameter
 
                 Interpolator ms2Interpolator(ms2Times, ms2Scores);
                 
-	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	            Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
-	            ms2Chromatogram.index = chromatogramListSimple->size()-1;
-	            ms2Chromatogram.id = "Interpolated MS2s for " + oss.str();
-		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
+                ms2Chromatogram.index = chromatogramListSimple->size()-1;
+                ms2Chromatogram.id = "Interpolated MS2s for " + oss.str();
+                ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 vector<double>& ms2InterpolatedTimes = ms2Chromatogram.getTimeArray()->data;
                 vector<double>& ms2InterpolatedIntensities = ms2Chromatogram.getIntensityArray()->data;
                 double sampleRate = minDiff / 10;
@@ -262,19 +262,19 @@ namespace quameter
                     ms2InterpolatedIntensities.push_back(ms2Interpolator.interpolate(ms2Times, ms2Scores, time));
                 }
             }
-	    }
+        }
 
         BOOST_FOREACH(const UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
         {
             const LocalChromatogram& window = info.chromatogram;
 
-		    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		    Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		    c.index = chromatogramListSimple->size()-1;
+            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+            Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+            c.index = chromatogramListSimple->size()-1;
             ostringstream oss;
             oss << "precursor m/z: " << info.mzWindow << "; time: " << info.scanTimeWindow;
-		    c.id = "Raw SIC for " + oss.str();
-		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
+            c.id = "Raw SIC for " + oss.str();
+            c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_detector_counts);
 
 
             // for idfree metrics, show peaks
@@ -283,10 +283,10 @@ namespace quameter
                 CrawdadPeakFinder crawdadPeakFinder;
                 crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
 
-	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	            Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
-	            c3.index = chromatogramListSimple->size()-1;
-	            c3.id = "Smoothed SIC for " + oss.str();
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
+                c3.index = chromatogramListSimple->size()-1;
+                c3.id = "Smoothed SIC for " + oss.str();
                 c3.set(MS_SIC_chromatogram);
                 double sampleRate = window.MS1RT[1] - window.MS1RT[0];
                 size_t wingSize = crawdadPeakFinder.getWingData().size();
@@ -305,10 +305,10 @@ namespace quameter
 
                 // output all Crawdad peaks
                 {
-	                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-	                c2.index = chromatogramListSimple->size()-1;
-	                c2.id = "Crawdad peaks for " + oss.str();
+                    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                    Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                    c2.index = chromatogramListSimple->size()-1;
+                    c2.id = "Crawdad peaks for " + oss.str();
                     c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                     BOOST_FOREACH(const Peak& peak, window.peaks)
@@ -330,10 +330,10 @@ namespace quameter
                 // output only the best peak
                 if (window.bestPeak)
                 {
-	                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
-	                c2.index = chromatogramListSimple->size()-1;
-	                c2.id = "Best Crawdad peak for " + oss.str();
+                    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+                    Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+                    c2.index = chromatogramListSimple->size()-1;
+                    c2.id = "Best Crawdad peak for " + oss.str();
                     c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
                     const Peak& peak = *window.bestPeak;
@@ -346,8 +346,8 @@ namespace quameter
             }
             else // for idfree metrics the "unidentified" prefix is pointless
                 c.id = "unidentified " + c.id;
-	    }
-	    string chromFilename = bfs::change_extension(sourceFilename, "-quameter_chromatograms.mz5").string();
+        }
+        string chromFilename = bfs::change_extension(sourceFilename, "-quameter_chromatograms.mz5").string();
         MSDataFile::write(chromData, chromFilename, MSDataFile::WriteConfig(MSDataFile::Format_MZ5));
     }
 
@@ -368,33 +368,33 @@ namespace quameter
                        "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
                        "-dump                         : show runtime configuration settings before starting the run\n";
 
-	    bool ignoreConfigErrors = false;
+        bool ignoreConfigErrors = false;
         g_endianType = GetHostEndianType();
         g_numWorkers = GetNumProcessors();
 
         // First set the working directory, if provided
         for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-workdir" && i+1 <= args.size() )
-			{
-				chdir( args[i+1].c_str() );
-				args.erase( args.begin() + i );
-			} else if( args[i] == "-cpus" && i+1 <= args.size() )
-			{
-				g_numWorkers = atoi( args[i+1].c_str() );
-				args.erase( args.begin() + i );
-			} else if( args[i] == "-ignoreConfigErrors" )
-			{
-				ignoreConfigErrors = true;
-			} else
-				continue;
+        {
+            if( args[i] == "-workdir" && i+1 <= args.size() )
+            {
+                chdir( args[i+1].c_str() );
+                args.erase( args.begin() + i );
+            } else if( args[i] == "-cpus" && i+1 <= args.size() )
+            {
+                g_numWorkers = atoi( args[i+1].c_str() );
+                args.erase( args.begin() + i );
+            } else if( args[i] == "-ignoreConfigErrors" )
+            {
+                ignoreConfigErrors = true;
+            } else
+                continue;
 
-			args.erase( args.begin() + i );
-			--i;
-		}
+            args.erase( args.begin() + i );
+            --i;
+        }
 
-		g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
-		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+        g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+        g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
 
         for( size_t i=1; i < args.size(); ++i )
         {
@@ -414,10 +414,10 @@ namespace quameter
         }
 
         if( args.size() < 2 )
-		{
-			cerr << "Not enough arguments.\n\n" << usage << endl;
-			return 1;
-		}
+        {
+            cerr << "Not enough arguments.\n\n" << usage << endl;
+            return 1;
+        }
 
         if( !g_rtConfig->initialized() )
         {
@@ -448,30 +448,30 @@ namespace quameter
         g_rtConfig->setVariables( vars );
 
         for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-dump" )
-			{
-				g_rtConfig->dump();
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
+        {
+            if( args[i] == "-dump" )
+            {
+                g_rtConfig->dump();
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i][0] == '-' )
-			{
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i][0] == '-' )
+            {
                 if (!ignoreConfigErrors)
                 {
                     cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
                     return 1;
                 }
 
-				cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
+                cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
         if (args.size() == 1)
         {
@@ -686,7 +686,7 @@ namespace quameter
             // apply spectrum list filters
             vector<string> wrappers;
             if (!g_rtConfig->SpectrumListFilters.empty())
-            	bal::split(wrappers, g_rtConfig->SpectrumListFilters, bal::is_any_of(";"));
+                bal::split(wrappers, g_rtConfig->SpectrumListFilters, bal::is_any_of(";"));
 
             SpectrumListFactory::wrap(msd, wrappers);
 
@@ -799,7 +799,7 @@ namespace quameter
 
                         scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
                         if (si.cvParam(MS_selected_ion_m_z).empty() )
-                            scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();	
+                            scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();    
                         if (scanInfo.precursorMZ == 0)
                             throw runtime_error("No precursor m/z for " + spectrum->id);
 
@@ -867,7 +867,7 @@ namespace quameter
                     int msLevel = spectrumMSLevel.valueAs<int>();
                     if (msLevel == 1) 
                     {
-                        Scan& scan = spectrum->scanList.scans[0];	
+                        Scan& scan = spectrum->scanList.scans[0];    
 
                         // all m/z and intensity data for a spectrum
                         const vector<double>& mzV = spectrum->getMZArray()->data;
@@ -1025,7 +1025,7 @@ namespace quameter
             XICWindowList dummyPepWindows;
 
             // Write chromatograms for visualization of data
-		    if (g_rtConfig->ChromatogramOutput)
+            if (g_rtConfig->ChromatogramOutput)
                 writeChromatograms(sourceFilename, ms2ScanMap, dummyPepWindows, unidentifiedPrecursors);
 
             // TIC metrics
@@ -1305,7 +1305,7 @@ namespace quameter
             // apply spectrum list filters
             vector<string> wrappers;
             if (!g_rtConfig->SpectrumListFilters.empty())
-            	bal::split(wrappers, g_rtConfig->SpectrumListFilters, bal::is_any_of(";"));
+                bal::split(wrappers, g_rtConfig->SpectrumListFilters, bal::is_any_of(";"));
 
             SpectrumListFactory::wrap(msd, wrappers);
 
@@ -1424,7 +1424,7 @@ namespace quameter
 
                     scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
                     if (si.cvParam(MS_selected_ion_m_z).empty() )
-                        scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();	
+                        scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();    
                     if (scanInfo.precursorMZ == 0)
                         throw runtime_error("No precursor m/z for " + spectrum->id);
 
@@ -1571,7 +1571,7 @@ namespace quameter
             // MS1-1: Median MS1 ion injection time
             double medianInjectionTimeMS1 = accs::percentile(ms1IonInjectionTimes, accs::percentile_number = 50);;
 
-            // MS1-5A: Median real value of precursor errors	
+            // MS1-5A: Median real value of precursor errors    
             // MS1-5B: Mean of the absolute precursor errors
             // MS1-5C: Median real value of precursor errors in ppm
             // MS1-5D: Interquartile range in ppm of the precursor errors
@@ -1671,7 +1671,7 @@ namespace quameter
                     int msLevel = spectrumMSLevel.valueAs<int>();
                     if (msLevel == 1) 
                     {
-                        Scan& scan = spectrum->scanList.scans[0];	
+                        Scan& scan = spectrum->scanList.scans[0];    
 
                         // all m/z and intensity data for a spectrum
                         const vector<double>& mzV = spectrum->getMZArray()->data;
@@ -1950,7 +1950,7 @@ namespace quameter
                 }
 
                 // Write chromatograms for visualization of data
-			    if (g_rtConfig->ChromatogramOutput)
+                if (g_rtConfig->ChromatogramOutput)
                     writeChromatograms(sourceFilename, ms2ScanMap, pepWindow, unidentifiedPrecursors);
 
                 // Metric C-3A: Median peak width of identified spectra
@@ -2219,6 +2219,6 @@ int main( int argc, char* argv[] )
     }
     
     return result;
-	
+    
 }
 

@@ -197,7 +197,7 @@ class file_info {
 ///checks if a vector is sorted
 template<typename data_type>
 bool ordered_list( std::vector<data_type> & v );
-/*	
+/*    
 template<typename data_type>
 data_type sum_list( data_type * d, size_t  l );
 
@@ -218,7 +218,7 @@ inline float spectra_pair_uniform_weight ( const std::vector<float> & s1, const 
 
   float spectra_noise_est ( const std::vector<float> & s1, const std::vector<float> & s2, double s1_sqrsum , double s2_sqrsum , double resolution );
 float spectra_cosine_angle ( const std::vector<float> & s1, const std::vector<float> & s2, 
-								double s1_sqrsum, double s2_sqrsum);
+                                double s1_sqrsum, double s2_sqrsum);
 float spectra_cosine_angle ( const std::vector<float> & s1, const std::vector<float> & s2);
 float spectra_cosine_angle_squared ( const std::vector<float> & s1, const std::vector<float> & s2, double d1, double d2);
   float spectra_dps_nz ( const std::vector<float> & s1, const std::vector<float> & s2, double d1, double d2 );
@@ -232,8 +232,8 @@ float spectra_corr_coef ( const std::vector<float> & s1, const std::vector<float
                           double s1_sqrsum, double s2_sqrsum);
 
   void filter_zero_values (const std::vector<float> & s1 , const std::vector<float> & s2,
-			   std::vector<float> & out_s1, std::vector<float> & out_s2 ,
-			   float min_val = 0.0f );
+               std::vector<float> & out_s1, std::vector<float> & out_s2 ,
+               float min_val = 0.0f );
   void rank_by_pos_ties ( const std::vector< std::pair< float, int > > & sorted_by_i , std::vector<float> & to_rank, bool avg_tie = true );
   void rank_by_pos_noties ( const std::vector< std::pair< float, int > > & sorted_by_i , std::vector<float> & to_rank );
 
@@ -266,7 +266,7 @@ int idx_of_centroid(const std::vector<float>& x, const std::vector<float>& y);
 //flt_map::iterator find_nearest( flt_map & s, float key);
 
 void myfree( void * mypnt);
-	
+    
 
 void * mymalloc(size_t size, size_t n);
 
@@ -359,11 +359,11 @@ void reverse_vect( std::vector<data_type> & v ) {
 ///sum of a vector
 template<typename data_type>
 data_type sum_vect( const std::vector<data_type> & v ) {
-	data_type t = (data_type)0.0;
-	for ( size_t i = 0 ; i < v.size() ; i++ ) {
-		t += v[i];
-	}
-	return t;
+    data_type t = (data_type)0.0;
+    for ( size_t i = 0 ; i < v.size() ; i++ ) {
+        t += v[i];
+    }
+    return t;
 }
 
 ///sum of an array, size is passed in
@@ -379,7 +379,7 @@ data_type sum_list( data_type * d, size_t  l ) {
 ///mean of an stl container
 template<class cont, class value_type> 
 value_type average_stl_cont( cont & a ) {
-	value_type sum = std::accumulate(a.begin(), a.end(), (value_type)0);
+    value_type sum = std::accumulate(a.begin(), a.end(), (value_type)0);
     return sum / a.size();
 }
 
@@ -476,23 +476,23 @@ std::vector< std::pair<int,int> > fyates_shuffle_commands( int series_size );
 ///returns a vector being the product of two other vectors
 template<typename data_type>
 std::vector<data_type> vect_mult ( const std::vector<data_type> & a , const std::vector<data_type> & b) {
-	assert(a.size() == b.size());
-	std::vector<data_type> t(a.size());
-	for ( int i = 0 ; i < a.size() ; i++ ) {
-		t[i] = a[i] * b[i];
-	}
-	return t;
+    assert(a.size() == b.size());
+    std::vector<data_type> t(a.size());
+    for ( int i = 0 ; i < a.size() ; i++ ) {
+        t[i] = a[i] * b[i];
+    }
+    return t;
 }
 
 ///returns a vector<double> being the product of two other datatypes
 template<typename data_type>
 std::vector<double> vect_multd( std::vector<data_type> & a, std::vector<data_type> & b) {
-	assert(a.size() == b.size());
-	std::vector<double> t(a.size());
-	for ( uint i = 0 ; i < a.size() ; i++ ) {
-		t[i] = a[i] * b[i];
-	}
-	return t;
+    assert(a.size() == b.size());
+    std::vector<double> t(a.size());
+    for ( uint i = 0 ; i < a.size() ; i++ ) {
+        t[i] = a[i] * b[i];
+    }
+    return t;
 }
 
 ///returns the summed product of two vectors
@@ -501,9 +501,9 @@ data_type mult_accum_vects( const std::vector<data_type> & a, const std::vector<
     assert(a.size() == b.size());
     uint lim = a.size();
     data_type accum = (data_type)0.0;
-	for ( uint i = 0 ; i < lim ; i++ ) {
+    for ( uint i = 0 ; i < lim ; i++ ) {
        accum += a[i] * b[i];
-	}
+    }
     return accum;
 }
 
@@ -597,8 +597,8 @@ uint min_idx_vect_bound( std::vector<data_type> & v , uint start, uint stop ) {
 */
 template <typename data_type>
 void  load_type(data_type * d, const char * field_data, int data_len) {
-	//assert(data_len == sizeof(data_type));
-		memcpy(d,field_data,data_len);
+    //assert(data_len == sizeof(data_type));
+        memcpy(d,field_data,data_len);
 }
 
 ///crude serializer for arrays. writes an array to an ostream as bytes
@@ -607,25 +607,25 @@ template <typename data_type>
   const char * data_as_charstr = (const char*)d;
   o.write(data_as_charstr, data_len * sizeof(data_type));
 }
-	
+    
 template <typename data_type>
 void load_int_type( data_type * out_val, char * field_data, int data_len );
-	
+    
 template <typename data_type>
 void load_array( data_type * out_val, const char * field_data, int char_len ) {
-	//TODO -- deal with different endianness in the data
-	memcpy((void*)out_val, (void*)field_data, char_len );	
+    //TODO -- deal with different endianness in the data
+    memcpy((void*)out_val, (void*)field_data, char_len );    
 };
 
 
 template <typename data_type>
 void load_array( data_type * out_val , const char * field_data, int char_len, int num_fields ) {
-	//assert(num_fields * sizeof(data_type) == char_len);
-	load_array(out_val, field_data, char_len);
+    //assert(num_fields * sizeof(data_type) == char_len);
+    load_array(out_val, field_data, char_len);
 };
 
 
-	
+    
 template<typename data_type>
 data_type templ_abs( data_type v );
 
@@ -636,22 +636,22 @@ double round_to_dbl(double n, double r);
 ///are all values in the vector unique
 template<typename T>
 bool unique_vect ( std::vector<T> & v) {
-	for ( uint i = 0 ; i < v.size() - 1 ; i++ ) {
-		if ( v[i] == v[i+1] ) {
-			return false;
-		}
-	}
-	return true;
+    for ( uint i = 0 ; i < v.size() - 1 ; i++ ) {
+        if ( v[i] == v[i+1] ) {
+            return false;
+        }
+    }
+    return true;
 }
 
-///is the vector monotonically increasing?				
+///is the vector monotonically increasing?                
 template<typename T> 
 bool monotonic_vect ( std::vector<T> & v) {
-	for ( uint i = 0 ; i < v.size() - 1 ; i++ ) {
-		if ( v[i+1] < v[i] ) 
-			return false;
-	}
-	return true;
+    for ( uint i = 0 ; i < v.size() - 1 ; i++ ) {
+        if ( v[i+1] < v[i] ) 
+            return false;
+    }
+    return true;
 }
 
 
@@ -682,7 +682,7 @@ uint get_lh_idx (std::vector<T> & v, T lookup ) {
     assert(monotonic_vect(v));
     typename std::vector<T>::iterator begin = v.begin();
     typename std::vector<T>::iterator end = v.end();
-	typename std::vector<T>::iterator lh = lower_bound(begin , end, lookup);
+    typename std::vector<T>::iterator lh = lower_bound(begin , end, lookup);
     if ( lh == end ) {
         //std::cerr << "after end" << std::endl;
         return v.size() - 1;
@@ -702,9 +702,9 @@ template <typename T>
 void output_vector ( std::ostream & o, std::vector<T> & v, char delim=' ' ) {
     //o << '[';
     if ( v.size() > 0 ) {
-	for ( uint i = 0; i < v.size() - 1; i++ ) {
+    for ( uint i = 0; i < v.size() - 1; i++ ) {
          o << v[i] << delim;
-	}
+    }
     o << v[v.size()-1];
     }
 };
@@ -723,44 +723,44 @@ void create_range ( T lh, T rh, T jump, std::vector<T> & output ) {
 ///given a vector of value
 template <typename T>
 int retain_vector ( const std::vector<int> & idxs,  const std::vector<T> & vals, std::vector<T> & ret )  {
-	 std::vector<int> idxs_c(idxs);
-	 std::sort(idxs_c.begin(), idxs_c.end());
+     std::vector<int> idxs_c(idxs);
+     std::sort(idxs_c.begin(), idxs_c.end());
      
-	 std::list<T> keep_vals(0);
-	 for ( uint i = 0 ; i < vals.size() ; i++ ) {
+     std::list<T> keep_vals(0);
+     for ( uint i = 0 ; i < vals.size() ; i++ ) {
           keep_vals.push_back(vals[i]);
-	 }
+     }
      typename std::list<T >::iterator ki = keep_vals.begin();
      uint i_idx = 0;
 
 
      int retained = 0;
-	 while ( true ) {
-		 if ( i_idx >= idxs_c.size()  ) {
+     while ( true ) {
+         if ( i_idx >= idxs_c.size()  ) {
              break;
-		 }
-		 while ( idxs[i_idx] != *ki ) {
-			 if ( ki == keep_vals.end() ) {
+         }
+         while ( idxs[i_idx] != *ki ) {
+             if ( ki == keep_vals.end() ) {
       
                  break;
-			 }
+             }
              typename std::list< T >::iterator d = ki;
              ki++;
              keep_vals.erase(d);
-		 }
+         }
          retained++;
-		 if ( ki == keep_vals.end() ) {
+         if ( ki == keep_vals.end() ) {
            break;
-		 }
+         }
          ki++;
          i_idx++;
-	 }
+     }
      ret.resize(keep_vals.size());
      typename std::list<T>::iterator k = keep_vals.begin();
-	 for ( uint i = 0 ; i < keep_vals.size() ; i++ ) {
+     for ( uint i = 0 ; i < keep_vals.size() ; i++ ) {
           ret[i] = *k;
           k++;
-	 }
+     }
 
      return retained;
 };
@@ -953,19 +953,19 @@ float tvalue_dep(const std::vector<T>& a, const std::vector<T>& b)
     if ( W_stddev == 0.0)
       {
 #ifdef ER_DEBUG
-	if (W_mean != 0)
-	  {
-	    std::cerr << "W_stddev == 0.0; a = (" << a[0];
-	    for (int j = 1; j < a.size(); j++)
-	      std::cerr << ", " << a[j];
-	    std::cerr << "), b = (" << b[0];
-	    for (int j = 1; j < b.size(); j++)
-	      std::cerr << ", " << b[j];
-	    std:: cerr << "), W = (" << W[0];
-	    for (int j = 1; j < W.size(); j++)
-	      std::cerr << ", " << W[j];
-	    std::cerr << "), W_mean = " << W_mean << "." << std::endl;
-	  }
+    if (W_mean != 0)
+      {
+        std::cerr << "W_stddev == 0.0; a = (" << a[0];
+        for (int j = 1; j < a.size(); j++)
+          std::cerr << ", " << a[j];
+        std::cerr << "), b = (" << b[0];
+        for (int j = 1; j < b.size(); j++)
+          std::cerr << ", " << b[j];
+        std:: cerr << "), W = (" << W[0];
+        for (int j = 1; j < W.size(); j++)
+          std::cerr << ", " << W[j];
+        std::cerr << "), W_mean = " << W_mean << "." << std::endl;
+      }
 #endif // ER_DEBUG
 
       return std::numeric_limits<float>::max();
@@ -975,16 +975,16 @@ float tvalue_dep(const std::vector<T>& a, const std::vector<T>& b)
 #ifdef ER_DEBUG
     if (fabs(retval) > 1.0e+30 || !(retval <= 0 || retval >= 0))//|| fabs(retval) == 1)
       {
-	std::cerr << "t = " << retval << ", W_stddev = " << W_stddev << ", a = (" << a[0];
-	for (int j = 1; j < a.size(); j++)
-	  std::cerr << ", " << a[j];
-	std::cerr << "), b = (" << b[0];
-	for (int j = 1; j < b.size(); j++)
-	  std::cerr << ", " << b[j];
-	std:: cerr << "), W = (" << W[0];
-	for (int j = 1; j < W.size(); j++)
-	  std::cerr << ", " << W[j];
-	std::cerr << "), W_mean = " << W_mean << "." << std::endl;
+    std::cerr << "t = " << retval << ", W_stddev = " << W_stddev << ", a = (" << a[0];
+    for (int j = 1; j < a.size(); j++)
+      std::cerr << ", " << a[j];
+    std::cerr << "), b = (" << b[0];
+    for (int j = 1; j < b.size(); j++)
+      std::cerr << ", " << b[j];
+    std:: cerr << "), W = (" << W[0];
+    for (int j = 1; j < W.size(); j++)
+      std::cerr << ", " << W[j];
+    std::cerr << "), W_mean = " << W_mean << "." << std::endl;
       }
 #endif // ER_DEBUG
     return retval;
@@ -1058,10 +1058,10 @@ void FDRsFromPvals(const std::vector<std::pair<float, T1> >& pvalsForFeatures, s
     {
       int numPValsGreaterThanLambda(0), i(N-1);
       while (i >= 0 && pvalsForFeatures[i].first > lambda)
-	{
-	  numPValsGreaterThanLambda++;
-	  i--;
-	}
+    {
+      numPValsGreaterThanLambda++;
+      i--;
+    }
       xyPoint.first = lambda;
       xyPoint.second = 1.*numPValsGreaterThanLambda/(N*(1.-lambda));
       xyData.push_back(xyPoint);
@@ -1073,13 +1073,13 @@ void FDRsFromPvals(const std::vector<std::pair<float, T1> >& pvalsForFeatures, s
 
   prevFDR = FDR = final_pi0 * pvalsForFeatures[N-1].first;
   put_FDR_value(FDR, features[feature_index_from_type(pvalsForFeatures[N-1].second,1)],
-		feature_index_from_type(pvalsForFeatures[N-1].second,2));
+        feature_index_from_type(pvalsForFeatures[N-1].second,2));
 
   for (int i = N-2; i >= 0; i--)
     {
       prevFDR = FDR = std::min(static_cast<float>(final_pi0*N*pvalsForFeatures[i].first/(1.+i)), prevFDR);
       put_FDR_value(FDR, features[feature_index_from_type(pvalsForFeatures[i].second,1)],
-		    feature_index_from_type(pvalsForFeatures[i].second,2));
+            feature_index_from_type(pvalsForFeatures[i].second,2));
     }
 }
 

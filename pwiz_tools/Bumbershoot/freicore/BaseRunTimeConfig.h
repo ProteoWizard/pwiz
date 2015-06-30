@@ -27,17 +27,17 @@
 
 #include "stdafx.h"
 
-#define RTCONFIG_VARIABLE_EX(varType, varName, varDefaultValue, varInit)	((4, (varType, varName, varDefaultValue, varInit)))
-#define RTCONFIG_VARIABLE(varType, varName, varDefaultValue)				RTCONFIG_VARIABLE_EX(varType, varName, varDefaultValue, 1)
-#define RTCONFIG_VAR_NAME(var)												BOOST_PP_ARRAY_ELEM(1, var)
-#define RTCONFIG_VAR_TYPE(var)												BOOST_PP_ARRAY_ELEM(0, var)
-#define RTCONFIG_VAR_DEFAULTVALUE(var)										BOOST_PP_ARRAY_ELEM(2, var)
-#define RTCONFIG_VAR_INIT(var)												BOOST_PP_ARRAY_ELEM(3, var)
+#define RTCONFIG_VARIABLE_EX(varType, varName, varDefaultValue, varInit)    ((4, (varType, varName, varDefaultValue, varInit)))
+#define RTCONFIG_VARIABLE(varType, varName, varDefaultValue)                RTCONFIG_VARIABLE_EX(varType, varName, varDefaultValue, 1)
+#define RTCONFIG_VAR_NAME(var)                                                BOOST_PP_ARRAY_ELEM(1, var)
+#define RTCONFIG_VAR_TYPE(var)                                                BOOST_PP_ARRAY_ELEM(0, var)
+#define RTCONFIG_VAR_DEFAULTVALUE(var)                                        BOOST_PP_ARRAY_ELEM(2, var)
+#define RTCONFIG_VAR_INIT(var)                                                BOOST_PP_ARRAY_ELEM(3, var)
 
-#define RTCONFIG_VAR_NAME_CAT(var, str)										BOOST_PP_CAT( RTCONFIG_VAR_NAME(var), str )
-#define RTCONFIG_VAR_NAME_STR(var)											BOOST_PP_STRINGIZE( RTCONFIG_VAR_NAME(var) )
+#define RTCONFIG_VAR_NAME_CAT(var, str)                                        BOOST_PP_CAT( RTCONFIG_VAR_NAME(var), str )
+#define RTCONFIG_VAR_NAME_STR(var)                                            BOOST_PP_STRINGIZE( RTCONFIG_VAR_NAME(var) )
 
-#define RTCONFIG_DECLARE_VAR(r, n_a, var)						RTCONFIG_VAR_TYPE(var) RTCONFIG_VAR_NAME(var);
+#define RTCONFIG_DECLARE_VAR(r, n_a, var)                        RTCONFIG_VAR_TYPE(var) RTCONFIG_VAR_NAME(var);
 #define RTCONFIG_INIT_DEFAULT_VAR_(r, n_a, var) \
         try \
         { \
@@ -48,67 +48,67 @@
         }
 
 #define RTCONFIG_INIT_DEFAULT_VAR(r, n_a, var) \
-	BOOST_PP_IF( RTCONFIG_VAR_INIT(var), RTCONFIG_INIT_DEFAULT_VAR_(r, n_a, var), 0; )
+    BOOST_PP_IF( RTCONFIG_VAR_INIT(var), RTCONFIG_INIT_DEFAULT_VAR_(r, n_a, var), 0; )
 
 #define RTCONFIG_FILL_MAP(r, varMap, var) \
-		string RTCONFIG_VAR_NAME_CAT( var, Val ); \
-		try \
-		{ \
-			if( !hideDefaultValues || !( lexical_cast<string>(RTCONFIG_VAR_NAME(var)) == lexical_cast<string>(RTCONFIG_VAR_DEFAULTVALUE(var)) ) ) \
-			{ \
-				RTCONFIG_VAR_NAME_CAT( var, Val ) = lexical_cast<string>( RTCONFIG_VAR_NAME(var) ); \
-				varMap[ RTCONFIG_VAR_NAME_STR(var) ] = RTCONFIG_VAR_NAME_CAT( var, Val ); \
-			} \
+        string RTCONFIG_VAR_NAME_CAT( var, Val ); \
+        try \
+        { \
+            if( !hideDefaultValues || !( lexical_cast<string>(RTCONFIG_VAR_NAME(var)) == lexical_cast<string>(RTCONFIG_VAR_DEFAULTVALUE(var)) ) ) \
+            { \
+                RTCONFIG_VAR_NAME_CAT( var, Val ) = lexical_cast<string>( RTCONFIG_VAR_NAME(var) ); \
+                varMap[ RTCONFIG_VAR_NAME_STR(var) ] = RTCONFIG_VAR_NAME_CAT( var, Val ); \
+            } \
         } catch(exception& e) \
-		{ \
-			m_warnings << "Casting " << RTCONFIG_VAR_NAME_STR(var) << " with value \"" << RTCONFIG_VAR_NAME(var) << "\": " << e.what() << "\n"; \
-		}
+        { \
+            m_warnings << "Casting " << RTCONFIG_VAR_NAME_STR(var) << " with value \"" << RTCONFIG_VAR_NAME(var) << "\": " << e.what() << "\n"; \
+        }
 
 #define RTCONFIG_READ_MAP(r, varMap, var) \
-		RunTimeVariableMap::const_iterator RTCONFIG_VAR_NAME_CAT( var, Itr ) = varMap.find( RTCONFIG_VAR_NAME_STR(var) ); \
-		if( RTCONFIG_VAR_NAME_CAT( var, Itr ) != varMap.end() ) \
-		{ \
-			string RTCONFIG_VAR_NAME_CAT( var, Str ) = UnquoteString( RTCONFIG_VAR_NAME_CAT( var, Itr )->second ); \
-			try \
-			{ \
-				parse( RTCONFIG_VAR_NAME(var), RTCONFIG_VAR_NAME_CAT( var, Str ) ); \
-			} catch(bad_lexical_cast&) \
-			{ \
-				m_warnings << "Parsing " << RTCONFIG_VAR_NAME_STR(var) << " with value \"" << RTCONFIG_VAR_NAME_CAT( var, Str ) << "\": expected " << cppTypeToNaturalLanguage<RTCONFIG_VAR_TYPE(var)>(BOOST_PP_STRINGIZE(RTCONFIG_VAR_TYPE(var))) << "\n"; \
-			} catch(exception& e) \
-			{ \
-				m_warnings << "Parsing " << RTCONFIG_VAR_NAME_STR(var) << " with value \"" << RTCONFIG_VAR_NAME_CAT( var, Str ) << "\": " << e.what() << "\n"; \
-			} \
-		}
+        RunTimeVariableMap::const_iterator RTCONFIG_VAR_NAME_CAT( var, Itr ) = varMap.find( RTCONFIG_VAR_NAME_STR(var) ); \
+        if( RTCONFIG_VAR_NAME_CAT( var, Itr ) != varMap.end() ) \
+        { \
+            string RTCONFIG_VAR_NAME_CAT( var, Str ) = UnquoteString( RTCONFIG_VAR_NAME_CAT( var, Itr )->second ); \
+            try \
+            { \
+                parse( RTCONFIG_VAR_NAME(var), RTCONFIG_VAR_NAME_CAT( var, Str ) ); \
+            } catch(bad_lexical_cast&) \
+            { \
+                m_warnings << "Parsing " << RTCONFIG_VAR_NAME_STR(var) << " with value \"" << RTCONFIG_VAR_NAME_CAT( var, Str ) << "\": expected " << cppTypeToNaturalLanguage<RTCONFIG_VAR_TYPE(var)>(BOOST_PP_STRINGIZE(RTCONFIG_VAR_TYPE(var))) << "\n"; \
+            } catch(exception& e) \
+            { \
+                m_warnings << "Parsing " << RTCONFIG_VAR_NAME_STR(var) << " with value \"" << RTCONFIG_VAR_NAME_CAT( var, Str ) << "\": " << e.what() << "\n"; \
+            } \
+        }
 
 #define RTCONFIG_PRINT_VAR(r, n_a, var) \
-	stringstream RTCONFIG_VAR_NAME_CAT( var, Stream ); \
-	RTCONFIG_VAR_NAME_CAT( var, Stream ) << right << RTCONFIG_VAR_NAME_STR(var) << ": "; \
-	cout << RTCONFIG_VAR_NAME_CAT( var, Stream ).str() << RTCONFIG_VAR_NAME(var) << endl;
+    stringstream RTCONFIG_VAR_NAME_CAT( var, Stream ); \
+    RTCONFIG_VAR_NAME_CAT( var, Stream ) << right << RTCONFIG_VAR_NAME_STR(var) << ": "; \
+    cout << RTCONFIG_VAR_NAME_CAT( var, Stream ).str() << RTCONFIG_VAR_NAME(var) << endl;
 
 #define RTCONFIG_DEFINE_MEMBERS_EX(configName, baseConfigName, configVariables, configDefaultFilename) \
-	BOOST_PP_SEQ_FOR_EACH( RTCONFIG_DECLARE_VAR, ~, configVariables ) \
-	configName(bool treatWarningsAsErrors = true) : baseConfigName(treatWarningsAsErrors) \
-	{ \
-		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, configVariables ) \
+    BOOST_PP_SEQ_FOR_EACH( RTCONFIG_DECLARE_VAR, ~, configVariables ) \
+    configName(bool treatWarningsAsErrors = true) : baseConfigName(treatWarningsAsErrors) \
+    { \
+        BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, configVariables ) \
         if (m_warnings.tellp() > 0) throw runtime_error(m_warnings.str()); /* initialization errors are bugs */ \
-	} \
-	RunTimeVariableMap getVariables( bool hideDefaultValues = false ) \
-	{ \
-		baseConfigName::getVariables( hideDefaultValues ); \
-		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_FILL_MAP, m_variables, configVariables ) \
-		return m_variables; \
-	} \
-	void setVariables( RunTimeVariableMap& vars ) \
-	{ \
-		baseConfigName::setVariables( vars ); \
-		BOOST_PP_SEQ_FOR_EACH( RTCONFIG_READ_MAP, vars, configVariables ) \
+    } \
+    RunTimeVariableMap getVariables( bool hideDefaultValues = false ) \
+    { \
+        baseConfigName::getVariables( hideDefaultValues ); \
+        BOOST_PP_SEQ_FOR_EACH( RTCONFIG_FILL_MAP, m_variables, configVariables ) \
+        return m_variables; \
+    } \
+    void setVariables( RunTimeVariableMap& vars ) \
+    { \
+        baseConfigName::setVariables( vars ); \
+        BOOST_PP_SEQ_FOR_EACH( RTCONFIG_READ_MAP, vars, configVariables ) \
         finalize(); \
-	} \
-	int initializeFromFile( const string& rtConfigFilename = configDefaultFilename ) \
-	{ \
-		return BaseRunTimeConfig::initializeFromFile( rtConfigFilename ); \
-	}
+    } \
+    int initializeFromFile( const string& rtConfigFilename = configDefaultFilename ) \
+    { \
+        return BaseRunTimeConfig::initializeFromFile( rtConfigFilename ); \
+    }
 
 #define RTCONFIG_DEFINE_MEMBERS(configName, configVariables, configDefaultFilename) \
     RTCONFIG_DEFINE_MEMBERS_EX(configName, BaseRunTimeConfig, configVariables, configDefaultFilename)
@@ -160,19 +160,19 @@ namespace freicore
             return "a " + cppType;
     }
 
-	struct RunTimeVariableMap : public map< string, string >
-	{
-		RunTimeVariableMap(	const string& initialVarList = "" )
-		{
-			static const boost::char_separator<char> delim(" ");
+    struct RunTimeVariableMap : public map< string, string >
+    {
+        RunTimeVariableMap(    const string& initialVarList = "" )
+        {
+            static const boost::char_separator<char> delim(" ");
             stokenizer parser( initialVarList.begin(), initialVarList.begin() + initialVarList.length(), delim );
 
-			for( stokenizer::iterator itr = parser.begin(); itr != parser.end(); ++itr )
-			{
-				operator[]( *itr ) = "";
-			}
-		}
-	};
+            for( stokenizer::iterator itr = parser.begin(); itr != parser.end(); ++itr )
+            {
+                operator[]( *itr ) = "";
+            }
+        }
+    };
 
     struct BaseRunTimeConfig
     {
@@ -185,13 +185,13 @@ namespace freicore
         string cfgStr;
 
                                     BaseRunTimeConfig(bool treatWarningsAsErrors = true);
-		virtual                     ~BaseRunTimeConfig() {}
+        virtual                     ~BaseRunTimeConfig() {}
 
-		virtual void                initializeFromBuffer( const string& cfgStr );
-		virtual	RunTimeVariableMap  getVariables( bool hideDefaultValues = false );
-		virtual void                setVariables( RunTimeVariableMap& vars );
-		virtual void                dump();
-		virtual void                finalize();
+        virtual void                initializeFromBuffer( const string& cfgStr );
+        virtual    RunTimeVariableMap  getVariables( bool hideDefaultValues = false );
+        virtual void                setVariables( RunTimeVariableMap& vars );
+        virtual void                dump();
+        virtual void                finalize();
 
         bool                        initialized() { return !cfgStr.empty(); }
         int                         initializeFromFile( const string& rtConfigFilename );

@@ -29,29 +29,29 @@ using namespace freicore;
 
 namespace std
 {
-	ostream& operator<< ( ostream& o, const freicore::myrimatch::PeakInfo& rhs )
-	{
-		return o << rhs.normalizedIntensity;
-	}
+    ostream& operator<< ( ostream& o, const freicore::myrimatch::PeakInfo& rhs )
+    {
+        return o << rhs.normalizedIntensity;
+    }
 }
 
 namespace freicore
 {
 namespace myrimatch
 {
-	void Spectrum::Preprocess()
-	{
-		PeakPreData::iterator itr;
-		PeakPreData::reverse_iterator r_itr;
+    void Spectrum::Preprocess()
+    {
+        PeakPreData::iterator itr;
+        PeakPreData::reverse_iterator r_itr;
 
-		if( mzOfPrecursor < 1 )
-		{
-			peakPreData.clear();
-			return;
-		}
+        if( mzOfPrecursor < 1 )
+        {
+            peakPreData.clear();
+            return;
+        }
 
-		if( peakPreData.empty() )
-			return;
+        if( peakPreData.empty() )
+            return;
 
         // calculate precursor mass hypotheses
         if (precursorMzType == MassType_Monoisotopic || g_rtConfig->precursorMzToleranceRule == MzToleranceRule_Mono)
@@ -89,74 +89,74 @@ namespace myrimatch
         // filter out peaks above the largest precursor hypthesis' mass
         peakPreData.erase( peakPreData.upper_bound( precursorMassHypotheses.back().mass + g_rtConfig->AvgPrecursorMzTolerance ), peakPreData.end() );
 
-		// The old way of calculating these values:
+        // The old way of calculating these values:
         /*mzLowerBound = peakPreData.begin()->first;
-		mzUpperBound = peakPreData.rbegin()->first;
-		totalPeakSpace = mzUpperBound - mzLowerBound;*/
+        mzUpperBound = peakPreData.rbegin()->first;
+        totalPeakSpace = mzUpperBound - mzLowerBound;*/
 
-		FilterByTIC( g_rtConfig->TicCutoffPercentage );
+        FilterByTIC( g_rtConfig->TicCutoffPercentage );
         FilterByPeakCount( g_rtConfig->MaxPeakCount );
 
-		if( peakPreData.empty() )
-			return;
+        if( peakPreData.empty() )
+            return;
 
         BOOST_FOREACH(int charge, possibleChargeStates)
         {
-		    PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/charge, g_rtConfig->FragmentMzTolerance, true );
-		    if( precursorWaterLossItr != peakPreData.end() )
-			    peakPreData.erase( precursorWaterLossItr );
+            PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/charge, g_rtConfig->FragmentMzTolerance, true );
+            if( precursorWaterLossItr != peakPreData.end() )
+                peakPreData.erase( precursorWaterLossItr );
 
-		    PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/charge, g_rtConfig->FragmentMzTolerance, true );
-		    if( precursorDoubleWaterLossItr != peakPreData.end() )
+            PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/charge, g_rtConfig->FragmentMzTolerance, true );
+            if( precursorDoubleWaterLossItr != peakPreData.end() )
                 peakPreData.erase( precursorDoubleWaterLossItr );
         }
 
-		if( peakPreData.empty() )
-			return;
+        if( peakPreData.empty() )
+            return;
 
         // results for each possible charge state are stored separately
         resultsByCharge.resize(possibleChargeStates.back());
         BOOST_FOREACH(SearchResultSetType& resultSet, resultsByCharge)
             resultSet.max_ranks( g_rtConfig->MaxResultRank );
 
-		ClassifyPeakIntensities(); // for mvh
+        ClassifyPeakIntensities(); // for mvh
 
         //swap(peakPreData, unfilteredPeakPreData);
         NormalizePeakIntensities(); // for xcorr
         //swap(peakPreData, unfilteredPeakPreData);
 
-		peakCount = (int) peakData.size();
+        peakCount = (int) peakData.size();
 
-		// Divide the spectrum peak space into equal m/z bins
-		//cout << mzUpperBound << "," << mzLowerBound << endl;
-		double spectrumMedianMass = totalPeakSpace/2.0;
+        // Divide the spectrum peak space into equal m/z bins
+        //cout << mzUpperBound << "," << mzLowerBound << endl;
+        double spectrumMedianMass = totalPeakSpace/2.0;
         double fragMassError = g_rtConfig->FragmentMzTolerance.units == MZTolerance::PPM ? (spectrumMedianMass*g_rtConfig->FragmentMzTolerance.value*1e-6):g_rtConfig->FragmentMzTolerance.value;
-		//cout << fragMassError << "," << mOfPrecursor << endl;
-		int totalPeakBins = (int) round( totalPeakSpace / ( fragMassError * 2.0f ), 0 );
-		initialize( g_rtConfig->NumIntensityClasses+1, g_rtConfig->NumMzFidelityClasses );
-		for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
-		{
+        //cout << fragMassError << "," << mOfPrecursor << endl;
+        int totalPeakBins = (int) round( totalPeakSpace / ( fragMassError * 2.0f ), 0 );
+        initialize( g_rtConfig->NumIntensityClasses+1, g_rtConfig->NumMzFidelityClasses );
+        for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
+        {
             if (itr->second.intenClass > 0)
-			    ++ intenClassCounts[ itr->second.intenClass-1 ];
-		}
-		intenClassCounts[ g_rtConfig->NumIntensityClasses ] = totalPeakBins - peakCount;
-		//cout << id.nativeID << ": " << intenClassCounts << endl;
+                ++ intenClassCounts[ itr->second.intenClass-1 ];
+        }
+        intenClassCounts[ g_rtConfig->NumIntensityClasses ] = totalPeakBins - peakCount;
+        //cout << id.nativeID << ": " << intenClassCounts << endl;
 
         int divider = 0;
-	    for( int i=0; i < g_rtConfig->NumMzFidelityClasses-1; ++i )
-	    {
-		    divider += 1 << i;
-		    mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance.value * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
-	    }
-		mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance.value;
+        for( int i=0; i < g_rtConfig->NumMzFidelityClasses-1; ++i )
+        {
+            divider += 1 << i;
+            mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance.value * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
+        }
+        mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance.value;
         //cout << id.nativeID << ": " << mzFidelityThresholds << endl;
 
-		//totalPeakSpace = peakPreData.rbegin()->first - peakPreData.begin()->first;
-		//if( id.nativeID == 1723 )
-		//	cout << totalPeakSpace << " " << mzUpperBound << " " << mzLowerBound << endl;
+        //totalPeakSpace = peakPreData.rbegin()->first - peakPreData.begin()->first;
+        //if( id.nativeID == 1723 )
+        //    cout << totalPeakSpace << " " << mzUpperBound << " " << mzLowerBound << endl;
 
         // we no longer need the raw intensities
-		peakPreData.clear();
+        peakPreData.clear();
 
         // set fragment types
         fragmentTypes.reset();
@@ -178,40 +178,40 @@ namespace myrimatch
 
         if( fragmentTypes.none() )
             fragmentTypes = g_rtConfig->defaultFragmentTypes;
-	}
+    }
 
     void Spectrum::ClassifyPeakIntensities()
-	{
-		// Sort peaks by intensity.
-		// Use multimap because multiple peaks can have the same intensity.
-		typedef multimap< double, double > IntenSortedPeakPreData;
-		IntenSortedPeakPreData intenSortedPeakPreData;
-		for( PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr )
-		{
-			IntenSortedPeakPreData::iterator iItr = intenSortedPeakPreData.insert( make_pair( itr->second, itr->second ) );
-			iItr->second = itr->first;
-		}
+    {
+        // Sort peaks by intensity.
+        // Use multimap because multiple peaks can have the same intensity.
+        typedef multimap< double, double > IntenSortedPeakPreData;
+        IntenSortedPeakPreData intenSortedPeakPreData;
+        for( PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr )
+        {
+            IntenSortedPeakPreData::iterator iItr = intenSortedPeakPreData.insert( make_pair( itr->second, itr->second ) );
+            iItr->second = itr->first;
+        }
 
-		// Restore the sorting order to be based on MZ
-		IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
+        // Restore the sorting order to be based on MZ
+        IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
         //cout << id.nativeID << peakPreData.size() << endl;
-		peakPreData.clear();
-		peakData.clear();
+        peakPreData.clear();
+        peakData.clear();
 
-		for( int i=0; i < g_rtConfig->NumIntensityClasses; ++i )
-		{
-			int numFragments = (int) round( (double) ( pow( (double) g_rtConfig->ClassSizeMultiplier, i ) * intenSortedPeakPreData.size() ) / (double) g_rtConfig->minIntensityClassCount, 0 );
-			//cout << numFragments << endl;
-			for( int j=0; r_iItr != intenSortedPeakPreData.rend() && j < numFragments; ++j, ++r_iItr )
-			{
-				double mz = r_iItr->second;
-				double inten = r_iItr->first;
-				peakPreData[ mz ] = inten;
-				peakData[ mz ].intenClass = i+1;
-			}
-		}
-		intenSortedPeakPreData.clear();
-	}
+        for( int i=0; i < g_rtConfig->NumIntensityClasses; ++i )
+        {
+            int numFragments = (int) round( (double) ( pow( (double) g_rtConfig->ClassSizeMultiplier, i ) * intenSortedPeakPreData.size() ) / (double) g_rtConfig->minIntensityClassCount, 0 );
+            //cout << numFragments << endl;
+            for( int j=0; r_iItr != intenSortedPeakPreData.rend() && j < numFragments; ++j, ++r_iItr )
+            {
+                double mz = r_iItr->second;
+                double inten = r_iItr->first;
+                peakPreData[ mz ] = inten;
+                peakData[ mz ].intenClass = i+1;
+            }
+        }
+        intenSortedPeakPreData.clear();
+    }
 
     // the m/z width for xcorr bins
     const double binWidth = Proton;
@@ -397,272 +397,272 @@ namespace myrimatch
 
     void Spectrum::computeSecondaryScores()
     {
-		//Compute the average and the mode of the MVH and mzFidelity distrubutions
-		double averageMVHValue = 0.0;
-		double totalComps = 0.0;
-		int maxValue = INT_MIN;
-		for(flat_map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
-			if((*itr).first==0) {
-				continue;
-			}
-			// Sum the score distribution
-			averageMVHValue += ((*itr).second * (*itr).first);
-			totalComps += (*itr).second;
-			// Get the max value
-			maxValue = maxValue < (*itr).second ? (*itr).second : maxValue;
-		}
-		// Compute the average
-		averageMVHValue /= totalComps;
+        //Compute the average and the mode of the MVH and mzFidelity distrubutions
+        double averageMVHValue = 0.0;
+        double totalComps = 0.0;
+        int maxValue = INT_MIN;
+        for(flat_map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
+            if((*itr).first==0) {
+                continue;
+            }
+            // Sum the score distribution
+            averageMVHValue += ((*itr).second * (*itr).first);
+            totalComps += (*itr).second;
+            // Get the max value
+            maxValue = maxValue < (*itr).second ? (*itr).second : maxValue;
+        }
+        // Compute the average
+        averageMVHValue /= totalComps;
 
-		// Locate the most frequent mvh score
-		double mvhMode;
-		for(flat_map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
-			if((*itr).second==maxValue) {
-				mvhMode = (double) (*itr).first;
-				break;
-			}
-		}
-		
-		
-		// Compute the average and mode of the mzFidelity score distrubtion just like the mvh score 
-		// distribution
-		double averageMZFidelity = 0.0;
-		totalComps = 0.0;
-		maxValue = INT_MIN;
-		for(flat_map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
-			if((*itr).first==0) {
-				continue;
-			}
-			averageMZFidelity += ((*itr).second * (*itr).first);
-			totalComps += (*itr).second;
-			maxValue = maxValue < (*itr).second ? (*itr).second : maxValue;
-		}
-		averageMZFidelity /= totalComps;
+        // Locate the most frequent mvh score
+        double mvhMode;
+        for(flat_map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
+            if((*itr).second==maxValue) {
+                mvhMode = (double) (*itr).first;
+                break;
+            }
+        }
+        
+        
+        // Compute the average and mode of the mzFidelity score distrubtion just like the mvh score 
+        // distribution
+        double averageMZFidelity = 0.0;
+        totalComps = 0.0;
+        maxValue = INT_MIN;
+        for(flat_map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
+            if((*itr).first==0) {
+                continue;
+            }
+            averageMZFidelity += ((*itr).second * (*itr).first);
+            totalComps += (*itr).second;
+            maxValue = maxValue < (*itr).second ? (*itr).second : maxValue;
+        }
+        averageMZFidelity /= totalComps;
 
-		double mzFidelityMode;
-		for(flat_map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
-			if((*itr).second==maxValue) {
-				mzFidelityMode = (double) (*itr).first;
-				break;
-			}
-		}
-		double massError = 2.5;
-		// For each search result
-		/*for( SearchResultSetType::const_reverse_iterator rItr = resultSet.rbegin(); rItr != resultSet.rend(); ++rItr )
-		{
-			// Init the default values for all delta scores.
-			const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = 0.0;
-			const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = 0.0;
-			const_cast< SearchResult& >( *rItr ).deltaMVHMode = -1.0;
-			const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = 0.0;
-			const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = 0.0;
-			const_cast< SearchResult& >( *rItr ).deltaMZFidelityMode = -1.0;
-			const_cast< SearchResult& >( *rItr ).deltaMVHAvg = -1.0;
-			const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvg = -1.0;
-			const_cast < SearchResult& >(*rItr ).mvhMode = 0.0;
-			const_cast < SearchResult& >(*rItr ).mzFidelityMode = 0.0;
+        double mzFidelityMode;
+        for(flat_map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
+            if((*itr).second==maxValue) {
+                mzFidelityMode = (double) (*itr).first;
+                break;
+            }
+        }
+        double massError = 2.5;
+        // For each search result
+        /*for( SearchResultSetType::const_reverse_iterator rItr = resultSet.rbegin(); rItr != resultSet.rend(); ++rItr )
+        {
+            // Init the default values for all delta scores.
+            const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = 0.0;
+            const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = 0.0;
+            const_cast< SearchResult& >( *rItr ).deltaMVHMode = -1.0;
+            const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = 0.0;
+            const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = 0.0;
+            const_cast< SearchResult& >( *rItr ).deltaMZFidelityMode = -1.0;
+            const_cast< SearchResult& >( *rItr ).deltaMVHAvg = -1.0;
+            const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvg = -1.0;
+            const_cast < SearchResult& >(*rItr ).mvhMode = 0.0;
+            const_cast < SearchResult& >(*rItr ).mzFidelityMode = 0.0;
 
-			// Check to see if the mvh and mzFidelity scores are above zero.
-			bool validMVHScore = rItr->mvh > 0.0 ? true : false;
-			bool validMZFidelityScore = rItr->mzFidelity > 0.0 ? true : false;
+            // Check to see if the mvh and mzFidelity scores are above zero.
+            bool validMVHScore = rItr->mvh > 0.0 ? true : false;
+            bool validMZFidelityScore = rItr->mzFidelity > 0.0 ? true : false;
 
-			// If the mvh score is valid then compute the deltaMVH using the (thisMVH-averageMVH)/thisMVH
-			// Also compute the deltaMVH using (thisMVH-modeMVH)/thisMVH.
-			if(validMVHScore) {			
-				const_cast< SearchResult& >( *rItr ).deltaMVHAvg = (rItr->mvh-averageMVHValue);
-				const_cast< SearchResult& >( *rItr ).deltaMVHMode = (rItr->mvh-mvhMode);
-				const_cast < SearchResult& >(*rItr ).mvhMode = mvhMode;
-			}
-			// Compute the deltaMZFidelity values just like the deltaMVH values described above.
-			if(validMZFidelityScore) {
-				const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvg = (rItr->mzFidelity-averageMZFidelity);
-				const_cast< SearchResult& >( *rItr ).deltaMZFidelityMode = (rItr->mzFidelity-mzFidelityMode);
-			}
-			
-			
-			// Compute the smart sequest type deltaMVH value as (thisMVH-nextBestMVH)/thisMVH
-			// nextBestMVH is the next lowest MVH that matches to a different sequence. Please
-			// note that this treats the peptide sequences that match with same MVH score as
-			// same. It also treats a peptide sequence with ambiguous interpretations
-			// as same.
-			SearchResultSetType::const_reverse_iterator reverIter = rItr;
-			// Get the current sequence
-			string currentPep = rItr->sequence();
-			// Go down the list of results and locate the next best result that doesn't have the
-			// same MVH score and the same peptide sequence.
-			//while(validMVHScore && reverIter!=resultSet.begin() && (currentPep.compare(reverIter->sequence())==0 || rItr->mvh==reverIter->mvh)) {
-			while(validMVHScore && reverIter!=resultSet.rend() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massError)==true || rItr->mvh==reverIter->mvh)) {
-				++reverIter;
-			}
-			// Compute the deltaMVH using the located result
-			if(reverIter!=resultSet.rend() && validMVHScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mvh!=reverIter->mvh) && reverIter->mvh > 0.0) {
-				const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = (rItr->mvh-reverIter->mvh);
-			}
+            // If the mvh score is valid then compute the deltaMVH using the (thisMVH-averageMVH)/thisMVH
+            // Also compute the deltaMVH using (thisMVH-modeMVH)/thisMVH.
+            if(validMVHScore) {            
+                const_cast< SearchResult& >( *rItr ).deltaMVHAvg = (rItr->mvh-averageMVHValue);
+                const_cast< SearchResult& >( *rItr ).deltaMVHMode = (rItr->mvh-mvhMode);
+                const_cast < SearchResult& >(*rItr ).mvhMode = mvhMode;
+            }
+            // Compute the deltaMZFidelity values just like the deltaMVH values described above.
+            if(validMZFidelityScore) {
+                const_cast< SearchResult& >( *rItr ).deltaMZFidelityAvg = (rItr->mzFidelity-averageMZFidelity);
+                const_cast< SearchResult& >( *rItr ).deltaMZFidelityMode = (rItr->mzFidelity-mzFidelityMode);
+            }
+            
+            
+            // Compute the smart sequest type deltaMVH value as (thisMVH-nextBestMVH)/thisMVH
+            // nextBestMVH is the next lowest MVH that matches to a different sequence. Please
+            // note that this treats the peptide sequences that match with same MVH score as
+            // same. It also treats a peptide sequence with ambiguous interpretations
+            // as same.
+            SearchResultSetType::const_reverse_iterator reverIter = rItr;
+            // Get the current sequence
+            string currentPep = rItr->sequence();
+            // Go down the list of results and locate the next best result that doesn't have the
+            // same MVH score and the same peptide sequence.
+            //while(validMVHScore && reverIter!=resultSet.begin() && (currentPep.compare(reverIter->sequence())==0 || rItr->mvh==reverIter->mvh)) {
+            while(validMVHScore && reverIter!=resultSet.rend() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massError)==true || rItr->mvh==reverIter->mvh)) {
+                ++reverIter;
+            }
+            // Compute the deltaMVH using the located result
+            if(reverIter!=resultSet.rend() && validMVHScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mvh!=reverIter->mvh) && reverIter->mvh > 0.0) {
+                const_cast< SearchResult& >( *rItr ).deltaMVHSmartSeqType = (rItr->mvh-reverIter->mvh);
+            }
 
-			// Compute the sequest type deltaMVH as (thisMVH-nextBestMVH)/thisMVH.
-			// nextBestMVH in this context is the next lowest MVH value regardless of the
-			// sequence it matched to. Please note that this treats peptides with ambiguous
-			// modification interpretations as different entities.
-			reverIter = rItr;
-			// Locate the next result with the lowest score
-			while(validMVHScore && reverIter!=resultSet.rend() && rItr->mvh==reverIter->mvh) {
-				++reverIter;
-			}
-			// Compute the deltaMVH
-			if(reverIter!=resultSet.rend() && validMVHScore && rItr->mvh!=reverIter->mvh && reverIter->mvh > 0.0) {
-				const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = (rItr->mvh-reverIter->mvh);
-			}
+            // Compute the sequest type deltaMVH as (thisMVH-nextBestMVH)/thisMVH.
+            // nextBestMVH in this context is the next lowest MVH value regardless of the
+            // sequence it matched to. Please note that this treats peptides with ambiguous
+            // modification interpretations as different entities.
+            reverIter = rItr;
+            // Locate the next result with the lowest score
+            while(validMVHScore && reverIter!=resultSet.rend() && rItr->mvh==reverIter->mvh) {
+                ++reverIter;
+            }
+            // Compute the deltaMVH
+            if(reverIter!=resultSet.rend() && validMVHScore && rItr->mvh!=reverIter->mvh && reverIter->mvh > 0.0) {
+                const_cast< SearchResult& >( *rItr ).deltaMVHSeqType = (rItr->mvh-reverIter->mvh);
+            }
 
-			// Compute the smart sequest type deltaMZFidelity value as (thisMZFidelity-nextBestMZFidelity)/thisMZFidelity
-			// nextBestMZFidelity is the next lowest MZFidelity that matches to a different sequence. Please
-			// note that this treats the peptide sequences that match with same MZFidelity score as
-			// same. It also treats a peptide sequence with ambiguous interpretations
-			// as same.
-			reverIter = rItr;
-			// Go down the list of results and locate the next best result that doesn't have the
-			// same MVH score and the same peptide sequence.
-			while(validMZFidelityScore && reverIter!=resultSet.rend() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massError)==true || rItr->mzFidelity==reverIter->mzFidelity)) {
-				++reverIter;
-			}
-			// Compute the deltaMVH using the located result
-			if(reverIter!=resultSet.rend() && validMZFidelityScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mzFidelity!=reverIter->mzFidelity) && reverIter->mzFidelity > 0.0) {
-				const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = (rItr->mzFidelity-reverIter->mzFidelity);
-			}
+            // Compute the smart sequest type deltaMZFidelity value as (thisMZFidelity-nextBestMZFidelity)/thisMZFidelity
+            // nextBestMZFidelity is the next lowest MZFidelity that matches to a different sequence. Please
+            // note that this treats the peptide sequences that match with same MZFidelity score as
+            // same. It also treats a peptide sequence with ambiguous interpretations
+            // as same.
+            reverIter = rItr;
+            // Go down the list of results and locate the next best result that doesn't have the
+            // same MVH score and the same peptide sequence.
+            while(validMZFidelityScore && reverIter!=resultSet.rend() && (isIsobaric(static_cast< const DigestedPeptide& >(*rItr),static_cast< const DigestedPeptide& >(*reverIter),massError)==true || rItr->mzFidelity==reverIter->mzFidelity)) {
+                ++reverIter;
+            }
+            // Compute the deltaMVH using the located result
+            if(reverIter!=resultSet.rend() && validMZFidelityScore && (currentPep.compare(reverIter->sequence())!=0 && rItr->mzFidelity!=reverIter->mzFidelity) && reverIter->mzFidelity > 0.0) {
+                const_cast< SearchResult& >( *rItr ).deltaMZFidelitySmartSeqType = (rItr->mzFidelity-reverIter->mzFidelity);
+            }
 
-			// Compute the sequest type deltaMZFidelity as (thisMZFidelity-nextBestMZFidelity)/thisMZFidelity.
-			// nextBestMZFidelity in this context is the next lowest MZFidelity value regardless of the
-			// sequence it matched to. Please note that this treats peptides with ambiguous
-			// modification interpretations as different entities.
-			reverIter = rItr;
-			// Locate the next result with the lowest score
-			while(validMZFidelityScore && reverIter!=resultSet.rend() && rItr->mzFidelity==reverIter->mzFidelity) {
-				++reverIter;
-			}
-			// Compute the deltaMZFidelity
-			if(reverIter!=resultSet.rend() && validMZFidelityScore && rItr->mzFidelity!=reverIter->mzFidelity && reverIter->mzFidelity > 0.0) {
-				const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = (rItr->mzFidelity-reverIter->mzFidelity);
-			}
-		}*/
-	}
+            // Compute the sequest type deltaMZFidelity as (thisMZFidelity-nextBestMZFidelity)/thisMZFidelity.
+            // nextBestMZFidelity in this context is the next lowest MZFidelity value regardless of the
+            // sequence it matched to. Please note that this treats peptides with ambiguous
+            // modification interpretations as different entities.
+            reverIter = rItr;
+            // Locate the next result with the lowest score
+            while(validMZFidelityScore && reverIter!=resultSet.rend() && rItr->mzFidelity==reverIter->mzFidelity) {
+                ++reverIter;
+            }
+            // Compute the deltaMZFidelity
+            if(reverIter!=resultSet.rend() && validMZFidelityScore && rItr->mzFidelity!=reverIter->mzFidelity && reverIter->mzFidelity > 0.0) {
+                const_cast< SearchResult& >( *rItr ).deltaMZFidelitySeqType = (rItr->mzFidelity-reverIter->mzFidelity);
+            }
+        }*/
+    }
 
     void Spectrum::ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector< double >& seqIons )
     {
         PeakData::iterator peakItr;
-		MvIntKey mzFidelityKey;
+        MvIntKey mzFidelityKey;
         //MvIntKey& mvhKey = result.key;
         MvIntKey mvhKey;
 
-		mvhKey.clear();
-		mvhKey.resize( g_rtConfig->NumIntensityClasses+1, 0 );
-		mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
-		result.mvh = 0.0;
-		result.mzFidelity = 0.0;
-		//result.mzSSE = 0.0;
-		//result.newMZFidelity = 0.0;
-		//result.mzMAE = 0.0;
-		result.matchedIons.clear();
+        mvhKey.clear();
+        mvhKey.resize( g_rtConfig->NumIntensityClasses+1, 0 );
+        mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
+        result.mvh = 0.0;
+        result.mzFidelity = 0.0;
+        //result.mzSSE = 0.0;
+        //result.newMZFidelity = 0.0;
+        //result.mzMAE = 0.0;
+        result.matchedIons.clear();
 
 
-		START_PROFILER(6);
-		int totalPeaks = (int) seqIons.size();
+        START_PROFILER(6);
+        int totalPeaks = (int) seqIons.size();
 
         for( size_t j=0; j < seqIons.size(); ++j )
-	    {
-		    // skip theoretical ions outside the scan range of the spectrum
-		    if( seqIons[j] < mzLowerBound ||
-			    seqIons[j] > mzUpperBound )
-		    {
-			    --totalPeaks; // one less ion to consider because it's out of the scan range
-			    continue;
-		    }
+        {
+            // skip theoretical ions outside the scan range of the spectrum
+            if( seqIons[j] < mzLowerBound ||
+                seqIons[j] > mzUpperBound )
+            {
+                --totalPeaks; // one less ion to consider because it's out of the scan range
+                continue;
+            }
 
 
-		    START_PROFILER(7);
-		    // Find the fragment ion peak. Consider the fragment ion charge state while setting the
-		    // mass window for the fragment ion lookup.
-		    peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
+            START_PROFILER(7);
+            // Find the fragment ion peak. Consider the fragment ion charge state while setting the
+            // mass window for the fragment ion lookup.
+            peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
             
-		    STOP_PROFILER(7);
+            STOP_PROFILER(7);
 
-		    // If a peak was found, increment the sequenceInstance's ion correlation triplet
-		    if( peakItr != peakData.end() && peakItr->second.intenClass > 0 )
-		    {
-			    double mzError = fabs( peakItr->first - seqIons[j] );
-			    ++mvhKey[ peakItr->second.intenClass-1 ];
-			    //result.mzSSE += pow( mzError, 2.0 );
-			    //result.mzMAE += mzError;
-			    ++mzFidelityKey[ ClassifyError( mzError, mzFidelityThresholds ) ];
-			    //int mzFidelityClass = ClassifyError( mzError, g_rtConfig->massErrors );
-			    //result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
-			    //result.matchedIons.push_back(peakItr->first);
-		    } else
-		    {
-			    ++mvhKey[ g_rtConfig->NumIntensityClasses ];
-			    //result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
-			    //result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
-			    ++mzFidelityKey[ g_rtConfig->NumMzFidelityClasses ];
-		    }
+            // If a peak was found, increment the sequenceInstance's ion correlation triplet
+            if( peakItr != peakData.end() && peakItr->second.intenClass > 0 )
+            {
+                double mzError = fabs( peakItr->first - seqIons[j] );
+                ++mvhKey[ peakItr->second.intenClass-1 ];
+                //result.mzSSE += pow( mzError, 2.0 );
+                //result.mzMAE += mzError;
+                ++mzFidelityKey[ ClassifyError( mzError, mzFidelityThresholds ) ];
+                //int mzFidelityClass = ClassifyError( mzError, g_rtConfig->massErrors );
+                //result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
+                //result.matchedIons.push_back(peakItr->first);
+            } else
+            {
+                ++mvhKey[ g_rtConfig->NumIntensityClasses ];
+                //result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
+                //result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
+                ++mzFidelityKey[ g_rtConfig->NumMzFidelityClasses ];
+            }
 
-	    }
-		STOP_PROFILER(6);
+        }
+        STOP_PROFILER(6);
 
-		//result.mzSSE /= totalPeaks;
-		//result.mzMAE /= totalPeaks;
+        //result.mzSSE /= totalPeaks;
+        //result.mzMAE /= totalPeaks;
 
-		// Convert the new mzFidelity score into normal domain.
-		//result.newMZFidelity = exp(result.newMZFidelity);
+        // Convert the new mzFidelity score into normal domain.
+        //result.newMZFidelity = exp(result.newMZFidelity);
 
-		double mvh = 0.0;
+        double mvh = 0.0;
 
         result.fragmentsUnmatched = mvhKey.back();
 
-		START_PROFILER(8);
-		if( result.fragmentsUnmatched != totalPeaks )
-		{
+        START_PROFILER(8);
+        if( result.fragmentsUnmatched != totalPeaks )
+        {
             int fragmentsPredicted = accumulate( mvhKey.begin(), mvhKey.end(), 0 );
-			result.fragmentsMatched = fragmentsPredicted - result.fragmentsUnmatched;
+            result.fragmentsMatched = fragmentsPredicted - result.fragmentsUnmatched;
 
             if( result.fragmentsMatched >= g_rtConfig->MinMatchedFragments )
             {
-			    //int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
-			    int numVoids = intenClassCounts.back();
-			    int totalPeakBins = numVoids + peakCount;
+                //int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
+                int numVoids = intenClassCounts.back();
+                int totalPeakBins = numVoids + peakCount;
 
-			    for( size_t i=0; i < intenClassCounts.size(); ++i ) {
-				    mvh += lnCombin( intenClassCounts[i], mvhKey[i] );
-			    }
-			    mvh -= lnCombin( totalPeakBins, fragmentsPredicted );
+                for( size_t i=0; i < intenClassCounts.size(); ++i ) {
+                    mvh += lnCombin( intenClassCounts[i], mvhKey[i] );
+                }
+                mvh -= lnCombin( totalPeakBins, fragmentsPredicted );
 
-			    result.mvh = -mvh;
+                result.mvh = -mvh;
 
 
-			    int N;
-			    double sum1 = 0, sum2 = 0;
-			    int totalPeakSpace = numVoids + fragmentsPredicted;
-			    double pHits = (double) fragmentsPredicted / (double) totalPeakSpace;
-			    double pMisses = 1.0 - pHits;
+                int N;
+                double sum1 = 0, sum2 = 0;
+                int totalPeakSpace = numVoids + fragmentsPredicted;
+                double pHits = (double) fragmentsPredicted / (double) totalPeakSpace;
+                double pMisses = 1.0 - pHits;
 
-			    N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
-			    int p = 0;
+                N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
+                int p = 0;
 
-			    //cout << id << ": " << mzFidelityKey << endl;
+                //cout << id << ": " << mzFidelityKey << endl;
 
-			    //if( id == 2347 ) cout << pHits << " " << totalPeakSpace << " " << peakData.size() << endl;
-			    for( int i=0; i < g_rtConfig->NumMzFidelityClasses; ++i )
-			    {
-				    p = 1 << i;
-				    double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
-				    //if( id == 2347 ) cout << " " << pKey << " " << mzFidelityKey[i] << endl;
-				    sum1 += log( pow( pKey, mzFidelityKey[i] ) );
-				    sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
-			    }
-			    sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
-			    sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
-			    result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
+                //if( id == 2347 ) cout << pHits << " " << totalPeakSpace << " " << peakData.size() << endl;
+                for( int i=0; i < g_rtConfig->NumMzFidelityClasses; ++i )
+                {
+                    p = 1 << i;
+                    double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
+                    //if( id == 2347 ) cout << " " << pKey << " " << mzFidelityKey[i] << endl;
+                    sum1 += log( pow( pKey, mzFidelityKey[i] ) );
+                    sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
+                }
+                sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
+                sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
+                result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
             }
-		}
+        }
 
-		STOP_PROFILER(8);
+        STOP_PROFILER(8);
     }
 }
 }

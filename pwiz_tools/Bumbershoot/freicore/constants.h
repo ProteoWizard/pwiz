@@ -34,12 +34,12 @@
    */
 
 ///Defines proton, neutron and electron masses
-#define PROTON				1.007276
-#define NEUTRON				1.008665
-#define ELECTRON			0.000549
+#define PROTON                1.007276
+#define NEUTRON                1.008665
+#define ELECTRON            0.000549
 
 ///Defines number of isotopes for each element
-#define NUM_ISOTOPES		5
+#define NUM_ISOTOPES        5
 extern const double CARBON_ISOTOPES[NUM_ISOTOPES];
 extern const double HYDROGEN_ISOTOPES[NUM_ISOTOPES];
 extern const double OXYGEN_ISOTOPES[NUM_ISOTOPES];
@@ -73,13 +73,13 @@ extern const double AMMONIA_MONO;
 extern const double AMMONIA_AVG;
 #define AMMONIA(useAvg) (useAvg?AMMONIA_AVG:AMMONIA_MONO)
 
-#define PEPTIDE_N_TERMINUS_SYMBOL	'('
-#define PEPTIDE_C_TERMINUS_SYMBOL	')'
+#define PEPTIDE_N_TERMINUS_SYMBOL    '('
+#define PEPTIDE_C_TERMINUS_SYMBOL    ')'
 extern const char PEPTIDE_N_TERMINUS_STRING[2];
 extern const char PEPTIDE_C_TERMINUS_STRING[2];
 
-#define PROTEIN_N_TERMINUS_SYMBOL	'['
-#define PROTEIN_C_TERMINUS_SYMBOL	']'
+#define PROTEIN_N_TERMINUS_SYMBOL    '['
+#define PROTEIN_C_TERMINUS_SYMBOL    ']'
 extern const char PROTEIN_N_TERMINUS_STRING[2];
 extern const char PROTEIN_C_TERMINUS_STRING[2];
 

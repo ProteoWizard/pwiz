@@ -81,8 +81,8 @@ public ref struct Parser
     void Parse(IEnumerable<String^>^ inputFilepaths, int maxThreads, pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
     void Parse(String^ inputFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);
-	
-	static String^ ParseSource(String^ inputFilepath);
+    
+    static String^ ParseSource(String^ inputFilepath);
 
 
     internal:

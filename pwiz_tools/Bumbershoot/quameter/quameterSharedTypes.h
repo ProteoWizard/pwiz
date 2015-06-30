@@ -91,19 +91,19 @@ namespace quameter
         double precursorScanStartTime;
 
         bool operator< ( const MS2ScanInfo& rhs ) const
-		{
+        {
             return nativeID < rhs.nativeID;
-		}
+        }
 
-		bool operator== ( const MS2ScanInfo& rhs ) const
-		{
+        bool operator== ( const MS2ScanInfo& rhs ) const
+        {
             return scanStartTime == rhs.scanStartTime &&
                    nativeID == rhs.nativeID &&
                    distinctModifiedPeptideID == rhs.distinctModifiedPeptideID &&
                    precursorScanStartTime == rhs.precursorScanStartTime &&
                    precursorMZ == rhs.precursorMZ &&
                    precursorNativeID == rhs.precursorNativeID;
-		}
+        }
 
     };
 
@@ -177,7 +177,7 @@ namespace quameter
         }
 
         bool operator< ( const ScanRankerMS2PrecInfo& rhs ) const
-		{
+        {
             if(nativeID.compare(rhs.nativeID)!=0)
                 return nativeID < rhs.nativeID;
             if(charge != rhs.charge)
@@ -186,13 +186,13 @@ namespace quameter
                 return precursorMass < rhs.precursorMass;
 
             return 0;
-		}
+        }
 
-		/// Operator to compare the equality of two search scores (MVH)
-		bool operator== ( const ScanRankerMS2PrecInfo& rhs ) const
-		{
-			return nativeID.compare(rhs.nativeID)==0 && charge == rhs.charge && precursorMass == rhs.precursorMass;
-		}
+        /// Operator to compare the equality of two search scores (MVH)
+        bool operator== ( const ScanRankerMS2PrecInfo& rhs ) const
+        {
+            return nativeID.compare(rhs.nativeID)==0 && charge == rhs.charge && precursorMass == rhs.precursorMass;
+        }
 
     };
 

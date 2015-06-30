@@ -36,7 +36,7 @@ using boost::icl::interval_set;
 using boost::icl::continuous_interval;
 
 #define QUAMETER_RUNTIME_CONFIG \
-	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
+    COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
     RTCONFIG_VARIABLE( string,          OutputFilepath,              ""           ) \
     RTCONFIG_VARIABLE( string,          MetricsType,                 "nistms"     ) \
     RTCONFIG_VARIABLE( string,          Instrument,                  "ltq"        ) \
@@ -46,7 +46,7 @@ using boost::icl::continuous_interval;
     RTCONFIG_VARIABLE( double,          ScoreCutoff,                 0.05         ) \
     RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzLowerOffset,   "0.5mz"      ) \
     RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzUpperOffset,   "1.0mz"      ) \
-	RTCONFIG_VARIABLE( bool,            ChromatogramOutput,          false        ) \
+    RTCONFIG_VARIABLE( bool,            ChromatogramOutput,          false        ) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,         "peakPicking true 1-;threshold absolute 0.00000000001 most-intense" )
 
 
@@ -56,10 +56,10 @@ namespace freicore
 namespace quameter
 {
 
-	struct RunTimeConfig : public BaseRunTimeConfig
-	{
-	public:
-		RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, QUAMETER_RUNTIME_CONFIG, "quameter.cfg" )
+    struct RunTimeConfig : public BaseRunTimeConfig
+    {
+    public:
+        RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, QUAMETER_RUNTIME_CONFIG, "quameter.cfg" )
 
         interval_set<double> chromatogramScanTimeWindow(double centerTime) const
         {
@@ -75,9 +75,9 @@ namespace quameter
 
         bool useAvgMass;
 
-	private:
-		void finalize()
-		{
+    private:
+        void finalize()
+        {
             bal::to_lower(MetricsType);
             bal::to_lower(Instrument);
 
@@ -88,14 +88,14 @@ namespace quameter
 
             bal::trim_right_if(RawDataPath, is_any_of("/\\"));
 
-			string cwd;
-			cwd.resize( MAX_PATH );
-			getcwd( &cwd[0], MAX_PATH );
-			WorkingDirectory = cwd.c_str();
-		}
-	};
+            string cwd;
+            cwd.resize( MAX_PATH );
+            getcwd( &cwd[0], MAX_PATH );
+            WorkingDirectory = cwd.c_str();
+        }
+    };
 
-	extern RunTimeConfig* g_rtConfig;
+    extern RunTimeConfig* g_rtConfig;
 }
 }
 

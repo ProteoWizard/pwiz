@@ -109,8 +109,8 @@ struct Parser
     void parse(const vector<string>& inputFilepaths, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;
 
     void parse(const string& inputFilepath, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;
-	
-	static string parseSource(const string& inputFilepath);
+    
+    static string parseSource(const string& inputFilepath);
     
     static boost::filesystem::path outputFilepath(const string& inputFilepath);
 

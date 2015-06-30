@@ -33,19 +33,19 @@
 using namespace freicore;
 
 #define DIRECTAG_RUNTIME_CONFIG \
-	MULTITHREAD_RTCONFIG \
-	RTCONFIG_VARIABLE( string,			OutputSuffix,				""			        ) \
-    RTCONFIG_VARIABLE( int,				NumBatches,					50				    ) \
-	RTCONFIG_VARIABLE( bool,			DuplicateSpectra,			true				) \
-	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		true				) \
+    MULTITHREAD_RTCONFIG \
+    RTCONFIG_VARIABLE( string,            OutputSuffix,                ""                    ) \
+    RTCONFIG_VARIABLE( int,                NumBatches,                    50                    ) \
+    RTCONFIG_VARIABLE( bool,            DuplicateSpectra,            true                ) \
+    RTCONFIG_VARIABLE( bool,            UseChargeStateFromMS,        true                ) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,        "peakPicking true 2-"   ) \
-	RTCONFIG_VARIABLE( bool,			WriteOutTags,				true		        ) \
-	RTCONFIG_VARIABLE( bool,			WriteScanRankerMetrics,		false		        ) \
-	RTCONFIG_VARIABLE( string,			ScanRankerMetricsFileName,	""			        ) \
-	RTCONFIG_VARIABLE( bool,			WriteHighQualSpectra,		false		        ) \
-	RTCONFIG_VARIABLE( string,			HighQualSpecFileName,		""			        ) \
-	RTCONFIG_VARIABLE( double,			HighQualSpecCutoff,			0.6			        ) \
-	RTCONFIG_VARIABLE( string,			OutputFormat,				"mzML"		        ) 
+    RTCONFIG_VARIABLE( bool,            WriteOutTags,                true                ) \
+    RTCONFIG_VARIABLE( bool,            WriteScanRankerMetrics,        false                ) \
+    RTCONFIG_VARIABLE( string,            ScanRankerMetricsFileName,    ""                    ) \
+    RTCONFIG_VARIABLE( bool,            WriteHighQualSpectra,        false                ) \
+    RTCONFIG_VARIABLE( string,            HighQualSpecFileName,        ""                    ) \
+    RTCONFIG_VARIABLE( double,            HighQualSpecCutoff,            0.6                    ) \
+    RTCONFIG_VARIABLE( string,            OutputFormat,                "mzML"                ) 
 
 
 namespace freicore
@@ -53,27 +53,27 @@ namespace freicore
 namespace directag
 {
     
-	struct RunTimeConfig : public DirecTagAPIConfig
-	{
-	public:
+    struct RunTimeConfig : public DirecTagAPIConfig
+    {
+    public:
         RTCONFIG_DEFINE_MEMBERS_EX( RunTimeConfig, DirecTagAPIConfig, DIRECTAG_RUNTIME_CONFIG, "directag.cfg" )
 
-		int		SpectraBatchSize;
-		int		ProteinBatchSize;
+        int        SpectraBatchSize;
+        int        ProteinBatchSize;
 
-	protected:
-		void finalize()
-		{
-			string cwd;
-			cwd.resize( MAX_PATH );
-			getcwd( &cwd[0], MAX_PATH );
-			WorkingDirectory = cwd.c_str();
+    protected:
+        void finalize()
+        {
+            string cwd;
+            cwd.resize( MAX_PATH );
+            getcwd( &cwd[0], MAX_PATH );
+            WorkingDirectory = cwd.c_str();
             
-			DirecTagAPIConfig::finalize();
-		}
-	};
+            DirecTagAPIConfig::finalize();
+        }
+    };
 
-	extern shared_ptr<RunTimeConfig>   rtConfig;
+    extern shared_ptr<RunTimeConfig>   rtConfig;
 }
 }
 

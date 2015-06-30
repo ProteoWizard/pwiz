@@ -176,7 +176,7 @@ void Parser::Parse(String^ inputFilepath, pwiz::CLI::util::IterationListenerRegi
 
 String^ Parser::ParseSource(String^ inputFilepath)
 {
-    string nativeInputFilepath = ToStdString(inputFilepath);	
+    string nativeInputFilepath = ToStdString(inputFilepath);    
 
     try {return ToSystemString(NativeIDPicker::Parser::parseSource(nativeInputFilepath));} CATCH_AND_FORWARD;
     return "";

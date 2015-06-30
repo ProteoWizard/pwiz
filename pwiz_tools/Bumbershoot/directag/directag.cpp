@@ -48,132 +48,132 @@ namespace directag
     PeakFilteringStatistics             peakStatistics;
     shared_ptr<RunTimeConfig>           rtConfig;
 
-	void WriteTagsToTagsFile(	const string& inputFilename,
-								string startTime,
-								string startDate,
-								float totalTaggingTime )
-	{
-		string filenameAsScanName;
-		filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
-								inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
-		string outputFilename = filenameAsScanName + rtConfig->OutputSuffix + ".tags";
+    void WriteTagsToTagsFile(    const string& inputFilename,
+                                string startTime,
+                                string startDate,
+                                float totalTaggingTime )
+    {
+        string filenameAsScanName;
+        filenameAsScanName =    inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
+                                inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
+        string outputFilename = filenameAsScanName + rtConfig->OutputSuffix + ".tags";
 
-		stringstream header;
-		header << "H\tTagsGenerator\tDirecTag\n" <<
+        stringstream header;
+        header << "H\tTagsGenerator\tDirecTag\n" <<
                   "H\tTagsGeneratorVersion\t" << Version::str() << " (" << Version::LastModified() << ")\n";
 
-		string license( DIRECTAG_LICENSE );
-		boost::char_separator<char> delim("\n");
-		stokenizer parser( license.begin(), license.begin() + license.length(), delim );
-		for( stokenizer::iterator token = parser.begin(); token != parser.end(); ++token )
-			header <<"H\t" << *token << "\n";
+        string license( DIRECTAG_LICENSE );
+        boost::char_separator<char> delim("\n");
+        stokenizer parser( license.begin(), license.begin() + license.length(), delim );
+        for( stokenizer::iterator token = parser.begin(); token != parser.end(); ++token )
+            header <<"H\t" << *token << "\n";
 
-		header <<	"H\tTagging started at " << startTime << " on " << startDate << ".\n" <<
-					"H\tTagging finished at " << GetTimeString() << " on " << GetDateString() << ".\n" <<
-					"H\tTotal tagging time: " << totalTaggingTime << " seconds.\n" <<
-					"H\tUsed " << g_numProcesses << " processing " << ( g_numProcesses > 1 ? "nodes" : "node" ) << ".\n";
+        header <<    "H\tTagging started at " << startTime << " on " << startDate << ".\n" <<
+                    "H\tTagging finished at " << GetTimeString() << " on " << GetDateString() << ".\n" <<
+                    "H\tTotal tagging time: " << totalTaggingTime << " seconds.\n" <<
+                    "H\tUsed " << g_numProcesses << " processing " << ( g_numProcesses > 1 ? "nodes" : "node" ) << ".\n";
 
-		cout << "Writing tags to \"" << outputFilename << "\"." << endl;
-		spectra.writeTags( inputFilename, rtConfig->OutputSuffix, header.str(), rtConfig->getVariables() );
-		spectra.clear();
-	}
+        cout << "Writing tags to \"" << outputFilename << "\"." << endl;
+        spectra.writeTags( inputFilename, rtConfig->OutputSuffix, header.str(), rtConfig->getVariables() );
+        spectra.clear();
+    }
 
-	void PrepareSpectra()
-	{
-		Timer timer;
+    void PrepareSpectra()
+    {
+        Timer timer;
 
-		cout << "Trimming spectra with less than " << 10 << " peaks." << endl;
+        cout << "Trimming spectra with less than " << 10 << " peaks." << endl;
 
-		int preTrimCount = 0;
-		try
-		{
-			preTrimCount = spectra.filterByPeakCount( 10 );
-		} catch( exception& e )
-		{
-			throw runtime_error( string( "trimming spectra: " ) + e.what() );
-		} catch( ... )
-		{
-			throw runtime_error( "trimming spectra" );
-		}
+        int preTrimCount = 0;
+        try
+        {
+            preTrimCount = spectra.filterByPeakCount( 10 );
+        } catch( exception& e )
+        {
+            throw runtime_error( string( "trimming spectra: " ) + e.what() );
+        } catch( ... )
+        {
+            throw runtime_error( "trimming spectra" );
+        }
 
-		cout << "Trimmed " << preTrimCount << " spectra for being too small before peak filtering." << endl;
-		cout << "Determining spectrum charge states from " << spectra.size() << " spectra." << endl;
+        cout << "Trimmed " << preTrimCount << " spectra for being too small before peak filtering." << endl;
+        cout << "Determining spectrum charge states from " << spectra.size() << " spectra." << endl;
 
-		timer.Begin();
-		SpectraList duplicates;
-		BOOST_FOREACH(Spectrum* s, spectra)
-		{
-			try
-			{
-				if( !rtConfig->UseChargeStateFromMS )
-					spectra.setId( s->id, SpectrumId( s->id.nativeID, 0 ) );
+        timer.Begin();
+        SpectraList duplicates;
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            try
+            {
+                if( !rtConfig->UseChargeStateFromMS )
+                    spectra.setId( s->id, SpectrumId( s->id.nativeID, 0 ) );
 
-				if( s->id.charge == 0 )
-				{
-					SpectrumId preChargeId( s->id );
-					s->DetermineSpectrumChargeState();
-					SpectrumId postChargeId( s->id );
+                if( s->id.charge == 0 )
+                {
+                    SpectrumId preChargeId( s->id );
+                    s->DetermineSpectrumChargeState();
+                    SpectrumId postChargeId( s->id );
 
-					if( postChargeId.charge == 0 )
-					{
-						postChargeId.setCharge(2);
+                    if( postChargeId.charge == 0 )
+                    {
+                        postChargeId.setCharge(2);
 
-						if( rtConfig->DuplicateSpectra )
-						{
-							for( int z = 3; z <= rtConfig->NumChargeStates; ++z )
-							{
-								Spectrum* s2 = new Spectrum( *s );
-								s2->id.setCharge(z);
+                        if( rtConfig->DuplicateSpectra )
+                        {
+                            for( int z = 3; z <= rtConfig->NumChargeStates; ++z )
+                            {
+                                Spectrum* s2 = new Spectrum( *s );
+                                s2->id.setCharge(z);
                                 s2->setTagConfig(rtConfig);
-								duplicates.push_back(s2);
-							}
-						}
-					}
+                                duplicates.push_back(s2);
+                            }
+                        }
+                    }
 
-					spectra.setId( preChargeId, postChargeId );
-				}
+                    spectra.setId( preChargeId, postChargeId );
+                }
 
-			} catch( exception& e )
-			{
-				throw runtime_error( string( "duplicating scan " ) + string( s->id ) + ": " + e.what() );
-			} catch( ... )
-			{
-				throw runtime_error( string( "duplicating scan " ) + string( s->id ) );
-			}
-		}
+            } catch( exception& e )
+            {
+                throw runtime_error( string( "duplicating scan " ) + string( s->id ) + ": " + e.what() );
+            } catch( ... )
+            {
+                throw runtime_error( string( "duplicating scan " ) + string( s->id ) );
+            }
+        }
 
-		try
-		{
-			spectra.insert( duplicates.begin(), duplicates.end(), spectra.end() );
-			duplicates.clear(false);
-		} catch( exception& e )
-		{
-			throw runtime_error( string( "adding duplicated spectra: " ) + e.what() );
-		} catch( ... )
-		{
-			throw runtime_error( "adding duplicated spectra" );
-		}
+        try
+        {
+            spectra.insert( duplicates.begin(), duplicates.end(), spectra.end() );
+            duplicates.clear(false);
+        } catch( exception& e )
+        {
+            throw runtime_error( string( "adding duplicated spectra: " ) + e.what() );
+        } catch( ... )
+        {
+            throw runtime_error( "adding duplicated spectra" );
+        }
 
-		cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
-		cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
-	}
+        cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
+        cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
+    }
 
-	vector< int > workerNumbers;
-	int numSearched;
+    vector< int > workerNumbers;
+    int numSearched;
 
     void ExecuteSequenceTagger()
-	{
+    {
         try
         {
             Spectrum* taggingTask;
-	        while( true )
-	        {
+            while( true )
+            {
                 if (!taggingTasks.pop(taggingTask))
-			        break;
+                    break;
 
-			    Spectrum* s = taggingTask;
+                Spectrum* s = taggingTask;
                 s->processAndTagSpectrum(peakStatistics, taggingStatistics, true);
-		    }
+            }
         } catch( std::exception& e )
         {
             cerr << " terminated with an error: " << e.what() << endl;
@@ -181,29 +181,29 @@ namespace directag
         {
             cerr << " terminated with an unknown error." << endl;
         }
-	}
+    }
 
     void ExecutePipeline()
-	{
-		int numSpectra = (int) spectra.size();
+    {
+        int numSpectra = (int) spectra.size();
 
-		float maxPeakSpace = 0;
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        float maxPeakSpace = 0;
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
         {
-			taggingTasks.push(*sItr);
-			if( (*sItr)->totalPeakSpace > maxPeakSpace )
-				maxPeakSpace = (*sItr)->totalPeakSpace;
+            taggingTasks.push(*sItr);
+            if( (*sItr)->totalPeakSpace > maxPeakSpace )
+                maxPeakSpace = (*sItr)->totalPeakSpace;
         }
 
-		//cout << "Resizing lnTable to " << maxPeakSpace << endl;
-		g_lnFactorialTable.resize( (int) ceil( maxPeakSpace ) );
+        //cout << "Resizing lnTable to " << maxPeakSpace << endl;
+        g_lnFactorialTable.resize( (int) ceil( maxPeakSpace ) );
 
         bpt::ptime start = bpt::microsec_clock::local_time();
 
         boost::thread_group workerThreadGroup;
         vector<boost::thread*> workerThreads;
 
-		for (int i = 0; i < g_numWorkers; ++i)
+        for (int i = 0; i < g_numWorkers; ++i)
             workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteSequenceTagger));
 
         if (g_numChildren > 0)
@@ -231,19 +231,19 @@ namespace directag
                 lastUpdate = current;
                 bpt::time_duration elapsed = current - start;
 
-			    float spectraPerSec = static_cast<float>(taggingStatistics.numSpectraTagged) / elapsed.total_microseconds() * 1e6;
+                float spectraPerSec = static_cast<float>(taggingStatistics.numSpectraTagged) / elapsed.total_microseconds() * 1e6;
                 bpt::time_duration estimatedTimeRemaining(0, 0, round((numSpectra - taggingStatistics.numSpectraTagged) / spectraPerSec));
 
-		        cout << "Sequence tagged " << taggingStatistics.numSpectraTagged << " of " << numSpectra << " spectra; "
+                cout << "Sequence tagged " << taggingStatistics.numSpectraTagged << " of " << numSpectra << " spectra; "
                      << round(spectraPerSec) << " per second, "
                      << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
                      << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
-		    }
+            }
         }
-	}
+    }
 
-	int InitProcess( argList_t& args )
-	{
+    int InitProcess( argList_t& args )
+    {
        cout << "DirecTag " << Version::str() << " (" << Version::LastModified() << ")\n" <<
                "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
                "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
@@ -259,30 +259,30 @@ namespace directag
                        "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
                        "-dump                         : show runtime configuration settings before starting the run\n";
         
-		bool ignoreConfigErrors = false;
-		g_residueMap = new ResidueMap;
-		g_endianType = GetHostEndianType();
-		g_numWorkers = GetNumProcessors();
+        bool ignoreConfigErrors = false;
+        g_residueMap = new ResidueMap;
+        g_endianType = GetHostEndianType();
+        g_numWorkers = GetNumProcessors();
 
-		// First set the working directory, if provided
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-workdir" && i+1 <= args.size() )
-			{
-				chdir( args[i+1].c_str() );
-				args.erase( args.begin()+i );
-			} else if( args[i] == "-cpus" && i+1 <= args.size() )
-			{
-				g_numWorkers = atoi( args[i+1].c_str() );
-				args.erase( args.begin()+i );
-			} else if( args[i] == "-ignoreConfigErrors" )
-			{
-				ignoreConfigErrors = true;
-			} else
-				continue;
-			args.erase( args.begin()+i );
-			--i;
-		}
+        // First set the working directory, if provided
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i] == "-workdir" && i+1 <= args.size() )
+            {
+                chdir( args[i+1].c_str() );
+                args.erase( args.begin()+i );
+            } else if( args[i] == "-cpus" && i+1 <= args.size() )
+            {
+                g_numWorkers = atoi( args[i+1].c_str() );
+                args.erase( args.begin()+i );
+            } else if( args[i] == "-ignoreConfigErrors" )
+            {
+                ignoreConfigErrors = true;
+            } else
+                continue;
+            args.erase( args.begin()+i );
+            --i;
+        }
         
         rtConfig.reset(new RunTimeConfig(!ignoreConfigErrors));
 
@@ -304,11 +304,11 @@ namespace directag
             --i;
         }
         
-		if( args.size() < 2 )
-		{
-			cerr << "Not enough arguments.\n\n" << usage << endl;
-			return 1;
-		}
+        if( args.size() < 2 )
+        {
+            cerr << "Not enough arguments.\n\n" << usage << endl;
+            return 1;
+        }
 
         if( !rtConfig->initialized() )
         {
@@ -322,55 +322,55 @@ namespace directag
             return 1;
         }
 
-		// Command line overrides happen after config file has been distributed but before PTM parsing
-		RunTimeVariableMap vars = rtConfig->getVariables();
-		for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
-		{
-			string varName;
-			varName += "-" + itr->first;
+        // Command line overrides happen after config file has been distributed but before PTM parsing
+        RunTimeVariableMap vars = rtConfig->getVariables();
+        for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
+        {
+            string varName;
+            varName += "-" + itr->first;
 
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i] == varName && i+1 <= args.size() )
-				{
-					//cout << varName << " " << itr->second << " " << args[i+1] << endl;
-					itr->second = args[i+1];
-					args.erase( args.begin() + i );
-					args.erase( args.begin() + i );
-					--i;
-				}
-			}
-		}
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                if( args[i] == varName && i+1 <= args.size() )
+                {
+                    //cout << varName << " " << itr->second << " " << args[i+1] << endl;
+                    itr->second = args[i+1];
+                    args.erase( args.begin() + i );
+                    args.erase( args.begin() + i );
+                    --i;
+                }
+            }
+        }
 
-		rtConfig->setVariables( vars );
+        rtConfig->setVariables( vars );
 
-		// Dump the parameters if the user opts for it
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == "-dump" )
-			{
-				rtConfig->dump();
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
+        // Dump the parameters if the user opts for it
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i] == "-dump" )
+            {
+                rtConfig->dump();
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
         // Either warn or error out on unrecognized parameters
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i][0] == '-' )
-			{
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i][0] == '-' )
+            {
                 if (!ignoreConfigErrors)
                 {
                     cerr << "Error: unrecognized parameter \"" << args[i] << "\"" << endl;
                     return 1;
                 }
 
-				cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
+                cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
         if (args.size() == 1)
         {
@@ -378,17 +378,17 @@ namespace directag
             return 1;
         }
 
-		return 0;
-	}
+        return 0;
+    }
 
-	int ProcessHandler( int argc, char* argv[] )
-	{
-		vector< string > args;
-		for( int i=0; i < argc; ++i )
-			args.push_back( argv[i] );
+    int ProcessHandler( int argc, char* argv[] )
+    {
+        vector< string > args;
+        for( int i=0; i < argc; ++i )
+            args.push_back( argv[i] );
 
-		if( InitProcess( args ) )
-			return 1;
+        if( InitProcess( args ) )
+            return 1;
 
         rtConfig->PreComputeScoreDistributions();
 
@@ -482,9 +482,9 @@ namespace directag
             }
 
             if(  rtConfig->WriteHighQualSpectra )
-            {						
+            {                        
                 vector<NativeID>    mergedSpectraIndices;
-	            vector<NativeID>	highQualSpectraIndices;
+                vector<NativeID>    highQualSpectraIndices;
                 set<NativeID>       seen;
                 BOOST_FOREACH(Spectrum* s, spectra)
                 {
@@ -530,28 +530,28 @@ namespace directag
 
         cout << "Finished tagging " << g_inputFilenames.size() << " files; " << overallTime.End() << " seconds elapsed." << endl;
 
-		return 0;
-	}
+        return 0;
+    }
 }
 }
 
 int main( int argc, char* argv[] )
 {
-	try
-	{
-		char buf[256];
-		GetHostname( buf, sizeof(buf) );
+    try
+    {
+        char buf[256];
+        GetHostname( buf, sizeof(buf) );
 
-		g_numProcesses = 1;
-		g_pid = 0;
+        g_numProcesses = 1;
+        g_pid = 0;
 
-		g_numChildren = g_numProcesses - 1;
+        g_numChildren = g_numProcesses - 1;
 
-		ostringstream str;
-		str << "Process #" << g_pid << " (" << buf << ")";
-		g_hostString = str.str();
+        ostringstream str;
+        str << "Process #" << g_pid << " (" << buf << ")";
+        g_hostString = str.str();
 
-		int result = directag::ProcessHandler( argc, argv );
+        int result = directag::ProcessHandler( argc, argv );
 
         // HACK: avoid crashing at exit on Windows (probably a conflict between Boost and the .NET vendor DLLs)
         #ifdef WIN32
@@ -559,11 +559,11 @@ int main( int argc, char* argv[] )
         #else
             return result;
         #endif
-	}
+    }
     catch( exception& e )
-	{
-		cerr << e.what() << endl;
-	}
+    {
+        cerr << e.what() << endl;
+    }
 
-	return 1;
+    return 1;
 }

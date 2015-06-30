@@ -36,10 +36,10 @@
 //#define BOOST_LIB_DIAGNOSTIC
 
 #ifdef USE_MPI
-	#undef SEEK_SET
-	#undef SEEK_CUR
-	#undef SEEK_END
-	#include "mpi.h"
+    #undef SEEK_SET
+    #undef SEEK_CUR
+    #undef SEEK_END
+    #include "mpi.h"
 #endif
 
 namespace freicore

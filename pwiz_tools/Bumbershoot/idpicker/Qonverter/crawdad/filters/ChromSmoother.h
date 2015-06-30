@@ -76,7 +76,7 @@ class ChromSmoother {
 #ifndef HAVE_FFTPACK
     if ( v == true ) {
       std::cerr << "No, you have not built this with FFTPACK support, you cannot set the fft flag.";
-	}
+    }
     else {
       this->fft = v;
     }

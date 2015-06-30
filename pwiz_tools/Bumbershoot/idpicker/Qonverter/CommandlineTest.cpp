@@ -628,7 +628,7 @@ void testIdpQuery(const string& idpQueryPath, const bfs::path& testDataPath)
             ifstream outputFile((testDataPath / ("merged-empty-iTRAQ4plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
             getline(outputFile, line);
-            unit_assert_operator_equal("Accession	GeneId	GeneGroup	DistinctPeptides	DistinctMatches	FilteredSpectra	IsDecoy	Cluster	ProteinGroup	Length	PercentCoverage	Sequence	Description	TaxonomyId	GeneName	GeneFamily	Chromosome	GeneDescription	", line);
+            unit_assert_operator_equal("Accession    GeneId    GeneGroup    DistinctPeptides    DistinctMatches    FilteredSpectra    IsDecoy    Cluster    ProteinGroup    Length    PercentCoverage    Sequence    Description    TaxonomyId    GeneName    GeneFamily    Chromosome    GeneDescription    ", line);
             // TODO: figure out how to test the output of the second line
         }
 

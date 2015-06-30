@@ -52,16 +52,16 @@ PeakCoordSet ( const std::vector<SlimCrawPeakPtr> & peaks ) ;
 };
 
 
-	struct PeaksUsedOrNot {
+    struct PeaksUsedOrNot {
       SlimCrawPeakPtr * p;
       bool used;
-      	  PeaksUsedOrNot();
-	  PeaksUsedOrNot( SlimCrawPeakPtr * in_p );
+            PeaksUsedOrNot();
+      PeaksUsedOrNot( SlimCrawPeakPtr * in_p );
       float get_peak_rt() const;
       float get_peak_height() const ;
       float get_peak_raw_height() const ;
 
-	};
+    };
 
     struct CompPeaksUsedOrNotDumbPtrByPeakRtIdx {
         bool operator() ( const PeaksUsedOrNot * lh,const PeaksUsedOrNot * rh ) {
@@ -151,7 +151,7 @@ void peak_tweak ( SlimCrawPeak & peak, const CrawPeakMethod & m );
   int get_peakloc_in_range ( int start_idx, int stop_idx );
 
 void get_all_areas( int start_idx, int stop_idx, int peak_idx,
-		    float & raw_area, float & bg_area , float & bg_sub_area , float & bg_sub_height, float & raw_height );
+            float & raw_area, float & bg_area , float & bg_sub_area , float & bg_sub_height, float & raw_height );
 
 void extend_to_lower_boundary ( SlimCrawPeak & peak , float allowed_asymmetry = 1.0f);
 

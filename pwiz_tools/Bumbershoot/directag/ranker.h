@@ -61,18 +61,18 @@ class ranker
     if (method == "average") {
       for (uint c = 0, reps; c < w.size(); c += reps) { reps = 1;
         while (c + reps < w.size() && p[tmp[c]] == p[tmp[c + reps]]) ++reps;
-	for (uint k = 0; k < reps; ++k)
+    for (uint k = 0; k < reps; ++k)
           w[tmp[c + k]] = S(2 * c + reps - 1) / 2 + 1;
       }
     } else if (method == "min") {
       for (uint c = 0, reps; c < w.size(); c += reps) { reps = 1;
         while (c + reps < w.size() && p[tmp[c]] == p[tmp[c + reps]]) ++reps;
-	for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + 1;
+    for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + 1;
       }
     } else if (method == "max") {
       for (uint c = 0, reps; c < w.size(); c += reps) { reps = 1;
         while (c + reps < w.size() && p[tmp[c]] == p[tmp[c + reps]]) ++reps;
-	for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + reps;
+    for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + reps;
       }
     } else // default
       for (uint c = 0; c < w.size(); ++c) w[tmp[c]] = c + 1;
@@ -88,18 +88,18 @@ class ranker
     if (method == "average") {
       for (uint c = 0, reps; c < num; c += reps) { reps = 1;
         while (c + reps < num && p[tmp[c]] == p[tmp[c + reps]]) ++reps;
-	for (uint k = 0; k < reps; ++k)
+    for (uint k = 0; k < reps; ++k)
           w[tmp[c + k]] = S(2 * c + reps - 1) / 2 + 1;
       }
     } else if (method == "min") {
       for (uint c = 0, reps; c < num; c += reps) { reps = 1;
         while (c + reps < num && p[tmp[c]] == p[tmp[c + reps]]) ++reps;
-	for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + 1;
+    for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + 1;
       }
     } else if (method == "max") {
       for (uint c = 0, reps; c < num; c += reps) { reps = 1;
         while (c + reps < num && p[tmp[c]] == p[tmp[c + reps]]) ++reps;
-	for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + reps;
+    for (uint k = 0; k < reps; ++k) w[tmp[c + k]] = c + reps;
       }
     } else // default
       for (uint c = 0; c < num; ++c) w[tmp[c]] = c + 1;

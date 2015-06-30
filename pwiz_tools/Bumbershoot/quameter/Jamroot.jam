@@ -96,7 +96,7 @@ import path ;
 
 
 project quameter
-	: requirements
+    : requirements
       <include>.
       <include>$(PWIZ_SOURCE)
       <include>$(LIBRARIES_PATH)/boost_aux
@@ -124,7 +124,7 @@ project quameter
       <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
       <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
       <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-      <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4267                    # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
       <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
@@ -169,7 +169,7 @@ project quameter
       <variant>release
       <link>static
       <runtime-link>static
-	;
+    ;
 
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;

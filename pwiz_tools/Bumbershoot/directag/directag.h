@@ -30,7 +30,7 @@
 #include "directagSpectrum.h"
 #include "tagsFile.h"
 
-#define DIRECTAG_LICENSE				COMMON_LICENSE
+#define DIRECTAG_LICENSE                COMMON_LICENSE
 
 using namespace freicore;
 
@@ -39,11 +39,11 @@ namespace freicore
 
 namespace directag
 {
-	extern SpectraList      spectra;
+    extern SpectraList      spectra;
 
-	int						InitProcess( argList_t& args );
-	int						ProcessHandler( int argc, char* argv[] );
-	void					GenerateForegroundTables();
+    int                        InitProcess( argList_t& args );
+    int                        ProcessHandler( int argc, char* argv[] );
+    void                    GenerateForegroundTables();
 }
 }
 

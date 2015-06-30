@@ -34,93 +34,93 @@ using System.IO;
 
 public class Pair<T1, T2>
 {
-	public Pair()
-	{
-		this.first = default(T1);
-		this.second = default(T2);
-	}
+    public Pair()
+    {
+        this.first = default(T1);
+        this.second = default(T2);
+    }
 
-	public Pair( T1 first, T2 second )
-	{
-		this.first = first;
-		this.second = second;
-	}
+    public Pair( T1 first, T2 second )
+    {
+        this.first = first;
+        this.second = second;
+    }
 
-	public T1 first;
-	public T2 second;
+    public T1 first;
+    public T2 second;
 }
 
 public class RefPair<T1, T2>
-	//where T1 : new()
-	//where T2 : new()
+    //where T1 : new()
+    //where T2 : new()
 {
-	/*public RefPair()
-	{
-		this.first = new T1();
-		this.second = new T2();
-	}*/
+    /*public RefPair()
+    {
+        this.first = new T1();
+        this.second = new T2();
+    }*/
 
-	public RefPair()
-	{
-		this.first = default(T1);
-		this.second = default(T2);
-	}
+    public RefPair()
+    {
+        this.first = default(T1);
+        this.second = default(T2);
+    }
 
-	public RefPair( T1 first, T2 second )
-	{
-		this.first = first;
-		this.second = second;
-	}
+    public RefPair( T1 first, T2 second )
+    {
+        this.first = first;
+        this.second = second;
+    }
 
-	public T1 first;
-	public T2 second;
+    public T1 first;
+    public T2 second;
 }
 
 namespace IonMatcher
 {
-	public class PointDataMap<T> : Map< double, T >
-		where T: new()
-	{
+    public class PointDataMap<T> : Map< double, T >
+        where T: new()
+    {
         public Enumerator FindNear( double x, double tolerance )
-		{
-			Enumerator cur, min, max;
+        {
+            Enumerator cur, min, max;
 
-			min = LowerBound( x - tolerance );
-			max = LowerBound( x + tolerance );
+            min = LowerBound( x - tolerance );
+            max = LowerBound( x + tolerance );
 
-			if( !min.IsValid || ( max.IsValid && min.Current == max.Current ) )
-				return null; // no peaks
+            if( !min.IsValid || ( max.IsValid && min.Current == max.Current ) )
+                return null; // no peaks
 
-			MutableKeyValuePair<double, T> best = min.Current;
+            MutableKeyValuePair<double, T> best = min.Current;
             Enumerator bestEnum = min;
 
-			// find the peak closest to the desired mz
-			double minDiff = Math.Abs( x - best.Key );
-			cur = min;
-			while( true )
-			{
-				double curDiff = Math.Abs( x - cur.Current.Key );
-				if( curDiff < minDiff )
-				{
-					minDiff = curDiff;
-					best = cur.Current;
+            // find the peak closest to the desired mz
+            double minDiff = Math.Abs( x - best.Key );
+            cur = min;
+            while( true )
+            {
+                double curDiff = Math.Abs( x - cur.Current.Key );
+                if( curDiff < minDiff )
+                {
+                    minDiff = curDiff;
+                    best = cur.Current;
                     bestEnum = (Enumerator) cur.Clone();
-				}
-				cur.MoveNext();
-				if( !cur.IsValid || (max.IsValid && cur.Current == max.Current) )
-					break;
-			}
+                }
+                cur.MoveNext();
+                if( !cur.IsValid || (max.IsValid && cur.Current == max.Current) )
+                    break;
+            }
 
             return bestEnum;
-			//return new MapPair( best.Key, best.Value );
-		}
-	}
+            //return new MapPair( best.Key, best.Value );
+        }
+    }
 
     public class PointMap : PointDataMap<double>
     {
         public PointMap()
-		{
-		}
+        {
+        }
 
         public PointMap( ZedGraph.IPointList pointList )
         {
@@ -130,14 +130,14 @@ namespace IonMatcher
     }
 
     public enum MatchToleranceUnits
-	{
-		Seconds = 0,
-		Minutes,
-		Hours,
-		Daltons,
-		PPM,
-		ResolvingPower
-	}
+    {
+        Seconds = 0,
+        Minutes,
+        Hours,
+        Daltons,
+        PPM,
+        ResolvingPower
+    }
 
     public class SpectrumSource
     {
@@ -224,15 +224,15 @@ namespace IonMatcher
         IList<GraphItem> DataItems { get; }
     }
 
-	public abstract class GraphItem : IComparable<GraphItem>, pwiz.MSGraph.IMSGraphItemInfo
-	{
+    public abstract class GraphItem : IComparable<GraphItem>, pwiz.MSGraph.IMSGraphItemInfo
+    {
         public GraphItem()
         {
             annotationList = new List<IAnnotation>();
         }
 
-		protected string id;
-		public string Id { get { return id; } }
+        protected string id;
+        public string Id { get { return id; } }
 
         protected int index;
         public int Index { get { return index; } }
@@ -243,7 +243,7 @@ namespace IonMatcher
         protected List<IAnnotation> annotationList;
         public List<IAnnotation> AnnotationList { get { return annotationList; } set { annotationList = value; } }
 
-		public bool IsMassSpectrum { get { return this is MassSpectrum; } }
+        public bool IsMassSpectrum { get { return this is MassSpectrum; } }
 
         public int CompareTo( GraphItem other )
         {
@@ -263,15 +263,15 @@ namespace IonMatcher
         public virtual string Title { get { return Id; } }
         public virtual Color Color { get { return Color.Gray; } }
 
-	    /// <summary>
-	    /// gets the width of graph lines
-	    /// </summary>
-	    public float LineWidth
-	    {
-	        get { return 1; }
-	    }
+        /// <summary>
+        /// gets the width of graph lines
+        /// </summary>
+        public float LineWidth
+        {
+            get { return 1; }
+        }
 
-	    public virtual void CustomizeXAxis( ZedGraph.Axis axis )
+        public virtual void CustomizeXAxis( ZedGraph.Axis axis )
         {
             axis.Title.FontSpec.Family = "Arial";
             axis.Title.FontSpec.Size = 14;
@@ -326,8 +326,8 @@ namespace IonMatcher
         public virtual ZedGraph.IPointList Points { get { return null; } }
     }
 
-	public class MassSpectrum : GraphItem
-	{
+    public class MassSpectrum : GraphItem
+    {
         public MassSpectrum( ManagedDataSource source, int index, SpectrumList spectrumList )
         {
             this.source = source;
@@ -361,7 +361,7 @@ namespace IonMatcher
         // cache the most recently accessed element and the spectrum list used to get it
         // note: this breaks if you access Element from a "using" block (but why?)
         private static pwiz.CLI.msdata.SpectrumList lastSpectrumListUsed = null;
-		private static pwiz.CLI.msdata.Spectrum lastElementAccessed = null;
+        private static pwiz.CLI.msdata.Spectrum lastElementAccessed = null;
 
         public pwiz.CLI.msdata.Spectrum Element
         {
@@ -428,8 +428,8 @@ namespace IonMatcher
             }
         }
 
-		public override ZedGraph.IPointList Points
-		{
+        public override ZedGraph.IPointList Points
+        {
             get
             {
                 using( Spectrum element = spectrumList.spectrum( index, true ) )
@@ -437,7 +437,7 @@ namespace IonMatcher
                     return new ZedGraph.PointPairList( element.getMZArray().data, element.getIntensityArray().data );
                 }
             }
-		}
+        }
 
         public override pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
@@ -453,57 +453,57 @@ namespace IonMatcher
 
         /*private TimeSpan retentionTime;
         public TimeSpan RetentionTime
-		{
+        {
             get { return retentionTime; }
-		}*/
-	}
+        }*/
+    }
 
-	public class SeemsPointAnnotation
-	{
-		public SeemsPointAnnotation()
-		{
-			point = 0;
-			label = String.Empty;
-			color = Color.Gray;
-			width = 1;
-		}
+    public class SeemsPointAnnotation
+    {
+        public SeemsPointAnnotation()
+        {
+            point = 0;
+            label = String.Empty;
+            color = Color.Gray;
+            width = 1;
+        }
 
-		public SeemsPointAnnotation( double point, string label, Color color, int width )
-		{
-			this.point = point;
-			this.label = label;
-			this.color = color;
-			this.width = width;
-		}
+        public SeemsPointAnnotation( double point, string label, Color color, int width )
+        {
+            this.point = point;
+            this.label = label;
+            this.color = color;
+            this.width = width;
+        }
 
-		private double point;
-		public double Point
-		{
-			get { return point; }
-			set { point = value; }
-		}
+        private double point;
+        public double Point
+        {
+            get { return point; }
+            set { point = value; }
+        }
 
-		private string label;
-		public string Label
-		{
-			get { return label; }
-			set { label = value; }
-		}
+        private string label;
+        public string Label
+        {
+            get { return label; }
+            set { label = value; }
+        }
 
-		private Color color;
-		public Color Color
-		{
-			get { return color; }
-			set { color = value; }
-		}
+        private Color color;
+        public Color Color
+        {
+            get { return color; }
+            set { color = value; }
+        }
 
-		private int width;
-		public int Width
-		{
-			get { return width; }
-			set { width = value; }
-		}
-	}
+        private int width;
+        public int Width
+        {
+            get { return width; }
+            set { width = value; }
+        }
+    }
 
     public class AnnotationSettings
     {

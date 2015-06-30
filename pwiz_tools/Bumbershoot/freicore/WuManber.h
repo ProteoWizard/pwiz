@@ -7,18 +7,19 @@
 // For use without restriction but one:  this copyright notice must be preserved.
 
 #include <vector>
-using namespace std;
+#include <map>
+
 namespace freicore {
 
-    class WuManber {
+    class WuManber
+    {
 
     public:
 
         WuManber( void );
         virtual ~WuManber( void );
-        void Initialize( const vector<const char *> &patterns, 
-            bool bCaseSensitive = false, bool bIncludeSpecialCharacters = false, bool bIncludeExtendedAscii = false );
-        map<string,size_t> Search( size_t TextLength, const char *Text, const vector<const char *> &patterns );
+        void Initialize( const vector<const char *> &patterns, bool bCaseSensitive = false, bool bIncludeSpecialCharacters = false, bool bIncludeExtendedAscii = false );
+        std::map<string, size_t> Search(size_t TextLength, const char *Text, const std::vector<const char *> &patterns);
 
     protected:
 
@@ -48,7 +49,7 @@ namespace freicore {
             size_t ix;  // index into patterns for final comparison
         } m_PatternMapElement;  // termporary area for element storage
 
-        vector<structPatternMap> *m_vPatternMap;
+        std::vector<structPatternMap> *m_vPatternMap;
         // this is a combination of HASH and PREFIX table
         // the paper suggests shifting hash right by n bits to hash into this table in order to reduce sparseness
 

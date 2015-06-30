@@ -232,14 +232,14 @@ void testPeptideComparators()
 
 void testEnumeration()
 {
-	vector<size_t> pos;
-	pos.push_back(10);
-	pos.push_back(8);
+    vector<size_t> pos;
+    pos.push_back(10);
+    pos.push_back(8);
 
-	SubsetEnumerator enumerator(2,1,2,pos);
-	do {
-		enumerator.print_set();
-	} while(enumerator.next());
+    SubsetEnumerator enumerator(2,1,2,pos);
+    do {
+        enumerator.print_set();
+    } while(enumerator.next());
 }
 
 
@@ -319,62 +319,62 @@ void testNewPTM() {
     DigestedPeptide testPeptide("QAKDRDNYKMNVLMK");
     DynamicModSet crazyMods("M * 15.996 (Q @ -17.03 ( ^ 42.01 C & 57.02");
     {
-		PTMVariantList iter(testPeptide, 2, crazyMods, staticMods, 100000);
-		size_t numCandidates = 0;
-		do {
-			++numCandidates;
-			//cout << getInterpretation(iter.ptmVariant) << endl;
+        PTMVariantList iter(testPeptide, 2, crazyMods, staticMods, 100000);
+        size_t numCandidates = 0;
+        do {
+            ++numCandidates;
+            //cout << getInterpretation(iter.ptmVariant) << endl;
         } while (iter.next());
         unit_assert_operator_equal(11, numCandidates);
     }
 
-	DigestedPeptide testPeptide2("AKDRDNCYKMNVLMK");
+    DigestedPeptide testPeptide2("AKDRDNCYKMNVLMK");
     DynamicModSet crazyMods2("M * 15.996 ( ^ 42.01 C & 57.02");
     {
-		PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
-		size_t numCandidates = 0;
-		do {
-			++numCandidates;
-			//cout << getInterpretation(iter.ptmVariant) << endl;
+        PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
+        size_t numCandidates = 0;
+        do {
+            ++numCandidates;
+            //cout << getInterpretation(iter.ptmVariant) << endl;
         } while (iter.next());
         unit_assert_operator_equal(11, numCandidates);
     }
 
-	{
-		PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
-		size_t numCandidates = 0;
-		while(iter.nextWithoutStaticPeptide()) {
-			++numCandidates;
-			//cout << getInterpretation(iter.ptmVariant) << endl;
+    {
+        PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
+        size_t numCandidates = 0;
+        while(iter.nextWithoutStaticPeptide()) {
+            ++numCandidates;
+            //cout << getInterpretation(iter.ptmVariant) << endl;
         }
         unit_assert_operator_equal(10, numCandidates);
     }
 
-	{
-		PTMVariantList iter(testPeptide, 0, crazyMods, staticMods, 100000);
-		size_t numCandidates = 0;
-		do {
-			++numCandidates;
-			//cout << getInterpretation(iter.ptmVariant) << endl;
+    {
+        PTMVariantList iter(testPeptide, 0, crazyMods, staticMods, 100000);
+        size_t numCandidates = 0;
+        do {
+            ++numCandidates;
+            //cout << getInterpretation(iter.ptmVariant) << endl;
         } while (iter.next());
         unit_assert_operator_equal(1, numCandidates);
     }
-	
-	{
-		PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
-		vector<DigestedPeptide> variants;
-		iter.getVariantsAsList(variants,false);
-		//for(int i = 0; i < variants.size(); ++i)
-		//	cout << getInterpretation(variants[i]) << endl;
+    
+    {
+        PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
+        vector<DigestedPeptide> variants;
+        iter.getVariantsAsList(variants,false);
+        //for(int i = 0; i < variants.size(); ++i)
+        //    cout << getInterpretation(variants[i]) << endl;
         unit_assert_operator_equal(10, variants.size());
     }
 
-	{
-		PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
-		vector<DigestedPeptide> variants;
-		iter.getVariantsAsList(variants);
-	    //for(int i = 0; i < variants.size(); ++i)
-		//	cout << getInterpretation(variants[i]) << endl;
+    {
+        PTMVariantList iter(testPeptide2, 2, crazyMods2, staticMods, 100000);
+        vector<DigestedPeptide> variants;
+        iter.getVariantsAsList(variants);
+        //for(int i = 0; i < variants.size(); ++i)
+        //    cout << getInterpretation(variants[i]) << endl;
         unit_assert_operator_equal(11, variants.size());
     }
 }

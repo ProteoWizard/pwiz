@@ -79,11 +79,11 @@ namespace freicore
         }
         
         template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
+        void serialize( Archive& ar, const unsigned int version )
+        {
             ar & numTargetUnmodComparisons & numDecoyUnmodComparisons;
             ar & numTargetModComparisons & numDecoyModComparisons;
-		}
+        }
 
         size_t numTargetUnmodComparisons;
         size_t numDecoyUnmodComparisons;
@@ -92,75 +92,75 @@ namespace freicore
     };
 
     template< class SearchResultT >
-	struct SearchSpectrum : public virtual BaseSpectrum
-	{
-		typedef SearchResultT						SearchResultType;
-        typedef boost::shared_ptr<SearchResultT>	SearchResultPtr;
-		typedef SearchResultSet< SearchResultT >	SearchResultSetType;
+    struct SearchSpectrum : public virtual BaseSpectrum
+    {
+        typedef SearchResultT                        SearchResultType;
+        typedef boost::shared_ptr<SearchResultT>    SearchResultPtr;
+        typedef SearchResultSet< SearchResultT >    SearchResultSetType;
 
-		SearchSpectrum()
+        SearchSpectrum()
             :   BaseSpectrum(), decoyState(0),
                 numTargetComparisons(0), numDecoyComparisons(0)
         {}
 
-		SearchSpectrum( const SearchSpectrum& old )
-			:	BaseSpectrum( old ), resultsByCharge( old.resultsByCharge ), decoyState(0),
+        SearchSpectrum( const SearchSpectrum& old )
+            :    BaseSpectrum( old ), resultsByCharge( old.resultsByCharge ), decoyState(0),
                 numTargetComparisons( old.numTargetComparisons ),
                 numDecoyComparisons( old.numDecoyComparisons ),
                 detailedCompStats ( old.detailedCompStats )
-		{}
+        {}
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
             ar & fragmentTypes;
-			ar & resultsByCharge;
+            ar & resultsByCharge;
             ar & numTargetComparisons & numDecoyComparisons;
             ar & detailedCompStats;
-		}
+        }
 
-		FragmentTypesBitset fragmentTypes;
+        FragmentTypesBitset fragmentTypes;
         vector<SearchResultSetType> resultsByCharge;
 
-		char decoyState;
-		char numTerminiCleavages; // 0, 1, or 2 termini
+        char decoyState;
+        char numTerminiCleavages; // 0, 1, or 2 termini
         int numTargetComparisons; // number of comparisons to a target sequence
         int numDecoyComparisons;  // number of comparisons to a decoy sequence
         ComparisonStatistics detailedCompStats;
-	};
+    };
 
-	template< class SpectrumType >
-	struct SearchSpectraListSortByTotalScore
-	{
-		bool operator() ( const SpectrumType* lhs, const SpectrumType* rhs )
-		{
-			double lhsScore = lhs->resultSet.getBestTotalScore();
-			double rhsScore = rhs->resultSet.getBestTotalScore();
+    template< class SpectrumType >
+    struct SearchSpectraListSortByTotalScore
+    {
+        bool operator() ( const SpectrumType* lhs, const SpectrumType* rhs )
+        {
+            double lhsScore = lhs->resultSet.getBestTotalScore();
+            double rhsScore = rhs->resultSet.getBestTotalScore();
 
-			if( lhsScore == rhsScore )
-			{
-				return spectraSortByID()( lhs, rhs );
-			}
+            if( lhsScore == rhsScore )
+            {
+                return spectraSortByID()( lhs, rhs );
+            }
 
-			return lhsScore > rhsScore;
-		}
-	};
+            return lhsScore > rhsScore;
+        }
+    };
 
-	template< class SpectrumType, class SpectraListType >
-	struct SearchSpectraList : public virtual BaseSpectraList< SpectrumType, SpectraListType >
-	{
-		bool spectraDecoyStatesSet;
+    template< class SpectrumType, class SpectraListType >
+    struct SearchSpectraList : public virtual BaseSpectraList< SpectrumType, SpectraListType >
+    {
+        bool spectraDecoyStatesSet;
 
-		SearchSpectraList()
-			:	BaseSpectraList< SpectrumType, SpectraListType >(), spectraDecoyStatesSet(false)
-		{}
+        SearchSpectraList()
+            :    BaseSpectraList< SpectrumType, SpectraListType >(), spectraDecoyStatesSet(false)
+        {}
 
-//		typedef SearchSpectraList< SpectrumType, ListType >			ListType;
-		typedef BaseSpectraList< SpectrumType, SpectraListType >	SearchBaseList;
-		typedef typename SearchBaseList::ListConstIterator			ListConstIterator;
-		typedef typename SearchBaseList::ListIterator				ListIterator;
+//        typedef SearchSpectraList< SpectrumType, ListType >            ListType;
+        typedef BaseSpectraList< SpectrumType, SpectraListType >    SearchBaseList;
+        typedef typename SearchBaseList::ListConstIterator            ListConstIterator;
+        typedef typename SearchBaseList::ListIterator                ListIterator;
 
-		void write(	const string& sourceFilepath,
+        void write(    const string& sourceFilepath,
                     pwiz::identdata::IdentDataFile::Format outputFormat,
                     const string& filenameSuffix,
                     const string& searchEngineName,
@@ -171,7 +171,7 @@ namespace freicore
                     const string& cleavageAgentRegex,
                     const string& decoyPrefix,
                     const RunTimeVariableMap& vars ) const
-		{
+        {
             using namespace pwiz::identdata;
             namespace msdata = pwiz::msdata;
             namespace proteome = pwiz::proteome;
@@ -698,7 +698,7 @@ namespace freicore
                 else if (ionSeries == "w")          sip.additionalSearchParams.set(MS_param__w_ion);
             }
         }
-	};
+    };
 }
 
 //BOOST_CLASS_IMPLEMENTATION( freicore::SearchSpectrum, boost::serialization::object_serializable );

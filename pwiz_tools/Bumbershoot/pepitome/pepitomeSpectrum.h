@@ -43,8 +43,8 @@ namespace freicore
 {
 namespace pepitome
 {
-	struct PeakInfo
-	{
+    struct PeakInfo
+    {
         int     intenClass;
         float   rawIntensity;
         int     intensityRank;
@@ -60,26 +60,26 @@ namespace pepitome
             normIntensity = nInten;
         }
 
-	};
+    };
     
     typedef BasePeakData< PeakInfo > PeakData;
-	
+    
     struct SearchResult : public BaseSearchResult
-	{
-		SearchResult() : BaseSearchResult("A") {}
-		SearchResult( const DigestedPeptide& c ) : BaseSearchResult( c ) {}
+    {
+        SearchResult() : BaseSearchResult("A") {}
+        SearchResult( const DigestedPeptide& c ) : BaseSearchResult( c ) {}
 
         bool _isDecoy;
         bool isDecoy() const {return _isDecoy;}
 
-		double mvh;
-		//double massError;
-		//double mzSSE;
+        double mvh;
+        //double massError;
+        //double mzSSE;
         double mzFidelity;
-		//double newMZFidelity;
-		// Mean absolute error
-		//double mzMAE;
-		
+        //double newMZFidelity;
+        // Mean absolute error
+        //double mzMAE;
+        
         // Computes the p-value of matching more peaks by random chance
         double hgt;
         // Kendall Tau
@@ -90,28 +90,28 @@ namespace pepitome
 
         vector<double> matchedIons;
 
-		double getTotalScore() const
-		{
-			return mvh;
-		}
+        double getTotalScore() const
+        {
+            return mvh;
+        }
 
-		SearchScoreList getScoreList() const
-		{
+        SearchScoreList getScoreList() const
+        {
             SearchScoreList scoreList;
-			scoreList.push_back( SearchScore( "mvh", mvh, MS_MyriMatch_MVH ) );
+            scoreList.push_back( SearchScore( "mvh", mvh, MS_MyriMatch_MVH ) );
             scoreList.push_back( SearchScore( "mzFidelity", mzFidelity, MS_MyriMatch_mzFidelity ) );
 
-			//scoreList.push_back( SearchScore( "massError", massError ) );
-			//scoreList.push_back( SearchScore( "mzSSE", mzSSE ) );
-			//scoreList.push_back( SearchScore( "newMZFidelity" , newMZFidelity ) );
-			//scoreList.push_back( SearchScore( "mzMAE", mzMAE ) );
+            //scoreList.push_back( SearchScore( "massError", massError ) );
+            //scoreList.push_back( SearchScore( "mzSSE", mzSSE ) );
+            //scoreList.push_back( SearchScore( "newMZFidelity" , newMZFidelity ) );
+            //scoreList.push_back( SearchScore( "mzMAE", mzMAE ) );
 
             scoreList.push_back( SearchScore( "hgt", hgt ) ); 
             scoreList.push_back( SearchScore( "kendallTau", kendallTau ) );
             scoreList.push_back( SearchScore( "kendallPVal", kendallPVal ) );
 
-			return scoreList;
-		}
+            return scoreList;
+        }
 
         string& getAnnotation(string& annotation) const
         {
@@ -122,33 +122,33 @@ namespace pepitome
             return annotation;
         }
 
-		/*** 
-			Operator to sort the search scores based on total scores (MVH)
-			This function sorts search results based on mvh, sequence and 
-			followed by modification location in that sequence. 
-		*/
-		bool operator< ( const SearchResult& rhs ) const
-		{
-			return rankingScore < rhs.rankingScore;
-		}
+        /*** 
+            Operator to sort the search scores based on total scores (MVH)
+            This function sorts search results based on mvh, sequence and 
+            followed by modification location in that sequence. 
+        */
+        bool operator< ( const SearchResult& rhs ) const
+        {
+            return rankingScore < rhs.rankingScore;
+        }
 
-		/// Operator to compare the equality of two search scores (MVH)
-		bool operator== ( const SearchResult& rhs ) const
-		{
-			return rankingScore == rhs.rankingScore;
-		}
-	};
+        /// Operator to compare the equality of two search scores (MVH)
+        bool operator== ( const SearchResult& rhs ) const
+        {
+            return rankingScore == rhs.rankingScore;
+        }
+    };
 
-	struct Spectrum : public PeakSpectrum< PeakInfo >, SearchSpectrum< SearchResult >
-	{
-		void initialize( int numIntenClasses, int numMzFidelityClasses )
-		{
-			intenClassCounts.resize( numIntenClasses, 0 );
+    struct Spectrum : public PeakSpectrum< PeakInfo >, SearchSpectrum< SearchResult >
+    {
+        void initialize( int numIntenClasses, int numMzFidelityClasses )
+        {
+            intenClassCounts.resize( numIntenClasses, 0 );
             mzFidelityThresholds.resize( numMzFidelityClasses, 0 );
-		}
+        }
 
-		void Preprocess();
-		
+        void Preprocess();
+        
         int QuerySequence();
 
         void ClassifyPeakIntensities(bool rankPeaks = false, bool DotProduct = false);
@@ -157,26 +157,26 @@ namespace pepitome
 
         void computeSecondaryScores();
 
-		vector< int >		    intenClassCounts;
-        vector< double >		mzFidelityThresholds;
-		vector< double>			newMZFidelityThresholds;
+        vector< int >            intenClassCounts;
+        vector< double >        mzFidelityThresholds;
+        vector< double>            newMZFidelityThresholds;
         
-        Histogram< double >	scoreHistogram;
-		map< double, int > scores;
-		
-		// Keep track of the score distributions
-		map<int, int> mvhScoreDistribution;
-		map<int, int> mzFidelityDistribution;
+        Histogram< double >    scoreHistogram;
+        map< double, int > scores;
+        
+        // Keep track of the score distributions
+        map<int, int> mvhScoreDistribution;
+        map<int, int> mzFidelityDistribution;
         
         boost::mutex mutex;
-	};
+    };
 
-	struct SpectraList : public	PeakSpectraList< Spectrum, SpectraList >,
-								SearchSpectraList< Spectrum, SpectraList >
-	{
-		using BaseSpectraList< Spectrum, SpectraList >::ListIndex;
-		using BaseSpectraList< Spectrum, SpectraList >::ListIndexIterator;
-	};
+    struct SpectraList : public    PeakSpectraList< Spectrum, SpectraList >,
+                                SearchSpectraList< Spectrum, SpectraList >
+    {
+        using BaseSpectraList< Spectrum, SpectraList >::ListIndex;
+        using BaseSpectraList< Spectrum, SpectraList >::ListIndexIterator;
+    };
 }
 }
 

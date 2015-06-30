@@ -32,7 +32,7 @@
 #include <boost/cstdint.hpp>
 
 
-#define MYRIMATCH_LICENSE			COMMON_LICENSE
+#define MYRIMATCH_LICENSE            COMMON_LICENSE
 
 using namespace freicore;
 using boost::container::flat_multimap;
@@ -46,8 +46,8 @@ namespace freicore
 
 namespace myrimatch
 {
-	struct SearchStatistics
-	{
+    struct SearchStatistics
+    {
         SearchStatistics()
         :   numProteinsDigested(0),
             numPeptidesGenerated(0),
@@ -61,8 +61,8 @@ namespace myrimatch
             operator=(other);
         }
 
-		SearchStatistics& operator=(const SearchStatistics& other)
-		{
+        SearchStatistics& operator=(const SearchStatistics& other)
+        {
             numProteinsDigested.store(other.numProteinsDigested);
             numPeptidesGenerated.store(other.numPeptidesGenerated);
             numVariantsGenerated.store(other.numVariantsGenerated);
@@ -72,78 +72,78 @@ namespace myrimatch
         }
 
         boost::atomic_uint32_t numProteinsDigested;
-		boost::atomic_uint64_t numPeptidesGenerated;
-		boost::atomic_uint64_t numVariantsGenerated;
-		boost::atomic_uint64_t numComparisonsDone;
+        boost::atomic_uint64_t numPeptidesGenerated;
+        boost::atomic_uint64_t numVariantsGenerated;
+        boost::atomic_uint64_t numComparisonsDone;
         boost::atomic_uint64_t numPeptidesSkipped;
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & numProteinsDigested & numPeptidesGenerated & numVariantsGenerated
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & numProteinsDigested & numPeptidesGenerated & numVariantsGenerated
                & numComparisonsDone & numPeptidesSkipped;
-		}
+        }
 
-		SearchStatistics operator+ ( const SearchStatistics& rhs )
-		{
-			SearchStatistics tmp(*this);
-			tmp.numProteinsDigested.fetch_add(rhs.numProteinsDigested);
-			tmp.numPeptidesGenerated.fetch_add(rhs.numPeptidesGenerated);
-			tmp.numVariantsGenerated.fetch_add(rhs.numVariantsGenerated);
-			tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
+        SearchStatistics operator+ ( const SearchStatistics& rhs )
+        {
+            SearchStatistics tmp(*this);
+            tmp.numProteinsDigested.fetch_add(rhs.numProteinsDigested);
+            tmp.numPeptidesGenerated.fetch_add(rhs.numPeptidesGenerated);
+            tmp.numVariantsGenerated.fetch_add(rhs.numVariantsGenerated);
+            tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
             tmp.numPeptidesSkipped.fetch_add(rhs.numPeptidesSkipped);
-			return tmp;
-		}
+            return tmp;
+        }
 
-		void reset()
-		{
-			numProteinsDigested = 0;
-			numPeptidesGenerated = 0;
-			numVariantsGenerated = 0;
-			numComparisonsDone = 0;
-			numPeptidesSkipped = 0;
-		}
+        void reset()
+        {
+            numProteinsDigested = 0;
+            numPeptidesGenerated = 0;
+            numVariantsGenerated = 0;
+            numComparisonsDone = 0;
+            numPeptidesSkipped = 0;
+        }
 
-		operator string()
-		{
-			stringstream s;
-			s	<< numProteinsDigested << " proteins; "
+        operator string()
+        {
+            stringstream s;
+            s    << numProteinsDigested << " proteins; "
                 << numPeptidesGenerated << " peptides; "
                 << numVariantsGenerated << " variants; "
                 << numComparisonsDone << " comparisons";
             if(numPeptidesSkipped>0) {
                 s << "; " << numPeptidesSkipped << " skipped";
             }
-			return s.str();
-		}
-	};
+            return s.str();
+        }
+    };
 
-	typedef flat_multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
-	typedef vector< SpectraMassMap >        SpectraMassMapList;
+    typedef flat_multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
+    typedef vector< SpectraMassMap >        SpectraMassMapList;
 
 
-	#ifdef USE_MPI
-		void TransmitConfigsToChildProcesses();
-		void ReceiveConfigsFromRootProcess();
-		int ReceivePreparedSpectraFromChildProcesses();
-		int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
-		int ReceiveUnpreparedSpectraBatchFromRootProcess();
-		int TransmitUnpreparedSpectraToChildProcesses();
-		int ReceiveSpectraFromRootProcess();
-		int TransmitSpectraToChildProcesses( int done );
-		int TransmitProteinsToChildProcesses();
-		int ReceiveProteinBatchFromRootProcess();
-		int TransmitResultsToRootProcess();
-		int ReceiveResultsFromChildProcesses( bool firstBatch );
-	#endif
+    #ifdef USE_MPI
+        void TransmitConfigsToChildProcesses();
+        void ReceiveConfigsFromRootProcess();
+        int ReceivePreparedSpectraFromChildProcesses();
+        int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
+        int ReceiveUnpreparedSpectraBatchFromRootProcess();
+        int TransmitUnpreparedSpectraToChildProcesses();
+        int ReceiveSpectraFromRootProcess();
+        int TransmitSpectraToChildProcesses( int done );
+        int TransmitProteinsToChildProcesses();
+        int ReceiveProteinBatchFromRootProcess();
+        int TransmitResultsToRootProcess();
+        int ReceiveResultsFromChildProcesses( bool firstBatch );
+    #endif
 
-	extern proteinStore						proteins;
+    extern proteinStore                        proteins;
     extern SearchStatistics                 searchStatistics;
 
-	extern SpectraList						spectra;
-	extern SpectraMassMapList				avgSpectraByChargeState;
-	extern SpectraMassMapList				monoSpectraByChargeState;
-	extern float							totalSequenceComparisons;
+    extern SpectraList                        spectra;
+    extern SpectraMassMapList                avgSpectraByChargeState;
+    extern SpectraMassMapList                monoSpectraByChargeState;
+    extern float                            totalSequenceComparisons;
 
 }
 }

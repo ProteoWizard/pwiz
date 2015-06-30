@@ -164,7 +164,7 @@ public:
 
   ///Constructor taking start,stop,peak,mz indices, and a vector of intensities
   CrawPeak(  int start_idx, int stop_idx, int peak_idx, 
-	   const std::vector<float> & raw, std::vector<float> & scratch ,int mz_idx = -1 );
+       const std::vector<float> & raw, std::vector<float> & scratch ,int mz_idx = -1 );
 
   virtual void init();
 
@@ -218,7 +218,7 @@ class CrawPeakLocated : public CrawPeak {
 public :
   float mz,rt_start,rt_stop,rt_peak;
   CrawPeakLocated(  int lh_valley, int rh_valley, int peak_loc,
-		  const std::vector<float> & chrom, std::vector<float> & scratch_chrom, int mz_idx );
+          const std::vector<float> & chrom, std::vector<float> & scratch_chrom, int mz_idx );
   virtual void init() {
     mz = rt_start = rt_stop = rt_peak = -1.0f;
     CrawPeak::init();

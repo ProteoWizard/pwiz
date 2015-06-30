@@ -22,6 +22,7 @@
 build-project-if-exists freicore ;
 build-project-if-exists greazy ;
 build-project-if-exists myrimatch ;
+build-project-if-exists pepitome ;
 
 .common-location = $(PWIZ_BUILD_PATH) ;
 

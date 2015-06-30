@@ -106,9 +106,9 @@ import path ;
 
 
 project bumbershoot
-	: requirements
-	    <include>freicore/pwiz_src
-	    <include>freicore/libraries/boost_aux
+    : requirements
+        <include>freicore/pwiz_src
+        <include>freicore/libraries/boost_aux
 
         <toolset>gcc,<link>shared:<runtime-link>shared
         <toolset>darwin,<link>shared:<runtime-link>shared
@@ -128,7 +128,7 @@ project bumbershoot
         <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
         <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
         <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-        <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4267                    # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
@@ -161,7 +161,7 @@ project bumbershoot
       <variant>release
       <link>static
       <runtime-link>static
-	;
+    ;
 
 
 local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
@@ -302,8 +302,8 @@ exe $(application-name:L)
   : # requirements
       <conditional>@with-mpi
       <library>freicore
-	  <library>/ext/expat//expat/
-	  <define>XML_LARGE_SIZE
+      <library>/ext/expat//expat/
+      <define>XML_LARGE_SIZE
   ;
 
 install install

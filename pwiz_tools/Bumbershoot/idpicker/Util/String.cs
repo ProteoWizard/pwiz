@@ -195,7 +195,7 @@ namespace IDPicker
         /* Aho-Corasick text search algorithm implementation
          * 
          * For more information visit
-         *		- http://www.cs.uku.fi/~kilpelai/BSA05/lectures/slides04.pdf
+         *        - http://www.cs.uku.fi/~kilpelai/BSA05/lectures/slides04.pdf
          */
 
         /// <summary>

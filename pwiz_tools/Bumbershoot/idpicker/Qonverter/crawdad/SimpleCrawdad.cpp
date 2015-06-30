@@ -35,7 +35,7 @@ void CrawdadPeakFinder::SetChromatogram(const vector<double>& times, const vecto
     // Marshall intensities to vector for Crawdad
     int len = intensities.size();
     vector<float> intensitiesCrawdad(len);
-	_baselineIntensity = intensities[0];
+    _baselineIntensity = intensities[0];
     float maxIntensity = 0;
     int maxIntensityIndex = -1;
     for (int i = 1; i < len; i++)
@@ -49,8 +49,8 @@ void CrawdadPeakFinder::SetChromatogram(const vector<double>& times, const vecto
             maxIntensity = intensity;
             maxIntensityIndex = i;
         }
-		if (intensity < _baselineIntensity)
-			_baselineIntensity = intensity;
+        if (intensity < _baselineIntensity)
+            _baselineIntensity = intensity;
     }
 
     SetChromatogram(intensitiesCrawdad, maxIntensityIndex);
@@ -63,7 +63,7 @@ void CrawdadPeakFinder::SetChromatogram(const vector<float>& times, const vector
     // Marshall intensities to vector for Crawdad
     int len = intensities.size();
     vector<float> intensitiesCrawdad(len);
-	_baselineIntensity = intensities[0];
+    _baselineIntensity = intensities[0];
     float maxIntensity = 0;
     int maxIntensityIndex = -1;
     for (int i = 1; i < len; i++)
@@ -77,8 +77,8 @@ void CrawdadPeakFinder::SetChromatogram(const vector<float>& times, const vector
             maxIntensity = intensity;
             maxIntensityIndex = i;
         }
-		if (intensity < _baselineIntensity)
-			_baselineIntensity = intensity;
+        if (intensity < _baselineIntensity)
+            _baselineIntensity = intensity;
     }
 
     SetChromatogram(intensitiesCrawdad, maxIntensityIndex);
@@ -115,16 +115,16 @@ void CrawdadPeakFinder::SetChromatogram(vector<float>& intensities, int maxInten
     }
     setFullWidthHalfMax((float) fwhm);
 
-	_widthDataWings = (int)(getFullWidthHalfMax()*2);
+    _widthDataWings = (int)(getFullWidthHalfMax()*2);
 
-	if (_widthDataWings > 0)
-	{
+    if (_widthDataWings > 0)
+    {
         _wingData.assign(_widthDataWings, _baselineIntensity);
-		intensities.insert(intensities.begin(), _widthDataWings, _baselineIntensity);
-		intensities.insert(intensities.end(), _widthDataWings, _baselineIntensity);
-	}
+        intensities.insert(intensities.begin(), _widthDataWings, _baselineIntensity);
+        intensities.insert(intensities.end(), _widthDataWings, _baselineIntensity);
+    }
 
-	_peakFinder.clear();
+    _peakFinder.clear();
     _peakFinder.set_chrom(intensities, 0);
 }
 
@@ -187,29 +187,29 @@ vector<CrawdadPeakPtr> CrawdadPeakFinder::CalcPeaks(int maxPeaks)
     vector<SlimCrawPeak>::iterator itPeak = _peakFinder.sps.begin();
     vector<SlimCrawPeak>::iterator itPeakEnd = _peakFinder.sps.end();
     double totalArea = 0;
-	int stop_rt = _peakFinder.chrom.size() - _widthDataWings - 1;
-	int adjust_stop_rt = stop_rt - _widthDataWings;
+    int stop_rt = _peakFinder.chrom.size() - _widthDataWings - 1;
+    int adjust_stop_rt = stop_rt - _widthDataWings;
     while (itPeak != itPeakEnd)
     {
-		if (itPeak->start_rt_idx < stop_rt && itPeak->stop_rt_idx > _widthDataWings)
-		{
-			double rheight = itPeak->peak_height / itPeak->raw_height;
-			double rarea = itPeak->peak_area / itPeak->raw_area;
+        if (itPeak->start_rt_idx < stop_rt && itPeak->stop_rt_idx > _widthDataWings)
+        {
+            double rheight = itPeak->peak_height / itPeak->raw_height;
+            double rarea = itPeak->peak_area / itPeak->raw_area;
 
-			if (rheight > 0.02 && rarea > 0.02)
-			{
-				itPeak->start_rt_idx = max(_widthDataWings, itPeak->start_rt_idx);
-				itPeak->start_rt_idx -= _widthDataWings;
-				itPeak->peak_rt_idx = max(_widthDataWings, min(stop_rt, itPeak->peak_rt_idx));
-				itPeak->peak_rt_idx -= _widthDataWings;
-				itPeak->stop_rt_idx = max(_widthDataWings, min(stop_rt, itPeak->stop_rt_idx));
-				itPeak->stop_rt_idx -= _widthDataWings;
+            if (rheight > 0.02 && rarea > 0.02)
+            {
+                itPeak->start_rt_idx = max(_widthDataWings, itPeak->start_rt_idx);
+                itPeak->start_rt_idx -= _widthDataWings;
+                itPeak->peak_rt_idx = max(_widthDataWings, min(stop_rt, itPeak->peak_rt_idx));
+                itPeak->peak_rt_idx -= _widthDataWings;
+                itPeak->stop_rt_idx = max(_widthDataWings, min(stop_rt, itPeak->stop_rt_idx));
+                itPeak->stop_rt_idx -= _widthDataWings;
 
-				result.push_back(CrawdadPeakPtr(new CrawdadPeak(*itPeak)));
+                result.push_back(CrawdadPeakPtr(new CrawdadPeak(*itPeak)));
 
-				totalArea += itPeak->peak_area;
-			}
-		}
+                totalArea += itPeak->peak_area;
+            }
+        }
         itPeak++;
     }
 
@@ -222,7 +222,7 @@ vector<CrawdadPeakPtr> CrawdadPeakFinder::CalcPeaks(int maxPeaks)
         float intensityCutoff = 0;
         FindIntensityCutoff(result, 0, (float)(totalArea/lenResult)*2, maxPeaks, 1, intensityCutoff, lenResult);
 
-	    vector<CrawdadPeakPtr> resultFiltered;
+        vector<CrawdadPeakPtr> resultFiltered;
         for (int i = 0, lenOrig = result.size(); i < lenOrig ; i++)
         {
             if (result[i]->getArea() >= intensityCutoff || intensityCutoff == 0)

@@ -1030,7 +1030,7 @@ namespace BumberDash.Forms
         private void DeleteRunning(int row)
         {
             var hi = (HistoryItem) JobQueueDGV[0, row].Tag;
-        	var firstConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+            var firstConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
             var firstConfig = firstConfigList.Any() ? firstConfigList[0] : null;
 
             //Remove associated pepXMLs? (yes/no)-> Save job for later? (no)-> [[Remove associated files as well?]]
@@ -1071,8 +1071,8 @@ namespace BumberDash.Forms
                     }
                     else
                     {
-						var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
-						var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
+                        var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+                        var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
                         foreach (var file in hi.FileList)
                         {
                             var fedPathList = new List<string>();
@@ -1216,8 +1216,8 @@ namespace BumberDash.Forms
         private void DeleteFinished(int row)
         {
             var hi = (HistoryItem) JobQueueDGV[0, row].Tag;
-			var firstConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
-			var firstConfig = firstConfigList.Any() ? firstConfigList[0] : null;
+            var firstConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+            var firstConfig = firstConfigList.Any() ? firstConfigList[0] : null;
 
             //Remove associated pepXMLs? (yes/no)->  [[Remove associated files as well?]]
 
@@ -1254,8 +1254,8 @@ namespace BumberDash.Forms
                         }
                         else
                         {
-						    var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
-						    var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
+                            var secondConfigList = hi.InitialConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").ToList();
+                            var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
                             foreach (var file in hi.FileList)
                             {
                                 if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
@@ -1356,9 +1356,9 @@ namespace BumberDash.Forms
                     for (var oldProperty = 0; oldProperty < item.PropertyList.Count; oldProperty++)
                     {
                         var property = item.PropertyList[oldProperty];
-                    	var otherPropertyList = hi.InitialConfigFile.PropertyList.Where(
+                        var otherPropertyList = hi.InitialConfigFile.PropertyList.Where(
                             x => (x.Name == property.Name &&
-                    		      x.Value == property.Value)).ToList();
+                                  x.Value == property.Value)).ToList();
                         var otherProperty = otherPropertyList.Any() ? otherPropertyList[0] : null;
 
                         if (otherProperty == null)
@@ -1399,10 +1399,10 @@ namespace BumberDash.Forms
                         for (var oldProperty = 0; oldProperty < item.PropertyList.Count; oldProperty++)
                         {
                             var property = item.PropertyList[oldProperty];
-							var otherPropertyList = hi.InitialConfigFile.PropertyList.Where(
-							x => (x.Name == property.Name &&
-								  x.Value == property.Value)).ToList();
-							var otherProperty = otherPropertyList.Any() ? otherPropertyList[0] : null;
+                            var otherPropertyList = hi.InitialConfigFile.PropertyList.Where(
+                            x => (x.Name == property.Name &&
+                                  x.Value == property.Value)).ToList();
+                            var otherProperty = otherPropertyList.Any() ? otherPropertyList[0] : null;
                             if (otherProperty == null)
                             {
                                 foundDuplicate = false;

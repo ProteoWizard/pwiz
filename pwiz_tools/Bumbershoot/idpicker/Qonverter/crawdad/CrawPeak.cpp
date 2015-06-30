@@ -47,7 +47,7 @@ namespace crawpeaks {
    }
 
    SlimCrawPeak::SlimCrawPeak( int start_idx, int stop_idx, int peak_idx, 
-			     const std::vector<float> & raw ,std::vector<float> & scratch , int mz_idx  ) : 
+                 const std::vector<float> & raw ,std::vector<float> & scratch , int mz_idx  ) : 
     start_rt_idx(start_idx) , 
     stop_rt_idx(stop_idx) , 
     peak_rt_idx(peak_idx) , 
@@ -81,7 +81,7 @@ int SlimCrawPeak::delcnt = 0;
 #endif
 
 CrawPeak::CrawPeak(  int start_idx, int stop_idx, int peak_idx, 
-		  const std::vector<float> & raw , std::vector<float> & scratch,  int mz_idx 
+          const std::vector<float> & raw , std::vector<float> & scratch,  int mz_idx 
                  ) :
     SlimCrawPeak( start_idx, stop_idx, peak_idx, raw, scratch, mz_idx ) {
   init();     
@@ -169,7 +169,7 @@ void CrawPeak::calc_baseline_stats( )  {
       double total_bg = 0.0;
       float bg_val = raw[start_rt_idx];
       /* TODO -- trapezoidal area calculation in place, rather than
-	 copied to a vector and passed to a function */
+     copied to a vector and passed to a function */
       float next_used_val, curr_used_val;
       curr_used_val = next_used_val = bg_val;
 
@@ -179,16 +179,16 @@ void CrawPeak::calc_baseline_stats( )  {
       int rel_peak_idx = get_rel_peak_idx();
       peak_bg_val = bg_val + rel_peak_idx * bgslope;
       for ( int i = 0 ; i < this->len - 1 ; i++ ) {
-	total_bg += next_used_val;
-	curr_used_val = next_used_val;
-	bg_val += bgslope;
-	if ( raw[start_rt_idx+i+1] < bg_val ) {
-	  next_used_val = raw[start_rt_idx+i+1];
-	}
-	else {
-	  next_used_val = bg_val;
-	}
-	total_bg += ( next_used_val - curr_used_val ) / 2.0;
+    total_bg += next_used_val;
+    curr_used_val = next_used_val;
+    bg_val += bgslope;
+    if ( raw[start_rt_idx+i+1] < bg_val ) {
+      next_used_val = raw[start_rt_idx+i+1];
+    }
+    else {
+      next_used_val = bg_val;
+    }
+    total_bg += ( next_used_val - curr_used_val ) / 2.0;
       }
       peak_height = raw[peak_rt_idx] - peak_bg_val;
 #else
@@ -212,9 +212,9 @@ void CrawPeak::calc_baseline_stats( )  {
 #ifdef TEST_AREA
       //assert(abs(bg_area - total_bg) <= 0.1 );
       if ( abs(bg_area - total_bg) > 1 ) {
-	//std::cerr << "Error calculating bg_area vs total_bg: " << bg_area << " , " << total_bg << "len: " << this->len << std::endl;
-	//std::cerr << this->as_string() << std::endl;
-	throw runtime_error("Error calculating bg_area vs total_bg: ");
+    //std::cerr << "Error calculating bg_area vs total_bg: " << bg_area << " , " << total_bg << "len: " << this->len << std::endl;
+    //std::cerr << this->as_string() << std::endl;
+    throw runtime_error("Error calculating bg_area vs total_bg: ");
       }
 #endif
       peak_area = raw_area - bg_area;
@@ -238,7 +238,7 @@ void CrawPeak::calc_baseline_stats( )  {
    std::string SlimCrawPeak::internal_as_string_long() const {
        char tmpstr[1024];
        sprintf(tmpstr,"\t%3.3f\t%3.3f\t%d\t%3.3f",
-	       peak_height,peak_area, len, get_peak_to_bg() );
+           peak_height,peak_area, len, get_peak_to_bg() );
 
        return std::string(tmpstr);
    }
@@ -271,9 +271,9 @@ void CrawPeak::calc_baseline_stats( )  {
 
 
        sprintf(tmpstr,"\t%3.3f\t%3.3f\t%d\t%3.3f\t%3.3f\t%3.3f\t%d\t%3.3f",
-	       peak_height,peak_area, len, get_peak_to_bg(),
-	       mean_above_baseline, stddev_mean_above_baseline,
-	       get_baseline_p_mean_crossing(),assymmetry_stab() );
+           peak_height,peak_area, len, get_peak_to_bg(),
+           mean_above_baseline, stddev_mean_above_baseline,
+           get_baseline_p_mean_crossing(),assymmetry_stab() );
        return std::string(tmpstr);
    }
 
@@ -282,7 +282,7 @@ void CrawPeak::calc_baseline_stats( )  {
 /* ---- suppeaklocated ---- */
 
 CrawPeakLocated::CrawPeakLocated( int lh_valley, int rh_valley,
-			       int peak_loc, const std::vector<float> &chrom , std::vector<float> & scratch, int mz_idx ) : 
+                   int peak_loc, const std::vector<float> &chrom , std::vector<float> & scratch, int mz_idx ) : 
   CrawPeak( lh_valley, rh_valley, peak_loc, chrom, scratch, mz_idx ) {
 }
 

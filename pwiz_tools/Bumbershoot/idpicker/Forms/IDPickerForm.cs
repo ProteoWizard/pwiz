@@ -386,10 +386,10 @@ namespace IDPicker
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     fileNames = openFileDialog.GetFileNames().Distinct().ToList();
-					if (session != null && sender == importToolStripMenuItem)
-						treeStructure = openFileDialog.GetTreeStructure(session);
-					else
-						treeStructure = openFileDialog.GetTreeStructure();
+                    if (session != null && sender == importToolStripMenuItem)
+                        treeStructure = openFileDialog.GetTreeStructure(session);
+                    else
+                        treeStructure = openFileDialog.GetTreeStructure();
                     if (!fileNames.Any())
                         return;
                 }
@@ -645,12 +645,12 @@ namespace IDPicker
                 if (mainViewsLoaded < 5)
                     return;
 
-			if (e.BreadCrumb == null && e.BreadCrumbList != null)
-				foreach (var crumb in e.BreadCrumbList)
-					breadCrumbControl.BreadCrumbs.Remove(crumb);
-			else
-				breadCrumbControl.BreadCrumbs.Remove(e.BreadCrumb);
-        	
+            if (e.BreadCrumb == null && e.BreadCrumbList != null)
+                foreach (var crumb in e.BreadCrumbList)
+                    breadCrumbControl.BreadCrumbs.Remove(crumb);
+            else
+                breadCrumbControl.BreadCrumbs.Remove(e.BreadCrumb);
+            
 
             // start with the basic filter
             viewFilter = basicFilter;

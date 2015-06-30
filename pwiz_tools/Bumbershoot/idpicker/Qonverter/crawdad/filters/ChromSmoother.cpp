@@ -106,29 +106,29 @@ void ChromSmoother::set_weight_size( int weight_size ) {
 
 void ChromSmoother::smooth_vect_discrete( const std::vector<float> & raw_vec, std::vector<float> & out_vec) {
 
-	assert(raw_vec.size() == out_vec.size());
-	if ( (int)raw_vec.size() <= half_window_size * 2 + 1) {
-	  std::copy(raw_vec.begin(), raw_vec.end(), out_vec.begin());
-	}
-	else {
-	  
-	    for ( int i = 0 ; i < half_window_size ; i++ ) {
-	      out_vec[i] = raw_vec[i]; 
-	    }
-	    for ( uint i = raw_vec.size() - half_window_size; i < raw_vec.size() ; i++) {
-	      out_vec[i] = raw_vec[i];
-	    }
-	    /* we assume the weights are normalized */
-	    for ( uint i = half_window_size ; i < raw_vec.size() - half_window_size ;
-		  i++ ) {
-	      float t = 0.0;
-	      for ( int offset = 0 ; offset < window_size ;  offset++ ) {
-		int raw_idx = i - half_window_size + offset;
-		t += raw_vec[raw_idx] * weights[offset];
-	      }
-	      out_vec[i] = t;
-	    }
-	}
+    assert(raw_vec.size() == out_vec.size());
+    if ( (int)raw_vec.size() <= half_window_size * 2 + 1) {
+      std::copy(raw_vec.begin(), raw_vec.end(), out_vec.begin());
+    }
+    else {
+      
+        for ( int i = 0 ; i < half_window_size ; i++ ) {
+          out_vec[i] = raw_vec[i]; 
+        }
+        for ( uint i = raw_vec.size() - half_window_size; i < raw_vec.size() ; i++) {
+          out_vec[i] = raw_vec[i];
+        }
+        /* we assume the weights are normalized */
+        for ( uint i = half_window_size ; i < raw_vec.size() - half_window_size ;
+          i++ ) {
+          float t = 0.0;
+          for ( int offset = 0 ; offset < window_size ;  offset++ ) {
+        int raw_idx = i - half_window_size + offset;
+        t += raw_vec[raw_idx] * weights[offset];
+          }
+          out_vec[i] = t;
+        }
+    }
 }
 
 ///Filters chromatogram by removing small spikes, where the signal is <= baseline over at least spike_len consecutive units.
@@ -149,17 +149,17 @@ int ChromSmoother::spike_filter( const std::vector<float> & raw_vec, std::vector
        }
        else {
            if ( spike_points > 0 && spike_points <= spike_len ) {
-	     float start_i = smooth_vect[i - spike_points - 1];
-	     float stop_i =  smooth_vect[i];
-	       if  ( start_i >= 0 && stop_i <= smooth_vect.size() - 1 ) {
-		 float slope = (stop_i - start_i) / spike_points;
-		 float sl_val = start_i;
-		 for ( int b = i - spike_points ; b < i ; b++ ) {
-		   sl_val = sl_val + slope;
-		   smooth_vect[b] = sl_val;
-		 }
-		 num_spikes++;
-	       }
+         float start_i = smooth_vect[i - spike_points - 1];
+         float stop_i =  smooth_vect[i];
+           if  ( start_i >= 0 && stop_i <= smooth_vect.size() - 1 ) {
+         float slope = (stop_i - start_i) / spike_points;
+         float sl_val = start_i;
+         for ( int b = i - spike_points ; b < i ; b++ ) {
+           sl_val = sl_val + slope;
+           smooth_vect[b] = sl_val;
+         }
+         num_spikes++;
+           }
            }
            spike_points = 0;
        }

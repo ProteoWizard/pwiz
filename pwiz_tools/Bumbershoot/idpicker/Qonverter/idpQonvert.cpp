@@ -93,41 +93,41 @@ int InitProcess( argList_t& args )
                     "-AnyParameterName <value>     : override the value of the given parameter to <value>\n"
                     "-dump                         : show runtime configuration settings before starting the run\n";
 
-	bool ignoreConfigErrors = false;
+    bool ignoreConfigErrors = false;
     string logFilepath;
-	g_numWorkers = GetNumProcessors();
+    g_numWorkers = GetNumProcessors();
 
-	// First set the working directory, if provided
-	for( size_t i=1; i < args.size(); ++i )
-	{
-		if( args[i] == "-workdir" && i+1 <= args.size() )
-		{
-			chdir( args[i+1].c_str() );
-			args.erase( args.begin() + i );
-		}
+    // First set the working directory, if provided
+    for( size_t i=1; i < args.size(); ++i )
+    {
+        if( args[i] == "-workdir" && i+1 <= args.size() )
+        {
+            chdir( args[i+1].c_str() );
+            args.erase( args.begin() + i );
+        }
         else if( args[i] == "-cpus" && i+1 <= args.size() )
-		{
-			g_numWorkers = atoi( args[i+1].c_str() );
-			args.erase( args.begin() + i );
-		}
+        {
+            g_numWorkers = atoi( args[i+1].c_str() );
+            args.erase( args.begin() + i );
+        }
         else if( args[i] == "-ignoreConfigErrors" )
-		{
-			ignoreConfigErrors = true;
-		}
+        {
+            ignoreConfigErrors = true;
+        }
         else if (args[i] == "-LogFilepath")
         {
             logFilepath = args[i+1];
             continue;
         }
         else
-			continue;
+            continue;
 
-		args.erase( args.begin() + i );
-		--i;
-	}
+        args.erase( args.begin() + i );
+        --i;
+    }
 
-	g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
-	g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+    g_rtConfig = new RunTimeConfig(!ignoreConfigErrors);
+    g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
     g_rtConfig->LogFilepath = logFilepath;
 
     boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
@@ -148,18 +148,18 @@ int InitProcess( argList_t& args )
 
     vector<string> extraFilepaths;
 
-	for( size_t i=1; i < args.size(); ++i )
-	{
-		if( args[i] == "-cfg" && i+1 <= args.size() )
-		{
-			if( g_rtConfig->initializeFromFile( args[i+1] ) )
-			{
-				BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
-				return QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE;
-			}
-			args.erase( args.begin() + i );
+    for( size_t i=1; i < args.size(); ++i )
+    {
+        if( args[i] == "-cfg" && i+1 <= args.size() )
+        {
+            if( g_rtConfig->initializeFromFile( args[i+1] ) )
+            {
+                BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+                return QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE;
+            }
+            args.erase( args.begin() + i );
 
-		}
+        }
         else if( args[i] == "-b" && i+1 <= args.size() )
         {
             // read filepaths from file
@@ -174,48 +174,48 @@ int InitProcess( argList_t& args )
             while (getline(listFile, line))
                 extraFilepaths.push_back(line);
 
-			args.erase( args.begin() + i );
+            args.erase( args.begin() + i );
         }
         else
-			continue;
+            continue;
 
-		args.erase( args.begin() + i );
-		--i;
-	}
+        args.erase( args.begin() + i );
+        --i;
+    }
 
-	if( g_rtConfig->inputFilepaths.empty() && args.size() < 2 )
+    if( g_rtConfig->inputFilepaths.empty() && args.size() < 2 )
     {
         BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "not enough arguments.\n\n" << usage << endl;
-		return QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS;
-	}
+        return QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS;
+    }
 
-	if( !g_rtConfig->initialized() )
-	{
-		if( g_rtConfig->initializeFromFile() )
-		{
+    if( !g_rtConfig->initialized() )
+    {
+        if( g_rtConfig->initializeFromFile() )
+        {
             BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "could not find the default configuration file (hard-coded defaults in use)." << endl;
-		}
-	}
+        }
+    }
 
-	// Command line overrides happen after config file has been distributed but before PTM parsing
-	RunTimeVariableMap vars = g_rtConfig->getVariables();
-	for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
-	{
-		string varName;
-		varName += "-" + itr->first;
+    // Command line overrides happen after config file has been distributed but before PTM parsing
+    RunTimeVariableMap vars = g_rtConfig->getVariables();
+    for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
+    {
+        string varName;
+        varName += "-" + itr->first;
 
-		for( size_t i=1; i < args.size(); ++i )
-		{
-			if( args[i] == varName && i+1 < args.size() )
-			{
-				//cout << varName << " " << itr->second << " " << args[i+1] << endl;
-				itr->second = args[i+1];
-				args.erase( args.begin() + i );
-				args.erase( args.begin() + i );
-				--i;
-			}
-		}
-	}
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i] == varName && i+1 < args.size() )
+            {
+                //cout << varName << " " << itr->second << " " << args[i+1] << endl;
+                itr->second = args[i+1];
+                args.erase( args.begin() + i );
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
+    }
 
     try
     {
@@ -242,20 +242,20 @@ int InitProcess( argList_t& args )
     sink->set_formatter(fmt);
     boost::log::core::get()->add_sink(sink);
 
-	for( size_t i=1; i < args.size(); ++i )
-	{
-		if( args[i] == "-dump" )
-		{
-			g_rtConfig->dump();
-			args.erase( args.begin() + i );
-			--i;
-		}
-	}
+    for( size_t i=1; i < args.size(); ++i )
+    {
+        if( args[i] == "-dump" )
+        {
+            g_rtConfig->dump();
+            args.erase( args.begin() + i );
+            --i;
+        }
+    }
 
-	for( size_t i=1; i < args.size(); ++i )
-	{
-		if( args[i][0] == '-' )
-		{
+    for( size_t i=1; i < args.size(); ++i )
+    {
+        if( args[i][0] == '-' )
+        {
             if (!ignoreConfigErrors)
             {
                 BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "unrecognized parameter \"" << args[i] << "\"" << endl;
@@ -263,10 +263,10 @@ int InitProcess( argList_t& args )
             }
 
             BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-			args.erase( args.begin() + i );
-			--i;
-		}
-	}
+            args.erase( args.begin() + i );
+            --i;
+        }
+    }
 
     if (args.size() == 1)
     {
@@ -277,7 +277,7 @@ int InitProcess( argList_t& args )
 
     args.insert(args.end(), extraFilepaths.begin(), extraFilepaths.end());
 
-	return 0;
+    return 0;
 }
 
 struct ImportSettingsHandler : public Parser::ImportSettingsCallback
@@ -652,20 +652,20 @@ int run( int argc, char* argv[] )
 {
     try
     {
-	    argList_t args( argv, argv+argc );
+        argList_t args( argv, argv+argc );
 
-	    int rv;
+        int rv;
         if( ( rv = InitProcess(args) ) > 0 )
-		    return rv;
+            return rv;
 
-	    for( size_t i = 1; i < args.size(); ++i )
-		    FindFilesByMask( args[i], g_rtConfig->inputFilepaths );
+        for( size_t i = 1; i < args.size(); ++i )
+            FindFilesByMask( args[i], g_rtConfig->inputFilepaths );
 
-	    if( g_rtConfig->inputFilepaths.empty() )
-	    {
+        if( g_rtConfig->inputFilepaths.empty() )
+        {
             BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "no files found matching input filemasks." << endl;
-		    return QONVERT_ERROR_NO_INPUT_FILES_FOUND;
-	    }
+            return QONVERT_ERROR_NO_INPUT_FILES_FOUND;
+        }
 
         vector<string> idpDbFilepaths, parserFilepaths;
         BOOST_FOREACH(const string& filepath, g_rtConfig->inputFilepaths)
@@ -821,7 +821,7 @@ int run( int argc, char* argv[] )
         return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
 
-	return 0;
+    return 0;
 }
 
 int main(int argc, char* argv[])

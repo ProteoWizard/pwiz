@@ -50,9 +50,9 @@ namespace ScanRanker
             HighQualSpecCutoff = 0.6
 
          DirecTag hard code default config
-            ComplementScoreWeight	=	1
-            IntensityScoreWeight	=	1
-            MzFidelityScoreWeight	=	1
+            ComplementScoreWeight    =    1
+            IntensityScoreWeight    =    1
+            MzFidelityScoreWeight    =    1
             TicCutoffPercentage = 1
             MaxPeakCount = 100
             MaxTagCount = 20

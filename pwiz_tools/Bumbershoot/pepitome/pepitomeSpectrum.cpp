@@ -132,12 +132,12 @@ namespace freicore
             //cout << id.index << ": " << intenClassCounts << endl;
 
             int divider = 0;
-	        for( int i=0; i < g_rtConfig->NumMzFidelityClasses-1; ++i )
-	        {
-		        divider += 1 << i;
-		        mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance.value * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
-	        }
-		    mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance.value;
+            for( int i=0; i < g_rtConfig->NumMzFidelityClasses-1; ++i )
+            {
+                divider += 1 << i;
+                mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance.value * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
+            }
+            mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance.value;
 
             peakPreData.clear();
 
@@ -237,8 +237,8 @@ namespace freicore
             MvIntKey mzFidelityKey;
             MvIntKey mvhKey;
             mvhKey.clear();
-		    mvhKey.resize( g_rtConfig->NumIntensityClasses+1, 0 );
-		    mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
+            mvhKey.resize( g_rtConfig->NumIntensityClasses+1, 0 );
+            mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
 
             result.mvh = 0.0;
             //result.mzSSE = 0.0;

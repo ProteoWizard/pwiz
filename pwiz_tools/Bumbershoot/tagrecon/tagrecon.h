@@ -34,7 +34,7 @@
 #include <boost/interprocess/containers/container/flat_map.hpp>
 #include <boost/interprocess/containers/container/flat_set.hpp>
 
-#define TAGRECON_LICENSE			COMMON_LICENSE
+#define TAGRECON_LICENSE            COMMON_LICENSE
 
 //#define DEBUG 1
 
@@ -46,52 +46,52 @@ using boost::container::flat_multiset;
 
 namespace freicore
 {
-	#ifdef USE_MPI
+    #ifdef USE_MPI
         extern MPI_Status st;
         extern void* g_mpiBuffer;
     #endif
 
 namespace tagrecon
 {
-	typedef struct spectrumInfo
-	{
-		vector< string > sequences;
-		bool hasCorrectTag;
-	} spectrumInfo_t;
+    typedef struct spectrumInfo
+    {
+        vector< string > sequences;
+        bool hasCorrectTag;
+    } spectrumInfo_t;
 
-	typedef flat_map< float, string >				                    modMap_t;
+    typedef flat_map< float, string >                                    modMap_t;
 
-	/**
-		Structure TagSetInfo stores the spectrum, tag sequence, n-terminal and c-terminal
-		masses that sourround the tag.
-	*/
-	struct TagSpectrumInfo
-	{
-		TagSpectrumInfo( const SpectraList::iterator& itr, string tag, float nT, float cT ) { 
-			sItr = itr;
-			nTerminusMass = nT;
-			cTerminusMass = cT;
-			candidateTag = tag;
-		}
+    /**
+        Structure TagSetInfo stores the spectrum, tag sequence, n-terminal and c-terminal
+        masses that sourround the tag.
+    */
+    struct TagSpectrumInfo
+    {
+        TagSpectrumInfo( const SpectraList::iterator& itr, string tag, float nT, float cT ) { 
+            sItr = itr;
+            nTerminusMass = nT;
+            cTerminusMass = cT;
+            candidateTag = tag;
+        }
 
-		TagSpectrumInfo(string tag, float nT, float cT) {
-			candidateTag = tag;
-			nTerminusMass = nT;
-			cTerminusMass = cT;
-		}
+        TagSpectrumInfo(string tag, float nT, float cT) {
+            candidateTag = tag;
+            nTerminusMass = nT;
+            cTerminusMass = cT;
+        }
 
         template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & candidateTag & nTerminusMass & cTerminusMass & tagChargeState & sItr;
-		}
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & candidateTag & nTerminusMass & cTerminusMass & tagChargeState & sItr;
+        }
 
-		SpectraList::iterator sItr;
-		float nTerminusMass;
-		float cTerminusMass;
-		string candidateTag;
+        SpectraList::iterator sItr;
+        float nTerminusMass;
+        float cTerminusMass;
+        string candidateTag;
         int tagChargeState;
-	};
+    };
 
     struct TagMatchInfo
     {
@@ -177,8 +177,8 @@ namespace tagrecon
 
     typedef AhoCorasickTrie<ascii_translator, AATagToSpectraMap>         SpectraTagTrie;
 
-	struct SearchStatistics
-	{
+    struct SearchStatistics
+    {
         SearchStatistics()
         :   numProteinsDigested(0),
             numCandidatesGenerated(0),
@@ -192,8 +192,8 @@ namespace tagrecon
             operator=(other);
         }
 
-		SearchStatistics& operator=(const SearchStatistics& other)
-		{
+        SearchStatistics& operator=(const SearchStatistics& other)
+        {
             numProteinsDigested.store(other.numProteinsDigested);
             numCandidatesGenerated.store(other.numCandidatesGenerated);
             numCandidatesQueried.store(other.numCandidatesQueried);
@@ -203,66 +203,66 @@ namespace tagrecon
         }
 
         boost::atomic_uint32_t numProteinsDigested;
-		boost::atomic_uint64_t numCandidatesGenerated;
-		boost::atomic_uint64_t numCandidatesQueried;
-		boost::atomic_uint64_t numComparisonsDone;
+        boost::atomic_uint64_t numCandidatesGenerated;
+        boost::atomic_uint64_t numCandidatesQueried;
+        boost::atomic_uint64_t numComparisonsDone;
         boost::atomic_uint64_t numCandidatesSkipped;
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & numProteinsDigested & numCandidatesGenerated & numCandidatesQueried & numComparisonsDone & numCandidatesSkipped;
-		}
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & numProteinsDigested & numCandidatesGenerated & numCandidatesQueried & numComparisonsDone & numCandidatesSkipped;
+        }
 
-		SearchStatistics operator+ ( const SearchStatistics& rhs )
-		{
-			SearchStatistics tmp(*this);
-			tmp.numProteinsDigested.fetch_add(rhs.numProteinsDigested);
-			tmp.numCandidatesGenerated.fetch_add(rhs.numCandidatesGenerated);
-			tmp.numCandidatesQueried.fetch_add(rhs.numCandidatesQueried);
-			tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
+        SearchStatistics operator+ ( const SearchStatistics& rhs )
+        {
+            SearchStatistics tmp(*this);
+            tmp.numProteinsDigested.fetch_add(rhs.numProteinsDigested);
+            tmp.numCandidatesGenerated.fetch_add(rhs.numCandidatesGenerated);
+            tmp.numCandidatesQueried.fetch_add(rhs.numCandidatesQueried);
+            tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
             tmp.numCandidatesSkipped.fetch_add(rhs.numCandidatesSkipped);
-			return tmp;
-		}
+            return tmp;
+        }
 
-		operator string()
-		{
-			stringstream s;
-			s	<< numProteinsDigested << " proteins; " << numCandidatesGenerated << " candidates; "
-				<< numCandidatesQueried << " queries; " << numComparisonsDone << " comparisons";
+        operator string()
+        {
+            stringstream s;
+            s    << numProteinsDigested << " proteins; " << numCandidatesGenerated << " candidates; "
+                << numCandidatesQueried << " queries; " << numComparisonsDone << " comparisons";
             if(numCandidatesSkipped>0) {
                 s << "; " << numCandidatesSkipped << " skipped";
             }
-			return s.str();
-		}
-	};
+            return s.str();
+        }
+    };
 
     typedef flat_multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
-	typedef vector< SpectraMassMap >        SpectraMassMapList;
+    typedef vector< SpectraMassMap >        SpectraMassMapList;
 
     #ifdef USE_MPI
-		void TransmitConfigsToChildProcesses();
-		void ReceiveConfigsFromRootProcess();
+        void TransmitConfigsToChildProcesses();
+        void ReceiveConfigsFromRootProcess();
         void ReceiveNETRewardsFromRootProcess();
         void TransmitNETRewardsToChildProcess();
-		int ReceivePreparedSpectraFromChildProcesses();
-		int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
-		int ReceiveUnpreparedSpectraBatchFromRootProcess();
-		int TransmitUnpreparedSpectraToChildProcesses();
-		int ReceiveSpectraFromRootProcess();
-		int TransmitSpectraToChildProcesses( int done );
-		int TransmitProteinsToChildProcesses();
-		int ReceiveProteinBatchFromRootProcess();
-		int TransmitResultsToRootProcess();
-		int ReceiveResultsFromChildProcesses( bool firstBatch );
-	#endif
+        int ReceivePreparedSpectraFromChildProcesses();
+        int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
+        int ReceiveUnpreparedSpectraBatchFromRootProcess();
+        int TransmitUnpreparedSpectraToChildProcesses();
+        int ReceiveSpectraFromRootProcess();
+        int TransmitSpectraToChildProcesses( int done );
+        int TransmitProteinsToChildProcesses();
+        int ReceiveProteinBatchFromRootProcess();
+        int TransmitResultsToRootProcess();
+        int ReceiveResultsFromChildProcesses( bool firstBatch );
+    #endif
 
-	extern proteinStore         proteins;
+    extern proteinStore         proteins;
     extern SearchStatistics     searchStatistics;
 
-	extern SpectraList			spectra;
+    extern SpectraList            spectra;
     // These lists hold precursor masses for "untagged" spectra.
-    extern SpectraMassMapList	untaggedSpectraByChargeState;
+    extern SpectraMassMapList    untaggedSpectraByChargeState;
 }
 }
 

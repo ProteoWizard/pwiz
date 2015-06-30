@@ -95,11 +95,11 @@ import path ;
 
 
 project bumberdash
-	: requirements
-	  <include>$(PWIZ_SOURCE)
-	  <include>$(LIBRARIES_PATH)/boost_aux
-	  <include>$(LIBRARIES_PATH)/boost_$(BOOST_VERSION:J=_)
-	  <include>$(LIBRARIES_PATH)/libsvm-3.0
+    : requirements
+      <include>$(PWIZ_SOURCE)
+      <include>$(LIBRARIES_PATH)/boost_aux
+      <include>$(LIBRARIES_PATH)/boost_$(BOOST_VERSION:J=_)
+      <include>$(LIBRARIES_PATH)/libsvm-3.0
 
       # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
@@ -120,22 +120,22 @@ project bumberdash
       <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
       <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
       <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-      <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4267                    # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
       <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
-	  
-	  # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
+      
+      # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
       <toolset>gcc:<cxxflags>-Wno-uninitialized
 
       # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
       <toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
-	  
-	  # special Cygwin gcc-3.4.4 hack
+      
+      # special Cygwin gcc-3.4.4 hack
       # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
       <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
       <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
@@ -155,7 +155,7 @@ project bumberdash
       <variant>release
       <link>static
       <runtime-link>static
-	;
+    ;
 
 alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
 
@@ -527,7 +527,7 @@ tar.extract
         pwiz_aux/Jamfile.jam
         pwiz_tools/common
         pwiz_tools/Shared/MSGraph
-		pwiz_tools/Shared/zedgraph
+        pwiz_tools/Shared/zedgraph
         pwiz_tools/Shared/Lib
         pwiz_tools/Shared/Common
 
@@ -536,7 +536,7 @@ tar.extract
     : # usage-requirements
     : check-last-file-only
     ;
-	
+    
 make BumberDash.exe
     : # sources
         BumberDash/Program.cs
@@ -674,7 +674,7 @@ tar.create $(application-name:L)-src.tar.bz2
     $(.exclusion-list)
 
     $(ROOT_PATH)/BumberDash
-	$(ROOT_PATH)/Deploy
+    $(ROOT_PATH)/Deploy
     $(ROOT_PATH)/Tests
 
     [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]

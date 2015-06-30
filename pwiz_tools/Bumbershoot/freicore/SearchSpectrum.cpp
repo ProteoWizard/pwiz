@@ -31,8 +31,8 @@ SearchScoreList BaseSearchResult::emptyScoreList;
 
 namespace std
 {
-	ostream& operator<< ( ostream& o, const SearchScore& rhs )
-	{
+    ostream& operator<< ( ostream& o, const SearchScore& rhs )
+    {
         return ( o << "(" << rhs.name << ":" << rhs.value << ")" );
-	}
+    }
 }

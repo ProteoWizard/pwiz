@@ -41,7 +41,7 @@ bool BaseCrawPeakFinder::consistent_gte( const std::vector<float> & c , int idx,
     int rh_bound = std::min((int)c.size(),idx+len);
     for ( int i = idx ;  i < rh_bound ; i++ ) {
       if ( c[i] < threshold ) 
-	return false;
+    return false;
     }
     return true;
 }
@@ -126,7 +126,7 @@ BaseCrawPeakFinder::~BaseCrawPeakFinder () {
 
 
 void BaseCrawPeakFinder::find_cross_points(std::vector<float> &c , float threshold  ) {
-	find_cross_points(c,this->plus_crosses, this->minus_crosses, threshold);
+    find_cross_points(c,this->plus_crosses, this->minus_crosses, threshold);
 }
 /*! Finds maxima and minima between crossing points of a signal as described in find_cross_points.
     sets 'peaks' and 'valleys' in the 2D signal in the peaks, valleys
@@ -150,11 +150,11 @@ public:
 /*
  * a simple copy operation, using the = operator
  */
-	PVIndexType& operator=(const PVIndexType &rhs)	{
-		index = rhs.index;
-		type = rhs.type;
-		return *this;
-	}
+    PVIndexType& operator=(const PVIndexType &rhs)    {
+        index = rhs.index;
+        type = rhs.type;
+        return *this;
+    }
 };
 
 static bool lessThanIndex(const PVIndexType &l,const PVIndexType &r)
@@ -185,11 +185,11 @@ void BaseCrawPeakFinder::peaks_and_valleys_fast( std::vector<float> & c ) {
       mc_idx++;
       
       if ( mc_idx >= (int)minus_crosses.size() - 2 ) {
-	if ( pl_idx <= (int)plus_crosses.size() ) {
-	  int max_idx = crawutils::max_idx_vect_bound ( c, plus_crosses.at(pl_idx), minus_crosses.at(mc_idx) );
-	  peaks.push_back(max_idx);
-	}
-	break;
+    if ( pl_idx <= (int)plus_crosses.size() ) {
+      int max_idx = crawutils::max_idx_vect_bound ( c, plus_crosses.at(pl_idx), minus_crosses.at(mc_idx) );
+      peaks.push_back(max_idx);
+    }
+    break;
       }
     }
 
@@ -209,11 +209,11 @@ void BaseCrawPeakFinder::peaks_and_valleys_fast( std::vector<float> & c ) {
       pl_idx++;
 
       if ( pl_idx >= (int)plus_crosses.size() - 2 ) {
-	if ( mc_idx <= (int)minus_crosses.size() ) {
-	  int min_idx = crawutils::min_idx_vect_bound ( c, minus_crosses.at(mc_idx), plus_crosses.at(pl_idx) );
-	  valleys.push_back(min_idx);
-	}
-	break;
+    if ( mc_idx <= (int)minus_crosses.size() ) {
+      int min_idx = crawutils::min_idx_vect_bound ( c, minus_crosses.at(mc_idx), plus_crosses.at(pl_idx) );
+      valleys.push_back(min_idx);
+    }
+    break;
       }
 
     }
@@ -370,7 +370,7 @@ void BaseCrawPeakFinder::peaks_and_valleys_slow( std::vector<float> & c ) {
 
 
 void BaseCrawPeakFinder::get_2d_chrom( const std::vector<float> & in_chrom,
-				       std::vector<float> & out_chrom ) {
+                       std::vector<float> & out_chrom ) {
   if ( ! this->method.saved_weights ) {
     set_weights();
   }
@@ -385,7 +385,7 @@ void BaseCrawPeakFinder::get_2d_chrom( std::vector<float> & in_chrom ) {
 }
 
 void BaseCrawPeakFinder::get_1d_chrom( const std::vector<float> & in_chrom,
-				       std::vector<float> & out_chrom ) {
+                       std::vector<float> & out_chrom ) {
   if ( ! this->method.saved_weights ) {
     set_weights();
   }
@@ -399,7 +399,7 @@ void BaseCrawPeakFinder::get_0d_chrom( std::vector<float> & in_chrom ) {
   gs_0d->smooth_vect ( in_chrom );
 }
 void BaseCrawPeakFinder::get_0d_chrom( const std::vector<float> & in_chrom,
-				       std::vector<float> & out_chrom ) {
+                       std::vector<float> & out_chrom ) {
   if ( ! this->method.saved_weights ) {
     set_weights();
   }
@@ -509,8 +509,8 @@ void BaseCrawPeakFinder::call_peaks() {
     uint lh_valley_idx = crawutils::get_lh_idx(valleys,chrom2d_peak_loc);
     if ( valleys.size() == 1 ) {
       if ( valleys[0] > peaks[0] ) {
-	lh_valley = 0;
-	rh_valley = valleys[0];
+    lh_valley = 0;
+    rh_valley = valleys[0];
       }
       else {
           lh_valley = valleys[0];
@@ -545,9 +545,9 @@ void BaseCrawPeakFinder::call_peaks() {
     if ( ! (method.mean_cutoff) || 
          ( this->annotator.get_active_chrom()->at(chrom2d_peak_loc) > mean_height_cutoff ) ) { 
       if ( passes_min_len( lh_valley, rh_valley ) )
-	{
-	  peak_voodoo(lh_valley,rh_valley,chrom2d_peak_loc);
-	}
+    {
+      peak_voodoo(lh_valley,rh_valley,chrom2d_peak_loc);
+    }
     }
   }
   if ( this->method.extend_peak_set ) {
@@ -622,7 +622,7 @@ bool BaseCrawPeakFinder::passes_min_len ( int lh_valley, int rh_valley ) {
 }
 
 void BaseCrawPeakFinder::delimit_by_minimum_level( uint & lh_valley_idx , uint & rh_valley_idx ,
-					      int peak_loc ) {
+                          int peak_loc ) {
   for ( int lh = peak_loc ; lh > (int)lh_valley_idx ; lh-- ) {
     if ( this->chrom[lh] <= this->method.minimum_level ) {
       lh_valley_idx = lh;

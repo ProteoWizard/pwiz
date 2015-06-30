@@ -105,10 +105,10 @@ namespace crawutils {
       std::string tmp_s("");
       uint last_ext_pos = filename.rfind(delim);
       if (  last_ext_pos != std::string::npos )  {
-	tmp_s.append(filename,0,last_ext_pos);
-	std::cerr << "stripped extension" << tmp_s << std::endl;
-	filename = tmp_s;
-	ext_stripped = true;
+    tmp_s.append(filename,0,last_ext_pos);
+    std::cerr << "stripped extension" << tmp_s << std::endl;
+    filename = tmp_s;
+    ext_stripped = true;
       }
     }
   }
@@ -173,7 +173,7 @@ namespace crawutils {
       }
 #endif
     return tmp_s; 
-  }	
+  }    
 
 std::string trim_whitespace ( const std::string & in_str ) {
    int start_ws = in_str.find_first_not_of(" \t\n\r");
@@ -229,7 +229,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     double t = 0.0;
     for ( uint i = 0 ; i < f.size() ; i++ ) {
       t += (double)f[i] * (double)f[i];
-			
+            
     }
     return t;
   }
@@ -252,7 +252,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
 
 
   float spectra_cosine_angle ( const std::vector<float> & s1, const std::vector<float> & s2, 
-			       double s1_sqrsum, double s2_sqrsum ) {
+                   double s1_sqrsum, double s2_sqrsum ) {
     // SQRSUM NULL represents a dummy value for the sqrsum
     if ( s1_sqrsum == SQRSUM_NULL || s2_sqrsum == SQRSUM_NULL ) {
       return spectra_cosine_angle(s1,s2);
@@ -264,7 +264,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     if ( d == 0.0 )  {
       return 0.0f;
     }
-    double n = mult_accum_vects(s1,s2);		
+    double n = mult_accum_vects(s1,s2);        
     return (float)(n / d);
   }
 
@@ -273,20 +273,20 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
      2. negative / zero intensity values
      3. assess data from noise values
      4. Speed -- pre-rank all spectra */
-	
+    
   void rankties( std::vector<float> & v ) {
     std::vector<int> tied_idxs(1);
     tied_idxs[0] = 0;
     float last_seen = v[0];
     for ( int i = 1 ; i < (int)v.size() ; i++ ) {
       if ( v[i] != last_seen ) {
-	if ( tied_idxs.size() > 1 ) {
-	  float avg = (float)sum_vect(tied_idxs) / (float)tied_idxs.size();
-	  for ( int t = 0 ; t < (int)tied_idxs.size() ; t++ ) {
-	    v[tied_idxs[t]] = avg;
-	  }
-	}
-	tied_idxs.clear();
+    if ( tied_idxs.size() > 1 ) {
+      float avg = (float)sum_vect(tied_idxs) / (float)tied_idxs.size();
+      for ( int t = 0 ; t < (int)tied_idxs.size() ; t++ ) {
+        v[tied_idxs[t]] = avg;
+      }
+    }
+    tied_idxs.clear();
       }
       tied_idxs.push_back(i);
       last_seen = v[i];
@@ -294,7 +294,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   }
 
   float spectra_spearman_rank_corr ( const std::vector<float> & s1, const std::vector<float> & s2, 
-				     double d1, double d2 ) {
+                     double d1, double d2 ) {
     assert(s1.size() == s2.size());
 
     //note that we will modify comparisons by reducing them when one or the other of the intensities is zero
@@ -303,12 +303,12 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     int saved_idx = 0;
     for ( int i = 0 ; i < (int)s1.size();  i++ ) {
       if ( s1[i] <= 0.0f && s2[i] <= 0.0f ) {
-	continue;
+    continue;
       }
       else {
-	s1_sort.push_back(std::pair<float,int>(s1[i],saved_idx));
-	s2_sort.push_back(std::pair<float,int>(s2[i],saved_idx));
-	saved_idx++;
+    s1_sort.push_back(std::pair<float,int>(s1[i],saved_idx));
+    s2_sort.push_back(std::pair<float,int>(s2[i],saved_idx));
+    saved_idx++;
       }
     }
     int comparisons = saved_idx;
@@ -365,47 +365,47 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
 
     while ( true ) {
       if ( i >= (int)sorted_by_i.size() ) {
-	break;
+    break;
       }
       if ( ( i != ((int)sorted_by_i.size() ) ) && ( sorted_by_i[i].first == last_val) ) {
-	if ( ! in_tie ) {
-	  in_tie = true;
-	  tie_start = i;
-	}
-	else {
-	  //continuing a tie
-	}
+    if ( ! in_tie ) {
+      in_tie = true;
+      tie_start = i;
+    }
+    else {
+      //continuing a tie
+    }
       }
       else {
-	if ( in_tie == false ) {
-	  //we are not ending a tie
-	  to_rank[sorted_by_i[i].second] = (float)i;
-	}
-	else {
-	  //we are ending a tie
-	  if ( avg_tie ) {
-	    int rank_total = 0;
-	    int tie_size = i - tie_start + 1;
-	    int j = tie_start;
-	    for ( ; j < i ; j++ ) {
-	      rank_total += j;
-	    }
-	    float tied_rank = (float)rank_total / (float)tie_size;
-	    for ( j = tie_start ;  j < i ; j++ ) {
-	      to_rank[sorted_by_i[i].second] = tied_rank;
-	    }
-	  }
-	  else {
-	    //use the floor of the start of the ranks
-	    float tie_rank_floor = (float)tie_start;
-	    for ( int j = tie_start; j < i ; j++ ) {
-	      to_rank[sorted_by_i[i].second] = tie_rank_floor;
-	    }
-	  }
-	  //since we are not ending a tie..
-	  last_val = sorted_by_i[i].first;
-	  in_tie = false;
-	}
+    if ( in_tie == false ) {
+      //we are not ending a tie
+      to_rank[sorted_by_i[i].second] = (float)i;
+    }
+    else {
+      //we are ending a tie
+      if ( avg_tie ) {
+        int rank_total = 0;
+        int tie_size = i - tie_start + 1;
+        int j = tie_start;
+        for ( ; j < i ; j++ ) {
+          rank_total += j;
+        }
+        float tied_rank = (float)rank_total / (float)tie_size;
+        for ( j = tie_start ;  j < i ; j++ ) {
+          to_rank[sorted_by_i[i].second] = tied_rank;
+        }
+      }
+      else {
+        //use the floor of the start of the ranks
+        float tie_rank_floor = (float)tie_start;
+        for ( int j = tie_start; j < i ; j++ ) {
+          to_rank[sorted_by_i[i].second] = tie_rank_floor;
+        }
+      }
+      //since we are not ending a tie..
+      last_val = sorted_by_i[i].first;
+      in_tie = false;
+    }
       }
       i++; // make sure we always increment i
     }
@@ -421,7 +421,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
 
     while ( true ) {
       if ( i >= (int)sorted_by_i.size() ) {
-	break;
+    break;
       }
       to_rank[sorted_by_i[i].second] = (float)i;
       i++;
@@ -437,12 +437,12 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     int saved_idx = 0;
     for ( int i = 0 ; i < (int)s1.size();  i++ ) {
       if ( s1[i] <= 0.0f || s2[i] <= 0.0f ) {
-	continue;
+    continue;
       }
       else {
-	s1_sort.push_back(std::pair<float,int>(s1[i],saved_idx));
-	s2_sort.push_back(std::pair<float,int>(s2[i],saved_idx));
-	saved_idx++;
+    s1_sort.push_back(std::pair<float,int>(s1[i],saved_idx));
+    s2_sort.push_back(std::pair<float,int>(s2[i],saved_idx));
+    saved_idx++;
       }
     }
    
@@ -470,12 +470,12 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     int saved_idx = 0;
     for ( int i = 0 ; i < (int)s1.size();  i++ ) {
       if ( s1[i] <= 0.0f || s2[i] <= 0.0f ) {
-	continue;
+    continue;
       }
       else {
-	s1_sort.push_back(std::pair<float,int>(s1[i],saved_idx));
-	s2_sort.push_back(std::pair<float,int>(s2[i],saved_idx));
-	saved_idx++;
+    s1_sort.push_back(std::pair<float,int>(s1[i],saved_idx));
+    s2_sort.push_back(std::pair<float,int>(s2[i],saved_idx));
+    saved_idx++;
       }
     }
    
@@ -573,7 +573,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     return spectra_cosine_angle(s1,s2,sv1_sqrsum,sv2_sqrsum);
   }
   float spectra_cosine_angle_squared ( const std::vector<float> & s1, const std::vector<float> & s2,
-				       double d1, double d2) {
+                       double d1, double d2) {
     float cos_angle = spectra_cosine_angle(s1,s2);
     return cos_angle * cos_angle;
   }
@@ -591,8 +591,8 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   */
 
   void filter_zero_values (const std::vector<float> & s1 , const std::vector<float> & s2,
-			   std::vector<float> & out_s1, std::vector<float> & out_s2 ,
-			   float min_val ) {
+               std::vector<float> & out_s1, std::vector<float> & out_s2 ,
+               float min_val ) {
     if ( s1.size() != s2.size() ) {
       throw("spectra must be of the same size");
     }
@@ -600,11 +600,11 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     std::vector<float> s2_tmp; s2_tmp.reserve(s2.size());
     for ( int i = 0 ; i < (int)s1.size(); i++ ) {
       if ( s1[i] <= min_val || s2[i] <= min_val ) {
-	continue;
+    continue;
       }
       else {
-	s1_tmp.push_back(s1[i]);
-	s2_tmp.push_back(s2[i]);
+    s1_tmp.push_back(s1[i]);
+    s2_tmp.push_back(s2[i]);
       }
     }
     out_s1.resize(s1_tmp.size());
@@ -627,8 +627,8 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   }
 
   float spectra_corr_coef ( const std::vector<float> & s1, const std::vector<float> & s2, 
-			    double s1_sqrsum, double s2_sqrsum ) {
- 	  
+                double s1_sqrsum, double s2_sqrsum ) {
+       
     /* calculate as the centered cosine angle */
     if ( s1_sqrsum == SQRSUM_NULL || s2_sqrsum == SQRSUM_NULL ) {
       return spectra_corr_coef(s1,s2);
@@ -731,7 +731,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     if ( v.size() == 1 ) { return true; }
     for ( int i = 1; i < v.size(); i++ ) {
       if(v[i] < v[i-1]) {
-	return false;
+    return false;
       }
     }
     return true;
@@ -764,7 +764,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     template <typename data_type>
     void load_array( data_type * out_val, char * field_data, int char_len ) {
     //TODO -- deal with different endianness in the data
-    memcpy((void*)out_val, (void*)field_data, char_len );	
+    memcpy((void*)out_val, (void*)field_data, char_len );    
     };
 
 
@@ -798,7 +798,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     data_type rb_diff = templ_abs<data_type>( *rb - key);
     if ( lb_diff <= rb_diff ) {
     return lb;
-    }	
+    }    
     else {
     return rb;
     }
@@ -826,12 +826,12 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
       lb_diff = templ_abs<float>( key - *lb);
       rb_diff = templ_abs<float>( *rb - key);
 
-		
+        
       if ( lb_diff <= rb_diff ) {
-	return lb;
-      }	
+    return lb;
+      }    
       else {
-	return rb;
+    return rb;
       }
     }
   }
@@ -857,11 +857,11 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     return rh;
     }
 
-	 
+     
     if ( mypnt == NULL ) {
     fprintf(stderr,"tried to free a NULL pointer\n");
-    }	
-    else {	
+    }    
+    else {    
     free(mypnt);
     mypnt = NULL;
     }
@@ -888,7 +888,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   void print_cmd_args(int argc, char ** argv ) {
     for ( int i = 0 ; i < argc ; i++) {
       std::cerr << argv[i] << " ";
-		
+        
     }
     std::cerr << std::endl;
   }
@@ -905,7 +905,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     }
     float half_val = cum_sum[v.size() - 1] / 2;
     //std::cerr << "blah" << std::endl;
-	
+    
     std::vector<float>::iterator lh,rh;
     /* TODO -- use of lower_bound here is wrong */
     lh = lower_bound(cum_sum.begin(), cum_sum.end(), half_val);
@@ -934,8 +934,8 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   {
     if (y.empty())
       {
-	//std::cerr << "Error:  Called idx_of_centroid() on an empty vector." << std::endl;
-	throw("Error:  Called idx_of_centroid() on an empty vector.");
+    //std::cerr << "Error:  Called idx_of_centroid() on an empty vector." << std::endl;
+    throw("Error:  Called idx_of_centroid() on an empty vector.");
       }
     if (1 == y.size())
       return 0;
@@ -945,13 +945,13 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     int idx;
     for (idx = 1; idx < (int)y.size(); idx++)
       {
-	if (y[idx] < 0.)
-	  {
-	    //std::cerr << "Error:  idx_of_centroid() expected wholly nonnegative y-values; received "
-		//      << y[idx] << " in position " << idx << " of a vector." << std::endl;
-	    throw("Error:  idx_of_centroid() expected wholly nonnegative y-values; received ");
-	  }
-	cumulative_area.push_back((float)(0.5*(y[idx-1] + y[idx]) + cumulative_area[idx-1]));
+    if (y[idx] < 0.)
+      {
+        //std::cerr << "Error:  idx_of_centroid() expected wholly nonnegative y-values; received "
+        //      << y[idx] << " in position " << idx << " of a vector." << std::endl;
+        throw("Error:  idx_of_centroid() expected wholly nonnegative y-values; received ");
+      }
+    cumulative_area.push_back((float)(0.5*(y[idx-1] + y[idx]) + cumulative_area[idx-1]));
       }
     float half_total_auc((float)(0.5*cumulative_area[cumulative_area.size()-1]));
     idx = 1;
@@ -974,14 +974,14 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   {
     if (y.size() != x.size())
       {
-	// std::cerr << "Error:  idx_of_centroid() received vectors of unequal size ("
-		  // << x.size() << ", " << y.size() << ")." << std::endl;
-	throw("Error:  idx_of_centroid() received vectors of unequal size");
+    // std::cerr << "Error:  idx_of_centroid() received vectors of unequal size ("
+          // << x.size() << ", " << y.size() << ")." << std::endl;
+    throw("Error:  idx_of_centroid() received vectors of unequal size");
       }
     if (x.empty())
       {
-	//std::cerr << "Error:  Called idx_of_centroid() on an empty vector." << std::endl;
-	throw("Error:  Called idx_of_centroid() on an empty vector.");
+    //std::cerr << "Error:  Called idx_of_centroid() on an empty vector." << std::endl;
+    throw("Error:  Called idx_of_centroid() on an empty vector.");
       }
     if (1 == x.size())
       return 0;
@@ -991,13 +991,13 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     int idx;
     for (idx = 1; idx < (int)y.size(); idx++)
       {
-	if (y[idx] < 0. || x[idx] < 0.)
-	  {
-	    // std::cerr << "Error:  idx_of_centroid() expected wholly nonnegative y-values; received "
-		      // << (y[idx] < 0 ? y[idx] : x[idx]) << " in position " << idx << " of a vector." << std::endl;
-	    throw("Error:  idx_of_centroid() expected wholly nonnegative y-values; received");
-	  }
-	cumulative_area.push_back((float)((x[idx] - x[idx-1])*0.5*(y[idx-1] + y[idx]) + cumulative_area[idx-1]));
+    if (y[idx] < 0. || x[idx] < 0.)
+      {
+        // std::cerr << "Error:  idx_of_centroid() expected wholly nonnegative y-values; received "
+              // << (y[idx] < 0 ? y[idx] : x[idx]) << " in position " << idx << " of a vector." << std::endl;
+        throw("Error:  idx_of_centroid() expected wholly nonnegative y-values; received");
+      }
+    cumulative_area.push_back((float)((x[idx] - x[idx-1])*0.5*(y[idx-1] + y[idx]) + cumulative_area[idx-1]));
       }
     float half_total_auc((float)(0.5*cumulative_area[cumulative_area.size()-1]));
     idx = 1;
@@ -1052,10 +1052,10 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     while ( true ) {
       pos = s.find(c, pos);
       if ( pos < 0 ) {
-	break;
+    break;
       }
       else {
-	ps.push_back(pos);
+    ps.push_back(pos);
       }
       pos++;
     }
@@ -1066,7 +1066,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     else {
       v->push_back(s.substr(0,ps[0]));
       for ( uint i = 0 ; i < ps.size() - 1 ; i++ ) {
-	v->push_back(s.substr(ps[i]+1, (ps[i+1] - 1  - ps[i])  ));
+    v->push_back(s.substr(ps[i]+1, (ps[i+1] - 1  - ps[i])  ));
       }
       v->push_back(s.substr(ps[ps.size()-1]+1,s.length() - 1 - ps[ps.size() - 1] ) );
       return v;
@@ -1087,19 +1087,19 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
 
     while ( data_idx < data_length ) {
       if ( str_idx >= strbuf_size ) {
-	strbuf_size = strbuf_size * 2;
-	strbuf = (char*)realloc((void*)strbuf,strbuf_size);
+    strbuf_size = strbuf_size * 2;
+    strbuf = (char*)realloc((void*)strbuf,strbuf_size);
       }
       if ( string_data[data_idx] == '\0' ) {
-	strbuf[str_idx] = '\0';
-	in.push_back(std::string(strbuf));
-	str_idx = 0;
-	data_idx++;
+    strbuf[str_idx] = '\0';
+    in.push_back(std::string(strbuf));
+    str_idx = 0;
+    data_idx++;
       }
       else {
-	strbuf[str_idx] = string_data[data_idx];
-	str_idx++;
-	data_idx++;
+    strbuf[str_idx] = string_data[data_idx];
+    str_idx++;
+    data_idx++;
       }
     }
     free(strbuf);
@@ -1134,19 +1134,19 @@ return drand48();
     const char * prot_str = protein.c_str();
     int pep_added = 0;
     std::vector<char> pepbuf;
-		  
+          
     for ( int i = 0 ; i < (int)protein.length() - 1 ; i++ ) {
       char this_res = prot_str[i];
       pepbuf.push_back(this_res);
       if ( ( this_res == 'K' || this_res == 'R' ) && prot_str[i+1] != 'P' ) {
-			  
-	if ( min_length < 0 || (int)pepbuf.size() >= min_length )  {
-	  pepbuf.push_back('\0');
-	  std::string pepstr(&pepbuf[0]);
-	  pepbuf.clear();
-	  peptides.push_back(pepstr);
-	  pep_added++;
-	}
+              
+    if ( min_length < 0 || (int)pepbuf.size() >= min_length )  {
+      pepbuf.push_back('\0');
+      std::string pepstr(&pepbuf[0]);
+      pepbuf.clear();
+      peptides.push_back(pepstr);
+      pep_added++;
+    }
       }
     }
     pepbuf.push_back(prot_str[protein.length() - 1]);
@@ -1160,19 +1160,19 @@ return drand48();
   }
 
 
-	
-	
+    
+    
   std::string trim(std::string& s, const std::string & drop)
   {
     std::string r=s.erase(s.find_last_not_of(drop)+1);
     return r.erase(0,r.find_first_not_of(drop));
   }
-	      
+          
 
-	      
+          
   void tokenize_string(const std::string& str,
-		       std::vector<std::string>& tokens,
-		       const std::string& delimiters )
+               std::vector<std::string>& tokens,
+               const std::string& delimiters )
   {
     // Skip delimiters at beginning.
     std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
@@ -1180,15 +1180,15 @@ return drand48();
     // Find first "non-delimiter".
       //std::string::size_type pos     = str.find_first_of('\0',0);
     std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
-		    
+            
     while (std::string::npos != pos || std::string::npos != lastPos)
       {
-	// Found a token, add it to the vector.
-	tokens.push_back(str.substr(lastPos, pos - lastPos));
-	// Skip delimiters.  Note the "not_of"
-	lastPos = str.find_first_not_of(delimiters, pos);
-	// Find next "non-delimiter"
-	pos = str.find_first_of(delimiters, lastPos);
+    // Found a token, add it to the vector.
+    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    // Skip delimiters.  Note the "not_of"
+    lastPos = str.find_first_not_of(delimiters, pos);
+    // Find next "non-delimiter"
+    pos = str.find_first_of(delimiters, lastPos);
       }
   }
 
@@ -1297,7 +1297,7 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
     float other_max = max_vect(s2);
     float both_max = std::max(my_max,other_max);
     float logMaxI;
-				
+                
     if ( both_max <= 0.0f ) {
       logMaxI = 0.0f;
     }
@@ -1333,10 +1333,10 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
     for ( int i = 0 ; i < size ; i ++ ) {
       float intensity = s[i];
       if ( intensity <= 0.0f ) {
-	s[i] = 0.0f;
+    s[i] = 0.0f;
       }
       else {
-	s[i] = log10f(intensity);	
+    s[i] = log10f(intensity);    
       }
     }
   }
@@ -1345,7 +1345,7 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
     float threshold = *(float*)p;
     for ( int i = 0; i < (int)s.size() ; i++ ) {
       if ( s[i] < threshold ) {
-	s[i] = 0.0f;
+    s[i] = 0.0f;
       }
     }
   }
@@ -1393,15 +1393,15 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
       int np_start = pairs[lh_pair].first;
       int np_stop  = pairs[lh_pair].second;
       for ( int rh_cand_pair = lh_pair + 1; rh_cand_pair < (int)pairs.size() ; rh_cand_pair++ ) {
-	int lh_test = pairs[rh_cand_pair].first;
-	if ( adjacent ) { lh_test = lh_test - 1; }
-	if ( lh_test <= np_stop) {
-	  np_stop = pairs[rh_cand_pair].second;
-	  lh_pair++;
-	}
-	else {
-	  break;
-	}
+    int lh_test = pairs[rh_cand_pair].first;
+    if ( adjacent ) { lh_test = lh_test - 1; }
+    if ( lh_test <= np_stop) {
+      np_stop = pairs[rh_cand_pair].second;
+      lh_pair++;
+    }
+    else {
+      break;
+    }
       }
       out_pairs.push_back(std::pair<int,int>(np_start,np_stop));
     }
@@ -1503,7 +1503,7 @@ int main(int argc, char ** argv) {
   std::cout << pvalue << "\t" << pscore << std::endl;
   ttest_dep(s1,s2,pvalue,pscore);
   std::cout << "Testing the paired t-test:  p-value = "
-	    << pvalue << ", t-statistic = " << pscore << std::endl;
+        << pvalue << ", t-statistic = " << pscore << std::endl;
   std::sort(s1.begin(),s1.end());
   std::sort(s2.begin(),s2.end());
 

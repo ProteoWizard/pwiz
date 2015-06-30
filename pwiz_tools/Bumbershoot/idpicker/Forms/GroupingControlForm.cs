@@ -516,13 +516,13 @@ namespace IDPicker.Forms
                         break;
                     }
                 }
-            	if (isValid)
-            		e.Effect = DragDropEffects.Move;
-            	else
-            		e.Effect = DragDropEffects.None;
+                if (isValid)
+                    e.Effect = DragDropEffects.Move;
+                else
+                    e.Effect = DragDropEffects.None;
             }
-			else
-				e.Effect = DragDropEffects.None;
+            else
+                e.Effect = DragDropEffects.None;
         }
 
         private void tlvGroupedFiles_Dropped(object sender, OlvDropEventArgs e)

@@ -26,10 +26,10 @@
 
 ///Define the elemental composition of the C,H,N,O,S, and P
 const double CARBON_ISOTOPES[NUM_ISOTOPES]      = { 0.9893,     0.0107,     0,          0,          0 };
-const double HYDROGEN_ISOTOPES[NUM_ISOTOPES]    = { 0.999885,	0.000115,	0,          0,          0 };
-const double OXYGEN_ISOTOPES[NUM_ISOTOPES]      = { 0.99757,	0.00038,	0.00205,	0,          0 };
-const double NITROGEN_ISOTOPES[NUM_ISOTOPES]    = { 0.99632,	0.00368,	0.,         0,          0 };
-const double SULPHUR_ISOTOPES[NUM_ISOTOPES]     = { 0.9493,     0.0076,     0.429,	    0.0002,     0 };
+const double HYDROGEN_ISOTOPES[NUM_ISOTOPES]    = { 0.999885,    0.000115,    0,          0,          0 };
+const double OXYGEN_ISOTOPES[NUM_ISOTOPES]      = { 0.99757,    0.00038,    0.00205,    0,          0 };
+const double NITROGEN_ISOTOPES[NUM_ISOTOPES]    = { 0.99632,    0.00368,    0.,         0,          0 };
+const double SULPHUR_ISOTOPES[NUM_ISOTOPES]     = { 0.9493,     0.0076,     0.429,        0.0002,     0 };
 const double PHOSPHORUS_ISOTOPES[NUM_ISOTOPES]  = { 1.0,        0.0,        0.0,        0.0,        0 };
 
 ///Initialize the elemental masses

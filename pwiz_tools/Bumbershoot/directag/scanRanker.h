@@ -43,27 +43,27 @@ namespace directag
 {
 namespace scanranker
 {    
-	float					bestTagScoreMean;
-	float					bestTagTICMean;
-	float					tagMzRangeMean;
-	float					bestTagScoreIQR;
-	float					bestTagTICIQR;
-	float					tagMzRangeIQR;
-	size_t					numTaggedSpectra;
+    float                    bestTagScoreMean;
+    float                    bestTagTICMean;
+    float                    tagMzRangeMean;
+    float                    bestTagScoreIQR;
+    float                    bestTagTICIQR;
+    float                    tagMzRangeIQR;
+    size_t                    numTaggedSpectra;
 
     struct spectraSortByQualScore
-	{
-		bool operator() ( const Spectrum* a, const Spectrum* b )
-		{
-			return a->qualScore > b->qualScore;  // descending order
-		}
-	};
+    {
+        bool operator() ( const Spectrum* a, const Spectrum* b )
+        {
+            return a->qualScore > b->qualScore;  // descending order
+        }
+    };
 
     // configuration for writing msdata
     struct Config
     {
-	    //index filter defined later
-	    string filename;
+        //index filter defined later
+        string filename;
         string outputPath;
         string extension;
         bool verbose;
@@ -330,7 +330,7 @@ namespace scanranker
     {
         cout << "Generating output of quality metrics." << endl;
         string filenameAsScanName;
-        filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
+        filenameAsScanName =    inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
             inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
 
         string outputFilename = (outFilename.empty()) ? (filenameAsScanName + "-ScanRankerMetrics" + ".txt") :  outFilename;
@@ -338,7 +338,7 @@ namespace scanranker
         ofstream fileStream( outputFilename.c_str() );
 
         fileStream << "H\tBestTagScoreMean\tBestTagTICMean\tTagMzRangeMean\tBestTagScoreIQR\tBestTagTICIQR\tTagMzRangeIQR\tnumTaggedSpectra\n";
-        fileStream 	<< "H"<< '\t'
+        fileStream << "H"<< '\t'
             << bestTagScoreMean << '\t'
             << bestTagTICMean << '\t'
             << tagMzRangeMean << '\t'
@@ -357,7 +357,7 @@ namespace scanranker
             pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
             if( insertResult.second ) // only write out metrics of best scored spectrum if existing multiple charge states
             {
-                fileStream	<< "S" << '\t'
+                fileStream << "S" << '\t'
                     //<< s->nativeID << '\t'
                     << s->nativeID << '\t'
                     << s->mzOfPrecursor << '\t'

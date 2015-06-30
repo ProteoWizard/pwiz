@@ -145,12 +145,12 @@ namespace IDPicker.Forms
 
         private void createButton_Click(object sender, EventArgs e)
         {
-            /* Barcode	Sample
-               data_type	CAT
-               Broad-20120603-iTRAQ-114	WHIM-16
-               Broad-20120603-iTRAQ-115	WHIM-2
-               Broad-20120603-iTRAQ-116	WHIM-16
-               Broad-20120603-iTRAQ-117	WHIM-2
+            /* Barcode    Sample
+               data_type    CAT
+               Broad-20120603-iTRAQ-114    WHIM-16
+               Broad-20120603-iTRAQ-115    WHIM-2
+               Broad-20120603-iTRAQ-116    WHIM-16
+               Broad-20120603-iTRAQ-117    WHIM-2
             */
 
             string outputFilepath = _defaultFilepath;

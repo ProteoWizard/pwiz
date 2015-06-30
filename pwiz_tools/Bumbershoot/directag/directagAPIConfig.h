@@ -40,59 +40,59 @@ using namespace freicore;
 namespace accs = boost::accumulators;
 
 #define DIRECTAG_API_CONFIG \
-	COMMON_RTCONFIG \
-	RTCONFIG_VARIABLE( int,				MaxTagCount,				50				    ) \
-	RTCONFIG_VARIABLE( double,			MaxTagScore,				20.0			    ) \
-	RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				    ) \
-	RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				    ) \
-	RTCONFIG_VARIABLE( int,				TagLength,					3				    ) \
-	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		1.0			        ) \
-	RTCONFIG_VARIABLE( size_t,			MaxPeakCount,				100				    ) \
-	RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0			        ) \
-	RTCONFIG_VARIABLE( double,			MinPrecursorAdjustment,		-2.5			    ) \
-	RTCONFIG_VARIABLE( double,			MaxPrecursorAdjustment,		2.5			        ) \
-	RTCONFIG_VARIABLE( double,			PrecursorAdjustmentStep,	0.1			        ) \
-	RTCONFIG_VARIABLE( bool,			NormalizeOnMode,			true			    ) \
-	RTCONFIG_VARIABLE( bool,			AdjustPrecursorMass,		false			    ) \
-	RTCONFIG_VARIABLE( int,				DeisotopingMode,			0				    ) \
-	RTCONFIG_VARIABLE( bool,			MakeSpectrumGraphs,			false			    ) \
-	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSize,	20				    ) \
-	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSamples,	10000		        ) \
-	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMin,	-5.0			    ) \
-	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMax,	1.0			        ) \
-	RTCONFIG_VARIABLE( double,			PrecursorMzTolerance,		1.5					) \
-	RTCONFIG_VARIABLE( double,			FragmentMzTolerance,		0.5				    ) \
-	RTCONFIG_VARIABLE( double,			ComplementMzTolerance,		0.5				    ) \
-	RTCONFIG_VARIABLE( double,			IsotopeMzTolerance,			0.25				) \
-    RTCONFIG_VARIABLE( string,			DynamicMods,				""		            ) \
-	RTCONFIG_VARIABLE( int,				MaxDynamicMods,				2					) \
-	RTCONFIG_VARIABLE( string,			StaticMods,					""					) \
-	RTCONFIG_VARIABLE( double,			IntensityScoreWeight,		1.0			        ) \
-	RTCONFIG_VARIABLE( double,			MzFidelityScoreWeight,		1.0			        ) \
-	RTCONFIG_VARIABLE( double,			ComplementScoreWeight,		1.0			        ) 
-	//RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			        ) 
+    COMMON_RTCONFIG \
+    RTCONFIG_VARIABLE( int,                MaxTagCount,                50                    ) \
+    RTCONFIG_VARIABLE( double,            MaxTagScore,                20.0                ) \
+    RTCONFIG_VARIABLE( int,                NumIntensityClasses,        3                    ) \
+    RTCONFIG_VARIABLE( int,                NumMzFidelityClasses,        3                    ) \
+    RTCONFIG_VARIABLE( int,                TagLength,                    3                    ) \
+    RTCONFIG_VARIABLE( double,            TicCutoffPercentage,        1.0                    ) \
+    RTCONFIG_VARIABLE( size_t,            MaxPeakCount,                100                    ) \
+    RTCONFIG_VARIABLE( double,            ClassSizeMultiplier,        2.0                    ) \
+    RTCONFIG_VARIABLE( double,            MinPrecursorAdjustment,        -2.5                ) \
+    RTCONFIG_VARIABLE( double,            MaxPrecursorAdjustment,        2.5                    ) \
+    RTCONFIG_VARIABLE( double,            PrecursorAdjustmentStep,    0.1                    ) \
+    RTCONFIG_VARIABLE( bool,            NormalizeOnMode,            true                ) \
+    RTCONFIG_VARIABLE( bool,            AdjustPrecursorMass,        false                ) \
+    RTCONFIG_VARIABLE( int,                DeisotopingMode,            0                    ) \
+    RTCONFIG_VARIABLE( bool,            MakeSpectrumGraphs,            false                ) \
+    RTCONFIG_VARIABLE( int,                MzFidelityErrorBinsSize,    20                    ) \
+    RTCONFIG_VARIABLE( int,                MzFidelityErrorBinsSamples,    10000                ) \
+    RTCONFIG_VARIABLE( double,            MzFidelityErrorBinsLogMin,    -5.0                ) \
+    RTCONFIG_VARIABLE( double,            MzFidelityErrorBinsLogMax,    1.0                    ) \
+    RTCONFIG_VARIABLE( double,            PrecursorMzTolerance,        1.5                    ) \
+    RTCONFIG_VARIABLE( double,            FragmentMzTolerance,        0.5                    ) \
+    RTCONFIG_VARIABLE( double,            ComplementMzTolerance,        0.5                    ) \
+    RTCONFIG_VARIABLE( double,            IsotopeMzTolerance,            0.25                ) \
+    RTCONFIG_VARIABLE( string,            DynamicMods,                ""                    ) \
+    RTCONFIG_VARIABLE( int,                MaxDynamicMods,                2                    ) \
+    RTCONFIG_VARIABLE( string,            StaticMods,                    ""                    ) \
+    RTCONFIG_VARIABLE( double,            IntensityScoreWeight,        1.0                    ) \
+    RTCONFIG_VARIABLE( double,            MzFidelityScoreWeight,        1.0                    ) \
+    RTCONFIG_VARIABLE( double,            ComplementScoreWeight,        1.0                    ) 
+    //RTCONFIG_VARIABLE( double,            RandomScoreWeight,            0.0                    ) 
 
 namespace freicore
 {
 namespace directag
 {
     
-    typedef map< double, double >					MzFidelityErrorBins, MzFEBins;
-	typedef map< double, double >					ComplementErrorBins, CEBins;
-	typedef vector< CEBins >					    CEBinsList;
-	typedef vector< double >						IntensityRanksumBins, IRBins;
-	typedef vector< vector< IRBins > >			    IntensityRanksumBinsByPeakCountAndTagLength, IRBinsTable;
+    typedef map< double, double >                    MzFidelityErrorBins, MzFEBins;
+    typedef map< double, double >                    ComplementErrorBins, CEBins;
+    typedef vector< CEBins >                        CEBinsList;
+    typedef vector< double >                        IntensityRanksumBins, IRBins;
+    typedef vector< vector< IRBins > >                IntensityRanksumBinsByPeakCountAndTagLength, IRBinsTable;
 
     struct TaggingStatistics
-	{
-		TaggingStatistics() :
-			numSpectraTagged(0), numResidueMassGaps(0), 
-			numTagsGenerated(0), numTagsRetained(0) {}
+    {
+        TaggingStatistics() :
+            numSpectraTagged(0), numResidueMassGaps(0), 
+            numTagsGenerated(0), numTagsRetained(0) {}
 
-		boost::atomic_uint32_t numSpectraTagged;
-		boost::atomic_uint32_t numResidueMassGaps;
-		boost::atomic_uint32_t numTagsGenerated;
-		boost::atomic_uint32_t numTagsRetained;
+        boost::atomic_uint32_t numSpectraTagged;
+        boost::atomic_uint32_t numResidueMassGaps;
+        boost::atomic_uint32_t numTagsGenerated;
+        boost::atomic_uint32_t numTagsRetained;
 
         TaggingStatistics(const TaggingStatistics& other)
         {
@@ -100,7 +100,7 @@ namespace directag
         }
 
         TaggingStatistics& operator=(const TaggingStatistics& other)
-		{
+        {
             numSpectraTagged.store(other.numSpectraTagged);
             numResidueMassGaps.store(other.numResidueMassGaps);
             numTagsGenerated.store(other.numTagsGenerated);
@@ -108,15 +108,15 @@ namespace directag
             return *this;
         }
 
-		TaggingStatistics operator+ ( const TaggingStatistics& rhs )
-		{
+        TaggingStatistics operator+ ( const TaggingStatistics& rhs )
+        {
             TaggingStatistics tmp(*this);
-			tmp.numSpectraTagged = numSpectraTagged + rhs.numSpectraTagged;
-			tmp.numResidueMassGaps = numResidueMassGaps + rhs.numResidueMassGaps;
-			tmp.numTagsGenerated = numTagsGenerated + rhs.numTagsGenerated;
-			tmp.numTagsRetained = numTagsRetained + rhs.numTagsRetained;
-			return tmp;
-		}
+            tmp.numSpectraTagged = numSpectraTagged + rhs.numSpectraTagged;
+            tmp.numResidueMassGaps = numResidueMassGaps + rhs.numResidueMassGaps;
+            tmp.numTagsGenerated = numTagsGenerated + rhs.numTagsGenerated;
+            tmp.numTagsRetained = numTagsRetained + rhs.numTagsRetained;
+            return tmp;
+        }
 
         void reset()
         {
@@ -126,20 +126,20 @@ namespace directag
             numTagsRetained = 0;
         }
 
-		operator string() const
-		{
-			stringstream s;
-			s << numSpectraTagged << " spectra; " << numResidueMassGaps << " tag graph edges; "
-			  << numTagsGenerated << " tags generated; " << numTagsRetained << " tags retained";
-			return s.str();
-		}
+        operator string() const
+        {
+            stringstream s;
+            s << numSpectraTagged << " spectra; " << numResidueMassGaps << " tag graph edges; "
+              << numTagsGenerated << " tags generated; " << numTagsRetained << " tags retained";
+            return s.str();
+        }
 
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & numSpectraTagged & numResidueMassGaps & numTagsGenerated & numTagsRetained;
-		}
-	};
+        template< class Archive >
+        void serialize( Archive& ar, const unsigned int version )
+        {
+            ar & numSpectraTagged & numResidueMassGaps & numTagsGenerated & numTagsRetained;
+        }
+    };
 
     struct PeakFilteringStatistics
     {
@@ -157,38 +157,38 @@ namespace directag
         }
 
         operator string() const
-		{
-			stringstream s;
+        {
+            stringstream s;
             s << "Mean original (filtered) peak count: " << accs::mean(before) << " (" << accs::mean(after) << ")" << endl;
             s << "Min/Max original (filtered) peak count: " << accs::min(before) << "/" << accs::max(before) << " (" << accs::min(after) << "/" << accs::max(after) << ")" << endl;
             float filter = 1.0f - ( (float) accs::sum(after) / (float) accs::sum(before) );
             s << "Filtered out " << filter * 100.0f << "% of peaks before tagging.";
-			return s.str();
-		}
+            return s.str();
+        }
     };
 
-	struct DirecTagAPIConfig : public BaseRunTimeConfig
-	{
-	public:
+    struct DirecTagAPIConfig : public BaseRunTimeConfig
+    {
+    public:
         RTCONFIG_DEFINE_MEMBERS( DirecTagAPIConfig, DIRECTAG_API_CONFIG, "directag.cfg" )
 
-		vector< float >			scoreThresholds;
-		tagMetaIndex_t			tagMetaIndex;
-		map< string, float >	compositionScoreMap;
+        vector< float >            scoreThresholds;
+        tagMetaIndex_t            tagMetaIndex;
+        map< string, float >    compositionScoreMap;
         
         //boost::mt19937 rng;
-		//boost::uniform_real<> RandomScoreRange;
-		//boost::variate_generator< boost::mt19937&, boost::uniform_real<> > GetRandomScore;
+        //boost::uniform_real<> RandomScoreRange;
+        //boost::variate_generator< boost::mt19937&, boost::uniform_real<> > GetRandomScore;
 
-		int		minIntensityClassCount;
-		int		minMzFidelityClassCount;
-		int		tagPeakCount;
-		double	MzFidelityErrorBinsScaling;
-		double	MzFidelityErrorBinsOffset;
+        int        minIntensityClassCount;
+        int        minMzFidelityClassCount;
+        int        tagPeakCount;
+        double    MzFidelityErrorBinsScaling;
+        double    MzFidelityErrorBinsOffset;
 
-        CEBinsList			complementErrorBinsList;
-		IRBinsTable			intensityRanksumBinsTable;
-        MzFEBins			mzFidelityErrorBins;
+        CEBinsList            complementErrorBinsList;
+        IRBinsTable            intensityRanksumBinsTable;
+        MzFEBins            mzFidelityErrorBins;
 
         void CalculateIRBins_R( IRBins& theseRanksumBins, int tagLength, int numPeaks, int curRanksum, int curRank, int loopDepth )
         {
@@ -350,47 +350,47 @@ namespace directag
         void PreComputeScoreDistributions()
         {
             InitMzFEBins();
-		    InitCEBins();
+            InitCEBins();
             PrecacheIRBins();
         }
 
-	protected:
-		void finalize()
-		{
-			if( TicCutoffPercentage > 1.0f )
-			{
-				TicCutoffPercentage /= 100.0f;
-				cerr << "TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
-			}
+    protected:
+        void finalize()
+        {
+            if( TicCutoffPercentage > 1.0f )
+            {
+                TicCutoffPercentage /= 100.0f;
+                cerr << "TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
+            }
 
-			if( !DynamicMods.empty() )
-			{
-				DynamicMods = TrimWhitespace( DynamicMods );
-				g_residueMap->setDynamicMods( DynamicMods );
-			}
+            if( !DynamicMods.empty() )
+            {
+                DynamicMods = TrimWhitespace( DynamicMods );
+                g_residueMap->setDynamicMods( DynamicMods );
+            }
 
-			if( !StaticMods.empty() )
-			{
-				StaticMods = TrimWhitespace( StaticMods );
-				g_residueMap->setStaticMods( StaticMods );
-			}
+            if( !StaticMods.empty() )
+            {
+                StaticMods = TrimWhitespace( StaticMods );
+                g_residueMap->setStaticMods( StaticMods );
+            }
 
-			tagPeakCount = TagLength + 1;
+            tagPeakCount = TagLength + 1;
 
-			double m = ClassSizeMultiplier;
-			if( m > 1 )
-			{
-				minIntensityClassCount = int( ( pow( m, NumIntensityClasses ) - 1 ) / ( m - 1 ) );
-				minMzFidelityClassCount = int( ( pow( m, NumMzFidelityClasses ) - 1 ) / ( m - 1 ) );
-			} else
-			{
-				minIntensityClassCount = NumIntensityClasses;
-				minMzFidelityClassCount = NumMzFidelityClasses;
-			}
+            double m = ClassSizeMultiplier;
+            if( m > 1 )
+            {
+                minIntensityClassCount = int( ( pow( m, NumIntensityClasses ) - 1 ) / ( m - 1 ) );
+                minMzFidelityClassCount = int( ( pow( m, NumMzFidelityClasses ) - 1 ) / ( m - 1 ) );
+            } else
+            {
+                minIntensityClassCount = NumIntensityClasses;
+                minMzFidelityClassCount = NumMzFidelityClasses;
+            }
 
-			BaseRunTimeConfig::finalize();
-		}
-	};
+            BaseRunTimeConfig::finalize();
+        }
+    };
 }
 }
 

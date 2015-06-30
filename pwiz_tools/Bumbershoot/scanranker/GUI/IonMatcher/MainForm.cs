@@ -386,8 +386,8 @@ namespace IonMatcher
             string[] fields = null;
             DataTable dt = new DataTable();
             //metrics file header:
-            // old: H	Index	NativeID	"PrecursorMZ","Charge","PrecursorMass", BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore	AdjustedScore	Label	CumsumLabel	Peptide	Protein(locus;peptide starting position)
-            //H	NativeID	PrecursorMZ	Charge	PrecursorMass	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore AdjustedScore	Label	CumsumLabel	Peptide	Protein
+            // old: H    Index    NativeID    "PrecursorMZ","Charge","PrecursorMass", BestTagScore    BestTagTIC    TagMzRange    ScanRankerScore    AdjustedScore    Label    CumsumLabel    Peptide    Protein(locus;peptide starting position)
+            //H    NativeID    PrecursorMZ    Charge    PrecursorMass    BestTagScore    BestTagTIC    TagMzRange    ScanRankerScore AdjustedScore    Label    CumsumLabel    Peptide    Protein
             //List<string> selectedColumns = new List<string>(new string[] { "NativeID", "PrecursorMZ", "Charge", "PrecursorMass", "ScanRankerScore", "Peptide" });
             //dt.TableName = tableName;  
             try

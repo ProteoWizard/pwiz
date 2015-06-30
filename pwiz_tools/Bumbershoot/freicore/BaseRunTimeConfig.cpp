@@ -27,12 +27,12 @@
 
 namespace freicore
 {
-	BaseRunTimeConfig::BaseRunTimeConfig(bool treatWarningsAsErrors) : m_treatWarningsAsErrors(treatWarningsAsErrors)
-	{
-	}
+    BaseRunTimeConfig::BaseRunTimeConfig(bool treatWarningsAsErrors) : m_treatWarningsAsErrors(treatWarningsAsErrors)
+    {
+    }
 
-	void BaseRunTimeConfig::initializeFromBuffer( const string& cfgStr )
-	{
+    void BaseRunTimeConfig::initializeFromBuffer( const string& cfgStr )
+    {
         if (&cfgStr != &this->cfgStr)
             this->cfgStr = cfgStr;
 
@@ -47,7 +47,7 @@ namespace freicore
             istringstream cfgStream(cfgStr);
 
             string line;
-		    while (getline(cfgStream, line))
+            while (getline(cfgStream, line))
             {
                 ++lineNum;
                 bal::trim(line); // trim whitespace
@@ -119,45 +119,45 @@ namespace freicore
 
         // apply the new variable values
         setVariables(newVars);
-	}
+    }
 
-	RunTimeVariableMap BaseRunTimeConfig::getVariables( bool hideDefaultValues )
-	{
-		return m_variables;
-	}
+    RunTimeVariableMap BaseRunTimeConfig::getVariables( bool hideDefaultValues )
+    {
+        return m_variables;
+    }
 
-	void BaseRunTimeConfig::setVariables( RunTimeVariableMap& vars )
-	{
-		for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
-		{
-			string value = UnquoteString( itr->second );
-			if( value == "true" )
-				itr->second = "\"1\"";
-			else if( value == "false" )
-				itr->second = "\"0\"";
-			//cout << itr->first << " " << itr->second << "\n";
-		}
-	}
+    void BaseRunTimeConfig::setVariables( RunTimeVariableMap& vars )
+    {
+        for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
+        {
+            string value = UnquoteString( itr->second );
+            if( value == "true" )
+                itr->second = "\"1\"";
+            else if( value == "false" )
+                itr->second = "\"0\"";
+            //cout << itr->first << " " << itr->second << "\n";
+        }
+    }
 
-	void BaseRunTimeConfig::dump()
-	{
-		getVariables();
-		string::size_type longestName = 0;
-		for( RunTimeVariableMap::iterator itr = m_variables.begin(); itr != m_variables.end(); ++itr )
-			if( itr->first.length() > longestName )
-				longestName = itr->first.length();
+    void BaseRunTimeConfig::dump()
+    {
+        getVariables();
+        string::size_type longestName = 0;
+        for( RunTimeVariableMap::iterator itr = m_variables.begin(); itr != m_variables.end(); ++itr )
+            if( itr->first.length() > longestName )
+                longestName = itr->first.length();
 
-		for( RunTimeVariableMap::iterator itr = m_variables.begin(); itr != m_variables.end(); ++itr )
-		{
-			cout.width( (streamsize) longestName + 2 );
-			stringstream s;
-			s << right << itr->first << ": ";
-			cout << s.str() << boolalpha << "\"" << itr->second << "\"" << endl;
-		}
-	}
+        for( RunTimeVariableMap::iterator itr = m_variables.begin(); itr != m_variables.end(); ++itr )
+        {
+            cout.width( (streamsize) longestName + 2 );
+            stringstream s;
+            s << right << itr->first << ": ";
+            cout << s.str() << boolalpha << "\"" << itr->second << "\"" << endl;
+        }
+    }
 
-	void BaseRunTimeConfig::finalize()
-	{
+    void BaseRunTimeConfig::finalize()
+    {
         if (m_warnings.tellp() > 0)
         {
             if (m_treatWarningsAsErrors)
@@ -165,36 +165,36 @@ namespace freicore
             else
                 cerr << "Warning! There are problems with the configuration file: \n" << m_warnings.str() << endl;
         }
-	}
+    }
 
-	int BaseRunTimeConfig::initializeFromFile( const string& rtConfigFilename )
-	{
-		// Abort
-		if( rtConfigFilename.empty() )
-		{
-			finalize();
-			return 1;
-		}
+    int BaseRunTimeConfig::initializeFromFile( const string& rtConfigFilename )
+    {
+        // Abort
+        if( rtConfigFilename.empty() )
+        {
+            finalize();
+            return 1;
+        }
 
-		// Read settings from file; abort if file does not exist
-		else
-		{
-			ifstream rtConfigFile( rtConfigFilename.c_str(), ios::binary );
-			if( rtConfigFile.is_open() )
-			{
-				//cout << GetHostname() << " is reading its configuration file \"" << rtConfigFilename << "\"" << endl;
-				int cfgSize = (int) GetFileSize( rtConfigFilename );
-				cfgStr.resize( cfgSize );
-				rtConfigFile.read( &cfgStr[0], cfgSize );
-				initializeFromBuffer( cfgStr );
-				rtConfigFile.close();
-			} else
-			{
-				finalize();
-				return 1;
-			}
-		}
+        // Read settings from file; abort if file does not exist
+        else
+        {
+            ifstream rtConfigFile( rtConfigFilename.c_str(), ios::binary );
+            if( rtConfigFile.is_open() )
+            {
+                //cout << GetHostname() << " is reading its configuration file \"" << rtConfigFilename << "\"" << endl;
+                int cfgSize = (int) GetFileSize( rtConfigFilename );
+                cfgStr.resize( cfgSize );
+                rtConfigFile.read( &cfgStr[0], cfgSize );
+                initializeFromBuffer( cfgStr );
+                rtConfigFile.close();
+            } else
+            {
+                finalize();
+                return 1;
+            }
+        }
 
-		return 0;
-	}
+        return 0;
+    }
 }

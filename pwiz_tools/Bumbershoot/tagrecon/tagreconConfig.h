@@ -37,67 +37,67 @@ using namespace pwiz;
 #define TAGRECON_RUNTIME_CONFIG \
     COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
     RTCONFIG_VARIABLE( string,          OutputFormat,               "pepXML"        ) \
-    RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
+    RTCONFIG_VARIABLE( string,            OutputSuffix,                ""                ) \
     RTCONFIG_VARIABLE( string,          ProteinDatabase,            ""              ) \
     RTCONFIG_VARIABLE( string,          DecoyPrefix,                "rev_"          ) \
-    RTCONFIG_VARIABLE( string,          UnimodXML,		            "unimod.xml"    ) \
-    RTCONFIG_VARIABLE( string,          Blosum,						"blosum62.fas"  ) \
+    RTCONFIG_VARIABLE( string,          UnimodXML,                    "unimod.xml"    ) \
+    RTCONFIG_VARIABLE( string,          Blosum,                        "blosum62.fas"  ) \
     RTCONFIG_VARIABLE( double,          PrecursorMzTolerance,       1.25            ) \
     RTCONFIG_VARIABLE( double,          NTerminusMzTolerance,       1.5             ) \
     RTCONFIG_VARIABLE( double,          CTerminusMzTolerance,       1.25            ) \
     RTCONFIG_VARIABLE( double,          FragmentMzTolerance,        0.5             ) \
     RTCONFIG_VARIABLE( string,          FragmentationRule,          "cid"           ) \
     RTCONFIG_VARIABLE( bool,            FragmentationAutoRule,      true            ) \
-    RTCONFIG_VARIABLE( int,				MaxResultRank,	    		5				) \
-    RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				) \
-    RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				) \
-    RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
-    RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		0.98			) \
-    RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0 			) \
+    RTCONFIG_VARIABLE( int,                MaxResultRank,                5                ) \
+    RTCONFIG_VARIABLE( int,                NumIntensityClasses,        3                ) \
+    RTCONFIG_VARIABLE( int,                NumMzFidelityClasses,        3                ) \
+    RTCONFIG_VARIABLE( int,                NumBatches,                    50                ) \
+    RTCONFIG_VARIABLE( double,            TicCutoffPercentage,        0.98            ) \
+    RTCONFIG_VARIABLE( double,            ClassSizeMultiplier,        2.0             ) \
     RTCONFIG_VARIABLE( double,          MinResultScore,             1e-7            ) \
     RTCONFIG_VARIABLE( double,          MinPeptideMass,             0.0             ) \
     RTCONFIG_VARIABLE( double,          MaxPeptideMass,             10000.0         ) \
     RTCONFIG_VARIABLE( int,             MinPeptideLength,           5               ) \
     RTCONFIG_VARIABLE( int,             MaxPeptideLength,           75              ) \
-    RTCONFIG_VARIABLE( bool,			PreferIntenseComplements,	true			) \
-    RTCONFIG_VARIABLE( int,				ProteinSamplingTime,		15				) \
-    RTCONFIG_VARIABLE( bool,			EstimateSearchTimeOnly,		false			) \
-    RTCONFIG_VARIABLE( string,			CleavageRules,				"trypsin/p"	    ) \
-    RTCONFIG_VARIABLE( int,				MinTerminiCleavages,		2				) \
-    RTCONFIG_VARIABLE( int,				MaxMissedCleavages,		    -1				) \
-    RTCONFIG_VARIABLE( int,				MaxTagCount,				0				) \
-    RTCONFIG_VARIABLE( int,				MaxTagLength,				3				) \
-    RTCONFIG_VARIABLE( int,				BlosumThreshold,			0				) \
-    RTCONFIG_VARIABLE( bool,			MakeScoreHistograms,		false			) \
-    RTCONFIG_VARIABLE( int,				NumScoreHistogramBins,		100				) \
-    RTCONFIG_VARIABLE( int,				MaxScoreHistogramValues,	100				) \
-    RTCONFIG_VARIABLE( int,				ScoreHistogramWidth,		800				) \
-    RTCONFIG_VARIABLE( int,				ScoreHistogramHeight,		600				) \
-    RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
-    RTCONFIG_VARIABLE( double,			MaxModificationMassPlus,	300.0			) \
-	RTCONFIG_VARIABLE( double,			MaxModificationMassMinus,	150.0			) \
-    RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
+    RTCONFIG_VARIABLE( bool,            PreferIntenseComplements,    true            ) \
+    RTCONFIG_VARIABLE( int,                ProteinSamplingTime,        15                ) \
+    RTCONFIG_VARIABLE( bool,            EstimateSearchTimeOnly,        false            ) \
+    RTCONFIG_VARIABLE( string,            CleavageRules,                "trypsin/p"        ) \
+    RTCONFIG_VARIABLE( int,                MinTerminiCleavages,        2                ) \
+    RTCONFIG_VARIABLE( int,                MaxMissedCleavages,            -1                ) \
+    RTCONFIG_VARIABLE( int,                MaxTagCount,                0                ) \
+    RTCONFIG_VARIABLE( int,                MaxTagLength,                3                ) \
+    RTCONFIG_VARIABLE( int,                BlosumThreshold,            0                ) \
+    RTCONFIG_VARIABLE( bool,            MakeScoreHistograms,        false            ) \
+    RTCONFIG_VARIABLE( int,                NumScoreHistogramBins,        100                ) \
+    RTCONFIG_VARIABLE( int,                MaxScoreHistogramValues,    100                ) \
+    RTCONFIG_VARIABLE( int,                ScoreHistogramWidth,        800                ) \
+    RTCONFIG_VARIABLE( int,                ScoreHistogramHeight,        600                ) \
+    RTCONFIG_VARIABLE( int,                MaxFragmentChargeState,        0                ) \
+    RTCONFIG_VARIABLE( double,            MaxModificationMassPlus,    300.0            ) \
+    RTCONFIG_VARIABLE( double,            MaxModificationMassMinus,    150.0            ) \
+    RTCONFIG_VARIABLE( double,            MinModificationMass,        NEUTRON            ) \
     RTCONFIG_VARIABLE( bool,            MassReconMode,              false           ) \
-    RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    ) \
-    RTCONFIG_VARIABLE( string,			PreferredDeltaMasses,	    ""   		    ) \
-    RTCONFIG_VARIABLE( int, 			MaxNumPreferredDeltaMasses,	1   		    ) \
-    RTCONFIG_VARIABLE( string,			ExplainUnknownMassShiftsAs,  ""   		    ) \
-    RTCONFIG_VARIABLE( int,			    MaxAmbResultsForBlindMods,  2   		    ) \
-    RTCONFIG_VARIABLE( int,			    MaxPeakCount,               200   		    ) \
-    RTCONFIG_VARIABLE( bool,			ComputeXCorr,               true  		    ) \
-    RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           false  		    ) \
-    RTCONFIG_VARIABLE( bool,			PenalizeUnknownMods,        false  		    ) \
+    RTCONFIG_VARIABLE( int,                ResultsPerBatch,             200000            ) \
+    RTCONFIG_VARIABLE( string,            PreferredDeltaMasses,        ""               ) \
+    RTCONFIG_VARIABLE( int,             MaxNumPreferredDeltaMasses,    1               ) \
+    RTCONFIG_VARIABLE( string,            ExplainUnknownMassShiftsAs,  ""               ) \
+    RTCONFIG_VARIABLE( int,                MaxAmbResultsForBlindMods,  2               ) \
+    RTCONFIG_VARIABLE( int,                MaxPeakCount,               200               ) \
+    RTCONFIG_VARIABLE( bool,            ComputeXCorr,               true              ) \
+    RTCONFIG_VARIABLE( bool,            UseNETAdjustment,           false              ) \
+    RTCONFIG_VARIABLE( bool,            PenalizeUnknownMods,        false              ) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,        "peakPicking true 2-"   ) \
     RTCONFIG_VARIABLE( string,          ProteinListFilters,         ""              ) \
     RTCONFIG_VARIABLE( string,          StaticMods,                 ""              ) \
     RTCONFIG_VARIABLE( string,          DynamicMods,                ""              ) \
     RTCONFIG_VARIABLE( int,             MaxDynamicMods,             2               ) \
-	RTCONFIG_VARIABLE( bool,			UseAvgMassOfSequences,		false			) \
+    RTCONFIG_VARIABLE( bool,            UseAvgMassOfSequences,        false            ) \
     RTCONFIG_VARIABLE( int,             MaxPeptideVariants,         1000000         ) \
-	RTCONFIG_VARIABLE( bool,			DuplicateSpectra,			true			) \
-	RTCONFIG_VARIABLE( bool,			UseSmartPlusThreeModel,		true			) \
-	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		false			) \
-	RTCONFIG_VARIABLE( bool,			SearchUntaggedSpectra,		false			) \
+    RTCONFIG_VARIABLE( bool,            DuplicateSpectra,            true            ) \
+    RTCONFIG_VARIABLE( bool,            UseSmartPlusThreeModel,        true            ) \
+    RTCONFIG_VARIABLE( bool,            UseChargeStateFromMS,        false            ) \
+    RTCONFIG_VARIABLE( bool,            SearchUntaggedSpectra,        false            ) \
     RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("1.25 mz")) \
     RTCONFIG_VARIABLE( string,          BlindPTMResidues,           ""              ) 
 
@@ -133,13 +133,13 @@ namespace tagrecon
 
         UnknownMassShiftSearchMode unknownMassShiftSearchMode;
 
-        int				SpectraBatchSize;
-        int				ProteinBatchSize;
-        int				ProteinIndexOffset;
+        int                SpectraBatchSize;
+        int                ProteinBatchSize;
+        int                ProteinIndexOffset;
         double          curMinPeptideMass;
         double          curMaxPeptideMass;
-        int				minIntensityClassCount;
-        int				minMzFidelityClassCount;
+        int                minIntensityClassCount;
+        int                minMzFidelityClassCount;
 
         vector<double>  PrecursorMassTolerance;
         vector<double>  NTerminalMassTolerance;

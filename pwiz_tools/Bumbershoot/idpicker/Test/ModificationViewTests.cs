@@ -193,7 +193,7 @@ namespace Test
                 // 21.9819   133         64  69                            
                 // 15.9949   55                      55                    
                 // 14.0157   57                  39          18            
-                // -17.0265  29                          29              	  
+                // -17.0265  29                          29                    
                 // -18.0106  4               4
                 pivotModeComboBox.Select(2);
                 statusText.WaitForReady();
@@ -652,24 +652,24 @@ namespace Test
 
                 // test that cell values are correct and the default sort order is correct:
                 // Site Mass     DP  DM  Sp  Description
-                // (	42.0106  134 168 271 Acetyl
-                // C	57.0215  149 186 198 Carbamidomethyl
-                // D	21.9819  64  121 96  Cation:Na
-                // D	37.9559  31  61  44  Cation:K
-                // E	-18.0106 4   6   9   Glu->pyro-Glu
-                // E	21.9819  69  179 109 Cation:Na
-                // E	37.9559  22  64  31  Cation:K
-                // K	14.0157  39  145 68  Methyl
-                // K	28.0313  34  62  57  Dimethyl; Delta:H(4)C(2); Ethyl
-                // K	42.0106  43  66  66  Acetyl
-                // M	15.9949  55  69  81  Oxidation
-                // Q	-17.0265 29  29  36  Gln->pyro-Glu
-                // R	14.0157  18  28  25  Methyl
-                // R	28.0313  15  32  30  Dimethyl
-                // S	79.9663  23  56  126 Phospho
-                // T	79.9663  20  30  60  Phospho
-                // Y	44.9851  11  28  24  Nitro
-                // Y	79.9663  8   18  44  Phospho
+                // (    42.0106  134 168 271 Acetyl
+                // C    57.0215  149 186 198 Carbamidomethyl
+                // D    21.9819  64  121 96  Cation:Na
+                // D    37.9559  31  61  44  Cation:K
+                // E    -18.0106 4   6   9   Glu->pyro-Glu
+                // E    21.9819  69  179 109 Cation:Na
+                // E    37.9559  22  64  31  Cation:K
+                // K    14.0157  39  145 68  Methyl
+                // K    28.0313  34  62  57  Dimethyl; Delta:H(4)C(2); Ethyl
+                // K    42.0106  43  66  66  Acetyl
+                // M    15.9949  55  69  81  Oxidation
+                // Q    -17.0265 29  29  36  Gln->pyro-Glu
+                // R    14.0157  18  28  25  Methyl
+                // R    28.0313  15  32  30  Dimethyl
+                // S    79.9663  23  56  126 Phospho
+                // T    79.9663  20  30  60  Phospho
+                // Y    44.9851  11  28  24  Nitro
+                // Y    79.9663  8   18  44  Phospho
                 var detailViewTable = modificationTableForm.GetFastTable("detailDataGridView");
                 var rows = detailViewTable.Rows;
                 var columns = detailViewTable.Header.Columns;
