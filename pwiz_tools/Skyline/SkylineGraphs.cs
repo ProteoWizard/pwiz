@@ -563,7 +563,7 @@ namespace pwiz.Skyline
 //            previousReplicateMenuItem.Enabled = hasResults && comboResults.SelectedIndex > 0;
 //        }
 
-        private void UpdateGraphPanes()
+        public void UpdateGraphPanes()
         {
             // Add only visible graphs to the update list, since each update
             // must pass through the Windows message queue on a WM_TIMER.

@@ -2028,5 +2028,19 @@ namespace pwiz.Skyline.Properties {
                 this["MemoryFractionForImport"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UsePowerOfTen
+        {
+            get
+            {
+                return ((bool)(this["UsePowerOfTen"]));
+            }
+            set
+            {
+                this["UsePowerOfTen"] = value;
+            }
+        }
     }
 }

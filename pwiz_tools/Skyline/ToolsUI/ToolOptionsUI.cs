@@ -36,6 +36,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             InitializeComponent();
             checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
+            powerOfTenCheckBox.Checked = Settings.Default.UsePowerOfTen;
             Icon = Resources.Skyline;
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
@@ -100,6 +101,8 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     Settings.Default.ShowStartupForm = checkBoxShowWizard.Checked;
                     Settings.Default.DisplayLanguage = displayLanguageItem.Key;
+                    Settings.Default.UsePowerOfTen = powerOfTenCheckBox.Checked;
+                    Program.MainWindow.UpdateGraphPanes();
                 }
             }
             base.OnClosed(e);
@@ -124,6 +127,15 @@ namespace pwiz.Skyline.ToolsUI
                 return DisplayName;
             }
         }
+        #region For Testing
+
+        public bool PowerOfTenCheckBox
+        {
+            get { return powerOfTenCheckBox.Checked; }
+            set { powerOfTenCheckBox.Checked = value; }
+        }
+
+        #endregion
 
     }
 }

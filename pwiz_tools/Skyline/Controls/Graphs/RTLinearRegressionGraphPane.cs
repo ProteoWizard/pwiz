@@ -283,6 +283,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool checkData)
         {
+            GraphHelper.FormatGraphPane(this);
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             PeptideDocNode nodeSelected = null;
             int resultIndex = (ShowReplicate == ReplicateDisplay.single ? GraphSummary.ResultsIndex : -1);

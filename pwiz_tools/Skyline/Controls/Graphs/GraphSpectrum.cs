@@ -326,6 +326,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.GraphObjList.Clear();
             GraphItem = null;
 
+            GraphHelper.FormatGraphPane(graphControl.GraphPane);
             // Try to find a tree node with spectral library info associated
             // with the current selection.
             var nodeTree = _stateProvider.SelectedNode as SrmTreeNode;

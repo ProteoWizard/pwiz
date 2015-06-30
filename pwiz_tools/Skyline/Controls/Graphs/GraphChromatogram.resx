@@ -148,7 +148,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>28, 22</value>
+    <value>27, 22</value>
   </data>
   <data name="toolStripLabel1.Text" xml:space="preserve">
     <value>File:</value>
@@ -214,6 +214,6 @@
     <value>GraphChromatogram</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

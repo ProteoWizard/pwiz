@@ -612,6 +612,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag; }
         }
+        public GraphPane GraphItem
+        {
+            get { return graphControl.GraphPane; }
+        }
 
         public double? BestPeakTime
         {
@@ -664,7 +668,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void UpdateUI(bool selectionChanged = true)
-        {
+        {            
             IsCacheInvalidated = false;
 
             // Only worry about updates, if the graph is visible
@@ -672,6 +676,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed)
                 return;
 
+            GraphHelper.FormatGraphPane(graphControl.GraphPane);
             var settings = DocumentUI.Settings;
             var results = settings.MeasuredResults;
             if (results == null)

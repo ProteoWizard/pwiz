@@ -690,7 +690,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed || _scanProvider == null)
                 return;
-
+            GraphHelper.FormatGraphPane(graphControl.GraphPane);
             if (_fullScans != null)
             {
                 leftButton.Enabled = (_scanIndex > 0);

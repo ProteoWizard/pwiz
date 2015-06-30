@@ -42,15 +42,18 @@ namespace pwiz.Skyline.ToolsUI
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
             this.checkBoxLiveReports = new System.Windows.Forms.CheckBox();
+            this.tabDisplay = new System.Windows.Forms.TabPage();
+            this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabChorus.SuspendLayout();
             this.tabLanguage.SuspendLayout();
             this.tabMisc.SuspendLayout();
+            this.tabDisplay.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -60,6 +63,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabControl.Controls.Add(this.tabChorus);
             this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
+            this.tabControl.Controls.Add(this.tabDisplay);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
@@ -146,11 +150,30 @@ namespace pwiz.Skyline.ToolsUI
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
             // 
+            // checkBoxShowWizard
+            // 
+            resources.ApplyResources(this.checkBoxShowWizard, "checkBoxShowWizard");
+            this.checkBoxShowWizard.Name = "checkBoxShowWizard";
+            this.checkBoxShowWizard.UseVisualStyleBackColor = true;
+            // 
             // checkBoxLiveReports
             // 
             resources.ApplyResources(this.checkBoxLiveReports, "checkBoxLiveReports");
             this.checkBoxLiveReports.Name = "checkBoxLiveReports";
             this.checkBoxLiveReports.UseVisualStyleBackColor = true;
+            // 
+            // tabDisplay
+            // 
+            this.tabDisplay.Controls.Add(this.powerOfTenCheckBox);
+            resources.ApplyResources(this.tabDisplay, "tabDisplay");
+            this.tabDisplay.Name = "tabDisplay";
+            this.tabDisplay.UseVisualStyleBackColor = true;
+            // 
+            // powerOfTenCheckBox
+            // 
+            resources.ApplyResources(this.powerOfTenCheckBox, "powerOfTenCheckBox");
+            this.powerOfTenCheckBox.Name = "powerOfTenCheckBox";
+            this.powerOfTenCheckBox.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
@@ -165,12 +188,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxShowWizard
-            // 
-            resources.ApplyResources(this.checkBoxShowWizard, "checkBoxShowWizard");
-            this.checkBoxShowWizard.Name = "checkBoxShowWizard";
-            this.checkBoxShowWizard.UseVisualStyleBackColor = true;
             // 
             // ToolOptionsUI
             // 
@@ -193,6 +210,8 @@ namespace pwiz.Skyline.ToolsUI
             this.tabLanguage.ResumeLayout(false);
             this.tabMisc.ResumeLayout(false);
             this.tabMisc.PerformLayout();
+            this.tabDisplay.ResumeLayout(false);
+            this.tabDisplay.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -216,5 +235,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label lblChorusAccounts;
         private System.Windows.Forms.Button btnEditChorusAccountList;
         private System.Windows.Forms.CheckBox checkBoxShowWizard;
+        private System.Windows.Forms.TabPage tabDisplay;
+        private System.Windows.Forms.CheckBox powerOfTenCheckBox;
     }
 }

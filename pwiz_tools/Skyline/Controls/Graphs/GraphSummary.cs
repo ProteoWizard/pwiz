@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Avoid updating when document container and state provider are out of sync
             if (!ReferenceEquals(DocumentUIContainer.Document, StateProvider.SelectionDocument))
                 return;
-
+           
             // CONSIDER: Need a better guarantee that this ratio index matches the
             //           one in the sequence tree, but at least this will keep the UI
             //           from crashing with IndexOutOfBoundsException.
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Release any necessary resources from the old pane
                     var disposable = pane as IDisposable;
                     if (disposable != null)
-                        disposable.Dispose();
+                        disposable.Dispose();   
                 }
 
                 // Layout the new pane
@@ -275,6 +275,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var pane in graphPanes)
             {
                 pane.UpdateGraph(checkData);
+                GraphHelper.FormatGraphPane(pane);
             }
             graphControl.Invalidate();
         }

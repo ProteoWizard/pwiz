@@ -204,6 +204,7 @@
     <Compile Include="RetentionTimeFilterTest.cs" />
     <Compile Include="RInstallerTest.cs" />
     <Compile Include="ScheduleMethodDlgTest.cs" />
+    <Compile Include="ScientificNotationGraphsTest.cs" />
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />

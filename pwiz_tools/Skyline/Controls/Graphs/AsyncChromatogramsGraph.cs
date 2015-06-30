@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphPane.YAxis.MajorTic.IsOpposite = false;
             _graphPane.YAxis.Scale.Min = 0.0;
             _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
+            GraphHelper.FormatGraphPane(_graphPane);
         }
 
         /// <summary>
