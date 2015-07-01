@@ -589,6 +589,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var peakSet = _listPeakSets[i];
                 var peakMax = peakSet[0].Peak;
+                int optimizationStepMax = peakSet[0].Data.OptimizationStep;
 
                 // Store the primary peaks that are part of this group.
                 primaryPeakKeys.Clear();
@@ -611,7 +612,7 @@ namespace pwiz.Skyline.Model.Results
                         // Mark the peak as forced integration, if it was not part of the original
                         // coeluting set, unless it is optimization data for which the primary peak
                         // was part of the original set
-                        if (!peak.Data.IsOptimizationData || !primaryPeakKeys.Contains(peak.Data.PrimaryKey))
+                        if (peak.Data.OptimizationStep == optimizationStepMax || !primaryPeakKeys.Contains(peak.Data.PrimaryKey))
                             flags |= ChromPeak.FlagValues.forced_integration;
                     }
                     // Use correct time normalization flag (backward compatibility with v0.5)
@@ -781,14 +782,14 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // The middle element in the run is the regression value.
                         // Mark it as not optimization data.
-                        var primaryData = _listChromData[(i - iFirst) / 2 + iFirst];
+                        int middleIndex = (i - iFirst)/2 + iFirst;
+                        var primaryData = _listChromData[middleIndex];
                         // Set the primary key for all members of this group.
                         for (int j = iFirst; j <= i; j++)
                         {
-                            _listChromData[j].IsOptimizationData = true;
+                            _listChromData[j].OptimizationStep = middleIndex - j;
                             _listChromData[j].PrimaryKey = primaryData.Key;
                         }
-                        primaryData.IsOptimizationData = false;
                     }
                     // Start a new run with the next value
                     iFirst = i + 1;

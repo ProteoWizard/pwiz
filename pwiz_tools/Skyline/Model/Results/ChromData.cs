@@ -130,9 +130,7 @@ namespace pwiz.Skyline.Model.Results
         {
             Finder = new CrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            // Don't find peaks for optimization data.  Optimization data will
-            // have its peak extents set based on the primary data.
-            if (IsOptimizationData || (requireDocNode && DocNode == null))
+            if (requireDocNode && DocNode == null)
                 RawPeaks = new CrawdadPeak[0];
             else
             {
@@ -219,7 +217,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
-        public bool IsOptimizationData { get; set; }
+        public int OptimizationStep { get; set; }
         public ChromKey PrimaryKey { get; set; }
 
         public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIdsNew)
@@ -772,8 +770,8 @@ namespace pwiz.Skyline.Model.Results
 
         private void AddPeak(ChromDataPeak dataPeak)
         {
-            // Avoid using optimization data in scoring
-            if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
+            // Avoid using optimization data from other optimization steps in scoring
+            if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep))
             {
                 MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 double area = dataPeak.Peak.Area;
@@ -789,7 +787,7 @@ namespace pwiz.Skyline.Model.Results
         private void SubtractPeak(ChromDataPeak dataPeak)
         {
             // Avoid using optimization data in scoring
-            if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
+            if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep))
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
