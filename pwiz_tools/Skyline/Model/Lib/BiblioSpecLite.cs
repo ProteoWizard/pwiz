@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 7;
+        private const int FORMAT_VERSION_CACHE = 8;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -542,13 +542,7 @@ namespace pwiz.Skyline.Model.Lib
                         string sequence = reader.GetString(iSeq);
                         int charge = reader.GetInt16(iCharge);
                         short copies = reader.GetInt16(iCopies);
-                        int numPeaks32 = reader.GetInt32(iPeaks);
-                        if (numPeaks32 > ushort.MaxValue)
-                        {
-                            // CONSIDER: Throw an error instead?
-                            continue;
-                        }
-                        ushort numPeaks = (ushort) numPeaks32;
+                        int numPeaks = reader.GetInt32(iPeaks);
                         int id = reader.GetInt32(iId);
 
                         // Avoid creating a cache which will just report it is corrupted.
@@ -616,7 +610,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes((int)info.Copies), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes((int)info.NumPeaks), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
                         info.Key.WriteSequence(outStream);
                         info.RetentionTimesByFileId.Write(outStream);
@@ -800,7 +794,7 @@ namespace pwiz.Skyline.Model.Lib
                         var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
                         LibKey key = new LibKey(specSequence, 0, seqLength, charge);
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, (ushort)numPeaks, id, retentionTimesByFileId, driftTimesByFileId);
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId);
                         if (seqKeyLength > 0)
                         {
                             LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
@@ -884,7 +878,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         if (reader.Read())
                         {
-                            ushort numPeaks = info.NumPeaks;
+                            int numPeaks = info.NumPeaks;
                             return ReadPeaks(reader, numPeaks);
                         }
                     }
@@ -936,7 +930,7 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        private static SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, ushort numPeaks)
+        private static SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks)
         {
             const int sizeMz = sizeof(double);
             const int sizeInten = sizeof(float);
@@ -1714,12 +1708,12 @@ namespace pwiz.Skyline.Model.Lib
     {
         private readonly LibKey _key;
         private readonly short _copies;
-        private readonly ushort _numPeaks;
+        private readonly int _numPeaks;
         private readonly int _id;
         private readonly IndexedRetentionTimes _retentionTimesByFileId;
         private readonly IndexedIonMobilities _ionMobilitiesByFileId;
 
-        public BiblioLiteSpectrumInfo(LibKey key, short copies, ushort numPeaks, int id, IndexedRetentionTimes retentionTimesByFileId, IndexedIonMobilities ionMobilitiesByFileId)
+        public BiblioLiteSpectrumInfo(LibKey key, short copies, int numPeaks, int id, IndexedRetentionTimes retentionTimesByFileId, IndexedIonMobilities ionMobilitiesByFileId)
         {
             _key = key;
             _copies = copies;
@@ -1731,7 +1725,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public LibKey Key { get { return _key;  } }
         public short Copies { get { return _copies; } }
-        public ushort NumPeaks { get { return _numPeaks; } }
+        public int NumPeaks { get { return _numPeaks; } }
         public int Id { get { return _id; } }
         public IndexedRetentionTimes RetentionTimesByFileId { get { return _retentionTimesByFileId; } }
         public IndexedIonMobilities IonMobilitiesByFileId { get { return _ionMobilitiesByFileId; } }
