@@ -49,6 +49,7 @@
 #include "rules.h"
 #include "search.h"
 #include "variable.h"
+#include "output.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -63,6 +64,12 @@ static SETTINGS * make1settings  ( struct module_t *, LIST * vars );
 static void       make1bind      ( TARGET * );
 static TARGET   * make1findcycle ( TARGET * );
 static void       make1breakcycle( TARGET *, TARGET * cycle_root );
+static void       push_cmds( CMDLIST * cmds, int status );
+static int        cmd_sem_lock( TARGET * t );
+static void       cmd_sem_unlock( TARGET * t );
+
+static int targets_contains( TARGETS * l, TARGET * t );
+static int targets_equal( TARGETS * l1, TARGETS * l2 );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
 
@@ -239,13 +246,13 @@ int make1( LIST * targets )
 
     /* Talk about it. */
     if ( counts->failed )
-        printf( "...failed updating %d target%s...\n", counts->failed,
+        out_printf( "...failed updating %d target%s...\n", counts->failed,
             counts->failed > 1 ? "s" : "" );
     if ( DEBUG_MAKE && counts->skipped )
-        printf( "...skipped %d target%s...\n", counts->skipped,
+        out_printf( "...skipped %d target%s...\n", counts->skipped,
             counts->skipped > 1 ? "s" : "" );
     if ( DEBUG_MAKE && counts->made )
-        printf( "...updated %d target%s...\n", counts->made,
+        out_printf( "...updated %d target%s...\n", counts->made,
             counts->made > 1 ? "s" : "" );
 
     /* If we were interrupted, exit now that all child processes
@@ -372,32 +379,15 @@ static void make1b( state * const pState )
     TARGET * failed = 0;
     char const * failed_name = "dependencies";
 
+    pop_state( &state_stack );
+
     /* If any dependencies are still outstanding, wait until they signal their
      * completion by pushing this same state for their parent targets.
      */
     if ( --t->asynccnt )
     {
-        pop_state( &state_stack );
         return;
     }
-
-    /* Try to aquire a semaphore. If it is locked, wait until the target that
-     * locked it is built and signals completition.
-     */
-#ifdef OPT_SEMAPHORE
-    if ( t->semaphore && t->semaphore->asynccnt )
-    {
-        /* Append 't' to the list of targets waiting on semaphore. */
-        t->semaphore->parents = targetentry( t->semaphore->parents, t );
-        t->asynccnt++;
-
-        if ( DEBUG_EXECCMD )
-            printf( "SEM: %s is busy, delaying launch of %s\n",
-                object_str( t->semaphore->name ), object_str( t->name ) );
-        pop_state( &state_stack );
-        return;
-    }
-#endif
 
     /* Now ready to build target 't', if dependencies built OK. */
 
@@ -436,11 +426,11 @@ static void make1b( state * const pState )
         if ( ( t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
         {
             if ( !unlink( object_str( t->boundname ) ) )
-                printf( "...removing outdated %s\n", object_str( t->boundname )
+                out_printf( "...removing outdated %s\n", object_str( t->boundname )
                     );
         }
         else
-            printf( "...skipped %s for lack of %s...\n", object_str( t->name ),
+            out_printf( "...skipped %s for lack of %s...\n", object_str( t->name ),
                 failed_name );
     }
 
@@ -458,7 +448,7 @@ static void make1b( state * const pState )
 
         case T_FATE_ISTMP:
             if ( DEBUG_MAKE )
-                printf( "...using %s...\n", object_str( t->name ) );
+                out_printf( "...using %s...\n", object_str( t->name ) );
             break;
 
         case T_FATE_TOUCHED:
@@ -475,7 +465,7 @@ static void make1b( state * const pState )
             {
                 ++counts->total;
                 if ( DEBUG_MAKE && !( counts->total % 100 ) )
-                    printf( "...on %dth target...\n", counts->total );
+                    out_printf( "...on %dth target...\n", counts->total );
 
                 t->cmds = (char *)make1cmds( t );
                 /* Update the target's "progress" so MAKE1C processing counts it
@@ -487,33 +477,24 @@ static void make1b( state * const pState )
 
         /* All valid fates should have been accounted for by now. */
         default:
-            printf( "ERROR: %s has bad fate %d", object_str( t->name ),
+            err_printf( "ERROR: %s has bad fate %d", object_str( t->name ),
                 t->fate );
             abort();
         }
-
-#ifdef OPT_SEMAPHORE
-    /* If there is a semaphore, indicate that it is in use. */
-    if ( t->semaphore )
-    {
-        ++t->semaphore->asynccnt;
-        if ( DEBUG_EXECCMD )
-            printf( "SEM: %s now used by %s\n", object_str( t->semaphore->name
-                ), object_str( t->name ) );
-    }
-#endif
 
     /* Proceed to MAKE1C to begin executing the chain of commands prepared for
      * building the target. If we are not going to build the target (e.g. due to
      * dependency failures or no commands needing to be run) the chain will be
      * empty and MAKE1C processing will directly signal the target's completion.
      */
-    /* Implementation note:
-     *   Morfing the current state on the stack instead of popping it and
-     * pushing a new one is a slight optimization with no side-effects since we
-     * pushed no other states while processing this one.
-     */
-    pState->curstate = T_STATE_MAKE1C;
+
+    if ( t->cmds == NULL || --( ( CMD * )t->cmds )->asynccnt == 0 )
+        push_state( &state_stack, t, NULL, T_STATE_MAKE1C );
+    else if ( DEBUG_EXECCMD )
+    {
+        CMD * cmd = ( CMD * )t->cmds;
+        out_printf( "Delaying %s %s: %d targets not ready\n", object_str( cmd->rule->name ), object_str( t->boundname ), cmd->asynccnt );
+    }
 }
 
 
@@ -534,7 +515,7 @@ static void make1c( state const * const pState )
     TARGET * const t = pState->t;
     CMD * const cmd = (CMD *)t->cmds;
 
-    if ( cmd && t->status == EXEC_CMD_OK )
+    if ( cmd )
     {
         /* Pop state first in case something below (e.g. exec_cmd(), exec_wait()
          * or make1c_closure()) pushes a new state. Note that we must not access
@@ -542,6 +523,21 @@ static void make1c( state const * const pState )
          * been reused internally for some newly pushed state.
          */
         pop_state( &state_stack );
+
+        if ( cmd->status != EXEC_CMD_OK )
+        {
+            t->cmds = NULL;
+            push_cmds( cmd->next, cmd->status );
+            cmd_free( cmd );
+            return;
+        }
+
+#ifdef OPT_SEMAPHORE
+        if ( ! cmd_sem_lock( t ) )
+        {
+            return;
+        }
+#endif
 
         /* Increment the jobs running counter. */
         ++cmdsrunning;
@@ -575,14 +571,6 @@ static void make1c( state const * const pState )
     {
         ACTIONS * actions;
 
-        /* Collect status from actions, and distribute it as well. */
-        for ( actions = t->actions; actions; actions = actions->next )
-            if ( actions->action->status > t->status )
-                t->status = actions->action->status;
-        for ( actions = t->actions; actions; actions = actions->next )
-            if ( t->status > actions->action->status )
-                actions->action->status = t->status;
-
         /* Tally success/failure for those we tried to update. */
         if ( t->progress == T_MAKE_RUNNING )
             switch ( t->status )
@@ -605,8 +593,6 @@ static void make1c( state const * const pState )
             {
                 TARGET * saved_includes;
                 SETTINGS * s;
-
-                t->rescanned = 1;
 
                 /* Clean current includes. */
                 saved_includes = t->includes;
@@ -676,38 +662,6 @@ static void make1c( state const * const pState )
                 for ( c = t->parents; c; c = c->next )
                     push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
             }
-
-#ifdef OPT_SEMAPHORE
-            /* If there is a semaphore, it is now free. */
-            if ( t->semaphore )
-            {
-                assert( t->semaphore->asynccnt == 1 );
-                --t->semaphore->asynccnt;
-
-                if ( DEBUG_EXECCMD )
-                    printf( "SEM: %s is now free\n", object_str(
-                        t->semaphore->name ) );
-
-                /* If anything is waiting, notify the next target. There is no
-                 * point in notifying all waiting targets, since they will be
-                 * notified again.
-                 */
-                if ( t->semaphore->parents )
-                {
-                    TARGETS * first = t->semaphore->parents;
-                    t->semaphore->parents = first->next;
-                    if ( first->next )
-                        first->next->tail = first->tail;
-
-                    if ( DEBUG_EXECCMD )
-                        printf( "SEM: placing %s on stack\n", object_str(
-                            first->target->name ) );
-                    push_state( &temp_stack, first->target, NULL, T_STATE_MAKE1B
-                        );
-                    BJAM_FREE( first );
-                }
-            }
-#endif
 
             /* Must pop state before pushing any more. */
             pop_state( &state_stack );
@@ -900,7 +854,7 @@ static void make1c_closure
     {
         call_timing_rule( t, time );
         if ( DEBUG_EXECCMD )
-            printf( "%f sec system; %f sec user\n", time->system, time->user );
+            out_printf( "%f sec system; %f sec user\n", time->system, time->user );
 
         /* Assume -p0 is in effect, i.e. cmd_stdout contains merged output. */
         call_action_rule( t, status_orig, time, cmd->buf->value, cmd_stdout );
@@ -910,11 +864,11 @@ static void make1c_closure
     if ( t->status == EXEC_CMD_FAIL && DEBUG_MAKE )
     {
         if ( !DEBUG_EXEC )
-            printf( "%s\n", cmd->buf->value );
+            out_printf( "%s\n", cmd->buf->value );
 
-        printf( "...failed %s ", object_str( cmd->rule->name ) );
+        out_printf( "...failed %s ", object_str( cmd->rule->name ) );
         list_print( lol_get( (LOL *)&cmd->args, 0 ) );
-        printf( "...\n" );
+        out_printf( "...\n" );
     }
 
     /* On interrupt, set quit so _everything_ fails. Do the same for failed
@@ -941,16 +895,61 @@ static void make1c_closure
             char const * const filename = object_str( list_item( iter ) );
             TARGET const * const t = bindtarget( list_item( iter ) );
             if ( !( t->flags & T_FLAG_PRECIOUS ) && !unlink( filename ) )
-                printf( "...removing %s\n", filename );
+                out_printf( "...removing %s\n", filename );
         }
     }
+
+#ifdef OPT_SEMAPHORE
+    /* Release any semaphores used by this action. */
+    cmd_sem_unlock( t );
+#endif
 
     /* Free this command and push the MAKE1C state to execute the next one
      * scheduled for building this same target.
      */
-    t->cmds = (char *)cmd_next( cmd );
+    t->cmds = NULL;
+    push_cmds( cmd->next, t->status );
     cmd_free( cmd );
-    push_state( &state_stack, t, NULL, T_STATE_MAKE1C );
+}
+
+/* push the next MAKE1C state after a command is run. */
+static void push_cmds( CMDLIST * cmds, int status )
+{
+    CMDLIST * cmd_iter;
+    for( cmd_iter = cmds; cmd_iter; cmd_iter = cmd_iter->next )
+    {
+        if ( cmd_iter->iscmd )
+        {
+            CMD * next_cmd = cmd_iter->impl.cmd;
+            /* Propagate the command status. */
+            if ( next_cmd->status < status )
+                next_cmd->status = status;
+            if ( --next_cmd->asynccnt == 0 )
+            {
+                /* Select the first target associated with the action.
+                 * This is safe because sibling CMDs cannot have targets
+                 * in common.
+                 */
+                TARGET * first_target = bindtarget( list_front( lol_get( &next_cmd->args, 0 ) ) );
+                first_target->cmds = (char *)next_cmd;
+                push_state( &state_stack, first_target, NULL, T_STATE_MAKE1C );
+            }
+            else if ( DEBUG_EXECCMD )
+            {
+                TARGET * first_target = bindtarget( list_front( lol_get( &next_cmd->args, 0 ) ) );
+                out_printf( "Delaying %s %s: %d targets not ready\n", object_str( next_cmd->rule->name ), object_str( first_target->boundname ), next_cmd->asynccnt );
+            }
+        }
+        else
+        {
+            /* This is a target that we're finished updating */
+            TARGET * updated_target = cmd_iter->impl.t;
+            if ( updated_target->status < status )
+                updated_target->status = status;
+            updated_target->cmds = NULL;
+            push_state( &state_stack, updated_target, NULL, T_STATE_MAKE1C );
+        }
+    }
 }
 
 
@@ -995,15 +994,14 @@ static void swap_settings
 static CMD * make1cmds( TARGET * t )
 {
     CMD * cmds = 0;
-    CMD * * cmds_next = &cmds;
+    CMD * last_cmd;
     LIST * shell = L0;
     module_t * settings_module = 0;
     TARGET * settings_target = 0;
     ACTIONS * a0;
     int const running_flag = globs.noexec ? A_RUNNING_NOEXEC : A_RUNNING;
 
-    /* Step through actions. Actions may be shared with other targets or grouped
-     * using RULE_TOGETHER, so actions already seen are skipped.
+    /* Step through actions.
      */
     for ( a0 = t->actions; a0; a0 = a0->next )
     {
@@ -1014,11 +1012,36 @@ static CMD * make1cmds( TARGET * t )
         LIST         * ns;
         ACTIONS      * a1;
 
-        /* Only do rules with commands to execute. If this action has already
-         * been executed, use saved status.
+        /* Only do rules with commands to execute.
          */
-        if ( !actions || a0->action->running >= running_flag )
+        if ( !actions )
             continue;
+
+        if ( a0->action->running >= running_flag )
+        {
+            CMD * first;
+            /* If this action was skipped either because it was
+             * combined with another action by RULE_TOGETHER, or
+             * because all of its sources were filtered out,
+             * then we don't have anything to do here.
+             */
+            if ( a0->action->first_cmd == NULL )
+                continue;
+            /* This action has already been processed for another target.
+             * Just set up the dependency graph correctly and move on.
+             */
+            first = a0->action->first_cmd;
+            if( cmds )
+            {
+                last_cmd->next = cmdlist_append_cmd( last_cmd->next, first );
+            }
+            else
+            {
+                cmds = first;
+            }
+            last_cmd = a0->action->last_cmd;
+            continue;
+        }
 
         a0->action->running = running_flag;
 
@@ -1031,7 +1054,8 @@ static CMD * make1cmds( TARGET * t )
         if ( actions->flags & RULE_TOGETHER )
             for ( a1 = a0->next; a1; a1 = a1->next )
                 if ( a1->action->rule == rule &&
-                    a1->action->running < running_flag )
+                    a1->action->running < running_flag &&
+                    targets_equal( a0->action->targets, a1->action->targets ) )
                 {
                     ns = make1list( ns, a1->action->sources, actions->flags );
                     a1->action->running = running_flag;
@@ -1076,8 +1100,12 @@ static CMD * make1cmds( TARGET * t )
             int const length = list_length( ns );
             int start = 0;
             int chunk = length;
+            int cmd_count = 0;
             LIST * cmd_targets = L0;
             LIST * cmd_shell = L0;
+            TARGETS * semaphores = NULL;
+            TARGETS * targets_iter;
+            int unique_targets;
             do
             {
                 CMD * cmd;
@@ -1124,12 +1152,12 @@ static CMD * make1cmds( TARGET * t )
                             : "contains a line that is too long";
                     assert( cmd_check_result == EXEC_CHECK_TOO_LONG ||
                         cmd_check_result == EXEC_CHECK_LINE_TOO_LONG );
-                    printf( "%s action %s (%d, max %d):\n", object_str(
+                    out_printf( "%s action %s (%d, max %d):\n", object_str(
                         rule->name ), error_message, cmd_error_length,
                         cmd_error_max_length );
 
                     /* Tell the user what did not fit. */
-                    fputs( cmd->buf->value, stdout );
+                    out_puts( cmd->buf->value );
                     exit( EXITBAD );
                 }
 
@@ -1138,8 +1166,20 @@ static CMD * make1cmds( TARGET * t )
                 if ( accept_command )
                 {
                     /* Chain it up. */
-                    *cmds_next = cmd;
-                    cmds_next = &cmd->next;
+                    if ( cmds )
+                    {
+                        last_cmd->next = cmdlist_append_cmd( last_cmd->next, cmd );
+                        last_cmd = cmd;
+                    }
+                    else
+                    {
+                        cmds = last_cmd = cmd;
+                    }
+
+                    if ( cmd_count++ == 0 )
+                    {
+                        a0->action->first_cmd = cmd;
+                    }
 
                     /* Mark lists we need recreated for the next command since
                      * they got consumed by the cmd object.
@@ -1160,6 +1200,39 @@ static CMD * make1cmds( TARGET * t )
                     start += chunk;
             }
             while ( start < length );
+
+            /* Record the end of the actions cmds */
+            a0->action->last_cmd = last_cmd;
+
+            unique_targets = 0;
+            for ( targets_iter = a0->action->targets; targets_iter; targets_iter = targets_iter->next )
+            {
+                if ( targets_contains( targets_iter->next, targets_iter->target ) )
+                    continue;
+                /* Add all targets produced by the action to the update list. */
+                push_state( &state_stack, targets_iter->target, NULL, T_STATE_MAKE1A );
+                ++unique_targets;
+            }
+            /* We need to wait until all the targets agree that
+             * it's okay to run this action.
+             */
+            ( ( CMD * )a0->action->first_cmd )->asynccnt = unique_targets;
+
+#if OPT_SEMAPHORE
+            /* Collect semaphores */
+            for ( targets_iter = a0->action->targets; targets_iter; targets_iter = targets_iter->next )
+            {
+                TARGET * sem = targets_iter->target->semaphore;
+                if ( sem )
+                {
+                    TARGETS * semiter;
+                    if ( ! targets_contains( semaphores, sem ) )
+                        semaphores = targetentry( semaphores, sem );
+                }
+            }
+            ( ( CMD * )a0->action->first_cmd )->lock = semaphores;
+            ( ( CMD * )a0->action->last_cmd )->unlock = semaphores;
+#endif
         }
 
         /* These were always copied when used. */
@@ -1169,6 +1242,11 @@ static CMD * make1cmds( TARGET * t )
         /* Free variables with values bound by 'actions xxx bind vars'. */
         popsettings( rule->module, boundvars );
         freesettings( boundvars );
+    }
+
+    if ( cmds )
+    {
+        last_cmd->next = cmdlist_append_target( last_cmd->next, t );
     }
 
     swap_settings( &settings_module, &settings_target, 0, 0 );
@@ -1281,3 +1359,101 @@ static void make1bind( TARGET * t )
     t->binding = timestamp_empty( &t->time ) ? T_BIND_MISSING : T_BIND_EXISTS;
     popsettings( root_module(), t->settings );
 }
+
+
+static int targets_contains( TARGETS * l, TARGET * t )
+{
+    for ( ; l; l = l->next )
+    {
+        if ( t == l->target )
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int targets_equal( TARGETS * l1, TARGETS * l2 )
+{
+    for ( ; l1 && l2; l1 = l1->next, l2 = l2->next )
+    {
+        if ( l1->target != l2->target )
+            return 0;
+    }
+    return !l1 && !l2;
+}
+
+
+#ifdef OPT_SEMAPHORE
+
+static int cmd_sem_lock( TARGET * t )
+{
+    CMD * cmd = (CMD *)t->cmds;
+    TARGETS * iter;
+    /* Check whether all the semaphores required for updating
+     * this target are free.
+     */
+    for ( iter = cmd->lock; iter; iter = iter->next )
+    {
+        if ( iter->target->asynccnt > 0 )
+        {
+            if ( DEBUG_EXECCMD )
+                out_printf( "SEM: %s is busy, delaying launch of %s\n",
+                    object_str( iter->target->name ), object_str( t->name ) );
+            iter->target->parents = targetentry( iter->target->parents, t );
+            return 0;
+        }
+    }
+    /* Lock the semaphores. */
+    for ( iter = cmd->lock; iter; iter = iter->next )
+    {
+        ++iter->target->asynccnt;
+        if ( DEBUG_EXECCMD )
+            out_printf( "SEM: %s now used by %s\n", object_str( iter->target->name
+                ), object_str( t->name ) );
+    }
+    /* A cmd only needs to be locked around its execution.
+     * clearing cmd->lock here makes it safe to call cmd_sem_lock
+     * twice.
+     */
+    cmd->lock = NULL;
+    return 1;
+}
+
+static void cmd_sem_unlock( TARGET * t )
+{
+    CMD * cmd = ( CMD * )t->cmds;
+    TARGETS * iter;
+    /* Release the semaphores. */
+    for ( iter = cmd->unlock; iter; iter = iter->next )
+    {
+        if ( DEBUG_EXECCMD )
+            out_printf( "SEM: %s is now free\n", object_str(
+                iter->target->name ) );
+        --iter->target->asynccnt;
+        assert( iter->target->asynccnt <= 0 );
+    }
+    for ( iter = cmd->unlock; iter; iter = iter->next )
+    {
+        /* Find a waiting target that's ready */
+        while ( iter->target->parents )
+        {
+            TARGETS * first = iter->target->parents;
+            TARGET * t1 = first->target;
+
+            /* Pop the first waiting CMD */
+            if ( first->next )
+                first->next->tail = first->tail;
+            iter->target->parents = first->next;
+            BJAM_FREE( first );
+
+            if ( cmd_sem_lock( t1 ) )
+            {
+                push_state( &state_stack, t1, NULL, T_STATE_MAKE1C );
+                break;
+            }
+        }
+    }
+}
+
+#endif

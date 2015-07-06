@@ -76,11 +76,11 @@ def get(scanner_class, properties):
     r = property.select(relevant_properties, properties)
 
     scanner_id = scanner_name + '.' + '-'.join(r)
-    
-    if not __scanner_cache.has_key(scanner_name):
-        __scanner_cache[scanner_name] = scanner_class(r)
 
-    return __scanner_cache[scanner_name]
+    if not __scanner_cache.has_key(scanner_id):
+        __scanner_cache[scanner_id] = scanner_class(r)
+
+    return __scanner_cache[scanner_id]
 
 class Scanner:
     """ Base scanner class.

@@ -1,5 +1,7 @@
 # Copyright 2005 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
+# Copyright 2014-2015 Rene Rivera
+# Copyright 2014 Microsoft Corporation
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -67,6 +69,11 @@ feature.feature testing.precommand  : : free optional ;
 # The working directory is the location of the test executable.
 # The arguments to this command are the test name and the exit status (0=pass !0=fail)
 feature.feature testing.postcommand : : free optional ;
+
+# Feature to control whether executable binaries are run as part of test.
+# This can be used to just compile test cases in cross compilation situations.
+feature.feature testing.execute : on off : incidental propagated ;
+feature.set-default testing.execute : on ;
 
 feature.feature testing.semaphore   : : free optional ;
 
@@ -330,7 +337,7 @@ generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
 #
 rule expect-success ( target : dependency + : requirements * )
 {
-    **passed** $(target) : $(sources) ;
+    **passed** $(target) : $(dependency) ;
 }
 
 
@@ -355,6 +362,8 @@ rule expect-failure ( target : dependency + : properties * )
 #
 rule **passed**
 {
+    remove-test-targets $(<) ;
+
     # Dump all the tests, if needed. We do it here, since dump should happen
     # only after all Jamfiles have been read, and there is no such place
     # currently defined (but there should be).
@@ -414,6 +423,12 @@ toolset.flags testing.capture-output TEST_POSTCOMMAND <testing.postcommand> ;
 toolset.flags testing.capture-output TEST_SEMAPHORE <testing.semaphore> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 
+.preserve-test-targets = on ;
+if --remove-test-targets in [ modules.peek : ARGV ]
+{
+    .preserve-test-targets = off ;
+}
+
 
 # Runs executable 'sources' and stores stdout in file 'target'. Unless
 # --preserve-test-targets command line option has been specified, removes the
@@ -433,7 +448,7 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
     # OK if it cannot find the target or updating rule.
     NOCARE $(target:S=.output) ;
 
-    # This has two-fold effect. First it adds input files to the dependendency
+    # This has two-fold effect. First it adds input files to the dependency
     # graph, preventing a warning. Second, it causes input files to be bound
     # before target is created. Therefore, they are bound using SEARCH setting
     # on them and not LOCATE setting of $(target), as in other case (due to jam
@@ -468,9 +483,68 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
         JAM_SEMAPHORE on $(target) = $(test-semaphore) ;
     }
 
-    if [ feature.get-values preserve-test-targets : $(properties) ] = off
+    DISABLE_TEST_EXECUTION on $(target) = 0 ;
+    if [ feature.get-values testing.execute : $(properties) ] = off
     {
-        TEMPORARY $(targets-to-remove) ;
+        DISABLE_TEST_EXECUTION on $(target) = 1 ;
+    }
+    
+    if [ feature.get-values preserve-test-targets : $(properties) ] = off
+        || $(.preserve-test-targets) = off
+    {
+        rmtemp-sources $(target) : $(targets-to-remove) ;
+        for local to-remove in $(targets-to-remove)
+        {
+            rmtemp-all-sources $(to-remove) ;
+        }
+    }
+}
+
+.types-to-remove = EXE OBJ ;
+
+local rule remove-test-targets ( targets + )
+{
+    if $(.preserve-test-targets) = off
+    {
+        rmtemp-all-sources $(target) ;
+    }
+}
+
+local rule rmtemp-all-sources ( target )
+{
+    local sources ;
+    local action = [ on $(target) return $(.action) ] ;
+    if $(action)
+    {
+        local action-sources = [ $(action).sources ] ;
+        for local source in $(action-sources)
+        {
+            local source-type = [ $(source).type ] ;
+            if $(source-type) in $(.types-to-remove)
+            {
+                sources += [ $(source).actual-name ] ;
+            }
+            else
+            {
+                # ECHO IGNORED: $(source) :: $(source-type) ;
+            }
+        }
+        if $(sources)
+        {
+            rmtemp-sources $(target) : $(sources) ;
+            for local source in $(sources)
+            {
+                rmtemp-all-sources $(source) ;
+            }
+        }
+    }
+}
+
+local rule rmtemp-sources ( target : sources * )
+{
+    if $(sources)
+    {
+        TEMPORARY $(sources) ;
         # Set a second action on target that will be executed after capture
         # output action. The 'RmTemps' rule has the 'ignore' modifier so it is
         # always considered succeeded. This is needed for 'run-fail' test. For
@@ -478,7 +552,7 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
         # 'ignore' successful execution will be negated and be reported as
         # failure. With 'ignore' we do not detect a case where removing files
         # fails, but it is not likely to happen.
-        RmTemps $(target) : $(targets-to-remove) ;
+        RmTemps $(target) : $(sources) ;
     }
 }
 
@@ -496,6 +570,7 @@ if [ os.name ] = NT
     .CATENATE      = type ;
     .CP            = copy ;
     .NULL          = nul ;
+    .NULLIN        = ;
 }
 else
 {
@@ -510,10 +585,10 @@ else
     .CATENATE      = cat ;
     .CP            = cp ;
     .NULL          = /dev/null ;
+    .NULLIN        = "<" "/dev/null" ;
 }
 
 .DEFAULT_CMD   = "echo " ;
-
 
 .VERBOSE_TEST = 0 ;
 if --verbose-test in [ modules.peek : ARGV ]
@@ -528,9 +603,14 @@ if --verbose-test in [ modules.peek : ARGV ]
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
+    $(.SHELL_SET)status=$(DISABLE_TEST_EXECUTION)
+    if $(.STATUS_NOT_0)
+        echo Skipping test execution due to testing.execute=off
+        exit 0
+    $(.ENDIF)
     $(.SHELL_SET)name=$(TEST_NAME)
     $(TEST_PRECOMMAND:E=echo) $(TEST_PRECOMMAND_OUTPUT)
-    $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1
+    $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1 $(.NULLIN)
     $(.SET_STATUS)
     $(.RUN_OUTPUT_NL) >> "$(output-file)"
     echo EXIT STATUS: $(.STATUS) >> "$(output-file)"
@@ -594,10 +674,10 @@ actions unit-test
     $(PATH_SETUP)
     $(.SHELL_SET)name=$(TEST_NAME)
     $(TEST_PRECOMMAND:E=echo) $(TEST_PRECOMMAND_OUTPUT)
-    $(LAUNCHER) $(>) $(ARGS)
+    $(LAUNCHER) "$(>)" $(ARGS)
     $(.SET_STATUS)
     if $(.STATUS_0)
-      $(.MAKE_FILE) $(<)
+      $(.MAKE_FILE) "$(<)"
     $(.ENDIF)
     $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
     exit $(.STATUS)

@@ -237,23 +237,23 @@ int main( int argc, char * * argv, char * * arg_environ )
 
     if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
     {
-        printf( "\nusage: %s [ options ] targets...\n\n", progname );
+        err_printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
-        printf( "-a      Build all targets, even if they are current.\n" );
-        printf( "-dx     Set the debug level to x (0-9).\n" );
-        printf( "-fx     Read x instead of Jambase.\n" );
-        /* printf( "-g      Build from newest sources first.\n" ); */
-        printf( "-jx     Run up to x shell commands concurrently.\n" );
-        printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
-        printf( "-mx     Maximum target output saved (kb), default is to save all output.\n" );
-        printf( "-n      Don't actually execute the updating actions.\n" );
-        printf( "-ox     Write the updating actions to file x.\n" );
-        printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
-        printf( "-q      Quit quickly as soon as a target fails.\n" );
-        printf( "-sx=y   Set variable x=y, overriding environment.\n" );
-        printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
-        printf( "-v      Print the version of jam and exit.\n" );
-        printf( "--x     Option is ignored.\n\n" );
+        err_printf( "-a      Build all targets, even if they are current.\n" );
+        err_printf( "-dx     Set the debug level to x (0-9).\n" );
+        err_printf( "-fx     Read x instead of Jambase.\n" );
+        /* err_printf( "-g      Build from newest sources first.\n" ); */
+        err_printf( "-jx     Run up to x shell commands concurrently.\n" );
+        err_printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
+        err_printf( "-mx     Maximum target output saved (kb), default is to save all output.\n" );
+        err_printf( "-n      Don't actually execute the updating actions.\n" );
+        err_printf( "-ox     Mirror all output to file x.\n" );
+        err_printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
+        err_printf( "-q      Quit quickly as soon as a target fails.\n" );
+        err_printf( "-sx=y   Set variable x=y, overriding environment.\n" );
+        err_printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
+        err_printf( "-v      Print the version of jam and exit.\n" );
+        err_printf( "--x     Option is ignored.\n\n" );
 
         exit( EXITBAD );
     }
@@ -261,13 +261,13 @@ int main( int argc, char * * argv, char * * arg_environ )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        printf( "Boost.Jam  Version %s. %s.\n", VERSION, OSMINOR );
-        printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
+        out_printf( "Boost.Jam  Version %s. %s.\n", VERSION, OSMINOR );
+        out_printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
             "Software, Inc.\n" );
-        printf( "   Copyright 2001 David Turner.\n" );
-        printf( "   Copyright 2001-2004 David Abrahams.\n" );
-        printf( "   Copyright 2002-2008 Rene Rivera.\n" );
-        printf( "   Copyright 2003-2008 Vladimir Prus.\n" );
+        out_printf( "   Copyright 2001 David Turner.\n" );
+        out_printf( "   Copyright 2001-2004 David Abrahams.\n" );
+        out_printf( "   Copyright 2002-2015 Rene Rivera.\n" );
+        out_printf( "   Copyright 2003-2015 Vladimir Prus.\n" );
         return EXITOK;
     }
 
@@ -286,7 +286,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         globs.pipe_action = atoi( s );
         if ( globs.pipe_action < 0 || 3 < globs.pipe_action )
         {
-            printf( "Invalid pipe descriptor '%d', valid values are -p[0..3]."
+            err_printf( "Invalid pipe descriptor '%d', valid values are -p[0..3]."
                 "\n", globs.pipe_action );
             exit( EXITBAD );
         }
@@ -303,7 +303,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         globs.jobs = atoi( s );
         if ( globs.jobs < 1 || globs.jobs > MAXJOBS )
         {
-            printf( "Invalid value for the '-j' option, valid values are 1 "
+            err_printf( "Invalid value for the '-j' option, valid values are 1 "
                 "through %d.\n", MAXJOBS );
             exit( EXITBAD );
         }
@@ -332,7 +332,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
         if ( ( i < 0 ) || ( i >= DEBUG_MAX ) )
         {
-            printf( "Invalid debug level '%s'.\n", s );
+            out_printf( "Invalid debug level '%s'.\n", s );
             continue;
         }
 
@@ -342,6 +342,17 @@ int main( int argc, char * * argv, char * * arg_environ )
             globs.debug[ i ] = 1;
         else while ( i )
             globs.debug[ i-- ] = 1;
+    }
+
+    /* If an output file is specified, set globs.out to that. */
+    if ( ( s = getoptval( optv, 'o', 0 ) ) )
+    {
+        if ( !( globs.out = fopen( s, "w" ) ) )
+        {
+            err_printf( "Failed to write to '%s'\n", s );
+            exit( EXITBAD );
+        }
+        /* ++globs.noexec; */
     }
 
     constants_init();
@@ -513,17 +524,6 @@ int main( int argc, char * * argv, char * * arg_environ )
             object_free( target );
         }
 
-        /* If an output file is specified, set globs.cmdout to that. */
-        if ( ( s = getoptval( optv, 'o', 0 ) ) )
-        {
-            if ( !( globs.cmdout = fopen( s, "w" ) ) )
-            {
-                printf( "Failed to write to '%s'\n", s );
-                exit( EXITBAD );
-            }
-            ++globs.noexec;
-        }
-
         /* The build system may set the PARALLELISM variable to override -j
          * options.
          */
@@ -533,7 +533,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             {
                 int const j = atoi( object_str( list_front( p ) ) );
                 if ( j < 1 || j > MAXJOBS )
-                    printf( "Invalid value of PARALLELISM: %s. Valid values "
+                    out_printf( "Invalid value of PARALLELISM: %s. Valid values "
                         "are 1 through %d.\n", object_str( list_front( p ) ),
                         MAXJOBS );
                 else
@@ -588,9 +588,9 @@ int main( int argc, char * * argv, char * * arg_environ )
     constants_done();
     object_done();
 
-    /* Close cmdout. */
-    if ( globs.cmdout )
-        fclose( globs.cmdout );
+    /* Close log out. */
+    if ( globs.out )
+        fclose( globs.out );
 
 #ifdef HAVE_PYTHON
     Py_Finalize();
@@ -627,7 +627,8 @@ char *executable_path( char const * argv0 )
 # include <stdlib.h>
 char * executable_path( char const * argv0 )
 {
-    return strdup( getexecname() );
+    const char * execname = getexecname();
+    return execname ? strdup( execname ) : NULL;
 }
 #elif defined(__FreeBSD__)
 # include <sys/sysctl.h>

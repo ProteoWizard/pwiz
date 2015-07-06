@@ -146,6 +146,8 @@ rule init ( version ? : command * : options * : requirement * )
     {
         flags darwin.compile OPTIONS $(condition) : -Wno-long-double ;
     }
+    # - GCC on Darwin with -pedantic, suppress unsupported long long warning
+    flags darwin.compile OPTIONS $(condition)/<warnings>all : -Wno-long-long ;
 
     # - Set the link flags common with the GCC toolset.
     gcc.init-link-flags darwin darwin $(condition) ;

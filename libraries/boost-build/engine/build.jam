@@ -371,13 +371,21 @@ toolset vc10 cl : /Fe /Fe /Fd /Fo : -D
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
     -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
+## Microsoft Visual C++ 2012
 toolset vc11 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /GL /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
     -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
+## Microsoft Visual C++ 2013
 toolset vc12 cl : /Fe /Fe /Fd /Fo : -D
+    : /nologo
+    [ opt --release : /GL /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
+    [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
+    -I$(--python-include) -I$(--extra-include)
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
+toolset vc14 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /GL /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]

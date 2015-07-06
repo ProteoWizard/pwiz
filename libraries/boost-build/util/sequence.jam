@@ -55,6 +55,7 @@ if [ HAS_NATIVE_RULE sequence : transform : 1 ]
     NATIVE_RULE sequence : transform ;
 }
 
+# Returns the elements of 's' in reverse order
 rule reverse ( s * )
 {
     local r ;
@@ -178,7 +179,9 @@ rule length ( s * )
     return $(result) ;
 }
 
-
+# Removes duplicates from 'list'.  If 'stable' is
+# passed, then the order of the elements will
+# be unchanged.
 rule unique ( list * : stable ? )
 {
     local result ;

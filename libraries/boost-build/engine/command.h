@@ -46,14 +46,41 @@
 
 
 typedef struct _cmd CMD;
+
+/*
+ * A list whose elements are either TARGETS or CMDS.
+ * CMDLIST is used only by CMD.  A TARGET means that
+ * the CMD is the last updating action required to
+ * build the target.  A CMD is the next CMD required
+ * to build the same target.  (Note that a single action
+ * can update more than one target, so the CMDs form
+ * a DAG, not a straight linear list.)
+ */
+typedef struct _cmdlist {
+    struct _cmdlist * next;
+    union {
+        CMD * cmd;
+        TARGET * t;
+    } impl;
+    char iscmd;
+} CMDLIST;
+
+CMDLIST * cmdlist_append_cmd( CMDLIST *, CMD * );
+CMDLIST * cmdlist_append_target( CMDLIST *, TARGET * );
+void cmd_list_free( CMDLIST * );
+
 struct _cmd
 {
-    CMD  * next;
+    CMDLIST * next;
     RULE * rule;      /* rule->actions contains shell script */
     LIST * shell;     /* $(JAMSHELL) value */
     LOL    args;      /* LISTs for $(<), $(>) */
     string buf[ 1 ];  /* actual commands */
     int    noop;      /* no-op commands should be faked instead of executed */
+    int    asynccnt;  /* number of outstanding dependencies */
+    TARGETS * lock;   /* semaphores that are required by this cmd. */
+    TARGETS * unlock; /* semaphores that are released when this cmd finishes. */
+    char   status;    /* the command status */
 };
 
 CMD * cmd_new

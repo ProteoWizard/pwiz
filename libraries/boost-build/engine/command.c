@@ -24,6 +24,37 @@
 
 
 /*
+ * cmdlist_append_cmd
+ */
+CMDLIST * cmdlist_append_cmd( CMDLIST * l, CMD * cmd )
+{
+    CMDLIST * result = (CMDLIST *)BJAM_MALLOC( sizeof( CMDLIST ) );
+    result->iscmd = 1;
+    result->next = l;
+    result->impl.cmd = cmd;
+    return result;
+}
+
+CMDLIST * cmdlist_append_target( CMDLIST * l, TARGET * t )
+{
+    CMDLIST * result = (CMDLIST *)BJAM_MALLOC( sizeof( CMDLIST ) );
+    result->iscmd = 0;
+    result->next = l;
+    result->impl.t = t;
+    return result;
+}
+
+void cmdlist_free( CMDLIST * l )
+{
+    while ( l )
+    {
+        CMDLIST * tmp = l->next;
+        BJAM_FREE( l );
+        l = tmp;
+    }
+}
+
+/*
  * cmd_new() - return a new CMD.
  */
 
@@ -37,6 +68,10 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     cmd->shell = shell;
     cmd->next = 0;
     cmd->noop = 0;
+    cmd->asynccnt = 1;
+    cmd->status = 0;
+    cmd->lock = NULL;
+    cmd->unlock = NULL;
 
     lol_init( &cmd->args );
     lol_add( &cmd->args, targets );
@@ -62,9 +97,11 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 
 void cmd_free( CMD * cmd )
 {
+    cmdlist_free( cmd->next );
     lol_free( &cmd->args );
     list_free( cmd->shell );
     string_free( cmd->buf );
+    freetargets( cmd->unlock );
     BJAM_FREE( (void *)cmd );
 }
 

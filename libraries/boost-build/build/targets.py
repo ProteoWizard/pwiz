@@ -588,8 +588,9 @@ class ProjectTarget (AbstractTarget):
                 l = get('source-location')
                 
             value = os.path.join(l, value)
-            # Now make the value absolute path
-            value = os.path.join(os.getcwd(), value)
+            # Now make the value absolute path. Constants should be in
+            # platform-native form.
+            value = os.path.normpath(os.path.join(os.getcwd(), value))
 
         self.constants_[name] = value
         bjam.call("set-variable", self.project_module(), name, value)
@@ -1238,10 +1239,8 @@ class BasicTarget (AbstractTarget):
         # they are propagated only to direct dependents. We might need
         # a more general mechanism, but for now, only those two
         # features are special.
-        raw = subvariant.sources_usage_requirements().raw()
-        raw = property.change(raw, "<pch-header>", None);
-        raw = property.change(raw, "<pch-file>", None);              
-        result = result.add(property_set.create(raw))
+        removed_pch = filter(lambda prop: prop.feature().name() not in ['<pch-header>', '<pch-file>'], subvariant.sources_usage_requirements().all())
+        result = result.add(property_set.PropertySet(removed_pch))
         
         return result
 
@@ -1345,7 +1344,7 @@ def apply_default_build(property_set, default_build):
         compressed = feature.compress_subproperties(property_set.all())
 
         result = build_request.expand_no_defaults(
-            b2.build.property_set.create([p]) for p in (compressed + defaults_to_apply))
+            b2.build.property_set.create(feature.expand([p])) for p in (compressed + defaults_to_apply))
 
     else:
         result.append (property_set)

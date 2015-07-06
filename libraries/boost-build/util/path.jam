@@ -165,7 +165,7 @@ rule join ( elements + )
             if [ is-rooted $(e) ]
             {
                 import errors ;
-                errors.error only the first element may be rooted $(e) ;
+                errors.error only the first element may be rooted ;
             }
         }
         return [ NORMALIZE_PATH "$(elements)" ] ;

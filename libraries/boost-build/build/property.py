@@ -1,4 +1,4 @@
-# Status: ported, except for tests and --abbreviate-paths.
+# Status: ported, except for tests.
 # Base revision: 64070
 #
 # Copyright 2001, 2002, 2003 Dave Abrahams 
@@ -8,6 +8,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 import re
+import sys
 from b2.util.utility import *
 from b2.build import feature
 from b2.util import sequence, qualify_jam_action
@@ -21,6 +22,11 @@ __re_split_conditional = re.compile (r'(.+):<(.+)')
 __re_colon = re.compile (':')
 __re_has_condition = re.compile (r':<')
 __re_separate_condition_and_property = re.compile (r'(.*):(<.*)')
+
+__not_applicable_feature='not-applicable-in-this-context'
+feature.feature(__not_applicable_feature, [], ['free'])
+
+__abbreviated_paths = False
 
 class Property(object):
 
@@ -59,9 +65,9 @@ class Property(object):
         return hash((self._feature, self._value, tuple(self._condition)))
 
     def __cmp__(self, other):
-        return cmp((self._feature, self._value, self._condition),
-                   (other._feature, other._value, other._condition))
-                           
+        return cmp((self._feature.name(), self._value, self._condition),
+                   (other._feature.name(), other._value, other._condition))
+
 
 def create_from_string(s, allow_condition=False,allow_missing_value=False):
 
@@ -89,9 +95,24 @@ def create_from_string(s, allow_condition=False,allow_missing_value=False):
         else:        
             raise get_manager().errors()("Invalid property '%s' -- unknown feature" % s)
     else:
-        f = feature.get(feature_name)        
+        if feature.valid(feature_name):
+            f = feature.get(feature_name)
+            value = get_value(s)
+        else:
+            # In case feature name is not known, it is wrong to do a hard error.
+            # Feature sets change depending on the toolset. So e.g.
+            # <toolset-X:version> is an unknown feature when using toolset Y.
+            #
+            # Ideally we would like to ignore this value, but most of
+            # Boost.Build code expects that we return a valid Property. For this
+            # reason we use a sentinel <not-applicable-in-this-context> feature.
+            #
+            # The underlying cause for this problem is that python port Property
+            # is more strict than its Jam counterpart and must always reference
+            # a valid feature.
+            f = feature.get(__not_applicable_feature)
+            value = s
 
-        value = get_value(s)
         if not value and not allow_missing_value:
             get_manager().errors()("Invalid property '%s' -- no value specified" % s)
 
@@ -112,10 +133,19 @@ def reset ():
 
     # A cache of results from as_path
     __results = {}
-    
+
 reset ()
 
-        
+
+def set_abbreviated_paths(on=True):
+    global __abbreviated_paths
+    __abbreviated_paths = on
+
+
+def get_abbreviated_paths():
+    return __abbreviated_paths or '--abbreviated-paths' in sys.argv
+
+
 def path_order (x, y):
     """ Helper for as_path, below. Orders properties with the implicit ones
         first, and within the two sections in alphabetical order of feature

@@ -94,7 +94,8 @@ flags borland OPTIONS <threading>multi : -tWM ;
 
 
 
-flags borland.compile OPTIONS <cxxflags> ;
+flags borland.compile OPTIONS <cflags> ;
+flags borland.compile.c++ OPTIONS <cxxflags> ;
 flags borland.compile DEFINES <define> ;
 flags borland.compile INCLUDES <include> ;
 

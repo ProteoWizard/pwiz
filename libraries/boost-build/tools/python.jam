@@ -388,12 +388,12 @@ local rule split-version ( version )
 }
 
 
-# Build a list of versions from 3.0 down to 1.5. Because bjam can not enumerate
+# Build a list of versions from 3.4 down to 1.5. Because bjam can not enumerate
 # registry sub-keys, we have no way of finding a version with a 2-digit minor
 # version, e.g. 2.10 -- let us hope that never happens.
 #
 .version-countdown = ;
-for local v in [ numbers.range 15 30 ]
+for local v in [ numbers.range 15 34 ]
 {
     .version-countdown = [ SUBST $(v) (.)(.*) $1.$2 ] $(.version-countdown) ;
 }
@@ -639,6 +639,7 @@ local rule system-library-dependencies ( target-os )
         case qnx* : return ;
         case darwin : return ;
         case windows : return ;
+        case haiku : return ;
 
         case hpux : return  <library>rt ;
         case *bsd : return  <library>pthread <toolset>gcc:<library>util ;
@@ -961,15 +962,17 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     # symbols. If we linked to libpython, we would get duplicate symbols. So
     # declare two targets -- one for building extensions and another for
     # embedding.
-    #
-    # Unlike most *nix systems, Mac OS X's linker does not permit undefined
-    # symbols when linking a shared library. So, we still need to link against
-    # the Python framework, even when building extensions. Note that framework
-    # builds of Python always use shared libraries, so we do not need to worry
-    # about duplicate Python symbols.
-    if $(target-os) in windows cygwin darwin
+    if $(target-os) in windows cygwin
     {
         alias python_for_extensions : python : $(target-requirements) ;
+    }
+    else if $(target-os) = darwin {
+        alias python_for_extensions
+            :
+            : $(target-requirements)
+            :
+            : $(usage-requirements) <linkflags>"-undefined dynamic_lookup"
+            ;
     }
     # On AIX we need Python extensions and Boost.Python to import symbols from
     # the Python interpreter. Dynamic libraries opened with dlopen() do not
@@ -1057,14 +1060,14 @@ IMPORT python : python-extension : : python-extension ;
 
 rule py2to3
 {
-    common.copy $(>) $(<) ;
+    common.copy $(<) : $(>) ;
     2to3 $(<) ;
 }
 
 actions 2to3
 {
-    2to3 -wn "$(<)"
-    2to3 -dwn "$(<)"
+    2to3 -wn --no-diffs "$(<)"
+    2to3 -dwn --no-diffs "$(<)"
 }
 
 

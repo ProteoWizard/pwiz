@@ -16,7 +16,10 @@ import os
 import os.path
 import sys
 
-from b2.build import feature
+# for some reason this fails on Python 2.7(r27:82525)
+# from b2.build import virtual_target 
+import b2.build.virtual_target
+from b2.build import feature, type
 from b2.util.utility import *
 from b2.util import path
 
@@ -63,7 +66,8 @@ def reset ():
     m = {"NT": __executable_path_variable,
          "CYGWIN": "PATH",
          "MACOSX": "DYLD_LIBRARY_PATH",
-         "AIX": "LIBPATH"}
+         "AIX": "LIBPATH",
+         "HAIKU": "LIBRARY_PATH"}
     global __shared_library_path_variable
     __shared_library_path_variable = m.get(OS, "LD_LIBRARY_PATH")
                             
@@ -170,14 +174,18 @@ def check_init_parameters(toolset, requirement, *args):
 
         The return value from this rule is a condition to be used for flags settings.
     """
+    from b2.build import toolset as b2_toolset
+    if requirement is None:
+        requirement = []
     # The type checking here is my best guess about
     # what the types should be.
     assert(isinstance(toolset, str))
-    assert(isinstance(requirement, str) or requirement is None)
+    # iterable and not a string, allows for future support of sets
+    assert(not isinstance(requirement, basestring) and hasattr(requirement, '__contains__'))
     sig = toolset
     condition = replace_grist(toolset, '<toolset>')
     subcondition = []
-    
+
     for arg in args:
         assert(isinstance(arg, tuple))
         assert(len(arg) == 2)
@@ -230,6 +238,11 @@ def check_init_parameters(toolset, requirement, *args):
         
         sig = sig + value + '-'
 
+    # if a requirement is specified, the signature should be unique
+    # with that requirement
+    if requirement:
+        sig += '-' + '-'.join(requirement)
+
     if __all_signatures.has_key(sig):
         message = "duplicate initialization of '%s' with the following parameters: " % toolset
         
@@ -250,15 +263,15 @@ def check_init_parameters(toolset, requirement, *args):
     # condition. To accomplish this we add a toolset requirement that imposes
     # the toolset subcondition, which encodes the version.
     if requirement:
-        r = ['<toolset>' + toolset, requirement]
+        r = ['<toolset>' + toolset] + requirement
         r = ','.join(r)
-        toolset.add_requirements([r + ':' + c for c in subcondition])
+        b2_toolset.add_requirements([r + ':' + c for c in subcondition])
 
     # We add the requirements, if any, to the condition to scope the toolset
     # variables and options to this specific version.
     condition = [condition]
     if requirement:
-        condition += [requirement]
+        condition += requirement
 
     if __show_configuration:
         print "notice:", condition
@@ -640,13 +653,13 @@ def format_name(format, name, target_type, prop_set):
             if grist == '<base>':
                 result += os.path.basename(name)
             elif grist == '<toolset>':
-                result += join_tag(ungrist(f), 
+                result += join_tag(get_value(f), 
                     toolset_tag(name, target_type, prop_set))
             elif grist == '<threading>':
-                result += join_tag(ungrist(f),
+                result += join_tag(get_value(f),
                     threading_tag(name, target_type, prop_set))
             elif grist == '<runtime>':
-                result += join_tag(ungrist(f),
+                result += join_tag(get_value(f),
                     runtime_tag(name, target_type, prop_set))
             elif grist.startswith('<version:'):
                 key = grist[len('<version:'):-1]
@@ -654,7 +667,7 @@ def format_name(format, name, target_type, prop_set):
                 if not version:
                     version = key
                 version = __re_version.match(version)
-                result += join_tag(ungrist(f), version[1] + '_' + version[2])
+                result += join_tag(get_value(f), version[1] + '_' + version[2])
             elif grist.startswith('<property:'):
                 key = grist[len('<property:'):-1]
                 property_re = re.compile('<(' + key + ')>')
@@ -670,15 +683,17 @@ def format_name(format, name, target_type, prop_set):
                         assert(len(p) == 1)
                         result += join_tag(ungrist(f), p)
             else:
-                result += ungrist(f)
+                result += f
 
-        result = virtual_target.add_prefix_and_suffix(
+        result = b2.build.virtual_target.add_prefix_and_suffix(
             ''.join(result), target_type, prop_set)
         return result
 
 def join_tag(joiner, tag):
-    if not joiner: joiner = '-'
-    return joiner + tag
+    if tag:
+        if not joiner: joiner = '-'
+        return joiner + tag
+    return ''
 
 __re_toolset_version = re.compile(r"<toolset.*version>(\d+)[.](\d*)")
 
@@ -687,7 +702,7 @@ def toolset_tag(name, target_type, prop_set):
 
     properties = prop_set.raw()
     tools = prop_set.get('<toolset>')
-    assert(len(tools) == 0)
+    assert(len(tools) == 1)
     tools = tools[0]
     if tools.startswith('borland'): tag += 'bcb'
     elif tools.startswith('como'): tag += 'como'

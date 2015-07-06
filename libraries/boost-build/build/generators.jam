@@ -667,7 +667,7 @@ class generator
                     result += $(source) ;
                 }
             }
-            return [ sequence.unique $(result) ] ;
+            return [ sequence.unique $(result) : stable ] ;
         }
     }
 

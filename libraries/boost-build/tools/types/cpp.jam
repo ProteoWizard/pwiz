@@ -15,22 +15,22 @@ class c-scanner : scanner
     import regex ;
     import scanner ;
     import sequence ;
+    import toolset ;
     import virtual-target ;
 
     rule __init__ ( includes * )
     {
         scanner.__init__ ;
 
-        for local i in $(includes)
-        {
-            self.includes += [ sequence.transform path.native : [ regex.split
-                $(i:G=) "&&" ] ] ;
-        }
+        # toolset.handle-flag-value is a bit of overkill, but it
+        # does correctly handle the topological sort of && separated
+        # include paths
+        self.includes = [ toolset.handle-flag-value <include> : $(includes) ] ;
     }
 
     rule pattern ( )
     {
-        return "#[ \t]*include[ ]*(<(.*)>|\"(.*)\")" ;
+        return "#[ \t]*include[ \t]*(<(.*)>|\"(.*)\")" ;
     }
 
     rule process ( target : matches * : binding )

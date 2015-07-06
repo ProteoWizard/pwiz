@@ -50,7 +50,7 @@ import sequence ;
 # Jamfile at that location is loaded already, does nothing. Returns the project
 # module for the Jamfile.
 #
-rule load ( jamfile-location )
+rule load ( jamfile-location : synthesize ? )
 {
     local module-name = [ module-name $(jamfile-location) ] ;
     # If Jamfile is already loaded, do not try again.
@@ -61,7 +61,7 @@ rule load ( jamfile-location )
             ECHO Loading Jamfile at '$(jamfile-location)' ;
         }
 
-        load-jamfile $(jamfile-location) : $(module-name) ;
+        load-jamfile $(jamfile-location) : $(module-name) : $(synthesize) ;
 
         # We want to make sure that child project are loaded only after parent
         # projects. In particular, because parent projects define attributes
@@ -161,15 +161,28 @@ rule find ( name : current-location )
 #
 rule module-name ( jamfile-location )
 {
-    # MCC: I didn't update this function with the latest Boost code because it
-    # broke the Windows build when there's a path like foo/BAR/BAZ/Jamfile.jam
-
     if ! $(.module.$(jamfile-location))
     {
         # Root the path, so that locations are always unambiguous. Without this,
-        # we can't decide if '../../exe/program1' and '.' are the same paths.
-        jamfile-location = [ path.root $(jamfile-location) [ path.pwd ] ] ;
-        .module.$(jamfile-location) = Jamfile<$(jamfile-location)> ;
+        # we can not decide if '../../exe/program1' and '.' are the same paths.
+        local normalized = [ path.root $(jamfile-location) [ path.pwd ] ] ;
+
+        # Quick & dirty fix to get the same module name when we supply two
+        # equivalent location paths, e.g. 'd:\Foo' & 'D:\fOo\bar\..' on Windows.
+        # Note that our current implementation will not work correctly if the
+        # given location references an empty folder, but in that case any later
+        # attempt to load a Jamfile from this location will fail anyway.
+        # FIXME: Implement this cleanly. Support for this type of path
+        # normalization already exists internally in Boost Jam and the current
+        # fix relies on the GLOB builtin rule using that support. Most likely we
+        # just need to add a new builtin rule to do this explicitly.
+        normalized = [ NORMALIZE_PATH $(normalized) ] ;
+        local glob-result = [ GLOB [ path.native $(normalized) ] : * ] ;
+        if $(glob-result)
+        {
+            normalized = $(glob-result[1]:D) ;
+        }
+        .module.$(jamfile-location) = Jamfile<$(normalized)> ;
     }
     return $(.module.$(jamfile-location)) ;
 }
@@ -257,14 +270,14 @@ rule find-jamfile (
 # the file as indicated by the JAMFILE patterns. Effect of calling this rule
 # twice with the same 'dir' is undefined.
 #
-local rule load-jamfile ( dir : jamfile-module )
+local rule load-jamfile ( dir : jamfile-module : synthesize ? )
 {
     # See if the Jamfile is where it should be.
     #
     local jamfile-to-load = [ path.glob $(dir) : $(JAMROOT) ] ;
     if ! $(jamfile-to-load)
     {
-        jamfile-to-load = [ find-jamfile $(dir) ] ;
+        jamfile-to-load = [ find-jamfile $(dir) : $(synthesize) ] ;
     }
 
     if $(jamfile-to-load[2])
@@ -272,6 +285,11 @@ local rule load-jamfile ( dir : jamfile-module )
         import errors ;
         errors.error "Multiple Jamfiles found at '$(dir)'" :
             "Filenames are: " $(jamfile-to-load:D=) ;
+    }
+    
+    if ! $(jamfile-to-load) && $(synthesize)
+    {
+        jamfile-to-load = $(dir)/@ ;
     }
 
     # Now load the Jamfile in its own context.
@@ -294,14 +312,24 @@ local rule load-jamfile ( dir : jamfile-module )
             local saved-project = $(.current-project) ;
 
             mark-as-user $(jamfile-module) ;
-            modules.load $(jamfile-module) : [ path.native $(jamfile-to-load) ]
-                : . ;
-            if [ MATCH ^($(JAMROOT))$ : $(jamfile-to-load:BS) ]
+            if $(jamfile-to-load:B) = "@"
             {
-                jamfile = [ find-jamfile $(dir) : no-errors ] ;
-                if $(jamfile)
+                # Not a real jamfile to load. Synthsize the load.
+                modules.poke $(jamfile-module) : __name__ : $(jamfile-module) ;
+                modules.poke $(jamfile-module) : __file__ : [ path.native $(jamfile-to-load) ] ;
+                modules.poke $(jamfile-module) : __binding__ : [ path.native $(jamfile-to-load) ] ;
+            }
+            else
+            {
+                modules.load $(jamfile-module) : [ path.native $(jamfile-to-load) ]
+                    : . ;
+                if [ MATCH ^($(JAMROOT))$ : $(jamfile-to-load:BS) ]
                 {
-                    load-aux $(jamfile-module) : [ path.native $(jamfile) ] ;
+                    jamfile = [ find-jamfile $(dir) : no-errors ] ;
+                    if $(jamfile)
+                    {
+                        load-aux $(jamfile-module) : [ path.native $(jamfile) ] ;
+                    }
                 }
             }
 
@@ -889,7 +917,7 @@ rule target ( project-module )
 # extensions are really projects, they can be initialized as a module would be
 # with the "using" (project.project-rules.using) mechanism.
 #
-rule extension ( id : options * : * )
+rule extension ( id space ? : options * : * )
 {
     # The caller is a standalone module for the extension.
     local mod = [ CALLER_MODULE ] ;
@@ -908,15 +936,19 @@ rule extension ( id : options * : * )
         {
             root-project = [ project.attribute $(root-project) parent-module ] ;
         }
+        
+        # Default to creating extensions in /ext/.. project space.
+        local id = $(1[1]) ;
+        local space = $(1[2]) ;
+        space ?= ext ;
 
         # Create the project data, and bring in the project rules into the
         # module.
         project.initialize $(__name__) : [ path.join [ project.attribute
-            $(root-project) location ] ext $(1:L) ] ;
+            $(root-project) location ] $(space:L) $(id:L) ] ;
 
-        # Create the project itself, i.e. the attributes. All extensions are
-        # created in the "/ext" project space.
-        project /ext/$(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+        # Create the project itself, i.e. the attributes.
+        project /$(space:L)/$(id:L) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
             $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17)
             : $(18) : $(19) ;
         local attributes = [ project.attributes $(__name__) ] ;
@@ -964,6 +996,32 @@ rule glob-internal ( project : wildcards + : excludes * : rule-name )
         # of making paths absolute.
         result = $(paths:D="") ;
     }
+
+    return $(result) ;
+}
+
+
+rule glob-path-root ( root path )
+{
+    return [ path.root $(path) $(root) ] ;
+}
+
+rule glob-internal-ex ( project : paths + : wildcards + : excludes * : rule-name )
+{
+    # Make the paths we search in absolute, if they aren't already absolute.
+    # If the given paths are relative, they will be relative to the source
+    # directory. So that's what we root against.
+    local source-location
+        = [ path.root [ $(project).get source-location ] [ path.pwd ] ] ;
+    local search-paths
+        = [ sequence.transform project.glob-path-root $(source-location) : $(paths) ] ;
+    paths
+        = [ path.$(rule-name) $(search-paths) : $(wildcards) : $(excludes) ] ;
+    # The paths we have found are absolute, but the names specified in the
+    # sources list are assumed to be relative to the source directory of the
+    # corresponding project. Make the results relative to the source again.
+    local result
+        = [ sequence.transform path.relative-to $(source-location) : $(paths) ] ;
 
     return $(result) ;
 }
@@ -1177,6 +1235,20 @@ module project-rules
         }
         return [ project.glob-internal [ project.current ] : $(wildcards) :
             $(excludes) : glob-tree ] ;
+    }
+
+    rule glob-ex ( paths + : wildcards + : excludes * )
+    {
+        import project ;
+        return [ project.glob-internal-ex [ project.current ]
+            : $(paths) : $(wildcards) : $(excludes) : glob ] ;
+    }
+
+    rule glob-tree-ex ( paths + : wildcards + : excludes * )
+    {
+        import project ;
+        return [ project.glob-internal-ex [ project.current ]
+            : $(paths) : $(wildcards) : $(excludes) : glob-tree ] ;
     }
 
     # Calculates conditional requirements for multiple requirements at once.

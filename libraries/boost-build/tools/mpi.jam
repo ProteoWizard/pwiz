@@ -291,6 +291,12 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
       command = [ common.get-invocation-command mpi : mpicxx ] ;
     }
 
+    if ! $(mpicxx) && ! $(command) 
+    {
+      # Try "CC", which is used by Cray
+      command = [ common.get-invocation-command mpi : CC ] ;
+    }
+
     local result ;
     local compile_flags ;
     local link_flags ;
@@ -396,6 +402,17 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
         compile_flags = "$(compile_flags) $(f_flags)" ;
       }
     }
+    # Cray 
+    else if [ safe-shell-command "$(command) -v" ]
+    {
+      compile_flags = [ safe-shell-command  "$(command) -###" ] ;
+      link_flags = [ safe-shell-command  "$(command) -###" ] ;
+      # ECHO "Noel: compile_flags: $(compile_flags)" ;
+      # ECHO "Noel: link_flags: $(link_flags)" ;
+      result = " " ;
+    }
+   
+      # Prepend COMPILER as the executable name, to match the format of 
 
     if $(result) || $(compile_flags) && $(link_flags)
     {

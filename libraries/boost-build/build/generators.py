@@ -1060,9 +1060,9 @@ def construct (project, name, target_type, prop_set, sources, top_level=False):
         
     __construct_stack.append (1)
 
+    increase_indent ()
+
     if project.manager().logger().on():
-        increase_indent ()
-        
         dout( "*** construct " + target_type)
         
         for s in sources:
@@ -1072,7 +1072,7 @@ def construct (project, name, target_type, prop_set, sources, top_level=False):
              
     result = __construct_really(project, name, target_type, prop_set, sources)
 
-    project.manager().logger().decrease_indent()
+    decrease_indent()
         
     __construct_stack = __construct_stack [1:]
 

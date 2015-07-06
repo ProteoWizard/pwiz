@@ -400,16 +400,42 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
         }
     }
 
+    if [ glob $(.incprefix)/QtAngle ]
+    {
+        # Setup support of ANGLE builds.
+        alias QtAngle
+            : # sources
+            : # requirements
+                $(target-requirements)
+            : # default-build
+            : # usage-requirements
+                <define>QT_OPENGL_ES_2
+                <define>QT_OPENGL_ES_2_ANGLE
+                <include>$(.incprefix)/QtAngle
+                $(usage-requirements)
+            ;
+    }
+    else
+    {
+         alias QtAngle 
+            : # sources
+            : # requirements
+                $(target-requirements)
+            ;
+    }
+
     # Initialising the remaining libraries is canonical
     # parameters 'module' : 'depends-on' : 'usage-define' : 'requirements' : 'include'
     # 'include' only for non-canonical include paths.
-    add-shared-library QtGui     : QtCore : QT_GUI_LIB     : $(target-requirements) ;
+    add-shared-library QtGui     : QtCore QtAngle : QT_GUI_LIB : $(target-requirements) ;
     add-shared-library QtWidgets : QtGui  : QT_WIDGETS_LIB : $(target-requirements) ;
     add-shared-library QtNetwork : QtCore : QT_NETWORK_LIB : $(target-requirements) ;
     add-shared-library QtSql     : QtCore : QT_SQL_LIB     : $(target-requirements) ;
     add-shared-library QtXml     : QtCore : QT_XML_LIB     : $(target-requirements) ;
     add-shared-library QtPrintSupport : QtGui : QT_PRINTSUPPORT_LIB : $(target-requirements) ;
     add-shared-library QtConcurrent : QtCore : QT_CONCURRENT_LIB : $(target-requirements) ;
+
+    add-shared-library QtPositioning : QtCore : QT_POSITIONING_LIB : $(target-requirements) ;
 
     add-shared-library QtOpenGL : QtGui : QT_OPENGL_LIB : $(target-requirements) ;
     add-shared-library QtSvg : QtXml QtOpenGL : QT_SVG_LIB : $(target-requirements) ;
@@ -436,7 +462,7 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
     add-shared-library QtMultimedia : QtGui : QT_MULTIMEDIA_LIB : $(target-requirements) ;
     add-shared-library QtMultimediaWidgets : QtMultimedia : QT_MULTIMEDIAWIDGETS_LIB : $(target-requirements) ;
 
-    # 
+    #
     add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB : $(target-requirements) ;
 
     # Help-Engine
@@ -448,6 +474,9 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
     add-shared-library QtQuick          : QtQml : QT_QUICK_LIB : $(target-requirements) ;
     add-shared-library QtQuickParticles : QtQml : : $(target-requirements) ;
     add-shared-library QtQuickTest      : QtQml : : $(target-requirements) ;
+
+    # QtLocation (since 5.4)
+    add-shared-library QtLocation : QtQuick QtPositioning : QT_LOCATION_LIB : $(target-requirements) ;
 
     # Regular expression support
     add-shared-library QtV8 : QtCore : : $(target-requirements) ;

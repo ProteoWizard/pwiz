@@ -26,8 +26,19 @@
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "output.h"
 
 #include <ctype.h>
+
+#ifdef OS_NT
+#include <windows.h>
+#ifndef FSCTL_GET_REPARSE_POINT
+/* MinGW's version of windows.h is missing this, so we need
+ * to include winioctl.h directly
+ */
+#include <winioctl.h>
+#endif
+#endif
 
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
@@ -425,14 +436,18 @@ void load_builtins()
         char const * args [] = { "path", 0 };
         bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
     }
+    
+    {
+        const char * args [] = { "path", 0 };
+        bind_builtin( "READLINK", builtin_readlink, 0, args );
+    }
 
       {
           const char * args[] = { "directories", "*", 0 };
           bind_builtin( "RESCAN",
                         builtin_rescan, 0, args );
       }
-
-      /* Initialize builtin modules. */
+    /* Initialize builtin modules. */
     init_set();
     init_path();
     init_regex();
@@ -569,8 +584,8 @@ LIST * builtin_rebuilds( FRAME * frame, int flags )
 LIST * builtin_echo( FRAME * frame, int flags )
 {
     list_print( lol_get( frame->args, 0 ) );
-    printf( "\n" );
-    fflush( stdout );
+    out_printf( "\n" );
+    out_flush();
     return L0;
 }
 
@@ -585,7 +600,7 @@ LIST * builtin_exit( FRAME * frame, int flags )
 {
     LIST * const code = lol_get( frame->args, 1 );
     list_print( lol_get( frame->args, 0 ) );
-    printf( "\n" );
+    out_printf( "\n" );
     if ( !list_empty( code ) )
         exit( atoi( object_str( list_front( code ) ) ) );
     else
@@ -751,8 +766,9 @@ static int has_wildcards( char const * const str )
 
 static LIST * append_if_exists( LIST * list, OBJECT * file )
 {
-    return file_query( file )
-        ? list_push_back( list, object_copy( file ) )
+    file_info_t * info = file_query( file );
+    return info
+        ? list_push_back( list, object_copy( info->name ) )
         : list ;
 }
 
@@ -1005,7 +1021,7 @@ LIST * builtin_hdrmacro( FRAME * frame, int flags )
 
         /* Scan file for header filename macro definitions. */
         if ( DEBUG_HEADER )
-            printf( "scanning '%s' for header file macro definitions\n",
+            out_printf( "scanning '%s' for header file macro definitions\n",
                 object_str( list_item( iter ) ) );
 
         macro_headers( t );
@@ -1102,14 +1118,14 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
 {
     backtrace_line( frame->prev );
     if ( key )
-        printf("%s error", key);
+        out_printf("%s error", key);
     else
-        printf("ERROR");
-    printf( ": rule \"%s\" unknown in ", object_str( rule_name ) );
+        out_printf("ERROR");
+    out_printf( ": rule \"%s\" unknown in ", object_str( rule_name ) );
     if ( module->name )
-        printf( "module \"%s\".\n", object_str( module->name ) );
+        out_printf( "module \"%s\".\n", object_str( module->name ) );
     else
-        printf( "root module.\n" );
+        out_printf( "root module.\n" );
     backtrace( frame->prev );
     exit( 1 );
 }
@@ -1183,13 +1199,13 @@ LIST * builtin_import( FRAME * frame, int flags )
     if ( source_iter != source_end || target_iter != target_end )
     {
         backtrace_line( frame->prev );
-        printf( "import error: length of source and target rule name lists "
+        out_printf( "import error: length of source and target rule name lists "
             "don't match!\n" );
-        printf( "    source: " );
+        out_printf( "    source: " );
         list_print( source_rules );
-        printf( "\n    target: " );
+        out_printf( "\n    target: " );
         list_print( target_rules );
-        printf( "\n" );
+        out_printf( "\n" );
         backtrace( frame->prev );
         exit( 1 );
     }
@@ -1262,9 +1278,9 @@ void print_source_line( FRAME * frame )
     int line;
     get_source_line( frame, &file, &line );
     if ( line < 0 )
-        printf( "(builtin):" );
+        out_printf( "(builtin):" );
     else
-        printf( "%s:%d:", file, line );
+        out_printf( "%s:%d:", file, line );
 }
 
 
@@ -1277,12 +1293,12 @@ void backtrace_line( FRAME * frame )
 {
     if ( frame == 0 )
     {
-        printf( "(no frame):" );
+        out_printf( "(no frame):" );
     }
     else
     {
         print_source_line( frame );
-        printf( " in %s\n", frame->rulename );
+        out_printf( " in %s\n", frame->rulename );
     }
 }
 
@@ -1460,8 +1476,8 @@ LIST * builtin_update_now( FRAME * frame, int flags )
         /* Flush whatever stdio might have buffered, while descriptions 0 and 1
          * still refer to the log file.
          */
-        fflush( stdout );
-        fflush( stderr );
+        out_flush( );
+        err_flush( );
         dup2( original_stdout, 0 );
         dup2( original_stderr, 1 );
         close( original_stdout );
@@ -1660,7 +1676,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     else
     {
         backtrace_line( frame->prev );
-        printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
+        out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
             object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
         exit( 1 );
@@ -1834,6 +1850,116 @@ LIST * builtin_makedir( FRAME * frame, int flags )
         : list_new( object_copy( list_front( path ) ) );
 }
 
+LIST *builtin_readlink( FRAME * frame, int flags )
+{
+    const char * path = object_str( list_front( lol_get( frame->args, 0 ) ) );
+#ifdef OS_NT
+
+    /* This struct is declared in ntifs.h which is
+     * part of the Windows Driver Kit.
+     */
+    typedef struct _REPARSE_DATA_BUFFER {
+        ULONG ReparseTag;
+        USHORT ReparseDataLength;
+        USHORT Reserved;
+        union {
+            struct {
+                USHORT SubstituteNameOffset;
+                USHORT SubstituteNameLength;
+                USHORT PrintNameOffset;
+                USHORT PrintNameLength;
+                ULONG Flags;
+                WCHAR PathBuffer[ 1 ];
+            } SymbolicLinkReparseBuffer;
+            struct {
+                USHORT SubstituteNameOffset;
+                USHORT SubstituteNameLength;
+                USHORT PrintNameOffset;
+                USHORT PrintNameLength;
+                WCHAR PathBuffer[ 1 ];
+            } MountPointReparseBuffer;
+            struct {
+                UCHAR DataBuffer[ 1 ];
+            } GenericReparseBuffer;
+        };
+    } REPARSE_DATA_BUFFER;
+
+    HANDLE hLink = CreateFileA( path, 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL );
+    DWORD n;
+    union {
+        REPARSE_DATA_BUFFER reparse;
+        char data[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
+    } buf;
+    int okay = DeviceIoControl(hLink, FSCTL_GET_REPARSE_POINT, NULL, 0, &buf, sizeof(buf), &n, NULL);
+
+    CloseHandle( hLink );
+
+    if (okay && buf.reparse.ReparseTag == IO_REPARSE_TAG_SYMLINK )
+    {
+        int index = buf.reparse.SymbolicLinkReparseBuffer.SubstituteNameOffset / 2;
+        int length = buf.reparse.SymbolicLinkReparseBuffer.SubstituteNameLength / 2;
+        char cbuf[MAX_PATH + 1];
+        int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.SymbolicLinkReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
+        if( numchars >= sizeof(cbuf) )
+        {
+            return 0;
+        }
+        cbuf[numchars] = '\0';
+        return list_new( object_new( cbuf ) );
+    }
+    else if( okay && buf.reparse.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT )
+    {
+        int index = buf.reparse.MountPointReparseBuffer.SubstituteNameOffset / 2;
+        int length = buf.reparse.MountPointReparseBuffer.SubstituteNameLength / 2;
+        char cbuf[MAX_PATH + 1];
+        const char * result;
+        int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.MountPointReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
+        if( numchars >= sizeof(cbuf) )
+        {
+            return 0;
+        }
+        cbuf[numchars] = '\0';
+        /* strip off the leading "\??\" */
+        result = cbuf;
+        if ( cbuf[ 0 ] == '\\' && cbuf[ 1 ] == '?' &&
+            cbuf[ 2 ] == '?' && cbuf[ 3 ] == '\\' &&
+            cbuf[ 4 ] != '\0' && cbuf[ 5 ] == ':' )
+        {
+            result += 4;
+        }
+        return list_new( object_new( result ) );
+    }
+    return 0;
+#else
+    char static_buf[256];
+    char * buf = static_buf;
+    size_t bufsize = 256;
+    LIST * result = 0;
+    while (1) {
+        ssize_t len = readlink( path, buf, bufsize );
+        if ( len < 0 )
+        {
+            break;
+        }
+        else if ( len < bufsize )
+        {
+            buf[ len ] = '\0';
+            result = list_new( object_new( buf ) );
+            break;
+        }
+        if ( buf != static_buf )
+            BJAM_FREE( buf );
+        bufsize *= 2;
+        buf = BJAM_MALLOC( bufsize );
+    }
+    
+    if ( buf != static_buf )
+        BJAM_FREE( buf );
+
+    return result;
+#endif
+}
+
 LIST * builtin_rescan( FRAME * frame, int flags )
 {
     /* clear file and timestamp hashes */
@@ -1903,14 +2029,14 @@ LIST * builtin_python_import_rule( FRAME * frame, int flags )
         {
             if ( PyErr_Occurred() )
                 PyErr_Print();
-            fprintf( stderr, "Cannot find function \"%s\"\n", python_function );
+            err_printf( "Cannot find function \"%s\"\n", python_function );
         }
         Py_DECREF( pModule );
     }
     else
     {
         PyErr_Print();
-        fprintf( stderr, "Failed to load \"%s\"\n", python_module );
+        err_printf( "Failed to load \"%s\"\n", python_module );
     }
     return L0;
 
@@ -1991,7 +2117,7 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
                     char * s = PyString_AsString( e );
                     if ( !s )
                     {
-                        printf( "Invalid parameter type passed from Python\n" );
+                        err_printf( "Invalid parameter type passed from Python\n" );
                         exit( 1 );
                     }
                     l = list_push_back( l, object_new( s ) );

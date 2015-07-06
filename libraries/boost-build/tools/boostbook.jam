@@ -178,6 +178,7 @@ rule print-error ( location message * )
 
 rule make-error ( message * )
 {
+    import errors ;
     return [ errors.nearest-user-location ] $(message) ;
 }
 
@@ -204,7 +205,6 @@ rule check-docbook-xsl-dir ( )
     {
         if ! [ path.glob $(.docbook-xsl-dir) : common/common.xsl ]
         {
-            import errors ;
             .error-message = [ make-error BoostBook: could not find docbook XSL stylesheets
                 in: [ path.native $(.docbook-xsl-dir) ] ] ;
         }

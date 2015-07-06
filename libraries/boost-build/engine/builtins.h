@@ -63,6 +63,7 @@ LIST *builtin_pad( FRAME * frame, int flags );
 LIST *builtin_precious( FRAME * frame, int flags );
 LIST *builtin_self_path( FRAME * frame, int flags );
 LIST *builtin_makedir( FRAME * frame, int flags );
+LIST *builtin_readlink( FRAME * frame, int flags );
 LIST *builtin_rescan( FRAME *frame, int flags );
 
 void backtrace( FRAME *frame );

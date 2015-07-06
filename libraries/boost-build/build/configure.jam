@@ -123,10 +123,71 @@ rule print-configure-checks-summary ( )
     }
 }
 
+# Attempts to build a set of virtual targets
+rule try-build ( targets * : ps : what : retry ? )
+{
+   local cache-name = $(what) [ $(ps).raw ] ;
+   cache-name = $(cache-name:J=-) ;
+   local value = [ config-cache.get $(cache-name) ] ;
+        
+    local result ;
+    local jam-targets ;
 
-# Attempt to build a metatarget named by 'metatarget-reference' in context of
-# 'project' with properties 'ps'. Returns non-empty value if build is OK.
-#
+    for local t in $(targets)
+    {
+        jam-targets += [ $(t).actualize ] ;
+    }
+         
+    if $(value)
+    {
+        local x = [ PAD "    - $(what)" : $(.width) ] ; 
+        if $(value) = true
+        {
+            .$(what)-supported.$(ps) = yes ;
+            result = true ;
+            log-check-result "$(x) : yes (cached)" ;
+        }
+        else
+        {
+            log-check-result "$(x) : no  (cached)" ;
+        }
+    }       
+    else if ! UPDATE_NOW in [ RULENAMES ]
+    {
+        # Cannot determine. Assume existance.
+    }
+    else
+    {
+        local x = [ PAD "    - $(what)" : $(.width) ] ;
+        if [ UPDATE_NOW $(jam-targets) :
+             $(.log-fd) : ignore-minus-n : ignore-minus-q ]
+        {
+            .$(what)-supported.$(ps) = yes ;
+            result = true ;
+            log-check-result "$(x) : yes" ;
+        }
+        else
+        {
+            log-check-result "$(x) : no" ;
+        }
+    }
+    if ! $(value)
+    {
+        if $(result)
+        {
+            config-cache.set $(cache-name) : true ;
+        }
+        else
+        {
+            config-cache.set $(cache-name) : false ;
+        }
+    }        
+    return $(result) ;
+}
+
+# Attempt to build a metatarget named by 'metatarget-reference'
+# in context of 'project' with properties 'ps'.
+# Returns non-empty value if build is OK.
 rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
 {
     local result ;
@@ -135,64 +196,14 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
     {
         .$(what)-tested.$(ps) = true ;
 
-        local cache-name = $(what) [ $(ps).raw ] ;
-        cache-name = $(cache-name:J=-) ;
-        local value = [ config-cache.get $(cache-name) ] ;
-        
         local targets = [ targets.generate-from-reference 
             $(metatarget-reference) : $(project) : $(ps) ] ;
 
-        local jam-targets ;
-        for local t in $(targets[2-])
-        {
-            jam-targets += [ $(t).actualize ] ;
-        }
-             
-        if $(value)
-        {
-            local x = [ PAD "    - $(what)" : $(.width) ] ; 
-            if $(value) = true
-            {
-                .$(what)-supported.$(ps) = yes ;
-                result = true ;
-                log-check-result "$(x) : yes (cached)" ;
-            }
-            else
-            {
-                log-check-result "$(x) : no  (cached)" ;
-            }
-        }       
-        else if ! UPDATE_NOW in [ RULENAMES ]
-        {
-            # Cannot determine. Assume existance.
-        }
-        else
-        {
-            local x = [ PAD "    - $(what)" : $(.width) ] ;
-            if [ UPDATE_NOW $(jam-targets) :
-                 $(.log-fd) : ignore-minus-n : ignore-minus-q ]
-            {
-                .$(what)-supported.$(ps) = yes ;
-                result = true ;
-                log-check-result "$(x) : yes" ;
-            }
-            else
-            {
-                log-check-result "$(x) : no" ;
-            }
-        }
-        if ! $(value)
-        {
-            if $(result)
-            {
-                config-cache.set $(cache-name) : true ;
-            }
-            else
-            {
-                config-cache.set $(cache-name) : false ;
-            }
-        }        
+        result = [ try-build $(targets[2-]) : $(ps) : $(what) : $(retry) ] ;
+        .$(what)-supported.$(ps) = $(result) ;
+
         return $(result) ;
+
     }
     else
     {

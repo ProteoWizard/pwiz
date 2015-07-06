@@ -175,6 +175,10 @@ static int canonicWindowsPath( char const * const path, int const path_length,
                 return 1;
             }
         }
+        else
+        {
+            return 1;
+        }
     }
     return 0;
 }
@@ -243,7 +247,10 @@ static path_key_entry * path_key( OBJECT * const path,
         {
             nresult->path = normalized;
             if ( known_to_be_canonic )
+            {
                 nresult->key = object_copy( path );
+                nresult->exists = 1;
+            }
             else
             {
                 string canonic_path[ 1 ];

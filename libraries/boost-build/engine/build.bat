@@ -28,7 +28,7 @@ ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin,
-ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12
+ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12, vc14
 ECHO ###
 call :Set_Error
 endlocal
@@ -36,7 +36,7 @@ goto :eof
 
 
 :Test_Path
-REM Tests for the given file(executable) presence in the directories in the PATH
+REM Tests for the given executable file presence in the directories in the PATH
 REM environment variable. Additionaly sets FOUND_PATH to the path of the
 REM found file.
 call :Clear_Error
@@ -100,6 +100,16 @@ call :Clear_Error
 call :Test_Empty %ProgramFiles%
 if not errorlevel 1 set ProgramFiles=C:\Program Files
 
+call :Clear_Error
+if NOT "_%VS140COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc14"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
+    goto :eof)
+call :Clear_Error
+if EXIST "%ProgramFiles%\Microsoft Visual Studio 14.0\VC\VCVARSALL.BAT" (
+    set "BOOST_JAM_TOOLSET=vc14"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 14.0\VC\"
+    goto :eof)
 call :Clear_Error
 if NOT "_%VS120COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc12"
@@ -292,7 +302,7 @@ REM the toolset was guessed at and found, or when the toolset
 REM was indicated in the command arguments.
 REM NOTE: The strange multiple "if ?? == _toolset_" tests are that way
 REM because in BAT variables are subsituted only once during a single
-REM command. A complete "if ... ( commands ) else ( commands )"
+REM command. A complete "if ... else ..."
 REM is a single command, even though it's in multiple lines here.
 :Setup_Args
 call :Clear_Error
@@ -421,6 +431,21 @@ set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC12
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc14_" goto Skip_VC14
+if NOT "_%VS140COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
+    )
+if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%VCVARSALL.BAT" %BOOST_JAM_ARGS%
+if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+    if "_%VCINSTALLDIR%_" == "__" (
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+        ) )
+set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
+set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+set "_known_=1"
+:Skip_VC14
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call :Test_Path bcc32.exe )
@@ -513,11 +538,11 @@ set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
 if "%test%" == "--update" goto Found_Update
-endlocal
+endlocal & set BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 shift
 if not "_%BJAM_UPDATE%_" == "_update_" goto Check_Update
 :Found_Update
-endlocal
+endlocal & set BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 set BJAM_UPDATE=update
 :Check_Update_End
 if "_%BJAM_UPDATE%_" == "_update_" (
@@ -588,3 +613,4 @@ goto Set_Args
 :Skip_Jam
 
 :Finish
+exit /b %ERRORLEVEL%

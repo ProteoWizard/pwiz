@@ -1,6 +1,7 @@
 # Copyright 2001 David Abrahams.
 # Copyright 2004, 2005 Markus Schoepflin.
 # Copyright 2011, John Maddock
+# Copyright 2013, Cray, Inc.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -47,15 +48,20 @@ generators.register-c-compiler cray.compile.c++ : CPP : OBJ : <toolset>cray ;
 generators.register-c-compiler cray.compile.c : C : OBJ : <toolset>cray ;
 
 
-
-# No static linking as far as I can tell.
+# unlike most compliers, Cray defaults to static linking.
 # flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
-flags cray.compile OPTIONS <debug-symbols>on : -Gn ;
-flags cray.link OPTIONS <debug-symbols>on : -Gn ;
+# flags cray.compile OPTIONS <debug-symbols>on : -G0 ;
+flags cray.compile OPTIONS <debug-symbols>on : -g ;
+# flags cray.link OPTIONS <debug-symbols>on : -G0 ;
+flags cray.link OPTIONS <debug-symbols>on : -g ;
 
 flags cray.compile OPTIONS <optimization>off : -O0 ;
-flags cray.compile OPTIONS <optimization>speed : -O3 ;
+flags cray.compile OPTIONS <optimization>speed : -O2 ;
 flags cray.compile OPTIONS <optimization>space : -O1 ;
+
+# flags cray.compile OPTIONS <inlining>off  : -hipa0 ;
+# flags cray.compile OPTIONS <inlining>on   : ;
+# flags cray.compile OPTIONS <inlining>full : -hipa5 ;
 
 flags cray.compile OPTIONS <cflags> ;
 flags cray.compile.c++ OPTIONS <cxxflags> ;
@@ -63,8 +69,12 @@ flags cray.compile DEFINES <define> ;
 flags cray.compile INCLUDES <include> ;
 flags cray.link OPTIONS <linkflags> ;
 
-flags cray.compile OPTIONS <link>shared : -fPIC ;
-flags cray.link OPTIONS <link>shared : -fPIC ;
+flags cray.compile OPTIONS : -hgnu -fPIC -h system_alloc -h tolerant -h ipa0 ;
+flags cray.compile OPTIONS <link>shared : -dynamic ;
+flags cray.compile OPTIONS <link>static : -static ;
+flags cray.link OPTIONS <link>static : -static ;
+flags cray.link OPTIONS <link>shared ;
+flags cray.link LOPTIONS <link>shared : -dynamic ;
 
 flags cray.link LIBPATH <library-path> ;
 flags cray.link LIBRARIES <library-file> ;
@@ -73,7 +83,7 @@ flags cray.link FINDLIBS-SA <find-shared-library> ;
 
 actions link bind LIBRARIES
 {
-    $(CONFIG_COMMAND) $(OPTIONS) -o "$(<)" -L$(LIBPATH) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)
+    $(CONFIG_COMMAND) $(OPTIONS) $(LOPTIONS) -o "$(<)" -L$(LIBPATH) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)
 }
 
 # When creating dynamic libraries, we don't want to be warned about unresolved
@@ -83,7 +93,7 @@ actions link bind LIBRARIES
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -shared $(OPTIONS) -o "$(<[1])" -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)
+    $(CONFIG_COMMAND) -o "$(<[1])" -Wl,-h -Wl,$(<[-1]:D=) -shared -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)
 }
 
 
@@ -103,7 +113,7 @@ actions compile.c
 
 actions compile.c++
 {
-    $(CONFIG_COMMAND) -c -h gnu $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+    $(CONFIG_COMMAND) -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 # Always create archive from scratch. See the gcc toolet for rationale.

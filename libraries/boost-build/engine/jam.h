@@ -154,6 +154,11 @@
     #define OSMINOR "OS=HPUX"
     #define OS_HPUX
 #endif
+#ifdef __HAIKU__
+    #define unix
+    #define OSMINOR "OS=HAIKU"
+    #define OS_HAIKU
+#endif
 #ifdef __OPENNT
     #define unix
     #define OSMINOR "OS=INTERIX"
@@ -370,7 +375,8 @@
     #define OSPLAT "OSPLAT=MIPS"
 #endif
 
-#ifdef __arm__
+#if defined( __arm__ ) || \
+    defined( __aarch64__ )
     #define OSPLAT "OSPLAT=ARM"
 #endif
 
@@ -409,7 +415,7 @@
 #define MAXSYM   1024  /* longest symbol in the environment */
 #define MAXJPATH 1024  /* longest filename */
 
-#define MAXJOBS  64    /* internally enforced -j limit */
+#define MAXJOBS  256   /* internally enforced -j limit */
 #define MAXARGC  32    /* words in $(JAMSHELL) */
 
 /* Jam private definitions below. */
@@ -425,7 +431,7 @@ struct globs
     int    newestfirst;         /* build newest sources first */
     int    pipe_action;
     char   debug[ DEBUG_MAX ];
-    FILE * cmdout;              /* print cmds, not run them */
+    FILE * out;                 /* mirror output here */
     long   timeout;             /* number of seconds to limit actions to,
                                  * default 0 for no limit.
                                  */

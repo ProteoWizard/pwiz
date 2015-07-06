@@ -11,7 +11,7 @@ from b2.build.toolset import flags
 from b2.build.feature import feature
 from b2.manager import get_manager
 from b2.tools import builtin, common
-from b2.util import regex
+from b2.util import regex, utility
 
 def init():
     pass
@@ -22,7 +22,7 @@ type.register('IDL', ['idl'])
 # to resources of an application (.rc). In order to be found by a resource 
 # compiler its target type should be derived from 'H' - otherwise
 # the property '<implicit-dependency>' will be ignored.
-type.register('MSTYPELIB', 'tlb', 'H')
+type.register('MSTYPELIB', ['tlb'], 'H')
 
 # Register scanner for MIDL files
 class MidlScanner(scanner.Scanner):
@@ -52,8 +52,8 @@ class MidlScanner(scanner.Scanner):
         imported_tlbs   = regex.transform(matches, self.re_importlib, [1, 3])
 
         # CONSIDER: the new scoping rule seem to defeat "on target" variables.
-        g = bjam.call('get-target-variable', target, 'HDRGRIST')
-        b = os.path.normalize_path(os.path.dirname(binding))
+        g = bjam.call('get-target-variable', target, 'HDRGRIST')[0]
+        b = os.path.normpath(os.path.dirname(binding))
 
         # Attach binding of including file to included targets.
         # When target is directly created from virtual target
@@ -75,10 +75,10 @@ class MidlScanner(scanner.Scanner):
         bjam.call('INCLUDES', [target], all)
         bjam.call('DEPENDS', [target], imported_tlbs)
         bjam.call('NOCARE', all + imported_tlbs)
-        engine.set_target_variable(included_angle , 'SEARCH', ungrist(self.includes))
-        engine.set_target_variable(included_quoted, 'SEARCH', b + ungrist(self.includes))
-        engine.set_target_variable(imported       , 'SEARCH', b + ungrist(self.includes))
-        engine.set_target_variable(imported_tlbs  , 'SEARCH', b + ungrist(self.includes))
+        engine.set_target_variable(included_angle , 'SEARCH', [utility.get_value(inc) for inc in self.includes])
+        engine.set_target_variable(included_quoted, 'SEARCH', [utility.get_value(inc) for inc in self.includes])
+        engine.set_target_variable(imported       , 'SEARCH', [utility.get_value(inc) for inc in self.includes])
+        engine.set_target_variable(imported_tlbs  , 'SEARCH', [utility.get_value(inc) for inc in self.includes])
         
         get_manager().scanners().propagate(type.get_scanner('CPP', PropertySet(self.includes)), included_angle + included_quoted)
         get_manager().scanners().propagate(self, imported)

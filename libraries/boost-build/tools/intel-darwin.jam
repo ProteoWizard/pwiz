@@ -126,7 +126,7 @@ rule init ( version ? :  command * : options * )
 SPACE = " " ;
 
 flags intel-darwin.compile OPTIONS <cflags> ;
-flags intel-darwin.compile OPTIONS <cxxflags> ;
+flags intel-darwin.compile.c++ OPTIONS <cxxflags> ;
 # flags intel-darwin.compile INCLUDES <include> ;
 
 flags intel-darwin.compile OPTIONS <optimization>space : -O1 ; # no specific space optimization flag in icc

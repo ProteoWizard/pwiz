@@ -96,7 +96,8 @@ rule init ( version ? : command * : options * )
                 ;
             if $(tool-command)
             {
-                local tool-command-string = $(tool-command:J=" ") ;
+                local tool-command-string = \"$(tool-command)\" ;
+                tool-command-string = $(tool-command-string:J=" ") ;
                 local tool-version = [ MATCH "^([0-9.]+)" :
                     [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
                 if $(tool-version) != $(version)
@@ -153,9 +154,11 @@ rule init ( version ? : command * : options * )
     # Information about the gcc command...
     #   The command.
     local command = $(tool-command) ;
-    #   The 'command' variable can have multiple elements but when calling the
-    # SHELL builtin we need a single string.
-    local command-string = $(command:J=" ") ;
+    #   The 'command' variable can have multiple elements but when calling the    
+    # SHELL builtin we need a single string, and we need to quote elements
+    # with spaces.
+    local command-string = \"$(command)\" ;
+    command-string = $(command-string:J=" ") ;
     #   The root directory of the tool install.
     local root = [ feature.get-values <root> : $(options) ] ;
     #   The bin directory where to find the command to execute.
@@ -451,7 +454,7 @@ rule setup-address-model ( targets * : sources * : properties * )
         else
         {
             local arch = [ feature.get-values architecture : $(properties) ] ;
-            if $(arch) != arm
+            if $(arch) = power || $(arch) = sparc || $(arch) = x86
             {
                 if $(model) = 32
                 {
@@ -790,12 +793,16 @@ rule init-link-flags ( toolset linker condition )
         # searched during load-time. Note that the AIX linker does not have an
         # -soname equivalent, this is as close as it gets.
         #
+        # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
+        # This is neccesary for some submodules such as math, but it does make running
+        # the tests a tad slower.
+        #
         # The above options are definately for AIX 5.x, and most likely also for
         # AIX 4.x and AIX 6.x. For details about the AIX linker see:
         # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
         #
 
-        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath
+        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
             : unchecked ;
 
     case darwin :
@@ -1025,10 +1032,12 @@ rule setup-threading ( targets * : sources * : properties * )
 
         switch $(target)
         {
+            case android : # No threading options, everything is in already.
             case windows : option = -mthreads ;
             case cygwin  : option = -mthreads ;
             case solaris : option = -pthreads ; libs = rt ;
             case beos    : # No threading options.
+            case haiku   : option = ;
             case *bsd    : option = -pthread ;  # There is no -lrt on BSD.
             case sgi     : # gcc on IRIX does not support multi-threading.
             case darwin  : # No threading options.
@@ -1132,8 +1141,7 @@ cpu-flags gcc OPTIONS : x86 : c3-2 : -march=c3-2 ;
 ##
 cpu-flags gcc OPTIONS : x86 : atom : -march=atom ;
 # Sparc
-cpu-flags gcc OPTIONS : sparc : c3 : -mcpu=c3 : default ;
-cpu-flags gcc OPTIONS : sparc : v7 : -mcpu=v7 ;
+cpu-flags gcc OPTIONS : sparc : v7 : -mcpu=v7 : default ;
 cpu-flags gcc OPTIONS : sparc : cypress : -mcpu=cypress ;
 cpu-flags gcc OPTIONS : sparc : v8 : -mcpu=v8 ;
 cpu-flags gcc OPTIONS : sparc : supersparc : -mcpu=supersparc ;
@@ -1181,4 +1189,4 @@ cpu-flags gcc OPTIONS : power : rios2 : -mcpu=rios2 ;
 cpu-flags gcc OPTIONS : power : rsc : -mcpu=rsc ;
 cpu-flags gcc OPTIONS : power : rs64a : -mcpu=rs64 ;
 # AIX variant of RS/6000 & PowerPC
-toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X 64" ;
+toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;

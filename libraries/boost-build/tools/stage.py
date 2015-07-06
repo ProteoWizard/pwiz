@@ -170,7 +170,7 @@ class InstallTargetClass(targets.BasicTarget):
     def collect_targets(self, targets):
         
         s = [t.creating_subvariant() for t in targets]
-        s = unique(s)
+        s = unique(filter(lambda l: l != None,s))
         
         result = set(targets)
         for i in s:
@@ -251,7 +251,7 @@ class InstalledExeGenerator(generators.Generator):
         else:
             # See if the dll-path properties are not changed during
             # install. If so, copy, don't relink.
-            need_relink = ps.get('dll-path') != source[0].action().properties().get('dll-path')
+            need_relink = source[0].action() and ps.get('dll-path') != source[0].action().properties().get('dll-path')
 
         if need_relink:
             return [relink_file(project, source, ps)]
@@ -280,7 +280,7 @@ class InstalledSharedLibGenerator(generators.Generator):
             a = source.action()
             if not a:
                 # Non-derived file, just copy.
-                copied = copy_file(project, source, ps)
+                copied = copy_file(project, None, source, ps)
             else:
 
                 need_relink = ps.get('dll-path') != source.action().properties().get('dll-path')

@@ -71,7 +71,7 @@ type.register('PDB',['pdb'])
 #    using msvc : 6.5 : cl.exe ;
 #    using msvc : 7.0 : Y:/foo/bar/cl.exe ;
 #
-# The version parameter may be ommited:
+# The version parameter may be omitted:
 #
 #    using msvc : : Z:/foo/bar/cl.exe ;
 #
@@ -115,7 +115,7 @@ def init(version = None, command = None, options = None):
     command = to_seq(command)
     
     if command:
-        options.append("<command>"+command)
+        options.extend("<command>"+cmd for cmd in command)
     configure(version,options)
 
 def configure(version=None, options=None):
@@ -152,7 +152,7 @@ def configure_version_specific(toolset_arg, version, conditions):
     # options are off by default. If we are sure that the msvc version is at
     # 7.*, add those options explicitly. We can be sure either if user specified
     # version 7.* explicitly or if we auto-detected the version ourselves.
-    if not re.match('^6\\.', version):
+    if not re.search('^6\\.', version):
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS',conditions, ['/Zc:forScope','/Zc:wchar_t'])
         toolset.flags('{}.compile.c++'.format(toolset_arg), 'C++FLAGS',conditions, ['/wd4675'])
 
@@ -160,7 +160,7 @@ def configure_version_specific(toolset_arg, version, conditions):
         # versions have a bug, causing them to emit the deprecation warning even
         # with /W0.
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS',extend_conditions(conditions,['<warnings>off']), ['/wd4996'])
-        if re.match('^[78]\\.', version):
+        if re.search('^[78]\.', version):
             # 64-bit compatibility warning deprecated since 9.0, see
             # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
             toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS',extend_conditions(conditions,['<warnings>all']), ['/Wp64'])
@@ -168,7 +168,7 @@ def configure_version_specific(toolset_arg, version, conditions):
     #
     # Processor-specific optimization.
     #
-    if re.match('^[67]', version ):
+    if re.search('^[67]', version ):
         # 8.0 deprecates some of the options.
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS', extend_conditions(conditions,['<optimization>speed','<optimization>space']), ['/Ogiy', '/Gs'])
         toolset.flags('{}.compile'.format(toolset_arg), 'CFLAGS', extend_conditions(conditions,['<optimization>speed']), ['/Ot'])
@@ -270,76 +270,45 @@ def expand_target_variable(target,var,prefix=None,suffix=None):
     return " ".join([ ("" if prefix is None else prefix) + elem + ("" if suffix is None else suffix) for elem in list ])
 
 
-compile_c_cpp_pch = '''$(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER)'''
-# Action for running the C/C++ compiler using precompiled headers. An already
-# built source file for compiling the precompiled headers is expected to be
-# given as one of the source parameters.
-compile_c_cpp_pch_s = '''$(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)'''
-    
 def get_rspline(targets, lang_opt):
-    result = lang_opt + ' ' + \
-        expand_target_variable(targets, 'UNDEFS', '-U' ) + ' ' + \
-        expand_target_variable(targets, 'CFLAGS' ) + ' ' + \
-        expand_target_variable(targets, 'C++FLAGS' ) + ' ' + \
-        expand_target_variable(targets, 'OPTIONS' ) + ' -c ' + \
-        expand_target_variable(targets, 'DEFINES', '\n-D' ) + ' ' + \
-        expand_target_variable(targets, 'INCLUDES', '\n"-I', '"' )
+    result = lang_opt + '\n' + \
+        expand_target_variable(targets, 'UNDEFS'  , '\n-U'         ) + \
+        expand_target_variable(targets, 'CFLAGS'  , '\n'           ) + \
+        expand_target_variable(targets, 'C++FLAGS', '\n'           ) + \
+        expand_target_variable(targets, 'OPTIONS' , '\n'           ) + '\n-c' + \
+        expand_target_variable(targets, 'DEFINES' , '\n-D' , '\n'  ) + \
+        expand_target_variable(targets, 'INCLUDES', '\n"-I', '"\n' )
     bjam.call('set-target-variable', targets, 'CC_RSPLINE', result)
 
 def compile_c(targets, sources = [], properties = None):
-    get_manager().engine().set_target_variable( targets[1], 'C++FLAGS', '' )
+    get_manager().engine().set_target_variable( targets[0], 'C++FLAGS', '' )
     get_rspline(targets, '-TC')
-    sources += bjam.call('get-target-variable',targets,'PCH_FILE')
-    sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
     compile_c_cpp(targets,sources)
 
 def compile_c_preprocess(targets, sources = [], properties = None):
-    get_manager().engine().set_target_variable( target[1], 'C++FLAGS', '' )
+    get_manager().engine().set_target_variable( targets[0], 'C++FLAGS', '' )
     get_rspline(targets, '-TC')
-    sources += bjam.call('get-target-variable',targets,'PCH_FILE')
-    sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
     preprocess_c_cpp(targets,sources)
 
 def compile_c_pch(targets, sources = [], properties = []):
-    get_manager().engine().set_target_variable( target[1], 'C++FLAGS', '' )
+    get_manager().engine().set_target_variable( targets[0], 'C++FLAGS', '' )
+    get_rspline([targets[0]], '-TC')
     get_rspline([targets[1]], '-TC')
-    get_rspline([targets[2]], '-TC')
-    pch_source = bjam.call('get-target-variable', targets, 'PCH_SOURCE')
-    sources += pch_source
-    if pch_source:
-        get_manager().engine().set_update_action('compile-c-c++-pch-s', targets, sources, properties)
-        get_manager().engine().add_dependency(targets,pch_source)
-        compile_c_cpp_pch_s(targets,sources)
-    else:
-        get_manager().engine().set_update_action('compile-c-c++-pch', targets, sources, properties)
-        compile_c_cpp_pch(targets,sources)
 
 toolset.flags( 'msvc', 'YLOPTION', [], ['-Yl'] )
 
 def compile_cpp(targets,sources=[],properties=None):
     get_rspline(targets,'-TP')
-    sources += bjam.call('get-target-variable',targets,'PCH_FILE')
-    sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
+    bjam.call('set-target-variable', targets, 'PCH_FILE', sources)
     compile_c_cpp(targets,sources)
 
 def compile_cpp_preprocess(targets,sources=[],properties=None):
     get_rspline(targets,'-TP')
-    sources += bjam.call('get-target-variable',targets,'PCH_FILE')
-    sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
     preprocess_c_cpp(targets,sources)
 
 def compile_cpp_pch(targets,sources=[],properties=None):
+    get_rspline([targets[0]], '-TP')
     get_rspline([targets[1]], '-TP')
-    get_rspline([targets[2]], '-TP')
-    pch_source = bjam.call('get-target-variable', targets, 'PCH_SOURCE')
-    sources += pch_source
-    if pch_source:
-        get_manager().engine().set_update_action('compile-c-c++-pch-s', targets, sources, properties)
-        get_manager().engine().add_dependency(targets,pch_source)
-        compile_c_cpp_pch_s(targets,sources)
-    else:
-        get_manager().engine().set_update_action('compile-c-c++-pch', targets, sources, properties)
-        compile_c_cpp_pch(targets,sources)
 
 
 # Action for running the C/C++ compiler without using precompiled headers.
@@ -357,33 +326,68 @@ def compile_cpp_pch(targets,sources=[],properties=None):
 #    as in this case the compiler must be used to create a single PDB for our library.
 #
 
-compile_action = '$(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)'
-engine.register_action(
+class SetupAction:
+    def __init__(self, setup_func, function):
+        self.setup_func = setup_func
+        self.function = function
+            
+    def __call__(self, targets, sources, property_set):
+        assert(callable(self.setup_func))
+        # This can modify sources.
+        action_name = self.setup_func(targets, sources, property_set)
+        # Bjam actions defined from Python have only the command
+        # to execute, and no associated jam procedural code. So
+        # passing 'property_set' to it is not necessary.
+        bjam.call("set-update-action", action_name, targets, sources, [])
+        if self.function:
+            self.function(targets, sources, property_set)
+
+def register_setup_action(action_name,setup_function,function=None):
+    global engine
+    if engine.actions.has_key(action_name):
+        raise "Bjam action %s is already defined" % action_name
+    engine.actions[action_name] = SetupAction(setup_function, function)
+
+
+engine.register_action('compile-c-c++',
+'$(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)''',
+bound_list=['PDB_NAME'])
+
+def setup_compile_c_cpp_action(targets, sources, properties):
+    sources += bjam.call('get-target-variable',targets,'PCH_FILE')
+    sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
+    return 'compile-c-c++'
+
+
+register_setup_action(
     'msvc.compile.c',
-    compile_action,
-    function=compile_c,
-    bound_list=['PDB_NAME'])
+    setup_compile_c_cpp_action,
+    function=compile_c)
 
-engine.register_action(
+register_setup_action(
     'msvc.compile.c++',
-    compile_action,
-    function=compile_cpp,
-    bound_list=['PDB_NAME'])
+    setup_compile_c_cpp_action,
+    function=compile_cpp)
 
 
-preprocess_action = '$(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"'
+engine.register_action('preprocess-c-c++',
+'$(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"',
+bound_list=['PDB_NAME'])
 
-engine.register_action(
+def setup_preprocess_c_cpp_action(targets, sources, properties):
+    sources += bjam.call('get-target-variable',targets,'PCH_FILE')
+    sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
+    return 'preprocess-c-c++'
+    
+register_setup_action(
     'msvc.preprocess.c',
-    preprocess_action,
-    function=compile_c_preprocess,
-    bound_list=['PDB_NAME'])
+    setup_preprocess_c_cpp_action,
+    function=compile_c_preprocess)
 
-engine.register_action(
+register_setup_action(
     'msvc.preprocess.c++',
-    preprocess_action,
-    function=compile_cpp_preprocess,
-    bound_list=['PDB_NAME'])
+    setup_preprocess_c_cpp_action,
+    function=compile_cpp_preprocess)
 
 def compile_c_cpp(targets,sources=None):
     pch_header = bjam.call('get-target-variable',targets[0],'PCH_HEADER')
@@ -400,14 +404,30 @@ def preprocess_c_cpp(targets,sources=None):
 # to whatever else it needs to compile, this action also adds a temporary source
 # .cpp file used to compile the precompiled headers themselves.
 
-engine.register_action(
+
+engine.register_action('compile-c-c++-pch',
+'$(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include "$(>[1]:D=)"\n)" $(.CC.FILTER)')
+
+engine.register_action('compile-c-c++-pch-s',
+'$(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)')
+
+def setup_c_cpp_pch(targets, sources, properties):
+    pch_source = bjam.call('get-target-variable', targets, 'PCH_SOURCE')
+    if pch_source:
+        sources += pch_source
+        get_manager().engine().add_dependency(targets,pch_source)
+        return 'compile-c-c++-pch-s'
+    else:
+        return 'compile-c-c++-pch'
+
+register_setup_action(
     'msvc.compile.c.pch',
-    None, # action set by the function
+    setup_c_cpp_pch,
     function=compile_c_pch)
 
-engine.register_action(
+register_setup_action(
     'msvc.compile.c++.pch',
-    None, # action set by the function
+    setup_c_cpp_pch,
     function=compile_cpp_pch)
 
 
@@ -537,7 +557,6 @@ $(LIBRARIES)
 class MsvcPchGenerator(pch.PchGenerator):
 
     # Inherit the __init__ method
-
     def run_pch(self, project, name, prop_set, sources):
         # Find the header in sources. Ignore any CPP sources.
         pch_header = None
@@ -548,18 +567,30 @@ class MsvcPchGenerator(pch.PchGenerator):
             elif type.is_derived(s.type(), 'CPP') or type.is_derived(s.type(), 'C'):
                 pch_source = s
             
-        if not pch-header:
+        if not pch_header:
             raise RuntimeError( "can not build pch without pch-header" )
 
         # If we do not have the PCH source - that is fine. We will just create a
         # temporary .cpp file in the action.
-        temp_prop_set = property_set.create([Property('pch-source',pch_source)]+prop_set.all())
-        generated = Generator.run(project,name,temp_prop_set,pch_header)
+        properties = prop_set.all()
+        # Passing of <pch-source> is a dirty trick, needed because
+        # non-composing generators with multiple inputs are subtly
+        # broken. For more detailed information see:
+        # https://zigzag.cs.msu.su:7813/boost.build/ticket/111
+        if pch_source:
+            properties.append(Property('pch-source',pch_source))
+        generated = Generator.run(self,project,name,property_set.create(properties),[pch_header])
         pch_file = None
         for g in generated:
             if type.is_derived(g.type(), 'PCH'):
                 pch_file = g
-        return property_set.create([Property('pch-header',pch_header),Property('pch-file',pch_file)]+generated)
+        result_props = []
+        if pch_header:
+            result_props.append(Property('pch-header', pch_header))
+        if pch_file:
+            result_props.append(Property('pch-file', pch_file))
+            
+        return property_set.PropertySet(result_props), generated
 
 
 ################################################################################
@@ -577,9 +608,9 @@ def auto_detect_toolset_versions():
             versionVarName = '__version_{}_reg'.format(version.replace('.','_'))
             if versionVarName in globals():
                 vc_path = None
-                for x in [ '', 'Wow6432Node\\' ]:
+                for x64elt in [ '', 'Wow6432Node\\' ]:
                     try:
-                        with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\Microsoft\\{}{}'.format(x, globals()[versionVarName])) as reg_key:
+                        with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\{}Microsoft\\{}'.format(x64elt, globals()[versionVarName])) as reg_key:
                             vc_path = _winreg.QueryValueEx(reg_key, "ProductDir")[0]
                     except:
                         pass
@@ -645,7 +676,9 @@ def configure_really(version=None, options=[]):
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if re.search("Microsoft Visual Studio 12", command):
+            if re.search("Microsoft Visual Studio 14", command):
+                version = '14.0'
+            elif re.search("Microsoft Visual Studio 12", command):
                 version = '12.0'
             elif re.search("Microsoft Visual Studio 11", command):
                 version = '11.0'
@@ -830,12 +863,12 @@ def configure_really(version=None, options=[]):
                 cpu_assembler = locals()['default_assembler_{}'.format(c)]
 
             toolset.flags('msvc.compile', '.CC' , cpu_conditions, ['{}{} /Zm800 -nologo'         .format(setup_script, compiler)])
-            toolset.flags('msvc.compile', '.RC' , cpu_conditions, ['{}{} -nologo'                .format(setup_script, resource_compiler)])
-            toolset.flags('msvc.compile', '.ASM', cpu_conditions, ['{}{} '                       .format(setup_script, cpu_assembler)])
+            toolset.flags('msvc.compile', '.RC' , cpu_conditions, ['{}{}'                        .format(setup_script, resource_compiler)])
+            toolset.flags('msvc.compile', '.ASM', cpu_conditions, ['{}{} -nologo'                .format(setup_script, cpu_assembler)])
             toolset.flags('msvc.link'   , '.LD' , cpu_conditions, ['{}{} /NOLOGO /INCREMENTAL:NO'.format(setup_script, linker)])
             toolset.flags('msvc.archive', '.LD' , cpu_conditions, ['{}{} /lib /NOLOGO'           .format(setup_script, linker)])
-            toolset.flags('msvc.compile', '.IDL', cpu_conditions, ['{}{} '                       .format(setup_script, idl_compiler)])
-            toolset.flags('msvc.compile', '.MC' , cpu_conditions, ['{}{} '                       .format(setup_script, mc_compiler)])
+            toolset.flags('msvc.compile', '.IDL', cpu_conditions, ['{}{}'                        .format(setup_script, idl_compiler)])
+            toolset.flags('msvc.compile', '.MC' , cpu_conditions, ['{}{}'                        .format(setup_script, mc_compiler)])
             toolset.flags('msvc.link'   , '.MT' , cpu_conditions, ['{}{} -nologo'                .format(setup_script, manifest_tool)])
 
             if cc_filter:
@@ -1061,10 +1094,10 @@ def register_toolset_really():
     toolset.flags('msvc.link', 'OPTIONS', [], ['<linkflags>'])
     toolset.flags('msvc.link', 'LINKPATH', [], ['<library-path>'])
 
-    toolset.flags('msvc.link', 'FINDLIBS_ST', ['<find-static-library>'])
-    toolset.flags('msvc.link', 'FINDLIBS_SA', ['<find-shared-library>'])
-    toolset.flags('msvc.link', 'LIBRARY_OPTION', ['<toolset>msvc'])
-    toolset.flags('msvc.link', 'LIBRARIES_MENTIONED_BY_FILE', ['<library-file>'])
+    toolset.flags('msvc.link', 'FINDLIBS_ST', [], ['<find-static-library>'])
+    toolset.flags('msvc.link', 'FINDLIBS_SA', [], ['<find-shared-library>'])
+    toolset.flags('msvc.link', 'LIBRARY_OPTION', ['<toolset>msvc'], [''])
+    toolset.flags('msvc.link', 'LIBRARIES_MENTIONED_BY_FILE', [], ['<library-file>'])
 
     toolset.flags('msvc.archive', 'AROPTIONS', [], ['<archiveflags>'])
 
@@ -1158,7 +1191,7 @@ __cpu_type_itanium2 = ['itanium2', 'mckinley']
 
 
 # Known toolset versions, in order of preference.
-_known_versions = ['11.0', '10.0', '10.0express', '9.0', '9.0express', '8.0', '8.0express', '7.1', '7.1toolkit', '7.0', '6.0']
+_known_versions = ['14.0', '12.0', '11.0', '10.0', '10.0express', '9.0', '9.0express', '8.0', '8.0express', '7.1', '7.1toolkit', '7.0', '6.0']
 
 # Version aliases.
 __version_alias_6 = '6.0'
@@ -1168,6 +1201,8 @@ __version_alias_8 = '8.0'
 __version_alias_9 = '9.0'
 __version_alias_10 = '10.0'
 __version_alias_11 = '11.0'
+__version_alias_12 = '12.0'
+__version_alias_14 = '14.0'
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1181,6 +1216,8 @@ __version_9_0express_reg = "VCExpress\\9.0\\Setup\\VC"
 __version_10_0_reg = "VisualStudio\\10.0\\Setup\\VC"
 __version_10_0express_reg = "VCExpress\\10.0\\Setup\\VC"
 __version_11_0_reg = "VisualStudio\\11.0\\Setup\\VC"
+__version_12_0_reg = "VisualStudio\\12.0\\Setup\\VC"
+__version_14_0_reg = "VisualStudio\\14.0\\Setup\\VC"
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation
