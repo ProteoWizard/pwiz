@@ -49,8 +49,8 @@ rule msbuild_deploy ( targets + : sources * : properties * )
     ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
     TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
-    OUTPUT_PATH on $(targets) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
-    INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    OUTPUT_PATH on $(targets) = [ path.native $(PWIZ_BUILD_PATH)/IDPickerDeploy/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
 }
 
 actions msbuild_deploy
@@ -60,7 +60,7 @@ actions msbuild_deploy
     echo Building SetupDeployProject...
     msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(ADDRESS_MODEL)
-    pushd $(BUILD_PATH)
+    pushd $(PWIZ_BUILD_PATH)
     "%WIX%\bin\candle.exe" $(ARTIFACT_NAME).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
     "%WIX%\bin\light.exe" $(ARTIFACT_NAME).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
     set EXIT=%ERRORLEVEL%
@@ -122,7 +122,7 @@ actions test_msi
     IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     echo Installing $(ARTIFACT_NAME)...
-    pushd $(BUILD_PATH)
+    pushd $(PWIZ_BUILD_PATH)
     msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.

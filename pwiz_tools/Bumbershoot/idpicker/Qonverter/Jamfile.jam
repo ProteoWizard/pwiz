@@ -32,12 +32,12 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
 
 obj SchemaUpdater : SchemaUpdater.cpp
                   : # requirements
-                      <library>../freicore/libraries/SQLite//sqlite3pp
-                      <library>$(PWIZ_SOURCE)/pwiz/utility/misc//pwiz_utility_misc
+                      <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
+                      <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
                   : # default-build
                   : # usage-requirements
-                      <library>../freicore/libraries/SQLite//sqlite3pp
-                      <library>$(PWIZ_SOURCE)/pwiz/utility/misc//pwiz_utility_misc
+                      <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
+                      <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
                       <address-model>64:<define>IDPICKER_SQLITE_64
                   ;
 using ext-png : 1.5.6 : $(PNG_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
@@ -56,46 +56,48 @@ lib Qonverter
         TotalCounts.cpp
         spline.cpp
     : # requirements
-        <library>..//svm
+        <library>$(PWIZ_ROOT_PATH)//svm
         <library>/ext/boost//thread
         <library>/ext/boost//log
         <library>waffles//waffles
         <library>crawdad//crawdad
-        <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
-        <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
-        <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
-        <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
         <toolset>msvc:<cxxflags>/bigobj
+        <use>$(IDPICKER_PATH)/../freicore//freicore
     : # default-build
     : # usage-requirements
-        <library>..//svm
+        <library>$(PWIZ_ROOT_PATH)//svm
         <library>/ext/boost//thread
         <library>/ext/boost//log
         <library>waffles//waffles
         <library>crawdad//crawdad
-        <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
-        <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
-        <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
-        <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+        <use>$(IDPICKER_PATH)/../freicore//freicore
     ;
 
 import path ;
 import generate-version ;
 
-generate-version.cpp $(ROOT_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : [ path.glob $(ROOT_PATH)/Qonverter : *.?pp *.h : idp*.cpp Version.cpp ] ;
-generate-version.cpp $(ROOT_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(ROOT_PATH)/Qonverter/idpQonvert.cpp ;
-generate-version.cpp $(ROOT_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(ROOT_PATH)/Qonverter/idpAssemble.cpp ;
-generate-version.cpp $(ROOT_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(ROOT_PATH)/Qonverter/idpQuery.cpp ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : [ path.glob $(IDPICKER_PATH)/Qonverter : *.?pp *.h : idp*.cpp Version.cpp ] ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(IDPICKER_PATH)/Qonverter/idpQonvert.cpp ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(IDPICKER_PATH)/Qonverter/idpAssemble.cpp ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(IDPICKER_PATH)/Qonverter/idpQuery.cpp ;
 
 obj CoreVersion : CoreVersion.cpp ;
 
-exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter ../freicore ;
+exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore ;
 exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Qonverter ;
 exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp Qonverter /ext/boost//regex ;
 
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
-unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
+unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 

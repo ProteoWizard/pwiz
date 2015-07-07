@@ -1,0 +1,372 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PopupControl</name>
+    </assembly>
+    <members>
+        <member name="T:PopupControl.PopupComboBox">
+            <summary>
+            Represents a Windows combo box control with a custom popup control attached.
+            </summary>
+        </member>
+        <member name="T:PopupControl.ComboBox">
+            <summary>
+            Represents a Windows combo box control which can be used in a popup's content control.
+            </summary>
+        </member>
+        <member name="M:PopupControl.ComboBox.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:PopupControl.ComboBox"/> class.
+            </summary>
+        </member>
+        <member name="M:PopupControl.ComboBox.OnDropDown(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ComboBox.DropDown" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:PopupControl.ComboBox.OnDropDownClosed(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ComboBox.DropDownClosed" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="F:PopupControl.ComboBox.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:PopupControl.ComboBox.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:PopupControl.ComboBox.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupComboBox.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:PopupControl.PopupComboBox.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:PopupControl.PopupComboBox.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:PopupControl.PopupComboBox.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:PopupControl.PopupComboBox"/> class.
+            </summary>
+        </member>
+        <member name="M:PopupControl.PopupComboBox.ShowDropDown">
+            <summary>
+            Shows the drop down.
+            </summary>
+        </member>
+        <member name="M:PopupControl.PopupComboBox.HideDropDown">
+            <summary>
+            Hides the drop down.
+            </summary>
+        </member>
+        <member name="M:PopupControl.PopupComboBox.WndProc(System.Windows.Forms.Message@)">
+            <summary>
+            Processes Windows messages.
+            </summary>
+            <param name="m">The Windows <see cref="T:System.Windows.Forms.Message" /> to process.</param>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.DropDownControl">
+            <summary>
+            Gets or sets the drop down control.
+            </summary>
+            <value>The drop down control.</value>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.DroppedDown">
+            <summary>
+            Gets or sets a value indicating whether the combo box is displaying its drop-down portion.
+            </summary>
+            <value></value>
+            <returns>true if the drop-down portion is displayed; otherwise, false. The default is false.
+            </returns>
+        </member>
+        <member name="E:PopupControl.PopupComboBox.DropDown">
+            <summary>
+            Occurs when the drop-down portion of a <see cref="T:System.Windows.Forms.ComboBox"/> is shown.
+            </summary>
+        </member>
+        <member name="E:PopupControl.PopupComboBox.DropDownClosed">
+            <summary>
+            Occurs when the drop-down portion of the <see cref="T:System.Windows.Forms.ComboBox"/> is no longer visible.
+            </summary>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.DropDownWidth">
+            <summary>This property is not relevant for this class.</summary>
+            <returns>This property is not relevant for this class.</returns>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.DropDownHeight">
+            <summary>This property is not relevant for this class.</summary>
+            <returns>This property is not relevant for this class.</returns>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.IntegralHeight">
+            <summary>This property is not relevant for this class.</summary>
+            <returns>This property is not relevant for this class.</returns>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.Items">
+            <summary>This property is not relevant for this class.</summary>
+            <returns>This property is not relevant for this class.</returns>
+        </member>
+        <member name="P:PopupControl.PopupComboBox.ItemHeight">
+            <summary>This property is not relevant for this class.</summary>
+            <returns>This property is not relevant for this class.</returns>
+        </member>
+        <member name="T:PopupControl.Popup">
+            <summary>
+            Represents a pop-up window.
+            </summary>
+        </member>
+        <member name="F:PopupControl.Popup.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:PopupControl.Popup.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:PopupControl.Popup.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:PopupControl.Popup.#ctor(System.Windows.Forms.Control)">
+            <summary>
+            Initializes a new instance of the <see cref="T:PopupControl.Popup"/> class.
+            </summary>
+            <param name="content">The content of the pop-up.</param>
+            <remarks>
+            Pop-up will be disposed immediately after disposion of the content control.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="content"/> is <code>null</code>.</exception>
+        </member>
+        <member name="M:PopupControl.Popup.OnVisibleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripItem.VisibleChanged"/> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
+        </member>
+        <member name="M:PopupControl.Popup.ProcessDialogKey(System.Windows.Forms.Keys)">
+            <summary>
+            Processes a dialog box key.
+            </summary>
+            <param name="keyData">One of the <see cref="T:System.Windows.Forms.Keys" /> values that represents the key to process.</param>
+            <returns>
+            true if the key was processed by the control; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:PopupControl.Popup.UpdateRegion">
+            <summary>
+            Updates the pop-up region.
+            </summary>
+        </member>
+        <member name="M:PopupControl.Popup.Show(System.Windows.Forms.Control)">
+            <summary>
+            Shows the pop-up window below the specified control.
+            </summary>
+            <param name="control">The control below which the pop-up will be shown.</param>
+            <remarks>
+            When there is no space below the specified control, the pop-up control is shown above it.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
+        </member>
+        <member name="M:PopupControl.Popup.Show(System.Windows.Forms.Control,System.Drawing.Rectangle)">
+            <summary>
+            Shows the pop-up window below the specified area of the specified control.
+            </summary>
+            <param name="control">The control used to compute screen location of specified area.</param>
+            <param name="area">The area of control below which the pop-up will be shown.</param>
+            <remarks>
+            When there is no space below specified area, the pop-up control is shown above it.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
+        </member>
+        <member name="M:PopupControl.Popup.Show(System.Windows.Forms.ToolStripItem)">
+            <summary>
+            Shows the pop-up window below the specified ToolStripItem.
+            </summary>
+            <param name="toolStripItem">The ToolStripItem below which the pop-up will be shown.</param>
+            <remarks>
+            When there is no space below specified ToolStripItem, the pop-up control is shown above it.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="toolStripItem"/> or its Owner property is <code>null</code>.</exception>
+        </member>
+        <member name="M:PopupControl.Popup.OnSizeChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.Control.SizeChanged" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:PopupControl.Popup.OnOpening(System.ComponentModel.CancelEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripDropDown.Opening" /> event.
+            </summary>
+            <param name="e">A <see cref="T:System.ComponentModel.CancelEventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:PopupControl.Popup.OnOpened(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripDropDown.Opened" /> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        </member>
+        <member name="M:PopupControl.Popup.OnClosed(System.Windows.Forms.ToolStripDropDownClosedEventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripDropDown.Closed"/> event.
+            </summary>
+            <param name="e">A <see cref="T:System.Windows.Forms.ToolStripDropDownClosedEventArgs"/> that contains the event data.</param>
+        </member>
+        <member name="M:PopupControl.Popup.WndProc(System.Windows.Forms.Message@)">
+            <summary>
+            Processes Windows messages.
+            </summary>
+            <param name="m">The Windows <see cref="T:System.Windows.Forms.Message" /> to process.</param>
+        </member>
+        <member name="M:PopupControl.Popup.ProcessResizing(System.Windows.Forms.Message@)">
+            <summary>
+            Processes the resizing messages.
+            </summary>
+            <param name="m">The message.</param>
+            <returns>true, if the WndProc method from the base class shouldn't be invoked.</returns>
+        </member>
+        <member name="M:PopupControl.Popup.PaintSizeGrip(System.Windows.Forms.PaintEventArgs)">
+            <summary>
+            Paints the sizing grip.
+            </summary>
+            <param name="e">The <see cref="T:System.Windows.Forms.PaintEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="P:PopupControl.Popup.Content">
+            <summary>
+            Gets the content of the pop-up.
+            </summary>
+        </member>
+        <member name="P:PopupControl.Popup.ShowingAnimation">
+            <summary>
+            Determines which animation to use while showing the pop-up window.
+            </summary>
+        </member>
+        <member name="P:PopupControl.Popup.HidingAnimation">
+            <summary>
+            Determines which animation to use while hiding the pop-up window.
+            </summary>
+        </member>
+        <member name="P:PopupControl.Popup.AnimationDuration">
+            <summary>
+            Determines the duration of the animation.
+            </summary>
+        </member>
+        <member name="P:PopupControl.Popup.FocusOnOpen">
+            <summary>
+            Gets or sets a value indicating whether the content should receive the focus after the pop-up has been opened.
+            </summary>
+            <value><c>true</c> if the content should be focused after the pop-up has been opened; otherwise, <c>false</c>.</value>
+            <remarks>If the FocusOnOpen property is set to <c>false</c>, then pop-up cannot use the fade effect.</remarks>
+        </member>
+        <member name="P:PopupControl.Popup.AcceptAlt">
+            <summary>
+            Gets or sets a value indicating whether presing the alt key should close the pop-up.
+            </summary>
+            <value><c>true</c> if presing the alt key does not close the pop-up; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:PopupControl.Popup.Resizable">
+            <summary>
+            Gets or sets a value indicating whether the <see cref="T:PopupControl.Popup"/> is resizable.
+            </summary>
+            <value><c>true</c> if resizable; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:PopupControl.Popup.MinimumSize">
+            <summary>
+            Gets or sets a minimum size of the pop-up.
+            </summary>
+            <returns>An ordered pair of type <see cref="T:System.Drawing.Size" /> representing the width and height of a rectangle.</returns>
+        </member>
+        <member name="P:PopupControl.Popup.MaximumSize">
+            <summary>
+            Gets or sets a maximum size of the pop-up.
+            </summary>
+            <returns>An ordered pair of type <see cref="T:System.Drawing.Size" /> representing the width and height of a rectangle.</returns>
+        </member>
+        <member name="P:PopupControl.Popup.CreateParams">
+            <summary>
+            Gets parameters of a new window.
+            </summary>
+            <returns>An object of type <see cref="T:System.Windows.Forms.CreateParams" /> used when creating a new window.</returns>
+        </member>
+        <member name="T:PopupControl.PopupAnimations">
+            <summary>
+            Types of animation of the pop-up window.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.None">
+            <summary>
+            Uses no animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.LeftToRight">
+            <summary>
+            Animates the window from left to right. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.RightToLeft">
+            <summary>
+            Animates the window from right to left. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.TopToBottom">
+            <summary>
+            Animates the window from top to bottom. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.BottomToTop">
+            <summary>
+            Animates the window from bottom to top. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.Center">
+            <summary>
+            Makes the window appear to collapse inward if it is hiding or expand outward if the window is showing.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.Slide">
+            <summary>
+            Uses a slide animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.Blend">
+            <summary>
+            Uses a fade effect.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.Roll">
+            <summary>
+            Uses a roll animation.
+            </summary>
+        </member>
+        <member name="F:PopupControl.PopupAnimations.SystemDefault">
+            <summary>
+            Uses a default animation.
+            </summary>
+        </member>
+    </members>
+</doc>

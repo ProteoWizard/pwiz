@@ -75,9 +75,12 @@ namespace Test
                             .Select(o => new CustomUIItem(o, new NullActionListener()));
         }
 
-        public static string TestDataPath(this TestContext context)
+        // This way of getting the path to the TestData directory is very (w)hacky!
+        // Luckily it's just for testing!
+        public static string TestDataPath(this TestContext context, [System.Runtime.CompilerServices.CallerFilePath] string thisFilepath = "")
         {
-            return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "..\\..\\TestData"));
+
+            return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(thisFilepath), "..\\TestData"));
         }
 
         public static string TestDataFilePath(this TestContext context, string filename)

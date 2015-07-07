@@ -36,7 +36,7 @@
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
 #include "CoreVersion.hpp"
-#include "../freicore/AhoCorasickTrie.hpp"
+#include "AhoCorasickTrie.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/mutex.hpp"

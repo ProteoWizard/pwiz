@@ -2008,7 +2008,11 @@ namespace IDPicker
         private void loadRefSeqGeneMetadata()
         {
             #region Check for updated gene2protein database and download it
-            string g2pTimestamp = null;
+
+            if (!File.Exists(Path.Combine(Application.StartupPath, "gene2protein.db3")))
+                throw new Exception("missing gene2protein.db3 mapping file");
+
+            /*string g2pTimestamp = null;
 
             string g2pPath = Path.Combine(Application.UserAppDataPath, "gene2protein.db3");
             string g2pPathAlternate = Path.Combine(Application.StartupPath, "gene2protein.db3");
@@ -2123,7 +2127,7 @@ namespace IDPicker
                                         Path.GetDirectoryName(g2pPathAlternate),
                                         "Unable to copy");
                 }
-            }
+            }*/
             #endregion
 
             if (session == null)

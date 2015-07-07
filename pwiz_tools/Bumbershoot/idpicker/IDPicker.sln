@@ -20,9 +20,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetupDeployProject", "Deplo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IDPicker", "IDPicker.csproj", "{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seems", "freicore\pwiz_src\pwiz_tools\SeeMS\seems.csproj", "{2399F68B-D886-4D94-AB4B-700FE3E46849}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seems", "..\..\SeeMS\seems.csproj", "{2399F68B-D886-4D94-AB4B-700FE3E46849}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "freicore\pwiz_src\pwiz_tools\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "..\..\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{594E7E1C-DDA7-4056-9536-379379925DBA}"
 EndProject
@@ -34,9 +34,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util", "Util\Util.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomDataSourceDialog", "CustomDataSourceDialog\CustomDataSourceDialog.csproj", "{6B7B0771-4D09-469F-AEFA-00E4FA06D017}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "freicore\pwiz_src\pwiz_tools\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\..\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "freicore\pwiz_src\pwiz_tools\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "..\..\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{1101AABA-13EB-42BE-AC18-29D07DFAD6BF}"
 	ProjectSection(SolutionItems) = preProject
@@ -151,9 +151,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = IDPicker.vsmdi
