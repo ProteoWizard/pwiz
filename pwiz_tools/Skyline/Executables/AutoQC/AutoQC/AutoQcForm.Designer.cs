@@ -228,7 +228,12 @@
             this.comboBoxInstrumentType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxInstrumentType.FormattingEnabled = true;
             this.comboBoxInstrumentType.Items.AddRange(new object[] {
-            "Thermo"});
+            "Thermo",
+            "Waters",
+            "SCIEX",
+            "Agilent",
+            "Bruker",
+            "Schimadzu"});
             this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 266);
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
             this.comboBoxInstrumentType.Size = new System.Drawing.Size(163, 21);
@@ -625,39 +630,39 @@
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label labelDays;
-        internal System.Windows.Forms.TextBox textAccumulationTimeWindow;
+        private System.Windows.Forms.TextBox textAccumulationTimeWindow;
         private System.Windows.Forms.Label labelAccumulationTimeWindow;
-        internal System.Windows.Forms.CheckBox cbImportExistingFiles;
+        private System.Windows.Forms.CheckBox cbImportExistingFiles;
         private System.Windows.Forms.Label labelInstrumentType;
-        internal System.Windows.Forms.ComboBox comboBoxInstrumentType;
+        private System.Windows.Forms.ComboBox comboBoxInstrumentType;
         private System.Windows.Forms.Button btnFolderToWatch;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        internal System.Windows.Forms.TextBox textFolderToWatchPath;
+        private System.Windows.Forms.TextBox textFolderToWatchPath;
         private System.Windows.Forms.Button btnSkylineFilePath;
-        internal System.Windows.Forms.TextBox textSkylinePath;
+        private System.Windows.Forms.TextBox textSkylinePath;
         private System.Windows.Forms.TabPage tabSprocopSettings;
-        internal System.Windows.Forms.CheckBox cbRunsprocop;
-        internal System.Windows.Forms.GroupBox groupBoxSprocop;
+        private System.Windows.Forms.CheckBox cbRunsprocop;
+        private System.Windows.Forms.GroupBox groupBoxSprocop;
         private System.Windows.Forms.Button btnRScriptPath;
         private System.Windows.Forms.Label label10;
-        internal System.Windows.Forms.TextBox textRScriptPath;
-        internal System.Windows.Forms.CheckBox checkBoxIsHighRes;
-        internal System.Windows.Forms.NumericUpDown numericUpDownMMA;
+        private System.Windows.Forms.TextBox textRScriptPath;
+        private System.Windows.Forms.CheckBox checkBoxIsHighRes;
+        private System.Windows.Forms.NumericUpDown numericUpDownMMA;
         private System.Windows.Forms.Label labelMMA;
         private System.Windows.Forms.Label labelThreshold;
-        internal System.Windows.Forms.NumericUpDown numericUpDownThreshold;
+        private System.Windows.Forms.NumericUpDown numericUpDownThreshold;
         private System.Windows.Forms.TabPage tabPanoramaSettings;
-        internal System.Windows.Forms.CheckBox cbPublishToPanorama;
-        internal System.Windows.Forms.GroupBox groupBoxPanorama;
+        private System.Windows.Forms.CheckBox cbPublishToPanorama;
+        private System.Windows.Forms.GroupBox groupBoxPanorama;
         private System.Windows.Forms.Label labelPanoramaFolder;
-        internal System.Windows.Forms.TextBox textPanoramaFolder;
+        private System.Windows.Forms.TextBox textPanoramaFolder;
         private System.Windows.Forms.Label lblPanoramaUrl;
-        internal System.Windows.Forms.TextBox textPanoramaUrl;
-        internal System.Windows.Forms.TextBox textPanoramaPasswd;
+        private System.Windows.Forms.TextBox textPanoramaUrl;
+        private System.Windows.Forms.TextBox textPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaPasswd;
         private System.Windows.Forms.Label lblPanoramaEmail;
-        internal System.Windows.Forms.TextBox textPanoramaEmail;
+        private System.Windows.Forms.TextBox textPanoramaEmail;
         private System.Windows.Forms.TabPage tabOutput;
         private System.Windows.Forms.RichTextBox textOutput;
         private System.Windows.Forms.TabPage tabInstructions;

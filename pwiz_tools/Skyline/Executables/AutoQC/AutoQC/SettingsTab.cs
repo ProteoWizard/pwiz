@@ -1,20 +1,42 @@
-﻿using System;
+﻿/*
+ * Copyright 2015 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 
 namespace AutoQC
 {
     public abstract class SettingsTab
     {
-        public static AutoQCForm MainForm;
+        public IAppControl _appControl;
+        public readonly IAutoQCLogger Logger;
 
         public abstract void InitializeFromDefaultSettings();
         public abstract bool IsSelected();
         public abstract bool ValidateSettings();
         public abstract void SaveSettings();
 
+        protected SettingsTab(IAppControl appControl, IAutoQCLogger logger)
+        {
+            _appControl = appControl;
+            Logger = logger;
+        }
+
         /// <summary>
         /// Returns the command-line arguments to be passed to SkylineRunner.
         /// </summary>
-        /// <param name="importContext">Contains information about what we are importing</param>
+        /// <param name="importContext">Contains information about the results file we are importing</param>
         /// <param name="toPrint">True if the arguments will be logged</param>
         /// <returns></returns>
         public abstract string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false);
@@ -33,64 +55,26 @@ namespace AutoQC
         /// <returns></returns>
         public abstract ProcessInfo RunAfter(ImportContext importContext);
 
-        public void LogOutput(string message)
+        // Log to the Output tab only
+        public void LogOutput(string message, params Object[] args)
         {
-            MainForm.LogOutput(message);
+            Logger.LogOutput(message, args);
         }
 
-        public void LogErrorOutput(string error)
+        // Log error to the Output tab only
+        public void LogErrorOutput(string error, params Object[] args)
         {
-            MainForm.LogErrorOutput(error);
+            Logger.LogErrorOutput(error, args);
         }
 
         public void Log(string message, params Object[] args)
         {
-            MainForm.Log(string.Format(message, args));
-        }
-    }
-
-    public class ProcessInfo
-    {
-        public string Executable { get; private set; }
-        public string ExeName { get; private set; }
-        public string Args { get; private set; }
-        public string ArgsToPrint { get; private set; }
-
-        private bool _doRetry;
-        private int _tryCount;
-
-        public ProcessInfo(string exe, string args)
-        {
-            Executable = exe;
-            ExeName = Executable;
-            Args = args;
-            ArgsToPrint = args;
+            Logger.Log(message, args);
         }
 
-        public ProcessInfo(string exe, string exeName, string args, string argsToPrint) : this (exe, args)
+        public void LogError(string message, params Object[] args)
         {
-            ExeName = exeName;
-            ArgsToPrint = argsToPrint;
-        }
-
-        public int GetTryCount()
-        {
-            return _tryCount;
-        }
-
-        public void incrementTryCount()
-        {
-            _tryCount++;
-        }
-
-        public void allowRetry()
-        {
-            _doRetry = true;
-        }
-
-        public bool canRetry()
-        {
-            return _doRetry && _tryCount < AutoQCForm.MAX_TRY_COUNT;
+            Logger.LogError(message, args);
         }
     }
 }

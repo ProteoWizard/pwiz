@@ -27,8 +27,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>18</ApplicationRevision>
-    <ApplicationVersion>1.0.0.18</ApplicationVersion>
+    <ApplicationRevision>20</ApplicationRevision>
+    <ApplicationVersion>1.0.0.20</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -97,8 +97,12 @@
     <Compile Include="AutoQcForm.Designer.cs">
       <DependentUpon>AutoQcForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="AutoQCBackgroundWorker.cs" />
+    <Compile Include="AutoQCFileSystemWatcher.cs" />
     <Compile Include="ImportContext.cs" />
     <Compile Include="PanoramaSettings.cs" />
+    <Compile Include="ProcessInfo.cs" />
+    <Compile Include="ResultFileStatus.cs" />
     <Compile Include="SprocopSettings.cs" />
     <Compile Include="SettingsTab.cs" />
     <Compile Include="MainSettings.cs" />
@@ -136,6 +140,7 @@
   <ItemGroup>
     <EmbeddedResource Include="AutoQcForm.resx">
       <DependentUpon>AutoQcForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

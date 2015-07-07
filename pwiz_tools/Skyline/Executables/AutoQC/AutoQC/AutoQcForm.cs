@@ -1,23 +1,32 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿/*
+ * Copyright 2015 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AutoQC.Properties;
 using log4net;
 using log4net.Config;
-using MSFileReaderLib;
 
 namespace AutoQC
 {
-    public partial class AutoQCForm : Form
+    public partial class AutoQCForm : Form, IAppControl, IProcessControl, IAutoQCLogger
     {
         private const string AUTO_QC_RUNNING = "AutoQC is running";
         private const string AUTO_QC_WAITING = "AutoQC is waiting for background processes to finish";
@@ -26,28 +35,19 @@ namespace AutoQC
         private const string RUN_AUTOQC = "Run AutoQC";
         private const string STOP_AUTOQC = "Stop AutoQC";
 
-        
-        private const string SKYLINE_RUNNER = "SkylineRunner.exe";
-
-        // TODO: We need to support other instrument vendors
-        private const string THERMO_EXT = ".raw";
+        public const string SKYLINE_RUNNER = "SkylineRunner.exe";
+        public const int MAX_TRY_COUNT = 2;
 
         // Path to SkylineRunner.exe
-        public string SkylineRunnerPath { get; private set; }
-
-        // Collection of new mass spec files to be processed.
-        private readonly ConcurrentQueue<FileInfo> _dataFiles;
- 
-        private readonly FileSystemWatcher _fileWatcher;
+        // Expect SkylineRunner to be in the same directory as AutoQC
+        public static readonly string SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+            SKYLINE_RUNNER);
 
         // Background worker to run SkylineRunner
-        private BackgroundWorker _worker;
-
-        public const int MAX_TRY_COUNT = 2;
-        private bool _tryAgain;
+        private readonly AutoQCBackgroundWorker _worker;
 
         private readonly List<SettingsTab> _settingsTabs;
-        private int _totalImportCount;
+        
 
         private static readonly ILog LOG = LogManager.GetLogger(typeof(AutoQCForm).Name);
 
@@ -58,53 +58,45 @@ namespace AutoQC
             // Remove the SProCoP settings tab for now.  No way to hide the tab in the designer
             tabControl.TabPages.Remove(tabSprocopSettings);
 
-            // Expect SkylineRunner to be in the same directory as AutoQC
-            SkylineRunnerPath = Path.Combine(Directory.GetCurrentDirectory(), SKYLINE_RUNNER);
-
-            SettingsTab.MainForm = this;
-            _settingsTabs = new List<SettingsTab> {new MainSettings(), new PanoramaSettings()};
+            _settingsTabs = new List<SettingsTab>
+            {
+                new MainSettingsTab(this, this),
+                new PanoramaSettingsTab(this, this)
+            };
 
             // Initialize the tabs from default settings.
             foreach(var settings in _settingsTabs)
             {
                 settings.InitializeFromDefaultSettings();    
             }
-            
-            _dataFiles = new ConcurrentQueue<FileInfo>();
 
-            _fileWatcher = new FileSystemWatcher {Filter = "*" + THERMO_EXT };
-            _fileWatcher.Created += (s, e) => FileAdded(e, this);
+            _worker = new AutoQCBackgroundWorker(this, this, this);
         }
 
-        private MainSettings GetMainSettings()
+        private MainSettingsTab GetMainSettingsTab()
         {
-            return (MainSettings) _settingsTabs[0];
-        }
-
-        private void OpenFile(string filter, TextBox textbox)
-        {
-            var dialog = new OpenFileDialog {Filter = filter};
-            if (dialog.ShowDialog(this) == DialogResult.OK)
-            {
-                textbox.Text = dialog.FileName;
-            }
+            return (MainSettingsTab)_settingsTabs[0];
         }
       
         private async void Run()
         {
+            textOutput.Text = String.Empty;
+
             LogOutput("Starting AutoQC...");
 
             SetValidatingControls();
 
             if (!File.Exists(SkylineRunnerPath))
             {
-                LogError(string.Format("Could not find {0} at this path {1}. {0} should be in the same directory as AutoQC.", SKYLINE_RUNNER, SkylineRunnerPath));
+                LogError(
+                    "Could not find {0} at this path {1}. {0} should be in the same directory as AutoQC.",
+                    SKYLINE_RUNNER, SkylineRunnerPath);
                 SetStoppedControls();
                 return;
             }
 
-            var mainSettings = GetMainSettings();
-            if (!mainSettings.ValidateSettings())
+            var mainSettingsTab = GetMainSettingsTab();
+            if (!mainSettingsTab.ValidateSettings())
             {
                 SetStoppedControls();
                 return;
@@ -117,7 +109,8 @@ namespace AutoQC
             Log("Watching folder " + textFolderToWatchPath.Text);
             Log("Mass spec. files will be imported to " + textSkylinePath.Text);
 
-            var validSettings = await Task.Run(() => ValidateForm());
+            // Validate on a background thread. Validating Panorama settings can take a few seconds.
+            var validSettings = await Task.Run(() => ValidateAllSettings());
             if (!validSettings)
             {
                 SetStoppedControls();
@@ -128,35 +121,32 @@ namespace AutoQC
 
             SetRunningControls();
 
-            // Import existing data files in the directory, if required
-            if (mainSettings.ImportExistingFiles)
-            {
-                ProcessExistingFiles();
-            }
-            else
-            {
-                ProcessNewFiles();
-            }
-
-            _fileWatcher.Path = mainSettings.FolderToWatch;
-            _fileWatcher.EnableRaisingEvents = true; // Enables events on the _fileWatcher
+            var mainSettings = mainSettingsTab.Settings;
+            _worker.Start(mainSettings);
         }
 
-        private void Stop()
+        private bool ValidateAllSettings()
         {
-            Log("Stopping AutoQC...\n");
-            _fileWatcher.EnableRaisingEvents = false;
-            if (_worker != null && _worker.IsBusy)
+            var validated = true;
+            // MainSettings tab is the first tab in _settingsTabs.  It has already been validated. Don't re-validate.
+            for (var i = 1; i < _settingsTabs.Count; i++)
             {
-                _worker.CancelAsync();
-                SetWaitingControls();
+                var settingsTab = _settingsTabs[i];
+                if (!settingsTab.ValidateSettings())
+                {
+                    validated = false;
+                }
             }
-            else
-            {
-                SetStoppedControls();
-            }
+            return validated;
         }
-        
+
+        private void SaveSettings()
+        {
+            _settingsTabs.ForEach(settingsTab => settingsTab.SaveSettings());
+
+            Settings.Default.Save();
+        }
+
         private void SetValidatingControls()
         {
             btnStartStop.Enabled = false;
@@ -185,52 +175,203 @@ namespace AutoQC
             tabControl.Update();
         }
 
+        private void Stop()
+        {
+            LogWithSpace("Stopping AutoQC...");
+            _worker.Stop();
+        }
+
         private void SetStoppedControls()
         {
             btnStartStop.Text = RUN_AUTOQC;
             btnStartStop.Enabled = true;
             tabControl.SelectTab(tabOutput);
             statusImg.Image = Resources.redstatus;
+       
             labelStatusRunning.Text = AUTO_QC_STOPPED;
             tabControl.Update();
         }
 
-        private bool ValidateForm()
-        {
-            var validated = true;
-            // MainSettings tab is the first tab in _settingsTabs.  It has already been validated. Don't re-validate.
-            for (var i = 1; i < _settingsTabs.Count; i++)
-            {
-                var settingsTab = _settingsTabs[i];
-                if (!settingsTab.ValidateSettings())
-                {
-                    validated = false;
-                }
-            }
-            return validated;
-        }
-
-        // Log to the Output tab only
-        public void LogOutput(string line)
-        {
-            Log(line, false);
-        }
-
-        // Log error to the output tab only
-        public void LogErrorOutput(string line)
-        {
-            LogError(line, false);
-        }
-
-        public void Log(string line, bool logToFile = true)
+        #region [Implementation of IAppControl interface]
+        public void SetWaiting()
         {
             RunUI(() =>
             {
+                Log(AUTO_QC_WAITING);
+                SetWaitingControls();
+            });
+        }
+
+        public void SetStopped()
+        {
+            RunUI(() =>
+            {
+                Log(AUTO_QC_STOPPED);
+                SetStoppedControls();
+            });
+        }
+
+        public void SetUIMainSettings(MainSettings mainSettings)
+        {
+            RunUI(() =>
+            {
+                textSkylinePath.Text = mainSettings.SkylineFilePath;
+                textFolderToWatchPath.Text = mainSettings.FolderToWatch;
+                cbImportExistingFiles.Checked = mainSettings.ImportExistingFiles;
+                textAccumulationTimeWindow.Text = mainSettings.AccumulationWindowString;
+                comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
+            });
+        }
+
+        MainSettings IAppControl.GetUIMainSettings()
+        {
+            return RunUI(() => GetMainSettingsFromUI());
+        }
+
+        private MainSettings GetMainSettingsFromUI()
+        {
+            var mainSettings = new MainSettings()
+            {
+                SkylineFilePath = textSkylinePath.Text,
+                FolderToWatch = textFolderToWatchPath.Text,
+                ImportExistingFiles = cbImportExistingFiles.Checked,
+                AccumulationWindowString = textAccumulationTimeWindow.Text,
+                InstrumentType = comboBoxInstrumentType.SelectedText
+            };
+            return mainSettings;
+        }
+
+        public void SetUIPanoramaSettings(PanoramaSettings panoramaSettings)
+        {
+            RunUI(() =>
+            {
+                textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
+                textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
+                textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+                textPanoramaFolder.Text = panoramaSettings.PanoramaFolder;
+                cbPublishToPanorama.Checked = panoramaSettings.PublishToPanorama;
+            });
+        }
+
+        public PanoramaSettings GetUIPanoramaSettings()
+        {
+            return RunUI(() => GetPanoramaSettingsFromUI());
+        }
+
+        private PanoramaSettings GetPanoramaSettingsFromUI()
+        {
+            var panoramaSettings = new PanoramaSettings()
+            {
+                PanoramaServerUrl = textPanoramaUrl.Text,
+                PanoramaUserEmail = textPanoramaEmail.Text,
+                PanoramaPassword = textPanoramaPasswd.Text,
+                PanoramaFolder = textPanoramaFolder.Text,
+                PublishToPanorama = cbPublishToPanorama.Checked
+            };
+            return panoramaSettings;
+        }
+        public void DisablePanoramaSettings()
+        {
+            RunUI(() => groupBoxPanorama.Enabled = false);
+        }
+
+        public void SetUISprocopSettings(SprocopSettings sprocopSsettings)
+        {
+            RunUI(() =>
+            {
+                cbRunsprocop.Checked = sprocopSsettings.RunSprocop;
+                textRScriptPath.Text = sprocopSsettings.RScriptPath;
+                numericUpDownThreshold.Value = sprocopSsettings.Threshold;
+                checkBoxIsHighRes.Checked = sprocopSsettings.IsHighRes;
+                numericUpDownMMA.Value = sprocopSsettings.MMA;
+            });
+        }
+
+        public SprocopSettings GetUISprocopSettings()
+        {
+            return RunUI(() => GetSprocopSettingsFromUI());
+        }
+
+        private SprocopSettings GetSprocopSettingsFromUI()
+        {
+            var settings = new SprocopSettings()
+            {
+                RunSprocop = cbRunsprocop.Checked,
+                RScriptPath = textRScriptPath.Text,
+                Threshold = (int) numericUpDownThreshold.Value,
+                MMA = (int) numericUpDownMMA.Value,
+                IsHighRes = checkBoxIsHighRes.Checked
+            };
+            return settings;
+        }
+
+        public void DisableSprocopSettings()
+        {
+            RunUI(() => groupBoxSprocop.Enabled = false);
+        }
+
+
+        #endregion
+
+        
+
+        #region [Logging methods; Implementation of IAutoQCLogger interface]
+        // Log to the Output tab only
+        public void LogOutput(string message, params Object[] args)
+        {
+            Log(message, false, 0, 0, args);
+        }
+
+        public void LogOutput(string message, int blankLinesBefore, int blankLinesAfter, params object[] args)
+        {
+            Log(message, false, blankLinesBefore, blankLinesAfter, args);
+        }
+
+        // Log error to the output tab only
+        public void LogErrorOutput(string error, params Object[] args)
+        {
+            LogError(error, false, 0, 0, args);
+        }
+
+        public void LogErrorOutput(string error, int blankLinesBefore, int blankLinesAfter, params object[] args)
+        {
+            LogError(error, false, blankLinesBefore, blankLinesAfter, args);
+        }
+
+        public void Log(string message, params Object[] args)
+        {
+            Log(message, true, 0, 0, args);
+        }
+
+        private void LogWithSpace(string message, params Object[] args)
+        {
+            Log(message, 1, 1, args);  
+        }
+
+        public void Log(string message, int blankLinesBefore, int blankLinesAfter, params object[] args)
+        {
+            Log(message, true, blankLinesBefore, blankLinesAfter, args);
+        }
+
+        private void Log(string line, bool logToFile, int blankLinesBefore = 0, int blankLinesAfter = 0,
+            params Object[] args)
+        {
+            line = string.Format(line, args);
+            RunUI(() =>
+            {
+                while (blankLinesBefore-- > 0)
+                {
+                    textOutput.AppendText(Environment.NewLine);
+                }
                 textOutput.AppendText(line + Environment.NewLine);
+                while (blankLinesAfter-- > 0)
+                {
+                    textOutput.AppendText(Environment.NewLine);
+                }
                 textOutput.SelectionStart = textOutput.TextLength;
                 textOutput.ScrollToCaret();
                 textOutput.Update();
-                
+
             });
             if (logToFile)
             {
@@ -238,21 +379,48 @@ namespace AutoQC
             }
         }
 
-        public void LogError(Exception ex, bool logToFile = true)
+        private void LogException(Exception ex, bool logToFile)
         {
             LogError(ex.Message, false);
-            LOG.Error(ex.Message, ex); // Include stacktrace of the exception.
+            if (logToFile)
+            {
+                LOG.Error(ex.Message, ex); // Include stacktrace of the exception.
+            }
         }
 
-        public void LogError(string line, bool logToFile = true)
+        public void LogException(Exception ex)
         {
+            LogException(ex, true);
+        }
+
+        public void LogError(string message, params Object[] args)
+        {
+            LogError(message, true, 0, 0, args);
+        }
+
+        public void LogError(string message, int blankLinesBefore, int blankLinesAfter, params object[] args)
+        {
+            LogError(message, true, blankLinesBefore, blankLinesAfter, args);
+        }
+
+        private void LogError(string line, bool logToFile, int blankLinesBefore = 0, int blankLinesAfter = 0, params Object[] args)
+        {
+            line = string.Format(line, args);
             RunUI(() =>
             {
                 line = "ERROR: " + line;
                 textOutput.SelectionStart = textOutput.TextLength;
                 textOutput.SelectionLength = 0;
                 textOutput.SelectionColor = Color.Red;
+                while (blankLinesBefore-- > 0)
+                {
+                    textOutput.AppendText(Environment.NewLine);
+                }
                 textOutput.AppendText(line + Environment.NewLine);
+                while (blankLinesAfter-- > 0)
+                {
+                    textOutput.AppendText(Environment.NewLine);
+                }
                 textOutput.SelectionColor = textOutput.ForeColor;
                 textOutput.ScrollToCaret();
                 textOutput.Update();
@@ -263,235 +431,19 @@ namespace AutoQC
             }
         }
 
-        private void SaveSettings()
-        {
-            _settingsTabs.ForEach(settingsTab => settingsTab.SaveSettings());
+        #endregion
 
-            Settings.Default.Save();
-        }
 
-        private void ProcessExistingFiles()
-        {
-            Log("Processing existing files...");
-            RunBackgroundWorker(BackgroundWorker_DoWorkProcessExisting,
-                BackgroundWorker_RunWorkerCompletedProcessExisting); 
-        }
-
-        private void ProcessNewFiles()
-        {
-            Log("Processing new files...");
-            RunBackgroundWorker(BackgroundWorker_DoWork, BackgroundWorker_RunWorkerCompleted);
-        }
-
-        private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
-        {
-            if (_worker != null && _worker.IsBusy)
-            {
-                LogError("Background worker is running!!!");
-                Stop();
-                return;
-            }
-            _worker = new BackgroundWorker {WorkerSupportsCancellation = true, WorkerReportsProgress = true};
-            _worker.DoWork += doWork;
-            _worker.RunWorkerCompleted += doOnComplete;
-            _worker.RunWorkerAsync(); 
-        }
-
-        private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var worker = sender as BackgroundWorker;
-            if (worker == null)
-            {
-                return;
-            }
-
-            var inWait = false;
-            while (true)
-            {
-                if (worker.CancellationPending)
-                {
-                    e.Cancel = true;
-                    break;
-                }
-
-                if (!_dataFiles.IsEmpty)
-                {
-                    FileInfo fileInfo;
-                    _dataFiles.TryDequeue(out fileInfo);
-
-                    if (fileInfo != null)
-                    {
-                        var importContext = new ImportContext(fileInfo);
-                        ProcessFile(importContext);    
-                    }
-                    inWait = false;
-                }
-                else
-                {
-                    if (!inWait)
-                    {
-                        Log("\n\nWaiting for files...\n\n");
-                    }
-
-                    inWait = true;
-                    Thread.Sleep(10000);
-                }
-            }
-        }
-
-        private void BackgroundWorker_RunWorkerCompletedProcessExisting(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                Log("Cancelled processing files.");
-                Stop();
-            }
-            else
-            {
-                Log("Finished processing existing files.\n");
-                ProcessNewFiles(); // Start processing new files.
-            }
-        }
-
-        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                SetStoppedControls();
-                Log("AutoQC stopped.");
-            }
-            else
-            {
-                Stop();
-            }
-        }
-
-        private void BackgroundWorker_DoWorkProcessExisting(object sender, DoWorkEventArgs e)
-        {
-            var worker = sender as BackgroundWorker;
-            if (worker == null)
-            {
-                return;
-            }
-
-            if (worker.CancellationPending)
-            {
-                e.Cancel = true;
-                return;
-            }
-
-            // Queue up any existing data files in the folder
-            var files =
-                new DirectoryInfo(GetMainSettings().FolderToWatch).GetFiles(GetFileFilter()).OrderBy(f => f.LastWriteTime).ToList();
-
-            Log(string.Format("Found {0} files.", files.Count));
-
-            var importContext = new ImportContext(files);
-            importContext.TotalImportCount = _totalImportCount;
-            while (importContext.GetNextFile() != null)
-            {
-                ProcessFile(importContext);
-                if (worker.CancellationPending)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-            }  
-        }
-
-        private string GetFileFilter()
-        {
-            // TODO: We need to support other instrument vendors
-            return "*" + THERMO_EXT;
-        }
-
-        void FileAdded(FileSystemEventArgs e, AutoQCForm autoQcForm)
-        {
-            BeginInvoke(new Action(() =>
-            {
-                autoQcForm.Log(string.Format("File {0} added to directory.", e.Name));
-                _dataFiles.Enqueue(new FileInfo(e.FullPath));
-            }));
-        }
-
-        void ProcessFile(ImportContext importContext)
-        {
-            var file = importContext.getCurrentFile();
-            var counter = 0;
-            while (true)
-            {
-                if (_worker != null && _worker.CancellationPending)
-                {
-                    return;
-                }
-
-                if (IsFileReady(file))
-                {
-                    break;
-                }
-                if (counter%10 == 0)
-                {
-                    Log("File is being acquired. Waiting...");
-                }
-                counter++;
-                // Wait for 60 seconds.
-                Thread.Sleep(60000);
-            }
-            
-            Log("File is ready");
-            ProcessOneFile(importContext);    
-        }
-
-        static bool IsFileReady(FileInfo file)
-        {
-            IXRawfile rawFile = null;
-            try
-            {
-                rawFile = new MSFileReader_XRawfileClass();
-                rawFile.Open(file.FullName);
-                var inAcq = 1;
-                rawFile.InAcquisition(ref inAcq);
-                if (inAcq == 1)
-                {
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                LOG.Error(string.Format("Error getting acquisition state of file {0}", file.FullName), ex);
-                throw;
-            }
-            finally
-            {
-                if (rawFile != null)
-                {
-                    rawFile.Close();
-                    
-                }
-            }
-            return true;
-        }
-
-        private void ProcessOneFile(ImportContext importContext)
-        {
-            var processInfos = GetProcessInfos(importContext);
-
-            foreach (var procInfo in processInfos)
-            {
-                RunProcess(procInfo);
-            }
-            _totalImportCount++;
-        }
-
-        private List<ProcessInfo> GetProcessInfos(ImportContext importContext)
+        #region [Implementation of IProcessControl interface]
+        public IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext)
         {
             var processInfos = new List<ProcessInfo>();
-
             foreach (var settingsTab in _settingsTabs)
             {
                 var runBefore = settingsTab.RunBefore(importContext);
                 if (runBefore != null)
                 {
+                    runBefore.WorkingDirectory = importContext.WorkingDir;
                     processInfos.Add(runBefore);
                 }
             }
@@ -499,7 +451,7 @@ namespace AutoQC
             var skylineRunnerArgs = GetSkylineRunnerArgs(importContext);
             var argsToPrint = GetSkylineRunnerArgs(importContext, true);
             var skylineRunner = new ProcessInfo(SkylineRunnerPath, SKYLINE_RUNNER, skylineRunnerArgs, argsToPrint);
-            skylineRunner.allowRetry();
+            skylineRunner.SetMaxTryCount(MAX_TRY_COUNT);
             processInfos.Add(skylineRunner);
 
             foreach (var settingsTab in _settingsTabs)
@@ -513,69 +465,17 @@ namespace AutoQC
             return processInfos;
         }
 
-        private void RunProcess(ProcessInfo procInfo)
+        public bool RunProcess(ProcessInfo processInfo)
         {
-            Log(string.Format("Running {0} with args: ", procInfo.ExeName));
-            Log(procInfo.ArgsToPrint);
-
-            while (true)
-            {
-                procInfo.incrementTryCount();
-
-                var process = CreateProcess(procInfo);
-                process.StartInfo.WorkingDirectory = GetMainSettings().FolderToWatch;
-                process.OutputDataReceived += WriteToLog;
-                process.ErrorDataReceived += WriteToLog;
-                process.Exited += ProcessExit;
-                process.Start();
-                process.BeginOutputReadLine();
-                process.StandardError.ReadToEnd();
-                process.WaitForExit();
-
-                if (_tryAgain)
-                {
-                    if (procInfo.canRetry())
-                    {
-                        LogOutput("\n");
-                        LogError(string.Format("{0} returned an error. Trying again...", procInfo.Executable));
-                        LogOutput("\n");
-                        continue;
-                    }
-
-                    LogOutput("\n");
-                    LogError(string.Format("{0} returned an error. Exceeded maximum try count.  Giving up...", procInfo.ExeName));
-                    LogOutput("\n");
-                    Stop();
-                }
-                break;
-            }
-            _tryAgain = false;
+            return new ProcessRunner(processInfo, this).RunProcess();
         }
 
-        private static Process CreateProcess(ProcessInfo procInfo)
-        {
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    FileName = procInfo.Executable,
-                    Arguments = procInfo.Args,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                },
-                EnableRaisingEvents = true
-            };
-            return process;
-        }
+        #endregion
 
         private string GetSkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
             var args = new StringBuilder();
-            args.Append(GetMainSettings().SkylineRunnerArgs(importContext, toPrint));
-        
+            
             foreach (var settingsTab in _settingsTabs)
             {
                 args.AppendLine();
@@ -585,61 +485,49 @@ namespace AutoQC
             return args.ToString();
         }
 
-        // Handle a line of output/error data from the process.
-        private void WriteToLog(object sender, DataReceivedEventArgs e)
-        {
-            if (DetectError(e.Data))
-            {
-                LogError(e.Data);
-            }
-            else
-            {
-                Log(e.Data);   
-            }
-        }
-
-        private Boolean DetectError(string message)
-        {
-            if (message == null || !message.StartsWith("Error")) return false;
-            if (message.Contains("Failed importing the results file"))
-            {
-                _tryAgain = true;
-            }
-            return true;
-        }
-
         public void RunUI(Action action)
         {
-            try
+            if (InvokeRequired)
             {
-                Invoke(action);
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-        }
-
-        void ProcessExit(object sender, EventArgs e)
-        {
-            var process = sender as Process;
-            if (process == null)
-            {
-                LogError("!!!Process cannot be null!!!");
-                Stop();
-                return;
-            }
-
-            var exitCode = process.ExitCode;
-
-            if (exitCode == 0)
-            {
-                Log(string.Format("{0} exited successfully.", SKYLINE_RUNNER));
+                try
+                {
+                    Invoke(action);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
             else
             {
+                action();
+            }
+        }
 
-                LogError(string.Format("{0} exited with errors.", SKYLINE_RUNNER));
-                Stop();
+        public T RunUI<T>(Func<T> function)
+        {
+            if (InvokeRequired)
+            {
+                try
+                {
+                    return (T) Invoke(function);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+            else
+            {
+                return function();
+            }
+            return default(T);
+        }
+
+        private void OpenFile(string filter, TextBox textbox)
+        {
+            var dialog = new OpenFileDialog { Filter = filter };
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                textbox.Text = dialog.FileName;
             }
         }
 
@@ -673,7 +561,7 @@ namespace AutoQC
             {
                 Run();
             }
-            else
+            else if(btnStartStop.Text.Equals(STOP_AUTOQC))
             {
                 Stop();
             }
@@ -690,5 +578,43 @@ namespace AutoQC
         }
 
         #endregion
+    }
+
+    public interface IAppControl
+    {
+        void SetWaiting();
+        void SetStopped();
+
+        void SetUIMainSettings(MainSettings mainSettings);
+        MainSettings GetUIMainSettings();
+
+        void SetUIPanoramaSettings(PanoramaSettings panoramaSettings);
+        PanoramaSettings GetUIPanoramaSettings();
+        void DisablePanoramaSettings();
+
+        void SetUISprocopSettings(SprocopSettings sprocopSettings);
+        SprocopSettings GetUISprocopSettings();
+        void DisableSprocopSettings();
+    }
+
+    public interface IAutoQCLogger
+    {
+        void Log(string message, params object[] args);
+        void Log(string message, int blankLinesBefore, int blankLinesAfter, params object[] args);
+        void LogError(string message, params object[] args);
+        void LogError(string message, int blankLinesBefore, int blankLinesAfter, params object[] args);
+        void LogException(Exception exception);
+        // Log to Output tab only
+        void LogOutput(string message, params object[] args);
+        void LogOutput(string message, int blankLinesBefore, int blankLinesAfter, params object[] args);
+        // Log error to Output tab only
+        void LogErrorOutput(string error, params object[] args);
+        void LogErrorOutput(string error, int blankLinesBefore, int blankLinesAfter, params object[] args);
+    }
+
+    public interface IProcessControl
+    {
+        IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
+        bool RunProcess(ProcessInfo processInfo);
     }
 }

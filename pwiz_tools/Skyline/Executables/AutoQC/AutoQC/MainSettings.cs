@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright 2015 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,35 +23,81 @@ using System.Text.RegularExpressions;
 
 namespace AutoQC
 {
-    public class MainSettings: SettingsTab
+    public class MainSettings
     {
-        private const int ACCUM_TIME_WINDOW = 31;
+        public const int ACCUM_TIME_WINDOW = 31;
+        public const string THERMO = "Thermo";
+        public const string WATERS = "Waters";
+        public const string BRUKER = "Bruker";
+        public const string SCIEX = "SCIEX";
+        public const string AGILENT = "Agilent";
+        public const string SCHIMADZU = "Schimadzu";
 
-        public DateTime LastArchivalDate { get; set; }
         public string SkylineFilePath { get; set; }
         public string FolderToWatch { get; set; }
-        private int AccumulationWindow { get; set; }
-        private string InstrumentType { get; set; }
+        public int AccumulationWindow
+        {
+            get
+            {
+                int val;
+                return Int32.TryParse(AccumulationWindowString, out val) ? val : 0;
+            }
+        }
+        public string AccumulationWindowString { get; set; }
+        public string InstrumentType { get; set; }
         public bool ImportExistingFiles { get; set; }
+        public int DelayTime { get; set; } // TODO: Add this in the UI
+
+        
+
+        public static MainSettings InitializeFromDefaults()
+        {
+            var settings = new MainSettings
+            {
+                SkylineFilePath = Properties.Settings.Default.SkylineFilePath,
+                FolderToWatch = Properties.Settings.Default.FolderToWatch,
+                ImportExistingFiles = Properties.Settings.Default.ImportExistingFiles
+            };
+
+            var accumWin = Properties.Settings.Default.AccumulationWindow;
+            settings.AccumulationWindowString = accumWin == 0 ? ACCUM_TIME_WINDOW.ToString() : accumWin.ToString();
+            
+            var instrumentType = Properties.Settings.Default.InstrumentType;
+            settings.InstrumentType = string.IsNullOrEmpty(instrumentType) ? THERMO : instrumentType;
+
+            return settings;
+        }
+
+        internal void Save()
+        {
+            Properties.Settings.Default.SkylineFilePath = SkylineFilePath;
+
+            Properties.Settings.Default.FolderToWatch = FolderToWatch;
+
+            Properties.Settings.Default.AccumulationWindow = AccumulationWindow;
+
+            Properties.Settings.Default.InstrumentType = InstrumentType;
+
+            Properties.Settings.Default.ImportExistingFiles = ImportExistingFiles;
+        }
+    }
+
+    public class MainSettingsTab: SettingsTab
+    {
+        public MainSettings Settings { get; set; }
+
+        public DateTime LastArchivalDate { get; set; }
+
+        public MainSettingsTab(IAppControl appControl, IAutoQCLogger logger)
+            : base(appControl, logger)
+        {
+            Settings = new MainSettings();
+        }
 
         public override void InitializeFromDefaultSettings()
         {
-            SkylineFilePath = Properties.Settings.Default.SkylineFilePath;
-            MainForm.textSkylinePath.Text = SkylineFilePath;
-
-            FolderToWatch = Properties.Settings.Default.FolderToWatch;
-            MainForm.textFolderToWatchPath.Text = FolderToWatch;
-
-            var accumWin = Properties.Settings.Default.AccumulationWindow;
-            AccumulationWindow =  accumWin == 0 ? ACCUM_TIME_WINDOW : accumWin; 
-            MainForm.textAccumulationTimeWindow.Text = AccumulationWindow.ToString();
-
-            var instrumentType = Properties.Settings.Default.InstrumentType;
-            InstrumentType = string.IsNullOrEmpty(instrumentType) ? "Thermo" : instrumentType;
-            MainForm.comboBoxInstrumentType.SelectedItem = InstrumentType;
-
-            ImportExistingFiles = Properties.Settings.Default.ImportExistingFiles;
-            MainForm.cbImportExistingFiles.Checked = ImportExistingFiles;
+            Settings = MainSettings.InitializeFromDefaults();
+            _appControl.SetUIMainSettings(Settings);
         }
 
         public override bool IsSelected()
@@ -47,8 +108,13 @@ namespace AutoQC
         public override bool ValidateSettings()
         {
             LogOutput("Validating settings...");
+
+            var mainSettingsUI = _appControl.GetUIMainSettings();
+
             var error = false;
-            var path = MainForm.textSkylinePath.Text;
+
+            // Path to the Skyline file.
+            var path = mainSettingsUI.SkylineFilePath;
             if (string.IsNullOrWhiteSpace(path))
             {
                 LogErrorOutput("Please specify path to a Skyline file.");
@@ -56,11 +122,12 @@ namespace AutoQC
             }
             else if (!File.Exists(path))
             {
-                LogErrorOutput(string.Format("Skyline file {0} does not exist.", path));
+                LogErrorOutput("Skyline file {0} does not exist.", path);
                 error = true;
             }
 
-            path = MainForm.textFolderToWatchPath.Text;
+            // Path to the folder to monitor for mass spec. results files
+            path = mainSettingsUI.FolderToWatch;
             if (string.IsNullOrWhiteSpace(path))
             {
                 LogErrorOutput("Please specify path to a folder where mass spec. files will be written.");
@@ -68,12 +135,13 @@ namespace AutoQC
             }
             else if (!Directory.Exists(path))
             {
-                LogErrorOutput(string.Format("Folder {0} does not exist.", path));
+                LogErrorOutput("Folder {0} does not exist.", path);
                 error = true;
             }
 
-
-            if (string.IsNullOrWhiteSpace(MainForm.textAccumulationTimeWindow.Text))
+            // Accumulation window.
+            var accumWin = mainSettingsUI.AccumulationWindowString;
+            if (string.IsNullOrWhiteSpace(accumWin))
             {
                 LogErrorOutput("Please specify a value for the \"Accumulation time window\".");
                 error = true;
@@ -81,114 +149,104 @@ namespace AutoQC
             else
             {
                 int accumWindow;
-                if (!Int32.TryParse(MainForm.textAccumulationTimeWindow.Text, out accumWindow))
+                if (!Int32.TryParse(mainSettingsUI.AccumulationWindowString, out accumWindow))
                 {
-                    LogErrorOutput(string.Format("Invalid value for \"Accumulation time window\": {0}.",
-                        MainForm.textAccumulationTimeWindow.Text));
+                    LogErrorOutput("Invalid value for \"Accumulation time window\": {0}.",
+                        mainSettingsUI.AccumulationWindowString);
                     error = true;
                 }
-                else if (accumWindow < ACCUM_TIME_WINDOW)
+                else if (accumWindow < MainSettings.ACCUM_TIME_WINDOW)
                 {
-                    LogErrorOutput(string.Format("\"Accumulation time window\" cannot be less than {0} days.", ACCUM_TIME_WINDOW));
+                    LogErrorOutput("\"Accumulation time window\" cannot be less than {0} days.", MainSettings.ACCUM_TIME_WINDOW);
                     error = true;
                 }
             }
+            if (!error) Settings = mainSettingsUI;
             return !error;
         }
 
         public override void SaveSettings()
         {
-            SkylineFilePath = MainForm.textSkylinePath.Text;
-            Properties.Settings.Default.SkylineFilePath = SkylineFilePath;
-
-            FolderToWatch = MainForm.textFolderToWatchPath.Text;
-            Properties.Settings.Default.FolderToWatch = FolderToWatch;
-
-            AccumulationWindow = Convert.ToInt32(MainForm.textAccumulationTimeWindow.Text);
-            Properties.Settings.Default.AccumulationWindow = AccumulationWindow;
-
-            InstrumentType = MainForm.comboBoxInstrumentType.SelectedText;
-            Properties.Settings.Default.InstrumentType = InstrumentType;
-
-            ImportExistingFiles = MainForm.cbImportExistingFiles.Checked;
-            Properties.Settings.Default.ImportExistingFiles = ImportExistingFiles;
+            Settings.Save();
         }
 
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
             // Get the current accumulation window
             var currentDate = DateTime.Today;
-            var accumulationWindow = Window.GetAccumulationWindow(currentDate, AccumulationWindow);
-            Log("Current accumulation window is {0} TO {1}",
-                accumulationWindow.StartDate.ToShortDateString(), accumulationWindow.EndDate.ToShortDateString());
+            var accumulationWindow = AccumulationWindow.Get(currentDate, Settings.AccumulationWindow);
+            if (toPrint)
+            {
+                Log("Current accumulation window is {0} TO {1}",
+                    accumulationWindow.StartDate.ToShortDateString(), accumulationWindow.EndDate.ToShortDateString());
+            }
 
-            StringBuilder args = new StringBuilder();
+
+            var args = new StringBuilder();
             // Input Skyline file
-            args.Append(string.Format(" --in=\"{0}\"", SkylineFilePath));
+            args.Append(string.Format(" --in=\"{0}\"", Settings.SkylineFilePath));
 
-            // var shareArgs = string.Format(" --in=\"{0}\"", SkylineFilePath) + " --share-zip=Test.sky.zip";
-            var otherArgs = string.Format(" --in=\"{0}\"", SkylineFilePath);
-            otherArgs += string.Format(" --import-file=\"{0}\"", importContext.GetResultsFilePath());
-            otherArgs += string.Format(" --remove-before={0}", accumulationWindow.StartDate.Date);
-            otherArgs += " --save";
-            // return new List<string> {shareArgs, otherArgs};
-            return otherArgs;
 
-//            if (importContext.ImportExisting())
-//            {
-//                // We are importing existing files in the folder, import regardless of when the file was created.
-//                args.Append(string.Format(" --import-file=\"{0}\"", importContext.GetResultsFilePath()));
-//            }
-//            else
-//            {
-//                // Add arguments to roll over
-//                // Add arguments to remove files older than the start of the rolling window.   
-//                args.Append(string.Format(" --remove-before={0}", accumulationWindow.StartDate.Date));
-//
-//                // Add arguments to import the results file
-//                args.Append(string.Format(" --import-on-or-after={1} --import-file=\"{0}\"", importContext.GetResultsFilePath(),
-//                    accumulationWindow.StartDate.ToShortDateString()));
-//            }
-//            
-//            // Save the Skyline file
-//            args.Append(" --save");
-//
-//            return args.ToString();
+            if (importContext.ImportExisting)
+            {
+                // We are importing existing files in the folder, import regardless of when the file was created.
+                args.Append(string.Format(" --import-file=\"{0}\"", importContext.GetCurrentFile()));
+            }
+            else
+            {
+                // Add arguments to remove files older than the start of the rolling window.   
+                args.Append(string.Format(" --remove-before={0}", accumulationWindow.StartDate.ToShortDateString()));
+
+                // Add arguments to import the results file
+                args.Append(string.Format(" --import-on-or-after={1} --import-file=\"{0}\"", importContext.GetCurrentFile(),
+                    accumulationWindow.StartDate.ToShortDateString()));
+                // args.Append(string.Format(" --import-file=\"{0}\"", importContext.GetCurrentFile()));
+            }
+            
+            // Save the Skyline file
+            args.Append(" --save");
+
+            return args.ToString();
         }
 
         public override ProcessInfo RunBefore(ImportContext importContext)
         {
             string archiveArgs = null;
-            var currentDate = DateTime.Today;
-            if (importContext.ImportExisting)
+            if (!importContext.ImportExisting)
             {
-                // We are importing existing files in the folder 
-                if (importContext.ImportingLast())
-                {
-                    var oldestFileDate = importContext.GetOldestFileDate();
-                    var today = DateTime.Today;
-                    if (oldestFileDate.AddMonths(1).CompareTo(today) < 0)
-                    {
-                        archiveArgs = GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
-                    }
-                }
-            }
-            else
-            {
-                // Add arguments to archive, if required
+                // If we are NOT importing existing results, create an archive (if required) of the 
+                // Skyline document BEFORE importing a results file.
                 archiveArgs = GetArchiveArgs(GetLastArchivalDate(), DateTime.Today);
             }
             if (String.IsNullOrEmpty(archiveArgs))
             {
                 return null;
             }
-            var args = string.Format("--in=\"{0}\" {1}", SkylineFilePath, archiveArgs);
-            return new ProcessInfo(MainForm.SkylineRunnerPath, args);
+            var args = string.Format("--in=\"{0}\" {1}", Settings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(AutoQCForm.SkylineRunnerPath, args);
         }
 
         public override ProcessInfo RunAfter(ImportContext importContext)
         {
-            return null;
+            string archiveArgs = null;
+            var currentDate = DateTime.Today;
+            if (importContext.ImportExisting && importContext.ImportingLast())
+            {
+                // If We are importing existing files in the folder, create an archive (if required) of the 
+                // Skyline document AFTER importing the last results file.
+                var oldestFileDate = importContext.GetOldestFileDate();
+                var today = DateTime.Today;
+                if(oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
+                {
+                    archiveArgs = GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
+                }
+            }
+            if (String.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", Settings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(AutoQCForm.SkylineRunnerPath, args);
         }
 
         private DateTime GetLastArchivalDate()
@@ -198,25 +256,27 @@ namespace AutoQC
 
         public DateTime GetLastArchivalDate(IFileSystemUtil fileUtil)
         {
-            if (LastArchivalDate.Equals(DateTime.MinValue)) 
+            if (!LastArchivalDate.Equals(DateTime.MinValue))
             {
-                var fileName = Path.GetFileNameWithoutExtension(SkylineFilePath);
-                var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
-                var regex = new Regex(pattern);
-
-                var skylineFileDir = Path.GetDirectoryName(SkylineFilePath);
-                Debug.Assert(skylineFileDir != null);
-
-                // Look at any existing .sky.zip files to determine the last archival date
-                // Look for shared zip files with file names like <skyline_file_name>_<yyyy>_<mm>.sky.zip
-//                var archiveFiles =
-//                    new DirectoryInfo(skylineFileDir).GetFiles("*.sky.zip").Where(f => regex.IsMatch(f.Name)).OrderBy(f => f.LastWriteTime).ToList();
-                var archiveFiles =
-                    fileUtil.GetSkyZipFiles(skylineFileDir)
-                        .Where(f => regex.IsMatch(Path.GetFileName(f) ?? string.Empty)).OrderBy(fileUtil.LastWriteTime).ToList();
-
-                LastArchivalDate = archiveFiles.Any() ? fileUtil.LastWriteTime(archiveFiles.Last()) : DateTime.Today;
+                return LastArchivalDate;
             }
+
+            var fileName = Path.GetFileNameWithoutExtension(Settings.SkylineFilePath);
+            var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
+            var regex = new Regex(pattern);
+
+            var skylineFileDir = Path.GetDirectoryName(Settings.SkylineFilePath);
+            Debug.Assert(skylineFileDir != null);
+
+            // Look at any existing .sky.zip files to determine the last archival date
+            // Look for shared zip files with file names like <skyline_file_name>_<yyyy>_<mm>.sky.zip
+            var archiveFiles =
+                fileUtil.GetSkyZipFiles(skylineFileDir)
+                    .Where(f => regex.IsMatch(Path.GetFileName(f) ?? string.Empty))
+                    .OrderBy(filePath => fileUtil.LastWriteTime(filePath))
+                    .ToList();
+
+            LastArchivalDate = archiveFiles.Any() ? fileUtil.LastWriteTime(archiveFiles.Last()) : DateTime.Today;
 
             return LastArchivalDate;
         }
@@ -242,17 +302,17 @@ namespace AutoQC
 
         public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
         {
-//            if (currentDate.CompareTo(archiveDate) < 0)
-//                return null;
-//
-//            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
-//            {
-//                return null;
-//            }
+            if (currentDate.CompareTo(archiveDate) < 0)
+                return null;
+
+            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
+            {
+                return null;
+            }
 
             // Return args to archive the file: create a shared zip
             var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
-                Path.GetFileNameWithoutExtension(SkylineFilePath),
+                Path.GetFileNameWithoutExtension(Settings.SkylineFilePath),
                 archiveDate.Year,
                 archiveDate.Month);
 
@@ -262,17 +322,21 @@ namespace AutoQC
             return string.Format("--share-zip={0}", archiveFileName);
         }
 
-        private class Window
+        public class AccumulationWindow
         {
             public DateTime StartDate { get; private set; }
             public DateTime EndDate { get; private set; }
 
-            public static Window GetAccumulationWindow(DateTime currentDate, int windowSize)
+            public static AccumulationWindow Get(DateTime endWindow, int windowSize)
             {
-                var window = new Window
+                if (windowSize < 1)
                 {
-                    EndDate = currentDate,
-                    StartDate = currentDate.AddDays(-(windowSize - 1))
+                    throw new ArgumentException("Window size has be greater than 0.");
+                }
+                var window = new AccumulationWindow
+                {
+                    EndDate = endWindow,
+                    StartDate = endWindow.AddDays(-(windowSize - 1))
                 };
                 return window;
             }

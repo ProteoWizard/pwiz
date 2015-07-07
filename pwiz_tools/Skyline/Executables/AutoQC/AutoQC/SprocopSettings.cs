@@ -1,13 +1,59 @@
-﻿using System;
+﻿/*
+ * Copyright 2015 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.IO;
 using AutoQC.Properties;
 
 namespace AutoQC
 {
-    public class SprocopSettings: SettingsTab
+    public class SprocopSettings
     {
-        private bool RunSprocop { get; set; }
+        public bool RunSprocop { get; set; }
         public string RScriptPath { get; set; }
+        public int Threshold { get; set; }
+        public int MMA { get; set; }
+        public bool IsHighRes { get; set; }
+
+        public static SprocopSettings InitializeFromDefaults()
+        {
+            var settings = new SprocopSettings()
+            {
+                RunSprocop = Settings.Default.RunSprocop,
+                RScriptPath = Settings.Default.RScriptPath,
+                Threshold = 3
+            };
+
+            return settings;
+        }
+
+        public void Save()
+        {
+            Settings.Default.RunSprocop = RunSprocop;
+            Settings.Default.RScriptPath = RScriptPath;    
+        }
+    }
+
+    public class SprocopSettingsTab: SettingsTab
+    {
+        private SprocopSettings Settings { get; set; }
+
+        public SprocopSettingsTab(IAppControl appControl, IAutoQCLogger logger)
+            : base(appControl, logger)
+        {
+        }
 
         public String ReportFilePath
         {
@@ -20,16 +66,12 @@ namespace AutoQC
         }
 
         public override void InitializeFromDefaultSettings()
-        { 
-            RunSprocop = Settings.Default.RunSprocop;
-            MainForm.cbRunsprocop.Checked = RunSprocop;
-
-            RScriptPath = Settings.Default.RScriptPath;
-            MainForm.textRScriptPath.Text = RScriptPath;
-
-            if (!RunSprocop)
+        {
+            Settings = SprocopSettings.InitializeFromDefaults();
+            _appControl.SetUISprocopSettings(Settings);
+            if (!Settings.RunSprocop)
             {
-                MainForm.groupBoxSprocop.Enabled = false;
+                _appControl.DisableSprocopSettings();
             }
         }
 
@@ -40,27 +82,28 @@ namespace AutoQC
 
         public override bool ValidateSettings()
         {
-            if (!RunSprocop)
+            var settingsFromUI = _appControl.GetUISprocopSettings();
+
+            if (!settingsFromUI.RunSprocop)
             {
                 Log("Will NOT run SProCoP.");
+                Settings.RunSprocop = false;
                 return true;
             }
 
-            if (string.IsNullOrWhiteSpace(MainForm.textRScriptPath.Text))
+            if (string.IsNullOrWhiteSpace(settingsFromUI.RScriptPath))
             {
                 LogErrorOutput("Please specify path to Rscript.exe.");
                 return false;
             }
+
+            Settings = settingsFromUI;
             return true;
         }
 
         public override void SaveSettings()
         {
-            RunSprocop = MainForm.cbRunsprocop.Checked;
-            Settings.Default.RunSprocop = RunSprocop;
-
-            RScriptPath = MainForm.textRScriptPath.Text;
-            Settings.Default.RScriptPath = RScriptPath;
+            Settings.Save();
         }
 
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
@@ -82,14 +125,22 @@ namespace AutoQC
 
         public override ProcessInfo RunAfter(ImportContext importContext)
         {
-            var saveQcPath = Path.GetDirectoryName(importContext.GetResultsFilePath()) + "\\QC.pdf";
+            var thresholdCount = Settings.Threshold;
+            if (thresholdCount > importContext.TotalImportCount)
+            {
+                // Don't do anything if we have imported fewer files than the number of required threshold files.
+                return null;
+            }
+
+            var saveQcPath = Path.GetDirectoryName(importContext.GetCurrentFile()) + "\\QC.pdf";
             var args = String.Format(@"""{0}"" ""{1}"" {2} {3} 1 {4} ""{5}""",
                 SProCoPrScript,
                 ReportFilePath,
-                MainForm.numericUpDownThreshold.Value,
-                MainForm.checkBoxIsHighRes.Checked ? 1 : 0,
-                MainForm.numericUpDownMMA.Value, saveQcPath);
-            return new ProcessInfo(RScriptPath, args);
+                thresholdCount,
+                Settings.IsHighRes ? 1 : 0,
+                Settings.MMA, 
+                saveQcPath);
+            return new ProcessInfo(Settings.RScriptPath, args);
         }
     }
 }

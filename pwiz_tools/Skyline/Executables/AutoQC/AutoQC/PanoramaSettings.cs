@@ -1,77 +1,126 @@
-﻿using System;
+﻿/*
+ * Copyright 2015 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using AutoQC.Properties;
 
 namespace AutoQC
 {
-    public class PanoramaSettings: SettingsTab
+    public class PanoramaSettings
     {
-        static readonly byte[] entropy = Encoding.Unicode.GetBytes("Encrypt Panorama password");
+        
+        public bool PublishToPanorama { get; set; }
+        public string PanoramaServerUrl { get; set; }
+        public string PanoramaUserEmail { get; set; }
+        public string PanoramaPassword { get; set; }
+        public string PanoramaFolder { get; set; }
 
-        private bool PublishToPanorama { get; set; }
-        private string PanoramaServerUrl { get; set; }
-        private string PanoramaUserName { get; set; }
-        private string PanoramaPassword { get; set; }
-        private string PanoramaFolder { get; set; }
+        public static PanoramaSettings InitializeFromDefaults()
+        {
+            var settings = new PanoramaSettings()
+            {
+                PanoramaServerUrl = Settings.Default.PanoramaUrl,
+                PanoramaUserEmail = Settings.Default.PanoramaUserEmail,
+                PanoramaPassword = Settings.Default.PanoramaPassword,
+                PanoramaFolder = Settings.Default.PanoramaFolder,
+                PublishToPanorama = Settings.Default.PublishToPanorama,
+            };
+
+            return settings;
+        }
+
+        public void Save()
+        {
+            Settings.Default.PanoramaUrl = PanoramaServerUrl;
+            Settings.Default.PanoramaUserEmail = PanoramaUserEmail;
+            Settings.Default.PanoramaPassword = PanoramaPassword;
+            Settings.Default.PanoramaFolder = PanoramaFolder;
+            Settings.Default.PublishToPanorama = PublishToPanorama;
+        }
+ 
+    }
+    public class PanoramaSettingsTab: SettingsTab
+    {
+        public static readonly byte[] entropy = Encoding.Unicode.GetBytes("Encrypt Panorama password");
+
+        public PanoramaSettings Settings { get; set; }
+
+        public PanoramaSettingsTab(IAppControl appControl, IAutoQCLogger logger)
+            : base(appControl, logger)
+        {
+            Settings = new PanoramaSettings();
+        }
 
         public override void InitializeFromDefaultSettings()
         {
-            PanoramaServerUrl = Settings.Default.PanoramaUrl;
-            MainForm.textPanoramaUrl.Text = PanoramaServerUrl;
-
-            PanoramaUserName = Settings.Default.PanoramaUserEmail;
-            MainForm.textPanoramaEmail.Text = PanoramaUserName;
-
-            PanoramaPassword = Settings.Default.PanoramaPassword;
-            MainForm.textPanoramaPasswd.Text = PanoramaPassword;
-
-            PanoramaFolder = Settings.Default.PanoramaFolder; 
-            MainForm.textPanoramaFolder.Text = PanoramaFolder;
-
-            PublishToPanorama = Settings.Default.PublishToPanorama;
-            MainForm.cbPublishToPanorama.Checked = PublishToPanorama;
-
-            if (!PublishToPanorama)
+            Settings = PanoramaSettings.InitializeFromDefaults();
+            _appControl.SetUIPanoramaSettings(Settings);
+            if (!Settings.PublishToPanorama)
             {
-                MainForm.groupBoxPanorama.Enabled = false;
+                _appControl.DisablePanoramaSettings();
             }
         }
 
         public override bool IsSelected()
         {
-            return PublishToPanorama;
+            return Settings.PublishToPanorama;
         }
 
         public override bool ValidateSettings()
         {
-            if (!MainForm.cbPublishToPanorama.Checked)
+            var panoramaSettingsUI = _appControl.GetUIPanoramaSettings();
+
+            if (!panoramaSettingsUI.PublishToPanorama)
             {
-                LogOutput("Will NOT publish Skyline document to Panorama.");
+                LogOutput("Will NOT publish Skyline documents to Panorama.");
+                Settings.PublishToPanorama = false;
                 return true;
             }
 
             LogOutput("Validating Panorama settings...");
             var error = false;
-            var panoramaUrl = MainForm.textPanoramaUrl.Text;
-            Uri serverUri;
-            try
-            {
-                serverUri = new Uri(PanoramaUtil.ServerNameToUrl(panoramaUrl));
-            }
-            catch (UriFormatException)
-            {
-                LogErrorOutput("Panorama server name is invalid.");
-                return false;
-            }
+            var panoramaUrl = panoramaSettingsUI.PanoramaServerUrl;
+            Uri serverUri = null;
 
-            var panoramaEmail = MainForm.textPanoramaEmail.Text;
-            var panoramaPasswd = MainForm.textPanoramaPasswd.Text;
-            var panoramaFolder = MainForm.textPanoramaFolder.Text;
+            if (string.IsNullOrWhiteSpace(panoramaUrl))
+            {
+                LogErrorOutput("Please specify a Panorama server URL.");
+                error = true;
+            }
+            else
+            {
+                try
+                {
+                    serverUri = new Uri(PanoramaUtil.ServerNameToUrl(panoramaUrl));
+                }
+                catch (UriFormatException)
+                {
+                    LogError("Panorama server name is invalid.");
+                    return false;
+                }  
+            }
+            
+            var panoramaEmail = panoramaSettingsUI.PanoramaUserEmail;
+            var panoramaPasswd = panoramaSettingsUI.PanoramaPassword;
+            var panoramaFolder = panoramaSettingsUI.PanoramaFolder;
 
             if (string.IsNullOrWhiteSpace(panoramaEmail))
             {
-                LogErrorOutput("Please specify a Panorama user name.");
+                LogErrorOutput("Please specify a Panorama login name.");
                 error = true;
             }
             if (string.IsNullOrWhiteSpace(panoramaPasswd))
@@ -81,18 +130,17 @@ namespace AutoQC
             }
             else
             {
-                if (!panoramaPasswd.Equals(PanoramaPassword))
+                if (!panoramaPasswd.Equals(Settings.PanoramaPassword))
                 {
                     // Encrypt the password
                     try
                     {
                         panoramaPasswd = EncryptPassword(panoramaPasswd);
-                        MainForm.RunUI(() => MainForm.textPanoramaPasswd.Text = panoramaPasswd);
+                        panoramaSettingsUI.PanoramaPassword = panoramaPasswd;
                     }
                     catch (ObjectDisposedException)
                     {
                     }
-                    PanoramaPassword = panoramaPasswd;
                 }
             }
             if (string.IsNullOrWhiteSpace(panoramaFolder))
@@ -106,10 +154,12 @@ namespace AutoQC
                 return false;
             }
 
+            // Verify that we can connect to the given Panorama server with the user's credentials.
             var panoramaClient = new WebPanoramaClient(serverUri);
             try
             {
-                PanoramaUtil.VerifyServerInformation(panoramaClient, serverUri, panoramaEmail, DecryptPassword(panoramaPasswd));
+                PanoramaUtil.VerifyServerInformation(panoramaClient, serverUri, panoramaEmail,
+                    DecryptPassword(panoramaPasswd));
             }
             catch (Exception ex)
             {
@@ -119,7 +169,9 @@ namespace AutoQC
 
             try
             {
-                PanoramaUtil.VerifyFolder(panoramaClient, new Server(serverUri, panoramaEmail, DecryptPassword(panoramaPasswd)), MainForm.textPanoramaFolder.Text);
+                PanoramaUtil.VerifyFolder(panoramaClient,
+                    new Server(serverUri, panoramaEmail, DecryptPassword(panoramaPasswd)),
+                    panoramaFolder);
             }
             catch (Exception ex)
             {
@@ -127,25 +179,13 @@ namespace AutoQC
                 return false;
             }
 
+            Settings = panoramaSettingsUI;
             return true;
         }
 
         public override void SaveSettings()
         {
-            PanoramaServerUrl = MainForm.textPanoramaUrl.Text;
-            Settings.Default.PanoramaUrl = PanoramaServerUrl;
-
-            PanoramaUserName = MainForm.textPanoramaEmail.Text;
-            Settings.Default.PanoramaUserEmail = PanoramaUserName;
-
-            PanoramaPassword = MainForm.textPanoramaPasswd.Text; 
-            Settings.Default.PanoramaPassword = PanoramaPassword;
-
-            PanoramaFolder = MainForm.textPanoramaFolder.Text;
-            Settings.Default.PanoramaFolder = PanoramaFolder;
-
-            PublishToPanorama = MainForm.cbPublishToPanorama.Checked;
-            Settings.Default.PublishToPanorama = PublishToPanorama;
+            Settings.Save();
         }
 
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
@@ -157,12 +197,12 @@ namespace AutoQC
                 return string.Empty;
             }
 
-            var passwdArg = toPrint ? "" : string.Format("--panorama-password=\"{0}\"", DecryptPassword(PanoramaPassword));
+            var passwdArg = toPrint ? "" : string.Format("--panorama-password=\"{0}\"", DecryptPassword(Settings.PanoramaPassword));
             var uploadArgs = string.Format(
                     " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
-                    PanoramaServerUrl,
-                    PanoramaFolder,
-                    PanoramaUserName,
+                    Settings.PanoramaServerUrl,
+                    Settings.PanoramaFolder,
+                    Settings.PanoramaUserEmail,
                     passwdArg);
             return uploadArgs;
         }
@@ -186,9 +226,8 @@ namespace AutoQC
 
             try
             {
-                byte[] encrypted = ProtectedData.Protect(
-                    Encoding.Unicode.GetBytes(password),
-                    entropy,
+                var encrypted = ProtectedData.Protect(
+                    Encoding.Unicode.GetBytes(password), entropy,
                     DataProtectionScope.CurrentUser);
                 return Convert.ToBase64String(encrypted);
             }
@@ -209,8 +248,7 @@ namespace AutoQC
             try
             {
                 byte[] decrypted = ProtectedData.Unprotect(
-                    Convert.FromBase64String(encryptedPassword),
-                    entropy,
+                    Convert.FromBase64String(encryptedPassword), entropy,
                     DataProtectionScope.CurrentUser);
                 return Encoding.Unicode.GetString(decrypted);
             }
