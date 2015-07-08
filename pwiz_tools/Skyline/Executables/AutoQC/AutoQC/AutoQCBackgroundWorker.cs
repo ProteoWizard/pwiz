@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +36,9 @@ namespace AutoQC
         private readonly IAutoQCLogger _logger;
 
         public const int WAIT_5SEC = 5000;
+        private const string CANCELLED = "Cancelled";
+        private const string ERROR = "Error";
+        private const string COMPLETED = "COMPLETED";
        
         public AutoQCBackgroundWorker(IAppControl appControl, IProcessControl processControl, IAutoQCLogger logger)
         {
@@ -72,12 +77,20 @@ namespace AutoQC
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
         {
-            if (_worker != null && _worker.IsBusy)
+            if (_worker != null)
             {
-                LogError("Background worker is running!!!");
-                Stop();
-                return;
+                if (_worker.CancellationPending)
+                {
+                    return;
+                }
+                if (_worker.IsBusy)
+                {
+                    LogError("Background worker is running!!!");
+                    Stop();
+                    return;
+                }
             }
+
             _worker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _worker.DoWork += doWork;
             _worker.RunWorkerCompleted += doOnComplete;
@@ -91,7 +104,7 @@ namespace AutoQC
             {
                 if (_worker.CancellationPending)
                 {
-                    e.Cancel = true;
+                    e.Result = CANCELLED;
                     break;
                 }
 
@@ -102,6 +115,7 @@ namespace AutoQC
                     var importContext = new ImportContext(filePath) {TotalImportCount = _totalImportCount};
                     if (!ProcessOneFile(importContext))
                     {
+                        e.Result = ERROR;
                         break;
                     }
                     inWait = false;
@@ -121,7 +135,7 @@ namespace AutoQC
 
         private void ProcessNewFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Cancelled)
+            if (CANCELLED.Equals(e.Result))
             {
                 Log("Cancelled processing files.");
             }
@@ -130,9 +144,14 @@ namespace AutoQC
 
         private void ProcessExistingFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Cancelled)
+            if (e.Result == null || ERROR.Equals(e.Result))
             {
-                Log("Cancelled processing files.");
+                Log("Error processing existing files.");
+                Stop();
+            }
+            else if (CANCELLED.Equals(e.Result))
+            {
+                Log("Cancelled processing existing files.");
                 Stop();
             }
             else
@@ -144,12 +163,6 @@ namespace AutoQC
 
         private void ProcessExistingFiles(object sender, DoWorkEventArgs e)
         {
-            if (_worker.CancellationPending)
-            {
-                e.Cancel = true;
-                return;
-            }
-
             // Queue up any existing data files in the folder
             var files = _fileWatcher.GetAllFiles();
 
@@ -161,15 +174,16 @@ namespace AutoQC
                 _fileWatcher.WaitForFileReady(importContext.GetCurrentFile()); // TODO: Do we need to wait?
                 if (!ProcessOneFile(importContext))
                 {
-                    break;
+                    e.Result = ERROR;
+                    return;
                 }
-                if (!_worker.CancellationPending)
-                {
-                    continue;
-                }
-                e.Cancel = true;
+
+                if (!_worker.CancellationPending) continue;
+
+                e.Result = CANCELLED;
                 return;
             }
+            e.Result = COMPLETED;
         }
 
         private bool ProcessOneFile(ImportContext importContext)
@@ -178,7 +192,6 @@ namespace AutoQC
 
             if (processInfos.Any(procInfo => !_processControl.RunProcess(procInfo)))
             {
-                Stop();
                 return false;
             }
             _totalImportCount++;
@@ -188,6 +201,8 @@ namespace AutoQC
         public void Stop()
         {
             _fileWatcher.Stop();
+            _totalImportCount = 0;
+
             if (_worker.IsBusy)
             {
                 CancelAsync();

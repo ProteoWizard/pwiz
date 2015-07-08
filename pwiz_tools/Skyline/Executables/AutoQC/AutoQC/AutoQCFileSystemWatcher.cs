@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +33,7 @@ namespace AutoQC
         private IResultFileStatus _fileStatusChecker;
 
         // Collection of new mass spec files to be processed.
-        private readonly ConcurrentQueue<string> _dataFiles;
+        private ConcurrentQueue<string> _dataFiles;
 
         private readonly FileSystemWatcher _fileWatcher;
 
@@ -42,8 +44,6 @@ namespace AutoQC
 
         public AutoQCFileSystemWatcher(IAutoQCLogger logger)
         {
-            _dataFiles = new ConcurrentQueue<string>();
-
             _fileWatcher = new FileSystemWatcher();
             _fileWatcher.Created += (s, e) => FileAdded(e);
 
@@ -52,6 +52,8 @@ namespace AutoQC
 
         public void Start(MainSettings mainSettings)
         {
+            _dataFiles = new ConcurrentQueue<string>();
+
             _fileStatusChecker = GetFileStatusChecker(mainSettings);
 
             _fileWatcher.EnableRaisingEvents = false;
@@ -90,7 +92,6 @@ namespace AutoQC
         public void Stop()
         {
             _fileWatcher.EnableRaisingEvents = false;
-            _fileWatcher.Dispose();
         }
 
         void FileAdded(FileSystemEventArgs e)
@@ -128,7 +129,7 @@ namespace AutoQC
                 // Wait for 60 seconds.
                 Thread.Sleep(WAIT_60SEC);
             }
-            Logger.Log("File is ready");
+            Logger.Log("File {0} is ready", Path.GetFileName(filePath));
             return true;
         }
 

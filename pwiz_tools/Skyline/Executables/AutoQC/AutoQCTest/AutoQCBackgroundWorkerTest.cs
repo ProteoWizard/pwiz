@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -112,7 +113,7 @@ namespace AutoQCTest
             sb.Append("Processing new files...").AppendLine();
             sb.Append("Waiting for files...").AppendLine();
             sb.Append("File test1.txt added to directory.").AppendLine();
-            sb.Append("File is ready").AppendLine();
+            sb.Append("File test1.txt is ready").AppendLine();
             sb.Append("Running Process1 with args:").AppendLine();
             sb.Append("Process1 exited successfully.").AppendLine();
             sb.Append("Running Process2 with args: ").AppendLine();
@@ -122,7 +123,7 @@ namespace AutoQCTest
             
             sb.Append("Waiting for files...").AppendLine();
             sb.Append("File test2.txt added to directory.").AppendLine();
-            sb.Append("File is ready").AppendLine();
+            sb.Append("File test2.txt is ready").AppendLine();
             sb.Append("Running Process3 with args:").AppendLine();
             sb.Append("Error: Failed importing the results file").AppendLine();
             sb.Append("Process3 returned an error. Trying again...").AppendLine();

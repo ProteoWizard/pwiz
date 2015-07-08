@@ -125,8 +125,8 @@
 
 Before running AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC data files, as well as the path to a Skyline document where results will get imported.  Any new data files added to the folder will automatically get imported to the given Skyline document. 
 
-AutoQC allows the user to set an accumulation time window for the acquired results.  The minimum value for this setting is 31 days. The current Skyline document will contain results acquired only within the accumulation window.  When a new data files is added to the folder any results older than the current accumulation window, ending on the current day, will be discarded.  
-AutoQC also creates an archive (.sky.zip file) of the current Skyline document when data files are added to the folder in a new month. The archive contains data imported in the previous accumulation window.
+AutoQC allows the user to set an accumulation time window for the acquired results.  The minimum value for this setting is 31 days. The Skyline document specified in the "Setting" tab will contain results acquired only within the accumulation window.  When a new data files is added to the folder any results older than the current accumulation window, ending on that day, will be discarded.  
+AutoQC also creates an archive (.sky.zip file) of the Skyline document when data files are added to the folder in a new month.
 
 If you would like to publish the Skyline document to Panorama, check the box in the "Panorama Settings" tab and configure the details of the Panorama server. The document is published to Panorama after each data file import. </value>
   </data>

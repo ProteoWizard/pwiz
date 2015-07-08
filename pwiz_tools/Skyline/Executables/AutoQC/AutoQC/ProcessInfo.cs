@@ -1,4 +1,6 @@
 /*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -121,7 +123,7 @@ namespace AutoQC
                     return false;
                 }
 
-                Log("{0} exited successfully.", _procInfo.ExeName);
+                LogWithSpace("{0} exited successfully.", _procInfo.ExeName);
                 return true;
             }
         }
@@ -173,16 +175,14 @@ namespace AutoQC
             _logger.Log(message, args);
         }
 
-        private void LogError(string message, params Object[] args)
+        private void LogWithSpace(string message, params Object[] args)
         {
-            LogError(message, true, args);
+            _logger.Log(message, 1, 1, args);
         }
 
-        private void LogError(string message, bool space, params Object[] args)
+        private void LogError(string message, params Object[] args)
         {
-            var blankLinesBefore = space ? 1 : 0;
-            var blankLinesAfter = space ? 1 : 0;
-            _logger.LogError(message, blankLinesBefore, blankLinesAfter, args);
+            _logger.LogError(message, 1, 1, args);
         }
 
         protected ProcessInfo GetProcessInfo()

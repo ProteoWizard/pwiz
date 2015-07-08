@@ -36,7 +36,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBoxMain = new System.Windows.Forms.GroupBox();
             this.labelDays = new System.Windows.Forms.Label();
             this.textAccumulationTimeWindow = new System.Windows.Forms.TextBox();
             this.labelAccumulationTimeWindow = new System.Windows.Forms.Label();
@@ -83,7 +83,7 @@
             this.splitContainer1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.tabSettings.SuspendLayout();
-            this.groupBox2.SuspendLayout();
+            this.groupBoxMain.SuspendLayout();
             this.tabSprocopSettings.SuspendLayout();
             this.groupBoxSprocop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMMA)).BeginInit();
@@ -150,7 +150,7 @@
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSettings.Controls.Add(this.groupBox2);
+            this.tabSettings.Controls.Add(this.groupBoxMain);
             this.tabSettings.Location = new System.Drawing.Point(4, 28);
             this.tabSettings.Margin = new System.Windows.Forms.Padding(4);
             this.tabSettings.Name = "tabSettings";
@@ -159,25 +159,25 @@
             this.tabSettings.TabIndex = 1;
             this.tabSettings.Text = "Settings";
             // 
-            // groupBox2
+            // groupBoxMain
             // 
-            this.groupBox2.Controls.Add(this.labelDays);
-            this.groupBox2.Controls.Add(this.textAccumulationTimeWindow);
-            this.groupBox2.Controls.Add(this.labelAccumulationTimeWindow);
-            this.groupBox2.Controls.Add(this.cbImportExistingFiles);
-            this.groupBox2.Controls.Add(this.labelInstrumentType);
-            this.groupBox2.Controls.Add(this.comboBoxInstrumentType);
-            this.groupBox2.Controls.Add(this.btnFolderToWatch);
-            this.groupBox2.Controls.Add(this.label2);
-            this.groupBox2.Controls.Add(this.label3);
-            this.groupBox2.Controls.Add(this.textFolderToWatchPath);
-            this.groupBox2.Controls.Add(this.btnSkylineFilePath);
-            this.groupBox2.Controls.Add(this.textSkylinePath);
-            this.groupBox2.Location = new System.Drawing.Point(8, 15);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(621, 314);
-            this.groupBox2.TabIndex = 53;
-            this.groupBox2.TabStop = false;
+            this.groupBoxMain.Controls.Add(this.labelDays);
+            this.groupBoxMain.Controls.Add(this.textAccumulationTimeWindow);
+            this.groupBoxMain.Controls.Add(this.labelAccumulationTimeWindow);
+            this.groupBoxMain.Controls.Add(this.cbImportExistingFiles);
+            this.groupBoxMain.Controls.Add(this.labelInstrumentType);
+            this.groupBoxMain.Controls.Add(this.comboBoxInstrumentType);
+            this.groupBoxMain.Controls.Add(this.btnFolderToWatch);
+            this.groupBoxMain.Controls.Add(this.label2);
+            this.groupBoxMain.Controls.Add(this.label3);
+            this.groupBoxMain.Controls.Add(this.textFolderToWatchPath);
+            this.groupBoxMain.Controls.Add(this.btnSkylineFilePath);
+            this.groupBoxMain.Controls.Add(this.textSkylinePath);
+            this.groupBoxMain.Location = new System.Drawing.Point(8, 15);
+            this.groupBoxMain.Name = "groupBoxMain";
+            this.groupBoxMain.Size = new System.Drawing.Size(621, 314);
+            this.groupBoxMain.TabIndex = 53;
+            this.groupBoxMain.TabStop = false;
             // 
             // labelDays
             // 
@@ -603,8 +603,8 @@
             this.splitContainer1.ResumeLayout(false);
             this.tabControl.ResumeLayout(false);
             this.tabSettings.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
+            this.groupBoxMain.ResumeLayout(false);
+            this.groupBoxMain.PerformLayout();
             this.tabSprocopSettings.ResumeLayout(false);
             this.tabSprocopSettings.PerformLayout();
             this.groupBoxSprocop.ResumeLayout(false);
@@ -628,7 +628,7 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabSettings;
-        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox groupBoxMain;
         private System.Windows.Forms.Label labelDays;
         private System.Windows.Forms.TextBox textAccumulationTimeWindow;
         private System.Windows.Forms.Label labelAccumulationTimeWindow;

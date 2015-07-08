@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");

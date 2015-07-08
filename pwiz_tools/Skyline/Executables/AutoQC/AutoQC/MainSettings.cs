@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -246,7 +248,7 @@ namespace AutoQC
                 return null;
             }
             var args = string.Format("--in=\"{0}\" {1}", Settings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(AutoQCForm.SkylineRunnerPath, args);
+            return new ProcessInfo(AutoQCForm.SkylineRunnerPath, AutoQCForm.SKYLINE_RUNNER, args, args);
         }
 
         private DateTime GetLastArchivalDate()

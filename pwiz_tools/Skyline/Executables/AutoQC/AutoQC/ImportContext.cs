@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,13 +69,13 @@ namespace AutoQC
 
         public bool ImportingLast()
         {
-            return _currentIndex == _resultsFileList.Count - 1;
+            return _currentIndex >= _resultsFileList.Count - 1;
         }
 
         public virtual DateTime GetOldestFileDate()
         {
             // Results files are sorted by LastWriteTime;
-            return new FileInfo(_resultsFileList[_resultsFileList.Count - 1]).LastWriteTime;
+            return new FileInfo(_resultsFileList[0]).LastWriteTime;
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -163,6 +165,10 @@ namespace AutoQC
             tabControl.SelectTab(tabOutput);
             statusImg.Image = Resources.greenstatus;
             labelStatusRunning.Text = AUTO_QC_RUNNING;
+            groupBoxMain.Enabled = false;
+            groupBoxPanorama.Enabled = false;
+            cbPublishToPanorama.Enabled = false;
+
             tabControl.Update();
         }
 
@@ -189,6 +195,10 @@ namespace AutoQC
             statusImg.Image = Resources.redstatus;
        
             labelStatusRunning.Text = AUTO_QC_STOPPED;
+            groupBoxMain.Enabled = true;
+            groupBoxPanorama.Enabled = true;
+            cbPublishToPanorama.Enabled = true;
+
             tabControl.Update();
         }
 
@@ -197,7 +207,7 @@ namespace AutoQC
         {
             RunUI(() =>
             {
-                Log(AUTO_QC_WAITING);
+                LogWithSpace(AUTO_QC_WAITING);
                 SetWaitingControls();
             });
         }
@@ -220,6 +230,7 @@ namespace AutoQC
                 cbImportExistingFiles.Checked = mainSettings.ImportExistingFiles;
                 textAccumulationTimeWindow.Text = mainSettings.AccumulationWindowString;
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
+                comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(MainSettings.THERMO);
             });
         }
 
@@ -236,7 +247,7 @@ namespace AutoQC
                 FolderToWatch = textFolderToWatchPath.Text,
                 ImportExistingFiles = cbImportExistingFiles.Checked,
                 AccumulationWindowString = textAccumulationTimeWindow.Text,
-                InstrumentType = comboBoxInstrumentType.SelectedText
+                InstrumentType = comboBoxInstrumentType.SelectedItem.ToString()
             };
             return mainSettings;
         }
@@ -316,6 +327,9 @@ namespace AutoQC
         
 
         #region [Logging methods; Implementation of IAutoQCLogger interface]
+
+        private string _lastMessage = String.Empty;
+
         // Log to the Output tab only
         public void LogOutput(string message, params Object[] args)
         {
@@ -357,6 +371,13 @@ namespace AutoQC
             params Object[] args)
         {
             line = string.Format(line, args);
+
+            if (line.Equals(_lastMessage))
+            {
+                return;
+            }
+            _lastMessage = line;
+
             RunUI(() =>
             {
                 while (blankLinesBefore-- > 0)
