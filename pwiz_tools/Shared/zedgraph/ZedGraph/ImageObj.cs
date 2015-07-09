@@ -274,10 +274,10 @@ namespace ZedGraph
 					g.DrawImage( _image, tmpRect );
 				else
 				{
-					Region clip = g.Clip;
-					g.SetClip( tmpRect );
+					Region clip = g.Clip.Clone();
+					g.IntersectClip( tmpRect );
 					g.DrawImageUnscaled( _image, Rectangle.Round( tmpRect ) );
-					g.SetClip( clip, CombineMode.Replace );
+					g.Clip = clip;
 					//g.DrawImageUnscaledAndClipped( image, Rectangle.Round( tmpRect ) );
 				}
 			}

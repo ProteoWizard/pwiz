@@ -562,10 +562,10 @@ namespace ZedGraph
 								tRect.Height = zeroPix - tRect.Top;
 								if ( tRect.Height > 0 )
 								{
-									Region reg = g.Clip;
-									g.SetClip( tRect );
+									Region reg = g.Clip.Clone();
+									g.IntersectClip( tRect );
 									g.FillPath( brush, path );
-									g.SetClip( pane.Chart._rect );
+									g.Clip = reg;
 								}
 							}
 							else

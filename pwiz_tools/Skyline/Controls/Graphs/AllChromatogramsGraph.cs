@@ -53,9 +53,6 @@ namespace pwiz.Skyline.Controls.Graphs
             lblFileCount.Text = string.Empty;
             
             // Restore window placement.
-            Size size = Settings.Default.AllChromatogramsSize;
-            if (!size.IsEmpty)
-                Size = size;
             if (Program.DemoMode)
             {
                 var rectScreen = Screen.PrimaryScreen.WorkingArea;
@@ -74,8 +71,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     ForceOnScreen();
                 }
             }
-            if (Settings.Default.AllChromatogramsMaximized)
-                WindowState = FormWindowState.Maximized;
             Move += WindowMove;
             FormClosing += AllChromatogramsGraph_FormClosing;
 
@@ -102,28 +97,26 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Prepare to close this window for realy (instead of just hiding it).
+        /// Prepare to close this window for real (instead of just hiding it).
         /// </summary>
         public void Finish()
         {
             asyncGraph.Finish();
             FormClosing -= AllChromatogramsGraph_FormClosing;
+
+            // FOR PERFORMANCE TESTING:
+//            _stopwatch.Stop();
+//            if (Program.MainWindow != null && Program.MainWindow.DocumentFilePath != null)
+//            {
+//                File.WriteAllText(Path.ChangeExtension(Program.MainWindow.DocumentFilePath, ".txt"),
+//                    _stopwatch.Elapsed.TotalSeconds.ToString("N0"));
+//            }
         }
 
         private void WindowMove(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Normal)
                 Settings.Default.AllChromatogramsLocation = Location;
-            Settings.Default.AllChromatogramsMaximized =
-                (WindowState == FormWindowState.Maximized);
-        }
-
-        private void WindowResize(object sender, EventArgs e)
-        {
-            if (WindowState == FormWindowState.Normal)
-                Settings.Default.AllChromatogramsSize = Size;
-            Settings.Default.AllChromatogramsMaximized =
-                (WindowState == FormWindowState.Maximized);
         }
 
         /// <summary>

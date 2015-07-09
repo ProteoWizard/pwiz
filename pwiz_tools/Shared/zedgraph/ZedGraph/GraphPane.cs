@@ -731,8 +731,8 @@ namespace ZedGraph
 			if ( _rect.Width <= 1 || _rect.Height <= 1 )
 				return;
 
-			// Clip everything to the rect
-			g.SetClip( _rect );
+            // Clip everything to the rect
+            var clip = PushClip(g, _rect);
 
 			// calculate scaleFactor on "normal" pane size (BaseDimension)
 			float scaleFactor = this.CalcScaleFactor();
@@ -788,10 +788,9 @@ namespace ZedGraph
 				_graphObjList.Draw( g, this, scaleFactor, ZOrder.E_BehindCurves );
 
 				// Clip the points to the actual plot area
-				g.SetClip( _chart._rect );
+                var chartClip = PushClip(g, _chart._rect);
 				_curveList.Draw( g, this, scaleFactor );
-				g.SetClip( _rect );
-
+                PopClip(g, chartClip);
 			}
 
 			if ( showGraf )
@@ -836,7 +835,7 @@ namespace ZedGraph
 			}
 
 			// Reset the clipping
-			g.ResetClip();
+			PopClip(g, clip);
 
 			// Reset scale data
 			// this sets the temp values to NaN to cause an exception if these values are

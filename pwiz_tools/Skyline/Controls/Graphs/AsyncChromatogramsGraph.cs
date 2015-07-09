@@ -22,7 +22,6 @@ using System.Drawing;
 using ZedGraph;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -31,16 +30,14 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     class AsyncChromatogramsGraph : AsyncRenderControl
     {
-        private const int MAX_FRAMES_PER_SECOND = 5;           // target animation speed
+        private const int NORMAL_FRAME_MILLISECONDS = 500;
+        private const int FAST_FRAME_MILLISECONDS = 100;
         private const int STEPS_FOR_INTENSITY_ANIMATION = 2;    // half a second for growing peaks and adjusting intensity axis
-        private const int STEPS_FOR_TIME_AXIS_ANIMATION = 5;   // one second for adjusting time axis
-        private const double MINUTES_PER_BIN = 0.5;             // resolution for intensity averaging
-        private const int MAX_PEAKS_PER_BIN = 4;                // how many peaks to graph per bin
-        private const double DISPLAY_FILTER_PERCENT = 0.005;    // filter peaks less than this percentage of maximum intensity
+        private const int STEPS_FOR_TIME_AXIS_ANIMATION = 12;   // one second for adjusting time axis
         
         private const float PROGRESS_LINE_WIDTH = 2.0f;         // width of line to show current progress for progressive graphs
         private const double X_AXIS_START = 1.0;                // initial value for time axis
-        private const double Y_AXIS_START = 1.0;                // initial value for intensity axis
+        private const double Y_AXIS_START = 100.0;              // initial value for intensity axis
 
         private readonly Color _backgroundGradientColor1 = Color.FromArgb(240, 250, 250);
         private readonly Color _backgroundGradientColor2 = Color.FromArgb(250, 250, 210);
@@ -54,17 +51,16 @@ namespace pwiz.Skyline.Controls.Graphs
         private Animation _yAxisAnimation;
         private BoxObj _unfinishedBox;
         private LineObj _unfinishedLine;
-        private readonly List<ChromatogramLoadingStatus.TransitionData.Peak[]> _bins =
-            new List<ChromatogramLoadingStatus.TransitionData.Peak[]>(); 
-        private readonly List<CurveInfo> _animatingCurves = new List<CurveInfo>();
-        private double _lastCurrentTime;
+        private readonly List<CurveInfo> _activeCurves = new List<CurveInfo>();
         private ChromatogramLoadingStatus _status;
         private ChromatogramLoadingStatus _newStatus;
+        private double _lastTime;
+        private CurveInfo _lastCurve;
 
         //private static readonly Log LOG = new Log<AsyncChromatogramsGraph>();
 
         public AsyncChromatogramsGraph()
-            : base(MAX_FRAMES_PER_SECOND, "AllChromatograms background render") // Not L10N
+            : base("AllChromatograms background render") // Not L10N
         {
         }
 
@@ -90,6 +86,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphPane.YAxis.Scale.Min = 0.0;
             _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
             GraphHelper.FormatGraphPane(_graphPane);
+
+            _lastTime = 0;
         }
 
         /// <summary>
@@ -107,11 +105,9 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Render the graph on the background thread.
         /// </summary>
-        /// <param name="width">Width in pixels.</param>
-        /// <param name="height">Height in pixels.</param>
-        /// <param name="forceRender">True to force rendering (usually after size change).</param>
-        /// <param name="bitmap">Returns rendered bitmap.</param>
-        protected override void Render(int width, int height, bool forceRender, ref Bitmap bitmap)
+        /// <param name="bitmap">Destination bitmap.</param>
+        /// <param name="fullFrame">True to force full frame rendering.</param>
+        protected override Rectangle Render(Bitmap bitmap, bool fullFrame)
         {
             lock (this)
             {
@@ -128,49 +124,78 @@ namespace pwiz.Skyline.Controls.Graphs
                             : filePath;
                     _graphPane.Title.Text = fileName;
                     _graphPane.CurveList.Clear();
-                    _graphPane.XAxis.Scale.Max = _xMax = X_AXIS_START;
+                    _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
                     _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
                     _graphPane.AxisChange();
                     _xAxisAnimation = null;
                     _yAxisAnimation = null;
-                    _bins.Clear();
-                    _animatingCurves.Clear();
-                    if (_status.Transitions != null)
-                        _status.Transitions.CurrentTime = 0;
-                    forceRender = true;
+                    _activeCurves.Clear();
+                    _lastCurve = null;
+                    fullFrame = true;
                 }
             }
 
             if (_status == null)
-                return;
+                return Rectangle.Empty;
 
-            if (_status.Transitions != null && bitmap != null)  // don't add data until we've rendered first bitmap
+            // We need to process data even if the control isn't visible to reduce
+            // the memory load of raw chromatogram data.
+            bool newPeaks = false;
+            double time = _lastTime;
+            bool progressive = false;
+            if (_status.Transitions != null)
             {
-                // We need to process data even if the control isn't visible to reduce
-                // the memory load of raw chromatogram data.
-                forceRender = AddData(_status.Transitions) || forceRender;
+                progressive = _status.Transitions.Progressive;
+                time = _status.Transitions.CurrentTime;
+                newPeaks = AddData(_status.Transitions);
+            }
 
-                if (!IsVisible)
-                    return;
+            if (!IsVisible)
+                return Rectangle.Empty;
 
-                // Animate growing curves and changing axis scales.
-                forceRender = Animate() || forceRender;
+            Rectangle invalidRect;
+            if (fullFrame || _xAxisAnimation != null || _yAxisAnimation != null || (newPeaks && !progressive))
+            {
+                // full frame invalidation
+                invalidRect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            }
+            else if (newPeaks || time > _lastTime)
+            {
+                var p1 = _graphPane.GeneralTransform(_lastTime, 0, CoordType.AxisXYScale);
+                var p2 = _graphPane.GeneralTransform(time, 0, CoordType.AxisXYScale);
+                int x = (int) p1.X - 1;
+                int y = 0;
+                int width = (int)(p2.X + PROGRESS_LINE_WIDTH) - x;
+                int height = (int) p1.Y + 2;
+                invalidRect = new Rectangle(x, y, width, height);
+            }
+            else
+            {
+                invalidRect = Rectangle.Empty;
+            }
 
-                // For progressive import, update the progress line.
-                forceRender = UpdateProgressLine() || forceRender;
+            // Animate changing axis scales.
+            Animate();
+
+            // For progressive import, update the progress line.
+            if (progressive)
+            {
+                _lastTime = time;
+                UpdateProgressLine(time);
             }
 
             // Render a new bitmap if something has changed.
-            if (forceRender)
+            if (invalidRect.Width > 0)
             {
-                var newBitmap = new Bitmap(width, height);
-                using (var graphics = Graphics.FromImage(newBitmap))
+                using (var graphics = Graphics.FromImage(bitmap))
                 {
-                    _graphPane.ReSize(graphics, new RectangleF(0, 0, width, height));
+                    graphics.SetClip(invalidRect);
+                    _graphPane.ReSize(graphics, new RectangleF(0, 0, bitmap.Width, bitmap.Height));
                     _graphPane.Draw(graphics);
                 }
-                bitmap = newBitmap;
             }
+
+            return invalidRect;
         }
 
         /// <summary>
@@ -179,250 +204,162 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <returns>True if render is needed.</returns>
         private bool AddData(ChromatogramLoadingStatus.TransitionData transitions)
         {
-            bool render = false;
+            List<ChromatogramLoadingStatus.TransitionData.Peak> bin;
+            bool peaksAdded = false;
 
-            // Render progress line if it has moved.
-            if (transitions.Progressive && transitions.CurrentTime > _lastCurrentTime)
+            // Ensure that we get at least a few updates on a very fast load.
+            int maxBins = (int) Math.Max(1, transitions.MaxRetentionTime/10/ChromatogramLoadingStatus.TIME_RESOLUTION);
+
+            // Process bins of peaks queued by the reader thread.
+            float maxTime = (float) _xMax;
+            float maxIntensity = (float) _yMax;
+            while (maxBins-- > 0 && transitions.BinnedPeaks.TryDequeue(out bin))
             {
-                _lastCurrentTime = transitions.CurrentTime;
-                render = true;
+                if (transitions.Progressive)
+                    ProcessBinProgressive(bin, ref peaksAdded, ref maxTime, ref maxIntensity);
+                else
+                    ProcessBinSRM(bin, ref peaksAdded, ref maxTime, ref maxIntensity);
             }
 
-            // Add new curves and points.
-            var finishedPeaks = transitions.GetPeaks();
-            foreach (var peak in finishedPeaks)
+            // Rescale graph if necessary.
+            if (_xMax <= X_AXIS_START)
             {
-                // Discard tiny peaks.
-                if (peak.PeakIntensity < transitions.MaxIntensity*DISPLAY_FILTER_PERCENT)
-                    continue;
+                _xMax = maxTime;
+                _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax, 1, FAST_FRAME_MILLISECONDS);
+            }
+            else if (_xMax < maxTime)
+            {
+                _xMax = maxTime * 1.1;
+                _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax, STEPS_FOR_TIME_AXIS_ANIMATION,
+                    FAST_FRAME_MILLISECONDS);
+            }
 
-                if (!peak.MayOverlap)
-                {
-                    render = AddPeak(peak, 0.0) || render;
-                    continue;
-                }
+            if (_yMax < maxIntensity)
+            {
+                _yMax = maxIntensity*1.1;
+                _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax, STEPS_FOR_INTENSITY_ANIMATION);
+            }
 
-                // For SRM data, we need to combine peaks for the same filter index that overlap in time.
-                // When we do that, the new combined peak should grow from its current height, not from
-                // the base of the graph again.  Here we combine peaks and calculate a scale factor to
-                // start animation from so that the peak maintains its current height.
-                var removePeaks = new List<ChromatogramLoadingStatus.TransitionData.Peak>();
-                foreach (var bin in _bins)
+            return peaksAdded;
+        }
+
+        private void ProcessBinProgressive(
+            List<ChromatogramLoadingStatus.TransitionData.Peak> bin, 
+            ref bool peaksAdded,
+            ref float maxTime,
+            ref float maxIntensity)
+        {
+            float retentionTime = bin[0].BinIndex*ChromatogramLoadingStatus.TIME_RESOLUTION;
+            maxTime = _status.Transitions.MaxRetentionTime;
+
+            // Order the top peaks to be shown for each bin.
+            bin.Sort((a, b) => a.Intensity.CompareTo(b.Intensity));
+
+            for (int i = 0; i < _activeCurves.Count; i++)
+                _activeCurves[i].IsActive = false;
+
+            // Add the top peaks to the list of active curves. This allows peaks to be displayed smoothly
+            // and with anti-aliasing instead of as unconnected spikes.
+            for (int i = bin.Count - 1; i >= 0; i--)
+            {
+                // Filter out small intensities.
+                var peak = bin[i];
+                if (peak.Intensity < ChromatogramLoadingStatus.DISPLAY_FILTER_PERCENT*maxIntensity)
+                    break;
+
+                CurveInfo curve = null;
+                foreach (var activeCurve in _activeCurves)
                 {
-                    if (bin == null)
-                        continue;
-                    for (int i = 0; i < MAX_PEAKS_PER_BIN; i++)
+                    if (ReferenceEquals(peak.ModifiedSequence, activeCurve.ModifiedSequence))
                     {
-                        var displayedPeak = bin[i];
-                        if (displayedPeak == null)
-                            break;
-                        if (displayedPeak.FilterIndex == peak.FilterIndex && peak.Overlaps(displayedPeak))
-                        {
-                            // Combine old peak curve with the new peak.
-                            peak.Add(displayedPeak);
-
-                            // Remove old peak from display list.
-                            _graphPane.CurveList.Remove(((CurveInfo) displayedPeak.CurveInfo).Curve);
-
-                            // Remember old peak so we can correctly animate the new one.
-                            removePeaks.Add(displayedPeak);
-
-                            // Compact this bin.
-                            for (int j = i; j < MAX_PEAKS_PER_BIN - 1; j++)
-                                bin[j] = bin[j + 1];
-                            bin[MAX_PEAKS_PER_BIN - 1] = null;
-                            break;
-                        }
+                        curve = activeCurve;
+                        break;
                     }
                 }
 
-                // Break peak curve into multiple peaks that can be individually animated.
-                foreach (var extractedPeak in ExtractPeaks(peak))
+                // Add a new curve.
+                if (curve == null)
                 {
-                    double animatedScaleFactor = 0.0;
-                    var extractedTimes = extractedPeak.Times;
-                    double startTime = extractedTimes[0];
-                    double endTime = extractedTimes[extractedTimes.Count - 1];
-                    foreach (var removedPeak in removePeaks)
+                    curve = new CurveInfo(bin[i].ModifiedSequence, retentionTime);
+                    _graphPane.CurveList.Insert(0, curve.Curve);
+                    _activeCurves.Add(curve);
+                }
+
+                // Add intensity value to the curve.
+                float intensity = bin[i].Intensity;
+                maxIntensity = Math.Max(maxIntensity, intensity);
+                curve.Curve.Points[curve.Curve.NPts - 1].Y = intensity;
+                curve.Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                curve.IsActive = true;
+                peaksAdded = true;
+            }
+
+            // Remove curves that weren't among the top curves in this bin.
+            for (int i = _activeCurves.Count - 1; i >= 0; i--)
+            {
+                if (!_activeCurves[i].IsActive)
+                    _activeCurves.RemoveAt(i);
+            }
+        }
+
+        private void ProcessBinSRM(
+            List<ChromatogramLoadingStatus.TransitionData.Peak> bin,
+            ref bool peaksAdded,
+            ref float maxTime,
+            ref float maxIntensity)
+        {
+            float retentionTime = bin[0].BinIndex * ChromatogramLoadingStatus.TIME_RESOLUTION;
+            maxTime = Math.Max(maxTime, retentionTime);
+            peaksAdded = true;
+
+            foreach (var peak in bin)
+            {
+                // New peptide curve.
+                if (_lastCurve == null || !ReferenceEquals(peak.ModifiedSequence, _lastCurve.ModifiedSequence))
+                {
+                    _lastCurve = new CurveInfo(peak.ModifiedSequence, retentionTime, peak.Intensity);
+                    _graphPane.CurveList.Add(_lastCurve.Curve);
+                    maxIntensity = Math.Max(maxIntensity, peak.Intensity);
+                    continue;
+                }
+
+                // Add intensity to existing peptide curve.
+                for (int i = _lastCurve.Curve.NPts - 1; i >= 0; i--)
+                {
+                    int binIndex = ChromatogramLoadingStatus.GetBinIndex((float) _lastCurve.Curve.Points[i].X);
+                    if (binIndex > peak.BinIndex)
                     {
-                        var removedTimes = removedPeak.Times;
-                        if (removedTimes[0] >= startTime && removedTimes[removedTimes.Count - 1] <= endTime)
+                        if (i == 0)
                         {
-                            animatedScaleFactor = removedPeak.PeakIntensity/extractedPeak.PeakIntensity;
-                            if (((CurveInfo)removedPeak.CurveInfo).Animation != null)
-                                animatedScaleFactor *= ((CurveInfo)removedPeak.CurveInfo).Animation.Value;
-                            break;
+                            _lastCurve.InsertAt(0, retentionTime, peak.Intensity);
+                            _lastCurve.CheckZeroes(0);
+                            maxIntensity = Math.Max(maxIntensity, peak.Intensity);
                         }
                     }
-                    render = AddPeak(extractedPeak, animatedScaleFactor) || render;
-                }
-            }
-
-            if (IsVisible)
-            {
-                // Rescale axes to new maximum values.
-                double maxRetentionTime = transitions.MaxRetentionTime;
-                if (!transitions.MaxRetentionTimeKnown)
-                    maxRetentionTime *= 1.1;
-                render = AnimateAxes(maxRetentionTime, transitions.MaxIntensity*1.1) || render;
-            }
-
-            return render;
-        }
-
-        private int GetBinIndex(ChromatogramLoadingStatus.TransitionData.Peak peak)
-        {
-            return (int)Math.Round(peak.PeakTime/MINUTES_PER_BIN);
-        }
-
-        private bool AddPeak(ChromatogramLoadingStatus.TransitionData.Peak peak, double animatedScaleFactor)
-        {
-            // Find the time bin for peaks with this start time.
-            var binIndex = GetBinIndex(peak);
-            while (binIndex >= _bins.Count)
-                _bins.Add(null);
-            var bin = _bins[binIndex];
-
-            // Create a new bin.
-            if (bin == null)
-            {
-                bin = _bins[binIndex] = new ChromatogramLoadingStatus.TransitionData.Peak[MAX_PEAKS_PER_BIN];
-                bin[0] = peak;
-            }
-
-            // Fill an empty slot in the bin.
-            else if (bin[MAX_PEAKS_PER_BIN - 1] == null)
-            {
-                for (int i = 0;; i++)
-                {
-                    if (bin[i] == null)
+                    else if (binIndex == peak.BinIndex)
                     {
-                        bin[i] = peak;
+                        _lastCurve.Curve.Points[i].Y += peak.Intensity;
+                        _lastCurve.CheckZeroes(i);
+                        maxIntensity = Math.Max(maxIntensity, (float) _lastCurve.Curve.Points[i].Y);
+                        break;
+                    }
+                    else
+                    {
+                        _lastCurve.InsertAt(i + 1, retentionTime, peak.Intensity);
+                        _lastCurve.CheckZeroes(i + 1);
+                        maxIntensity = Math.Max(maxIntensity, peak.Intensity);
                         break;
                     }
                 }
             }
-
-            // If there is a peak with a lower intensity, replace it with the new peak.
-            else
-            {
-                int min = 0;
-                double minIntensity = bin[0].PeakIntensity;
-                for (int i = 1; i < MAX_PEAKS_PER_BIN; i++)
-                {
-                    double peakIntensity = bin[i].PeakIntensity;
-                    if (minIntensity > peakIntensity)
-                    {
-                        minIntensity = peakIntensity;
-                        min = i;
-                    }
-                }
-                if (peak.PeakIntensity < minIntensity)
-                    return false;   // no render required
-                var info = (CurveInfo) bin[min].CurveInfo;
-                _graphPane.CurveList.Remove(info.Curve);
-                bin[min] = peak;
-            }
-
-            if (_status.Transitions.MaxIntensity < peak.PeakIntensity)
-                _status.Transitions.MaxIntensity = peak.PeakIntensity;
-
-            // Drop low-intensity points.
-            FilterLowIntensityPoints(peak);
-
-            // Determine z-order for this peak (lowest intensity peaks are in front).
-            int zIndex = 0;
-            for (int i = 0; i < _bins.Count; i++)
-            {
-                bin = _bins[i];
-                if (bin != null)
-                {
-                    for (int j = 0; j < MAX_PEAKS_PER_BIN; j++)
-                    {
-                        if (bin[j] == null)
-                            break;
-                        if (bin[j].PeakIntensity < peak.PeakIntensity)
-                            zIndex++;
-                    }
-                }
-            }
-
-            // Add new peak to display list.
-            var curveInfo = new CurveInfo { Peak = peak, Animation = new Animation(animatedScaleFactor, 1.0, STEPS_FOR_INTENSITY_ANIMATION) };
-            peak.CurveInfo = curveInfo;
-            _animatingCurves.Add(curveInfo);
-            NewCurve(curveInfo, zIndex);
-
-            return true;    // render needed
-        }
-
-        private void FilterLowIntensityPoints(ChromatogramLoadingStatus.TransitionData.Peak peak)
-        {
-            // Count number of points that fall below intensity threshold for this peak.
-            double threshold = peak.PeakIntensity*0.01;
-            int start = 0;
-            while (peak.Intensities[start] < threshold)
-                start++;
-            int end = peak.Intensities.Count - 1;
-            while (peak.Intensities[end] < threshold)
-                end--;
-            end++;
-            int remaining = end - start;
-            if (remaining == peak.Intensities.Count)
-                return;
-
-            Assume.IsTrue(remaining > 0);
-
-            // Compact list, omitting low intensity points.
-            var times = new List<float>(remaining);
-            var intensities = new List<float>(remaining);
-            for (int i = start; i < end; i++)
-            {
-                times.Add(peak.Times[i]);
-                intensities.Add(peak.Intensities[i]);
-            }
-            peak.Times = times;
-            peak.Intensities = intensities;
-        }
-
-        /// <summary>
-        /// Add a new curve (representing a peak) to the graph.
-        /// </summary>
-        private void NewCurve(CurveInfo curveInfo, int zIndex)
-        {
-            var peak = curveInfo.Peak;
-            int peakId = peak.FilterIndex;
-            var fillColor = ColorGenerator.GetColor(peak.ModifiedSequence);
-            var curve = curveInfo.Curve = new LineItem(peakId + string.Empty, new PointPairList(), fillColor, SymbolType.None);
-            curve.Label.IsVisible = false;
-            curve.Line.Width = 0;
-            curve.Line.Fill = new Fill(fillColor);
-            curve.Line.IsAntiAlias = true;
-
-            // Add leading zero to curve.
-            curve.AddPoint(peak.Times[0] - ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);
-
-            double animationScaleFactor = curveInfo.Animation != null ? curveInfo.Animation.Value : 1.0;
-            for (int i = 0; i < peak.Times.Count; i++)
-                curve.AddPoint(peak.Times[i], peak.Intensities[i]*animationScaleFactor);
-
-            // Add trailing zero.
-            if (!peak.NoTrailingZero)
-                curve.AddPoint(peak.Times[peak.Times.Count - 1] + ChromatogramLoadingStatus.TIME_RESOLUTION, 0.0);
-
-            if (zIndex >= _graphPane.CurveList.Count)
-                _graphPane.CurveList.Add(curve);
-            else
-                _graphPane.CurveList.Insert(zIndex, curve);
         }
 
         /// <summary>
         /// Perform one step of peak and graph axes animations.
         /// </summary>
-        /// <returns>True if render is needed.</returns>
-        private bool Animate()
+        private void Animate()
         {
-            bool render = _animatingCurves.Count > 0 || _xAxisAnimation != null || _yAxisAnimation != null;
+            FrameMilliseconds = NORMAL_FRAME_MILLISECONDS;
 
             // Animate range of x and y axes.
             if (_xAxisAnimation != null)
@@ -432,6 +369,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (_xAxisAnimation.Done)
                     _xAxisAnimation = null;
+                else
+                    FrameMilliseconds = FAST_FRAME_MILLISECONDS;
             }
 
             if (_yAxisAnimation != null)
@@ -440,147 +379,33 @@ namespace pwiz.Skyline.Controls.Graphs
                 _graphPane.AxisChange();
 
                 if (_yAxisAnimation.Done)
-                {
                     _yAxisAnimation = null;
-                }
-            }
-
-            // Animate scale of new transition curves.
-            for (int i = _animatingCurves.Count - 1; i >= 0; i--)
-            {
-                var curveInfo = _animatingCurves[i];
-                var animation = curveInfo.Animation;
-                animation.Step();
-                
-                for (int j = 0; j < curveInfo.Peak.Intensities.Count; j++)
-                    curveInfo.Curve[j + 1].Y = curveInfo.Peak.Intensities[j] * animation.Value;
-
-                if (animation.Done)
-                {
-                    curveInfo.Animation = null;
-                    _animatingCurves.RemoveAt(i);
-                }
-            }
-
-            return render;
-        }
-
-
-        private IEnumerable<ChromatogramLoadingStatus.TransitionData.Peak> ExtractPeaks(ChromatogramLoadingStatus.TransitionData.Peak peak)
-        {
-            var intensities = peak.Intensities;
-            int startIndex = 0;
-            double thresholdIntensity = _status.Transitions.MaxIntensity * ChromatogramLoadingStatus.INTENSITY_THRESHOLD_PERCENT;
-
-            while (true)
-            {
-                while (startIndex < intensities.Count && intensities[startIndex] < thresholdIntensity)
-                    startIndex++;
-                if (startIndex == intensities.Count)
-                    yield break;
-
-                // Find end of transition below the threshold intensity value.
-                int endIndex = startIndex + 1;
-                float peakTime = peak.Times[startIndex];
-                float peakIntensity = intensities[startIndex];
-                while (endIndex < intensities.Count && intensities[endIndex] >= thresholdIntensity)
-                {
-                    if (peakIntensity < intensities[endIndex])
-                    {
-                        peakIntensity = intensities[endIndex];
-                        peakTime = peak.Times[endIndex];
-                    }
-                    endIndex++;
-                }
-
-                yield return new ChromatogramLoadingStatus.TransitionData.Peak(peak.ModifiedSequence, peak.FilterIndex, false)
-                    {
-                        Times = peak.Times.GetRange(startIndex, endIndex - startIndex),
-                        Intensities = peak.Intensities.GetRange(startIndex, endIndex - startIndex),
-                        PeakTime = peakTime,
-                        PeakIntensity = peakIntensity
-                    };
-
-                startIndex = endIndex;
-            }
-        }
-
-        /// <summary>
-        /// Determine if graph axes need to be adjusted (animated).
-        /// </summary>
-        /// <param name="xTarget">Target value for x axis.</param>
-        /// <param name="yTarget">Target value for y axis.</param>
-        /// <returns>True if render is needed.</returns>
-        private bool AnimateAxes(double xTarget, double yTarget)
-        {
-            bool render = false;
-
-            // Animate the x axis if the range has changed.
-            if (_xMax < xTarget)
-            {
-                _xMax = xTarget;
-
-                // Don't animate on the first range change (too much activity to watch).
-                if (_graphPane.XAxis.Scale.Max == X_AXIS_START)
-                {
-                    _graphPane.XAxis.Scale.Max = _xMax;
-                    _graphPane.AxisChange();
-                }
                 else
-                {
-                    _xAxisAnimation = new Animation(_graphPane.XAxis.Scale.Max, _xMax, STEPS_FOR_TIME_AXIS_ANIMATION);
-                }
-
-                render = true;
+                    FrameMilliseconds = FAST_FRAME_MILLISECONDS;
             }
-
-            // Animate the y axis if the range has changed.
-            if (_yMax < yTarget)
-            {
-                _yMax = yTarget;
-
-                // Don't animate on the first range change (too much activity to watch).
-                if (_graphPane.YAxis.Scale.Max == Y_AXIS_START)
-                {
-                    _graphPane.YAxis.Scale.Max = _yMax;
-                    _graphPane.AxisChange();
-                }
-                else
-                {
-                    _yAxisAnimation = new Animation(_graphPane.YAxis.Scale.Max, _yMax, STEPS_FOR_INTENSITY_ANIMATION);
-                }
-
-                render = true;
-            }
-
-            return render;
         }
+
 
         /// <summary>
         /// Update vertical line the marks current import time for progressively loaded files.
         /// </summary>
-        /// <returns>True if render is needed.</returns>
-        private bool UpdateProgressLine()
+        private void UpdateProgressLine(double time)
         {
-            var render = false;
-
             // Remove old progressive loading indicators.
             if (_unfinishedBox != null)
             {
                 _graphPane.GraphObjList.Remove(_unfinishedBox);
                 _graphPane.GraphObjList.Remove(_unfinishedLine);
                 _unfinishedBox = null;
-                render = true;
             }
 
             // If we're still loading, create a white rectangle which blocks the fill background, indicating data yet to be loaded.
-            double currentTime = _status.Transitions.CurrentTime;
-            if (_status.Transitions.Progressive && currentTime < _status.Transitions.MaxRetentionTime)
+            if (time < _status.Transitions.MaxRetentionTime)
             {
                 _unfinishedBox = new BoxObj(
-                    currentTime,
+                    time,
                     _graphPane.YAxis.Scale.Max,
-                    _graphPane.XAxis.Scale.Max - currentTime,
+                    _graphPane.XAxis.Scale.Max - time,
                     _graphPane.YAxis.Scale.Max - _graphPane.YAxis.Scale.Min,
                     Color.White, Color.White)
                 {
@@ -592,9 +417,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Place a vertical line after the last loaded data.
                 _unfinishedLine = new LineObj(
                     _unfinishedLineColor,
-                    currentTime,
+                    time,
                     _graphPane.YAxis.Scale.Max,
-                    currentTime,
+                    time,
                     _graphPane.YAxis.Scale.Min)
                 {
                     Location = { CoordinateFrame = CoordType.AxisXYScale },
@@ -602,10 +427,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZOrder = ZOrder.D_BehindAxis
                 };
                 _graphPane.GraphObjList.Add(_unfinishedLine);
-                render = true;
             }
-
-            return render;
         }
 
         /// <summary>
@@ -613,9 +435,58 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class CurveInfo
         {
-            public LineItem Curve;
-            public ChromatogramLoadingStatus.TransitionData.Peak Peak;
-            public Animation Animation;
+            public LineItem Curve { get; private set; }
+            public string ModifiedSequence { get; private set; }
+            public bool IsActive { get; set; }
+
+            public CurveInfo(string modifiedSequence, double retentionTime)
+            {
+                var fillColor = ColorGenerator.GetColor(modifiedSequence);
+                Curve = new LineItem(string.Empty, new PointPairList(), fillColor, SymbolType.None)
+                {
+                    Line = { Fill = new Fill(fillColor), Width = 2, IsAntiAlias = true },
+                    Label = { IsVisible = false }
+                };
+                Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                Curve.AddPoint(retentionTime, 0);
+                ModifiedSequence = modifiedSequence;
+            }
+
+            public CurveInfo(string modifiedSequence, double retentionTime, float intensity)
+                : this(modifiedSequence, retentionTime)
+            {
+                Curve.Points[1].Y = intensity;
+                Curve.AddPoint(retentionTime + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+            }
+
+            public void InsertAt(int index, double retentionTime, double intensity)
+            {
+                Curve.AddPoint(Curve.Points[Curve.NPts - 1].X, Curve.Points[Curve.NPts - 1].Y);
+                for (int j = index+1; j < Curve.NPts - 1; j++)
+                {
+                    Curve.Points[j].X = Curve.Points[j - 1].X;
+                    Curve.Points[j].Y = Curve.Points[j - 1].Y;
+                }
+                Curve.Points[index].X = retentionTime;
+                Curve.Points[index].Y = intensity;
+            }
+
+            public void CheckZeroes(int index)
+            {
+                if (index == 0 ||
+                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index - 1].X) < 
+                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index].X - 1))
+                {
+                    InsertAt(index, Curve.Points[index].X - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                    index++;
+                }
+                if (index + 1 == Curve.NPts ||
+                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index].X) <
+                    ChromatogramLoadingStatus.GetBinIndex((float) Curve.Points[index+1].X) - 1)
+                {
+                    InsertAt(index+1, Curve.Points[index].X + ChromatogramLoadingStatus.TIME_RESOLUTION, 0);
+                }
+            }
         }
     }
 }

@@ -265,6 +265,7 @@ namespace pwiz.MSGraph
             Region chartRegion = new Region( Chart.Rect );
             Region clipRegion = new Region();
             clipRegion.MakeEmpty();
+            var previousClip = g.Clip.Clone();
             g.SetClip( Rect, CombineMode.Replace );
             g.SetClip( chartRegion, CombineMode.Exclude );
 
@@ -425,6 +426,7 @@ namespace pwiz.MSGraph
             }
 
             autoScaleForManualLabels(g);
+            g.Clip = previousClip;
         }
 
         private bool isXChartFractionObject(GraphObj obj)

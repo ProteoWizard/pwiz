@@ -210,7 +210,6 @@ namespace pwiz.Skyline.Model.Results
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
                 _status = LoadingStatus.ChangeFilePath(dataFilePath).ChangeImporting(true);
                 var allChromData = LoadingStatus.Transitions;
-                allChromData.FromCache = false;
                 allChromData.MaxIntensity = 0;
                 allChromData.MaxRetentionTime = 0;
                 allChromData.MaxRetentionTimeKnown = false;
@@ -287,7 +286,6 @@ namespace pwiz.Skyline.Model.Results
                     {
                         provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
                         var allChromData = LoadingStatus.Transitions;
-                        allChromData.FromCache = true;
                         allChromData.MaxIntensity = (float)(provider.MaxIntensity ?? 0);
                         allChromData.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
                         allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;

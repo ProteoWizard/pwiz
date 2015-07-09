@@ -145,7 +145,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.MaximizeBox = false;
             this.Name = "AllChromatogramsGraph";
             this.ShowInTaskbar = false;
-            this.Resize += new System.EventHandler(this.WindowResize);
             this.panelMultifileProgress.ResumeLayout(false);
             this.panelMultifileProgress.PerformLayout();
             this.panel2.ResumeLayout(false);

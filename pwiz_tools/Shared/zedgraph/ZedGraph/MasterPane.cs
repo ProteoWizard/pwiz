@@ -588,8 +588,7 @@ namespace ZedGraph
 
 			float scaleFactor = CalcScaleFactor();
 
-			// Clip everything to the rect
-			g.SetClip( _rect );
+		    var clip = PushClip(g, _rect);
 
 			// For the MasterPane, All GraphItems go behind the GraphPanes, except those that
 			// are explicity declared as ZOrder.AInFront
@@ -598,14 +597,8 @@ namespace ZedGraph
 			_graphObjList.Draw( g, this, scaleFactor, ZOrder.D_BehindAxis );
 			_graphObjList.Draw( g, this, scaleFactor, ZOrder.C_BehindChartBorder );
 
-			// Reset the clipping
-			g.ResetClip();
-
 			foreach ( GraphPane pane in _paneList )
 				pane.Draw( g );
-
-			// Clip everything to the rect
-			g.SetClip( _rect );
 
 			_graphObjList.Draw( g, this, scaleFactor, ZOrder.B_BehindLegend );
 			
@@ -620,7 +613,7 @@ namespace ZedGraph
 			_graphObjList.Draw( g, this, scaleFactor, ZOrder.A_InFront );
 			
 			// Reset the clipping
-			g.ResetClip();
+			PopClip(g, clip);
 
 			// Restore original anti-alias mode
 			g.SmoothingMode = sModeSave;

@@ -600,11 +600,11 @@ namespace ZedGraph
 			// calculate scaleFactor on "normal" pane size (BaseDimension)
 			float scaleFactor = this.CalcScaleFactor();
 
+			// Clip everything to the rect
+		    var clip = PushClip(g, _rect);
+
 			// Fill the pane background and draw a border around it			
 			DrawPaneFrame( g, scaleFactor );
-
-			// Clip everything to the rect
-			g.SetClip( _rect );
 
 			// Draw the GraphItems that are behind everything
 			_graphObjList.Draw( g, this, scaleFactor, ZOrder.H_BehindAll );
@@ -616,8 +616,20 @@ namespace ZedGraph
 			//this.Legend.Draw( g, this, scaleFactor );
 
 			// Reset the clipping
-			g.ResetClip();
+            PopClip(g, clip);
 		}
+
+	    protected Region PushClip(Graphics g, RectangleF clip)
+	    {
+	        var previousClip = g.Clip.Clone();
+            g.IntersectClip(clip);
+	        return previousClip;
+	    }
+
+	    protected void PopClip(Graphics g, Region clipRegion)
+	    {
+	        g.Clip = clipRegion;
+	    }
 
 		/// <summary>
 		/// Calculate the client area rectangle based on the <see cref="PaneBase.Rect"/>.

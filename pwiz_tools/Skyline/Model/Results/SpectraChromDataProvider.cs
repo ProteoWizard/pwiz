@@ -105,10 +105,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Get data object used to graph all of the chromatograms.
             if (_loader.HasUI)
-            {
                 _allChromData = LoadingStatus.Transitions;
-                _allChromData.FilterCount = _filter.FilterPairs != null ? _filter.FilterPairs.Count() : 0;
-            }
 
             try
             {
@@ -1304,7 +1301,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Add data for chromatogram graph.
             if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
-                _allChromData.Add(spectrum.TextId, spectrum.FilterIndex, ChromSource, time, spectrum.Intensities);
+                _allChromData.Add(spectrum.TextId, spectrum.FilterIndex, time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.

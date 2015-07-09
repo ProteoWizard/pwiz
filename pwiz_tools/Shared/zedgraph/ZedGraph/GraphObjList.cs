@@ -241,7 +241,7 @@ namespace ZedGraph
 					if ( item.IsClippedToChartRect && pane is GraphPane )
 					{
 						region = g.Clip.Clone();
-						g.SetClip( ((GraphPane)pane).Chart._rect );
+                        g.IntersectClip( ((GraphPane)pane).Chart._rect );
 					}
 
 					item.Draw( g, pane, scaleFactor );

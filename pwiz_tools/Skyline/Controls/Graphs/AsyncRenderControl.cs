@@ -17,11 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using Timer = System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -31,50 +32,92 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public partial class AsyncRenderControl : UserControl
     {
-        private Bitmap _renderedBitmap;
+        private Bitmap _renderBitmap;
+        private Rectangle _invalidRect;
         private Timer _updateTimer;
-        private int _renderWidth;
-        private int _renderHeight;
-        private int _lastWidth;
-        private int _lastHeight;
         private readonly AutoResetEvent _startBackgroundRender = new AutoResetEvent(false);
+        private readonly string _backgroundThreadName;
+        private bool _fullFrame;
 
         //private static readonly Log LOG = new Log<AsyncRenderControl>();
 
-        protected AsyncRenderControl(int framesPerSecond, string backgroundThreadName = "Background render")    // Not L10N
+        protected AsyncRenderControl(string backgroundThreadName = "Background render")    // Not L10N
         {
             InitializeComponent();
-            pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+            _backgroundThreadName = backgroundThreadName;
+            FrameMilliseconds = 100;
+        }
 
+        protected override void OnLoad(EventArgs e)
+        {
             // Keep VS designer from crashing.
             if (Program.MainWindow == null)
                 return;
+
+            pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox.Width = Width;
+            pictureBox.Height = Height;
+            _renderBitmap = new Bitmap(Width, Height);
+            pictureBox.Image = new Bitmap(Width, Height);
+            _fullFrame = true;
 
             // NOTE: We create our a timer manually instead of using a designer component
             // because we want the timer to continue ticking even when the window is
             // closed.  Some subclasses may need to render even without a window to
             // process data that would otherwise consume a lot of memory.
-            _updateTimer = new Timer { Interval = 1000/framesPerSecond };
-            _updateTimer.Tick += (s, e) =>
+            _updateTimer = new Timer { Interval = 100 };
+            _updateTimer.Tick += (s, e1) =>
+            {
+                lock (this)
                 {
-                    if (_renderedBitmap != null && !ReferenceEquals(pictureBox.Image, _renderedBitmap))
-                        pictureBox.Image = _renderedBitmap;
-                    StartBackgroundRendering();
-                };
+                    // Don't render if window is not visible.
+                    if (!IsVisible)
+                    {
+                        _fullFrame = true;
+                        _invalidRect.Width = 0;
+                        _updateTimer.Interval = 500;
+                        return;
+                    }
+
+                    // For full frame, swap bitmap buffers.
+                    if (_invalidRect.Width == Width)
+                    {
+                        var swap = (Bitmap) pictureBox.Image;
+                        pictureBox.Image = _renderBitmap;
+                        _renderBitmap = swap;
+                    }
+
+                    // For partial frame, copy pixels from rendering buffer.
+                    else if (_invalidRect.Width > 0)
+                    {
+                        using (var graphics = Graphics.FromImage(pictureBox.Image))
+                        {
+                            graphics.DrawImage(_renderBitmap, _invalidRect, _invalidRect, GraphicsUnit.Pixel);
+                        }
+                        pictureBox.Invalidate(_invalidRect);
+                        pictureBox.Update();
+                    }
+
+                    _invalidRect.Width = 0;
+                    _updateTimer.Interval = FrameMilliseconds;
+                }
+                StartBackgroundRendering();
+            };
             _updateTimer.Start();
 
-            Thread backgroundRenderThread = new Thread(BackgroundRender)
-            {
-                Name = backgroundThreadName,
-                IsBackground = true
-            };
-            LocalizationHelper.InitThread(backgroundRenderThread);
-            backgroundRenderThread.Start();
+            ActionUtil.RunAsync(BackgroundRender, _backgroundThreadName);
+            StartBackgroundRendering();
         }
+
+        protected int FrameMilliseconds { get; set; }
 
         protected bool IsVisible
         {
-            get { return FormEx.GetParentForm(this).Visible; }
+            get
+            {
+                var parent = FormEx.GetParentForm(this);
+                return parent != null && parent.Visible;
+            }
         }
 
         /// <summary>
@@ -82,8 +125,11 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void Finish()
         {
-            _updateTimer.Dispose();
-            _updateTimer = null;
+            if (_updateTimer != null)
+            {
+                _updateTimer.Dispose();
+                _updateTimer = null;
+            }
             _startBackgroundRender.Set();
         }
 
@@ -92,14 +138,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         protected void StartBackgroundRendering()
         {
-            lock (this)
-            {
-                _renderWidth = Width;
-                _renderHeight = Height;
-            }
-            pictureBox.Width = _renderWidth;
-            pictureBox.Height = _renderHeight;
-            _startBackgroundRender.Set();
+            if (IsVisible)
+                _startBackgroundRender.Set();
         }
 
         /// <summary>
@@ -119,22 +159,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (_updateTimer == null)
                         return;
 
-                    // If size changed, force a new frame to be rendered.
-                    bool forceRender = (_renderedBitmap == null);
                     lock (this)
                     {
-                        forceRender |= (_lastWidth != _renderWidth || _lastHeight != _renderHeight);
-                        _lastWidth = _renderWidth;
-                        _lastHeight = _renderHeight;
+                        _invalidRect = Render(_renderBitmap, _fullFrame);
+                        _fullFrame = false;
                     }
-
-                    // Call derived class to render the bitmap.
-                    Render(_lastWidth, _lastHeight, forceRender && IsVisible, ref _renderedBitmap);
                 }
 // ReSharper disable EmptyGeneralCatchClause
-                catch (Exception)
+                catch (Exception e)
 // ReSharper restore EmptyGeneralCatchClause
                 {
+                    Trace.WriteLine(e);
                     // If we don't catch the exception in this background thread, Visual Studio
                     // kills a unit test without any explanation.  Resharper and TestRunner just
                     // ignore the problem.
@@ -155,22 +190,22 @@ namespace pwiz.Skyline.Controls.Graphs
         /// particular content.  The bitmap does not need to be re-rendered if nothing
         /// has changed since the last Render.
         /// </summary>
-        /// <param name="width">New bitmap width.</param>
-        /// <param name="height">New bitmap height.</param>
-        /// <param name="forceRender">True if render is required.</param>
-        /// <param name="bitmap">Bitmap which is created if new content needs to be displayed.</param>
-        protected virtual void Render(int width, int height, bool forceRender, ref Bitmap bitmap)
+        /// <param name="bitmap">Destination bitmap.</param>
+        /// <param name="fullFrame">True to force full frame rendering.</param>
+        protected virtual Rectangle Render(Bitmap bitmap, bool fullFrame)
         {
             // This is a default implementation that displays a red rectangle.  We don't
             // expect anyone to use this, but it's here to provide a reference implementation.
-            // For example, no bitmap needs to be rendered if forceRender is false and nothing
+
+            // No bitmap needs to be rendered if fullFrame is false and nothing
             // else has changed (this example is static).
-            if (forceRender)
-            {
-                bitmap = new Bitmap(width, height);
-                using (var graphics = Graphics.FromImage(bitmap))
-                    graphics.FillRectangle(Brushes.Red, 0, 0, bitmap.Width, bitmap.Height);
-            }
+            if (!fullFrame)
+                return Rectangle.Empty;
+
+            var renderedRect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            using (var graphics = Graphics.FromImage(bitmap))
+                graphics.FillRectangle(Brushes.Red, renderedRect);
+            return renderedRect;
         }
     }
 }

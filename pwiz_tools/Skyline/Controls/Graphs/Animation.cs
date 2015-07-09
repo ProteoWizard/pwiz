@@ -86,7 +86,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
 
                 if (step == _scaleFactors.Length - 1)
+                {
                     _scaleFactors = null;
+                    Value = _endValue;
+                }
             }
 
             return Value;
