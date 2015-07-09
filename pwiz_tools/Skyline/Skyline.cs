@@ -2146,6 +2146,27 @@ namespace pwiz.Skyline
             }
         }
 
+        private void acceptProteinsMenuItem_Click(object sender, EventArgs e)
+        {
+            AcceptProteins();
+        }
+
+        public void AcceptProteins()
+        {
+            using (var dlg = new RefineProteinListDlg(DocumentUI))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var refinementSettings = new RefinementSettings
+                    {
+                        AcceptedProteins = dlg.AcceptedProteins,
+                        AcceptProteinType = dlg.ProteinSpecType
+                    };                   
+
+                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine);
+                }
+            }
+        }
         private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
         {
             RemoveMissingResults();

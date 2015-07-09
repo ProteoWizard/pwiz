@@ -1383,7 +1383,8 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete &&
+                foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
             RunUI(() =>
             {
                 var foldChangeResultColumn =

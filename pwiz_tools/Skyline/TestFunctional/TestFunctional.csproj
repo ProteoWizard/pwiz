@@ -195,6 +195,7 @@
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReporterIonTest.cs" />

@@ -124,6 +124,7 @@ QuickFilterForm,TestLiveReportsFilter
 RecalibrateIrtDlg,IrtFunctionalTest
 RefineDlg,TestMethodEditTutorial
 RefineListDlg,TestRefineListDlg
+RefineProteinListDlg,TestRefineProteinListDlg
 RegressionRTThresholdDlg,TestIrtTutorial
 ReintegrateDlg,TestReintegrateDlg
 RenameProteinsDlg,TestRenameProteins

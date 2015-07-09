@@ -82,7 +82,11 @@ namespace pwiz.Skyline.Model
             public int? Charge { get; private set; }
         }
 
+        public enum ProteinSpecType {  name, accession, preferred }
+
         public IEnumerable<PeptideCharge> AcceptedPeptides { get; set; }
+        public IEnumerable<string> AcceptedProteins { get; set; }
+        public ProteinSpecType AcceptProteinType { get; set; }
         public bool AcceptModified { get; set; }
         public bool RemoveRepeatedPeptides { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
@@ -143,6 +147,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+            HashSet<string> acceptedProteins = (AcceptedProteins != null ? new HashSet<string>(AcceptedProteins) : null);
 
             var listPepGroups = new List<PeptideGroupDocNode>();
             // Excluding proteins with too few peptides, since they can impact results
@@ -150,6 +155,9 @@ namespace pwiz.Skyline.Model
             int minPeptides = MinPeptidesPerProtein ?? 0;
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
+                if (acceptedProteins != null && !acceptedProteins.Contains(GetAcceptProteinKey(nodePepGroup)))
+                    continue;
+
                 PeptideGroupDocNode nodePepGroupRefined = nodePepGroup;
                 // If auto-managing all peptides, make sure this flag is set correctly,
                 // and update the peptides list, if necessary.
@@ -204,6 +212,18 @@ namespace pwiz.Skyline.Model
             }
 
             return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+        }
+
+        private string GetAcceptProteinKey(PeptideGroupDocNode nodePepGroup)
+        {
+            switch (AcceptProteinType)
+            {
+                    case ProteinSpecType.accession:
+                        return nodePepGroup.ProteinMetadata.Accession;
+                    case ProteinSpecType.preferred:
+                        return nodePepGroup.ProteinMetadata.PreferredName;
+            }
+            return nodePepGroup.Name;
         }
 
         private PeptideGroupDocNode Refine(PeptideGroupDocNode nodePepGroup,

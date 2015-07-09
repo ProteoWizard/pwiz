@@ -288,6 +288,7 @@ namespace pwiz.Skyline
             this.sortProteinsByPreferredNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortProteinsByGeneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator43 = new System.Windows.Forms.ToolStripSeparator();
+            this.acceptProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateDecoysMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reintegrateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2175,6 +2176,7 @@ namespace pwiz.Skyline
             this.removeRepeatedPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
             this.toolStripSeparator45,
+            this.acceptProteinsMenuItem,
             this.renameProteinsMenuItem,
             this.sortProteinsMenuItem,
             this.toolStripSeparator43,
@@ -2260,6 +2262,12 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator43.Name = "toolStripSeparator43";
             resources.ApplyResources(this.toolStripSeparator43, "toolStripSeparator43");
+            // 
+            // acceptProteinsMenuItem
+            // 
+            this.acceptProteinsMenuItem.Name = "acceptProteinsMenuItem";
+            resources.ApplyResources(this.acceptProteinsMenuItem, "acceptProteinsMenuItem");
+            this.acceptProteinsMenuItem.Click += new System.EventHandler(this.acceptProteinsMenuItem_Click);
             // 
             // acceptPeptidesMenuItem
             // 
@@ -3639,6 +3647,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem addGroupComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator53;
+        private System.Windows.Forms.ToolStripMenuItem acceptProteinsMenuItem;
     }
 }
 

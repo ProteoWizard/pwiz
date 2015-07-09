@@ -8283,13 +8283,13 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="WizardPeptideSearchPRM" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideSearchPRM.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_" xml:space="preserve">
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Failure_attempting_to_save_to_the_temporary_file__0_" xml:space="preserve">
     <value>Failure attempting to save to the temporary file {0}</value>
   </data>
-    <data name="ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type" xml:space="preserve">
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type" xml:space="preserve">
     <value>The transition count {0} exceeds the maximum allowed for this instrument type</value>
   </data>
-    <data name="ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter" xml:space="preserve">
+  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter" xml:space="preserve">
     <value>Unexpected response {0} from Shimadzu method converter</value>
   </data>
   <data name="IsolationSchemeList_GetDefaults_SWATH__15_m_z_" xml:space="preserve">
@@ -8304,7 +8304,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="IsolationSchemeList_GetDefaults_SWATH__VW_100_" xml:space="preserve">
     <value>SWATH (VW 100)</value>
   </data>
-    <data name="ExportMethodDlg_OkDialog_The_DIA_isolation_list_must_have_prespecified_windows_" xml:space="preserve">
+  <data name="ExportMethodDlg_OkDialog_The_DIA_isolation_list_must_have_prespecified_windows_" xml:space="preserve">
     <value>The DIA isolation list must have prespecified windows.</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
@@ -8425,10 +8425,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" xml:space="preserve">
     <value>Provide transition ranking information through imported results, a spectral library, or choose only one target transition per precursor.</value>
   </data>
-    <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
+  <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
     <value>The precursor m/z {0:F04} is outside the instrument range {1} to {2}.</value>
   </data>
-    <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_" xml:space="preserve">
+  <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_" xml:space="preserve">
     <value>The precursor m/z {0:F04} is not measured by the current DIA isolation scheme.</value>
   </data>
   <data name="EditDescription_GetUndoText_Set__0__to___1__" xml:space="preserve">
@@ -8448,18 +8448,33 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <value>An unknown error occurred trying to verify access to Panorma folder {0} on the server {1}.
 {2}</value>
   </data>
-    <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model" xml:space="preserve">
+  <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model" xml:space="preserve">
     <value>Training peak scoring model</value>
   </data>
-    <data name="EditPeakScoringModelDlg_TrainModel_Training" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_TrainModel_Training" xml:space="preserve">
     <value>Training</value>
     <comment>trainng the scoring model</comment>
   </data>
-    <data name="EditPeakScoringModelDlg_TrainModelClick_Scoring" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_TrainModelClick_Scoring" xml:space="preserve">
     <value>Scoring</value>
     <comment>scoring peaks</comment>
   </data>
   <data name="Block_VerifySort_Expected_sorted_data" xml:space="preserve">
     <value>Expected sorted data</value>
+  </data>
+  <data name="RefineListDlgProtein_OkDialog_Do_you_want_to_continue" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="RefineListDlgProtein_OkDialog_The_protein___0___is_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
+    <value>The protein '{0}' is not in the document. Do you want to continue?</value>
+  </data>
+  <data name="RefineListDlgProtein_OkDialog_The_following_proteins_are_not_in_the_document_" xml:space="preserve">
+    <value>The following proteins are not in the document:</value>
+  </data>
+  <data name="RefineListDlgProtein_OkDialog_Of_the_specified__0__proteins__1__are_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
+    <value>Of the specified {0} proteins {1} are not in the document. Do you want to continue?</value>
+  </data>
+  <data name="RefineListDlgProtein_OkDialog_None_of_the_specified_proteins_are_in_the_document_" xml:space="preserve">
+    <value>None of the specified proteins are in the document.</value>
   </data>
 </root>
