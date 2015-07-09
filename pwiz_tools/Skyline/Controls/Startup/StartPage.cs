@@ -359,11 +359,13 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void openFile_MouseHover(object sender, EventArgs e)
         {
+            Cursor = Cursors.Hand;
             openFilePanel.BackColor = _darkestHoverColor;
         }
 
         private void openFile_MouseLeave(object sender, EventArgs e)
         {
+            Cursor = Cursors.Default;
             openFilePanel.BackColor = Color.Transparent;
         }
 
@@ -374,6 +376,7 @@ namespace pwiz.Skyline.Controls.Startup
         }
         private void openFile_Click(object sender, EventArgs e)
         {
+            Cursor.Current = Cursors.WaitCursor;
             OpenFile(null);
         }
 

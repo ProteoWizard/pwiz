@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void ControlMouseEnter(object sender, EventArgs e)
         {
+            Cursor = Cursors.Hand;
             BackColor = StartPage._darkestHoverColor;
             Parent.Focus();
         }
@@ -47,6 +48,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void ControlClick(object sender, EventArgs e)
         {
+            Cursor.Current = Cursors.WaitCursor;
             if (null != EventAction)
             {
                 EventAction();
