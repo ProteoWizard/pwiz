@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using ZedGraph;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -96,10 +97,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="status"></param>
         public void ClearGraph(ChromatogramLoadingStatus status)
         {
-            lock (this)
-            {
-                _newStatus = status;
-            }
+            _newStatus = status;
         }
 
         /// <summary>
@@ -109,30 +107,27 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="fullFrame">True to force full frame rendering.</param>
         protected override Rectangle Render(Bitmap bitmap, bool fullFrame)
         {
-            lock (this)
+            // If we have a new status object, clear the graph, set the title to the new file name,
+            // reset the range of axes, etc.
+            var newStatus = Interlocked.Exchange(ref _newStatus, null);
+            if (newStatus != null)
             {
-                // If we have a new status object, clear the graph, set the title to the new file name,
-                // reset the range of axes, etc.
-                if (_newStatus != null)
-                {
-                    _status = _newStatus;
-                    _newStatus = null;
-                    string sampleName = _status.FilePath.GetSampleName();
-                    string filePath = _status.FilePath.GetFileName();
-                    var fileName = !string.IsNullOrEmpty(sampleName)
-                            ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
-                            : filePath;
-                    _graphPane.Title.Text = fileName;
-                    _graphPane.CurveList.Clear();
-                    _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
-                    _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
-                    _graphPane.AxisChange();
-                    _xAxisAnimation = null;
-                    _yAxisAnimation = null;
-                    _activeCurves.Clear();
-                    _lastCurve = null;
-                    fullFrame = true;
-                }
+                _status = newStatus;
+                string sampleName = _status.FilePath.GetSampleName();
+                string filePath = _status.FilePath.GetFileName();
+                var fileName = !string.IsNullOrEmpty(sampleName)
+                    ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
+                    : filePath;
+                _graphPane.Title.Text = fileName;
+                _graphPane.CurveList.Clear();
+                _graphPane.XAxis.Scale.Max = _xMax = Math.Max(X_AXIS_START, _status.Transitions.MaxRetentionTime);
+                _graphPane.YAxis.Scale.Max = _yMax = Y_AXIS_START;
+                _graphPane.AxisChange();
+                _xAxisAnimation = null;
+                _yAxisAnimation = null;
+                _activeCurves.Clear();
+                _lastCurve = null;
+                fullFrame = true;
             }
 
             if (_status == null)
