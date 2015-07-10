@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model
     public class TransitionGroup : Identity
     {
         public const int MIN_PRECURSOR_CHARGE = 1;
-        public const int MAX_PRECURSOR_CHARGE = 20;
+        public const int MAX_PRECURSOR_CHARGE = 80;
         public const int MAX_PRECURSOR_CHARGE_PICK = 6;
 
         /// <summary>

@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION = FORMAT_VERSION_3_11;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
-        public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
+        public const int MAX_TRANSITION_COUNT = 6*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide
 
         // Version of this document in deserialized XML
 

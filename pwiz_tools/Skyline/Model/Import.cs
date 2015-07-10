@@ -878,7 +878,8 @@ namespace pwiz.Skyline.Model
                             continue;
 
                         double precursorMz = ColumnMz(fields, i, provider);
-                        if (precursorMz == 0)
+                        // With increased maximum charge state, avoid guessing very high charge states for smaller values
+                        if (precursorMz == 0 || precursorMz < settings.TransitionSettings.Instrument.MinMz)
                             continue;
 
                         int massShift;

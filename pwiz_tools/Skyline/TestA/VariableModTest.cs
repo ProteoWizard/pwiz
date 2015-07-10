@@ -347,13 +347,13 @@ namespace pwiz.SkylineTestA
             List<TransitionImportErrorInfo> errorList;
             document.ImportMassList(new StringReader(TEXT_PHOSPHO_TRANSITION_LIST),
                 CultureInfo.InvariantCulture, ',', null, out pathTo, out irtPeptides, out librarySpectra, out errorList);
-            Assert.AreEqual(errorList.Count, 27);
+            Assert.AreEqual(27, errorList.Count);
             AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
                                                 Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                                          errorList[0].ErrorMessage,
                                          2);
-            Assert.AreEqual(errorList[0].Column, 1);
-            Assert.AreEqual(errorList[0].Row, 40);
+            Assert.AreEqual(1, errorList[0].Column);
+            Assert.AreEqual(40, errorList[0].Row);
 
             var docHighMax = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
             var docList = docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_TRANSITION_LIST),
@@ -370,12 +370,12 @@ namespace pwiz.SkylineTestA
 
             docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_MULTI_LOSS),
                     CultureInfo.InvariantCulture, ',', null, out pathTo, out irtPeptides, out librarySpectra, out errorList);
-            Assert.AreEqual(errorList.Count, 5);
+            Assert.AreEqual(5, errorList.Count);
             AssertEx.AreComparableStrings(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion,
                                          errorList[0].ErrorMessage,
                                          2);
-            Assert.AreEqual(errorList[0].Column, 1);
-            Assert.AreEqual(errorList[0].Row, 2);
+            Assert.AreEqual(1, errorList[0].Column);
+            Assert.AreEqual(2, errorList[0].Row);
             
             var docMultiLos = docHighMax.ChangeSettings(docHighMax.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxNeutralLosses(2)));
