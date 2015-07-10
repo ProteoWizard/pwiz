@@ -2658,6 +2658,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unexpected zero length chromatogram returned from Chorus..
+        /// </summary>
+        public static string ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_ {
+            get {
+                return ResourceManager.GetString("ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_ret" +
+                        "urned_from_Chorus_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure trying to read points.
         /// </summary>
         public static string ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points {
@@ -2820,6 +2830,25 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_differen" +
                         "t_peak_counts__0__and__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed importing results file &apos;{0}&apos;..
+        /// </summary>
+        public static string ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___ {
+            get {
+                return ResourceManager.GetString("ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed importing results file &apos;{0}&apos;, sample {1}..
+        /// </summary>
+        public static string ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__ {
+            get {
+                return ResourceManager.GetString("ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__" +
+                        "1__", resourceCulture);
             }
         }
         
@@ -12622,11 +12651,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to build a cache for &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Failed importing results into &apos;{0}&apos;..
         /// </summary>
-        public static string Loader_Fail_Failed_to_build_a_cache_for__0__ {
+        public static string Loader_Fail_Failed_importing_results_into___0___ {
             get {
-                return ResourceManager.GetString("Loader_Fail_Failed_to_build_a_cache_for__0__", resourceCulture);
+                return ResourceManager.GetString("Loader_Fail_Failed_importing_results_into___0___", resourceCulture);
             }
         }
         
@@ -21346,6 +21375,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string SkylineWindow_ShowProgressErrorUI_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowProgressErrorUI_Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry.
+        /// </summary>
+        public static string SkylineWindow_ShowProgressErrorUI_Retry {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowProgressErrorUI_Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip.
+        /// </summary>
+        public static string SkylineWindow_ShowProgressErrorUI_Skip {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowProgressErrorUI_Skip", resourceCulture);
             }
         }
         

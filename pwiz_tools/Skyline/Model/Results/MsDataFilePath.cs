@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public abstract class MsDataFileUri : IComparable
     {
+        public abstract string GetFilePath();
         public abstract string GetFileName();
         public abstract string GetFileNameWithoutExtension();
         public abstract override string ToString();
@@ -86,6 +87,12 @@ namespace pwiz.Skyline.Model.Results
         }
         public string SampleName { get; private set; }
         public int SampleIndex { get; private set; }
+
+        public override string GetFilePath()
+        {
+            return FilePath;
+        }
+
         public override string GetFileNameWithoutExtension()
         {
             return Path.GetFileNameWithoutExtension(FilePath);
@@ -279,6 +286,11 @@ namespace pwiz.Skyline.Model.Results
         public ChorusUrl SetFileWriteTime(DateTime? fileWriteTime)
         {
             return new ChorusUrl(this) {FileWriteTime = fileWriteTime};
+        }
+
+        public override string GetFilePath()
+        {
+            return Uri.UnescapeDataString(Path);
         }
 
         public override string GetFileNameWithoutExtension()

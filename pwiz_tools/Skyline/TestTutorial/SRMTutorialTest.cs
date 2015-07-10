@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestTutorial
             PeptideGroupDocNode[] newProteins = smallDocument.PeptideGroups.Take(0).ToArray();
             smallDocument = (SrmDocument) smallDocument.ChangeChildren(newProteins);
 
-            SkylineWindow.SetDocument(smallDocument, SkylineWindow.Document);
+            Assert.IsTrue(SkylineWindow.SetDocument(smallDocument, SkylineWindow.Document)); // TODO: Must be a better way to do this
 
             var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>

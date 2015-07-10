@@ -99,6 +99,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private IList<MsDataFileUri> MSDataFilePaths { get; set; }
+        private MsDataFileUri CurrentFilePath { get { return MSDataFilePaths[_currentFileIndex]; } }
         private IList<RetentionTimeAlignmentIndices> FileAlignmentIndices { get; set; }
 
         private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
@@ -194,7 +195,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // If not cancelled, update progress.
-            var dataFilePath = MSDataFilePaths[_currentFileIndex];
+            var dataFilePath = CurrentFilePath;
             ChromFileInfo fileInfo = _document.Settings.MeasuredResults.GetChromFileInfo(dataFilePath);
             Assume.IsNotNull(fileInfo);
             string dataFilePathPart;
@@ -359,8 +360,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (MissingDataException x)
             {
-                ExitRead(new MissingDataException(x.MessageFormat,
-                                                  MSDataFilePaths[_currentFileIndex].GetSampleOrFileName(), x));
+                ExitRead(new MissingDataException(x.MessageFormat, CurrentFilePath.GetSampleOrFileName(), x));
             }
             catch (Exception x)
             {
@@ -368,6 +368,7 @@ namespace pwiz.Skyline.Model.Results
                 // be fairly unintelligible to the user, but keep the exception
                 // message, because ProteoWizard "Unsupported file format" comes
                 // in on this channel.
+                x = x as ChromCacheBuildException ?? new ChromCacheBuildException(CurrentFilePath, x);
                 ExitRead(x);
             }
         }
@@ -712,16 +713,14 @@ namespace pwiz.Skyline.Model.Results
                 return;
             string lookupSequence = nodePep.SourceUnmodifiedTextId;
             var lookupMods = nodePep.SourceExplicitMods;
-            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePaths[_currentFileIndex],
-                                                                           lookupSequence,
-                                                                           lookupMods);
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(CurrentFilePath, lookupSequence, lookupMods);
             bool isAlignedTimes = (retentionTimes.Length == 0);
             if (isAlignedTimes)
             {
                 RetentionTimeAlignmentIndices alignmentIndices = FileAlignmentIndices[_currentFileIndex];
                 if (alignmentIndices == null)
                 {
-                    string basename = MSDataFilePaths[_currentFileIndex].GetFileNameWithoutExtension();
+                    string basename = CurrentFilePath.GetFileNameWithoutExtension();
                     var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
                     alignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
                     FileAlignmentIndices[_currentFileIndex] = alignmentIndices;
@@ -1273,7 +1272,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // First check for any errors on the writer thread
                 if (_writeException != null)
-                    throw _writeException;
+                    throw new ChromCacheBuildException(CurrentFilePath, _writeException);
 
                 // Add new chromatogram data set, if not empty
                 if (chromDataSet != null)
@@ -1324,7 +1323,7 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         if (_writeException != null)
-                            throw _writeException;
+                            throw new ChromCacheBuildException(CurrentFilePath, _writeException);
                     }
                 }
             }
@@ -1387,7 +1386,7 @@ namespace pwiz.Skyline.Model.Results
                                 if (_currentFileIndex != currentFileIndex)
                                     return;
 
-                                _listCachedFiles.Add(new ChromCachedFile(MSDataFilePaths[_currentFileIndex],
+                                _listCachedFiles.Add(new ChromCachedFile(CurrentFilePath,
                                                                          _currentFileInfo.Flags,
                                                                          _currentFileInfo.LastWriteTime,
                                                                          _currentFileInfo.StartTime,

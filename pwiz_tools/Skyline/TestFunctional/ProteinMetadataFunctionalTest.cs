@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Revert those changes, so we can insert another way
-            SkylineWindow.SetDocument(snapshot, doc);
+            Assert.IsTrue(SkylineWindow.SetDocument(snapshot, doc));
             WaitForCondition(() => !SkylineWindow.Document.MoleculeGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
             doc = SkylineWindow.Document;
 

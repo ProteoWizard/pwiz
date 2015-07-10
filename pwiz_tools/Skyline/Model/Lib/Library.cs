@@ -41,6 +41,14 @@ namespace pwiz.Skyline.Model.Lib
     {
         private readonly Dictionary<string, Library> _loadedLibraries =
             new Dictionary<string, Library>();
+        private readonly Dictionary<string, LibraryLoadLock> _loadingLibraries =
+            new Dictionary<string, LibraryLoadLock>();
+
+        private class LibraryLoadLock
+        {
+            public Library Library { get; set; }
+            public bool IsLoaded { get; set; }
+        }
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
@@ -152,17 +160,35 @@ namespace pwiz.Skyline.Model.Lib
 
         public Library LoadLibrary(LibrarySpec spec, Func<ILoadMonitor> getMonitor)
         {
-            // TODO: Something better than locking for the entire load
+            LibraryLoadLock loadLock;
+
             lock (_loadedLibraries)
             {
                 Library library;
                 if (_loadedLibraries.TryGetValue(spec.Name, out library))
                     return library;
+                if (!_loadingLibraries.TryGetValue(spec.Name, out loadLock))
+                {
+                    loadLock = new LibraryLoadLock();
+                    _loadingLibraries.Add(spec.Name, loadLock);
+                }
+            }
 
-                library = spec.LoadLibrary(getMonitor());
-                if (library != null)
-                    _loadedLibraries.Add(spec.Name, library);
-                return library;
+            lock (loadLock)
+            {
+                if (!loadLock.IsLoaded)
+                {
+                    loadLock.Library = spec.LoadLibrary(getMonitor());
+                    loadLock.IsLoaded = true;
+                }
+            }
+
+            lock (_loadingLibraries)
+            {
+                _loadingLibraries.Remove(spec.Name);
+                if (loadLock.Library != null)
+                    _loadedLibraries.Add(spec.Name, loadLock.Library);
+                return loadLock.Library;
             }
         }
 
@@ -218,12 +244,28 @@ namespace pwiz.Skyline.Model.Lib
         public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor)
         {
             LocalizationHelper.InitThread();
-            // This blocks all library loading, while a library is being built
-            // TODO: Something better than locking for the entire build
+            // Avoid building a library that is loading or allowing the library to be loaded
+            // while it is building
+            LibraryLoadLock loadLock;
+
             lock (_loadedLibraries)
             {
-                bool success = builder.BuildLibrary(monitor);
+                if (!_loadingLibraries.TryGetValue(builder.LibrarySpec.Name, out loadLock))
+                {
+                    loadLock = new LibraryLoadLock();
+                    _loadingLibraries.Add(builder.LibrarySpec.Name, loadLock);
+                }
+            }
 
+            bool success;
+            lock (loadLock)
+            {
+                success = builder.BuildLibrary(monitor);
+            }
+
+            lock (_loadedLibraries)
+            {
+                _loadingLibraries.Remove(builder.LibrarySpec.Name);
                 if (success)
                 {
                     // If the library was already loaded, make sure the new copy
@@ -292,9 +334,9 @@ namespace pwiz.Skyline.Model.Lib
                 get { return false; }
             }
 
-            public void UpdateProgress(ProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
             {
-                _manager.UpdateProgress(status);
+                return _manager.UpdateProgress(status);
             }
 
             public bool HasUI { get { return false; } }

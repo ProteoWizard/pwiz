@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -76,4 +77,23 @@ namespace pwiz.Skyline.Model.Results
         public ProgressStatus Status { get; private set; }
     }
 
+    internal class ChromCacheBuildException : IOException
+    {
+        private static string GetMessage(MsDataFileUri importPath, Exception x)
+        {
+            string message = importPath.GetSampleName() == null
+                ? string.Format(Resources.ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___, importPath.GetFilePath())
+                : string.Format(Resources.ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__,
+                    importPath.GetFilePath(), importPath.GetSampleName());
+            return TextUtil.LineSeparate(message, x.Message);
+        }
+
+        public ChromCacheBuildException(MsDataFileUri importPath, Exception innerException)
+            : base(GetMessage(importPath, innerException), innerException)
+        {
+            ImportPath = importPath;
+        }
+
+        public MsDataFileUri ImportPath { get; private set; }
+    }
 }

@@ -549,7 +549,7 @@ namespace pwiz.Skyline
             if (DocumentChangedEvent != null)
                 DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
 
-            RunUIAction(UpdateDocumentUI);
+            RunUIActionAsync(UpdateDocumentUI);
 
             return true;
         }
@@ -3754,9 +3754,11 @@ namespace pwiz.Skyline
             get { return false; }
         }
 
-        void IProgressMonitor.UpdateProgress(ProgressStatus status)
+        UpdateProgressResponse IProgressMonitor.UpdateProgress(ProgressStatus status)
         {
-            UpdateProgress(this, new ProgressUpdateEventArgs(status));
+            var args = new ProgressUpdateEventArgs(status);
+            UpdateProgress(this, args);
+            return args.Response;
         }
 
         public bool HasUI { get { return true; } }
@@ -3793,12 +3795,20 @@ namespace pwiz.Skyline
 
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
-            if (i == 0 && status.IsBegin)
-                RunUIAction(BeginProgressUI, status);
+            bool begin = status.IsBegin || (!final && !_timerProgress.Enabled);
+            if (i == 0 && begin)
+                RunUIActionAsync(BeginProgressUI, status);
             // If it is a final state, and it is being shown, or there was an error
             // make sure user sees the change.
-            else if (final && (i == 0 || status.IsError))
-                RunUIAction(CompleteProgressUI, status);
+            else if (final)
+            {
+                // Only wait for an error, since it is expected that e
+                // may be modified by return of this function call
+                if (status.IsError)
+                    RunUIAction(CompleteProgressUI, e);
+                else if (i == 0)
+                    RunUIActionAsync(CompleteProgressUI, e);
+            }
         }
 
         private void BeginProgressUI(ProgressStatus status)
@@ -3806,11 +3816,12 @@ namespace pwiz.Skyline
             _timerProgress.Start();
         }
 
-        private void CompleteProgressUI(ProgressStatus status)
+        private void CompleteProgressUI(ProgressUpdateEventArgs e)
         {
             // If completed successfully, make sure the user sees 100% by setting
             // 100 and then waiting for the next timer tick to clear the progress
             // indicator.
+            var status = e.Progress;
             if (status.IsComplete)
             {
                 if (statusProgress.Visible)
@@ -3821,36 +3832,77 @@ namespace pwiz.Skyline
                 // If an error, show the message before removing status
                 if (status.IsError)
                 {
-                    var message = status.ErrorException.Message;
-
-                    // Drill down to see if the innermost exception was an out-of-memory exception.
-                    var innerException = status.ErrorException;
-                    while (innerException.InnerException != null)
-                        innerException = innerException.InnerException;
-                    if (innerException is OutOfMemoryException)
-                    {
-                        message += string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
-                        if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
-                        {
-                            message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
-                        }
-                    }
-
-                    // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
-                    try
-                    {
-                        // TODO: Get topmost window
-                        MessageDlg.ShowWithException(this, message, status.ErrorException);
-                    }
-                    catch (Exception)
-                    {
+                    if (!ShowProgressErrorUI(e))
                         return;
-                    }
                 }
 
                 // Update the progress UI immediately
                 UpdateProgressUI(this, new EventArgs());
             }
+        }
+
+        private bool ShowProgressErrorUI(ProgressUpdateEventArgs e)
+        {
+            var x = e.Progress.ErrorException;
+            var message = x.Message;
+
+            // Drill down to see if the innermost exception was an out-of-memory exception.
+            var innerException = x;
+            while (innerException.InnerException != null)
+                innerException = innerException.InnerException;
+            if (innerException is OutOfMemoryException)
+            {
+                string memoryMessage = string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
+                if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
+                {
+                    memoryMessage += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
+                }
+                message = TextUtil.LineSeparate(message, memoryMessage);
+            }
+
+            var xImport = x as ChromCacheBuildException;
+            if (xImport != null)
+            {
+                message = TextUtil.LineSeparate(message, string.Empty, Resources.SkylineWindow_ShowProgressErrorUI_Do_you_want_to_continue_);
+                // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
+                try
+                {
+                    var result = e.Progress.SegmentCount < 3    // 2 files and 1 for joining
+                        ? MultiButtonMsgDlg.Show(this, message, Resources.SkylineWindow_ShowProgressErrorUI_Retry, true)
+                        : MultiButtonMsgDlg.Show(this, message, Resources.SkylineWindow_ShowProgressErrorUI_Retry,
+                                                                Resources.SkylineWindow_ShowProgressErrorUI_Skip, true);
+                    switch (result)
+                    {
+                        case DialogResult.OK:
+                        case DialogResult.Yes:
+                            e.Response = UpdateProgressResponse.option1;
+                            break;
+                        case DialogResult.No:
+                            e.Response = UpdateProgressResponse.option2;
+                            break;
+                        default:
+                            e.Response = UpdateProgressResponse.cancel;
+                            break;
+                    }
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+                return true;
+            }
+
+            // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
+            try
+            {
+                // TODO: Get topmost window
+                MessageDlg.ShowWithException(this, message, x);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
         }
 
         private void UpdateProgressUI(object sender, EventArgs e)
@@ -3946,7 +3998,7 @@ namespace pwiz.Skyline
                 (WindowState == FormWindowState.Maximized);
         }
 
-        private void RunUIAction(Action act)
+        private void RunUIActionAsync(Action act)
         {
             if (InvokeRequired)
                 BeginInvoke(act);
@@ -3954,10 +4006,26 @@ namespace pwiz.Skyline
                 act();
         }
 
-        private void RunUIAction<TArg>(Action<TArg> act, TArg arg)
+        private void RunUIAction(Action act)
+        {
+            if (InvokeRequired)
+                Invoke(act);
+            else
+                act();
+        }
+
+        private void RunUIActionAsync<TArg>(Action<TArg> act, TArg arg)
         {
             if (InvokeRequired)
                 BeginInvoke(act, arg);
+            else
+                act(arg);
+        }
+
+        private void RunUIAction<TArg>(Action<TArg> act, TArg arg)
+        {
+            if (InvokeRequired)
+                Invoke(act, arg);
             else
                 act(arg);
         }
@@ -4049,7 +4117,6 @@ namespace pwiz.Skyline
 
         public string FindProgramPath(ProgramPathContainer programPathContainer)
         {
-            AutoResetEvent wh = new AutoResetEvent(false);
             DialogResult result = DialogResult.No;
             RunUIAction(() =>
                 {
@@ -4057,10 +4124,7 @@ namespace pwiz.Skyline
                     {
                         result = dlg.ShowDialog(this);
                     }
-                    wh.Set();
                 });
-            wh.WaitOne();
-            wh.Dispose();
             if (result == DialogResult.OK)
             {
                 return Settings.Default.ToolFilePaths.ContainsKey(programPathContainer) ? Settings.Default.ToolFilePaths[programPathContainer] : string.Empty;

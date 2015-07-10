@@ -18,6 +18,8 @@
  */
 namespace pwiz.Common.SystemUtil
 {
+    public enum UpdateProgressResponse { normal, cancel, option1, option2 }
+
     /// <summary>
     /// Use this interface to provide a progress sink for a long operation,
     /// and let the operation know, if it has been cancelled.  Usually used
@@ -34,7 +36,7 @@ namespace pwiz.Common.SystemUtil
         /// Reports updated <see cref="ProgressStatus"/> on a library load.
         /// </summary>
         /// <param name="status">The new status</param>
-        void UpdateProgress(ProgressStatus status);
+        UpdateProgressResponse UpdateProgress(ProgressStatus status);
 
         /// <summary>
         /// True if this progress monitor has a user interface.

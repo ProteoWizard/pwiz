@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 {
                     yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, null, 0,
                         chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
-                        chromatogramGroup.MinTime, chromatogramGroup.MaxTime);
+                        null, null);    // Optional times not used in this provider
                 }
             }
         }

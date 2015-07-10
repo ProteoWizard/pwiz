@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for Targeted MS/MS
     /// </summary>
     [TestClass]
-    public class TargetedMsmsTutorialTest : AbstractFunctionalTest
+    public class TargetedMsmsTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestTargetedMSMSTutorial()
@@ -115,20 +115,13 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
 
-            var document = SkylineWindow.Document;
             if (AsSmallMolecules)
             {
-                RunUI(() =>
-                {
-                    var refine = new RefinementSettings();
-                    var documentSM = refine.ConvertToSmallMolecules(document);
-                    while (!SkylineWindow.SetDocument(documentSM, document))
-                        Thread.Sleep(100);
-                    document = SkylineWindow.Document;
-                });
+                ConvertDocumentToSmallMolecules();
             }
 
             var expectedPeptideCount = AsSmallMolecules ? 10 : 9;
+            var document = SkylineWindow.Document;
             AssertEx.IsDocumentState(document, null, 3, expectedPeptideCount, 10, 78);
 
             // p. 3 Select first peptide

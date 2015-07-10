@@ -21,7 +21,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -38,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     /// Test DDA and Targeted isolation list export.
     /// </summary>
     [TestClass]
-    public class ExportIsolationListTest : AbstractFunctionalTest
+    public class ExportIsolationListTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestExportIsolationList()
@@ -102,13 +101,10 @@ namespace pwiz.SkylineTestFunctional
             // Load document which is already configured for DDA, and contains data for scheduling
             string standardDocumentFile = TestFilesDir.GetTestPath("BSA_Protea_label_free_meth3.sky");
             RunUI(() => SkylineWindow.OpenFile(standardDocumentFile));
+            WaitForDocumentLoaded();
             if (AsSmallMolecules)
             {
-                var document = SkylineWindow.Document;
-                var refine = new RefinementSettings();
-                var documentSM = refine.ConvertToSmallMolecules(document, false, AsSmallMoleculesNegative);
-                while (!SkylineWindow.SetDocument(documentSM, document))
-                    Thread.Sleep(100);
+                ConvertDocumentToSmallMolecules(false, AsSmallMoleculesNegative);
             }
 
             var t46 = 46.790;
@@ -116,17 +112,18 @@ namespace pwiz.SkylineTestFunctional
             var halfWin = 1.0;
             if (AsExplicitRetentionTimes)
             {
-                var refine = new RefinementSettings();
-                var document = SkylineWindow.Document;
                 const double timeOffset = 10;  // To verify that explicit retention times are in use
                 const double winOffset = .4;
-                var documentSM = refine.ConvertToExplicitRetentionTimes(document, timeOffset, winOffset);
+
+                RunUI(() => SkylineWindow.ModifyDocument("Convert to explicit retention times", document =>
+                {
+                    var refine = new RefinementSettings();
+                    return refine.ConvertToExplicitRetentionTimes(document, timeOffset, winOffset);
+                }));
+
                 t46 += timeOffset;
                 t39 += timeOffset;
                 halfWin += winOffset*0.5;
-
-                while (!SkylineWindow.SetDocument(documentSM, document))
-                    Thread.Sleep(100);
             }
 
             // Conversion to negative charge states shifts the masses
@@ -282,21 +279,20 @@ namespace pwiz.SkylineTestFunctional
 
         private static void CheckMassAnalyzer(string instrumentType, FullScanMassAnalyzerType massAnalyzer)
         {
-            SrmDocument doc = SkylineWindow.Document;
             // NOTE: Change to a DIFFERENT mass analyzer than we expect.
             if (!Equals(instrumentType, ExportInstrumentType.AGILENT_TOF))
             {
-                SkylineWindow.SetDocument(doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
+                RunUI(() => SkylineWindow.ModifyDocument("Change full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
                     .ChangePrecursorResolution(FullScanMassAnalyzerType.tof, 10000, null)
                     .ChangeProductResolution(FullScanMassAnalyzerType.tof, 10000, null)
-                    .ChangeAcquisitionMethod(FullScanAcquisitionMethod.Targeted, null))), doc);
+                    .ChangeAcquisitionMethod(FullScanAcquisitionMethod.Targeted, null)))));
             }
             else
             {
-                SkylineWindow.SetDocument(doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
+                RunUI(() => SkylineWindow.ModifyDocument("Change full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
                     .ChangePrecursorResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
                     .ChangeProductResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
-                    .ChangeAcquisitionMethod(FullScanAcquisitionMethod.Targeted, null))), doc);
+                    .ChangeAcquisitionMethod(FullScanAcquisitionMethod.Targeted, null)))));
             }
 
             var exportMethodDlg =

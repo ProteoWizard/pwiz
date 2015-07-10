@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -203,26 +204,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (doc.Settings.MeasuredResults == null)
                 return doc;
 
-            var keepChromatograms = new List<ChromatogramSet>();
-            foreach (var chromSet in doc.Settings.MeasuredResults.Chromatograms)
-            {
-                var keepFiles = chromSet.MSDataFileInfos.Where(selectFilesToKeepFunc).ToList();
-                if (keepFiles.Count != 0)
-                {
-                    if (keepFiles.Count == chromSet.FileCount)
-                        keepChromatograms.Add(chromSet);
-                    else
-                        keepChromatograms.Add(chromSet.ChangeMSDataFileInfos(keepFiles));
-                }
-            }
+            var measuredResultsNew = doc.Settings.MeasuredResults.FilterFiles(selectFilesToKeepFunc);
 
             // If nothing changed, don't create a new document instance
-            if (ArrayUtil.ReferencesEqual(keepChromatograms, doc.Settings.MeasuredResults.Chromatograms))
+            if (measuredResultsNew != null &&
+                ArrayUtil.ReferencesEqual(measuredResultsNew.Chromatograms, doc.Settings.MeasuredResults.Chromatograms))
+            {
                 return doc;
+            }
 
-            return doc.ChangeMeasuredResults(keepChromatograms.Count > 0
-                                                 ? doc.Settings.MeasuredResults.ChangeChromatograms(keepChromatograms)
-                                                 : null);
+            return doc.ChangeMeasuredResults(measuredResultsNew);
         }
     }
 }

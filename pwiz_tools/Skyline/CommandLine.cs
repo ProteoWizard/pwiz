@@ -3245,9 +3245,11 @@ namespace pwiz.Skyline
             get { return false; }
         }
 
-        void IProgressMonitor.UpdateProgress(ProgressStatus status)
+        UpdateProgressResponse IProgressMonitor.UpdateProgress(ProgressStatus status)
         {
             UpdateProgress(status);
+
+            return UpdateProgressResponse.normal;;
         }
 
         public bool HasUI { get { return false; } }

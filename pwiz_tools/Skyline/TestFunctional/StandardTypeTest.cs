@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
     /// Test of peptide standard types (iRT, QC and Normalization)
     /// </summary>
     [TestClass]
-    public class StandardTypeTest : AbstractFunctionalTest
+    public class StandardTypeTest : AbstractFunctionalTestEx
     {
         // Select peptide index 16
         const int SELECTED_PEPTIDE_INDEX = 16;
@@ -92,15 +92,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             if (AsSmallMolecules)
             {
-                var document = SkylineWindow.Document;
-                RunUI(() =>
-                {
-                    var refine = new RefinementSettings();
-                    var documentSM = refine.ConvertToSmallMolecules(document, ignoreDecoys:true);
-                    while (!SkylineWindow.SetDocument(documentSM, document))
-                        Thread.Sleep(100);
-                    document = SkylineWindow.Document;
-                });
+                ConvertDocumentToSmallMolecules(ignoreDecoys:true);
             }
             else
             {

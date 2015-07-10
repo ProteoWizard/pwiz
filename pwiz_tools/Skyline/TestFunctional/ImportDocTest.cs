@@ -204,11 +204,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.Redo);
             Assert.AreEqual(newCacheLen, new FileInfo(cachePersistPath).Length);
             // Undo followed by a save, should reduce cache to previous size
-            RunUI(() =>
-                      {
-                          SkylineWindow.Undo();
-                          SkylineWindow.SaveDocument();
-                      });
+            RunUI(SkylineWindow.Undo);
+            WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.SaveDocument());
             Assert.AreEqual(startCacheLen, new FileInfo(cachePersistPath).Length);
             // After which, a redo should return the document to the add state and
             // restore the cache
@@ -219,6 +217,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Import matching replicates by name
             RunUI(SkylineWindow.Undo);
+            WaitForDocumentLoaded();
             Assert.AreEqual(docInitial, SkylineWindow.Document);    // Cache optimization changes document
             docInitial = SkylineWindow.Document;
             RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[0]), dlg =>

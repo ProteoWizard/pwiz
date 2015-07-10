@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Model.Results
     [XmlRoot("measured_results")]
     public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
+        public static MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
+
         private ImmutableList<ChromatogramSet> _chromatograms;
 
         private ChromatogramCache _cacheFinal;
@@ -539,7 +541,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public void Load(SrmDocument document, string documentPath, ILoadMonitor loadMonitor,
-            Action<string, MeasuredResults> completed)
+            Action<string, MeasuredResults, bool> completed)
         {
             var loader = new Loader(ImClone(this), document, documentPath, loadMonitor, completed);
             loader.Load();
@@ -556,10 +558,10 @@ namespace pwiz.Skyline.Model.Results
 
         #region Property change methods
 
-        public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)
+        public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop, bool forceUpdate = false)
         {
             var results = ChangeProp(ImClone(this), im => im.Chromatograms = prop);
-            if (RequiresCacheUpdate(results))
+            if (forceUpdate || RequiresCacheUpdate(results))
             {
                 // Cache is no longer final
                 var listPartialCaches = new List<ChromatogramCache>();
@@ -604,6 +606,30 @@ namespace pwiz.Skyline.Model.Results
                     return true;
             }
             return false;
+        }
+
+        public MeasuredResults FilterFiles(Func<ChromFileInfo, bool> selectFilesToKeepFunc)
+        {
+            var keepChromatograms = new List<ChromatogramSet>();
+            foreach (var chromSet in Chromatograms)
+            {
+                var keepFiles = chromSet.MSDataFileInfos.Where(selectFilesToKeepFunc).ToList();
+                if (keepFiles.Count != 0)
+                {
+                    if (keepFiles.Count == chromSet.FileCount)
+                        keepChromatograms.Add(chromSet);
+                    else
+                        keepChromatograms.Add(chromSet.ChangeMSDataFileInfos(keepFiles));
+                }
+            }
+
+            // If nothing changed, don't create a new document instance
+            if (ArrayUtil.ReferencesEqual(keepChromatograms, Chromatograms))
+                return this;
+
+            return keepChromatograms.Count > 0
+                ? ChangeChromatograms(keepChromatograms)
+                : null;
         }
 
         public MeasuredResults ChangeSharedCachePaths(params string[] prop)
@@ -880,12 +906,12 @@ namespace pwiz.Skyline.Model.Results
             private readonly MeasuredResults _resultsClone;
             private readonly SrmDocument _document;
             private readonly string _documentPath;
-            private readonly Action<string, MeasuredResults> _completed;
+            private readonly Action<string, MeasuredResults, bool> _completed;
             private readonly ILoadMonitor _loader;
             private ProgressStatus _status;
 
             public Loader(MeasuredResults resultsClone, SrmDocument document, string documentPath,
-                ILoadMonitor loader, Action<string, MeasuredResults> completed)
+                ILoadMonitor loader, Action<string, MeasuredResults, bool> completed)
             {
                 _resultsClone = resultsClone;
                 _document = document;
@@ -1192,12 +1218,32 @@ namespace pwiz.Skyline.Model.Results
             private void Complete(bool final)
             {
                 _resultsClone._statusLoading = (final ? null : _status);
-                _completed(_documentPath, _resultsClone);
+                _completed(_documentPath, _resultsClone, false);
             }
 
             private void Fail(Exception x)
             {
-                if (x is IOException || x is InvalidDataException)
+                MeasuredResults newMeasuredResults = null;
+                var xBuild = x as ChromCacheBuildException;
+                if (xBuild != null)
+                {
+                    var response = _loader.UpdateProgress(_status.ChangeErrorException(x));
+                    var measuredResults = _document.Settings.MeasuredResults;
+                    switch (response)
+                    {
+                        case UpdateProgressResponse.option1:
+                            newMeasuredResults = measuredResults.ChangeChromatograms(measuredResults.Chromatograms, true);
+                            break;
+                        case UpdateProgressResponse.option2:
+                            newMeasuredResults = measuredResults.FilterFiles(info => !Equals(info.FilePath, xBuild.ImportPath));
+                            break;
+                        default:
+                            // cancel and normal remove everything not already imported
+                            newMeasuredResults = measuredResults.FilterFiles(info => measuredResults.IsCachedFile(info.FilePath)) ?? EMPTY;
+                            break;
+                    }                    
+                }
+                else if (x is IOException || x is InvalidDataException)
                     _loader.UpdateProgress(_status.ChangeErrorException(x));
                 else
                 {
@@ -1208,13 +1254,13 @@ namespace pwiz.Skyline.Model.Results
 //                    string xMessage = sb.ToString();
                     string xMessage = x.Message;
 
-                    var message = TextUtil.LineSeparate(string.Format(Resources.Loader_Fail_Failed_to_build_a_cache_for__0__, _documentPath),
+                    var message = TextUtil.LineSeparate(string.Format(Resources.Loader_Fail_Failed_importing_results_into___0___, _documentPath),
                                                         xMessage);
                     x = new Exception(message, x);
                     _loader.UpdateProgress(_status.ChangeErrorException(x));
                 }
 
-                _completed(_documentPath, null);
+                _completed(_documentPath, newMeasuredResults, true);
             }
 
             private void FinishCacheBuild(ChromatogramCache cache, Exception x)

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
@@ -138,6 +139,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             chromGroupInfo.ReadChromatogram(_chromatogramCache);
             var tranInfo = chromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
             times = tranInfo.Times;
+            if (times.Length == 0)
+                throw new IOException(Resources.ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_);
             if (null != tranInfo.ScanIds)
             {
                 scanIds = tranInfo.ScanIds[(short) chromKeyIndices.Key.Source];

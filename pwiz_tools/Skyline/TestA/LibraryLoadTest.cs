@@ -164,8 +164,9 @@ namespace pwiz.SkylineTestA
                 get { return false; }
             }
 
-            public void UpdateProgress(ProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
             {
+                return UpdateProgressResponse.normal;
             }
 
             public bool HasUI { get { return false; } }

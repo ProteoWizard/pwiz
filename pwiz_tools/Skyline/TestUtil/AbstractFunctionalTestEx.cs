@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -58,6 +59,15 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
             WaitForDocumentLoaded();
+        }
+
+        public void ConvertDocumentToSmallMolecules(bool massesOnly = false, bool invertCharges = false, bool ignoreDecoys = false)
+        {
+            RunUI(() => SkylineWindow.ModifyDocument("Convert to small molecules", document =>
+            {
+                var refine = new RefinementSettings();
+                return refine.ConvertToSmallMolecules(document, massesOnly, invertCharges, ignoreDecoys);
+            }));
         }
 
         /// <summary>

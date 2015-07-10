@@ -48,12 +48,11 @@ namespace pwiz.SkylineTestFunctional
             };
             var ionList = new MeasuredIonList();
             ionList.AddRange(ions);
-            var originalDoc = SkylineWindow.Document;
-            var measuredIonDoc = originalDoc.ChangeSettings(originalDoc.Settings.ChangeTransitionFilter(filter =>
-                filter.ChangeMeasuredIons(ions)));
             Settings.Default.MeasuredIonList = ionList;
 
-            SkylineWindow.SetDocument(measuredIonDoc, originalDoc);
+            RunUI(() => SkylineWindow.ModifyDocument("Change measured ions", document => document.ChangeSettings(
+                document.Settings.ChangeTransitionFilter(filter => filter.ChangeMeasuredIons(ions)))));
+
             TransitionSettingsUI tranSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
@@ -103,11 +102,9 @@ namespace pwiz.SkylineTestFunctional
             var ions = new MeasuredIon[0];
             var ionList = new MeasuredIonList();
             ionList.AddRange(ions);
-            var originalDoc = SkylineWindow.Document;
-            var measuredIonDoc = originalDoc.ChangeSettings(originalDoc.Settings.ChangeTransitionFilter(filter =>
-                filter.ChangeMeasuredIons(ions)));
             Settings.Default.MeasuredIonList = ionList;
-            SkylineWindow.SetDocument(measuredIonDoc, originalDoc);
+            RunUI(() => SkylineWindow.ModifyDocument("Change measured ions", document => document.ChangeSettings(
+                document.Settings.ChangeTransitionFilter(filter => filter.ChangeMeasuredIons(ions)))));
 
             var tranSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             var editMeasuredIonList =

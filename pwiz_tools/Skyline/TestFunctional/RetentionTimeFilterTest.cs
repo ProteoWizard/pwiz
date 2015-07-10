@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void SetUiDocument(SrmDocument newDocument)
         {
-            RunUI(()=>Assert.IsTrue(SkylineWindow.SetDocument(newDocument, SkylineWindow.DocumentUI)));
+            RunUI(() => Assert.IsTrue(SkylineWindow.SetDocument(newDocument, SkylineWindow.DocumentUI)));
         }
 
         private SrmDocument ChangeFullScanSettings(SrmDocument document, TransitionFullScan transitionFullScan)

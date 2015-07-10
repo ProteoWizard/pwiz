@@ -1972,9 +1972,6 @@ Are you sure you want to continue?</value>
   <data name="Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_" xml:space="preserve">
     <value>Failure attempting to load the data cache file {0}</value>
   </data>
-  <data name="Loader_Fail_Failed_to_build_a_cache_for__0__" xml:space="preserve">
-    <value>Failed to build a cache for '{0}'.</value>
-  </data>
   <data name="MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found" xml:space="preserve">
     <value>MS/MS scan index {0} not found</value>
   </data>
@@ -8476,5 +8473,26 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="RefineListDlgProtein_OkDialog_None_of_the_specified_proteins_are_in_the_document_" xml:space="preserve">
     <value>None of the specified proteins are in the document.</value>
+  </data>
+  <data name="Loader_Fail_Failed_importing_results_into___0___" xml:space="preserve">
+    <value>Failed importing results into '{0}'.</value>
+  </data>
+  <data name="SkylineWindow_ShowProgressErrorUI_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="SkylineWindow_ShowProgressErrorUI_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="SkylineWindow_ShowProgressErrorUI_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_" xml:space="preserve">
+    <value>Unexpected zero length chromatogram returned from Chorus.</value>
+  </data>
+  <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___" xml:space="preserve">
+    <value>Failed importing results file '{0}'.</value>
+  </data>
+  <data name="ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__" xml:space="preserve">
+    <value>Failed importing results file '{0}', sample {1}.</value>
   </data>
 </root>

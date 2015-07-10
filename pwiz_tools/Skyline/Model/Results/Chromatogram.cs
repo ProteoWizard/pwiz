@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Results
                 _manager.EndProcessing(_document);                
             }
 
-            private void FinishLoad(string documentPath, MeasuredResults resultsLoad)
+            private void FinishLoad(string documentPath, MeasuredResults resultsLoad, bool changeSets)
             {
                 if (resultsLoad == null)
                 {
@@ -167,8 +167,18 @@ namespace pwiz.Skyline.Model.Results
                         CancelLoad(resultsLoad);
                         return;
                     }
-                    // Otherwise, switch to new cache
-                    docNew = docCurrent.ChangeMeasuredResults(results.UpdateCaches(documentPath, resultsLoad));
+                    if (changeSets)
+                    {
+                        // Result is empty cache, due to cancelation
+                        results = resultsLoad.Chromatograms.Count != 0 ? resultsLoad : null;
+                        docNew = docCurrent.ChangeMeasuredResults(results);
+                    }
+                    else
+                    {
+                        // Otherwise, switch to new cache
+                        results = results.UpdateCaches(documentPath, resultsLoad);
+                        docNew = docCurrent.ChangeMeasuredResults(results);
+                    }
                 }
                 while (!_manager.CompleteProcessing(_container, docNew, docCurrent));
 

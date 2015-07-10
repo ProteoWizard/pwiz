@@ -167,10 +167,15 @@ namespace pwiz.Skyline.Model
         protected abstract bool LoadBackground(IDocumentContainer container,
             SrmDocument document, SrmDocument docCurrent);
 
-        protected void UpdateProgress(ProgressStatus status)
+        protected UpdateProgressResponse UpdateProgress(ProgressStatus status)
         {
             if (ProgressUpdateEvent != null)
-                ProgressUpdateEvent(this, new ProgressUpdateEventArgs(status));
+            {
+                var args = new ProgressUpdateEventArgs(status);
+                ProgressUpdateEvent(this, args);
+                return args.Response;
+            }
+            return UpdateProgressResponse.normal;
         }
 
         protected bool CompleteProcessing(IDocumentContainer container, SrmDocument docNew, SrmDocument docOriginal)
@@ -227,9 +232,9 @@ namespace pwiz.Skyline.Model
             /// Updates progress reporting for this operation.
             /// </summary>
             /// <param name="status"></param>
-            public void UpdateProgress(ProgressStatus status)
+            public UpdateProgressResponse UpdateProgress(ProgressStatus status)
             {
-                _manager.UpdateProgress(status);
+                return _manager.UpdateProgress(status);
             }
 
             public bool HasUI { get; set; }
@@ -265,9 +270,9 @@ namespace pwiz.Skyline.Model
             get { return _monitor.IsCanceled; }
         }
 
-        public void UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
         {
-            _monitor.UpdateProgress(status);
+            return _monitor.UpdateProgress(status);
         }
 
         public bool HasUI { get { return false; } }

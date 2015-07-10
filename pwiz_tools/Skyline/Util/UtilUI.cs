@@ -151,11 +151,12 @@ namespace pwiz.Skyline.Util
             get { return _broker.IsCanceled; }
         }
 
-        public void UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
         {
             _broker.ProgressValue = status.PercentComplete;
             _broker.Message = status.Message;
             Status = status;
+            return UpdateProgressResponse.normal;
         }
 
         public bool HasUI { get { return false; } }
@@ -169,6 +170,8 @@ namespace pwiz.Skyline.Util
         }
 
         public ProgressStatus Progress { get; private set; }
+
+        public UpdateProgressResponse Response { get; set; }
     }
 
     public interface IClipboardDataProvider
