@@ -170,6 +170,7 @@
     <Compile Include="EditStaticModTest.cs" />
     <Compile Include="ExplicitMultiTypeTest.cs" />
     <Compile Include="ExplicitVariableTest.cs" />
+    <Compile Include="ImportFailureTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
@@ -294,6 +295,7 @@
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonTest.zip" />
     <None Include="ImportDocTest.zip" />
+    <None Include="ImportFailureTest.zip" />
     <None Include="ImportPeptideSearchTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />
