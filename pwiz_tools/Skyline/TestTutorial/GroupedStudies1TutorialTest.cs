@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<ChromChartPropertyDlg>(() => SkylineWindow.ShowChromatogramProperties(), propDlg =>
             {
-                propDlg.FontSize = 12;
+                propDlg.FontSize = GraphFontSize.NORMAL;
                 propDlg.OkDialog();
             });
 

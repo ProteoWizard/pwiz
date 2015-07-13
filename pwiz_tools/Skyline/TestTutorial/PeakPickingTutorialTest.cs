@@ -160,7 +160,7 @@ namespace pwiz.SkylineTestTutorial
                 });
             RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
                 {
-                    dlg.FontSize = 14;
+                    dlg.FontSize = GraphFontSize.LARGE;
                     dlg.OkDialog();
                 });
             PauseForScreenShot("Main window", 5);

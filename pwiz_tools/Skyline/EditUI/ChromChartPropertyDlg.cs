@@ -34,7 +34,7 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
 
             textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString(LocalizationHelper.CurrentCulture);
-            textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString(LocalizationHelper.CurrentCulture);
+            GraphFontSize.PopulateCombo(textSizeComboBox, Settings.Default.ChromatogramFontSize);
 
             if (Settings.Default.ChromatogramTimeRange == 0)
             {
@@ -61,10 +61,6 @@ namespace pwiz.Skyline.EditUI
             if (!helper.ValidateNumberTextBox(textLineWidth, 1, 5, out lineWidth))
                 return;
 
-            int fontSize;
-            if (!helper.ValidateNumberTextBox(textFontSize, 6, 128, out fontSize))
-                return;
-
             double timeRange = 0;
             if (!string.IsNullOrEmpty(textTimeRange.Text))
             {
@@ -88,7 +84,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             Settings.Default.ChromatogramLineWidth = lineWidth;
-            Settings.Default.ChromatogramFontSize = fontSize;
+            Settings.Default.ChromatogramFontSize = GraphFontSize.GetFontSize(textSizeComboBox).PointSize;
             Settings.Default.ChromatogramTimeRange = timeRange;
             Settings.Default.ChromatogramTimeRangeRelative = relative;
             Settings.Default.ChromatogramMinIntensity = minIntensity;
@@ -111,7 +107,7 @@ namespace pwiz.Skyline.EditUI
                 Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_widths : 
                 Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes);
         }
-
+       
         #region Functional test support
 
         public int LineWidth
@@ -120,10 +116,10 @@ namespace pwiz.Skyline.EditUI
             set { textLineWidth.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        public int FontSize
+        public GraphFontSize FontSize
         {
-            get { return int.Parse(textFontSize.Text); }
-            set { textFontSize.Text = value.ToString(CultureInfo.CurrentCulture); }
+            get { return textSizeComboBox.SelectedItem as GraphFontSize; }
+            set { textSizeComboBox.SelectedItem = value; }
         }
 
         #endregion

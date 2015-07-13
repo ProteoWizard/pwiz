@@ -677,6 +677,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
+            GraphHelper.FormatFontSize(graphControl.GraphPane,Settings.Default.ChromatogramFontSize);
             var settings = DocumentUI.Settings;
             var results = settings.MeasuredResults;
             if (results == null)

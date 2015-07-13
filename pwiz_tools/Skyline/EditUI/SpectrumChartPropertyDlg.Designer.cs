@@ -33,8 +33,8 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.textLineWidth = new System.Windows.Forms.TextBox();
-            this.textFontSize = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.textSizeComboBox = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -61,15 +61,23 @@
             resources.ApplyResources(this.textLineWidth, "textLineWidth");
             this.textLineWidth.Name = "textLineWidth";
             // 
-            // textFontSize
-            // 
-            resources.ApplyResources(this.textFontSize, "textFontSize");
-            this.textFontSize.Name = "textFontSize";
-            // 
             // label1
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
+            // 
+            // textSizeComboBox
+            // 
+            this.textSizeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.textSizeComboBox.FormattingEnabled = true;
+            this.textSizeComboBox.Items.AddRange(new object[] {
+            resources.GetString("textSizeComboBox.Items"),
+            resources.GetString("textSizeComboBox.Items1"),
+            resources.GetString("textSizeComboBox.Items2"),
+            resources.GetString("textSizeComboBox.Items3"),
+            resources.GetString("textSizeComboBox.Items4")});
+            resources.ApplyResources(this.textSizeComboBox, "textSizeComboBox");
+            this.textSizeComboBox.Name = "textSizeComboBox";
             // 
             // SpectrumChartPropertyDlg
             // 
@@ -77,7 +85,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.textFontSize);
+            this.Controls.Add(this.textSizeComboBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textLineWidth);
             this.Controls.Add(this.label3);
@@ -99,7 +107,7 @@
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textLineWidth;
-        private System.Windows.Forms.TextBox textFontSize;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox textSizeComboBox;
     }
 }

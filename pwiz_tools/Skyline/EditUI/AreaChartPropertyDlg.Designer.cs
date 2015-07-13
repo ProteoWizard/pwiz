@@ -38,6 +38,8 @@
             this.labelCvPercent = new System.Windows.Forms.Label();
             this.textMaxCv = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.textSizeComboBox = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -99,12 +101,32 @@
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
+            // textSizeComboBox
+            // 
+            this.textSizeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.textSizeComboBox.FormattingEnabled = true;
+            this.textSizeComboBox.Items.AddRange(new object[] {
+            resources.GetString("textSizeComboBox.Items"),
+            resources.GetString("textSizeComboBox.Items1"),
+            resources.GetString("textSizeComboBox.Items2"),
+            resources.GetString("textSizeComboBox.Items3"),
+            resources.GetString("textSizeComboBox.Items4")});
+            resources.ApplyResources(this.textSizeComboBox, "textSizeComboBox");
+            this.textSizeComboBox.Name = "textSizeComboBox";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // AreaChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textSizeComboBox);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
@@ -116,6 +138,7 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -130,5 +153,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label labelCvPercent;
         private System.Windows.Forms.CheckBox cbDecimalCvs;
+        private System.Windows.Forms.ComboBox textSizeComboBox;
+        private System.Windows.Forms.Label label1;
     }
 }

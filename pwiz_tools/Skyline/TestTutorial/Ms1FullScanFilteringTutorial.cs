@@ -274,12 +274,12 @@ namespace pwiz.SkylineTestTutorial
             });
             RunDlg<SpectrumChartPropertyDlg>(SkylineWindow.ShowSpectrumProperties, dlg =>
             {
-                dlg.FontSize = 12;
+                dlg.FontSize = GraphFontSize.NORMAL;
                 dlg.OkDialog();
             });
             RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
             {
-                dlg.FontSize = 12;
+                dlg.FontSize = GraphFontSize.NORMAL;
                 dlg.OkDialog();
             });
             RunUI(() =>

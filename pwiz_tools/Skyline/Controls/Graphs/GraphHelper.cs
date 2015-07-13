@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
@@ -33,6 +34,12 @@ namespace pwiz.Skyline.Controls.Graphs
         private DisplayState _displayState;
         private bool _zoomLocked;
         public const string scientificNotationFormatString = "0.000e0"; // Not L10N
+
+        private const float xsmall = 8;
+        private const float small = 10;
+        private const float normal = 12;
+        private const float large = 14;
+        private const float xlarge = 16;
 
         public GraphHelper(MSGraphControl msGraphControl)
         {
@@ -514,6 +521,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     zedGraphPane.YAxis.Scale.MagAuto = true;
                 }
             }
+        }
+
+        public static void FormatFontSize(GraphPane g, float fontSize)
+        {
+            g.YAxis.Scale.FontSpec.Size = fontSize;
+            g.XAxis.Scale.FontSpec.Size = fontSize;
+            g.YAxis.Title.FontSpec.Size = fontSize;
+            g.XAxis.Title.FontSpec.Size = fontSize;
+            g.Title.FontSpec.Size = fontSize*1.5f;
+            g.Legend.FontSpec.Size = fontSize;
         }
     }
 

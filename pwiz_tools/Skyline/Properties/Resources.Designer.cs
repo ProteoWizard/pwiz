@@ -10106,6 +10106,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to large.
+        /// </summary>
+        public static string FontSize_LARGE_large {
+            get {
+                return ResourceManager.GetString("FontSize_LARGE_large", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to normal.
+        /// </summary>
+        public static string FontSize_NORMAL_normal {
+            get {
+                return ResourceManager.GetString("FontSize_NORMAL_normal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to small.
+        /// </summary>
+        public static string FontSize_SMALL_small {
+            get {
+                return ResourceManager.GetString("FontSize_SMALL_small", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to x-large.
+        /// </summary>
+        public static string FontSize_XLARGE_x_large {
+            get {
+                return ResourceManager.GetString("FontSize_XLARGE_x_large", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to x-small.
+        /// </summary>
+        public static string FontSize_XSMALL_x_small {
+            get {
+                return ResourceManager.GetString("FontSize_XSMALL_x_small", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Fragment {

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Util
@@ -81,8 +82,7 @@ namespace pwiz.Skyline.Util
             var fontSpec = XAxis.Scale.FontSpec;
 
             int pointSize;
-            
-            for (pointSize = 12; pointSize > 4; pointSize--)
+            for (pointSize = (int)Settings.Default.AreaFontSize; pointSize > 4; pointSize--)
             {
                 // Start over with the original labels and a smaller font
                 if (XAxis.Scale.TextLabels != null)

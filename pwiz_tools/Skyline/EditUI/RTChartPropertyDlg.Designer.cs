@@ -42,6 +42,8 @@ namespace pwiz.Skyline.EditUI
             this.labelCvPercent = new System.Windows.Forms.Label();
             this.textMaxCv = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.textSizeComboBox = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -127,12 +129,32 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
+            // textSizeComboBox
+            // 
+            this.textSizeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.textSizeComboBox.FormattingEnabled = true;
+            this.textSizeComboBox.Items.AddRange(new object[] {
+            resources.GetString("textSizeComboBox.Items"),
+            resources.GetString("textSizeComboBox.Items1"),
+            resources.GetString("textSizeComboBox.Items2"),
+            resources.GetString("textSizeComboBox.Items3"),
+            resources.GetString("textSizeComboBox.Items4")});
+            resources.ApplyResources(this.textSizeComboBox, "textSizeComboBox");
+            this.textSizeComboBox.Name = "textSizeComboBox";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
             // RTChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textSizeComboBox);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
@@ -144,6 +166,7 @@ namespace pwiz.Skyline.EditUI
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -162,5 +185,7 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox textSizeComboBox;
+        private System.Windows.Forms.Label label6;
     }
 }

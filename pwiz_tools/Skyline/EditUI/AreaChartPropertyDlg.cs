@@ -20,6 +20,7 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -36,6 +37,7 @@ namespace pwiz.Skyline.EditUI
                 textMaxArea.Text = Settings.Default.PeakAreaMaxArea.ToString(LocalizationHelper.CurrentCulture);
             if (Settings.Default.PeakAreaMaxCv != 0)
                 textMaxCv.Text = Settings.Default.PeakAreaMaxCv.ToString(LocalizationHelper.CurrentCulture);
+            GraphFontSize.PopulateCombo(textSizeComboBox, Settings.Default.AreaFontSize);
         }
 
         public void OkDialog()
@@ -64,6 +66,7 @@ namespace pwiz.Skyline.EditUI
             Settings.Default.PeakAreaMaxArea = maxArea;
             Settings.Default.PeakAreaMaxCv = maxCv;
             Settings.Default.PeakDecimalCv = decimalCv;
+            Settings.Default.AreaFontSize = GraphFontSize.GetFontSize(textSizeComboBox).PointSize;
 
             DialogResult = DialogResult.OK;
         }

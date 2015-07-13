@@ -306,6 +306,7 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphFontSize.cs" />
     <Compile Include="Controls\GroupComparison\BaseGroupComparisonSettings.cs">
       <SubType>Form</SubType>
     </Compile>

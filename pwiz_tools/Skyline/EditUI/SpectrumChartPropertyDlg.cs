@@ -21,6 +21,7 @@ using System.Globalization;
 using pwiz.Common.SystemUtil;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
 
             textLineWidth.Text = Settings.Default.SpectrumLineWidth.ToString(LocalizationHelper.CurrentCulture);
-            textFontSize.Text = Settings.Default.SpectrumFontSize.ToString(LocalizationHelper.CurrentCulture);
+            GraphFontSize.PopulateCombo(textSizeComboBox, Settings.Default.SpectrumFontSize);
         }
 
         public void OkDialog()
@@ -44,12 +45,9 @@ namespace pwiz.Skyline.EditUI
             if (!helper.ValidateNumberTextBox(textLineWidth, 1, 5, out lineWidth))
                 return;
 
-            int fontSize;
-            if (!helper.ValidateNumberTextBox(textFontSize, 6, 128, out fontSize))
-                return;
 
             Settings.Default.SpectrumLineWidth = lineWidth;
-            Settings.Default.SpectrumFontSize = fontSize;
+            Settings.Default.SpectrumFontSize = GraphFontSize.GetFontSize(textSizeComboBox).PointSize;
             DialogResult = DialogResult.OK;
         }
 
@@ -66,10 +64,10 @@ namespace pwiz.Skyline.EditUI
             set { textLineWidth.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        public int FontSize
+        public GraphFontSize FontSize
         {
-            get { return int.Parse(textFontSize.Text); }
-            set { textFontSize.Text = value.ToString(CultureInfo.CurrentCulture); }
+            get { return textSizeComboBox.SelectedItem as GraphFontSize; }
+            set { textSizeComboBox.SelectedItem = value; }
         }
 
         #endregion

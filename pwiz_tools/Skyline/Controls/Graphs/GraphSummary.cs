@@ -276,6 +276,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 pane.UpdateGraph(checkData);
                 GraphHelper.FormatGraphPane(pane);
+                GraphHelper.FormatFontSize(pane, Settings.Default.AreaFontSize);
             }
             graphControl.Invalidate();
         }

@@ -8474,6 +8474,21 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="RefineListDlgProtein_OkDialog_None_of_the_specified_proteins_are_in_the_document_" xml:space="preserve">
     <value>None of the specified proteins are in the document.</value>
   </data>
+  <data name="FontSize_XSMALL_x_small" xml:space="preserve">
+    <value>x-small</value>
+  </data>
+  <data name="FontSize_SMALL_small" xml:space="preserve">
+    <value>small</value>
+  </data>
+  <data name="FontSize_NORMAL_normal" xml:space="preserve">
+    <value>normal</value>
+  </data>
+  <data name="FontSize_LARGE_large" xml:space="preserve">
+    <value>large</value>
+  </data>
+  <data name="FontSize_XLARGE_x_large" xml:space="preserve">
+    <value>x-large</value>
+  </data>
   <data name="Loader_Fail_Failed_importing_results_into___0___" xml:space="preserve">
     <value>Failed importing results into '{0}'.</value>
   </data>
