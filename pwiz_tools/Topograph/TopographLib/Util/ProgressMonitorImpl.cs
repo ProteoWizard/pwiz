@@ -17,9 +17,10 @@ namespace pwiz.Topograph.Util
             get { return _isCanceledImpl.Invoke(); }
         }
 
-        public void UpdateProgress(ProgressStatus status)
+        public UpdateProgressResponse UpdateProgress(ProgressStatus status)
         {
             _updateProgressImpl.Invoke(status);
+            return UpdateProgressResponse.normal;
         }
 
         public bool HasUI
