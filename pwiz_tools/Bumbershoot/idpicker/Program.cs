@@ -35,8 +35,8 @@ using System.Threading;
 using System.Net;
 using System.Text.RegularExpressions;
 using IDPicker.Forms;
-using SharpSvn;
-using SharpSvn.Security;
+//using SharpSvn;
+//using SharpSvn.Security;
 
 namespace IDPicker
 {
