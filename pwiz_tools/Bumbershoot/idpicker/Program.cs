@@ -83,9 +83,9 @@ namespace IDPicker
                     singleInstanceArgs.RemoveAll(o => o == "--headless");
 
                 // initialize webClient asynchronously
-                initializeWebClient();
+                //initializeWebClient();
 
-                automaticCheckForUpdates();
+                //automaticCheckForUpdates();
 
                 //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
 
@@ -170,13 +170,15 @@ namespace IDPicker
 
                 if (MainWindow.IsDisposed)
                 {
-                    if (reportForm.ShowDialog() == DialogResult.OK)
-                        SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email, reportForm.Username);
+                    reportForm.ShowDialog();
+                    //if (reportForm.ShowDialog() == DialogResult.OK)
+                        //SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email, reportForm.Username);
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
                 }
 
-                if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
-                    SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email, reportForm.Username);
+                reportForm.ShowDialog(MainWindow);
+                //if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
+                    //SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email, reportForm.Username);
                 if (reportForm.ForceClose)
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
@@ -194,7 +196,7 @@ namespace IDPicker
         #endregion
 
         #region Update checking and error reporting
-        private static CookieAwareWebClient webClient = new CookieAwareWebClient();
+        /*private static CookieAwareWebClient webClient = new CookieAwareWebClient();
         public static CookieAwareWebClient WebClient { get { return webClient; } }
 
         private const string loginAddress = "http://forge.fenchurch.mc.vanderbilt.edu/account/login.php";
@@ -231,7 +233,7 @@ namespace IDPicker
                         webClient.UploadValues(loginAddress, form);
                     }
                 }
-                catch {/* TODO: log warning */}
+                catch {}
             }).Start();
         }
 
@@ -248,7 +250,7 @@ namespace IDPicker
             if (Application.ExecutablePath.Contains("build-nt-x86"))
                 return;
 
-            new Thread(() => { try { CheckForUpdates(); } catch {/* TODO: log warning */} }).Start();
+            new Thread(() => { try { CheckForUpdates(); } catch {} }).Start();
         }
 
         /// <summary>
@@ -379,7 +381,7 @@ namespace IDPicker
 
                 webClient.UploadValues(errorReportAddress, form);
             }
-        }
+        }*/
         #endregion
     }
 }

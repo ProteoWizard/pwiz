@@ -1861,8 +1861,9 @@ namespace IDPicker
         private void checkForUpdatesToolStripMenuItem_Click (object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
-            if (!Program.CheckForUpdates())
-                MessageBox.Show("You are running the latest version.", "No Update Available");
+            //if (!Program.CheckForUpdates())
+            //    MessageBox.Show("You are running the latest version.", "No Update Available");
+            Process.Start("http://proteowizard.sourceforge.net/downloads.shtml");
             Cursor = Cursors.Default;
         }
 
