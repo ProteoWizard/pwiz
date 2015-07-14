@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
             // Retry after failure
             ImportResultsAsync(FAILS_FILE_NAME, SUCCEEDS2_FILE_NAME);
             var dlgImportFailed = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunUI(() => dlgImportFailed.Btn0Click());
+            OkDialog(dlgImportFailed, () => dlgImportFailed.Btn0Click());
             var dlgImportFailed2 = WaitForOpenForm<MultiButtonMsgDlg>();
             var docBeforeSuccess = SkylineWindow.Document;
             File.Copy(succeedsFile, failsFile, true);
