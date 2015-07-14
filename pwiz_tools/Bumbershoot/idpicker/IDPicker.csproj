@@ -165,10 +165,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\ObjectListView\ObjectListView.dll</HintPath>
     </Reference>
-    <Reference Include="Office, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="PopupControl, Version=1.5.0.37175, Culture=neutral, PublicKeyToken=04c10344d6495b18, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\SimplePopup\PopupControl.dll</HintPath>
