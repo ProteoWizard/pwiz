@@ -3249,7 +3249,7 @@ namespace pwiz.Skyline
         {
             UpdateProgress(status);
 
-            return UpdateProgressResponse.normal;;
+            return UpdateProgressResponse.normal;
         }
 
         public bool HasUI { get { return false; } }

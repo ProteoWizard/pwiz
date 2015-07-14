@@ -17,11 +17,8 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
