@@ -378,7 +378,6 @@ int main(int argc, char* argv[])
         testSimpleSet();
         //testSimpleReverseSet();
         test2();
-        return 0;
     }
     catch (exception& e)
     {
