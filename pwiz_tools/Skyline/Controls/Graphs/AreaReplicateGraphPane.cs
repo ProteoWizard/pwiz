@@ -593,15 +593,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddDotProductLabels(Graphics g, TransitionGroupDocNode nodeGroup, IList<double> sumAreas)
         {
             // Create temporary label to calculate positions
-            FontSpec fontLabel = new FontSpec();
-            SizeF sizeLabel = fontLabel.MeasureString(g, DotpLabelText, CalcScaleFactor());
-
-            float labelWidth = (float) XAxis.Scale.ReverseTransform((XAxis.Scale.Transform(0) + sizeLabel.Width));
-
-            bool visible = labelWidth < 1.0;
+            var pointSize = GetDotProductsPointSize(g);
+            bool visible = pointSize.HasValue;
             bool visibleState = _dotpLabels.Count > 0;
 
-            if (visible == visibleState)
+            if (visible == visibleState && (!visibleState || ((TextObj)_dotpLabels[0]).FontSpec.Size == pointSize))
                 return;
 
             foreach (GraphObj pa in _dotpLabels)
@@ -634,10 +630,26 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
                     textObj.FontSpec.Border.IsVisible = false;
+                    textObj.FontSpec.Size = pointSize.Value;
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);
                 }
             }
+        }
+
+        private int? GetDotProductsPointSize(Graphics g)
+        {
+            for (int pointSize = (int) Settings.Default.AreaFontSize; pointSize > 4; pointSize--)
+            {
+                var fontLabel = new FontSpec {Size = pointSize};
+                var sizeLabel = fontLabel.MeasureString(g, DotpLabelText, CalcScaleFactor());
+
+                float labelWidth = (float) XAxis.Scale.ReverseTransform((XAxis.Scale.Transform(0) + sizeLabel.Width));
+
+                if (labelWidth < 1.2)
+                    return pointSize;
+            }
+            return null;
         }
 
         private string GetDotProductResultsText(TransitionGroupDocNode nodeGroup, int indexResult)
