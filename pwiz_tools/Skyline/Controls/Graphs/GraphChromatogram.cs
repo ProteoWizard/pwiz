@@ -721,7 +721,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peptideAndTransitionGroups.ShowPeptideTotals)
             {
                 // Display transition totals for multiple peptides.
-                nodePeps = peptideAndTransitionGroups.NodePep.ToArray();
+                nodePeps = peptideAndTransitionGroups.NodePeps.ToArray();
                 nodeGroups = peptideAndTransitionGroups.NodeGroups.ToArray();
                 groupPaths = peptideAndTransitionGroups.GroupPaths.ToArray();
             }
@@ -1100,7 +1100,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            if (peptidesAndTransitionGroups.NodePep.Count == 0)
+            if (peptidesAndTransitionGroups.NodePeps.Count == 0)
             {
                 foreach (var selectedNode in _stateProvider.SelectedNodes)
                 {
@@ -1118,6 +1118,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+
+            peptidesAndTransitionGroups.Complete(MaxPeptidesDisplayed, _chromIndex);
 
             return peptidesAndTransitionGroups;
         }
@@ -1899,7 +1901,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var precursor in peptideDocNode.TransitionGroups)
                 {
-                    var chromGroupInfo = chromGroupInfos[lookupChromGroupInfoIndex[precursor.Id.GlobalIndex]];
+                    int indexInfo;
+                    if (!lookupChromGroupInfoIndex.TryGetValue(precursor.Id.GlobalIndex, out indexInfo))
+                        continue;
+                    var chromGroupInfo = chromGroupInfos[indexInfo];
                     if (chromGroupInfo == null)
                         continue;
                     ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
@@ -2241,7 +2246,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private class PeptidesAndTransitionGroups
         {
             private readonly HashSet<int> _setGlobalIndices = new HashSet<int>();
-            public readonly List<PeptideDocNode> NodePep = new List<PeptideDocNode>();
+            public readonly List<PeptideDocNode> NodePeps = new List<PeptideDocNode>();
             public readonly List<TransitionGroupDocNode> NodeGroups = new List<TransitionGroupDocNode>();
             public readonly List<IdentityPath> GroupPaths = new List<IdentityPath>();
             public bool ProteinSelected;
@@ -2259,7 +2264,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _setGlobalIndices.Add(nodePep.Peptide.GlobalIndex);
                         _peptideCount++;
                     }
-                    NodePep.Add(nodePep);
+                    NodePeps.Add(nodePep);
                     GroupPaths.Add(new IdentityPath(pathPep, nodeGroup.Id));
                 }
             }
@@ -2268,6 +2273,40 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var nodeGroups in nodePep.TransitionGroups)
                     Add(pathPep, nodePep, nodeGroups);
+            }
+
+            public void Complete(int maxPeaks, int chromIndex)
+            {
+                if (NodeGroups.Count <= maxPeaks)
+                    return;
+
+                var statHeights = new Statistics(NodeGroups.Select(nodeGroup => GetHeight(nodeGroup.Results[chromIndex])));
+                double minHeight = statHeights.QNthItem(statHeights.Length - maxPeaks);
+
+                var nodePeps = new List<PeptideDocNode>();
+                var nodeGroups = new List<TransitionGroupDocNode>();
+                var groupPaths = new List<IdentityPath>();
+                for (int i = 0; i < NodeGroups.Count; i++)
+                {
+                    var nodeGroup = NodeGroups[i];
+                    if (GetHeight(nodeGroup.Results[chromIndex]) < minHeight)
+                        continue;
+                    nodePeps.Add(NodePeps[i]);
+                    nodeGroups.Add(nodeGroup);
+                    groupPaths.Add(GroupPaths[i]);
+                }
+
+                NodePeps.Clear();
+                NodePeps.AddRange(nodePeps);
+                NodeGroups.Clear();
+                NodeGroups.AddRange(nodeGroups);
+                GroupPaths.Clear();
+                GroupPaths.AddRange(groupPaths);
+            }
+
+            private double GetHeight(ChromInfoList<TransitionGroupChromInfo> transitionGroupChromInfos)
+            {
+                return transitionGroupChromInfos != null ? transitionGroupChromInfos.Max(c => c.Height ?? 0) : 0;
             }
         }
 

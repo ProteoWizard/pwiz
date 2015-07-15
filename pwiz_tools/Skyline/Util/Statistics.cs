@@ -1305,6 +1305,11 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public double QNthItem(int elementIndex)
+        {
+            return QNthItem(CopyList(), elementIndex);
+        }
+
         /// <summary>
         /// Linear time function for finding the n-th item in a list. This function changes the order of the elements in the list.
         /// </summary>

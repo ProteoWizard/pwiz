@@ -46,6 +46,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
 
@@ -2006,7 +2007,11 @@ namespace pwiz.Skyline.Properties
         {
             using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
             {
-                editModel.SetScoringModel(item);
+                using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
+                {
+                    longWaitDlg.PerformWork(owner, 800,
+                        progressMonitor => editModel.SetScoringModel(item, progressMonitor));
+                }
                 if (editModel.ShowDialog(owner) == DialogResult.OK)
                     return (PeakScoringModelSpec) editModel.PeakScoringModel;
 
