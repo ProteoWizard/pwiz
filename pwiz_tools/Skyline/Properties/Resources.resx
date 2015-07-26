@@ -5825,10 +5825,7 @@ Are you sure you want to continue?</value>
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
     <value>The current peak scoring model is incompatible with one or more peptides in the document. Please train a new model.</value>
   </data>
-  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
-    <value>Adjusting peak boundaries</value>
-  </data>
-  <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
+    <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
     <value>missing scores</value>
   </data>
   <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">
@@ -8512,5 +8509,23 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
     <data name="MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" xml:space="preserve">
     <value>Training peak scoring model (iteration {0} of {1})</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_TrainModel_Calculating" xml:space="preserve">
+    <value>Calculating</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_" xml:space="preserve">
+    <value>Calculating contribution of {0}</value>
+  </data>
+    <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_" xml:space="preserve">
+    <value>Adjusting peak boundaries for {0}</value>
+  </data>
+    <data name="Loader_FinishLoad_Updating_peak_statistics_for__0_" xml:space="preserve">
+    <value>Updating peak statistics for {0}</value>
+  </data>
+    <data name="MassListImporter_Import_Reading_transition_list" xml:space="preserve">
+    <value>Reading transition list</value>
+  </data>
+    <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
+    <value>Inspecting peptide sequence information</value>
   </data>
 </root>

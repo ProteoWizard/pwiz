@@ -71,10 +71,11 @@ namespace pwiz.Skyline.FileUI
             return protein.Peptides.Select(pep => pep.ModifiedSequence).Intersect(COMMON_IRT_STANDARDS).Count() > CalibrateIrtDlg.MIN_STANDARD_PEPTIDES;
         }
 
-        public CreateIrtCalculatorDlg(SrmDocument document, IList<RetentionScoreCalculatorSpec> existing, IEnumerable<PeptideGroupDocNode> peptideGroups)
+        public CreateIrtCalculatorDlg(SrmDocument document, string documentFilePath, IList<RetentionScoreCalculatorSpec> existing, IEnumerable<PeptideGroupDocNode> peptideGroups)
         {
-            _existing = existing;
             Document = document;
+            DocumentFilePath = documentFilePath;
+            _existing = existing;
             InitializeComponent();
             _librarySpectra = new List<SpectrumMzInfo>();
             _dbIrtPeptides = new List<DbIrtPeptide>();
@@ -89,6 +90,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         public SrmDocument Document { get; private set; }
+        public string DocumentFilePath { get; private set; }
 
         private readonly IList<RetentionScoreCalculatorSpec> _existing;
 
@@ -265,7 +267,7 @@ namespace pwiz.Skyline.FileUI
             using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
-                InitialDirectory = Settings.Default.ActiveDirectory,
+                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
                 DefaultExt = IrtDb.EXT,
                 Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
             })
@@ -294,7 +296,7 @@ namespace pwiz.Skyline.FileUI
             using (var dlg = new SaveFileDialog
             {
                 Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database,
-                InitialDirectory = Settings.Default.ActiveDirectory,
+                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
                 OverwritePrompt = true,
                 DefaultExt = IrtDb.EXT,
                 Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
@@ -303,6 +305,8 @@ namespace pwiz.Skyline.FileUI
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
+                    if (string.IsNullOrEmpty(textCalculatorName.Text))
+                        textCalculatorName.Text = Path.GetFileNameWithoutExtension(dlg.FileName);
                     textBox.Text = dlg.FileName;
                     textBox.Focus();
                 }
@@ -319,7 +323,7 @@ namespace pwiz.Skyline.FileUI
             using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_,
-                InitialDirectory = Settings.Default.ActiveDirectory,
+                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
                 DefaultExt = TextUtil.EXT_CSV,
                 Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
                     Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV))

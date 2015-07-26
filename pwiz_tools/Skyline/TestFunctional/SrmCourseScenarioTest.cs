@@ -201,7 +201,9 @@ namespace pwiz.SkylineTestFunctional
                 .SelectMany(nodeGroup => nodeGroup.ChromInfos))
             {
                 var userSet = chromInfo.UserSet;
-                counts[userSetGroups.IndexOf(us => Equals(us.UserSet, userSet))]++;
+                int userSetIndex = userSetGroups.IndexOf(us => Equals(us.UserSet, userSet));
+                Assert.AreNotEqual(-1, userSetIndex, string.Format("Unexpected User Set value {0}", userSet));
+                counts[userSetIndex]++;
             }
             for (int i = 0; i < userSetGroups.Length; i++)
             {
@@ -213,7 +215,9 @@ namespace pwiz.SkylineTestFunctional
                 .SelectMany(nodeTran => nodeTran.ChromInfos))
             {
                 var userSet = chromInfo.UserSet;
-                counts[userSetTrans.IndexOf(us => Equals(us.UserSet, userSet))]++;
+                int userSetIndex = userSetTrans.IndexOf(us => Equals(us.UserSet, userSet));
+                Assert.AreNotEqual(-1, userSetIndex, string.Format("Unexpected User Set value {0}", userSet));
+                counts[userSetIndex]++;
             }
             for (int i = 0; i < userSetTrans.Length; i++)
             {

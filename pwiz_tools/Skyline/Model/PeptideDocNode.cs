@@ -652,6 +652,9 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
         {
+            if (diff.Monitor != null)
+                diff.Monitor.ProcessMolecule(this);
+
             // If the peptide has explicit modifications, and the modifications have
             // changed, see if any of the explicit modifications have changed
             var explicitMods = ExplicitMods;

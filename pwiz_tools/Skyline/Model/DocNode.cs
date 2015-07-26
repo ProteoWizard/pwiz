@@ -1250,7 +1250,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) 
-                && Equals(obj.Children, Children)
+                && ArrayUtil.EqualsDeep(obj.Children, Children)
                 && AutoManageChildren == obj.AutoManageChildren;
         }
 

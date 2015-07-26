@@ -88,8 +88,11 @@ namespace pwiz.Skyline.Model.Results
                 // Only use the retention time predictor on non-SRM data, and only when
                 // there are enough transitions to cause performance issues with extracting
                 // full-gradient in a single pass, and then trimming.
-                if (_document.MoleculeTransitionCount > MAX_FULL_GRADIENT_TRANSITIONS)
+                if (_document.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows &&
+                    _document.MoleculeTransitionCount > MAX_FULL_GRADIENT_TRANSITIONS)
+                {
                     _retentionTimePredictor = retentionTimePredictor;
+                }
             }
 
             // Only mzXML from mzWiff requires the introduction of zero values
@@ -490,6 +493,9 @@ namespace pwiz.Skyline.Model.Results
                     }
                     catch (Exception ex)
                     {
+                        if (_collectors == null)
+                            throw;
+
                         _collectors.SetException(ex);
                     }
                 }, "Chromatogram extractor"); // Not L10N

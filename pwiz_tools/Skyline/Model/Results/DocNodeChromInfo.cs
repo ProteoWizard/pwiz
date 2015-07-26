@@ -366,6 +366,9 @@ namespace pwiz.Skyline.Model.Results
             BackgroundArea = backgroundArea;
             Height = height;
             Fwhm = fwhm;
+            // Crawdad can set FWHM to NaN. Need to protect against that here.
+            if (float.IsNaN(fwhm))
+                Fwhm = 0;
             IsFwhmDegenerate = fwhmDegenerate;
             IsTruncated = truncated;
             Identified = identified;
@@ -482,6 +485,9 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.BackgroundArea = peak.BackgroundArea;
             chromInfo.Height = peak.Height;
             chromInfo.Fwhm = peak.Fwhm;
+            // Crawdad can set FWHM to NaN. Need to protect against that here.
+            if (float.IsNaN(peak.Fwhm))
+                chromInfo.Fwhm = 0;
             chromInfo.IsFwhmDegenerate = peak.IsFwhmDegenerate;
             chromInfo.IsTruncated = peak.IsTruncated;
             chromInfo.Identified = peak.Identified;

@@ -122,6 +122,7 @@ namespace pwiz.SkylineTestUtil
         {
             var doc = Document;
             var docResults = doc.ChangeMeasuredResults(measuredResults);
+            ResetProgress();
             Assert.IsTrue(SetDocument(docResults, doc, true));
             AssertComplete();
             docResults = Document;
@@ -140,6 +141,7 @@ namespace pwiz.SkylineTestUtil
             var libraries = new Library[libSpecs.Count];
             var settings = Document.Settings.ChangePeptideLibraries(l => l.ChangeLibraries(libSpecs, libraries));
             var docLibraries = doc.ChangeSettings(settings);
+            ResetProgress();
             Assert.IsTrue(SetDocument(docLibraries, doc, libSpecs.Count > 0));
             AssertComplete();
             return Document;

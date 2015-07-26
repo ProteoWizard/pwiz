@@ -74,11 +74,11 @@ namespace pwiz.SkylineTestA
             docContainer.AssertComplete();
             SrmDocument docOriginal = docContainer.Document;
             var peakScoringModel = docOriginal.Settings.PeptideSettings.Integration.PeakScoringModel;
-            var resultsHandler = new MProphetResultsHandler(docOriginal, peakScoringModel);
+            var resultsHandler = new MProphetResultsHandler(docOriginal, peakScoringModel) { QValueCutoff = Q_CUTOFF };
             
             // 1. Reintegrate and export report produces expected file
             resultsHandler.ScoreFeatures();
-            var docNew = resultsHandler.ChangePeaks(Q_CUTOFF);
+            var docNew = resultsHandler.ChangePeaks();
             var reportSpec = MakeReportSpec();
             if (IsSaveAll)
             {
@@ -92,9 +92,9 @@ namespace pwiz.SkylineTestA
             AssertEx.FileEquals(docNewExpected, docNewActual);
 
             // 2. Reintegrating again gives no change in document
-            var resultsHandlerRepeat = new MProphetResultsHandler(docNew, peakScoringModel);
+            var resultsHandlerRepeat = new MProphetResultsHandler(docNew, peakScoringModel) { QValueCutoff = Q_CUTOFF };
             resultsHandlerRepeat.ScoreFeatures();
-            var docRepeat = resultsHandlerRepeat.ChangePeaks(Q_CUTOFF);
+            var docRepeat = resultsHandlerRepeat.ChangePeaks();
             Assert.AreSame(docRepeat, docNew);
             Assert.AreNotSame(docOriginal, docNew);
 
@@ -112,9 +112,9 @@ namespace pwiz.SkylineTestA
             AssertEx.FileEquals(mProphetExpected, mProphetActual);
 
             // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
-            var resultsHandlerQAll = new MProphetResultsHandler(docOriginal, peakScoringModel);
+            var resultsHandlerQAll = new MProphetResultsHandler(docOriginal, peakScoringModel) {QValueCutoff = 1.0};
             resultsHandlerQAll.ScoreFeatures();
-            var docNewQAll = resultsHandlerRepeat.ChangePeaks(1.0);
+            var docNewQAll = resultsHandlerQAll.ChangePeaks();
             var peakBoundaryImporter = new PeakBoundaryImporter(docNewQAll);
             long lineCount = Helpers.CountLinesInFile(mProphetActual);
             peakBoundaryImporter.Import(mProphetActual, null, lineCount);
@@ -122,9 +122,9 @@ namespace pwiz.SkylineTestA
             Assert.AreSame(docNewQAll, docImport);
 
             // 5. Reintegration with q value cutoff of <0 causes all peaks set to null
-            var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel);
+            var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel) {QValueCutoff = -0.001};
             handlerAllNull.ScoreFeatures();
-            var docNull = handlerAllNull.ChangePeaks(-0.001);
+            var docNull = handlerAllNull.ChangePeaks();
             foreach (var transitionNode in docNull.PeptideTransitions)
                 foreach(var chromInfo in transitionNode.ChromInfos)
                     Assert.IsTrue(chromInfo.IsEmpty || transitionNode.IsDecoy);
@@ -134,7 +134,8 @@ namespace pwiz.SkylineTestA
             var midQNode = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
             foreach (var chromInfo in midQNode.Transitions.SelectMany(transition => transition.ChromInfos))
                 Assert.IsTrue(chromInfo.IsEmpty);
-            resultsHandler.ChangePeaks(Q_CUTOFF_HIGH);
+            resultsHandler.QValueCutoff = Q_CUTOFF_HIGH;
+            resultsHandler.ChangePeaks();
             var midQNodeNew = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
             foreach (var chromInfo in midQNodeNew.Transitions.SelectMany(transition => transition.ChromInfos))
                 Assert.IsFalse(chromInfo.IsEmpty);

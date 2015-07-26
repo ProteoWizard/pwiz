@@ -34,26 +34,30 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData).ToArray();
-            if (tranGroupPeakDatas.Length == 0)
-                return float.NaN;
-
             var massErrors = new List<double>();
             var weights = new List<double>();
             bool noTransitions = true;
-            foreach (var pdTran in tranGroupPeakDatas.SelectMany(pd => pd.TransitionPeakData))
+            bool allZeroWeights = true;
+            foreach (var tranGroup in GetTransitionGroups(summaryPeakData))
             {
-                if (!IsIonType(pdTran.NodeTran))
-                    continue;
-                noTransitions = false;
-                var peakData = pdTran.PeakData;
-                double? massError = peakData.MassError;
-                if (massError.HasValue)
+                foreach (var pdTran in tranGroup.TransitionPeakData)
                 {
-                    massErrors.Add(MassErrorFunction(massError.Value));
-                    weights.Add(GetWeight(peakData));
+                    if (!IsIonType(pdTran.NodeTran))
+                        continue;
+                    noTransitions = false;
+                    var peakData = pdTran.PeakData;
+                    double? massError = peakData.MassError;
+                    if (massError.HasValue)
+                    {
+                        massErrors.Add(MassErrorFunction(massError.Value));
+                        double weight = GetWeight(peakData);
+                        weights.Add(weight);
+                        if (weight != 0)
+                            allZeroWeights = false;
+                    }
                 }
             }
+
             // If there are no qualifying transitions, return NaN
             if (noTransitions)
                 return float.NaN;
@@ -61,7 +65,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // then return maximum possible mass error
             if (massErrors.Count == 0)
                 return (float) MaximumValue(context);
-            if (weights.All(weight => weight == 0))
+            if (allZeroWeights)
                 weights = weights.ConvertAll(weight => 1.0);
             var massStats = new Statistics(massErrors);
             var weightsStats = new Statistics(weights);

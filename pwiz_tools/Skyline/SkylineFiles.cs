@@ -1675,7 +1675,7 @@ namespace pwiz.Skyline
                     if (calculatorMissing)
                     {
                         // If there is no iRT calculator, ask the user to create one
-                        using (CreateIrtCalculatorDlg dlg = new CreateIrtCalculatorDlg(docNew, Settings.Default.RTScoreCalculatorList, peptideGroups))
+                        using (CreateIrtCalculatorDlg dlg = new CreateIrtCalculatorDlg(docNew, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
                         {
                             if (dlg.ShowDialog(this) == DialogResult.OK)
                             {

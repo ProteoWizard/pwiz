@@ -297,11 +297,24 @@ namespace pwiz.Skyline.Model
             librarySpectra = new List<SpectrumMzInfo>();
             errorList = new List<TransitionImportErrorInfo>();
             // Get the lines used to guess the necessary columns and create the row reader
+            if (longWaitBroker != null)
+            {
+                if (longWaitBroker.IsCanceled)
+                    return new PeptideGroupDocNode[0];
+                longWaitBroker.Message = Resources.MassListImporter_Import_Reading_transition_list;
+            }
             string line;
             List<string> lines = new List<string>();
             while ((line = reader.ReadLine()) != null)
             {
                 lines.Add(line);
+            }
+
+            if (longWaitBroker != null)
+            {
+                if (longWaitBroker.IsCanceled)
+                    return new PeptideGroupDocNode[0];
+                longWaitBroker.Message = Resources.MassListImporter_Import_Inspecting_peptide_sequence_information;
             }
             if (indices != null)
             {
@@ -374,6 +387,8 @@ namespace pwiz.Skyline.Model
                 {
                     if (longWaitBroker.IsCanceled)
                     {
+                        irtPeptides.Clear();
+                        librarySpectra.Clear();
                         errorList.Clear();
                         return new PeptideGroupDocNode[0];
                     }
@@ -545,7 +560,7 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     ModMatcher.CreateMatches(settingsMatcher,
-                                             sequences ?? new string[0],
+                                             sequences != null ? sequences.Distinct() : new string[0],
                                              Properties.Settings.Default.StaticModList,
                                              Properties.Settings.Default.HeavyModList);
                 }

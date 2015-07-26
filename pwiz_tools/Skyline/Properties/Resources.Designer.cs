@@ -7991,6 +7991,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculating.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_TrainModel_Calculating {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModel_Calculating", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating contribution of {0}.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_ {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There are no decoy peptides in the current document. Uncheck the Use Decoys Box..
         /// </summary>
         public static string EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_ {
@@ -12705,6 +12723,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updating peak statistics for {0}.
+        /// </summary>
+        public static string Loader_FinishLoad_Updating_peak_statistics_for__0_ {
+            get {
+                return ResourceManager.GetString("Loader_FinishLoad_Updating_peak_statistics_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure attempting to load the data cache file {0}.
         /// </summary>
         public static string Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_ {
@@ -12956,12 +12983,30 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Inspecting peptide sequence information.
+        /// </summary>
+        public static string MassListImporter_Import_Inspecting_peptide_sequence_information {
+            get {
+                return ResourceManager.GetString("MassListImporter_Import_Inspecting_peptide_sequence_information", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid transition list. Transition lists must contain at least precursor m/z, product m/z, and peptide sequence..
         /// </summary>
         public static string MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence {
             get {
                 return ResourceManager.GetString("MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_" +
                         "least_precursor_m_z_product_m_z_and_peptide_sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading transition list.
+        /// </summary>
+        public static string MassListImporter_Import_Reading_transition_list {
+            get {
+                return ResourceManager.GetString("MassListImporter_Import_Reading_transition_list", resourceCulture);
             }
         }
         
@@ -13711,11 +13756,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adjusting peak boundaries.
+        ///   Looks up a localized string similar to Adjusting peak boundaries for {0}.
         /// </summary>
-        public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
+        public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_ {
             get {
-                return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
+                return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries_for__0_", resourceCulture);
             }
         }
         

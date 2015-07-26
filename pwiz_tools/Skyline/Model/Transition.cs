@@ -191,6 +191,9 @@ namespace pwiz.Skyline.Model
 
         public static string StripChargeIndicators(string text, int min, int max)
         {
+            if (!MayHaveChargeIndicator(text))
+                return text;
+
             var sequences = new List<string>();
             foreach (var line in text.Split('\n').Select(seq => seq.Trim()))
             {
@@ -214,6 +217,16 @@ namespace pwiz.Skyline.Model
                 sequences.Add(chargePos == -1 ? line : line.Substring(0, chargePos));
             }
             return TextUtil.LineSeparate(sequences);
+        }
+
+        private static bool MayHaveChargeIndicator(string text)
+        {
+            foreach (char c in text)
+            {
+                if (c == '-' || c == '+')
+                    return true;
+            }
+            return false;
         }
 
         public static int? GetChargeFromIndicator(string text, int min, int max)

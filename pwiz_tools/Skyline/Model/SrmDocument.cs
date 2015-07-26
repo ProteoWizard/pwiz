@@ -628,14 +628,15 @@ namespace pwiz.Skyline.Model
         /// value, updating the <see cref="DocNode"/> hierarchy to reflect the change.
         /// </summary>
         /// <param name="settingsNew">New settings value</param>
+        /// <param name="progressMonitor">Progress monitor for long settings change operations</param>
         /// <returns>A new document revision</returns>
-        public SrmDocument ChangeSettings(SrmSettings settingsNew)
+        public SrmDocument ChangeSettings(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor = null)
         {
             // Preserve measured results.  Call ChangeMeasureResults to change the
             // MeasuredResults property on the SrmSettings.
             if (!ReferenceEquals(Settings.MeasuredResults, settingsNew.MeasuredResults))
                 settingsNew = settingsNew.ChangeMeasuredResults(Settings.MeasuredResults);
-            return ChangeSettingsInternal(settingsNew);
+            return ChangeSettingsInternal(settingsNew, progressMonitor);
         }
 
         /// <summary>
@@ -655,10 +656,11 @@ namespace pwiz.Skyline.Model
         /// <see cref="MeasuredResults"/> value.
         /// </summary>
         /// <param name="results">New <see cref="MeasuredResults"/> instance to associate with this document</param>
+        /// <param name="progressMonitor">Progress monitor for long settings change operations</param>
         /// <returns>A new document revision</returns>
-        public SrmDocument ChangeMeasuredResults(MeasuredResults results)
+        public SrmDocument ChangeMeasuredResults(MeasuredResults results, SrmSettingsChangeMonitor progressMonitor = null)
         {
-            return ChangeSettingsInternal(Settings.ChangeMeasuredResults(results));
+            return ChangeSettingsInternal(Settings.ChangeMeasuredResults(results), progressMonitor);
         }
 
         /// <summary>
@@ -666,11 +668,19 @@ namespace pwiz.Skyline.Model
         /// value.
         /// </summary>
         /// <param name="settingsNew">New settings value</param>
+        /// <param name="progressMonitor">Progress monitor for long settings change operations</param>
         /// <returns>A new document revision</returns>
-        private SrmDocument ChangeSettingsInternal(SrmSettings settingsNew)
+        private SrmDocument ChangeSettingsInternal(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor = null)
         {
             // First figure out what changed.
             SrmSettingsDiff diff = new SrmSettingsDiff(Settings, settingsNew);
+            if (progressMonitor != null)
+            {
+                progressMonitor.GroupCount = MoleculeGroupCount;
+                if (!diff.DiffPeptides)
+                    progressMonitor.MoleculeCount = MoleculeCount;
+                diff.Monitor = progressMonitor;
+            }
 
             // If there were no changes that require DocNode tree updates
             if (!diff.RequiresDocNodeUpdate)
@@ -689,6 +699,10 @@ namespace pwiz.Skyline.Model
                 if (ArrayUtil.ReferencesEqual(childrenNew, Children))
                     childrenNew = Children;
 
+                // Results handler changes for re-integration last only long enough
+                // to change the children
+                if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
+                    settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
                 return new SrmDocument(this, settingsNew, childrenNew);
             }
         }
@@ -2627,6 +2641,9 @@ namespace pwiz.Skyline.Model
                 float backgroundArea = Math.Max(0, reader.GetFloatAttribute(ATTR.background));
                 float height = reader.GetFloatAttribute(ATTR.height);
                 float fwhm = reader.GetFloatAttribute(ATTR.fwhm);
+                // Strange issue where fwhm got set to NaN
+                if (float.IsNaN(fwhm))
+                    fwhm = 0;
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
                 var identified = reader.GetEnumAttribute(ATTR.identified,

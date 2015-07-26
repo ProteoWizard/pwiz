@@ -58,6 +58,10 @@ namespace pwiz.Skyline.SettingsUI
         private bool _hasUnknownScores;
         private bool _allUnknownScores;
         private SortableBindingList<PeakCalculatorWeight> PeakCalculatorWeights { get { return _gridViewDriver.Items; } }
+
+        private bool _ignoreCheckChanged;
+        private bool _modelDirty;
+        private bool _featuresDirty;
         
         private enum ColumnNames { enabled, calculator_name, weight, percent_contribution }
 
@@ -113,44 +117,41 @@ namespace pwiz.Skyline.SettingsUI
             get { return _peakScoringModel; }
         }
 
-        public void SetScoringModel(IPeakScoringModel scoringModel, IProgressMonitor progressMonitor = null)
+        public void SetScoringModel(Control owner, IPeakScoringModel scoringModel)
         {
             // Scoring model is null if we're creating a new model from scratch (default to mProphet).
             if (scoringModel == null)
                  scoringModel = new MProphetPeakScoringModel(UNNAMED);
 
-            _targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, progressMonitor);
-
-            // Make sure this part happens on the UI thread
-            Program.MainWindow.Invoke(new Action(() =>
+            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
             {
-                InitializeGraphPanes();
-                _peakScoringModel = scoringModel;
-                ModelName = _peakScoringModel.Name;
-                if (_originalName == null)
-                    _originalName = _peakScoringModel.Name;
+                longWaitDlg.PerformWork(owner, 800,
+                    progressMonitor => _targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, progressMonitor));
+            }
+            
+            _peakScoringModel = scoringModel;
+            if (_lastTrainedScoringModel == null)
+                _lastTrainedScoringModel = _peakScoringModel;
+            if (_originalName == null)
+                _originalName = _peakScoringModel.Name;
+            var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
+            _selectedIndex = mProphetModel != null ? MPROPHET_MODEL_INDEX : SKYLINE_LEGACY_MODEL_INDEX;
 
-                var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
-                if (mProphetModel != null)
-                {
-                    comboModel.SelectedIndex = _selectedIndex = MPROPHET_MODEL_INDEX;
-                    lblColinearWarning.Visible = mProphetModel.ColinearWarning;
-                }
-                else
-                {
-                    comboModel.SelectedIndex = _selectedIndex = SKYLINE_LEGACY_MODEL_INDEX;
-                }
+            InitializeCalculatorGrid(owner);
 
-                InitializeCalculatorGrid();
+            InitializeGraphPanes();
+            ModelName = _peakScoringModel.Name;
+            comboModel.SelectedIndex = _selectedIndex;
 
-                if (_lastTrainedScoringModel == null)
-                    _lastTrainedScoringModel = _peakScoringModel;
-
-                decoyCheckBox.Checked = _peakScoringModel.UsesDecoys;
-                secondBestCheckBox.Checked = _peakScoringModel.UsesSecondBest;
-                UpdateCalculatorGraph(0);
-                UpdateModelGraph();
-            }));
+            // Keep changing checkboxes from updating graphs, since they will be updated
+            // again immediately afterward.
+            _ignoreCheckChanged = true;
+            decoyCheckBox.Checked = _peakScoringModel.UsesDecoys;
+            secondBestCheckBox.Checked = _peakScoringModel.UsesSecondBest;
+            _ignoreCheckChanged = false;
+            // Now update the graphs
+            UpdateCalculatorGraph(0);
+            UpdateModelGraph();
         }
 
         /// <summary>
@@ -177,12 +178,6 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 TrainModel(true);
-
-                using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring})
-                {
-                    longWaitDlg.PerformWork(this, 800,
-                        progressMonitor => SetScoringModel(_peakScoringModel, progressMonitor)); // update graphs and grid
-                }
             }
             catch (InvalidDataException x)
             {
@@ -225,7 +220,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!PeakScoringModelSpec.AreSameCalculators(_peakScoringModel.PeakFeatureCalculators, 
                                                          _targetDecoyGenerator.FeatureCalculators))
             {
-                SetScoringModel(_peakScoringModel);
+                SetScoringModel(this, _peakScoringModel);
             }
 
             // Get scores for target and decoy groups.
@@ -260,19 +255,49 @@ namespace pwiz.Skyline.SettingsUI
             }
             
             // Copy weights to grid.
-            for (int i = 0; i < _gridViewDriver.Items.Count; i++)
+            _gridViewDriver.Items.RaiseListChangedEvents = false;
+            try
             {
-                double weight = _peakScoringModel.Parameters.Weights[i];
-                _gridViewDriver.Items[i].Weight = double.IsNaN(weight) ? null : (double?) weight;
-                _gridViewDriver.Items[i].PercentContribution = double.IsNaN(weight) ? null : GetPercentContribution(i);
-            }
-            gridPeakCalculators.Invalidate();
+                using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating })
+                {
+                    int seenContributingScores = 0;
+                    int totalContributingScores = _peakScoringModel.Parameters.Weights.Count(w => !double.IsNaN(w));
+                    longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                    {
+                        for (int i = 0; i < _gridViewDriver.Items.Count; i++)
+                        {
+                            var item = _gridViewDriver.Items[i];
+                            double weight = _peakScoringModel.Parameters.Weights[i];
+                            if (double.IsNaN(weight))
+                            {
+                                item.Weight = null;
+                                item.PercentContribution = null;
+                                item.IsEnabled = false;
+                            }
+                            else
+                            {
+                                progressMonitor.Message = string.Format(Resources.EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_,
+                                    _peakScoringModel.PeakFeatureCalculators[i].Name);
+                                progressMonitor.ProgressValue = (seenContributingScores++*100)/totalContributingScores;
 
-            lblColinearWarning.Visible = _peakScoringModel is MProphetPeakScoringModel && ((MProphetPeakScoringModel)_peakScoringModel).ColinearWarning;
+                                item.Weight = weight;
+                                item.PercentContribution = GetPercentContribution(i);
+                            }
+                        }
+                    });
+                }
+            }
+            finally
+            {
+                _gridViewDriver.Items.RaiseListChangedEvents = true;
+            }
+            _gridViewDriver.Items.ResetBindings();
+
+            var model = _peakScoringModel as MProphetPeakScoringModel;
+            lblColinearWarning.Visible = model != null && model.ColinearWarning;
 
             UpdateCalculatorGraph();
-            UpdateModelGraph();
-            UpdateCalculatorGrid();
+            UpdateCalculatorGrid(); // Updates model graph
         }
 
         public void FindMissingValues(int selectedCalculatorIndex)
@@ -417,11 +442,31 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.GraphObjList.Clear();
         }
 
+        private bool IsFeaturesActive
+        {
+            get { return TAB_PAGES[tabControl1.SelectedIndex] is FeaturesTab; }
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!IsFeaturesActive && _modelDirty)
+                UpdateModelGraph();
+            if (IsFeaturesActive && _featuresDirty)
+                UpdateCalculatorGraph();
+        }
+
         /// <summary>
         /// Redraw the main model graph.
         /// </summary>
         private void UpdateModelGraph()
         {
+            if (IsFeaturesActive)
+            {
+                _modelDirty = true;
+                return;
+            }
+            _modelDirty = false;
+
             var graphPane = zedGraphMProphet.GraphPane;
             var graphPaneQ = zedGraphQValues.GraphPane;
             var graphPaneP = zedGraphPValues.GraphPane;
@@ -602,6 +647,13 @@ namespace pwiz.Skyline.SettingsUI
                 _selectedCalculator = calculatorIndex;
             }
 
+            if (!IsFeaturesActive)
+            {
+                _featuresDirty = true;
+                return;
+            }
+            _featuresDirty = false;
+
             var graphPane = zedGraphSelectedCalculator.GraphPane;
             ClearGraphPane(graphPane);
 
@@ -655,7 +707,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Erase a portion of the axis to indicate discontinuous data.
             var xAxisGap = new BoxObj(
-                0.8,
+                0.82,
                 0.99,
                 0.07,
                 0.02,
@@ -896,31 +948,50 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Fill the data grid with calculator names and weights.
         /// </summary>
-        private void InitializeCalculatorGrid()
+        /// <param name="owner"></param>
+        private void InitializeCalculatorGrid(Control owner)
         {
             // Create list of calculators and their corresponding weights.
+            var listPeakCalculatorWeights = new List<PeakCalculatorWeight>();
+            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating })
+            {
+                int seenContributingScores = 0;
+                int totalContributingScores = _peakScoringModel.IsTrained
+                    ? _peakScoringModel.Parameters.Weights.Count(w => !double.IsNaN(w))
+                    : 1;    // Should never get used, but just in case, avoid divide by zero
+                longWaitDlg.PerformWork(owner, 800, progressMonitor =>
+                {
+                    for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
+                    {
+                        bool isNanWeight = !_peakScoringModel.IsTrained ||
+                                           double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
+
+                        var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
+                        double? weight = null, normalWeight = null;
+                        if (!isNanWeight)
+                        {
+                            progressMonitor.Message = string.Format(Resources.EditPeakScoringModelDlg_TrainModel_Calculating_contribution_of__0_, name);
+                            progressMonitor.ProgressValue = (seenContributingScores++ * 100) / totalContributingScores;
+                            weight = _peakScoringModel.Parameters.Weights[i];
+                            normalWeight = GetPercentContribution(i);
+                        }
+                        // If the score is not eligible (e.g. has unknown values), definitely don't enable it
+                        // If it is eligible, enable if untrained or if trained and not nan
+                        bool enabled = _targetDecoyGenerator.EligibleScores[i] &&
+                                       (!_peakScoringModel.IsTrained ||
+                                        !double.IsNaN(_peakScoringModel.Parameters.Weights[i]));
+                        listPeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
+                    }
+                });
+            }
+
+            // Put the new weights into the grid on the UI thread
             _gridViewDriver.Items.RaiseListChangedEvents = false;
             try
             {
                 PeakCalculatorWeights.Clear();
-                for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
-                {
-                    bool isNanWeight = !_peakScoringModel.IsTrained ||
-                                       double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
-
-                    var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
-                    double? weight = null, normalWeight = null;
-                    if (!isNanWeight)
-                    {
-                        weight = _peakScoringModel.Parameters.Weights[i];
-                        normalWeight = GetPercentContribution(i);
-                    }
-                    // If the score is not eligible (e.g. has unknown values), definitely don't enable it
-                    // If it is eligible, enable if untrained or if trained and not nan
-                    bool enabled = _targetDecoyGenerator.EligibleScores[i] &&
-                                  (!_peakScoringModel.IsTrained || !double.IsNaN(_peakScoringModel.Parameters.Weights[i]));
-                    PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
-                }
+                foreach (var peakCalculatorWeight in listPeakCalculatorWeights)
+                    PeakCalculatorWeights.Add(peakCalculatorWeight);
             }
             finally
             {
@@ -1002,19 +1073,24 @@ namespace pwiz.Skyline.SettingsUI
             if (_selectedIndex != comboModel.SelectedIndex)
             {
                 _selectedIndex = comboModel.SelectedIndex;
+                IPeakScoringModel peakScoringModel = null;
                 switch (comboModel.SelectedIndex)
                 {
                     case MPROPHET_MODEL_INDEX:
-                        SetScoringModel(_lastTrainedScoringModel is MProphetPeakScoringModel
+                        peakScoringModel = _lastTrainedScoringModel is MProphetPeakScoringModel
                                             ? _lastTrainedScoringModel
-                                            : new MProphetPeakScoringModel(ModelName));
+                                            : new MProphetPeakScoringModel(ModelName);
                         break;
 
                     case SKYLINE_LEGACY_MODEL_INDEX:
-                        SetScoringModel(_lastTrainedScoringModel is LegacyScoringModel
+                        peakScoringModel = _lastTrainedScoringModel is LegacyScoringModel
                                             ? _lastTrainedScoringModel
-                                            : new LegacyScoringModel(ModelName));
+                                            : new LegacyScoringModel(ModelName);
                         break;
+                }
+                if (peakScoringModel != null)
+                {
+                    SetScoringModel(this, peakScoringModel);
                 }
             }
         }
@@ -1031,12 +1107,16 @@ namespace pwiz.Skyline.SettingsUI
 
         private void decoyCheckBox_CheckedChanged(object sender, EventArgs e)
         {
+            if (_ignoreCheckChanged)
+                return;
             UpdateCalculatorGraph();
             UpdateModelGraph();
         }
 
         private void falseTargetCheckBox_CheckedChanged(object sender, EventArgs e)
         {
+            if (_ignoreCheckChanged)
+                return;
             UpdateCalculatorGraph();
             UpdateModelGraph();
         }

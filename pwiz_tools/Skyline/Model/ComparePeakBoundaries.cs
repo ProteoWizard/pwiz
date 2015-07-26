@@ -94,9 +94,13 @@ namespace pwiz.Skyline.Model
             _docCompare = docOriginal;
             if (IsModel)
             {
-                var handler = new MProphetResultsHandler(DocOriginal, PeakScoringModel);
+                var handler = new MProphetResultsHandler(DocOriginal, PeakScoringModel)
+                {
+                    AddAnnotation = true,
+                    AddMAnnotation = true
+                };
                 handler.ScoreFeatures(progressMonitor);
-                _docCompare = handler.ChangePeaks(double.MaxValue, true, true, true, true, progressMonitor);
+                _docCompare = handler.ChangePeaks(progressMonitor);
             }
             else
             {

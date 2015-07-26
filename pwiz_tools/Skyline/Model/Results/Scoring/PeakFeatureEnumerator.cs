@@ -32,7 +32,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
                                                                                IList<IPeakFeatureCalculator> calcs,
-                                                                               IProgressMonitor progressMonitor = null)
+                                                                               IProgressMonitor progressMonitor = null,
+                                                                               bool includeMzFilters = false)
         {
             // Get features for each peptide
             int totalPeptides = document.MoleculeCount;
@@ -65,12 +66,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         {
                             progressMonitor.UpdateProgress(status =
                                 status.ChangeMessage(string.Format(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_,
-                                    nodePep.RawTextIdDisplay)) // Modified sequence, or custom ion name
+                                    nodePepGroup.Name)) // Modified sequence, or custom ion name
                                       .ChangePercentComplete(percentComplete));
                         }
                     }
 
-                    foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs, runEnumDict))
+                    foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs, runEnumDict, includeMzFilters))
                     {
                         yield return peakFeature;
                     }
@@ -85,14 +86,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                                 PeptideGroupDocNode nodePepGroup,
                                                                                 PeptideDocNode nodePep,
                                                                                 IList<IPeakFeatureCalculator> calcs,
-                                                                                IDictionary<int, int> runEnumDict)
+                                                                                IDictionary<int, int> runEnumDict,
+                                                                                bool includeMzFilters)
         {
             // Get peptide features for each set of comparable groups
             foreach (var nodeGroups in ComparableGroups(nodePep))
             {
                 var arrayGroups = nodeGroups.ToArray();
                 var labelType = arrayGroups[0].TransitionGroup.LabelType;
-                foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, labelType, arrayGroups, calcs, runEnumDict))
+                foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, labelType, arrayGroups, calcs, runEnumDict, includeMzFilters))
                 {
                     yield return peakFeature;
                 }
@@ -121,7 +123,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                    IsotopeLabelType labelType,
                                                                    IList<TransitionGroupDocNode> nodeGroups,
                                                                    IList<IPeakFeatureCalculator> calcs,
-                                                                   IDictionary<int, int> runEnumDict)
+                                                                   IDictionary<int, int> runEnumDict,
+                                                                   bool includeMzFilters)
         {
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
             float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -147,19 +150,23 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         if (!summaryPeakData.HasArea)
                             continue;
 
-                        var listFeatures = new List<float>();
+                        var features = new float[calcs.Count];
 
-                        foreach (var calc in calcs)
+                        for (int i = 0; i < calcs.Count; i++)
                         {
-                            listFeatures.Add(summaryPeakData.GetScore(context, calc));
+                            features[i] = summaryPeakData.GetScore(context, calcs[i]);
                         }
+
+                        MzFilterPairs[] mzFilters = null;
+                        if (includeMzFilters)
+                            mzFilters = summaryPeakData.GetMzFilters(context);
 
                         float retentionTime = summaryPeakData.RetentionTime;
                         float startTime = summaryPeakData.StartTime;
                         float endTime = summaryPeakData.EndTime;
                         bool isMaxPeakIndex = summaryPeakData.IsMaxPeakIndex;
                         listRunFeatures.Add(new PeakGroupFeatures(retentionTime, startTime, endTime,
-                            isMaxPeakIndex, listFeatures.ToArray(), summaryPeakData.GetMzFilters(context)));
+                            isMaxPeakIndex, features, mzFilters));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures);
@@ -169,12 +176,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         private class SummaryPeptidePeakData : IPeptidePeakData<ISummaryPeakData>
         {
+            private static readonly IList<ITransitionGroupPeakData<ISummaryPeakData>> EMPTY_DATA = new ITransitionGroupPeakData<ISummaryPeakData>[0];
+
             private readonly ChromatogramGroupInfo _chromGroupInfoPrimary;
             private int _peakIndex;
 
             public SummaryPeptidePeakData(SrmDocument document,
                                           PeptideDocNode nodePep,
-                                          IEnumerable<TransitionGroupDocNode> nodeGroups,
+                                          IList<TransitionGroupDocNode> nodeGroups,
                                           ChromatogramSet chromatogramSet,
                                           ChromatogramGroupInfo chromGroupInfoPrimary)
             {
@@ -183,14 +192,40 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                 NodePep = nodePep;
                 FileInfo = chromatogramSet.GetFileInfo(chromGroupInfoPrimary);
-                TransitionGroupPeakData = nodeGroups.Select(
-                    nodeGroup => new SummaryTransitionGroupPeakData(document,
-                                                                    nodePep,
-                                                                    nodeGroup,
-                                                                    chromatogramSet,
-                                                                    chromGroupInfoPrimary)).ToArray();
-                AnalyteGroupPeakData = TransitionGroupPeakData.Where(t => !t.IsStandard).ToArray();
-                StandardGroupPeakData = TransitionGroupPeakData.Where(t => t.IsStandard).ToArray();
+                TransitionGroupPeakData = new SummaryTransitionGroupPeakData[nodeGroups.Count];
+                for (int i = 0; i < nodeGroups.Count; i++)
+                {
+                    TransitionGroupPeakData[i] = new SummaryTransitionGroupPeakData(document,
+                        nodePep, nodeGroups[i], chromatogramSet, chromGroupInfoPrimary);
+                }
+                // Avoid extra ToArray() calls, since they show up in a profiler for big files
+                bool? standard;
+                if (AllSameStandardType(TransitionGroupPeakData, out standard))
+                {
+                    AnalyteGroupPeakData = standard.HasValue && !standard.Value ? TransitionGroupPeakData : EMPTY_DATA;
+                    StandardGroupPeakData = standard.HasValue && standard.Value ? TransitionGroupPeakData : EMPTY_DATA;
+                }
+                else
+                {
+                    AnalyteGroupPeakData = TransitionGroupPeakData.Where(t => !t.IsStandard).ToArray();
+                    StandardGroupPeakData = TransitionGroupPeakData.Where(t => t.IsStandard).ToArray();
+                }
+            }
+
+            private bool AllSameStandardType(IList<ITransitionGroupPeakData<ISummaryPeakData>> transitionGroupPeakData, out bool? standard)
+            {
+                standard = null;
+                foreach (var peakData in transitionGroupPeakData)
+                {
+                    if (!standard.HasValue)
+                        standard = peakData.IsStandard;
+                    else if (standard.Value != peakData.IsStandard)
+                    {
+                        standard = null;
+                        return false;
+                    }
+                }
+                return true;
             }
 
             public PeptideDocNode NodePep { get; private set; }
@@ -439,6 +474,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         private sealed class SummaryTransitionGroupPeakData : ITransitionGroupPeakData<ISummaryPeakData>
         {
+            private static readonly IList<ITransitionPeakData<ISummaryPeakData>> EMPTY_DATA = new ITransitionPeakData<ISummaryPeakData>[0];
+
             private readonly ChromatogramGroupInfo _chromGroupInfo;
             private int _peakIndex;
 
@@ -453,6 +490,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 NodeGroup = nodeGroup;
                 IsStandard = document.Settings.PeptideSettings.Modifications.InternalStandardTypes
                     .Contains(nodeGroup.TransitionGroup.LabelType);
+                TransitionPeakData = Ms1TranstionPeakData = Ms2TranstionPeakData = EMPTY_DATA;
 
                 ChromatogramGroupInfo[] arrayChromInfo;
                 var measuredResults = document.Settings.MeasuredResults;
@@ -465,23 +503,48 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                     if (_chromGroupInfo != null)
                     {
-                        var pd = from nodeTran in nodeGroup.Transitions
-                                 let tranInfo = _chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance)
-                                 where tranInfo != null
-                                 select new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
-                        TransitionPeakData = pd.ToArray();
+                        int ms1Count = 0, ms2Count = 0;
+                        var listPeakData = new List<ITransitionPeakData<ISummaryPeakData>>();
+                        foreach (var nodeTran in nodeGroup.Transitions)
+                        {
+                            var tranInfo = _chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
+                            if (tranInfo == null)
+                                continue;
+                            listPeakData.Add(new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo));
+                            if (nodeTran.IsMs1)
+                                ms1Count++;
+                            else
+                                ms2Count++;
+                        }
+                        TransitionPeakData = listPeakData.ToArray();
+                        Ms1TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, true);
+                        Ms2TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, false);
                     }
                 }
-                if (TransitionPeakData == null)
-                {
-                    TransitionPeakData = Ms1TranstionPeakData = Ms2TranstionPeakData =
-                        new ITransitionPeakData<ISummaryPeakData>[0];
-                }
+            }
+
+            private IList<ITransitionPeakData<ISummaryPeakData>> GetTransitionTypePeakData(int ms1Count, int ms2Count, bool ms1Type)
+            {
+                if ((ms1Type && ms1Count == 0) || (!ms1Type && ms2Count == 0))
+                    return EMPTY_DATA;
+                else if ((ms1Type && ms2Count == 0) || (!ms1Type && ms1Count == 0))
+                    return TransitionPeakData;
+                else if (ms1Type)
+                    return GetTransitionPeakData(ms1Count, t => t.IsMs1);
                 else
+                    return GetTransitionPeakData(ms2Count, t => !t.IsMs1);
+            }
+
+            private IList<ITransitionPeakData<ISummaryPeakData>> GetTransitionPeakData(int count, Func<TransitionDocNode, bool> selectNode)
+            {
+                var arrayPeakData = new ITransitionPeakData<ISummaryPeakData>[count];
+                int nextIndex = 0;
+                foreach (var peakData in TransitionPeakData)
                 {
-                    Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                    Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    if (selectNode(peakData.NodeTran))
+                        arrayPeakData[nextIndex++] = peakData;
                 }
+                return arrayPeakData;
             }
 
             public TransitionGroupDocNode NodeGroup { get; private set; }
@@ -684,6 +747,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public string GetFilterPairsText(CultureInfo cultureInfo)
         {
+            if (FilterPairs == null)
+                return string.Empty;
+
             var sb = new StringBuilder();
             foreach (var filterPairs in FilterPairs)
             {

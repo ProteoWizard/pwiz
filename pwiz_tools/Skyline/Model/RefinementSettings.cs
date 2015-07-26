@@ -113,6 +113,11 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Refine(SrmDocument document)
         {
+            return Refine(document, null);
+        }
+
+        public SrmDocument Refine(SrmDocument document, SrmSettingsChangeMonitor progressMonitor)
+        {
             HashSet<int> outlierIds = new HashSet<int>();
             if (RTRegressionThreshold.HasValue)
             {
@@ -155,6 +160,9 @@ namespace pwiz.Skyline.Model
             int minPeptides = MinPeptidesPerProtein ?? 0;
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
+                if (progressMonitor != null)
+                    progressMonitor.ProcessGroup(nodePepGroup);
+
                 if (acceptedProteins != null && !acceptedProteins.Contains(GetAcceptProteinKey(nodePepGroup)))
                     continue;
 
@@ -172,9 +180,8 @@ namespace pwiz.Skyline.Model
                         new SrmSettingsDiff(true, false, false, false, false, false));
                 }
 
-                nodePepGroupRefined =
-                    Refine(nodePepGroupRefined, document, outlierIds,
-                        includedPeptides, repeatedPeptides, acceptedPeptides);
+                nodePepGroupRefined = Refine(nodePepGroupRefined, document, outlierIds,
+                        includedPeptides, repeatedPeptides, acceptedPeptides, progressMonitor);
 
                 if (nodePepGroupRefined.Children.Count < minPeptides)
                     continue;
@@ -231,11 +238,15 @@ namespace pwiz.Skyline.Model
                                            ICollection<int> outlierIds,
                                            ICollection<RefinementIdentity> includedPeptides,
                                            ICollection<RefinementIdentity> repeatedPeptides,
-                                           Dictionary<RefinementIdentity, List<int>> acceptedPeptides)
+                                           Dictionary<RefinementIdentity, List<int>> acceptedPeptides,
+                                           SrmSettingsChangeMonitor progressMonitor)
         {
             var listPeptides = new List<PeptideDocNode>();
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
+                if (progressMonitor != null)
+                    progressMonitor.ProcessMolecule(nodePep);
+
                 if (outlierIds.Contains(nodePep.Id.GlobalIndex))
                     continue;
 

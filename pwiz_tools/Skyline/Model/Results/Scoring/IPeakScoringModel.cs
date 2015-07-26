@@ -158,7 +158,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public interface IModelParams
     {
+        // ReSharper disable UnusedMemberInSuper.Global
         double Score(IList<double> features);
+        // ReSharper restore UnusedMemberInSuper.Global
     }
 
     public class LinearModelParams : Immutable, IModelParams
@@ -458,6 +460,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public interface IDetailedPeakData : ISummaryPeakData
     {
+        // ReSharper disable UnusedMemberInSuper.Global
         int TimeIndex { get; }
         int EndIndex { get; }
         int StartIndex { get; }
@@ -473,6 +476,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Intensity array linear-interpolated to the shared time scale.
         /// </summary>
         float[] Intensities { get; }
+        // ReSharper restore UnusedMemberInSuper.Global
     }
 
     // ReSharper disable InconsistentNaming
@@ -481,6 +485,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public interface ISummaryPeakData
     {
+        // ReSharper disable UnusedMemberInSuper.Global
         float RetentionTime { get; }
         float StartTime { get; }
         float EndTime { get; }
@@ -494,6 +499,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         bool IsForcedIntegration { get; }
         PeakIdentification Identified { get; }
         bool? IsTruncated { get; }
+        // ReSharper restore UnusedMemberInSuper.Global
     }
 
     public static class PeakScoringModel

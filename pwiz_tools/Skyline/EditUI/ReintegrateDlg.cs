@@ -83,7 +83,13 @@ namespace pwiz.Skyline.EditUI
                         throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_);
                     }
                     var scoringModel = _driverPeakScoringModel.SelectedItem;
-                    var resultsHandler = new MProphetResultsHandler(Document, scoringModel);
+                    var resultsHandler = new MProphetResultsHandler(Document, scoringModel)
+                    {
+                        QValueCutoff = qCutoff,
+                        OverrideManual = checkBoxOverwrite.Checked,
+                        AddAnnotation = checkBoxAnnotation.Checked,
+                        AddMAnnotation = checkBoxAnnotation.Checked
+                    };
                     longWaitDlg.PerformWork(this, 1000, pm =>
                         {
                             resultsHandler.ScoreFeatures(pm);
@@ -92,7 +98,7 @@ namespace pwiz.Skyline.EditUI
                                 throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_);
                             }
                             // TODO: Add a checkbox for including decoys.  Probably most of the time real users won't want to bother with reintegrating decoys
-                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, true, checkBoxAnnotation.Checked, checkBoxAnnotation.Checked, pm);
+                            Document = resultsHandler.ChangePeaks(pm);
                         });
                     if (longWaitDlg.IsCanceled)
                         return;

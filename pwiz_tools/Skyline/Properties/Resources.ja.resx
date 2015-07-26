@@ -5822,10 +5822,7 @@
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
     <value>現在のピークスコアモデルは、ドキュメント内の1つ以上のペプチドと互換性がありません。新しいモデルをトレーニングしてください。</value>
   </data>
-  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
-    <value>ピーク境界の調整中</value>
-  </data>
-  <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
+    <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
     <value>欠損しているスコア</value>
   </data>
   <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">

@@ -141,6 +141,9 @@ namespace pwiz.Skyline.Model
 
         public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
         {
+            if (diff.Monitor != null)
+                diff.Monitor.ProcessGroup(this);
+
             if (diff.DiffPeptides && settingsNew.PeptideSettings.Filter.AutoSelect && AutoManageChildren)
             {
                 IList<DocNode> childrenNew = new List<DocNode>();

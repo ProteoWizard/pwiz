@@ -2400,12 +2400,26 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
         public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
+        public MProphetResultsHandler ResultsHandler { get; private set; }
 
         #region Property change methods
 
         public PeptideIntegration ChangePeakScoringModel(PeakScoringModelSpec prop)
         {
             return ChangeProp(ImClone(this), im => im.PeakScoringModel = prop);
+        }
+
+        /// <summary>
+        /// Changing this starts a peak reintegration when it is set on the document.
+        /// </summary>
+        public PeptideIntegration ChangeResultsHandler(MProphetResultsHandler prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                if (prop != null)
+                    im.PeakScoringModel = prop.ScoringModel;
+                im.ResultsHandler = prop;
+            });
         }
 
         #endregion

@@ -69,6 +69,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? PrecursorRightFilter { get; private set; }
         private ImmutableList<IsolationWindow> _prespecifiedIsolationWindows;
 
+        /// <summary>
+        /// Minimized set of disjoint m/z ranges covered to make checking if something
+        /// is within the m/z range(s) covered by the isolation scheme faster.
+        /// </summary>
+        private ImmutableList<IsolationWindow> _prespecifiedDisjointWindows;
+
         public string SpecialHandling { get; private set; }
         public int? WindowsPerScan { get; private set; }
 
@@ -106,7 +112,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool IsInRangeMz(double mz)
         {
-            return FromResults || PrespecifiedIsolationWindows.Any(window => window.Contains(mz));
+            return FromResults || _prespecifiedDisjointWindows.Any(window => window.Contains(mz));
         }
 
         /// <summary>
@@ -134,7 +140,33 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<IsolationWindow> PrespecifiedIsolationWindows
         {
             get { return _prespecifiedIsolationWindows; }
-            private set { _prespecifiedIsolationWindows = MakeReadOnly(value); }
+            private set
+            {
+                _prespecifiedIsolationWindows = MakeReadOnly(value);
+                _prespecifiedDisjointWindows = MakeReadOnly(GetDisjointRanges(value));
+            }
+        }
+
+        private IEnumerable<IsolationWindow> GetDisjointRanges(IList<IsolationWindow> isolationWindows)
+        {
+            var listIsolationWindows = new List<IsolationWindow>(isolationWindows);
+            listIsolationWindows.Sort((w1, w2) => Comparer<double>.Default.Compare(w1.Start, w2.Start));
+            int iDisjoint = 0;
+            for (int i = 1; i < listIsolationWindows.Count; i++)
+            {
+                var disjointWindow = listIsolationWindows[iDisjoint];
+                var nextWindow = listIsolationWindows[i];
+                if (disjointWindow.End >= nextWindow.Start)
+                {
+                    listIsolationWindows[iDisjoint] = new IsolationWindow(disjointWindow.Start, nextWindow.End);
+                }
+                else
+                {
+                    iDisjoint++;
+                    listIsolationWindows[iDisjoint] = nextWindow;
+                }
+            }
+            return listIsolationWindows.Take(iDisjoint + 1);
         }
 
         public IsolationWindow GetIsolationWindow(double targetMz, double matchTolerance)

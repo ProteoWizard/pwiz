@@ -85,6 +85,11 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
+        public void ResetProgress()
+        {
+            LastProgress = null;
+        }
+
         public ProgressStatus LastProgress { get; private set; }
 
         private void UpdateProgress(object sender, ProgressUpdateEventArgs e)
@@ -92,7 +97,9 @@ namespace pwiz.Skyline.Model
             // Unblock the waiting thread, if there was a cancel or error
             lock (CHANGE_EVENT_LOCK)
             {
-                LastProgress = (!e.Progress.IsComplete ? e.Progress : null);
+                // Keep track of last progress, but do not overwrite an error
+                if (LastProgress == null || !LastProgress.IsError)
+                    LastProgress = (!e.Progress.IsComplete ? e.Progress : null);
                 if (e.Progress.IsCanceled || e.Progress.IsError)
                     Monitor.Pulse(CHANGE_EVENT_LOCK);
             }

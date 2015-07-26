@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
@@ -1706,6 +1707,75 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetPrecursorFragmentMass(string seq);
     }
 
+    public class SrmSettingsChangeMonitor : IDisposable
+    {
+        private readonly IProgressMonitor _progressMonitor;
+        private readonly string _formatString;
+        private readonly IDocumentContainer _documentContainer;
+        private readonly SrmDocument _startDocument;
+
+        private ProgressStatus _status;
+        private int _groupCount;
+        private int? _moleculeCount;
+        private int _seenGroupCount;
+        private int _seenMoleculeCount;
+
+        public SrmSettingsChangeMonitor(IProgressMonitor progressMonitor, string formatString,
+            IDocumentContainer documentContainer = null, SrmDocument startDocument = null)
+        {
+            _progressMonitor = progressMonitor;
+            _documentContainer = documentContainer;
+            _startDocument = startDocument;
+
+            _formatString = formatString;
+            _status = new ProgressStatus(_formatString);
+        }
+
+        public void ProcessGroup(PeptideGroupDocNode nodeGroup)
+        {
+            _status = _status.ChangeMessage(string.Format(_formatString, nodeGroup.Name));
+            UpdateProgress(true);
+            _seenGroupCount++;
+        }
+
+        public void ProcessMolecule(PeptideDocNode nodePep)
+        {
+            UpdateProgress(false);
+            _seenMoleculeCount++;
+        }
+
+        private void UpdateProgress(bool forceUpdate)
+        {
+            // Stop processing if the document changes, since the SetDocument call will fail
+            if (_documentContainer != null && !ReferenceEquals(_startDocument, _documentContainer.Document))
+                throw new OperationCanceledException();
+
+            int percentComplete = (_seenMoleculeCount * 100) / MoleculeCount ?? (_seenGroupCount * 100) / GroupCount;
+            if (_status.PercentComplete != percentComplete)
+                _progressMonitor.UpdateProgress(_status = _status.ChangePercentComplete(percentComplete));
+            else if (forceUpdate)
+                _progressMonitor.UpdateProgress(_status);
+        }
+
+        public void Dispose()
+        {
+            _progressMonitor.UpdateProgress(_status = _status.Complete());
+        }
+
+        public int GroupCount
+        {
+            get {  return _groupCount; }
+            // Avoid divide by zero errors by always having at least 1 group
+            set { _groupCount = value != 0 ? value : 1; }
+        }
+
+        public int? MoleculeCount
+        {
+            get { return _moleculeCount; }
+            // Avoid divied by zero errors by using null when molecule count is zero
+            set { _moleculeCount = value.HasValue && value > 0 ? value : null; }
+        }
+    }
     /// <summary>
     /// A class that allows pre-calculation of settings changes for use
     /// in updating the <see cref="DocNode"/> tree in a <see cref="SrmDocument"/>
@@ -2004,6 +2074,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 DiffResults = true;
             }
+            // Results handler is temporary. Any time the document has one, it means the results
+            // must be updated and reintegration applied.
+            if (newPep.Integration.ResultsHandler != null)
+                DiffResults = true;
         }
 
         private static bool EqualExceptAnnotations(MeasuredResults measuredResultsNew, MeasuredResults measuredResultsOld)
@@ -2069,6 +2143,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public SrmSettings SettingsOld { get; private set; }
+
+        public SrmSettingsChangeMonitor Monitor { get; set; }
 
         public bool DiffPeptides { get; private set; }
         public bool DiffPeptideProps { get; private set; }

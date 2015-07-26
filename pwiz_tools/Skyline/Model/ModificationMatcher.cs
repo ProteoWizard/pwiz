@@ -52,13 +52,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private static readonly SrmSettingsDiff DIFF_GROUPS = new SrmSettingsDiff(false, false, true, false, false, false);
+
         public override bool MoveNextSequence()
         {
             if(!_sequences.MoveNext())
                 return false;
             // Skip sequences that can be created from the current settings.
             TransitionGroupDocNode nodeGroup;
-            while (CreateDocNodeFromSettings(_sequences.Current, null, null, out nodeGroup) != null)
+            while (CreateDocNodeFromSettings(_sequences.Current, null, DIFF_GROUPS, out nodeGroup) != null)
             {
                 if (!_sequences.MoveNext())
                     return false;

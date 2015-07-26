@@ -245,8 +245,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (tranGroupPeakDatas.Count == 0)
                 return float.NaN;
 
-            var isotopeDotProducts = new List<double>();
-            var weights = new List<double>();
+            // CONSIDER: With dot-products, when one charge state performs very well, and another
+            //           performs poorly, we do not want to penalize the score, since this may
+            //           occur for many reasons. Ideally, we would like a score that is improved
+            //           by multiple high scoring charge states, but not decreased by the addition
+            //           of low scoring charge states. For now we just take the maximum score, since
+            //           this is fast and easy to code correctly.
+            float maxDotProduct = 0;
             foreach (var pdGroup in tranGroupPeakDatas)
             {
                 var pds = pdGroup.TransitionPeakData.Where(pd => pd.NodeTran != null && pd.NodeTran.HasDistInfo).ToList();
@@ -257,20 +262,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var statPeakAreas = new Statistics(peakAreas);
                 var statIsotopeProportions = new Statistics(isotopeProportions);
                 var isotopeDotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statIsotopeProportions);
-                double weight = statPeakAreas.Sum();
                 if (double.IsNaN(isotopeDotProduct))
                     isotopeDotProduct = 0;
-                isotopeDotProducts.Add(isotopeDotProduct);
-                weights.Add(weight);
+                if (isotopeDotProduct > maxDotProduct)
+                    maxDotProduct = isotopeDotProduct;
             }
-            if (isotopeDotProducts.Count == 0)
+            if (maxDotProduct == 0)
                 return float.NaN;
-            // If all weights are zero, return zero instead of NaN
-            if (weights.All(weight => weight == 0))
-                return 0;
-            var idotpStats = new Statistics(isotopeDotProducts);
-            var weightsStats = new Statistics(weights);
-            return (float)idotpStats.Mean(weightsStats);
+            return maxDotProduct;
         }
     }
 
@@ -362,20 +361,40 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (tranGroupPeakDatas.Length == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup == null || pd.NodeGroup.LibInfo == null))
                 return float.NaN;
 
-            // Using linq expressions showed up in a profiler
-            var experimentAreas = new List<double>();
-            var libAreas = new List<double>();
-            foreach (var pd in GetIonTypes(tranGroupPeakDatas))
+            // CONSIDER: With dot-products, when one charge state performs very well, and another
+            //           performs poorly, we do not want to penalize the score, since this may
+            //           occur for many reasons. Ideally, we would like a score that is improved
+            //           by multiple high scoring charge states, but not decreased by the addition
+            //           of low scoring charge states. For now we just take the maximum score, since
+            //           this is fast and easy to code correctly.
+            float maxDotProduct = float.MinValue;
+            foreach (var pdGroup in tranGroupPeakDatas)
             {
-                experimentAreas.Add(pd.PeakData.Area);
-                libAreas.Add(pd.NodeTran.LibInfo != null
-                                    ? pd.NodeTran.LibInfo.Intensity
-                                    : 0);
+                if (pdGroup.NodeGroup == null || pdGroup.NodeGroup.LibInfo == null)
+                    continue;
+                var transitionPeakData = GetIonTypes(new[] {pdGroup});
+                int count = transitionPeakData.Count;
+                var peakAreas = new double[count];
+                var libIntensities = new double[count];
+                for (int i = 0; i < count; i++)
+                {
+                    var pd = transitionPeakData[i];
+                    if (pd.NodeTran == null)
+                        continue;
+                    peakAreas[i] = pd.PeakData.Area;
+                    libIntensities[i] = pd.NodeTran.LibInfo != null ? pd.NodeTran.LibInfo.Intensity : 0;
+                }
+                var statPeakAreas = new Statistics(peakAreas);
+                var statLibIntensities = new Statistics(libIntensities);
+                var dotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statLibIntensities);
+                if (double.IsNaN(dotProduct))
+                    dotProduct = 0;
+                if (dotProduct > maxDotProduct)
+                    maxDotProduct = dotProduct;
             }
-
-            var statExperiment = new Statistics(experimentAreas);
-            var statLib = new Statistics(libAreas);
-            return (float) statExperiment.NormalizedContrastAngleSqrt(statLib);
+            if (maxDotProduct < 0)
+                return float.NaN;
+            return maxDotProduct;
         }
 
         public override bool IsReversedScore { get { return false; } }

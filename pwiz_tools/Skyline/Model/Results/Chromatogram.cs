@@ -167,20 +167,34 @@ namespace pwiz.Skyline.Model.Results
                         CancelLoad(resultsLoad);
                         return;
                     }
-                    if (changeSets)
+
+                    try
                     {
-                        // Result is empty cache, due to cancelation
-                        results = resultsLoad.Chromatograms.Count != 0 ? resultsLoad : null;
-                        docNew = docCurrent.ChangeMeasuredResults(results);
+                        using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(new LoadMonitor(_manager, _container, null),
+                                                                                        Resources.Loader_FinishLoad_Updating_peak_statistics_for__0_,
+                                                                                        _container, docCurrent))
+                        {
+                            if (changeSets)
+                            {
+                                // Result is empty cache, due to cancelation
+                                results = resultsLoad.Chromatograms.Count != 0 ? resultsLoad : null;
+                                docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
+                            }
+                            else
+                            {
+                                // Otherwise, switch to new cache
+                                results = results.UpdateCaches(documentPath, resultsLoad);
+                                docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
+                            }
+                        }
                     }
-                    else
+                    catch (OperationCanceledException)
                     {
-                        // Otherwise, switch to new cache
-                        results = results.UpdateCaches(documentPath, resultsLoad);
-                        docNew = docCurrent.ChangeMeasuredResults(results);
+                        // Restart the processing form the top
+                        docNew = null;
                     }
                 }
-                while (!_manager.CompleteProcessing(_container, docNew, docCurrent));
+                while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
 
                 // Force a document changed event to keep progressive load going
                 // until it is complete

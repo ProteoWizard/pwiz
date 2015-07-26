@@ -1037,6 +1037,8 @@ namespace pwiz.Skyline.Model.Results
             }
             Height = peak.Height;
             Fwhm = (float) (peak.Fwhm * interval);
+            if (float.IsNaN(Fwhm))
+                Fwhm = 0;
             if (peak.FwhmDegenerate)
                 flags |= FlagValues.degenerate_fwhm;
 

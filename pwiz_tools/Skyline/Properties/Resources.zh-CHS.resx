@@ -5822,10 +5822,7 @@
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
     <value>当前的峰分数模型与文档中的一个或多个肽不兼容。请训练一个新模型。</value>
   </data>
-  <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
-    <value>调整峰边界</value>
-  </data>
-  <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
+    <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
     <value>缺失分数</value>
   </data>
   <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">

@@ -3927,6 +3927,7 @@ namespace pwiz.Skyline
             }
             else
             {
+                // Update the status bar with the first progress status.
                 ProgressStatus status = listProgress[0];
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
@@ -3936,7 +3937,7 @@ namespace pwiz.Skyline
                     return;
 
                 // Update chromatogram graph if we are importing a data file.
-                var loadingStatus = status as ChromatogramLoadingStatus;
+                var loadingStatus = listProgress.FirstOrDefault(s => s is ChromatogramLoadingStatus) as ChromatogramLoadingStatus;
                 if (loadingStatus != null && loadingStatus.Importing)
                 {
                     buttonShowAllChromatograms.Visible = true;

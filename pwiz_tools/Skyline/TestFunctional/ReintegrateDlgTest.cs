@@ -223,14 +223,17 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var chromInfo in nodeGroup.ChromInfos)
                 {
+                    var annotations = chromInfo.Annotations.ListAnnotations();
                     if (nodeGroup.IsDecoy)
                     {
-                        Assert.AreEqual(chromInfo.Annotations.ListAnnotations().Count(), 0);
+                        Assert.AreEqual(annotations.Length, 1);
+                        Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotations[0].Key);
                     }
                     else
                     {
-                        Assert.AreEqual(chromInfo.Annotations.ListAnnotations().Count(), 2);
-                        Assert.AreEqual(chromInfo.Annotations.ListAnnotations().First().Key, MProphetResultsHandler.AnnotationName);
+                        Assert.AreEqual(annotations.Length, 2);
+                        Assert.AreEqual(MProphetResultsHandler.AnnotationName, annotations[0].Key);
+                        Assert.AreEqual(MProphetResultsHandler.MAnnotationName, annotations[1].Key);
                     }
 
                 }

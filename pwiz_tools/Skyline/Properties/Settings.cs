@@ -2007,11 +2007,8 @@ namespace pwiz.Skyline.Properties
         {
             using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
             {
-                using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
-                {
-                    longWaitDlg.PerformWork(owner, 800,
-                        progressMonitor => editModel.SetScoringModel(item, progressMonitor));
-                }
+                editModel.SetScoringModel(owner, item);
+
                 if (editModel.ShowDialog(owner) == DialogResult.OK)
                     return (PeakScoringModelSpec) editModel.PeakScoringModel;
 
