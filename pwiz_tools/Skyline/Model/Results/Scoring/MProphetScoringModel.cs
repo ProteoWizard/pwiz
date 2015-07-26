@@ -210,7 +210,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     {
                         // CONSIDER: Support cancelling
                         if (progressMonitor != null)
-                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete((iteration + 1) * 100 / (MAX_ITERATIONS + 1)));
+                        {
+                            progressMonitor.UpdateProgress(status =
+                                status.ChangeMessage(string.Format(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__, iteration + 1, MAX_ITERATIONS))
+                                      .ChangePercentComplete((iteration + 1) * 100 / (MAX_ITERATIONS + 1)));
+                        }
 
                         im.CalculateWeights(iteration, targetTransitionGroups, decoyTransitionGroups,
                                             includeSecondBest, calcWeights, out decoyMean, out decoyStdev, ref colinearWarning);

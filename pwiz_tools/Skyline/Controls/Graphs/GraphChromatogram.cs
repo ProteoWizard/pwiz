@@ -1083,7 +1083,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (proteinNode != null)
                 {
                     peptidesAndTransitionGroups.ProteinSelected = true;
-                    foreach (var nodePep in proteinNode.DocNode.Peptides)
+                    foreach (var nodePep in proteinNode.DocNode.Molecules)
                     {
                         peptidesAndTransitionGroups.Add(new IdentityPath(proteinNode.Path, nodePep.Id), nodePep);
                     }

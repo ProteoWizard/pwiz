@@ -42,6 +42,8 @@ del /f /q pwiz\analysis\Version.cpp > nul 2>&1
 if %VERBOSE%==1 echo   Cleaning vendor dlls...
 del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc10 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc9 > nul 2>&1
 
 del /f /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x86 > nul 2>&1
@@ -51,6 +53,9 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.xml > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\baf2sql_c.h > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\baf2sql_cpp.h > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\schema.h > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\install_pwiz_vendor_api_bruker_stub > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x64 > nul 2>&1

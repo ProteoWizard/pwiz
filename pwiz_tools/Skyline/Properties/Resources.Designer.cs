@@ -13701,6 +13701,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Training peak scoring model (iteration {0} of {1}).
+        /// </summary>
+        public static string MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__ {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_Train_Training_peak_scoring_model__iteration__0__of__1__" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adjusting peak boundaries.
         /// </summary>
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
