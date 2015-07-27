@@ -145,6 +145,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(reintegrateDlgManual, reintegrateDlgManual.OkDialog);
             // No annotations
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
+            CheckRoundTrip(); // Verify that this all serializes properly
 
             // Peak Boundaries stay where they are when manual override is off
             double? startTime, endTime;
@@ -161,6 +162,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(reintegrateDlgOverride, reintegrateDlgOverride.OkDialog);
             // No annotations
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
+            CheckRoundTrip(); // Verify that this all serializes properly
             
             // Peak Boundaries move back when manual override is turned on
             CheckTimes(groupPath, 0, 0, out startTime, out endTime);
@@ -188,6 +190,7 @@ namespace pwiz.SkylineTestFunctional
             });
             // No annotations
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
+            CheckRoundTrip(); // Verify that this all serializes properly
             var reintegrateDlgCutoff = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() =>
             {
@@ -202,6 +205,7 @@ namespace pwiz.SkylineTestFunctional
                 ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
                 AssertEx.FileEquals(docNewActual, docNewExpectedAll);
             });
+            CheckRoundTrip(); // Verify that this all serializes properly
 
             // This time annotations are added
             var reintegrateDlgAnnotations = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -211,6 +215,7 @@ namespace pwiz.SkylineTestFunctional
                 reintegrateDlgAnnotations.AddAnnotation = true;
             });
             OkDialog(reintegrateDlgAnnotations, reintegrateDlgAnnotations.OkDialog);
+            CheckRoundTrip(); // Verify that this all serializes properly
             // Check annotation def is added
             var annotationDefs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
             Assert.AreEqual(annotationDefs.Count, 1);
@@ -248,8 +253,18 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(reintegrateDlgAnnotationsRemove, reintegrateDlgAnnotationsRemove.OkDialog);
             var annotationDefsRemove = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
             Assert.AreEqual(annotationDefsRemove.Count, 0);
+            CheckRoundTrip(); // Verify that this all serializes properly
         }
 
+        private void CheckRoundTrip()
+        {
+            // Verify that document roundtrips properly as small molecule
+            var refine = new RefinementSettings();
+            var doc = refine.ConvertToSmallMolecules(SkylineWindow.Document, ignoreDecoys: true); 
+            AssertEx.RoundTrip(doc);
+            // Verify that document roundtrips properly
+            AssertEx.RoundTrip(SkylineWindow.Document);
+        }
 
         private static void CheckTimes(IdentityPath groupPath, int file, int replicate, out double? startTime, out double? endTime)
         {
