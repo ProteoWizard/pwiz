@@ -829,7 +829,10 @@ namespace pwiz.Skyline.Model.Results
                         // Skip quickly through the chromatographic lead-in and tail when possible 
                         if (msLevel > 1) // We need all MS1 for TIC and BPC
                         {
-                            double? rtCheck = _lookaheadContext.GetRetentionTime(i);
+                            // Only do these checks if we can get the information instantly. Otherwise,
+                            // this will slow down processing in more complex cases.
+                            var timeAndPrecursors = _lookaheadContext.GetInstantTimeAndPrecursors(i);
+                            double? rtCheck = timeAndPrecursors.RetentionTime;
                             if (_filter.IsOutsideRetentionTimeRange(rtCheck))
                             {
                                 // Leave an update cue for the chromatogram painter then move on
@@ -837,7 +840,14 @@ namespace pwiz.Skyline.Model.Results
                                     _allChromData.CurrentTime = (float)rtCheck.Value;
                                 continue;
                             }
+
+                            var precursors = timeAndPrecursors.Precursors;
+                            if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                            {
+                                continue;
+                            }
                         }
+
                         // Inexpensive checks are complete, now actually get the spectrum data
                         var nextSpectrum = _lookaheadContext.GetSpectrum(i);
                         // Assertion for testing ID to spectrum index support
@@ -1086,6 +1096,18 @@ namespace pwiz.Skyline.Model.Results
                     return _lookAheadDataSpectrum.RetentionTime;
                 else
                     return _dataFile.GetStartTime(index);  // Returns 0 if retrieval is too expensive
+            }
+
+            public MsTimeAndPrecursors GetInstantTimeAndPrecursors(int index)
+            {
+                if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
+                    return new MsTimeAndPrecursors
+                    {
+                        Precursors = _lookAheadDataSpectrum.Precursors,
+                        RetentionTime = _lookAheadDataSpectrum.RetentionTime
+                    };
+                else
+                    return _dataFile.GetInstantTimeAndPrecursors(index);
             }
 
             public MsDataSpectrum GetSpectrum(int index)

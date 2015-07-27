@@ -147,13 +147,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     result->set(translateAsSpectrumType(experimentType));
     result->set(translate(msExperiment->getPolarity()));
 
-    // CONSIDER: Can anything below here be added to instant?
-    if (detailLevel == DetailLevel_InstantMetadata)
-        return result;
-
-	// Revert to previous behavior for getting binary data or not.
-	bool getBinaryData = (detailLevel == DetailLevel_FullData);
-
     double startMz, stopMz;
     msExperiment->getAcquisitionMassRange(startMz, stopMz);
     scan.scanWindows.push_back(ScanWindow(startMz, stopMz, MS_m_z));
@@ -225,6 +218,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             result->precursors.push_back(precursor);
         }
 
+    if (detailLevel == DetailLevel_InstantMetadata)
+        return result;
+
+    // Revert to previous behavior for getting binary data or not.
+    bool getBinaryData = (detailLevel == DetailLevel_FullData);
+
         //result->set(MS_lowest_observed_m_z, spectrum->getMinX(), MS_m_z);
         //result->set(MS_highest_observed_m_z, spectrum->getMaxX(), MS_m_z);
 
@@ -247,6 +246,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
                 result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
         }
 
+        // This forces the WIFF reader to get the data, making full metadata
+        // nearly equivalent in performance to getting binary.
         result->defaultArrayLength = spectrum->getDataSize(doCentroid);
     }
 

@@ -766,6 +766,18 @@ namespace pwiz.ProteowizardWrapper
             return param.timeInSeconds() / 60;
         }
 
+        public MsTimeAndPrecursors GetInstantTimeAndPrecursors(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, DetailLevel.InstantMetadata))
+            {
+                return new MsTimeAndPrecursors
+                {
+                    Precursors = GetPrecursors(spectrum),
+                    RetentionTime = GetStartTime(spectrum)
+                };
+            }
+        }
+
         public MsPrecursor[] GetPrecursors(int scanIndex)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, false))
@@ -773,7 +785,6 @@ namespace pwiz.ProteowizardWrapper
                 return GetPrecursors(spectrum);
             }
         }
-
 
         private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
@@ -907,6 +918,12 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
         }
+    }
+
+    public sealed class MsTimeAndPrecursors
+    {
+        public double? RetentionTime { get; set; }
+        public MsPrecursor[] Precursors { get; set; }
     }
 
     public sealed class MsDataSpectrum

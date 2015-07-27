@@ -513,6 +513,29 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public bool HasProductFilterPairs(double? retentionTime, MsPrecursor[] precursors)
+        {
+            if (!EnabledMsMs || !retentionTime.HasValue || !precursors.Any())
+                return false;
+
+            var handlingType = _fullScan.IsolationScheme == null || _fullScan.IsolationScheme.SpecialHandling == null
+                ? IsolationScheme.SpecialHandlingType.NONE
+                : _fullScan.IsolationScheme.SpecialHandling;
+            bool ignoreIso = handlingType == IsolationScheme.SpecialHandlingType.OVERLAP ||
+                             handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+
+            foreach (var isoWin in GetIsolationWindows(precursors))
+            {
+                foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
+                {
+                    if (!filterPair.ContainsRetentionTime(retentionTime.Value))
+                        continue;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private IEnumerable<IsolationWindowFilter> GetIsolationWindows(IList<MsPrecursor> precursors)
         {
             // Waters MSe high-energy scans actually appear to be MS1 scans without
