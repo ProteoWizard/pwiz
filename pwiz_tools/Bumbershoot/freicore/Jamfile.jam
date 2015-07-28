@@ -60,6 +60,7 @@ lib freicore
      <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
      <library>/ext/boost//regex
      <warnings>all
+     <toolset>gcc:<cxxflags>-Wno-pedantic
  : # default-build
      <link>static
      <variant>release

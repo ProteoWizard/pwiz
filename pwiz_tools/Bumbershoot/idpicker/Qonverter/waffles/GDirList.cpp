@@ -18,6 +18,8 @@
 #ifdef WINDOWS
 #	include <direct.h> // for "getcwd", "chdir", etc.
 #	include <io.h> // for "access"
+#else
+#   include <unistd.h>
 #endif
 
 using std::string;

@@ -177,6 +177,9 @@ import path ; # needed for glob, exists, etc.
 import project ; # needed for project.current
 import errors ;
 
+modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH)/predef/check ;
+import $(PWIZ_LIBRARIES_PATH)/predef/check/predef : require check : predef-require predef-check ;
+
 
 if --teamcity-test-decoration in [ modules.peek : ARGV ]
 {
@@ -258,7 +261,7 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
         <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
         <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-        <toolset>msvc:<cxxflags>/wd4267                    # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4267                 # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
@@ -272,7 +275,10 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-uninitialized
 
         # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
-        <toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
+        [ predef-check "BOOST_COMP_GNUC >= 4.8" : : <cxxflags>-Wno-unused-local-typedefs ]
+
+        # starting with gcc 4.9, gcc offers colored diagnostic messages, helpful when looking for an elusive "error" message in a sea of warning spam
+        [ predef-check "BOOST_COMP_GNUC >= 4.9" : : <cxxflags>-fdiagnostics-color=always ]
 
         # special Cygwin gcc-3.4.4 hack
         # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
@@ -341,7 +347,6 @@ lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_LIB
 alias svm : $(PWIZ_LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH) ;
-
 
 # get version info (used for tarball filenames)
 import svnrev ;
