@@ -110,6 +110,8 @@ namespace AutoQCTest
         private static string GetExpectedLog_ProcessNew ()
         {
             var sb = new StringBuilder();
+            sb.Append("Processing existing files...");
+            sb.Append("No existing files found.");
             sb.Append("Processing new files...").AppendLine();
             sb.Append("Waiting for files...").AppendLine();
             sb.Append("File test1.txt added to directory.").AppendLine();
@@ -133,6 +135,7 @@ namespace AutoQCTest
             sb.Append("Process4 returned an error. Trying again...").AppendLine();
             sb.Append("Process4 exited with error code 1.").AppendLine();
             sb.Append("Process4 returned an error. Exceeded maximum try count.  Giving up...");
+            sb.Append("Finished processing files.");
             return sb.ToString();
         }
 

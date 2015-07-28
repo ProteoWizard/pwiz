@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace AutoQC
@@ -26,6 +27,8 @@ namespace AutoQC
         public static void Main(string[] args)
         {
             var form = new AutoQCForm();
+            // Add version text in the title bar.
+            form.Text = string.Format("AutoQC-daily {0}", Assembly.GetEntryAssembly().GetName().Version);
             Application.Run(form); 
             
         }

@@ -104,7 +104,18 @@ namespace AutoQC
                 _tryAgain = false;
 
                 _procInfo.incrementTryCount();
-                var exitCode = CreateAndRunProcess();
+
+                int exitCode;
+                try
+                {
+                    exitCode = CreateAndRunProcess();
+                }
+                catch (Exception e)
+                {
+                    LogException(e, "There was an exception running the process {0}", _procInfo.ExeName);
+                    return false;
+                }
+
                 if (exitCode != 0)
                 {
                     LogError("{0} exited with error code {1}.", _procInfo.ExeName, exitCode);
@@ -183,6 +194,12 @@ namespace AutoQC
         private void LogError(string message, params Object[] args)
         {
             _logger.LogError(message, 1, 1, args);
+        }
+
+        private void LogException(Exception e, string message, params Object[] args)
+        {
+            _logger.LogError(message, args);
+            _logger.LogException(e);
         }
 
         protected ProcessInfo GetProcessInfo()

@@ -15,13 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -37,6 +40,7 @@ namespace AutoQC
 
         public string SkylineFilePath { get; set; }
         public string FolderToWatch { get; set; }
+
         public int AccumulationWindow
         {
             get
@@ -45,9 +49,10 @@ namespace AutoQC
                 return Int32.TryParse(AccumulationWindowString, out val) ? val : 0;
             }
         }
+
         public string AccumulationWindowString { get; set; }
         public string InstrumentType { get; set; }
-        public bool ImportExistingFiles { get; set; }
+        public DateTime LastAcquiredFileDate { get; set; } // Not saved to Properties.Settings
         public int DelayTime { get; set; } // TODO: Add this in the UI
 
         
@@ -56,15 +61,14 @@ namespace AutoQC
         {
             var settings = new MainSettings
             {
-                SkylineFilePath = Properties.Settings.Default.SkylineFilePath,
-                FolderToWatch = Properties.Settings.Default.FolderToWatch,
-                ImportExistingFiles = Properties.Settings.Default.ImportExistingFiles
+                SkylineFilePath = Settings.Default.SkylineFilePath,
+                FolderToWatch = Settings.Default.FolderToWatch,
             };
 
-            var accumWin = Properties.Settings.Default.AccumulationWindow;
+            var accumWin = Settings.Default.AccumulationWindow;
             settings.AccumulationWindowString = accumWin == 0 ? ACCUM_TIME_WINDOW.ToString() : accumWin.ToString();
-            
-            var instrumentType = Properties.Settings.Default.InstrumentType;
+
+            var instrumentType = Settings.Default.InstrumentType;
             settings.InstrumentType = string.IsNullOrEmpty(instrumentType) ? THERMO : instrumentType;
 
             return settings;
@@ -72,15 +76,91 @@ namespace AutoQC
 
         internal void Save()
         {
-            Properties.Settings.Default.SkylineFilePath = SkylineFilePath;
+            Settings.Default.SkylineFilePath = SkylineFilePath;
 
-            Properties.Settings.Default.FolderToWatch = FolderToWatch;
+            Settings.Default.FolderToWatch = FolderToWatch;
 
-            Properties.Settings.Default.AccumulationWindow = AccumulationWindow;
+            Settings.Default.AccumulationWindow = AccumulationWindow;
 
-            Properties.Settings.Default.InstrumentType = InstrumentType;
+            Settings.Default.InstrumentType = InstrumentType;
+        }
 
-            Properties.Settings.Default.ImportExistingFiles = ImportExistingFiles;
+        public bool ReadLastAcquiredFileDate(IAutoQCLogger logger, IProcessControl processControl)
+        {
+            logger.Log("Getting the newest acquisition date on the files imported into the Skyline document.");
+            var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (exeDir == null)
+            {
+                logger.LogError("Cound not get path to the Skyline report file");
+                return false;
+
+            }
+            var skyrFile = Path.Combine(exeDir, "FileAcquisitionTime.skyr");
+            var reportFile = Path.Combine(FolderToWatch, "AcquisitionTimes.csv");
+
+            // Export a report from the given Skyline file
+            var args =
+                string.Format(
+                    @" --in=""{0}"" --report-conflict-resolution=overwrite --report-add=""{1}"" --report-name=""{2}"" --report-file=""{3}""",
+                    SkylineFilePath, skyrFile, "ResultsFiles", reportFile);
+
+            var procInfo = new ProcessInfo(AutoQCForm.SkylineRunnerPath, args);
+            if (!processControl.RunProcess(procInfo))
+            {
+                logger.LogError("Error getting the last acquired file date from the Skyline document.");
+                return false;
+            }
+            // Read the exported report to get the last AcquiredTime for imported results in the Skyline doucment.
+            if (!File.Exists(reportFile))
+            {
+                logger.LogError("Could not find report outout {0}", reportFile);
+                return false;
+            }
+
+            try
+            {
+                LastAcquiredFileDate = GetLastAcquiredFileDate(reportFile);
+                logger.Log("The most recent acquisition date in the Skyline document is {0}", LastAcquiredFileDate);
+            }
+            catch (IOException e)
+            {
+                logger.LogError("Exception reading file {0}. Exception details are: ", reportFile);
+                logger.LogException(e);
+                return false;
+            }
+            return true;
+        }
+
+        private static DateTime GetLastAcquiredFileDate(string reportFile)
+        {
+            var lastAcq = new DateTime();
+
+            using (var reader = new StreamReader(reportFile))
+            {
+                string line; // Read the column headers
+                var first = true;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (first)
+                    {
+                        first = false;
+                        continue;
+                    }
+
+                    var values = line.Split(',');
+                    if (values.Length == 3)
+                    {
+                        var acqDate = DateTime.Parse(values[1]);
+                        if (acqDate.CompareTo(lastAcq) == 1)
+                        {
+                            lastAcq = acqDate;
+                        }
+                    }
+                }
+            }
+
+            return lastAcq;
         }
     }
 
@@ -188,23 +268,31 @@ namespace AutoQC
             // Input Skyline file
             args.Append(string.Format(" --in=\"{0}\"", Settings.SkylineFilePath));
 
-
+            string importOnOrAfter = "";
             if (importContext.ImportExisting)
             {
-                // We are importing existing files in the folder, import regardless of when the file was created.
-                args.Append(string.Format(" --import-file=\"{0}\"", importContext.GetCurrentFile()));
+                // We are importing existing files in the folder.  The import-on-or-after is determined
+                // by the last acquisition date on the files already imported in the Skyline document.
+                // If the Skyline document does not have any results files, we will import all existing
+                // files in the folder.
+                if (Settings.LastAcquiredFileDate != DateTime.MinValue)
+                {
+                    importOnOrAfter = string.Format(" --import-on-or-after={0}",
+                        Settings.LastAcquiredFileDate.ToShortDateString());
+                }
             }
             else
             {
+                importOnOrAfter = string.Format(" --import-on-or-after={0}",
+                    accumulationWindow.StartDate.ToShortDateString());
+
                 // Add arguments to remove files older than the start of the rolling window.   
                 args.Append(string.Format(" --remove-before={0}", accumulationWindow.StartDate.ToShortDateString()));
-
-                // Add arguments to import the results file
-                args.Append(string.Format(" --import-on-or-after={1} --import-file=\"{0}\"", importContext.GetCurrentFile(),
-                    accumulationWindow.StartDate.ToShortDateString()));
-                // args.Append(string.Format(" --import-file=\"{0}\"", importContext.GetCurrentFile()));
             }
-            
+
+            // Add arguments to import the results file
+            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
+
             // Save the Skyline file
             args.Append(" --save");
 
@@ -260,6 +348,12 @@ namespace AutoQC
         {
             if (!LastArchivalDate.Equals(DateTime.MinValue))
             {
+                return LastArchivalDate;
+            }
+
+            if(!Settings.LastAcquiredFileDate.Equals(DateTime.MinValue))
+            {
+                LastArchivalDate = Settings.LastAcquiredFileDate;
                 return LastArchivalDate;
             }
 

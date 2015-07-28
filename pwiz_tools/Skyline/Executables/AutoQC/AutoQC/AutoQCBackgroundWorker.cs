@@ -38,7 +38,7 @@ namespace AutoQC
         public const int WAIT_5SEC = 5000;
         private const string CANCELLED = "Cancelled";
         private const string ERROR = "Error";
-        private const string COMPLETED = "COMPLETED";
+        private const string COMPLETED = "Completed";
        
         public AutoQCBackgroundWorker(IAppControl appControl, IProcessControl processControl, IAutoQCLogger logger)
         {
@@ -51,28 +51,14 @@ namespace AutoQC
 
         public void Start(MainSettings mainSettings)
         {
-            if (mainSettings.ImportExistingFiles)
-            {
-                LogWithSpace("Processing existing files...");
-                ProcessExistingFiles();
-            }
-            else
-            {
-                LogWithSpace("Processing new files...");
-                ProcessNewFiles();
-            }
+            ProcessFiles();
 
             _fileWatcher.Start(mainSettings);
         }
 
-        private void ProcessExistingFiles()
+        private void ProcessFiles()
         {
-            RunBackgroundWorker(ProcessExistingFiles, ProcessExistingFilesCompleted);
-        }
-
-        private void ProcessNewFiles()
-        {
-            RunBackgroundWorker(ProcessNewFiles, ProcessNewFilesCompleted);
+            RunBackgroundWorker(ProcessFiles, ProcessFilesCompleted);
         }
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
@@ -97,8 +83,9 @@ namespace AutoQC
             _worker.RunWorkerAsync();
         }
 
-        private void ProcessNewFiles(object sender, DoWorkEventArgs e)
+        private void ProcessNewFiles(DoWorkEventArgs e)
         {
+            LogWithSpace("Processing new files...");
             var inWait = false;
             while (true)
             {
@@ -133,63 +120,76 @@ namespace AutoQC
             }
         }
 
-        private void ProcessNewFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void ProcessFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (CANCELLED.Equals(e.Result))
+            if (e.Error != null)
+            {
+                LogError("An exception occurred while processing the file:");
+                _logger.LogException(e.Error);  
+            }
+            else if (e.Result == null || ERROR.Equals(e.Result))
+            {
+                Log("Error processing file.");
+            }
+            else if (CANCELLED.Equals(e.Result))
             {
                 Log("Cancelled processing files.");
+            }
+            else
+            {
+                LogWithSpace("Finished processing files.");
             }
             Stop();
         }
 
-        private void ProcessExistingFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void ProcessFiles(object sender, DoWorkEventArgs e)
         {
-            if (e.Result == null || ERROR.Equals(e.Result))
+            if(ProcessExistingFiles(e))
             {
-                Log("Error processing existing files.");
-                Stop();
+                ProcessNewFiles(e);  
             }
-            else if (CANCELLED.Equals(e.Result))
-            {
-                Log("Cancelled processing existing files.");
-                Stop();
-            }
-            else
-            {
-                LogWithSpace("Finished processing existing files.");
-                ProcessNewFiles(); // Start processing new files.
-            }
+            e.Result = COMPLETED;
         }
 
-        private void ProcessExistingFiles(object sender, DoWorkEventArgs e)
+        private bool ProcessExistingFiles(DoWorkEventArgs e)
         {
             // Queue up any existing data files in the folder
+            LogWithSpace("Processing existing files...");
             var files = _fileWatcher.GetAllFiles();
 
-            Log(string.Format("Found {0} files.", files.Count));
+            if (files.Count == 0)
+            {
+                Log("No existing files found.");
+                return true;
+            }
+            
+            Log("Found {0} existing files.", files.Count);
 
             var importContext = new ImportContext(files) {TotalImportCount = _totalImportCount};
             while (importContext.GetNextFile() != null)
             {
-                _fileWatcher.WaitForFileReady(importContext.GetCurrentFile()); // TODO: Do we need to wait?
+                _fileWatcher.WaitForFileReady(importContext.GetCurrentFile());
+
                 if (!ProcessOneFile(importContext))
                 {
                     e.Result = ERROR;
-                    return;
+                    return false;
                 }
 
-                if (!_worker.CancellationPending) continue;
-
-                e.Result = CANCELLED;
-                return;
+                if (_worker.CancellationPending)
+                {
+                    e.Result = CANCELLED;
+                    return false;
+                }
             }
-            e.Result = COMPLETED;
+
+            LogWithSpace("Finished processing existing files...");
+            return true;
         }
 
         private bool ProcessOneFile(ImportContext importContext)
         {
             var processInfos = _processControl.GetProcessInfos(importContext);
-
             if (processInfos.Any(procInfo => !_processControl.RunProcess(procInfo)))
             {
                 return false;

@@ -40,7 +40,6 @@
             this.labelDays = new System.Windows.Forms.Label();
             this.textAccumulationTimeWindow = new System.Windows.Forms.TextBox();
             this.labelAccumulationTimeWindow = new System.Windows.Forms.Label();
-            this.cbImportExistingFiles = new System.Windows.Forms.CheckBox();
             this.labelInstrumentType = new System.Windows.Forms.Label();
             this.comboBoxInstrumentType = new System.Windows.Forms.ComboBox();
             this.btnFolderToWatch = new System.Windows.Forms.Button();
@@ -164,7 +163,6 @@
             this.groupBoxMain.Controls.Add(this.labelDays);
             this.groupBoxMain.Controls.Add(this.textAccumulationTimeWindow);
             this.groupBoxMain.Controls.Add(this.labelAccumulationTimeWindow);
-            this.groupBoxMain.Controls.Add(this.cbImportExistingFiles);
             this.groupBoxMain.Controls.Add(this.labelInstrumentType);
             this.groupBoxMain.Controls.Add(this.comboBoxInstrumentType);
             this.groupBoxMain.Controls.Add(this.btnFolderToWatch);
@@ -182,7 +180,7 @@
             // labelDays
             // 
             this.labelDays.AutoSize = true;
-            this.labelDays.Location = new System.Drawing.Point(128, 203);
+            this.labelDays.Location = new System.Drawing.Point(128, 176);
             this.labelDays.Name = "labelDays";
             this.labelDays.Size = new System.Drawing.Size(29, 13);
             this.labelDays.TabIndex = 56;
@@ -190,7 +188,7 @@
             // 
             // textAccumulationTimeWindow
             // 
-            this.textAccumulationTimeWindow.Location = new System.Drawing.Point(21, 200);
+            this.textAccumulationTimeWindow.Location = new System.Drawing.Point(21, 173);
             this.textAccumulationTimeWindow.Name = "textAccumulationTimeWindow";
             this.textAccumulationTimeWindow.Size = new System.Drawing.Size(100, 20);
             this.textAccumulationTimeWindow.TabIndex = 55;
@@ -198,26 +196,16 @@
             // labelAccumulationTimeWindow
             // 
             this.labelAccumulationTimeWindow.AutoSize = true;
-            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 184);
+            this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 157);
             this.labelAccumulationTimeWindow.Name = "labelAccumulationTimeWindow";
             this.labelAccumulationTimeWindow.Size = new System.Drawing.Size(135, 13);
             this.labelAccumulationTimeWindow.TabIndex = 54;
             this.labelAccumulationTimeWindow.Text = "Accumulation time window:";
             // 
-            // cbImportExistingFiles
-            // 
-            this.cbImportExistingFiles.AutoSize = true;
-            this.cbImportExistingFiles.Location = new System.Drawing.Point(21, 134);
-            this.cbImportExistingFiles.Name = "cbImportExistingFiles";
-            this.cbImportExistingFiles.Size = new System.Drawing.Size(210, 17);
-            this.cbImportExistingFiles.TabIndex = 53;
-            this.cbImportExistingFiles.Text = "Import existing mass spec. files in folder";
-            this.cbImportExistingFiles.UseVisualStyleBackColor = true;
-            // 
             // labelInstrumentType
             // 
             this.labelInstrumentType.AutoSize = true;
-            this.labelInstrumentType.Location = new System.Drawing.Point(20, 250);
+            this.labelInstrumentType.Location = new System.Drawing.Point(20, 225);
             this.labelInstrumentType.Name = "labelInstrumentType";
             this.labelInstrumentType.Size = new System.Drawing.Size(82, 13);
             this.labelInstrumentType.TabIndex = 52;
@@ -234,7 +222,7 @@
             "Agilent",
             "Bruker",
             "Schimadzu"});
-            this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 266);
+            this.comboBoxInstrumentType.Location = new System.Drawing.Point(21, 241);
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
             this.comboBoxInstrumentType.Size = new System.Drawing.Size(163, 21);
             this.comboBoxInstrumentType.TabIndex = 51;
@@ -632,7 +620,6 @@
         private System.Windows.Forms.Label labelDays;
         private System.Windows.Forms.TextBox textAccumulationTimeWindow;
         private System.Windows.Forms.Label labelAccumulationTimeWindow;
-        private System.Windows.Forms.CheckBox cbImportExistingFiles;
         private System.Windows.Forms.Label labelInstrumentType;
         private System.Windows.Forms.ComboBox comboBoxInstrumentType;
         private System.Windows.Forms.Button btnFolderToWatch;

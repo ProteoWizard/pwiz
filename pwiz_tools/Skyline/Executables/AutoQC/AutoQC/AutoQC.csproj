@@ -27,8 +27,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>20</ApplicationRevision>
-    <ApplicationVersion>1.0.0.20</ApplicationVersion>
+    <ApplicationRevision>23</ApplicationRevision>
+    <ApplicationVersion>1.0.0.23</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -78,6 +78,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="AutoQC_TemporaryKey.pfx" />
+    <None Include="FileAcquisitionTime.skyr">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -179,13 +182,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=win32">
-      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>..\..\..\..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.SxS.manifest</HintPath>
-    </NativeReference>
-  </ItemGroup>
   <ItemGroup>
     <COMReference Include="MSFileReaderLib">
       <Guid>{F0C5F3E3-4F2A-443E-A74D-0AABE3237494}</Guid>
@@ -196,6 +192,12 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.31.0, Type=win32">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\..\..\..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

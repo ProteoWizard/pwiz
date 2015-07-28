@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -124,7 +125,17 @@ namespace AutoQC
             SetRunningControls();
 
             var mainSettings = mainSettingsTab.Settings;
-            _worker.Start(mainSettings);
+
+            // Export a report from the Skyline document to get the most recent acquisition date on the results files
+            // imported into the document.
+            if (await Task.Run(() => mainSettings.ReadLastAcquiredFileDate(this, this)))
+            {
+                _worker.Start(mainSettings);
+            }
+            else
+            {
+                SetStoppedControls();
+            }
         }
 
         private bool ValidateAllSettings()
@@ -227,7 +238,6 @@ namespace AutoQC
             {
                 textSkylinePath.Text = mainSettings.SkylineFilePath;
                 textFolderToWatchPath.Text = mainSettings.FolderToWatch;
-                cbImportExistingFiles.Checked = mainSettings.ImportExistingFiles;
                 textAccumulationTimeWindow.Text = mainSettings.AccumulationWindowString;
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
                 comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(MainSettings.THERMO);
@@ -245,7 +255,6 @@ namespace AutoQC
             {
                 SkylineFilePath = textSkylinePath.Text,
                 FolderToWatch = textFolderToWatchPath.Text,
-                ImportExistingFiles = cbImportExistingFiles.Checked,
                 AccumulationWindowString = textAccumulationTimeWindow.Text,
                 InstrumentType = comboBoxInstrumentType.SelectedItem.ToString()
             };

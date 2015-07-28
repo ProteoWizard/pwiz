@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <report name="AcquisitionTimes" rowsource="pwiz.Skyline.Model.Databinding.Entities.Replicate" sublist="Files!*">
+    <column name="Files!*.FileName" />
+    <column name="Files!*.AcquiredTime" />
+    <column name="Files!*.ModifiedTime" />
+  </report>
+</ReportSpecList>

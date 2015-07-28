@@ -46,7 +46,7 @@ namespace AutoQCTest
                 SkylineFilePath = skyPath,
                 FolderToWatch = folderPath,
                 AccumulationWindowString = "not a number",
-                ImportExistingFiles = false
+                // ImportExistingFiles = false
             };
             mainControl = new TestAppControl();
             mainControl.SetUIMainSettings(settings);
@@ -128,7 +128,7 @@ namespace AutoQCTest
                 MainSettings.ACCUM_TIME_WINDOW);
            
             var expected =
-                string.Format("--in=\"{0}\" --remove-before={1} --import-on-or-after={2} --import-file=\"{3}\" --save", skyFile,
+                string.Format("--in=\"{0}\" --remove-before={1} --import-file=\"{3}\" --import-on-or-after={2} --save", skyFile,
                     accumulationWindow.StartDate.ToShortDateString(),
                     accumulationWindow.StartDate.ToShortDateString(), dataFile1);
 
