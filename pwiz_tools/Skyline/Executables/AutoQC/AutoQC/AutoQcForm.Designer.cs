@@ -37,6 +37,9 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.groupBoxMain = new System.Windows.Forms.GroupBox();
+            this.labelMinutes = new System.Windows.Forms.Label();
+            this.labelAquisitionTime = new System.Windows.Forms.Label();
+            this.textAquisitionTime = new System.Windows.Forms.TextBox();
             this.labelDays = new System.Windows.Forms.Label();
             this.textAccumulationTimeWindow = new System.Windows.Forms.TextBox();
             this.labelAccumulationTimeWindow = new System.Windows.Forms.Label();
@@ -160,6 +163,9 @@
             // 
             // groupBoxMain
             // 
+            this.groupBoxMain.Controls.Add(this.labelMinutes);
+            this.groupBoxMain.Controls.Add(this.labelAquisitionTime);
+            this.groupBoxMain.Controls.Add(this.textAquisitionTime);
             this.groupBoxMain.Controls.Add(this.labelDays);
             this.groupBoxMain.Controls.Add(this.textAccumulationTimeWindow);
             this.groupBoxMain.Controls.Add(this.labelAccumulationTimeWindow);
@@ -177,6 +183,34 @@
             this.groupBoxMain.TabIndex = 53;
             this.groupBoxMain.TabStop = false;
             // 
+            // labelMinutes
+            // 
+            this.labelMinutes.AutoSize = true;
+            this.labelMinutes.Location = new System.Drawing.Point(408, 248);
+            this.labelMinutes.Name = "labelMinutes";
+            this.labelMinutes.Size = new System.Drawing.Size(43, 13);
+            this.labelMinutes.TabIndex = 59;
+            this.labelMinutes.Text = "minutes";
+            // 
+            // labelAquisitionTime
+            // 
+            this.labelAquisitionTime.AutoSize = true;
+            this.labelAquisitionTime.Location = new System.Drawing.Point(302, 225);
+            this.labelAquisitionTime.Name = "labelAquisitionTime";
+            this.labelAquisitionTime.Size = new System.Drawing.Size(130, 13);
+            this.labelAquisitionTime.TabIndex = 58;
+            this.labelAquisitionTime.Text = "Expected acquisition time:";
+            // 
+            // textAquisitionTime
+            // 
+            this.textAquisitionTime.Location = new System.Drawing.Point(302, 243);
+            this.textAquisitionTime.Name = "textAquisitionTime";
+            this.textAquisitionTime.Size = new System.Drawing.Size(100, 20);
+            this.textAquisitionTime.TabIndex = 57;
+            this.toolTip1.SetToolTip(this.textAquisitionTime, "Expected time in minutes to completely acquire a data file.  A data file will be " +
+        "imported into the Skyline document after the specified minutes have elapsed sinc" +
+        "e the file was created.");
+            // 
             // labelDays
             // 
             this.labelDays.AutoSize = true;
@@ -192,6 +226,7 @@
             this.textAccumulationTimeWindow.Name = "textAccumulationTimeWindow";
             this.textAccumulationTimeWindow.Size = new System.Drawing.Size(100, 20);
             this.textAccumulationTimeWindow.TabIndex = 55;
+            this.toolTip1.SetToolTip(this.textAccumulationTimeWindow, resources.GetString("textAccumulationTimeWindow.ToolTip"));
             // 
             // labelAccumulationTimeWindow
             // 
@@ -658,5 +693,8 @@
         private System.Windows.Forms.Button btnStartStop;
         private System.Windows.Forms.PictureBox statusImg;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label labelAquisitionTime;
+        private System.Windows.Forms.TextBox textAquisitionTime;
+        private System.Windows.Forms.Label labelMinutes;
     }
 }

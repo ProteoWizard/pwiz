@@ -226,5 +226,17 @@ namespace AutoQC.Properties {
                 this["AccumulationWindow"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("75")]
+        public int AcquisitionTime {
+            get {
+                return ((int)(this["AcquisitionTime"]));
+            }
+            set {
+                this["AcquisitionTime"] = value;
+            }
+        }
     }
 }

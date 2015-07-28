@@ -98,7 +98,17 @@ namespace AutoQC
                 var filePath = _fileWatcher.GetFile();
                 if (filePath != null)
                 {
-                    _fileWatcher.WaitForFileReady(filePath);
+                    try
+                    {
+                        _fileWatcher.WaitForFileReady(filePath);
+                    }
+                    catch (FileStatusException fse)
+                    {
+                        _logger.LogException(fse);
+                        e.Result = ERROR;
+                        break;
+                    }
+                   
                     var importContext = new ImportContext(filePath) {TotalImportCount = _totalImportCount};
                     if (!ProcessOneFile(importContext))
                     {
@@ -168,7 +178,16 @@ namespace AutoQC
             var importContext = new ImportContext(files) {TotalImportCount = _totalImportCount};
             while (importContext.GetNextFile() != null)
             {
-                _fileWatcher.WaitForFileReady(importContext.GetCurrentFile());
+                try
+                {
+                    _fileWatcher.WaitForFileReady(importContext.GetCurrentFile());
+                }
+                catch (FileStatusException fse)
+                {
+                    _logger.LogException(fse);
+                    e.Result = ERROR;
+                    return false;
+                }
 
                 if (!ProcessOneFile(importContext))
                 {

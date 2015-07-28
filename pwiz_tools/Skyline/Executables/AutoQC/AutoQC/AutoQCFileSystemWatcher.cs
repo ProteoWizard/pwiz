@@ -61,6 +61,7 @@ namespace AutoQC
             _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType);
 
             _fileWatcher.Path = mainSettings.FolderToWatch;
+
             // Begin watching.
             _fileWatcher.EnableRaisingEvents = true;
         }
@@ -70,10 +71,10 @@ namespace AutoQC
             // TODO: We need to support other instrument vendors
             if (mainSettings.InstrumentType.Equals(MainSettings.THERMO))
             {
-                return new XRawFileSatus();
+                return new XRawFileStatus(mainSettings.AcquisitionTime);
             }
             // TODO: We need to support other instrument vendors
-            return new DelayTimeFileStatus(mainSettings.DelayTime);
+            return new AcquisitionTimeFileStatus(mainSettings.AcquisitionTime);
         }
 
         private static string GetFileFilter(string instrument)
@@ -100,27 +101,23 @@ namespace AutoQC
             _dataFiles.Enqueue(e.FullPath);
         }
 
-        public bool WaitForFileReady(string filePath)
+        public void WaitForFileReady(string filePath)
         {
             var counter = 0;
             while (true)
             {
-                bool ready;
-                try
-                {
-                    ready = _fileStatusChecker.isReady(filePath);
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError("Error getting status of file {0}", filePath);
-                    Logger.LogException(e);
-                    return false;
-                }
-
-                if (ready)
+                var fileStatus= _fileStatusChecker.CheckStatus(filePath);
+                if (fileStatus.Equals(Status.Ready))
                 {
                     break;
                 }
+
+                if (fileStatus.Equals(Status.ExceedMaximumAcquiTime))
+                {
+                    throw new FileStatusException("The data acquistion has exceeded the expected acquistion time." +
+                                        "The instument probably encountered an error.");
+                }
+
                 if (counter % 10 == 0)
                 {
                     Logger.Log("File is being acquired. Waiting...");
@@ -130,7 +127,6 @@ namespace AutoQC
                 Thread.Sleep(WAIT_60SEC);
             }
             Logger.Log("File {0} is ready", Path.GetFileName(filePath));
-            return true;
         }
 
         public string GetFile()
@@ -153,6 +149,18 @@ namespace AutoQC
         public string GetDirectory()
         {
             return _fileWatcher.Path;
+        }
+    }
+
+    public class FileStatusException : Exception
+    {
+        public FileStatusException(string message) : base(message)
+        {
+        }
+
+        public FileStatusException(string message, Exception innerException)
+            : base(message, innerException)
+        {
         }
     }
 }

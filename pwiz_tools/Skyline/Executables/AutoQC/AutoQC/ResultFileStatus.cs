@@ -21,54 +21,77 @@ using MSFileReaderLib;
 
 namespace AutoQC
 {
+    public enum Status { Ready, Waiting, ExceedMaximumAcquiTime }
+    
     interface IResultFileStatus
     {
-        bool isReady(string filePath);
+        /// <exception cref="FileStatusException"></exception>
+        Status CheckStatus(string filePath) ;
     }
 
-    class XRawFileSatus : IResultFileStatus
+    class XRawFileStatus : IResultFileStatus
     {
-        public bool isReady(string filePath)
+        // Acquision time in minutes. This is how long we will wait till we consider the file ready for import.
+        private readonly int _acquisitionTime;
+
+        public XRawFileStatus(int acquisitionTime)
+        {
+            _acquisitionTime = acquisitionTime;
+        }
+
+        public Status CheckStatus(string filePath)
         {
             IXRawfile rawFile = null;
+            // Get the time elapsed since the file was first created.
+            var createTime = File.GetCreationTime(filePath);
+
+            var inAcq = 1;
             try
             {
                 rawFile = new MSFileReader_XRawfileClass();
                 rawFile.Open(filePath);
-                var inAcq = 1;
-                rawFile.InAcquisition(ref inAcq);
-                if (inAcq == 1)
-                {
-                    return false;
-                }
+                rawFile.InAcquisition(ref inAcq);          
+            }
+            catch (Exception e)
+            {
+                throw new FileStatusException(string.Format("Error getting status of file {0}", filePath), e);
             }
             finally
             {
                 if (rawFile != null)
                 {
                     rawFile.Close();
-
                 }
             }
-            return true;
+
+            if (inAcq == 1)
+            {
+                // Check whether we have exceeded the expected acquisition time
+                return createTime.AddMinutes(_acquisitionTime) < DateTime.Now
+                    ? Status.ExceedMaximumAcquiTime
+                    : Status.Waiting;
+            }
+
+            return Status.Ready;
         }
     }
 
-    class DelayTimeFileStatus : IResultFileStatus
+    class AcquisitionTimeFileStatus : IResultFileStatus
     {
-        // Delay time in minutes. This is how long we will wait till we consider the file ready for import.
-        private readonly int _delayTime;
+        // Expected aquisition time in minutes. This is how long we will wait till we consider the file ready for import.
+        private readonly int _acquisitionTime;
 
-        public DelayTimeFileStatus(int delayTime)
+        public AcquisitionTimeFileStatus(int acquisitionTime)
         {
-            _delayTime = delayTime;
+            _acquisitionTime = acquisitionTime;
         }
 
-        public bool isReady(string filePath)
+        public Status CheckStatus(string filePath)
         {
             // Get the time elapsed since the file was first created.
             var createTime = File.GetCreationTime(filePath);
-            return createTime.AddMinutes(_delayTime) < DateTime.Now;
+
+            return createTime.AddMinutes(_acquisitionTime) < DateTime.Now ? Status.Ready : Status.Waiting;
         }
     }
 }

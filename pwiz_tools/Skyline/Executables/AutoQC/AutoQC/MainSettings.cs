@@ -31,6 +31,7 @@ namespace AutoQC
     public class MainSettings
     {
         public const int ACCUM_TIME_WINDOW = 31;
+        public const int ACQUISITION_TIME = 75;
         public const string THERMO = "Thermo";
         public const string WATERS = "Waters";
         public const string BRUKER = "Bruker";
@@ -53,8 +54,15 @@ namespace AutoQC
         public string AccumulationWindowString { get; set; }
         public string InstrumentType { get; set; }
         public DateTime LastAcquiredFileDate { get; set; } // Not saved to Properties.Settings
-        public int DelayTime { get; set; } // TODO: Add this in the UI
-
+        public string AcquisitionTimeString { get; set; }
+         public int AcquisitionTime
+        {
+            get
+            {
+                int val;
+                return Int32.TryParse(AcquisitionTimeString, out val) ? val : 75;
+            }
+        }
         
 
         public static MainSettings InitializeFromDefaults()
@@ -71,6 +79,9 @@ namespace AutoQC
             var instrumentType = Settings.Default.InstrumentType;
             settings.InstrumentType = string.IsNullOrEmpty(instrumentType) ? THERMO : instrumentType;
 
+            var acquisitionTime = Settings.Default.AcquisitionTime;
+            settings.AcquisitionTimeString = acquisitionTime == 0 ? ACQUISITION_TIME.ToString() : acquisitionTime.ToString();
+
             return settings;
         }
 
@@ -83,6 +94,8 @@ namespace AutoQC
             Settings.Default.AccumulationWindow = AccumulationWindow;
 
             Settings.Default.InstrumentType = InstrumentType;
+
+            Settings.Default.AcquisitionTime = AcquisitionTime;
         }
 
         public bool ReadLastAcquiredFileDate(IAutoQCLogger logger, IProcessControl processControl)
@@ -242,6 +255,24 @@ namespace AutoQC
                     LogErrorOutput("\"Accumulation time window\" cannot be less than {0} days.", MainSettings.ACCUM_TIME_WINDOW);
                     error = true;
                 }
+            }
+
+            // Expected acquisition time
+            var aquisitionTime = mainSettingsUI.AcquisitionTimeString;
+            if (string.IsNullOrWhiteSpace(aquisitionTime))
+            {
+                LogErrorOutput("Please specify a value for the \"Expected acquisition time\".");
+                error = true;
+            }
+            else
+            {
+                int aAcquisitionTime;
+                if (!Int32.TryParse(mainSettingsUI.AcquisitionTimeString, out aAcquisitionTime))
+                {
+                    LogErrorOutput("Invalid value for \"Expected acquisition time\": {0}.",
+                        mainSettingsUI.AcquisitionTimeString);
+                    error = true;
+                } 
             }
             if (!error) Settings = mainSettingsUI;
             return !error;
