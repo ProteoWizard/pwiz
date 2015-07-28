@@ -23,48 +23,10 @@ using pwiz.Common.DataBinding.Controls;
 namespace pwiz.Skyline.Controls.Databinding
 {
     /// <summary>
-    /// Subclass of BoundDataGridView which cooperates with the SkylineWindow in handling 
-    /// clipboard commands.
+    /// Subclass of BoundDataGridView which exposes some test methods.
     /// </summary>
     public class BoundDataGridViewEx : BoundDataGridView
     {
-        /// <summary>
-        /// If this control is a child of the SkylineWindow (not a popup), then returns the
-        /// SkylineWindow.  Otherwise returns null.
-        /// </summary>
-        protected SkylineWindow FindParentSkylineWindow()
-        {
-            for (Control control = this; control != null; control = control.Parent)
-            {
-                var skylineWindow = control as SkylineWindow;
-                if (skylineWindow != null)
-                {
-                    return skylineWindow;
-                }
-            }
-            return null;
-        }
-
-        protected override void OnEnter(EventArgs e)
-        {
-            base.OnEnter(e);
-            var skylineWindow = FindParentSkylineWindow();
-            if (skylineWindow != null)
-            {
-                skylineWindow.ClipboardControlGotFocus(this);
-            }
-        }
-
-        protected override void OnLeave(EventArgs e)
-        {
-            base.OnLeave(e);
-            var skylineWindow = FindParentSkylineWindow();
-            if (skylineWindow != null)
-            {
-                skylineWindow.ClipboardControlLostFocus(this);
-            }
-        }
-
         /// <summary>
         /// Testing method: Sends Ctrl-V to this control.
         /// </summary>

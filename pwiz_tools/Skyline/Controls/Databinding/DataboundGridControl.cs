@@ -52,6 +52,51 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        /// <summary>
+        /// If this control is a child of the SkylineWindow (not a popup), then returns the
+        /// SkylineWindow.  Otherwise returns null.
+        /// </summary>
+        protected SkylineWindow FindParentSkylineWindow()
+        {
+            for (Control control = this; control != null; control = control.Parent)
+            {
+                var skylineWindow = control as SkylineWindow;
+                if (skylineWindow != null)
+                {
+                    return skylineWindow;
+                }
+            }
+            return null;
+        }
+
+        protected override void OnEnter(EventArgs e)
+        {
+            base.OnEnter(e);
+            var skylineWindow = FindParentSkylineWindow();
+            if (skylineWindow != null)
+            {
+                skylineWindow.ClipboardControlGotFocus(this);
+            }
+        }
+
+        protected override void OnLeave(EventArgs e)
+        {
+            base.OnLeave(e);
+            var skylineWindow = FindParentSkylineWindow();
+            if (skylineWindow != null)
+            {
+                skylineWindow.ClipboardControlLostFocus(this);
+            }
+        }
+
+        /// <summary>
+        /// Testing method: Sends Ctrl-V to this control.
+        /// </summary>
+        public void SendPaste()
+        {
+            OnKeyDown(new KeyEventArgs(Keys.V | Keys.Control));
+        }
+
         #region Methods exposed for testing
         public BoundDataGridViewEx DataGridView { get { return boundDataGridView; } }
         public NavBar NavBar { get { return navBar; } }
