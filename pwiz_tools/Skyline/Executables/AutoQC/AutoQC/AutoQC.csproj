@@ -27,8 +27,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>25</ApplicationRevision>
-    <ApplicationVersion>1.0.0.25</ApplicationVersion>
+    <ApplicationRevision>27</ApplicationRevision>
+    <ApplicationVersion>1.0.0.27</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -78,9 +78,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="AutoQC_TemporaryKey.pfx" />
-    <None Include="FileAcquisitionTime.skyr">
+    <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -153,10 +153,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\redstatus.png" />
+    <Content Include="Resources\redstatus.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\greenstatus.png" />
+    <Content Include="Resources\greenstatus.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\SkylineRunner\bin\Release\SkylineRunner.exe">

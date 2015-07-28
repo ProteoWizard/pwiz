@@ -117,7 +117,7 @@ namespace AutoQC
                     @" --in=""{0}"" --report-conflict-resolution=overwrite --report-add=""{1}"" --report-name=""{2}"" --report-file=""{3}""",
                     SkylineFilePath, skyrFile, "ResultsFiles", reportFile);
 
-            var procInfo = new ProcessInfo(AutoQCForm.SkylineRunnerPath, args);
+            var procInfo = new ProcessInfo(AutoQCForm.SkylineRunnerPath, AutoQCForm.SKYLINE_RUNNER, args, args);
             if (!processControl.RunProcess(procInfo))
             {
                 logger.LogError("Error getting the last acquired file date from the Skyline document.");
@@ -344,7 +344,7 @@ namespace AutoQC
                 return null;
             }
             var args = string.Format("--in=\"{0}\" {1}", Settings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(AutoQCForm.SkylineRunnerPath, args);
+            return new ProcessInfo(AutoQCForm.SkylineRunnerPath, AutoQCForm.SKYLINE_RUNNER, args, args);
         }
 
         public override ProcessInfo RunAfter(ImportContext importContext)
