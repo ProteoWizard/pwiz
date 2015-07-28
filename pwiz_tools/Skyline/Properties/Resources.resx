@@ -8528,6 +8528,18 @@ Please contact the Panorama server administrator to upgrade the server.</value>
     <data name="MassListImporter_Import_Inspecting_peptide_sequence_information" xml:space="preserve">
     <value>Inspecting peptide sequence information</value>
   </data>
+  <data name="SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports" xml:space="preserve">
+    <value>Change Document Reports</value>
+  </data>
+  <data name="PersistedViews_ExternalToolsGroup_External_Tools" xml:space="preserve">
+    <value>External Tools</value>
+  </data>
+  <data name="PersistedViews_MainGroup_Main" xml:space="preserve">
+    <value>Main</value>
+  </data>
+  <data name="SkylineViewContext_SaveViewSpecList_Change_Document_Reports" xml:space="preserve">
+    <value>Change Document Reports</value>
+  </data>
   <data name="SkylineWindow_PickPeakInChromatograms_Apply_picked_peak" xml:space="preserve">
     <value>Apply picked peak</value>
   </data>

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -33,7 +32,6 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
-using pwiz.Skyline.Properties;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 
@@ -224,22 +222,22 @@ namespace pwiz.SkylineTestUtil
         public static IList<ReportSpec> ListReportSpecs()
         {
             var reportSpecs = new List<ReportSpec>();
-            var reportSpecSet = new HashSet<ReportSpec>();
-            reportSpecs.AddRange(Settings.Default.ReportSpecList);
-            reportSpecSet.UnionWith(reportSpecs);
-            var serializer = new XmlSerializer(typeof (ReportSpecList));
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var reportSpecList = (ReportSpecList) serializer.Deserialize(typeof(CheckReportCompatibility).Assembly
-                .GetManifestResourceStream(typeof(CheckReportCompatibility), "CheckReportCompatibility.skyr"));
-            Assert.AreNotEqual(0, reportSpecList.Count);
-            foreach (var reportSpec in reportSpecList)
-            {
-                if (reportSpecSet.Add(reportSpec))
-                {
-                    reportSpecs.Add(reportSpec);
-                }
-            }
-            CollectionAssert.AreEquivalent(reportSpecs, reportSpecSet.ToArray());
+//            var reportSpecSet = new HashSet<ReportSpec>();
+//            reportSpecs.AddRange(Settings.Default.ReportSpecList);
+//            reportSpecSet.UnionWith(reportSpecs);
+//            var serializer = new XmlSerializer(typeof (ReportSpecList));
+//            // ReSharper disable once AssignNullToNotNullAttribute
+//            var reportSpecList = (ReportSpecList) serializer.Deserialize(typeof(CheckReportCompatibility).Assembly
+//                .GetManifestResourceStream(typeof(CheckReportCompatibility), "CheckReportCompatibility.skyr"));
+//            Assert.AreNotEqual(0, reportSpecList.Count);
+//            foreach (var reportSpec in reportSpecList)
+//            {
+//                if (reportSpecSet.Add(reportSpec))
+//                {
+//                    reportSpecs.Add(reportSpec);
+//                }
+//            }
+//            CollectionAssert.AreEquivalent(reportSpecs, reportSpecSet.ToArray());
             return reportSpecs;
         }
     }

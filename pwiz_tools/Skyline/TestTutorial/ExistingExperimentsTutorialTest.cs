@@ -455,22 +455,12 @@ namespace pwiz.SkylineTestTutorial
                               SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.MoleculeGroups, 0);
                       });
             WaitForGraphs();
-            if (IsEnableLiveReports)
-            {
-                WaitForConditionUI(() => FindOpenForm<LiveResultsGrid>().IsComplete);
-            }
+            WaitForConditionUI(() => FindOpenForm<LiveResultsGrid>().IsComplete);
             RunUI(() =>
             {
-                ResultsGridForm.SynchronizeSelection = false;
+                Settings.Default.ResultsGridSynchSelection = false;
                 DataGridView resultsGrid;
-                if (IsEnableLiveReports)
-                {
-                    resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
-                }
-                else
-                {
-                    resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
-                }
+                resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
                 var colConcentration =
 // ReSharper disable LocalizableElement
                     resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText); // Not L10N
@@ -493,10 +483,7 @@ namespace pwiz.SkylineTestTutorial
                 }
             });
             WaitForGraphs();
-            if (IsEnableLiveReports)
-                PauseForScreenShot<LiveResultsGrid>("Results grid with annotations (scrolled to the end)", 35);
-            else
-                PauseForScreenShot<ResultsGridForm>("Results grid with annotations (scrolled to the end)", 35);
+            PauseForScreenShot<LiveResultsGrid>("Results grid with annotations (scrolled to the end)", 35);
             
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(() =>

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -163,20 +164,48 @@ namespace pwiz.Common.DataBinding.Controls
             var bindingSource = BindingListSource;
             if (bindingSource != null && ViewContext != null)
             {
-                bool currentViewIsBuiltIn = ViewContext.BuiltInViews.Select(view => view.Name)
-                    .Contains(GetCurrentViewName());
-                var builtInViewItems = ViewContext.BuiltInViews.Select(viewInfo => NewChooseViewItem(viewInfo, FontStyle.Regular)).ToArray();
-                if (builtInViewItems.Length > 0)
+                var groups = new List<ViewGroup>{ViewGroup.BUILT_IN};
+                groups.AddRange(ViewContext.ViewGroups.Except(groups));
+                bool anyOtherGroups = false;
+
+                foreach (var group in groups)
                 {
-                    contextMenu.Items.AddRange(builtInViewItems);
+                    List<ToolStripItem> items = new List<ToolStripItem>();
+                    var viewSpecList = ViewContext.GetViewSpecList(group.Id);
+                    if (!viewSpecList.ViewSpecs.Any())
+                    {
+                        continue;
+                    }
+                    foreach (var viewSpec in viewSpecList.ViewSpecs)
+                    {
+                        var item = NewChooseViewItem(group, viewSpec);
+                        if (null != item)
+                        {
+                            items.Add(item);
+                        }
+                    }
+                    if (!items.Any())
+                    {
+                        continue;
+                    }
+                    if (ViewGroup.BUILT_IN.Equals(group) || Equals(ViewContext.DefaultViewGroup, group))
+                    {
+                        contextMenu.Items.AddRange(items.ToArray());
+                        contextMenu.Items.Add(new ToolStripSeparator());
+                    }
+                    else
+                    {
+                        var item = new ToolStripMenuItem(group.Label);
+                        item.DropDownItems.AddRange(items.ToArray());
+                        contextMenu.Items.Add(item);
+                        anyOtherGroups = true;
+                    }
+                }
+                if (anyOtherGroups)
+                {
                     contextMenu.Items.Add(new ToolStripSeparator());
                 }
-                var customViewItems = ViewContext.CustomViews.Select(viewInfo => NewChooseViewItem(viewInfo, FontStyle.Italic)).ToArray();
-                if (customViewItems.Length > 0)
-                {
-                    contextMenu.Items.AddRange(customViewItems);
-                    contextMenu.Items.Add(new ToolStripSeparator());
-                }
+                bool currentViewIsBuiltIn = ViewGroup.BUILT_IN.Equals(BindingListSource.ViewInfo.ViewGroup);
                 if (currentViewIsBuiltIn)
                 {
                     contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View, null, OnCopyView));
@@ -191,24 +220,41 @@ namespace pwiz.Common.DataBinding.Controls
 
         }
 
-        ToolStripItem NewChooseViewItem(ViewSpec viewSpec, FontStyle fontStyle)
+        ToolStripItem NewChooseViewItem(ViewGroup viewGroup, ViewSpec viewSpec)
         {
-            var item = new ToolStripMenuItem(viewSpec.Name, null,
-                (sender, args) => ApplyView(viewSpec));
-            if (GetCurrentViewName() == viewSpec.Name)
+            var viewInfo = ViewContext.GetViewInfo(new ViewName(viewGroup.Id, viewSpec.Name));
+            if (null == viewInfo)
+            {
+                return null;
+            }
+            Image image = null;
+            int imageIndex = ViewContext.GetImageIndex(viewSpec);
+            if (imageIndex >= 0)
+            {
+                image = ViewContext.GetImageList()[imageIndex];
+            }
+            ToolStripMenuItem item = new ToolStripMenuItem(viewSpec.Name, image);
+
+            item.Click += (sender, args) => ApplyView(viewGroup, viewSpec);
+            var currentView = BindingListSource.ViewInfo;
+            var fontStyle = FontStyle.Regular;
+            if (null != currentView && Equals(viewGroup, currentView.ViewGroup) &&
+                Equals(viewSpec.Name, currentView.Name))
             {
                 fontStyle |= FontStyle.Bold;
+                item.Checked = true;
             }
-            if (fontStyle != item.Font.Style)
+            if (!ViewGroup.BUILT_IN.Equals(viewGroup))
             {
-                item.Font = new Font(item.Font, fontStyle);
+                fontStyle |= FontStyle.Italic;
             }
+            item.Font = new Font(item.Font, fontStyle);
             return item;
         }
 
-        public void ApplyView(ViewSpec viewSpec)
+        public void ApplyView(ViewGroup viewGroup, ViewSpec viewSpec)
         {
-            var viewInfo = ViewContext.GetViewInfo(viewSpec);
+            var viewInfo = ViewContext.GetViewInfo(viewGroup, viewSpec);
             BindingListSource.SetViewContext(ViewContext, viewInfo);
             RefreshUi();
         }
@@ -226,21 +272,34 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void CustomizeView()
         {
-            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec);
+            var viewGroup = BindingListSource.ViewInfo.ViewGroup;
+            var viewSpec = BindingListSource.ViewSpec;
+            if (Equals(viewGroup, ViewGroup.BUILT_IN))
+            {
+                viewSpec = viewSpec.SetName(string.Empty);
+                viewGroup = ViewContext.DefaultViewGroup;
+            }
+            var newView = ViewContext.CustomizeView(this, viewSpec, viewGroup);
             if (newView == null)
             {
                 return;
             }
-            BindingListSource.SetViewSpec(newView);
+            BindingListSource.SetViewContext(ViewContext, ViewContext.GetViewInfo(viewGroup, newView));
         }
 
         void OnCopyView(object sender, EventArgs eventArgs)
         {
-            var newView = ViewContext.CopyView(this, BindingListSource.ViewSpec);
-            if (null != newView)
+            var viewGroup = BindingListSource.ViewInfo.ViewGroup;
+            if (Equals(ViewGroup.BUILT_IN, viewGroup))
             {
-                BindingListSource.SetViewSpec(newView);
+                viewGroup = ViewContext.DefaultViewGroup;
             }
+            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec.SetName(null), viewGroup);
+            if (newView == null)
+            {
+                return;
+            }
+            BindingListSource.SetViewContext(ViewContext, ViewContext.GetViewInfo(viewGroup, newView));
         }
 
         void OnManageViews(object sender, EventArgs eventArgs)

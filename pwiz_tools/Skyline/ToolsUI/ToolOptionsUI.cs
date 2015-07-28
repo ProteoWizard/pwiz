@@ -44,8 +44,6 @@ namespace pwiz.Skyline.ToolsUI
             _driverChorusAccounts = new SettingsListBoxDriver<ChorusAccount>(listBoxChorusAccounts, Settings.Default.ChorusAccountList);
             _driverChorusAccounts.LoadList();
 
-            checkBoxLiveReports.Checked = Settings.Default.EnableLiveReports;
-
             // Hide ability to turn off live reports
             //tabControl.TabPages.Remove(tabMisc);
 
@@ -95,7 +93,6 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (DialogResult == DialogResult.OK)
             {
-                Program.MainWindow.SetEnableLiveReports(checkBoxLiveReports.Checked);
                 var displayLanguageItem = listBoxLanguages.SelectedItem as DisplayLanguageItem;
                 if (null != displayLanguageItem)
                 {

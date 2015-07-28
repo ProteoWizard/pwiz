@@ -123,9 +123,20 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ChooseView(string viewName)
         {
-            var viewSpecs = BindingListSource.ViewContext.BuiltInViews.Concat(BindingListSource.ViewContext.CustomViews);
-            var viewSpec = viewSpecs.First(view => view.Name == viewName);
-            BindingListSource.SetViewSpec(viewSpec);
+            var groups = new[] {ViewGroup.BUILT_IN}.Concat(BindingListSource.ViewContext.ViewGroups);
+            foreach (var viewGroup in groups)
+            {
+                foreach (var viewSpec in BindingListSource.ViewContext.GetViewSpecList(viewGroup.Id).ViewSpecs)
+                {
+                    if (viewSpec.Name == viewName)
+                    {
+
+                        BindingListSource.SetViewContext(BindingListSource.ViewContext, BindingListSource.ViewContext.GetViewInfo(viewGroup.Id.ViewName(viewSpec.Name)));
+                        return;
+                    }
+                }
+            }
+            throw new InvalidOperationException(string.Format("No view named {0}", viewName)); // Not L10N
         }
 
         public int RowCount

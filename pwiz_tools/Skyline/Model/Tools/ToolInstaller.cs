@@ -25,6 +25,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Kajabity.Tools.Java;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -344,14 +345,14 @@ namespace pwiz.Skyline.Model.Tools
                     // Overwrite all existing reports. 
                     foreach (ReportOrViewSpec item in existingReports)
                     {
-                        ReportSharing.SaveReport(item);
+                        ReportSharing.SaveReport(PersistedViews.ExternalToolsGroup, item);
                     }
                 }
 
                 // Add all new reports.
                 foreach (ReportOrViewSpec item in newReports)
                 {
-                    ReportSharing.SaveReport(item);
+                    ReportSharing.SaveReport(PersistedViews.ExternalToolsGroup, item);
                 }
                 var reportRenameMapping = new Dictionary<string, string>();
                 if (overwrite == false) // Dont overwrite so rename reports.
@@ -362,7 +363,7 @@ namespace pwiz.Skyline.Model.Tools
                         string oldname = item.GetKey();
                         string newname = GetUniqueReportName(oldname);
                         reportRenameMapping.Add(oldname, newname);
-                        ReportSharing.SaveReportAs(item, newname);
+                        ReportSharing.SaveReportAs(PersistedViews.ExternalToolsGroup, item, newname);
                     }
                 }
 
@@ -618,7 +619,7 @@ namespace pwiz.Skyline.Model.Tools
                 if (deprecatedQuaSAR != null)
                 {
                     Settings.Default.ToolList.Remove(deprecatedQuaSAR);
-                    Settings.Default.ReportSpecList.RemoveKey(ReportSpecList.QUASAR_REPORT_NAME);
+                    Settings.Default.PersistedViews.RemoveView(PersistedViews.ExternalToolsGroup.Id, ReportSpecList.QUASAR_REPORT_NAME);
                 }
             }
         }
@@ -688,15 +689,28 @@ namespace pwiz.Skyline.Model.Tools
                         string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__,
                                       file.FullName), exception);
                 }
-                var allExistingReports = ReportSharing.GetExistingReports();
+                var externalToolReports =
+                    Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id);
+                Dictionary<string, ViewSpec> allExistingReports = new Dictionary<string, ViewSpec>();
+                if (externalToolReports != null)
+                {
+                    foreach (var viewSpec in externalToolReports.ViewSpecs)
+                    {
+                        allExistingReports[viewSpec.Name] = viewSpec;
+                    }
+                }
                 foreach (var reportOrViewSpec in loadedItems)
                 {
-                    if (allExistingReports.ContainsKey(reportOrViewSpec.GetKey()))
+                    ViewSpec existingView;
+                    if (allExistingReports.TryGetValue(reportOrViewSpec.GetKey(), out existingView))
                     {
-                        //Check if  the Reports are identical. If so don't worry.
-                        if (!ReportSharing.AreEquivalent(allExistingReports[reportOrViewSpec.GetKey()], reportOrViewSpec))
+                        if (!ReportSharing.AreEquivalent(reportOrViewSpec, new ReportOrViewSpec(existingView)))
                         {
                             existingReports.Add(reportOrViewSpec);
+                        }
+                        else
+                        {
+                            newReports.Add(reportOrViewSpec);
                         }
                     }
                     else
@@ -786,7 +800,7 @@ namespace pwiz.Skyline.Model.Tools
                     reportTitle = reportRenameMapping[reportTitle];
                 }
                 // Check if they are still missing the report they want
-                if (!ReportSharing.GetExistingReports().ContainsKey(reportTitle))
+                if (!ReportSharing.GetExistingReports().ContainsKey(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle)))
                 {
                     accumulator.AddMessage(string.Format(Resources.UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_,
                                                          readin.Title, reportTitle));
@@ -939,10 +953,11 @@ namespace pwiz.Skyline.Model.Tools
 
         private static string GetUniqueReportName(string key)
         {
-            var existingReports = ReportSharing.GetExistingReports();
-            return existingReports.ContainsKey(key)
-                       ? GetUniqueName(key, value => !existingReports.ContainsKey(value))
-                       : key;
+//            var existingReports = ReportSharing.GetExistingReports();
+//            return existingReports.ContainsKey(key)
+//                       ? GetUniqueName(key, value => !existingReports.ContainsKey(value))
+//                       : key;
+            return null;
         }
 
         public class UnzipToolReturnAccumulator

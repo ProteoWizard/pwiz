@@ -25,7 +25,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -144,16 +143,8 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0);
             });
             WaitForGraphs();
-            DataGridView resultsGrid;
             DataGridViewColumn colSampleId = null, colConcentration = null, colIsConc = null;
-            if (IsEnableLiveReports)
-            {
-                resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
-            }
-            else
-            {
-                resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
-            }
+            DataGridView resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
             WaitForConditionUI(() => 0 != resultsGrid.ColumnCount);
             RunUI(() =>
                 {
@@ -193,18 +184,10 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[colSampleId.Index];
                 ClipboardEx.SetText(clipboardText.ToString());
-                var oldResultsGrid = resultsGrid as ResultsGrid;
-                if (oldResultsGrid != null)
-                {
-                    oldResultsGrid.SendPaste();
-                }
-                else
-                {
-                    SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.Control, (IntPtr)0);
-                    SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.V, (IntPtr)0);
-                    SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.V, (IntPtr)0);
-                    SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.Control, (IntPtr)0);
-                }
+                SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.Control, (IntPtr)0);
+                SendMessage(resultsGrid.Handle, WM_KEYDOWN, (IntPtr)Keys.V, (IntPtr)0);
+                SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.V, (IntPtr)0);
+                SendMessage(resultsGrid.Handle, WM_KEYUP, (IntPtr)Keys.Control, (IntPtr)0);
             });
             WaitForGraphs();
             PauseForScreenShot("p. 7 - Results Grid");

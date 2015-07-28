@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
@@ -27,7 +28,7 @@ namespace pwiz.Common.DataBinding
     /// Whereas a ViewSpec identifies columns simply by a string, a ViewInfo
     /// has retrieved the relevant PropertyDescriptors from the DataSchema.
     /// </summary>
-    public class ViewInfo
+    public class ViewInfo : Immutable
     {
         private readonly IDictionary<PropertyPath, ColumnDescriptor> _columnDescriptors = new Dictionary<PropertyPath, ColumnDescriptor>();
         
@@ -100,6 +101,13 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        public ViewGroup ViewGroup { get; private set; }
+
+        public ViewInfo ChangeViewGroup(ViewGroup viewGroup)
+        {
+            return ChangeProp(ImClone(this), im => im.ViewGroup = viewGroup);
+        }
+
         public bool HasTotals
         {
             get
@@ -107,7 +115,6 @@ namespace pwiz.Common.DataBinding
                 return DisplayColumns.Any(col => TotalOperation.PivotValue == col.ColumnSpec.Total);
             }
         }
-
 
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor ParentColumn { get; private set; }

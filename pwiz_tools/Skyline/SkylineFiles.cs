@@ -1192,19 +1192,9 @@ namespace pwiz.Skyline
 
         public void ShowExportReportDialog()
         {
-            if (Settings.Default.EnableLiveReports)
+            using (var dlg = new ExportLiveReportDlg(this))
             {
-                using (var dlg = new ExportLiveReportDlg(this))
-                {
-                    dlg.ShowDialog(this);
-                }
-            }
-            else
-            {
-                using (ExportReportDlg dlg = new ExportReportDlg(this))
-                {
-                    dlg.ShowDialog(this);
-                }
+                dlg.ShowDialog(this);
             }
         }
 

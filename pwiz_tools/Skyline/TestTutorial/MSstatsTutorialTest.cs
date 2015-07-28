@@ -137,14 +137,7 @@ namespace pwiz.SkylineTestTutorial
             DataGridViewColumn colBioreplicate = null, colCondition = null, colRunName = null;
             RunUI(() =>
             {
-                if (IsEnableLiveReports)
-                {
-                    resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
-                }
-                else
-                {
-                    resultsGrid = FindOpenForm<ResultsGridForm>().ResultsGrid;
-                }
+                resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
                 colBioreplicate =
                     resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => BIOREPLICATE.Name == col.HeaderText);
                 colCondition =

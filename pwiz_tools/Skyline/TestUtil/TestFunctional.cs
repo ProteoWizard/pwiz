@@ -107,12 +107,6 @@ namespace pwiz.SkylineTestUtil
             get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
         }
 
-        protected bool IsEnableLiveReports
-        {
-            get { return Settings.Default.EnableLiveReports; }
-            set { RunUI(() => SkylineWindow.SetEnableLiveReports(value)); }
-        }
-
         protected void RunWithOldReports(Action test)
         {
             TestContext.Properties["LiveReports"] = false.ToString();
@@ -764,7 +758,6 @@ namespace pwiz.SkylineTestUtil
                     "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 }
                 Settings.Default.Reset();
-                Settings.Default.EnableLiveReports = IsEnableLiveReports;
                 RunTest();
             }
             catch (Exception x)
@@ -806,11 +799,6 @@ namespace pwiz.SkylineTestUtil
             if (doClipboardCheck)
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
-            }
-
-            if (null != SkylineWindow)
-            {
-                IsEnableLiveReports = GetBoolValue("LiveReports", true); // Return true if unspecified
             }
 
             DoTest();

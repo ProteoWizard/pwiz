@@ -235,6 +235,24 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name cannot be blank.
+        /// </summary>
+        internal static string ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank {
+            get {
+                return ResourceManager.GetString("ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already a view named &apos;{0}&apos;..
+        /// </summary>
+        internal static string ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___ {
+            get {
+                return ResourceManager.GetString("ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap close {
@@ -732,6 +750,15 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("up_pro32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Built In Views.
+        /// </summary>
+        internal static string ViewGroup_BUILT_IN_Built_In_Views {
+            get {
+                return ResourceManager.GetString("ViewGroup_BUILT_IN_Built_In_Views", resourceCulture);
             }
         }
     }

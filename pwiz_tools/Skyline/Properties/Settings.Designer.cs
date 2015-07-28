@@ -1803,18 +1803,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool EnableLiveReports {
-            get {
-                return ((bool)(this["EnableLiveReports"]));
-            }
-            set {
-                this["EnableLiveReports"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool TestSmallMolecules {
             get {
@@ -1822,6 +1810,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["TestSmallMolecules"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TestSmallMolecules1 {
+            get {
+                return ((bool)(this["TestSmallMolecules1"]));
+            }
+            set {
+                this["TestSmallMolecules1"] = value;
             }
         }
         

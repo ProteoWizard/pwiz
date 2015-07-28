@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -30,35 +31,31 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     /// </summary>
     public partial class ManageViewsForm : CommonFormEx
     {
-        private ViewSpec[] _views = new ViewSpec[0];
         public ManageViewsForm(IViewContext viewContext)
         {
             InitializeComponent();
             ViewContext = viewContext;
+            imageList1.Images.AddRange(viewContext.GetImageList());
             Icon = ViewContext.ApplicationIcon;
-            RefreshUi(true);
+            chooseViewsControl1.ViewContext = viewContext;
+            UpdateButtons();
         }
 
         public IViewContext ViewContext { get; private set; }
 
-        public void RefreshUi(bool reloadSettings)
-        {
-            if (reloadSettings)
-            {
-                _views = ViewContext.CustomViews.ToArray();
-                ListViewHelper.ReplaceItems(listView1, _views.Select(vs=>new ListViewItem(vs.Name)).ToArray());
-            }
-            btnExportData.Enabled = btnCopy.Enabled = btnEdit.Enabled = listView1.SelectedIndices.Count == 1;
-            btnShare.Enabled = btnRemove.Enabled = listView1.SelectedIndices.Count > 0;
-            btnUp.Enabled = ListViewHelper.IsMoveUpEnabled(listView1);
-            btnDown.Enabled = ListViewHelper.IsMoveDownEnabled(listView1);
-            AfterResizeListView();
-        }
-
         private void BtnEditOnClick(object sender, EventArgs e)
         {
-            ViewContext.CustomizeView(this, _views[listView1.SelectedIndices[0]]);
-            RefreshUi(true);
+            EditView();
+        }
+
+        public void EditView()
+        {
+            var viewInfo = ViewContext.GetViewInfo(chooseViewsControl1.SelectedViewName.GetValueOrDefault());
+            if (null == viewInfo)
+            {
+                return;
+            }
+            ViewContext.CustomizeView(this, viewInfo.GetViewSpec(), viewInfo.ViewGroup);
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -68,73 +65,73 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void AddView()
         {
-            ViewContext.NewView(this);
-            RefreshUi(true);
-        }
-
-        private void ListView1OnSelectedIndexChanged(object sender, EventArgs e)
-        {
-            RefreshUi(false);
+            var newView = ViewContext.NewView(this, chooseViewsControl1.SelectedGroup);
+            if (null != newView)
+            {
+                chooseViewsControl1.SelectView(newView.Name);
+            }
         }
 
         private void BtnRemoveOnClick(object sender, EventArgs e)
         {
-            var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _views[i]).ToArray();
-            if (selectedItems.Length == 0)
+            Remove(true);
+        }
+
+        public void Remove(bool prompt)
+        {
+            var selectedViewNames = new HashSet<ViewName>(chooseViewsControl1.SelectedViews);
+            if (selectedViewNames.Count == 0)
             {
                 return;
             }
             string message;
-            if (selectedItems.Length == 1)
+            if (selectedViewNames.Count == 1)
             {
-                message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___, selectedItems[0].Name);
+                message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___, selectedViewNames.First().Name);
             }
             else
             {
-                message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_, selectedItems.Length);
+                message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_, selectedViewNames.Count);
             }
-            if (ViewContext.ShowMessageBox(this, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+            if (prompt && ViewContext.ShowMessageBox(this, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
             {
                 return;
             }
-            ViewContext.DeleteViews(selectedItems);
-            RefreshUi(true);
-        }
-
-        private void listView1_SizeChanged(object sender, EventArgs e)
-        {
-            if (IsHandleCreated)
+            var namesByGroup = selectedViewNames.ToLookup(name => name.GroupId, name => name.Name);
+            foreach (var grouping in namesByGroup)
             {
-                BeginInvoke(new Action(AfterResizeListView));
+                ViewContext.DeleteViews(grouping.Key, grouping);
             }
+            
         }
-
-        private void AfterResizeListView()
-        {
-            listView1.Columns[0].Width = listView1.ClientSize.Width
-                        - SystemInformation.VerticalScrollBarWidth - 1;
-        }
-
         private void btnShare_Click(object sender, EventArgs e)
         {
-            var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _views[i]).ToArray();
-            ViewContext.ExportViews(this, selectedItems);
+            ExportViews(null);
+        }
+
+        public void ExportViews(string filename)
+        {
+            var viewSpecList = ViewContext.GetViewSpecList(chooseViewsControl1.SelectedGroup.Id);
+            var selectedViewNames = new HashSet<string>(chooseViewsControl1.SelectedViews.Select(viewName => viewName.Name));
+            viewSpecList = new ViewSpecList(viewSpecList.ViewSpecs.Where(view => selectedViewNames.Contains(view.Name)));
+            if (null == filename)
+            {
+                ViewContext.ExportViews(this, viewSpecList);
+            }
+            else
+            {
+                ViewContext.ExportViewsToFile(this, viewSpecList, filename);
+            }
         }
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            ViewContext.ImportViews(this);
-            RefreshUi(true);
+            ViewContext.ImportViews(this, chooseViewsControl1.SelectedGroup);
         }
 
-        private void btnExportData_Click(object sender, EventArgs e)
+        public void ImportViews(string filename)
         {
-            if (listView1.SelectedIndices.Count == 0)
-            {
-                return;
-            }
-            var view = _views[listView1.SelectedIndices[0]];
-            ViewContext.Export(this, ViewContext.ExecuteQuery(this, view));
+            ViewContext.ImportViewsFromFile(this, chooseViewsControl1.SelectedGroup, filename);
         }
 
         public bool AddButtonVisible
@@ -161,66 +158,77 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             set { btnShare.Visible = value; }
         }
 
-        public bool ExportDataButtonVisible
+        public void SelectView(string viewName)
         {
-            get { return btnExportData.Visible; }
-            set { btnExportData.Visible = value; }
+            chooseViewsControl1.SelectView(viewName);
         }
 
-        public bool UpDownButtonsVisible
+        public void SelectViews(IEnumerable<string> viewNames)
         {
-            get
-            {
-                return panelUpDown.Visible;
-            }
-            set
-            {
-                panelUpDown.Visible = value;
-            }
+            chooseViewsControl1.SelectViews(viewNames);
         }
 
-        private void btnUp_Click(object sender, EventArgs e)
+        private void chooseViewsControl1_SelectionChanged(object sender, EventArgs e)
         {
-            MoveViews(true);
+            UpdateButtons();
         }
 
-
-        public void MoveViews(bool up)
+        public void UpdateButtons()
         {
-            var newViews = ListViewHelper.MoveItems(_views, listView1.SelectedIndices.Cast<int>(), up);
-            var newSelectedIndices = ListViewHelper.MoveSelectedIndexes(_views.Length,
-                listView1.SelectedIndices.Cast<int>(), up);
-            ViewContext.CustomViews = newViews;
-            RefreshUi(true);
-            ListViewHelper.SelectIndexes(listView1, newSelectedIndices);
-        }
-
-        private void btnDown_Click(object sender, EventArgs e)
-        {
-            MoveViews(false);
+            btnCopy.Enabled = btnShare.Enabled = btnRemove.Enabled = chooseViewsControl1.SelectedViews.Any();
+            ViewInfo selectedViewInfo = chooseViewsControl1.ViewContext.GetViewInfo(chooseViewsControl1.SelectedViewName);
+            btnEdit.Enabled = null != selectedViewInfo;
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            CopyView();
+            ShowCopyContextMenu();
+        }
+
+        public void ShowCopyContextMenu()
+        {
+            openViewEditorContextMenuItem.Enabled = 
+                null != chooseViewsControl1.ViewContext.GetViewInfo(chooseViewsControl1.SelectedViewName);
+            copyToGroupContextMenuItem.DropDownItems.Clear();
+            foreach (var group in ViewContext.ViewGroups)
+            {
+                if (!Equals(group, chooseViewsControl1.SelectedGroup))
+                {
+                    copyToGroupContextMenuItem.DropDownItems.Add(NewCopyToGroupMenuItem(group));
+                }
+            }
+            contextMenuStrip1.Show(btnCopy.Parent, btnCopy.Left, btnCopy.Bottom + 1);
+        }
+
+        private ToolStripMenuItem NewCopyToGroupMenuItem(ViewGroup group)
+        {
+            return new ToolStripMenuItem(group.Label, null, (sender, args) => CopyToGroup(group));
+        }
+
+        public void CopyToGroup(ViewGroup group)
+        {
+            var selectedViews = new ViewSpecList(chooseViewsControl1.SelectedViews.Select(viewName=>ViewContext.GetViewSpecList(viewName.GroupId).GetView(viewName.Name)));
+            ViewContext.CopyViewsToGroup(this, group, selectedViews);
         }
 
         public void CopyView()
         {
-            if (listView1.SelectedIndices.Count != 1)
+            var viewInfo = ViewContext.GetViewInfo(chooseViewsControl1.SelectedViewName.GetValueOrDefault());
+            if (null == viewInfo)
             {
                 return;
             }
-            ViewContext.CopyView(this, _views[listView1.SelectedIndices[0]]);
-            RefreshUi(true);
+            ViewContext.CustomizeView(this, viewInfo.GetViewSpec().SetName(null), viewInfo.ViewGroup);
         }
 
-        public void SelectView(string viewName)
+        private void openViewEditorContextMenuItem_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < listView1.Items.Count; i++)
-            {
-                listView1.Items[i].Selected = (listView1.Items[i].Text == viewName);
-            }
+            CopyView();
+        }
+
+        public void OkDialog()
+        {
+            Close();
         }
     }
 }

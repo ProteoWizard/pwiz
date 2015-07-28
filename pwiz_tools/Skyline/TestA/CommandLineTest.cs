@@ -32,7 +32,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -283,17 +282,11 @@ namespace pwiz.SkylineTestA
 
             //Before generating this report, check that it exists
             string reportName = Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results;
-            var defaultReportSpecs = Settings.Default.ReportSpecList.GetDefaults().ToArray();
-            Assert.IsNotNull(defaultReportSpecs.FirstOrDefault(r => r.Name.Equals(reportName)));
-            Settings.Default.ReportSpecList = new ReportSpecList();
-            Settings.Default.ReportSpecList.AddRange(defaultReportSpecs);
+            Settings.Default.PersistedViews.ResetDefaults();
+            Assert.IsNotNull(Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id)
+                .GetView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
 
             //First, programmatically generate the report
-            StringBuilder reportBuffer = new StringBuilder();
-            StringWriter reportWriter = new StringWriter(reportBuffer);
-
-            ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportName);
-
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
 
             //Attach replicate
@@ -302,37 +295,16 @@ namespace pwiz.SkylineTestA
             Assert.IsNull(status);
 
             string programmaticReport;
-            if (Settings.Default.EnableLiveReports)
-            {
-                MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
-                Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
-                SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
-                ViewInfo viewInfo = new ReportSpecConverter(skylineDataSchema).Convert(reportSpec);
-                StringWriter writer = new StringWriter();
-                status = new ProgressStatus("Exporting report");
-                viewContext.Export(null, ref status, viewInfo, writer,
-                    new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
-                programmaticReport = writer.ToString();
-            }
-            else
-            {
-                Report report = Report.Load(reportSpec);
-                using (Database database = new Database(doc.Settings))
-                {
-                    database.AddSrmDocument(doc);
-                    ResultSet resultSet = report.Execute(database);
-
-                    ResultSet.WriteReportHelper(resultSet, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture), reportWriter,
-                                                      LocalizationHelper.CurrentCulture);
-                }
-
-                reportWriter.Flush();
-
-                reportWriter.Close();
-
-                programmaticReport = reportBuffer.ToString();
-            }
+            MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
+            Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
+            SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
+            ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
+            StringWriter writer = new StringWriter();
+            status = new ProgressStatus("Exporting report");
+            viewContext.Export(null, ref status, viewInfo, writer,
+                new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
+            programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,
@@ -1435,8 +1407,8 @@ namespace pwiz.SkylineTestA
                     //Cleanup.
                     Settings.Default.ToolList.Clear();
                     DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
-                    Settings.Default.ReportSpecList.RemoveKey("UniqueReport");
-                    Settings.Default.ReportSpecList.RemoveKey("UniqueReport1");
+                    Settings.Default.PersistedViews.RemoveView(PersistedViews.ExternalToolsGroup.Id, "UniqueReport");
+                    Settings.Default.PersistedViews.RemoveView(PersistedViews.ExternalToolsGroup.Id, "UniqueReport1");
                 }
                 {
                     //Test working with packages and ProgramPath Macro.

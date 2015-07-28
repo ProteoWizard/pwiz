@@ -42,9 +42,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            if (!IsEnableLiveReports)
-                return;
-
             OpenDocument(FILE_NAME);
 
             // Install and run the test tool.

@@ -46,7 +46,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            IsEnableLiveReports = true;   // force LiveReports even if test context says no
             TestRatioFilter();
         }
 
@@ -117,6 +116,7 @@ namespace pwiz.SkylineTestFunctional
             var viewEditor = ShowDialog<ViewEditor>(databoundGridForm.NavBar.CustomizeView);
             RunUI(() =>
             {
+                viewEditor.ViewName = "Custom View";
                 viewEditor.TabControl.SelectTab(1);
                 Assert.IsTrue(viewEditor.FilterTab.TrySelectColumn(propertyPath));
                 int iFilter = viewEditor.ViewInfo.Filters.Count;

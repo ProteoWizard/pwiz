@@ -35,9 +35,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -241,127 +239,63 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(messageDlg, messageDlg.OkDialog);
             }
 
-            if (IsEnableLiveReports)
+            // Making a report by hand p.11
+            ExportLiveReportDlg exportReportDlg = ShowDialog<ExportLiveReportDlg>(() => SkylineWindow.ShowExportReportDialog());
+            var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
+            var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
+            RunUI(() =>
             {
-                // Making a report by hand p.11
-                ExportLiveReportDlg exportReportDlg = ShowDialog<ExportLiveReportDlg>(() => SkylineWindow.ShowExportReportDialog());
-                var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg.EditList);
-                var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
-                RunUI(() =>
+                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Name")));
+                viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
+                var columnsToAdd = new[]
+                            {
+                                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ModifiedSequence"),
+                                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"),
+                                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Mz"),
+                            };
+                foreach (var id in columnsToAdd)
                 {
-                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Name")));
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                    Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
-                    var columnsToAdd = new[]
-                                {
-                                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ModifiedSequence"),
-                                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"),
-                                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Mz"),
-                                };
-                    foreach (var id in columnsToAdd)
-                    {
-                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
-                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                    }
-                    Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
-                });
-                PauseForScreenShot<ViewEditor>("Edit Report form", 13);
-
-                {
-                    var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
-                    var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
-                    WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
-                    RunUI(() =>
-                    {
-                        Assert.AreEqual(4, previewReportDlg.ColumnCount);
-                        var precursors =
-                            SkylineWindow.Document.MoleculeTransitionGroups.ToArray();
-                        const int precursorIndex = 3;
-                        for (int i = 0; i < expectedRows; i++)
-                        {
-                            Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
-                        }
-                        var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
-                        Assert.IsNotNull(precursorMzCol);
-                        previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
-                    });
-                    PauseForScreenShot<DocumentGridForm>("Preview New Report window", 14);
-
-                    OkDialog(previewReportDlg, previewReportDlg.Close);
                 }
+                Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
+            });
+            PauseForScreenShot<ViewEditor>("Edit Report form", 13);
 
-                // Press the Esc key until all forms have been dismissed.
-                RunUI(() =>
-                {
-                    viewEditor.Close();
-                    editReportListDlg.CancelDialog();
-                    exportReportDlg.CancelClick();
-                });
-                WaitForClosedForm(viewEditor);
-                WaitForClosedForm(editReportListDlg);
-                WaitForClosedForm(exportReportDlg);
-
-            }
-            else
             {
-                // Making a report by hand p.11
-                ExportReportDlg exportReportDlg = ShowDialog<ExportReportDlg>(() => SkylineWindow.ShowExportReportDialog());
-                var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-                var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
+                var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+                var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
                 RunUI(() =>
                 {
-                    Assert.IsTrue(pivotReportDlg.TrySelect(new Identifier("ProteinName")));
-                    pivotReportDlg.AddSelectedColumn();
-                    Assert.AreEqual(1, pivotReportDlg.ColumnCount);
-                    var columnsToAdd = new[]
-                                {
-                                    new Identifier("Peptides", "Precursors", "ModifiedSequence"),
-                                    new Identifier("Peptides", "Precursors", "Charge"),
-                                    new Identifier("Peptides", "Precursors", "Mz")
-                                };
-                    foreach (Identifier id in columnsToAdd)
+                    Assert.AreEqual(4, previewReportDlg.ColumnCount);
+                    var precursors =
+                        SkylineWindow.Document.MoleculeTransitionGroups.ToArray();
+                    const int precursorIndex = 3;
+                    for (int i = 0; i < expectedRows; i++)
                     {
-                        Assert.IsTrue(pivotReportDlg.TrySelect(id));
-                        pivotReportDlg.AddSelectedColumn();
+                        Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
                     }
-                    Assert.AreEqual(4, pivotReportDlg.ColumnCount);
+                    var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
+                    Assert.IsNotNull(precursorMzCol);
+                    previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
                 });
-                PauseForScreenShot<PivotReportDlg>("Edit Report form", 13);
+                PauseForScreenShot<DocumentGridForm>("Preview New Report window", 14);
 
-                {
-                    var previewReportDlg = ShowDialog<PreviewReportDlg>(pivotReportDlg.ShowPreview);
-                    RunUI(() =>
-                    {
-                        Assert.AreEqual(10, previewReportDlg.RowCount);
-                        Assert.AreEqual(4, previewReportDlg.ColumnCount);
-                        var precursors =
-                            SkylineWindow.Document.MoleculeTransitionGroups.ToArray();
-                        const int precursorIndex = 3;
-                        for (int i = 0; i < 10; i++)
-                        {
-                            Assert.AreEqual(precursors[i].PrecursorMz, double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()), 0.000001);
-                        }
-                        var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
-                        Assert.IsNotNull(precursorMzCol);
-                        previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
-                    });
-                    PauseForScreenShot<PreviewReportDlg>("Report preview", 14);
-
-                    OkDialog(previewReportDlg, previewReportDlg.OkDialog);
-                }
-
-                // Press the Esc key until all forms have been dismissed.
-                RunUI(() =>
-                {
-                    pivotReportDlg.CancelDialog();
-                    editReportListDlg.CancelDialog();
-                    exportReportDlg.CancelClick();
-                });
-                WaitForClosedForm(pivotReportDlg);
-                WaitForClosedForm(editReportListDlg);
-                WaitForClosedForm(exportReportDlg);
-
+                OkDialog(previewReportDlg, previewReportDlg.Close);
             }
+
+            // Press the Esc key until all forms have been dismissed.
+            RunUI(() =>
+            {
+                viewEditor.Close();
+                editReportListDlg.Close();
+                exportReportDlg.CancelClick();
+            });
+            WaitForClosedForm(viewEditor);
+            WaitForClosedForm(editReportListDlg);
+            WaitForClosedForm(exportReportDlg);
 
             //p. 12 Import Full-Scan Data
             // Launch import peptide search wizard

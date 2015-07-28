@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -226,6 +227,8 @@ namespace pwiz.SkylineTestFunctional
             const string param2 = "param2=test";    // Not L10N
             const string querySep = "?";    // Not L10N
             const string paramSep = "&";    // Not L10N
+            Settings.Default.PersistedViews.SetViewSpecList(PersistedViews.ExternalToolsGroup.Id, 
+                Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id));
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     //Remove all tools.
@@ -309,8 +312,6 @@ namespace pwiz.SkylineTestFunctional
                 });
             string reportText =
                 "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
-            if (!Settings.Default.EnableLiveReports)
-                reportText = reportText.Replace(',', TextUtil.CsvSeparator);
             WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
             WaitForConditionUI(() =>
             {
@@ -324,8 +325,6 @@ namespace pwiz.SkylineTestFunctional
             });
             string reportText1 =
                 "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; // Not L10N
-            if (!Settings.Default.EnableLiveReports)
-                reportText1 = reportText1.Replace(',', TextUtil.CsvSeparator);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
             // Make sure the running EXE does not cause test to fail, because it is locked.
             WaitForCondition(() =>

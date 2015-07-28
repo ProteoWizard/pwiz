@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,20 +32,26 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public interface IViewContext
     {
-        IEnumerable<ViewSpec> BuiltInViews { get; }
-        IEnumerable<ViewSpec> CustomViews { get; set; }
+        IEnumerable<ViewGroup> ViewGroups { get; }
+        ViewSpecList GetViewSpecList(ViewGroupId groupId);
+        bool TryRenameView(ViewGroupId group, string oldName, string newName);
+        void AddOrReplaceViews(ViewGroupId group, IEnumerable<ViewSpec> viewSpecs);
+        void DeleteViews(ViewGroupId groupId, IEnumerable<string> names);
+        ViewGroup DefaultViewGroup { get; }
+        ViewGroup FindGroup(ViewGroupId groupId);
         IEnumerable GetRowSource(ViewInfo viewInfo);
-        ViewInfo GetViewInfo(ViewSpec viewSpec);
+        ViewInfo GetViewInfo(ViewGroup viewGroup, ViewSpec viewSpec);
+        ViewInfo GetViewInfo(ViewName? viewName);
         void Export(Control owner, BindingListSource bindingListSource);
         void CopyAll(Control owner, BindingListSource bindingListSource);
-        BindingListSource ExecuteQuery(Control owner, ViewSpec viewSpec);
-        ViewSpec NewView(Control owner);
-        ViewSpec CustomizeView(Control owner, ViewSpec viewSpec);
-        ViewSpec CopyView(Control owner, ViewSpec currentView);
+        ViewSpec NewView(Control owner, ViewGroup viewGroup);
+        ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewGroup);
         void ManageViews(Control owner);
-        void DeleteViews(IEnumerable<ViewSpec> viewSpecs);
-        void ExportViews(Control owner, IEnumerable<ViewSpec> views);
-        void ImportViews(Control owner);
+        void ExportViews(Control owner, ViewSpecList views);
+        void ExportViewsToFile(Control owner, ViewSpecList views, string fileName);
+        void ImportViews(Control owner, ViewGroup group);
+        void ImportViewsFromFile(Control owner, ViewGroup group, string fileName);
+        void CopyViewsToGroup(Control owner, ViewGroup group, ViewSpecList viewSpecList);
         DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons);
         Icon ApplicationIcon { get; }
         DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor);
@@ -52,5 +59,8 @@ namespace pwiz.Common.DataBinding
         bool DeleteEnabled { get; }
         void Delete();
         void Preview(Control owner, ViewInfo viewInfo);
+        Image[] GetImageList();
+        int GetImageIndex(ViewSpec viewSpec);
+        event Action ViewsChanged;
     }
 }

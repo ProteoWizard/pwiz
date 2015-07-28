@@ -49,8 +49,7 @@ namespace pwiz.Skyline
     public partial class SkylineWindow :
         GraphSpectrum.IStateProvider,
         GraphChromatogram.IStateProvider,
-        GraphSummary.IStateProvider,
-        ResultsGrid.IStateProvider
+        GraphSummary.IStateProvider
     {
         private GraphSpectrum _graphSpectrum;
         private GraphFullScan _graphFullScan;
@@ -407,9 +406,6 @@ namespace pwiz.Skyline
                     listUpdateGraphs.Add(_graphRetentionTime);
                 if (_graphPeakArea != null)
                     listUpdateGraphs.Add(_graphPeakArea);
-                var form = _resultsGridForm as ResultsGridForm;
-                if (form != null)
-                    listUpdateGraphs.Add(form);
             }
 
             UpdateGraphPanes(listUpdateGraphs);
@@ -579,8 +575,6 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_graphRetentionTime);
             if (_graphPeakArea != null && _graphPeakArea.Visible)
                 listUpdateGraphs.Add(_graphPeakArea);
-            if (_resultsGridForm is ResultsGridForm && _resultsGridForm.Visible)
-                listUpdateGraphs.Add((ResultsGridForm) _resultsGridForm);
 
             UpdateGraphPanes(listUpdateGraphs);
         }
@@ -3991,14 +3985,7 @@ namespace pwiz.Skyline
         private DockableForm CreateResultsGrid()
         {
             Debug.Assert(null == _resultsGridForm);
-            if (Settings.Default.EnableLiveReports)
-            {
-                _resultsGridForm = new LiveResultsGrid(this);
-            }
-            else
-            {
-                _resultsGridForm = new ResultsGridForm(this);
-            }
+            _resultsGridForm = new LiveResultsGrid(this);
             _resultsGridForm.FormClosed += resultsGrid_FormClosed;
             _resultsGridForm.VisibleChanged += resultsGrid_VisibleChanged;
             return _resultsGridForm;
@@ -4066,10 +4053,6 @@ namespace pwiz.Skyline
         private DocumentGridForm CreateDocumentGrid()
         {
             Assume.IsNull(_documentGridForm);
-            if (!Settings.Default.EnableLiveReports)
-            {
-                return null;
-            }
             _documentGridForm = new DocumentGridForm(this);
             _documentGridForm.FormClosed += documentGrid_FormClosed;
             return _documentGridForm;

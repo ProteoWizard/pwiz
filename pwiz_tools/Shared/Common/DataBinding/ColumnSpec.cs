@@ -20,10 +20,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 
@@ -483,108 +481,4 @@ namespace pwiz.Common.DataBinding
         }
     }
 
-    [XmlRoot("views")]
-    public class ViewSpecList : IXmlSerializable
-    {
-        public static readonly ViewSpecList EMPTY = new ViewSpecList(ImmutableList.Empty<ViewSpec>());
-        public ViewSpecList(IEnumerable<ViewSpec> viewSpecs)
-        {
-            ViewSpecs = ImmutableList.ValueOf(viewSpecs ?? ImmutableList.Empty<ViewSpec>());
-        }
-        
-        private ViewSpecList(ViewSpecList viewSpecList)
-        {
-            ViewSpecs = viewSpecList.ViewSpecs;
-        }
-
-        public IList<ViewSpec> ViewSpecs
-        {
-            get; private set;
-        }
-
-        public ViewSpecList SetViewSpecs(IEnumerable<ViewSpec> viewSpecs)
-        {
-            return new ViewSpecList(this)
-            {
-                ViewSpecs = ImmutableList.ValueOf(viewSpecs ?? ImmutableList.Empty<ViewSpec>())
-            };
-        }
-
-        #region XML Serialization
-        private ViewSpecList()
-        {
-        }
-
-        XmlSchema IXmlSerializable.GetSchema()
-        {
-            return null;
-        }
-
-        void IXmlSerializable.ReadXml(XmlReader reader)
-        {
-            if (ViewSpecs != null)
-            {
-                throw new ReadOnlyException();
-            }
-            if (reader.IsEmptyElement)
-            {
-                ViewSpecs = ImmutableList.Empty<ViewSpec>();
-                reader.ReadElementString("views"); // Not L10N
-                return;
-            }
-            reader.Read();
-            var viewSpecs = new List<ViewSpec>();
-            while (true)
-            {
-                if (reader.IsStartElement("view")) // Not L10N
-                {
-                    viewSpecs.Add(ViewSpec.ReadXml(reader));
-                }
-                else if (reader.NodeType == XmlNodeType.EndElement)
-                {
-                    reader.ReadEndElement();
-                    break;
-                }
-                else
-                {
-                    reader.Read();
-                }
-            }
-            ViewSpecs = ImmutableList.ValueOf(viewSpecs);
-        }
-
-        void IXmlSerializable.WriteXml(XmlWriter writer)
-        {
-            foreach (var viewSpec in ViewSpecs)
-            {
-                writer.WriteStartElement("view"); // Not L10N
-                viewSpec.WriteXml(writer);
-                writer.WriteEndElement();
-            }
-        }
-        #endregion
-
-        #region Equality Members
-        protected bool Equals(ViewSpecList other)
-        {
-            return Equals(ViewSpecs, other.ViewSpecs);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((ViewSpecList) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ViewSpecs.GetHashCode();
-            }
-        }
-        #endregion
-    }
 }

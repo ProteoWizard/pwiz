@@ -21,11 +21,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
@@ -40,6 +42,7 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class SkylineViewContext : AbstractViewContext
     {
+        private ViewChangeListener _viewChangeListener;
         public SkylineViewContext(SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources) : base(dataSchema, rowSources)
         {
             ApplicationIcon = Resources.Skyline;
@@ -52,6 +55,137 @@ namespace pwiz.Skyline.Model.Databinding
         {
             ApplicationIcon = Resources.Skyline;
         }
+
+        public override IEnumerable<ViewGroup> ViewGroups
+        {
+            get
+            {
+                return new[]
+                {
+                    PersistedViews.MainGroup,
+                    PersistedViews.ExternalToolsGroup,
+                };
+            }
+        }
+
+        public override ViewGroup DefaultViewGroup
+        {
+            get { return PersistedViews.MainGroup; }
+        }
+
+        public override ViewSpecList GetViewSpecList(ViewGroupId viewGroup)
+        {
+            return base.GetViewSpecList(viewGroup)
+                ?? SortViewSpecList(Settings.Default.PersistedViews.GetViewSpecList(viewGroup)) 
+                ?? ViewSpecList.EMPTY;
+        }
+
+        private ViewSpecList SortViewSpecList(ViewSpecList viewSpecList)
+        {
+            var viewSpecs = viewSpecList.ViewSpecs.ToArray();
+            var stringComparer = StringComparer.Create(SkylineDataSchema.DataSchemaLocalizer.FormatProvider, true);
+            Array.Sort(viewSpecs, (v1,v2)=>stringComparer.Compare(v1.Name, v2.Name));
+            return new ViewSpecList(viewSpecs);
+        }
+
+        public override void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
+        {
+            var viewSpecsArray = ImmutableList.ValueOf(viewSpecs);
+            if (Equals(groupId, PersistedViews.MainGroup.Id))
+            {
+                ChangeDocumentViewSpecList(viewSpecList => viewSpecList.AddOrReplaceViews(viewSpecsArray));
+            }
+            base.AddOrReplaceViews(groupId, viewSpecsArray);
+        }
+
+        public override void DeleteViews(ViewGroupId groupId, IEnumerable<string> viewNames)
+        {
+            var viewNameSet = new HashSet<string>(viewNames);
+            if (Equals(groupId, PersistedViews.MainGroup.Id))
+            {
+                ChangeDocumentViewSpecList(viewSpecList => viewSpecList.DeleteViews(viewNameSet));
+            }
+            base.DeleteViews(groupId, viewNameSet);
+        }
+
+        public override bool TryRenameView(ViewGroupId groupId, string oldName, string newName)
+        {
+            if (!base.TryRenameView(groupId, oldName, newName))
+            {
+                return false;
+            }
+            if (Equals(groupId, PersistedViews.MainGroup.Id))
+            {
+                ChangeDocumentViewSpecList(viewSpecList => viewSpecList.RenameView(oldName, newName));
+            }
+            return true;
+        }
+
+        protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
+        {
+            Settings.Default.PersistedViews.SetViewSpecList(viewGroup, viewSpecList);
+            if (Equals(viewGroup, PersistedViews.MainGroup.Id))
+            {
+                ChangeDocumentViewSpecList(docViewSpecList =>
+                {
+                    var newViews = new Dictionary<string, ViewSpec>();
+                    foreach (var viewSpec in viewSpecList.ViewSpecs)
+                    {
+                        newViews[viewSpec.Name] = viewSpec;
+                    }
+                    var newDocViews = new List<ViewSpec>();
+                    foreach (var oldDocView in docViewSpecList.ViewSpecs)
+                    {
+                        ViewSpec newDocView;
+                        if (newViews.TryGetValue(oldDocView.Name, out newDocView))
+                        {
+                            newDocViews.Add(newDocView);
+                        }
+                    }
+                    return new ViewSpecList(newDocViews);
+                });
+
+                var skylineWindow = SkylineDataSchema.SkylineWindow;
+                if (skylineWindow != null)
+                {
+                    skylineWindow.ModifyDocument(Resources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
+                    {
+                        var oldViews = new HashSet<string>(
+                            doc.Settings.DataSettings.ViewSpecList.ViewSpecs.Select(spec => spec.Name));
+                        var newViewSpecList =
+                            new ViewSpecList(viewSpecList.ViewSpecs.Where(spec => oldViews.Contains(spec.Name)));
+                        if (Equals(newViewSpecList, doc.Settings.DataSettings.ViewSpecList))
+                        {
+                            return doc;
+                        }
+                        return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
+                            doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
+                    });
+                }
+            }
+        }
+
+        protected void ChangeDocumentViewSpecList(Func<ViewSpecList, ViewSpecList> changeViewSpecFunc)
+        {
+            var skylineWindow = SkylineDataSchema.SkylineWindow;
+            if (skylineWindow != null)
+            {
+                skylineWindow.ModifyDocument(Resources.SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports, doc =>
+                {
+                    var oldViewSpecList = doc.Settings.DataSettings.ViewSpecList;
+                    var newViewSpecList = changeViewSpecFunc(oldViewSpecList);
+                    if (Equals(newViewSpecList, oldViewSpecList))
+                    {
+                        return doc;
+                    }
+                    return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
+                        doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
+                });
+            }
+            
+        }
+
+        public SkylineDataSchema SkylineDataSchema { get { return (SkylineDataSchema) DataSchema; } }
 
         public override string GetExportDirectory()
         {
@@ -251,47 +385,10 @@ namespace pwiz.Skyline.Model.Databinding
             return viewSpec;
         }
 
-        public override IEnumerable<ViewSpec> CustomViews
-        {
-            get
-            {
-                var viewSpecs = base.CustomViews.ToList();
-                foreach (var convertedView in ConvertReports(Settings.Default.ReportSpecList))
-                {
-                    if (null == GetRowSourceInfo(convertedView))
-                    {
-                        continue;
-                    }
-                    if (viewSpecs.All(viewSpec => viewSpec.Name != convertedView.Name))
-                    {
-                        viewSpecs.Add(convertedView);
-                    }
-                }
-                if (RowSources.Any(rowSource => rowSource.RowType == typeof (Entities.Transition)))
-                {
-                    // Add the appropriate "Transition List" report if it's not already in the settings
-                    var spec = GetTransitionListReportSpec((SkylineDataSchema)DataSchema);
-                    if (viewSpecs.All(viewSpec => viewSpec.Name != spec.Name))
-                        viewSpecs.Add(spec);
-                }
-                return viewSpecs;
-            }
-        }
-
         protected IEnumerable<ViewSpec> ConvertReports(ReportSpecList reportSpecs)
         {
             var converter = new ReportSpecConverter((SkylineDataSchema)DataSchema);
             return converter.ConvertAll(reportSpecs);
-        }
-
-        protected override ViewSpecList GetViewSpecList()
-        {
-            return ViewSettings.ViewSpecList;
-        }
-
-        protected override void SaveViewSpecList(ViewSpecList viewSpecList)
-        {
-            ViewSettings.ViewSpecList = viewSpecList;
         }
 
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
@@ -451,7 +548,7 @@ namespace pwiz.Skyline.Model.Databinding
                     skylineDataSchema.GetAnnotations(columnDescriptor.PropertyType)
                         .Select(pd => new ColumnSpec(PropertyPath.Root.Property(pd.Name)))));
             }
-            return new ViewInfo(columnDescriptor, viewSpec);
+            return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
         }
 
         public static PropertyPath GetReplicateSublist(Type rowType)
@@ -477,7 +574,7 @@ namespace pwiz.Skyline.Model.Databinding
                    || type == typeof (double?);
         }
 
-        public override void ExportViews(Control owner, IEnumerable<ViewSpec> views)
+        public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
             using (var saveFileDialog = new SaveFileDialog
             {
@@ -489,135 +586,80 @@ namespace pwiz.Skyline.Model.Databinding
                 saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
                 if (!string.IsNullOrEmpty(saveFileDialog.FileName))
                 {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
-                    var viewSpecList = new ViewSpecList(views);
-                    using (FileSaver fs = new FileSaver(saveFileDialog.FileName))
-                    {
-                        if (!fs.CanSave(owner))
-                            return;
-
-                        using (FileStream stream = File.OpenWrite(fs.SafeName))
-                        {
-                            xmlSerializer.Serialize(stream, viewSpecList);
-                            stream.Close();
-                            fs.Commit();
-                        }
-                    }
+                    ExportViewsToFile(owner, viewSpecList, saveFileDialog.FileName);
                 }
             }
         }
 
-        public override void ImportViews(Control owner)
+        public override void ExportViewsToFile(Control owner, ViewSpecList viewSpecList, string fileName)
+        {
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+            using (FileSaver fs = new FileSaver(fileName))
+            {
+                if (!fs.CanSave(owner))
+                    return;
+
+                using (FileStream stream = File.OpenWrite(fs.SafeName))
+                {
+                    xmlSerializer.Serialize(stream, viewSpecList);
+                    stream.Close();
+                    fs.Commit();
+                }
+            }
+        }
+
+        public override void ImportViews(Control owner, ViewGroup group)
         {
             using (var importDialog = new OpenFileDialog
             {
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 CheckPathExists = true,
                 Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports,
-                        ReportSpecList.EXT_REPORTS)
+                    ReportSpecList.EXT_REPORTS)
             })
             {
                 importDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
+
                 if (string.IsNullOrEmpty(importDialog.FileName))
                 {
                     return;
                 }
-                ViewSpec[] views;
-                try
-                {
-                    views = LoadViews(importDialog.FileName).ToArray();
-                }
-                catch (Exception x)
-                {
-                    new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(string.Format(Resources.SkylineViewContext_ImportViews_Failure_loading__0__, importDialog.FileName),
-                                                                 importDialog.FileName, x.InnerException);
-                    return;
-                }
-                if (views.Length == 0)
-                {
-                    ShowMessageBox(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_, MessageBoxButtons.OK);
-                    return;
-                }
-                var currentViews = CustomViews.ToList();
-                var conflicts = new HashSet<string>(views.Select(view => view.Name));
-                conflicts.IntersectWith(currentViews.Select(view=>view.Name));
-                if (conflicts.Count > 0)
-                {
-                    var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
-                                                    "{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them); // Not L10N
-                    string messageFormat = conflicts.Count == 1 ?
-                    Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
-                    multipleMessage;
-                    var result = MessageBox.Show(string.Format(messageFormat, TextUtil.LineSeparate(conflicts)),
-                                                 Program.Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.None,
-                                                 MessageBoxDefaultButton.Button2);
-                    switch (result)
-                    {
-                        case DialogResult.Cancel:
-                            return;
-                        case DialogResult.Yes:
-                            currentViews = currentViews.Where(view => !conflicts.Contains(view.Name)).ToList();
-                            break;
-                    }
-                }
-                foreach (var view in views)
-                {
-                    // ReSharper disable once SimplifyLinqExpression
-                    if (!currentViews.Any(currentView => currentView.Name == view.Name))
-                    {
-                        currentViews.Add(view);
-                    }
-                }
-                SetCustomViews(currentViews);
+                ImportViewsFromFile(owner, group, importDialog.FileName);
             }
         }
 
         /// <summary>
         /// For testing
         /// </summary>
-        /// <param name="fileName"></param>
-        public int ImportViewsFromFile(string fileName)
+        public override void ImportViewsFromFile(Control owner, ViewGroup group, string fileName)
         {
-            ViewSpec[] views = LoadViews(fileName).ToArray();
-            if (views.Length == 0)
+            ViewSpecList views;
+            try
             {
-                return 0;
+                views = LoadViews(fileName);
             }
-            int count = 0;
-            var currentViews = CustomViews.ToList();
-            foreach (var view in views)
+            catch (Exception x)
             {
-                // ReSharper disable once SimplifyLinqExpression
-                if (!currentViews.Any(currentView => currentView.Name == view.Name))
-                {
-                    currentViews.Add(view);
-                    count++;
-                }
-            }
-            SetCustomViews(currentViews);
-            return count;
-        }
-
-        public void SaveSettingsList(IEnumerable<ReportOrViewSpec> reportOrViewSpecList)
-        {
-            if (null == reportOrViewSpecList)
-            {
+                new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(
+                    string.Format(Resources.SkylineViewContext_ImportViews_Failure_loading__0__, fileName),
+                    fileName, x.InnerException);
                 return;
             }
-            SaveViews(reportOrViewSpecList.Select(item=>item.ViewSpec));
+            if (!views.ViewSpecs.Any())
+            {
+                ShowMessageBox(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
+                    MessageBoxButtons.OK);
+                return;
+            }
+            CopyViewsToGroup(owner, group, views);
         }
 
-        public void SaveViews(IEnumerable<ViewSpec> viewSpecs)
-        {
-            SaveViewSpecList(new ViewSpecList(viewSpecs));
-        }
-
-        protected IEnumerable<ViewSpec> LoadViews(string filename)
+        protected ViewSpecList LoadViews(string filename)
         {
             using (var stream = File.OpenRead(filename))
             {
                 var reportOrViewSpecs = ReportSharing.DeserializeReportList(stream);
-                return ReportSharing.ConvertAll(reportOrViewSpecs, ((SkylineDataSchema) DataSchema).Document);
+                return new ViewSpecList(ReportSharing.ConvertAll(reportOrViewSpecs, ((SkylineDataSchema) DataSchema).Document));
             }
         }
 
@@ -641,10 +683,6 @@ namespace pwiz.Skyline.Model.Databinding
             yield return new RowSourceInfo(typeof(SkylineDocument), new SkylineDocument[0], new ViewInfo[0]);
         }
 
-        public static IEnumerable<RowSourceInfo> GetAllRowSources(SkylineDataSchema dataSchema)
-        {
-            return GetDocumentGridRowSources(dataSchema);
-        }
         private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, IEnumerable<T> rows)
         {
             var parentColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(T));
@@ -659,6 +697,131 @@ namespace pwiz.Skyline.Model.Databinding
             // context menu on left click.
             column.SortMode = DataGridViewColumnSortMode.Programmatic;
             return column;
+        }
+
+        private static readonly IDictionary<string, int> _imageIndexes = new Dictionary<string, int>
+        {
+            // ReSharper disable RedundantNameQualifier
+            {typeof (Entities.Protein).FullName, 1},
+            {typeof (Entities.Peptide).FullName, 2},
+            {typeof (Entities.Precursor).FullName, 3},
+            {typeof (Entities.Transition).FullName, 4},
+            // ReSharper restore RedundantNameQualifier
+        };
+
+        public override Image[] GetImageList()
+        {
+            return new []
+            {
+                Resources.Folder,
+                Resources.Protein,
+                Resources.Peptide,
+                Resources.TransitionGroup,
+                Resources.Fragment,
+            };
+        }
+
+        public override int GetImageIndex(ViewSpec viewSpec)
+        {
+            int imageIndex;
+            if (_imageIndexes.TryGetValue(viewSpec.RowSource, out imageIndex))
+            {
+                return imageIndex;
+            }
+            return -1;
+        }
+
+        public override event Action ViewsChanged
+        {
+            add
+            {
+                if (_viewChangeListener == null)
+                {
+                    _viewChangeListener = new ViewChangeListener(Settings.Default.PersistedViews, SkylineDataSchema);
+                }
+                _viewChangeListener.AddListener(value);
+            }
+            remove
+            {
+                _viewChangeListener.RemoveListener(value);
+            }
+        }
+
+        private class ViewChangeListener : IDocumentChangeListener
+        {
+            private readonly PersistedViews _persistedViews;
+            private readonly SkylineDataSchema _skylineDataSchema;
+            private ViewSpecList _documentViews;
+            private HashSet<Action> _listeners;
+            public ViewChangeListener(PersistedViews persistedViews, SkylineDataSchema skylineDataSchema)
+            {
+                _persistedViews = persistedViews;
+                _skylineDataSchema = skylineDataSchema;
+            }
+
+            public void AddListener(Action listener)
+            {
+                if (_listeners == null)
+                {
+                    if (null != _persistedViews)
+                    {
+                        _persistedViews.Changed += PersistedViewsOnChanged;
+                    }
+                    if (null != _skylineDataSchema)
+                    {
+                        _documentViews = _skylineDataSchema.Document.Settings.DataSettings.ViewSpecList;
+                        _skylineDataSchema.Listen(this);
+                    }
+                    _listeners = new HashSet<Action>();
+                }
+                if (!_listeners.Add(listener))
+                {
+                    throw new InvalidOperationException("Listener already added"); // Not L10N
+                }
+            }
+
+            public void RemoveListener(Action listener)
+            {
+                if (!_listeners.Remove(listener))
+                {
+                    throw new InvalidOperationException("No such listener"); // Not L10N
+                }
+                if (_listeners.Count == 0)
+                {
+                    if (null != _persistedViews)
+                    {
+                        _persistedViews.Changed -= PersistedViewsOnChanged;
+                    }
+                    if (null != _skylineDataSchema)
+                    {
+                        _skylineDataSchema.Unlisten(this);
+                    }
+                    _listeners = null;
+                }
+            }
+
+            private void PersistedViewsOnChanged()
+            {
+                FireChanged();
+            }
+
+            void IDocumentChangeListener.DocumentOnChanged(object sender, DocumentChangedEventArgs args)
+            {
+                var viewSpecList = _skylineDataSchema.Document.Settings.DataSettings.ViewSpecList;
+                if (!Equals(viewSpecList, _documentViews))
+                {
+                    _documentViews = viewSpecList;
+                    FireChanged();
+                }
+            }
+
+            private void FireChanged()
+            {
+                foreach (var listener in _listeners.ToArray())
+                {
+                    listener();
+                }
+            }
         }
     }
 }

@@ -40,9 +40,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            if (!IsEnableLiveReports)
-                return;
-
             TestMixedDoc();
             TestPeptideOnlyDoc();
             TestSmallMoleculeOnlyDoc();

@@ -32,9 +32,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -327,48 +325,22 @@ namespace pwiz.SkylineTestTutorial
             string pathReport = GetTestPath("qValues_Exported_report.csv");
             const string qvalueHeader = "annotation_QValue";
             string reportName = Resources.ReportSpecList_GetDefaults_Peptide_RT_Results;
-            if (IsEnableLiveReports)
-            {
-                var reportExportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-                var editListReport = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(
-                    reportExportDlg.EditList);
-                RunUI(() => editListReport.SelectItem(reportName));
-                PauseForScreenShot<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>("Edit Reports form", 21);
+            var reportExportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            var manageViewsForm = ShowDialog<ManageViewsForm>(reportExportDlg.EditList);
+            RunUI(() => manageViewsForm.SelectView(reportName));
+            PauseForScreenShot<ManageViewsForm>("Edit Reports form", 21);
 
-                var customizeViewDlg = ShowDialog<ViewEditor>(editListReport.EditItem);
-                PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 22);
+            var customizeViewDlg = ShowDialog<ViewEditor>(manageViewsForm.EditView);
+            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 22);
 
-                RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value")
-                    .Property(AnnotationDef.ANNOTATION_PREFIX + qvalueHeader)));
-                PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form with selected columns", 23);
+            RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value")
+                .Property(AnnotationDef.ANNOTATION_PREFIX + qvalueHeader)));
+            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form with selected columns", 23);
 
-                OkDialog(customizeViewDlg, customizeViewDlg.OkDialog);
-                OkDialog(editListReport, editListReport.OkDialog);
-                RunUI(() => reportExportDlg.ReportName = reportName);
-                OkDialog(reportExportDlg, () => reportExportDlg.OkDialog(pathReport, TextUtil.CsvSeparator));
-            }
-            else
-            {
-                var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-                var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-                RunUI(() => editReportListDlg.SelectItem(reportName));
-                PauseForScreenShot<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>("Edit Reports form", 21);
-
-                var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.EditItem);
-                PauseForScreenShot<PivotReportDlg>("Edit Report form", 22);
-
-                RunUI(() =>
-                {
-                    pivotReportDlg.Select(new Identifier("Peptides", "Precursors", "PrecursorResults", qvalueHeader));
-                    pivotReportDlg.AddSelectedColumn();
-                });
-                PauseForScreenShot<PivotReportDlg>("Edit Report form with selected columns", 23);
-
-                OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
-                OkDialog(editReportListDlg, editReportListDlg.OkDialog);
-                RunUI(() => exportReportDlg.ReportName = reportName);
-                OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(pathReport, TextUtil.CsvSeparator));
-            }
+            OkDialog(customizeViewDlg, customizeViewDlg.OkDialog);
+            OkDialog(manageViewsForm, manageViewsForm.Close);
+            RunUI(() => reportExportDlg.ReportName = reportName);
+            OkDialog(reportExportDlg, () => reportExportDlg.OkDialog(pathReport, TextUtil.CsvSeparator));
 
             Assert.IsTrue(File.Exists(pathReport));
             using (var reader = new StreamReader(pathReport))

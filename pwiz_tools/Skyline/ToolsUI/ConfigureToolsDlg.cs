@@ -27,8 +27,8 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -1006,13 +1006,12 @@ namespace pwiz.Skyline.ToolsUI
         }
         private class ComboBoxDriverWrapper : Component
         {
-            private readonly SettingsListComboDriver<ReportSpec> _oldReportDriver;
             private readonly SettingsListComboDriver<ReportOrViewSpec> _liveReportDriver;
 
             public ComboBoxDriverWrapper(IContainer container, ComboBox comboBox)
             {
                 container.Add(this);
-                ViewSettings.SettingsChange += ViewSettingsOnSettingsChange;
+                Settings.Default.PersistedViews.Changed += ViewSettingsOnSettingsChange;
                 // Initialize the report comboBox.
                 // CONSIDER: Settings list editing is currently disabled, because
                 //           it had problems with the empty element added to the list.
@@ -1020,18 +1019,11 @@ namespace pwiz.Skyline.ToolsUI
                 //           modified list and persist it in ViewSettings.
                 //           Might be nice to allow report spec editing in this form
                 //           some day, though.
-                if (Settings.Default.EnableLiveReports)
-                {
-                    _liveReportDriver = new SettingsListComboDriver<ReportOrViewSpec>(comboBox, new ReportOrViewSpecList(), false);
-                    RepopulateLiveReportList();
-                }
-                else
-                {
-                    _oldReportDriver = new SettingsListComboDriver<ReportSpec>(comboBox, Settings.Default.ReportSpecList, false);
-                }
+                _liveReportDriver = new SettingsListComboDriver<ReportOrViewSpec>(comboBox, new ReportOrViewSpecList(), false);
+                RepopulateLiveReportList();
             }
 
-            private void ViewSettingsOnSettingsChange(object sender, EventArgs eventArgs)
+            private void ViewSettingsOnSettingsChange()
             {
                 if (null != _liveReportDriver)
                 {
@@ -1043,15 +1035,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 _liveReportDriver.List.Clear();
                 var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null, DataSchemaLocalizer.INVARIANT);
-                _liveReportDriver.List.AddRange(documentGridViewContext.CustomViews.Select(view => new ReportOrViewSpec(view)));
+                _liveReportDriver.List.AddRange(documentGridViewContext.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).ViewSpecs.Select(view => new ReportOrViewSpec(view)));
             }
 
             public void LoadList(string selectedItemLast)
             {
-                if (null != _oldReportDriver)
-                {
-                    _oldReportDriver.LoadList(selectedItemLast);
-                }
                 if (null != _liveReportDriver)
                 {
                     _liveReportDriver.LoadList(selectedItemLast);
@@ -1060,10 +1048,6 @@ namespace pwiz.Skyline.ToolsUI
 
             public bool SelectedIndexChangedEvent(object sender, EventArgs e)
             {
-                if (null != _oldReportDriver)
-                {
-                    return _oldReportDriver.SelectedIndexChangedEvent(sender, e);
-                }
                 if (null != _liveReportDriver)
                 {
                     return _liveReportDriver.SelectedIndexChangedEvent(sender, e);
@@ -1076,7 +1060,7 @@ namespace pwiz.Skyline.ToolsUI
                 base.Dispose(disposing);
                 if (disposing)
                 {
-                    ViewSettings.SettingsChange -= ViewSettingsOnSettingsChange;
+                    Settings.Default.PersistedViews.Changed -= ViewSettingsOnSettingsChange;
                 }
             }
         }

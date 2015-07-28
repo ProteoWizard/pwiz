@@ -39,11 +39,15 @@ namespace pwiz.Skyline.SettingsUI
             this.btnAddGroupComparison = new System.Windows.Forms.Button();
             this.btnEditGroupComparisonList = new System.Windows.Forms.Button();
             this.checkedListBoxGroupComparisons = new System.Windows.Forms.CheckedListBox();
+            this.tabPageReports = new System.Windows.Forms.TabPage();
+            this.labelReports = new System.Windows.Forms.Label();
+            this.chooseViewsControl = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
             this.tabPageGroupComparisons.SuspendLayout();
+            this.tabPageReports.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -51,6 +55,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPageAnnotations);
             this.tabControl.Controls.Add(this.tabPageGroupComparisons);
+            this.tabControl.Controls.Add(this.tabPageReports);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
@@ -120,6 +125,30 @@ namespace pwiz.Skyline.SettingsUI
             this.checkedListBoxGroupComparisons.FormattingEnabled = true;
             this.checkedListBoxGroupComparisons.Name = "checkedListBoxGroupComparisons";
             // 
+            // tabPageReports
+            // 
+            this.tabPageReports.Controls.Add(this.labelReports);
+            this.tabPageReports.Controls.Add(this.chooseViewsControl);
+            resources.ApplyResources(this.tabPageReports, "tabPageReports");
+            this.tabPageReports.Name = "tabPageReports";
+            this.tabPageReports.UseVisualStyleBackColor = true;
+            // 
+            // labelReports
+            // 
+            resources.ApplyResources(this.labelReports, "labelReports");
+            this.labelReports.Name = "labelReports";
+            // 
+            // chooseViewsControl
+            // 
+            this.chooseViewsControl.AllowEditing = false;
+            resources.ApplyResources(this.chooseViewsControl, "chooseViewsControl");
+            this.chooseViewsControl.FilterRowSources = false;
+            this.chooseViewsControl.GrayDisabledRowSources = false;
+            this.chooseViewsControl.MultiSelect = true;
+            this.chooseViewsControl.Name = "chooseViewsControl";
+            this.chooseViewsControl.ShowCheckboxes = false;
+            this.chooseViewsControl.ShowGroupChooser = false;
+            // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
@@ -151,6 +180,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl.ResumeLayout(false);
             this.tabPageAnnotations.ResumeLayout(false);
             this.tabPageGroupComparisons.ResumeLayout(false);
+            this.tabPageReports.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -169,5 +199,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnAddGroupComparison;
         private System.Windows.Forms.Button btnEditGroupComparisonList;
         private System.Windows.Forms.CheckedListBox checkedListBoxGroupComparisons;
+        private System.Windows.Forms.TabPage tabPageReports;
+        private Common.DataBinding.Controls.Editor.ChooseViewsControl chooseViewsControl;
+        private System.Windows.Forms.Label labelReports;
     }
 }

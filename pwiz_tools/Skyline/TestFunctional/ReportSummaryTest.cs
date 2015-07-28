@@ -25,13 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate.Query;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -64,14 +58,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            if (IsEnableLiveReports)
-            {
-                DoLiveReportsTest();
-            }
-            else
-            {
-                DoCustomReportsTest();
-            }
+            DoLiveReportsTest();
         }
 
         // ReSharper disable AccessToModifiedClosure
@@ -82,9 +69,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-            RunUI(()=>exportLiveReportDlg.SetUseInvariantLanguage(true));
-            var editReportList = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportLiveReportDlg.EditList);
-            var viewEditor = ShowDialog<ViewEditor>(editReportList.AddItem);
+            RunUI(() => exportLiveReportDlg.SetUseInvariantLanguage(true));
+            var manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
+            var viewEditor = ShowDialog<ViewEditor>(manageViewsForm.AddView);
 
             // Simple protein name report
             AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Name"));
@@ -106,12 +93,13 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add precursor results and results summary information
-            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Mean"),
+            AddColumns(viewEditor,
+                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Mean"),
                 PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Cv"),
                 PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"));
             CheckPreview(viewEditor, (preview, document) =>
             {
-                int expectedRows = document.PeptideTransitionGroupCount *
+                int expectedRows = document.PeptideTransitionGroupCount*
                                    document.Settings.MeasuredResults.Chromatograms.Count +
                                    (TestSmallMolecules ? 1 : 0);
                 Assert.AreEqual(expectedRows, preview.RowCount);
@@ -124,31 +112,36 @@ namespace pwiz.SkylineTestFunctional
                 CheckPreview(viewEditor, (preview, document) =>
                 {
                     Assert.AreEqual(document.MoleculeTransitionGroupCount, preview.RowCount);
-                    VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(viewEditor.ChooseColumnsTab.ColumnNames), "BestRetentionTime"); // Not L10N
+                    VerifyPivotedColumns(document, preview.ColumnHeaderNames,
+                        new List<string>(viewEditor.ChooseColumnsTab.ColumnNames), "BestRetentionTime"); // Not L10N
                 });
 
             const string precursorReportName = "Precursor RT Summary";
             RunUI(() => viewEditor.ViewName = precursorReportName);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            viewEditor = ShowDialog<ViewEditor>(editReportList.CopyItem);
+            viewEditor = ShowDialog<ViewEditor>(manageViewsForm.CopyView);
 
             // Add transition results summary column
-            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.ResultSummary.Area.Cv"));
+            AddColumns(viewEditor,
+                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.ResultSummary.Area.Cv"));
             // Not L10N
             CheckPreview(viewEditor, (preview, document) =>
             {
                 Assert.AreEqual(document.MoleculeTransitionCount, preview.RowCount);
-                VerifyPivotedColumns(document, preview.ColumnHeaderNames, viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime"); // Not L10N
+                VerifyPivotedColumns(document, preview.ColumnHeaderNames,
+                    viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime"); // Not L10N
             });
 
             // Add transition results column
-            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"));
+            AddColumns(viewEditor,
+                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"));
             // Not L10N
             CheckPreview(viewEditor, (preview, document) =>
             {
                 Assert.AreEqual(document.MoleculeTransitionCount, preview.RowCount);
-                VerifyPivotedColumns(document, preview.ColumnHeaderNames, viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime", "Area"); // Not L10N
+                VerifyPivotedColumns(document, preview.ColumnHeaderNames,
+                    viewEditor.ChooseColumnsTab.ColumnNames.ToList(), "BestRetentionTime", "Area"); // Not L10N
             });
 
             // Turn off pivot
@@ -157,8 +150,9 @@ namespace pwiz.SkylineTestFunctional
                 CheckPreview(viewEditor, (preview, document) =>
                 {
                     int replicateCount = document.Settings.MeasuredResults.Chromatograms.Count;
-                    Assert.AreEqual(document.PeptideTransitionCount * replicateCount + (TestSmallMolecules ? 2 : 0), preview.RowCount);
-                    
+                    Assert.AreEqual(document.PeptideTransitionCount*replicateCount + (TestSmallMolecules ? 2 : 0),
+                        preview.RowCount);
+
                     CollectionAssert.AreEqual(viewEditor.ChooseColumnsTab.ColumnNames, preview.ColumnHeaderNames);
                 });
 
@@ -166,27 +160,36 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => viewEditor.ViewName = transitionReportName);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            OkDialog(editReportList, editReportList.OkDialog);
+            OkDialog(manageViewsForm, manageViewsForm.Close);
 
-            // Save report templates to .skyr file
-            var shareReports = ShowDialog<ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>>(exportLiveReportDlg.ShowShare);
-            RunUI(() => shareReports.ChosenNames = new[] { precursorReportName, transitionReportName });
             string reportTemplateName = TestFilesDir.GetTestPath("TestReports.skyr");
-            OkDialog(shareReports, () => shareReports.OkDialog(reportTemplateName));
-
-            // Remove the in-memory reports
-            editReportList = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportLiveReportDlg.EditList);
-            RunUI(() =>
+            // Save report templates to .skyr file
             {
-                editReportList.SelectItem(precursorReportName);
-                editReportList.RemoveItem();
-                editReportList.SelectItem(transitionReportName);
-                editReportList.RemoveItem();
+                manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
+                RunUI(() =>
+                {
+                    manageViewsForm.SelectViews(new[] {precursorReportName, transitionReportName});
+                    manageViewsForm.ExportViews(reportTemplateName);
+                });
+                
+                OkDialog(manageViewsForm, manageViewsForm.Close);
+            }
+
+            manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
+            RunUI(()=>
+            {
+                manageViewsForm.SelectView(precursorReportName);
+                manageViewsForm.Remove(false);
+                manageViewsForm.SelectView(transitionReportName);
+                manageViewsForm.Remove(false);
             });
-            OkDialog(editReportList, editReportList.OkDialog);
+            OkDialog(manageViewsForm, manageViewsForm.Close);
+
 
             // Import the saved reports
-            RunUI(() => exportLiveReportDlg.Import(reportTemplateName));
+            manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
+            RunUI(() => manageViewsForm.ImportViews(reportTemplateName));
+            OkDialog(manageViewsForm, manageViewsForm.Close);
 
             // Export the reports to files
             var docFinal = SkylineWindow.Document;
@@ -207,132 +210,6 @@ namespace pwiz.SkylineTestFunctional
             VerifyReportFile(transitionReport,
                 docFinal.PeptideTransitionCount * docFinal.Settings.MeasuredResults.Chromatograms.Count + (TestSmallMolecules ? 2 : 0),
                 transitionColumnNames, true);
-        }
-
-
-        private void DoCustomReportsTest()
-        {
-            // Open the .sky file
-            string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
-
-            var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-            var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-            var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
-
-            // Simple protein name report
-            AddColumns(pivotReportDlg, new Identifier("ProteinName")); // Not L10N
-            CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 Assert.AreEqual(document.PeptideGroupCount, preview.RowCount);
-                                 var columnHeaderNames = new List<string>(preview.ColumnHeaderNames);
-                                 Assert.AreEqual(1, columnHeaderNames.Count);
-                                 Assert.AreEqual("ProteinName", columnHeaderNames[0]); // Not L10N
-                             });
-
-            // Add precursor information
-            AddColumns(pivotReportDlg, new Identifier("Peptides", "Sequence"), // Not L10N
-                       new Identifier("Peptides", "Precursors", "Charge"));
-            CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 Assert.AreEqual(document.PeptideTransitionGroupCount, preview.RowCount);
-                                 VerifyNoPivotedColumns(preview, new List<string>(pivotReportDlg.ColumnNames));
-                             });
-
-            // Add precursor results and results summary information
-            AddColumns(pivotReportDlg, new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "MeanBestRetentionTime"), // Not L10N
-                       new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "CvBestRetentionTime"),
-                       new Identifier("Peptides", "Precursors", "PrecursorResults", "BestRetentionTime"));
-            CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 int expectedRows = document.PeptideTransitionGroupCount*
-                                                    document.Settings.MeasuredResults.Chromatograms.Count;
-                                 Assert.AreEqual(expectedRows, preview.RowCount);
-                                 VerifyNoPivotedColumns(preview, new List<string>(pivotReportDlg.ColumnNames));
-                             });
-
-            // Pivot by replicate
-            RunUI(() => pivotReportDlg.PivotReplicate = true);
-            string[] precursorColumnNames =
-                CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 Assert.AreEqual(document.PeptideTransitionGroupCount, preview.RowCount);
-                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(pivotReportDlg.ColumnNames), "BestRetentionTime"); // Not L10N
-                             });
-
-            const string precursorReportName = "Precursor RT Summary";
-            RunUI(() => pivotReportDlg.ReportName = precursorReportName);
-            OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
-
-            pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.CopyItem);
-
-            // Add transition results summary column
-            AddColumns(pivotReportDlg, new Identifier("Peptides", "Precursors", "Transitions", "TransitionResultsSummary", "CvArea")); // Not L10N
-            CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 Assert.AreEqual(document.PeptideTransitionCount, preview.RowCount);
-                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(pivotReportDlg.ColumnNames), "BestRetentionTime"); // Not L10N
-                             });
-
-            // Add transition results column
-            AddColumns(pivotReportDlg, new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area")); // Not L10N
-            CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 Assert.AreEqual(document.PeptideTransitionCount, preview.RowCount);
-                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, new List<string>(pivotReportDlg.ColumnNames), "BestRetentionTime", "Area"); // Not L10N
-                             });
-
-            // Turn off pivot
-            RunUI(() => pivotReportDlg.PivotReplicate = false);
-            string[] transitionColumnNames =
-                CheckPreview(pivotReportDlg, (preview, document) =>
-                             {
-                                 int replicateCount = document.Settings.MeasuredResults.Chromatograms.Count;
-                                 Assert.AreEqual(document.PeptideTransitionCount*replicateCount, preview.RowCount);
-                                 VerifyNoPivotedColumns(preview, new List<string>(pivotReportDlg.ColumnNames));
-                             });
-
-            const string transitionReportName = "Transition RT-Area Summary";
-            RunUI(() => pivotReportDlg.ReportName = transitionReportName);
-            OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
-
-            OkDialog(editReportListDlg, editReportListDlg.OkDialog);
-
-            // Save report templates to .skyr file
-            var shareReports = ShowDialog<ShareListDlg<ReportSpecList, ReportSpec>>(exportReportDlg.ShowShare);
-            RunUI(() => shareReports.ChosenNames = new[] {precursorReportName, transitionReportName});
-            string reportTemplateName = TestFilesDir.GetTestPath("TestReports.skyr");
-            OkDialog(shareReports, () => shareReports.OkDialog(reportTemplateName));
-
-            // Remove the in-memory reports
-            editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-            RunUI(() =>
-                      {
-                          editReportListDlg.SelectItem(precursorReportName);
-                          editReportListDlg.RemoveItem();
-                          editReportListDlg.SelectItem(transitionReportName);
-                          editReportListDlg.RemoveItem();
-                      });
-            OkDialog(editReportListDlg, editReportListDlg.OkDialog);
-
-            // Import the saved reports
-            RunUI(() => exportReportDlg.Import(reportTemplateName));
-
-            // Export the reports to files
-            var docFinal = SkylineWindow.Document;
-            RunUI(() => exportReportDlg.ReportName = precursorReportName);
-            string precursorReport = TestFilesDir.GetTestPath("PrecursorRTSummary.csv");
-            OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(precursorReport, ','));
-            VerifyReportFile(precursorReport, docFinal.PeptideTransitionGroupCount, precursorColumnNames);
-
-            exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-
-            RunUI(() => exportReportDlg.ReportName = transitionReportName);
-            string transitionReport = TestFilesDir.GetTestPath("TransitionRTAreaSummary.csv");
-            OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(transitionReport, ','));
-            VerifyReportFile(transitionReport,
-                             docFinal.PeptideTransitionCount*docFinal.Settings.MeasuredResults.Chromatograms.Count,
-                             transitionColumnNames);
         }
 
         private void VerifyReportFile(string fileName, int rowCount, IList<string> columnNames, bool invariantFormat = false)
@@ -375,13 +252,6 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void VerifyNoPivotedColumns(PreviewReportDlg preview, List<string> columnNames)
-        {
-            var columnHeaderNames = new List<string>(preview.ColumnHeaderNames);
-            Assert.AreEqual(columnNames.Count, columnHeaderNames.Count);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(columnNames, columnHeaderNames));
-        }
-
         private void VerifyPivotedColumns(SrmDocument document,
             IEnumerable<string> columnHeaderNames, List<string> columnNames, params string[] pivotNames)
         {
@@ -399,18 +269,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(ArrayUtil.EqualsDeep(columnNames, listColumnHeaderNames));
         }
 
-        private void AddColumns(PivotReportDlg pivotReportDlg, params Identifier[] columnIds)
-        {
-            RunUI(() =>
-                      {
-                          foreach (var columnId in columnIds)
-                          {
-                              pivotReportDlg.Select(columnId);
-                              pivotReportDlg.AddSelectedColumn();
-                          }
-                      });
-        }
-
         private void AddColumns(ViewEditor viewEditor, params PropertyPath[] propertyPaths)
         {
             RunUI(() =>
@@ -422,19 +280,6 @@ namespace pwiz.SkylineTestFunctional
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 }
             });
-        }
-
-        private string[] CheckPreview(PivotReportDlg pivotReportDlg, Action<PreviewReportDlg, SrmDocument> checkPreview)
-        {
-            string[] columnNames = null;
-            var dlg = ShowDialog<PreviewReportDlg>(pivotReportDlg.ShowPreview);
-            RunUI(() =>
-            {
-                checkPreview(dlg, SkylineWindow.DocumentUI);
-                columnNames = dlg.ColumnHeaderNames.ToArray();
-            });
-            OkDialog(dlg, dlg.Close);
-            return columnNames;
         }
 
         private string[] CheckPreview(ViewEditor viewEditor, Action<DocumentGridForm, SrmDocument> checkPreview)

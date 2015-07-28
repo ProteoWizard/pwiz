@@ -283,6 +283,22 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        public PersistedViews PersistedViews
+        {
+            get
+            {
+                var persistedViews = (PersistedViews) this["PersistedViews"];
+                if (persistedViews == null)
+                {
+                    persistedViews = new PersistedViews((ReportSpecList) this["ReportSpecList"],
+                        (ViewSpecList) this["ViewSpecList"], ToolList);
+                    this["persistedViews"] = persistedViews;
+                }
+                return persistedViews;
+            }
+        }
+
+        [UserScopedSettingAttribute]
         public MethodTemplateList ExportMethodTemplateList
         {
             get
@@ -911,27 +927,12 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public ReportSpec GetReportSpecByName(string name)
-        {
-            ReportSpec reportSpec;
-            if (!ReportSpecList.TryGetValue(name, out reportSpec))
-                reportSpec = null;
-            return reportSpec;
-        }
-
         [UserScopedSettingAttribute]
         public ReportSpecList ReportSpecList
         {
             get
             {
-                ReportSpecList list = (ReportSpecList)this[typeof(ReportSpecList).Name];
-                if (list == null)
-                {
-                    list = new ReportSpecList();
-                    list.AddDefaults();
-                    ReportSpecList = list;
-                }
-                return list;
+                return (ReportSpecList)this[typeof(ReportSpecList).Name];
             }
             set
             {
@@ -2008,7 +2009,6 @@ namespace pwiz.Skyline.Properties
             using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
             {
                 editModel.SetScoringModel(owner, item);
-
                 if (editModel.ShowDialog(owner) == DialogResult.OK)
                     return (PeakScoringModelSpec) editModel.PeakScoringModel;
 

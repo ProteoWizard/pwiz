@@ -416,9 +416,6 @@
     <Compile Include="Controls\ImmediateWindow.Designer.cs">
       <DependentUpon>ImmediateWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ResultsGrid.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Controls\Graphs\RTLinearRegressionGraphPane.cs" />
     <Compile Include="Controls\Graphs\RTReplicateGraphPane.cs" />
     <Compile Include="Controls\LongWaitDlg.cs">
@@ -434,12 +431,7 @@
     <Compile Include="Controls\ColumnChooser.Designer.cs">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ResultsGridForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Controls\ResultsGridForm.Designer.cs">
-      <DependentUpon>ResultsGridForm.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Controls\ResultsGridForm.cs" />
     <Compile Include="Controls\ColorGenerator.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
@@ -747,7 +739,6 @@
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\SkylineViewContext.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
-    <Compile Include="Model\Databinding\ViewSettings.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
     <Compile Include="Model\Esp\EspFeatureCalc.cs" />
     <Compile Include="Model\Esp\EspFeatureDb.cs" />
@@ -854,6 +845,7 @@
     <Compile Include="Model\Optimization\OptimizationLibrary.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
+    <Compile Include="Model\PersistedViews.cs" />
     <Compile Include="Model\Proteome\ProteinMetadataManager.cs" />
     <Compile Include="Model\RefinementSettings.cs" />
     <Compile Include="EditUI\ChromatogramRTThresholdDlg.cs">
@@ -909,12 +901,6 @@
     </Compile>
     <Compile Include="FileUI\PivotReportDlg.Designer.cs">
       <DependentUpon>PivotReportDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileUI\ExportReportDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\ExportReportDlg.Designer.cs">
-      <DependentUpon>ExportReportDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PreviewReportDlg.cs">
       <SubType>Form</SubType>
@@ -1806,12 +1792,6 @@
     <EmbeddedResource Include="Controls\PopupPickList.zh-CHS.resx">
       <DependentUpon>PopupPickList.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\ResultsGridForm.ja.resx">
-      <DependentUpon>ResultsGridForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\ResultsGridForm.zh-CHS.resx">
-      <DependentUpon>ResultsGridForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTree.ja.resx">
       <DependentUpon>SequenceTree.cs</DependentUpon>
     </EmbeddedResource>
@@ -1985,12 +1965,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.zh-CHS.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportReportDlg.ja.resx">
-      <DependentUpon>ExportReportDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportReportDlg.zh-CHS.resx">
-      <DependentUpon>ExportReportDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsDlg.ja.resx">
       <DependentUpon>ImportResultsDlg.cs</DependentUpon>
@@ -3315,10 +3289,6 @@
       <DependentUpon>LongWaitDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\ResultsGridForm.resx">
-      <DependentUpon>ResultsGridForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Controls\TreeViewMS.resx">
       <DependentUpon>TreeViewMS.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -3406,10 +3376,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PivotReportDlg.resx">
       <DependentUpon>PivotReportDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportReportDlg.resx">
-      <DependentUpon>ExportReportDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PreviewReportDlg.resx">

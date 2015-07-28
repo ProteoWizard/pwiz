@@ -424,7 +424,7 @@
     <value>NoControl</value>
   </data>
   <data name="checkBoxShowWizard.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 30</value>
+    <value>6, 6</value>
   </data>
   <data name="checkBoxShowWizard.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 17</value>
@@ -446,33 +446,6 @@
   </data>
   <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxLiveReports.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 6</value>
-  </data>
-  <data name="checkBoxLiveReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 17</value>
-  </data>
-  <data name="checkBoxLiveReports.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="checkBoxLiveReports.Text" xml:space="preserve">
-    <value>Live Reports (document grid, new results grid)</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Name" xml:space="preserve">
-    <value>checkBoxLiveReports</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

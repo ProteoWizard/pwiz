@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
+using pwiz.Topograph.ui.DataBinding;
 
 namespace pwiz.Topograph.ui.Properties {
     
@@ -80,6 +81,20 @@ namespace pwiz.Topograph.ui.Properties {
             {
                 this["ViewSpecList"] = value;
             }
+        }
+
+        [System.Configuration.UserScopedSettingAttribute]
+        public TopographViewGroups TopographViewGroups
+        {
+            get
+            {
+                if (this["TopographViewGroups"] == null)
+                {
+                    TopographViewGroups = new TopographViewGroups(ViewSpecList);
+                }
+                return (TopographViewGroups) this["TopographViewGroups"];
+            }
+            set { this["TopographViewGroups"] = value; }
         }
         [System.Configuration.UserScopedSettingAttribute]
         public HalfLifeSettings HalfLifeSettings

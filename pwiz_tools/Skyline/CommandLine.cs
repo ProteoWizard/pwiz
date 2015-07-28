@@ -33,7 +33,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -2120,76 +2119,14 @@ namespace pwiz.Skyline
                 return;
             }
 
-            if (Settings.Default.EnableLiveReports)
-            {
-                ExportLiveReport(reportName, reportFile, reportColSeparator);
-                return;
-            }
-
-            //Check that the report exists
-            ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportName);
-            if (reportSpec == null)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
-                return;
-            }
-
-            _out.WriteLine(Resources.CommandLine_ExportReport_Exporting_report__0____, reportName);
-
-            try
-            {
-                using (var saver = new FileSaver(reportFile))
-                {
-                    if (!saver.CanSave())
-                    {
-                        _out.WriteLine(Resources.CommandLine_ExportReport_Error__The_report__0__could_not_be_saved_to__1____Check_to_make_sure_it_is_not_read_only_, reportName, reportFile);
-                    }
-
-                    var status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandWaitBroker(_out, status);
-
-                    using (var writer = new StreamWriter(saver.SafeName))
-                    {
-                        Report report = Report.Load(reportSpec);
-
-                        using (Database database = new Database(_doc.Settings)
-                        {
-                            ProgressMonitor = broker,
-                            Status = status,
-                            PercentOfWait = 80
-                        })
-                        {
-                            database.AddSrmDocument(_doc);
-                            status = database.Status;
-
-                            ResultSet resultSet = report.Execute(database);
-
-                            broker.UpdateProgress(status = status.ChangePercentComplete(95));
-                            ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
-                                                        LocalizationHelper.CurrentCulture);
-                        }
-
-                        writer.Flush();
-                        writer.Close();
-                    }
-
-                    broker.UpdateProgress(status.Complete());
-                    saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportReport_Report__0__exported_successfully_, reportName);
-                }
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
-                _out.WriteLine(x.Message);
-            }
+            ExportLiveReport(reportName, reportFile, reportColSeparator);
         }
 
         private void ExportLiveReport(string reportName, string reportFile, char reportColSeparator)
         {
             var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var viewSpec = viewContext.CustomViews.FirstOrDefault(view2 => view2.Name == reportName);
-            if (null == viewSpec)
+            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
+            if (null == viewInfo)
             {
                 _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
                 return;
@@ -2211,7 +2148,7 @@ namespace pwiz.Skyline
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(broker, ref status, viewContext.GetViewInfo(viewSpec), writer,
+                        viewContext.Export(broker, ref status, viewInfo, writer,
                             new DsvWriter(CultureInfo.CurrentCulture, reportColSeparator));
                     }
 
@@ -2307,7 +2244,7 @@ namespace pwiz.Skyline
                     return;
                 }
 
-                if (!ReportSharing.GetExistingReports().ContainsKey(reportTitle))
+                if (!ReportSharing.GetExistingReports().ContainsKey(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle))) 
                 {
                     _out.WriteLine(Resources.CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_, reportTitle);
                     _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);

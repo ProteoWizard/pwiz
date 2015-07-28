@@ -97,7 +97,9 @@ namespace pwiz.Common.DataBinding.Controls
             ViewInfo viewInfo = BindingListView.ViewInfo;
             if (viewInfo == null && viewContext != null)
             {
-                viewInfo = viewContext.GetViewInfo(viewContext.BuiltInViews.FirstOrDefault());
+                viewInfo = viewContext.GetViewInfo(
+                    ViewGroup.BUILT_IN,
+                    viewContext.GetViewSpecList(ViewGroup.BUILT_IN.Id).ViewSpecs.FirstOrDefault());
             }
             SetViewContext(viewContext, viewInfo);
         }
@@ -115,11 +117,6 @@ namespace pwiz.Common.DataBinding.Controls
         {
             get { return BindingListView.RowFilter; }
             set { BindingListView.RowFilter = value; }
-        }
-
-        public void SetViewSpec(ViewSpec viewSpec)
-        {
-            SetViewContext(ViewContext, ViewContext.GetViewInfo(viewSpec));
         }
 
         private void BindingListViewOnUnhandledException(object sender, BindingManagerDataErrorEventArgs args)

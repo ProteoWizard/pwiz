@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
@@ -27,14 +30,26 @@ namespace pwiz.Skyline.SettingsUI
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
             _groupComparisonsListBoxDriver.LoadList(
                 DocumentContainer.Document.Settings.DataSettings.GroupComparisonDefs);
+            var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
+            chooseViewsControl.ViewContext = new SkylineViewContext(dataSchema, new RowSourceInfo[0]);
+            chooseViewsControl.ShowCheckboxes = true;
+            chooseViewsControl.CheckedViews =
+                documentContainer.Document.Settings.DataSettings.ViewSpecList.ViewSpecs.Select(
+                    viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
         }
 
         public IDocumentContainer DocumentContainer { get; private set; }
 
         public DataSettings GetDataSettings(DataSettings dataSettings)
         {
+            var selectedViews = new HashSet<string>(chooseViewsControl.CheckedViews
+                .Where(viewName=>viewName.GroupId.Equals(PersistedViews.MainGroup.Id))
+                .Select(viewName=>viewName.Name));
+            var viewSpecs = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id)
+                .ViewSpecs.Where(view => selectedViews.Contains(view.Name));
             return dataSettings.ChangeAnnotationDefs(_annotationsListBoxDriver.Chosen)
-                .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen);
+                .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen)
+                .ChangeViewSpecList(new ViewSpecList(viewSpecs));
         }
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)

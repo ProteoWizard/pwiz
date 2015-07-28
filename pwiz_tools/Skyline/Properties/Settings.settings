@@ -449,8 +449,8 @@
     <Setting Name="AllowLabelOverlap" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="EnableLiveReports" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+    <Setting Name="TestSmallMolecules" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="TestSmallMolecules" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

@@ -186,6 +186,8 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="DataBinding\TopographDataSchema.cs" />
+    <Compile Include="DataBinding\TopographViewGroup.cs" />
+    <Compile Include="DataBinding\TopographViewGroups.cs" />
     <Compile Include="Forms\AboutDlg.cs">
       <SubType>Form</SubType>
     </Compile>

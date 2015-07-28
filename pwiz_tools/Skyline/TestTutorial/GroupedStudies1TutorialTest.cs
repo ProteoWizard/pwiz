@@ -121,43 +121,40 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(docInitial, null, 49, 137, 137, 789);
             PauseForScreenShot("Status bar", 3);
 
-            if (IsEnableLiveReports)
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            var pathLibraryName = PropertyPath.Parse("LibraryName");
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
+            WaitForConditionUI(() => documentGrid.RowCount > 0 &&
+                documentGrid.FindColumn(pathLibraryName) != null); // Let it initialize
+
+            DataGridView gridView = null;
+            DataGridViewColumn columnLibraryName = null;
+            RunUI(() =>
             {
-                var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-                var pathLibraryName = PropertyPath.Parse("LibraryName");
-                RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
-                WaitForConditionUI(() => documentGrid.RowCount > 0 &&
-                    documentGrid.FindColumn(pathLibraryName) != null); // Let it initialize
+                gridView = documentGrid.DataGridView;
+                columnLibraryName = documentGrid.FindColumn(pathLibraryName);
+            });
+            Assert.IsNotNull(gridView);
+            Assert.IsNotNull(columnLibraryName);
+            RunUI(() =>
+            {
+                gridView.Sort(columnLibraryName, ListSortDirection.Descending);
+                gridView.CurrentCell = gridView.Rows[79].Cells[columnLibraryName.Index];
+            });
 
-                DataGridView gridView = null;
-                DataGridViewColumn columnLibraryName = null;
-                RunUI(() =>
-                {
-                    gridView = documentGrid.DataGridView;
-                    columnLibraryName = documentGrid.FindColumn(pathLibraryName);
-                });
-                Assert.IsNotNull(gridView);
-                Assert.IsNotNull(columnLibraryName);
-                RunUI(() =>
-                {
-                    gridView.Sort(columnLibraryName, ListSortDirection.Descending);
-                    gridView.CurrentCell = gridView.Rows[79].Cells[columnLibraryName.Index];
-                });
+            WaitForConditionUI(() => gridView.Rows[80].Cells[columnLibraryName.Index].Value == null);
 
-                WaitForConditionUI(() => gridView.Rows[80].Cells[columnLibraryName.Index].Value == null);
+            RunUI(() => Assert.AreEqual(137, documentGrid.RowCount));
 
-                RunUI(() => Assert.AreEqual(137, documentGrid.RowCount));
+            PauseForScreenShot<DocumentGridForm>("Document grid toolbar", 4);
 
-                PauseForScreenShot<DocumentGridForm>("Document grid toolbar", 4);
-
-                RunUI(() =>
-                {
-                    Assert.AreEqual("Rat (NIST) (Rat_plasma2)", gridView.Rows[48].Cells[columnLibraryName.Index].Value);
-                    Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.Rows[49].Cells[columnLibraryName.Index].Value);
-                    Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.CurrentCell.Value);
-                    SkylineWindow.ShowDocumentGrid(false);
-                });
-            }
+            RunUI(() =>
+            {
+                Assert.AreEqual("Rat (NIST) (Rat_plasma2)", gridView.Rows[48].Cells[columnLibraryName.Index].Value);
+                Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.Rows[49].Cells[columnLibraryName.Index].Value);
+                Assert.AreEqual("Rat (GPM) (Rat_plasma2)", gridView.CurrentCell.Value);
+                SkylineWindow.ShowDocumentGrid(false);
+            });
 
             if (IsFullData)
             {
@@ -323,14 +320,11 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot("Find Results view", 16);
             }
 
-            if (IsEnableLiveReports)
-            {
-                var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
 
-                AddTruncatedPrecursorsView(documentGrid, true);
+            AddTruncatedPrecursorsView(documentGrid, true);
 
-                RunUI(() => SkylineWindow.ShowDocumentGrid(false));
-            }
+            RunUI(() => SkylineWindow.ShowDocumentGrid(false));
 
             RestoreViewOnScreen(13); // Same layout for chromatogram graphs as before on page 13
 
@@ -923,7 +917,6 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             }
 
-            if (IsEnableLiveReports)
             {
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 RunUI(() =>
@@ -969,7 +962,6 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             }
 
-            if (IsEnableLiveReports)
             {
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
 
@@ -1047,7 +1039,6 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot("Targets NP_036870 and peptides", 57);
             }
 
-            if (IsEnableLiveReports)
             {
                 var pathPrecursors = PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*");
                 var pathCountTruncated = PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CountTruncated");
@@ -1091,8 +1082,9 @@ namespace pwiz.SkylineTestTutorial
         private void EnsureTruncatedPrecursorsView(DocumentGridForm documentGrid)
         {
             bool hasTruncatedPrecursorsView = false;
-            RunUI(() => hasTruncatedPrecursorsView = documentGrid.BindingListSource.ViewContext.CustomViews.Contains(view =>
-                view.Name == TRUNCATED_PRECURSORS_VIEW_NAME));
+            RunUI(() => hasTruncatedPrecursorsView = null !=
+                        documentGrid.BindingListSource.ViewContext.GetViewInfo(
+                            PersistedViews.MainGroup.Id.ViewName(TRUNCATED_PRECURSORS_VIEW_NAME)));
             if (!hasTruncatedPrecursorsView)
                 AddTruncatedPrecursorsView(documentGrid, false);
         }
@@ -1108,14 +1100,12 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.OpenSharedFile(GetTestPath(@"Heart Failure\Rat_plasma.sky.zip"));
             });
 
-            if (IsEnableLiveReports)
             {
                 // From prepare for statistics section to get expected screenshot
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
 
                 bool hasMissingPeaksView = false;
-                RunUI(() => hasMissingPeaksView = documentGrid.BindingListSource.ViewContext.CustomViews.Contains(view =>
-                    view.Name == MISSING_PEAKS_VIEW_NAME));
+                RunUI(() => hasMissingPeaksView = null != documentGrid.BindingListSource.ViewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(MISSING_PEAKS_VIEW_NAME)));
                 if (hasMissingPeaksView)
                 {
                     RunUI(() => documentGrid.ChooseView(MISSING_PEAKS_VIEW_NAME));

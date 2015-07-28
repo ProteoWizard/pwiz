@@ -28,9 +28,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ManageViewsForm));
-            this.listView1 = new System.Windows.Forms.ListView();
-            this.colHdrName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnRemove = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
@@ -39,33 +38,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
-            this.panelUpDown = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnUp = new System.Windows.Forms.Button();
-            this.btnDown = new System.Windows.Forms.Button();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnExportData = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.chooseViewsControl1 = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.openViewEditorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyToGroupContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flowLayoutPanel1.SuspendLayout();
-            this.panelUpDown.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // listView1
-            // 
-            resources.ApplyResources(this.listView1, "listView1");
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.colHdrName});
-            this.listView1.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listView1.HideSelection = false;
-            this.listView1.Name = "listView1";
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
-            this.listView1.SelectedIndexChanged += new System.EventHandler(this.ListView1OnSelectedIndexChanged);
-            this.listView1.SizeChanged += new System.EventHandler(this.listView1_SizeChanged);
-            // 
-            // colHdrName
-            // 
-            resources.ApplyResources(this.colHdrName, "colHdrName");
             // 
             // btnEdit
             // 
@@ -106,10 +88,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.Controls.Add(this.btnAdd);
-            this.flowLayoutPanel1.Controls.Add(this.btnCopy);
             this.flowLayoutPanel1.Controls.Add(this.btnEdit);
+            this.flowLayoutPanel1.Controls.Add(this.btnCopy);
             this.flowLayoutPanel1.Controls.Add(this.btnRemove);
-            this.flowLayoutPanel1.Controls.Add(this.panelUpDown);
             this.flowLayoutPanel1.Controls.Add(this.btnShare);
             this.flowLayoutPanel1.Controls.Add(this.btnImport);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
@@ -128,54 +109,57 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
-            // panelUpDown
-            // 
-            resources.ApplyResources(this.panelUpDown, "panelUpDown");
-            this.panelUpDown.Controls.Add(this.btnUp);
-            this.panelUpDown.Controls.Add(this.btnDown);
-            this.panelUpDown.Name = "panelUpDown";
-            // 
-            // btnUp
-            // 
-            resources.ApplyResources(this.btnUp, "btnUp");
-            this.btnUp.Name = "btnUp";
-            this.btnUp.UseVisualStyleBackColor = true;
-            this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
-            // 
-            // btnDown
-            // 
-            resources.ApplyResources(this.btnDown, "btnDown");
-            this.btnDown.Name = "btnDown";
-            this.btnDown.UseVisualStyleBackColor = true;
-            this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
-            // 
             // flowLayoutPanel2
             // 
             resources.ApplyResources(this.flowLayoutPanel2, "flowLayoutPanel2");
             this.flowLayoutPanel2.Controls.Add(this.btnOk);
-            this.flowLayoutPanel2.Controls.Add(this.btnExportData);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
             // 
-            // btnExportData
+            // imageList1
             // 
-            resources.ApplyResources(this.btnExportData, "btnExportData");
-            this.btnExportData.Name = "btnExportData";
-            this.btnExportData.UseVisualStyleBackColor = true;
-            this.btnExportData.Click += new System.EventHandler(this.btnExportData_Click);
+            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            resources.ApplyResources(this.imageList1, "imageList1");
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
             // 
-            // label1
+            // chooseViewsControl1
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            this.chooseViewsControl1.AllowEditing = true;
+            resources.ApplyResources(this.chooseViewsControl1, "chooseViewsControl1");
+            this.chooseViewsControl1.FilterRowSources = false;
+            this.chooseViewsControl1.GrayDisabledRowSources = true;
+            this.chooseViewsControl1.MultiSelect = true;
+            this.chooseViewsControl1.Name = "chooseViewsControl1";
+            this.chooseViewsControl1.ShowCheckboxes = false;
+            this.chooseViewsControl1.ShowGroupChooser = true;
+            this.chooseViewsControl1.SelectionChanged += new System.EventHandler(this.chooseViewsControl1_SelectionChanged);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openViewEditorContextMenuItem,
+            this.copyToGroupContextMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
+            // 
+            // openViewEditorContextMenuItem
+            // 
+            this.openViewEditorContextMenuItem.Name = "openViewEditorContextMenuItem";
+            resources.ApplyResources(this.openViewEditorContextMenuItem, "openViewEditorContextMenuItem");
+            this.openViewEditorContextMenuItem.Click += new System.EventHandler(this.openViewEditorContextMenuItem_Click);
+            // 
+            // copyToGroupContextMenuItem
+            // 
+            this.copyToGroupContextMenuItem.Name = "copyToGroupContextMenuItem";
+            resources.ApplyResources(this.copyToGroupContextMenuItem, "copyToGroupContextMenuItem");
             // 
             // ManageViewsForm
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label1);
+            this.CancelButton = this.btnOk;
+            this.Controls.Add(this.chooseViewsControl1);
             this.Controls.Add(this.flowLayoutPanel1);
-            this.Controls.Add(this.listView1);
             this.Controls.Add(this.flowLayoutPanel2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -183,9 +167,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.ShowInTaskbar = false;
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
-            this.panelUpDown.ResumeLayout(false);
             this.flowLayoutPanel2.ResumeLayout(false);
             this.flowLayoutPanel2.PerformLayout();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -193,21 +177,19 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         #endregion
 
-        private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnRemove;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.ColumnHeader colHdrName;
         private System.Windows.Forms.Button btnShare;
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
-        private System.Windows.Forms.Button btnExportData;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.ImageList imageList1;
+        private ChooseViewsControl chooseViewsControl1;
         private System.Windows.Forms.Button btnCopy;
-        private System.Windows.Forms.FlowLayoutPanel panelUpDown;
-        private System.Windows.Forms.Button btnUp;
-        private System.Windows.Forms.Button btnDown;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem openViewEditorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyToGroupContextMenuItem;
     }
 }

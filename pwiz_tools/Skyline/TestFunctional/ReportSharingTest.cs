@@ -25,7 +25,9 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -46,10 +48,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            if (!IsEnableLiveReports)
-            {
-                return;
-            }
             TestDeserializeAllFiles();
             TestCommandLine();
             TestExportReportImport();
@@ -71,10 +69,10 @@ namespace pwiz.SkylineTestFunctional
         {
             foreach (var reportInfo in ListTestReportInfos())
             {
-                ViewSettings.ViewSpecList = new ViewSpecList(new ViewSpec[0]);
+                Settings.Default.PersistedViews.Clear();
                 StringWriter stringWriter = new StringWriter();
                 CommandLineRunner.RunCommand(new[]{"--report-add=" + reportInfo.Path}, new CommandStatusWriter(stringWriter));
-                VerifyReportsImported(reportInfo);
+                VerifyReportsImported(PersistedViews.MainGroup, reportInfo);
             }
         }
 
@@ -82,11 +80,13 @@ namespace pwiz.SkylineTestFunctional
         {
             foreach (var reportInfo in ListTestReportInfos())
             {
-                ViewSettings.ViewSpecList = new ViewSpecList(new ViewSpec[0]);
+                Settings.Default.PersistedViews.Clear(); 
                 var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
                 string reportInfoPath = reportInfo.Path;
-                RunUI(()=>exportLiveReportDlg.Import(reportInfoPath));
-                VerifyReportsImported(reportInfo);
+                var manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
+                RunUI(()=>manageViewsForm.ImportViews(reportInfoPath));
+                OkDialog(manageViewsForm, manageViewsForm.Close);
+                VerifyReportsImported(PersistedViews.MainGroup, reportInfo);
                 OkDialog(exportLiveReportDlg, exportLiveReportDlg.CancelClick);
             }
         }
@@ -96,12 +96,11 @@ namespace pwiz.SkylineTestFunctional
             DocumentGridForm documentGridForm = ShowDialog<DocumentGridForm>(()=>SkylineWindow.ShowDocumentGrid(true));
             foreach (var reportInfo in ListTestReportInfos())
             {
-                ViewSettings.ViewSpecList = new ViewSpecList(new ViewSpec[0]);
+                Settings.Default.PersistedViews.Clear(); 
                 ManageViewsForm manageViewsForm = ShowDialog<ManageViewsForm>(documentGridForm.ManageViews);
-                SkylineViewContext skylineViewContext = (SkylineViewContext) manageViewsForm.ViewContext;
                 string reportInfoPath = reportInfo.Path;
-                RunUI(()=>skylineViewContext.ImportViewsFromFile(reportInfoPath));
-                VerifyReportsImported(reportInfo);
+                RunUI(()=>manageViewsForm.ImportViews(reportInfoPath));
+                VerifyReportsImported(PersistedViews.MainGroup, reportInfo);
                 OkDialog(manageViewsForm, manageViewsForm.Close);
             }
         }
@@ -111,21 +110,20 @@ namespace pwiz.SkylineTestFunctional
             LiveResultsGrid liveResultsGrid = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             foreach (var reportInfo in ListTestReportInfos())
             {
-                ViewSettings.ViewSpecList = new ViewSpecList(new ViewSpec[0]);
+                Settings.Default.PersistedViews.Clear();
                 ManageViewsForm manageViewsForm = ShowDialog<ManageViewsForm>(liveResultsGrid.ManageViews);
-                SkylineViewContext skylineViewContext = (SkylineViewContext)manageViewsForm.ViewContext;
                 string reportInfoPath = reportInfo.Path;
-                RunUI(() => skylineViewContext.ImportViewsFromFile(reportInfoPath));
-                VerifyReportsImported(reportInfo);
+                RunUI(() => manageViewsForm.ImportViews(reportInfoPath));
+                VerifyReportsImported(PersistedViews.MainGroup, reportInfo);
                 OkDialog(manageViewsForm, manageViewsForm.Close);
             }
         }
 
-        protected void VerifyReportsImported(ReportInfo reportInfo)
+        protected void VerifyReportsImported(ViewGroup viewGroup, ReportInfo reportInfo)
         {
             foreach (var expectedReport in reportInfo.ReportOrViewSpecs)
             {
-                var foundReports = ViewSettings.ViewSpecList.ViewSpecs
+                var foundReports = Settings.Default.PersistedViews.GetViewSpecList(viewGroup.Id).ViewSpecs
                     .Where(viewSpec => viewSpec.Name == expectedReport.Name)
                     .ToArray();
                 Assert.AreEqual(1, foundReports.Length);

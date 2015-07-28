@@ -375,6 +375,87 @@
   <data name="&gt;&gt;tabPageGroupComparisons.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="labelReports.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelReports.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelReports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="labelReports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>610, 42</value>
+  </data>
+  <data name="labelReports.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelReports.Text" xml:space="preserve">
+    <value>Choose which report definitions you would like saved in the Skyline document.  These reports may be available in the Document Grid, Results Grid, or other windows.</value>
+  </data>
+  <data name="&gt;&gt;labelReports.Name" xml:space="preserve">
+    <value>labelReports</value>
+  </data>
+  <data name="&gt;&gt;labelReports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelReports.Parent" xml:space="preserve">
+    <value>tabPageReports</value>
+  </data>
+  <data name="&gt;&gt;labelReports.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="chooseViewsControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="chooseViewsControl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 48</value>
+  </data>
+  <data name="chooseViewsControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>610, 206</value>
+  </data>
+  <data name="chooseViewsControl.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;chooseViewsControl.Name" xml:space="preserve">
+    <value>chooseViewsControl</value>
+  </data>
+  <data name="&gt;&gt;chooseViewsControl.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;chooseViewsControl.Parent" xml:space="preserve">
+    <value>tabPageReports</value>
+  </data>
+  <data name="&gt;&gt;chooseViewsControl.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabPageReports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageReports.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageReports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>622, 260</value>
+  </data>
+  <data name="tabPageReports.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabPageReports.Text" xml:space="preserve">
+    <value>Reports</value>
+  </data>
+  <data name="&gt;&gt;tabPageReports.Name" xml:space="preserve">
+    <value>tabPageReports</value>
+  </data>
+  <data name="&gt;&gt;tabPageReports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageReports.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
   </data>
@@ -464,6 +545,9 @@
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>654, 340</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Document Settings</value>

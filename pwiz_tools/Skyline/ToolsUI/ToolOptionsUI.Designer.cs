@@ -43,7 +43,6 @@ namespace pwiz.Skyline.ToolsUI
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
             this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
-            this.checkBoxLiveReports = new System.Windows.Forms.CheckBox();
             this.tabDisplay = new System.Windows.Forms.TabPage();
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -145,7 +144,6 @@ namespace pwiz.Skyline.ToolsUI
             // tabMisc
             // 
             this.tabMisc.Controls.Add(this.checkBoxShowWizard);
-            this.tabMisc.Controls.Add(this.checkBoxLiveReports);
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
@@ -155,12 +153,6 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.checkBoxShowWizard, "checkBoxShowWizard");
             this.checkBoxShowWizard.Name = "checkBoxShowWizard";
             this.checkBoxShowWizard.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxLiveReports
-            // 
-            resources.ApplyResources(this.checkBoxLiveReports, "checkBoxLiveReports");
-            this.checkBoxLiveReports.Name = "checkBoxLiveReports";
-            this.checkBoxLiveReports.UseVisualStyleBackColor = true;
             // 
             // tabDisplay
             // 
@@ -226,7 +218,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.ListBox listboxServers;
         private System.Windows.Forms.TabPage tabMisc;
-        private System.Windows.Forms.CheckBox checkBoxLiveReports;
         private System.Windows.Forms.TabPage tabLanguage;
         private System.Windows.Forms.ListBox listBoxLanguages;
         private System.Windows.Forms.Label labelDisplayLanguage;

@@ -20,12 +20,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using NHibernate.Hql.Ast.ANTLR;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Topograph.ui.Forms;
@@ -54,6 +52,12 @@ namespace pwiz.Topograph.ui.DataBinding
         }
 
         public Type RowType { get { return RowSources.First().RowType; } }
+
+        public override IEnumerable<ViewGroup> ViewGroups
+        {
+            get { return new[] {new TopographViewGroup(RowType)}; }
+        }
+
         public Workspace Workspace { get; private set; }
         public DeleteHandler DeleteHandler { get; set; }
 
@@ -72,21 +76,58 @@ namespace pwiz.Topograph.ui.DataBinding
             Settings.Default.Save();
         }
 
-        protected override ViewSpecList GetViewSpecList()
+        public override ViewGroup DefaultViewGroup
         {
-            return Settings.Default.ViewSpecList;
+            get { return ViewGroups.First(); }
         }
 
-        protected override void SaveViewSpecList(ViewSpecList viewSpecList)
+        protected override void SaveViewSpecList(ViewGroupId viewGroupId, ViewSpecList viewSpecList)
         {
             Settings.Default.Reload();
-            Settings.Default.ViewSpecList = viewSpecList;
+            Settings.Default.TopographViewGroups.SetViewSpecList(viewGroupId, viewSpecList);
             Settings.Default.Save();
         }
 
+        public override ViewSpecList GetViewSpecList(ViewGroupId viewGroup)
+        {
+            return base.GetViewSpecList(viewGroup) 
+                ?? Settings.Default.TopographViewGroups.GetViewSpecList(viewGroup) 
+                ?? ViewSpecList.EMPTY;
+        }
+
+        public override void ExportViewsToFile(Control owner, ViewSpecList views, string fileName)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+            using (FileStream stream = File.OpenWrite(fileName))
+            {
+                xmlSerializer.Serialize(stream, views);
+                stream.Close();
+            }
+        }
+
+        public override void ImportViewsFromFile(Control control, ViewGroup viewGroup, string fileName)
+        {
+            ViewSpec[] views;
+            try
+            {
+                views = LoadViews(fileName).ToArray();
+            }
+            catch (Exception x)
+            {
+                ShowMessageBox(control, string.Format("Failure loading {0}:\n{1}", fileName, x.InnerException), MessageBoxButtons.OK);
+                return;
+            }
+            if (views.Length == 0)
+            {
+                ShowMessageBox(control, "No views were found in that file.", MessageBoxButtons.OK);
+                return;
+            }
+            CopyViewsToGroup(control, viewGroup, new ViewSpecList(views));
+        }
+        
         private const string ViewFileFilter = "tpgview Files (*.tpgview)|*.tpgview";
 
-        public override void ExportViews(Control owner, IEnumerable<ViewSpec> views)
+        public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
             using (var saveFileDialog = new SaveFileDialog
             {
@@ -98,18 +139,12 @@ namespace pwiz.Topograph.ui.DataBinding
                 saveFileDialog.ShowDialog(owner);
                 if (!string.IsNullOrEmpty(saveFileDialog.FileName))
                 {
-                    var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
-                    var viewSpecList = new ViewSpecList(views);
-                    using (FileStream stream = File.OpenWrite(saveFileDialog.FileName))
-                    {
-                        xmlSerializer.Serialize(stream, viewSpecList);
-                        stream.Close();
-                    }
+                    ExportViews(owner, viewSpecList);
                 }
             }
         }
 
-        public override void ImportViews(Control owner)
+        public override void ImportViews(Control owner, ViewGroup viewGroup)
         {
             using (var importDialog = new OpenFileDialog
             {
@@ -123,34 +158,7 @@ namespace pwiz.Topograph.ui.DataBinding
                 {
                     return;
                 }
-                ViewSpec[] views;
-                try
-                {
-                    views = LoadViews(importDialog.FileName).ToArray();
-                }
-                catch (Exception x)
-                {
-                    ShowMessageBox(owner, string.Format("Failure loading {0}:\n{1}", importDialog.FileName, x.InnerException), MessageBoxButtons.OK);
-                    return;
-                }
-                if (views.Length == 0)
-                {
-                    ShowMessageBox(owner, "No views were found in that file.", MessageBoxButtons.OK);
-                    return;
-                }
-                var currentViews = CustomViews.ToList();
-                var conflicts = new HashSet<string>(views.Select(view => view.Name));
-                conflicts.IntersectWith(currentViews.Select(view => view.Name));
-                currentViews = currentViews.Where(view => !conflicts.Contains(view.Name)).ToList();
-                foreach (var view in views)
-                {
-                    // ReSharper disable once SimplifyLinqExpression
-                    if (!currentViews.Any(currentView => currentView.Name == view.Name))
-                    {
-                        currentViews.Add(view);
-                    }
-                }
-                SetCustomViews(currentViews);
+                ImportViewsFromFile(owner, viewGroup, importDialog.FileName);
             }
         }
         protected IEnumerable<ViewSpec> LoadViews(string filename)

@@ -41,6 +41,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public abstract class AbstractViewContext : IViewContext
     {
+        
         public const string DefaultViewName = "default"; // Not L10N
         private IList<RowSourceInfo> _rowSources;
 
@@ -65,6 +66,18 @@ namespace pwiz.Common.DataBinding
             get { return _rowSources.SelectMany(rowSourceInfo=>rowSourceInfo.Views.Select(view=>view.ViewSpec.SetRowSource(rowSourceInfo.Name))); }
         }
 
+        public abstract IEnumerable<ViewGroup> ViewGroups { get; }
+
+        public ViewGroup FindGroup(ViewGroupId id)
+        {
+            if (Equals(id, ViewGroup.BUILT_IN.Id))
+            {
+                return ViewGroup.BUILT_IN;
+            }
+            return ViewGroups.FirstOrDefault(group => Equals(group.Id, id));
+        }
+
+
         protected IEnumerable<RowSourceInfo> RowSources
         {
             get
@@ -82,68 +95,76 @@ namespace pwiz.Common.DataBinding
             return _rowSources.FirstOrDefault(rowSource => rowSource.RowType == rowType);
         }
 
+        public virtual ViewSpecList GetViewSpecList(ViewGroupId viewGroup)
+        {
+            if (Equals(viewGroup, ViewGroup.BUILT_IN.Id))
+            {
+                return new ViewSpecList(BuiltInViews);
+            }
+            return null;
+        }
+
+        public abstract ViewGroup DefaultViewGroup { get; }
+
+        public virtual bool TryRenameView(ViewGroupId groupId, string oldName, string newName)
+        {
+            var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
+            if (null != viewSpecList.GetView(newName))
+            {
+                return false;
+            }
+            SaveViewSpecList(groupId, viewSpecList.RenameView(oldName, newName));
+            return true;
+        }
+
+        public virtual void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
+        {
+            var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
+            viewSpecList = viewSpecList.AddOrReplaceViews(viewSpecs);
+            SaveViewSpecList(groupId, viewSpecList);
+        }
+
+        public virtual void DeleteViews(ViewGroupId groupId, IEnumerable<string> viewNames)
+        {
+            var viewSpecList = GetViewSpecList(groupId);
+            viewSpecList = viewSpecList.DeleteViews(viewNames);
+            SaveViewSpecList(groupId, viewSpecList);
+        }
+
+        protected abstract void SaveViewSpecList(ViewGroupId viewGroupId, ViewSpecList viewSpecList);
+
         protected RowSourceInfo FindRowSourceInfo(ViewInfo viewInfo)
         {
             return FindRowSourceInfo(viewInfo.ParentColumn.PropertyType);
         }
-        protected abstract ViewSpecList GetViewSpecList();
-        protected abstract void SaveViewSpecList(ViewSpecList viewSpecList);
 
-        public virtual IEnumerable<ViewSpec> CustomViews
-        {
-            get
-            {
-                var viewSpecList = GetViewSpecList() ?? ViewSpecList.EMPTY;
-                var views = viewSpecList.ViewSpecs.Where(viewSpec => null != GetRowSourceInfo(viewSpec)).ToArray();
-                return views;
-            }
-            set
-            {
-                SetCustomViews(value);
-            }
-        }
-
-        public ViewInfo GetViewInfo(ViewSpec viewSpec)
+        public ViewInfo GetViewInfo(ViewGroup viewGroup, ViewSpec viewSpec)
         {
             var rowSourceInfo = GetRowSourceInfo(viewSpec);
             if (null == rowSourceInfo)
             {
                 return null;
             }
-            return new ViewInfo(DataSchema, rowSourceInfo.RowType, viewSpec);
+            return new ViewInfo(DataSchema, rowSourceInfo.RowType, viewSpec).ChangeViewGroup(viewGroup);
+        }
+
+        public ViewInfo GetViewInfo(ViewName? viewName)
+        {
+            if (!viewName.HasValue)
+            {
+                return null;
+            }
+            var viewSpec = GetViewSpecList(viewName.Value.GroupId).GetView(viewName.Value.Name);
+            if (null == viewSpec)
+            {
+                return null;
+            }
+            return GetViewInfo(FindGroup(viewName.Value.GroupId), viewSpec);
         }
 
         protected RowSourceInfo GetRowSourceInfo(ViewSpec viewSpec)
         {
             return RowSources.FirstOrDefault(rowSource => rowSource.Name == viewSpec.RowSource);
-        }
-
-        protected virtual void SetCustomViews(IEnumerable<ViewSpec> customViewSpecs)
-        {
-            var oldViewSpecList = GetViewSpecList().ViewSpecs.ToList();
-            int indexInsert = oldViewSpecList.FindIndex(viewSpec => null != GetRowSourceInfo(viewSpec));
-            if (indexInsert < 0)
-            {
-                indexInsert = oldViewSpecList.Count;
-            }
-            var otherViews = oldViewSpecList.Where(view => null == GetRowSourceInfo(view)).ToArray();
-            var combinedList = otherViews.Take(indexInsert).Concat(customViewSpecs).Concat(otherViews.Skip(indexInsert));
-            SaveViewSpecList(new ViewSpecList(combinedList));
-        }
-
-        public virtual string GetNewViewName()
-        {
-            var takenNames = new HashSet<string>(BuiltInViews.Select(viewSpec => viewSpec.Name));
-            takenNames.UnionWith(CustomViews.Select(viewSpec=>viewSpec.Name));
-            const string baseName = "CustomView"; // Not L10N
-            for (int index = 1;;index++)
-            {
-                string name = baseName + index;
-                if (!takenNames.Contains(name))
-                {
-                    return name;
-                }
-            }
         }
 
         protected virtual string GetDefaultViewName()
@@ -272,92 +293,14 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public BindingListSource ExecuteQuery(Control owner, ViewSpec viewSpec)
+        protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
         {
-            var viewInfo = GetViewInfo(viewSpec);
-            var rowSource = GetRowSource(viewInfo);
-            BindingListSource bindingListSource = new BindingListSource();
-            var cloneableList = rowSource as ICloneableList;
-            if (null != cloneableList)
-            {
-                var clonedValues = ((ICloneableList) rowSource).DeepClone();
-                RunLongJob(owner, progressMonitor =>
-                {
-                    progressMonitor.UpdateProgress(new ProgressStatus(Resources.AbstractViewContext_ExecuteQuery_Executing_query));
-                    bindingListSource.SetView(viewInfo, clonedValues);
-                });
-            }
-            else
-            {
-                bindingListSource.SetView(viewInfo, rowSource);
-            }
-            return bindingListSource;
-        }
-
-        protected virtual bool IsReadOnly(ViewInfo viewInfo)
-        {
-            return BuiltInViews.Any(builtInView => viewInfo.Name == builtInView.Name);
-        }
-
-        public virtual ViewSpec MakeEditable(ViewSpec viewSpec, string originalName)
-        {
-            if (string.IsNullOrEmpty(viewSpec.Name))
-            {
-                return viewSpec;
-            }
-            var viewNames = new HashSet<string>(BuiltInViews.Select(builtInViewSpec => builtInViewSpec.Name));
-            if (originalName == viewSpec.Name && !string.IsNullOrEmpty(originalName))
-            {
-                if (!viewNames.Contains(viewSpec.Name))
-                {
-                    return viewSpec;
-                }
-            }
-            viewNames.UnionWith(CustomViews.Select(customViewSpec=>customViewSpec.Name));
-            return viewSpec.SetName(FindUniqueName(viewNames, viewSpec.Name));
-        }
-
-        protected string FindUniqueName(ISet<string> existingNames, string startingName)
-        {
-            if (!string.IsNullOrEmpty(startingName) && !existingNames.Contains(startingName))
-            {
-                return startingName;
-            }
-            string baseName = startingName ?? string.Empty;
-            int lastDigit = baseName.Length;
-            while (lastDigit > 0 && char.IsDigit(baseName[lastDigit - 1]))
-            {
-                lastDigit--;
-            }
-            baseName = baseName.Substring(0, lastDigit);
-            if (baseName.Length == 0)
-            {
-                baseName = "CustomView"; // Not L10N
-            }
-            for (int uniquifier = 1;; uniquifier++)
-            {
-                string name = baseName + uniquifier;
-                if (!existingNames.Contains(name))
-                {
-                    return name;
-                }
-            }
-        }
-
-        public ViewSpec CustomizeView(Control owner, ViewSpec viewSpec)
-        {
-            return CustomizeOrCreateView(owner, viewSpec, viewSpec.Name);
-        }
-
-        protected virtual ViewEditor CreateViewEditor(ViewSpec viewSpec)
-        {
-            return new ViewEditor(this, GetViewInfo(viewSpec));
+            return new ViewEditor(this, GetViewInfo(viewGroup, viewSpec));
         }
         
-        protected virtual ViewSpec CustomizeOrCreateView(Control owner, ViewSpec viewSpec, string originalName)
+        public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath)
         {
-            viewSpec = MakeEditable(viewSpec, originalName);
-            using (var customizeViewForm = CreateViewEditor(viewSpec))
+            using (var customizeViewForm = CreateViewEditor(viewPath, viewSpec))
             {
                 if (FormUtil.ShowDialog(owner, customizeViewForm) == DialogResult.Cancel)
                 {
@@ -366,63 +309,87 @@ namespace pwiz.Common.DataBinding
                 // Consider: if save fails, reshow CustomizeViewForm?
                 ViewInfo viewInfo = customizeViewForm.ViewInfo;
                 viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(customizeViewForm.ViewName));
-                return SaveView(viewInfo, originalName).ViewSpec;
+                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                return viewInfo.GetViewSpec();
             }
         }
 
-        public ViewSpec NewView(Control owner)
+        public ViewSpec NewView(Control owner, ViewGroup viewPath)
         {
-            return CustomizeOrCreateView(owner, new ViewSpec().SetRowSource(RowSources.First().Name), null);
+            return CustomizeView(owner, GetBlankView(), viewPath);
         }
 
-        public ViewSpec CopyView(Control owner, ViewSpec currentView)
+        protected virtual ViewSpec GetBlankView()
         {
-            if (null == currentView)
-            {
-                currentView = BuiltInViews.FirstOrDefault();
-            }
-            if (null == currentView)
-            {
-                currentView = new ViewSpec().SetRowSource(RowSources.First().Name);
-            }
-            return CustomizeOrCreateView(owner, currentView, null);
+            return new ViewSpec().SetRowType(RowSources.First().RowType);
         }
 
         public void ManageViews(Control owner)
         {
-            using (var manageViewsForm = new ManageViewsForm(this)
-            {
-                ExportDataButtonVisible = false,
-            })
+            using (var manageViewsForm = new ManageViewsForm(this))
             {
                 FormUtil.ShowDialog(owner, manageViewsForm);
             }
         }
 
-        protected virtual ViewInfo SaveView(ViewInfo viewInfo, string originalName)
+        protected virtual void SaveView(ViewGroupId groupId, ViewSpec viewSpec, string originalName)
         {
-            var viewSpecs = CustomViews.ToList();
-            var existingIndex = viewSpecs.FindIndex(vs => vs.Name == originalName);
-            if (existingIndex >= 0)
-            {
-                viewSpecs[existingIndex] = viewInfo.ViewSpec;
-            }
-            else
-            {
-                viewSpecs.Add(viewInfo.ViewSpec);
-            }
-            SetCustomViews(viewSpecs);
-            return viewInfo;
+            var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
+            viewSpecList = viewSpecList.ReplaceView(originalName, viewSpec);
+            SaveViewSpecList(groupId, viewSpecList);
         }
 
-        public void DeleteViews(IEnumerable<ViewSpec> views)
-        {
-            var deletedViewNames = new HashSet<string>(views.Select(view=>view.Name));
-            SetCustomViews(CustomViews.Where(view=>!deletedViewNames.Contains(view.Name)));
-        }
+        public abstract void ExportViews(Control owner, ViewSpecList views);
+        public abstract void ExportViewsToFile(Control owner, ViewSpecList views, string fileName);
+        public abstract void ImportViews(Control owner, ViewGroup viewGroup);
+        public abstract void ImportViewsFromFile(Control control, ViewGroup viewGroup, string fileName);
 
-        public abstract void ExportViews(Control owner, IEnumerable<ViewSpec> views);
-        public abstract void ImportViews(Control owner);
+        public virtual void CopyViewsToGroup(Control control, ViewGroup viewGroup, ViewSpecList viewSpecList)
+        {
+            var currentViews = GetViewSpecList(viewGroup.Id);
+            var conflicts = new HashSet<string>();
+            foreach (var view in viewSpecList.ViewSpecs)
+            {
+                var existing = currentViews.GetView(view.Name);
+                if (existing != null && !Equals(existing, view))
+                {
+                    conflicts.Add(view.Name);
+                }
+            }
+            if (conflicts.Count > 0)
+            {
+                string message;
+                if (conflicts.Count == 1)
+                {
+                    message = "The name '{0}' already exists. Do you want to replace it?";
+                }
+                else
+                {
+                    var messageLines = new List<String>();
+                    messageLines.Add("The following names already exist:");
+                    messageLines.AddRange(conflicts);
+                    messageLines.Add("Do you want to replace them?");
+                    message = string.Join(Environment.NewLine, messageLines);
+                }
+                var result = ShowMessageBox(control, message, MessageBoxButtons.YesNoCancel);
+                switch (result)
+                {
+                    case DialogResult.Cancel:
+                        return;
+                    case DialogResult.Yes:
+                        currentViews = new ViewSpecList(currentViews.ViewSpecs.Where(view => !conflicts.Contains(view.Name)));
+                        break;
+                }
+            }
+            foreach (var view in viewSpecList.ViewSpecs)
+            {
+                if (null == currentViews.GetView(view.Name))
+                {
+                    currentViews = currentViews.ReplaceView(null, view);
+                }
+            }
+            SaveViewSpecList(viewGroup.Id, currentViews);
+        }
 
         public virtual DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor)
         {
@@ -643,6 +610,16 @@ namespace pwiz.Common.DataBinding
         {
         }
 
+        public virtual Image[] GetImageList()
+        {
+            return new Image[0];
+        }
+
+        public virtual int GetImageIndex(ViewSpec viewItem)
+        {
+            return -1;
+        }
+
         protected void SetViewFrom(BindingListSource sourceBindingList, IEnumerable newRowSource,
             BindingListSource targetBindingList)
         {
@@ -671,5 +648,7 @@ namespace pwiz.Common.DataBinding
                 get { return false; }
             }
         }
+
+        public virtual event Action ViewsChanged;
     }
 }

@@ -121,8 +121,7 @@ namespace pwiz.Skyline
             LocalizationHelper.InitThread();
 
             InitializeComponent();
-            SetEnableLiveReports(Settings.Default.EnableLiveReports);
-
+            
             _undoManager = new UndoManager(this);
             UndoRedoButtons undoRedoButtons = new UndoRedoButtons(_undoManager,
                 undoMenuItem, undoToolBarButton,
@@ -1613,18 +1612,10 @@ namespace pwiz.Skyline
             var bookmark = new Bookmark(startPath);
             if (_resultsGridForm != null && _resultsGridForm.Visible)
             {
-                var resultsGridForm = _resultsGridForm as ResultsGridForm;
-                if (null != resultsGridForm)
+                var liveResultsGrid = _resultsGridForm as LiveResultsGrid;
+                if (null != liveResultsGrid)
                 {
-                    bookmark = bookmark.ChangeChromFileInfoId(resultsGridForm.ResultsGrid.GetCurrentChromFileInfoId());
-                }
-                else
-                {
-                    var liveResultsGrid = _resultsGridForm as LiveResultsGrid;
-                    if (null != liveResultsGrid)
-                    {
-                        bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
-                    }
+                    bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
                 }
             }            
             var findResult = DocumentUI.SearchDocument(bookmark,
@@ -1730,18 +1721,10 @@ namespace pwiz.Skyline
             if (isAnnotationOrNote && findResult.Bookmark.ChromFileInfoId != null)
             {
                 ShowResultsGrid(true);
-                ResultsGridForm resultsGridForm = _resultsGridForm as ResultsGridForm;
-                if (null != resultsGridForm)
+                LiveResultsGrid liveResultGrid = _resultsGridForm as LiveResultsGrid;
+                if (null != liveResultGrid)
                 {
-                    resultsGridForm.ResultsGrid.HighlightFindResult(findResult);
-                }
-                else
-                {
-                    LiveResultsGrid liveResultGrid = _resultsGridForm as LiveResultsGrid;
-                    if (null != liveResultGrid)
-                    {
-                        liveResultGrid.HighlightFindResult(findResult);
-                    }
+                    liveResultGrid.HighlightFindResult(findResult);
                 }
                 return;
             }
@@ -2161,12 +2144,13 @@ namespace pwiz.Skyline
                     {
                         AcceptedProteins = dlg.AcceptedProteins,
                         AcceptProteinType = dlg.ProteinSpecType
-                    };                   
+                    };
 
                     ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine);
                 }
             }
         }
+
         private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
         {
             RemoveMissingResults();
@@ -3639,25 +3623,10 @@ namespace pwiz.Skyline
                 _graphRetentionTime.ResultsIndex = ComboResults.SelectedIndex;
             if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
                 _graphPeakArea.ResultsIndex = ComboResults.SelectedIndex;
-            if (_resultsGridForm is ResultsGridForm)
+            var liveResultsGrid = (LiveResultsGrid) _resultsGridForm;
+            if (null != liveResultsGrid)
             {
-                var resultsGridForm = (ResultsGridForm) _resultsGridForm;
-                if (null != resultsGridForm)
-                {
-                    // ReSharper disable once RedundantCheckBeforeAssignment
-                    if (resultsGridForm.ResultsIndex != ComboResults.SelectedIndex)
-                    {
-                        resultsGridForm.ResultsIndex = ComboResults.SelectedIndex;
-                    }
-                }
-            }
-            else
-            {
-                var liveResultsGrid = (LiveResultsGrid) _resultsGridForm;
-                if (null != liveResultsGrid)
-                {
-                    liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);
-                }
+                liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);
             }
 
             if (SequenceTree.ResultsIndex != ComboResults.SelectedIndex)
@@ -3821,7 +3790,7 @@ namespace pwiz.Skyline
             // If completed successfully, make sure the user sees 100% by setting
             // 100 and then waiting for the next timer tick to clear the progress
             // indicator.
-            var status = e.Progress;
+            var status = e.Progress; 
             if (status.IsComplete)
             {
                 if (statusProgress.Visible)
@@ -4118,6 +4087,7 @@ namespace pwiz.Skyline
 
         public string FindProgramPath(ProgramPathContainer programPathContainer)
         {
+            AutoResetEvent wh = new AutoResetEvent(false);
             DialogResult result = DialogResult.No;
             RunUIAction(() =>
                 {
@@ -4125,7 +4095,10 @@ namespace pwiz.Skyline
                     {
                         result = dlg.ShowDialog(this);
                     }
+                    wh.Set();
                 });
+            wh.WaitOne();
+            wh.Dispose();
             if (result == DialogResult.OK)
             {
                 return Settings.Default.ToolFilePaths.ContainsKey(programPathContainer) ? Settings.Default.ToolFilePaths[programPathContainer] : string.Empty;
@@ -4203,20 +4176,6 @@ namespace pwiz.Skyline
         public bool IsPasteKeys(Keys keys)
         {
             return Equals(pasteMenuItem.ShortcutKeys, keys);
-        }
-
-        public void SetEnableLiveReports(bool enable)
-        {
-            Settings.Default.EnableLiveReports = enable;
-            if (Settings.Default.EnableLiveReports)
-            {
-                documentGridMenuItem.Visible = true;
-            }
-            else
-            {
-                documentGridMenuItem.Visible = false;
-            }
-
         }
 
         public void UpdateTargetsDisplayMode(ProteinDisplayMode mode)

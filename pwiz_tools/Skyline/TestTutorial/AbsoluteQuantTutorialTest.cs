@@ -29,9 +29,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -242,87 +240,43 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main window with totals graphs for light and heavy and FOXN1-GST", 11);
             const int columnsToAddCount = 4;
             var columnSeparator = TextUtil.CsvSeparator;
-            if (IsEnableLiveReports)
+            // Generating a Calibration Curve p. 11
+            var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            var editReportListDlg = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
+            const string reportName = "Peptide Ratio Results Test";
+            var columnsToAdd = new[]
+                                {
+                                    PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
+                                    PropertyPath.Parse("Proteins!*.Name"),
+                                    PropertyPath.Parse("Replicates!*.Name"),
+                                    PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.RatioToStandard"),
+                                };
+            Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
             {
-                // Generating a Calibration Curve p. 11
-                var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-                var editReportListDlg =
-                    ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportLiveReportDlg.EditList);
-                const string reportName = "Peptide Ratio Results Test";
-                var columnsToAdd = new[]
-                                   {
-                                       PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
-                                       PropertyPath.Parse("Proteins!*.Name"),
-                                       PropertyPath.Parse("Replicates!*.Name"),
-                                       PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.RatioToStandard"),
-                                   };
-                Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
-                {
-                    var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
-                    RunUI(() =>
-                    {
-                        viewEditor.ViewName = reportName;
-                        foreach (var id in columnsToAdd)
-                        {
-                            Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
-                            viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                        }
-                        Assert.AreEqual(columnsToAdd.Length, viewEditor.ChooseColumnsTab.ColumnCount);
-                    });
-                    // TODO: MultiViewProvider not yet supported in Common
-                    PauseForScreenShot<ViewEditor>("Edit Report form", 12);
-
-                    OkDialog(viewEditor, viewEditor.OkDialog);
-                }
-
-                RunUI(editReportListDlg.OkDialog);
-                WaitForClosedForm(editReportListDlg);
+                var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
                 RunUI(() =>
                 {
-                    exportLiveReportDlg.ReportName = reportName;
-                    exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
-                });
-            }
-            else
-            {
-                // Generating a Calibration Curve p. 11
-                var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-                var editReportListDlg =
-                    ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
-                const string reportName = "Peptide Ratio Results Test";
-                var columnsToAdd = new[]
-                                   {
-                                       new Identifier("Peptides", "Sequence"),
-                                       new Identifier("ProteinName"),
-                                       new Identifier("Results", "ReplicateName"),
-                                       new Identifier("Peptides", "PeptideResults", "RatioToStandard")
-                                   };
-                Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
-                {
-                    var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
-                    RunUI(() =>
+                    viewEditor.ViewName = reportName;
+                    foreach (var id in columnsToAdd)
                     {
-                        pivotReportDlg.ReportName = reportName;
-                        foreach (Identifier id in columnsToAdd)
-                        {
-                            Assert.IsTrue(pivotReportDlg.TrySelect(id));
-                            pivotReportDlg.AddSelectedColumn();
-                        }
-                        Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
-                    });
-                    PauseForScreenShot<PivotReportDlg>("Preview Report");
-
-                    OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
-                }
-
-                RunUI(editReportListDlg.OkDialog);
-                WaitForClosedForm(editReportListDlg);
-                RunUI(() =>
-                {
-                    exportReportDlg.ReportName = reportName;
-                    exportReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
+                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                    }
+                    Assert.AreEqual(columnsToAdd.Length, viewEditor.ChooseColumnsTab.ColumnCount);
                 });
+                // TODO: MultiViewProvider not yet supported in Common
+                PauseForScreenShot<ViewEditor>("Edit Report form", 12);
+
+                OkDialog(viewEditor, viewEditor.OkDialog);
             }
+
+            RunUI(editReportListDlg.OkDialog);
+            WaitForClosedForm(editReportListDlg);
+            RunUI(() =>
+            {
+                exportLiveReportDlg.ReportName = reportName;
+                exportLiveReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
+            });
 
             // Check if export file is correct. 
             string filePath = TestFilesDir.GetTestPath("Calibration.csv");

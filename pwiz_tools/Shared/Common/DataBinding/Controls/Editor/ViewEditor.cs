@@ -268,18 +268,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 errorMessage = Resources.CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_;
             }
-            else if (ViewContext.BuiltInViews.FirstOrDefault(viewSpec=>name==viewSpec.Name) != null)
+            else 
             {
-                errorMessage = string.Format(Resources.CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___, name);
-            }
-            else
-            {
-                var currentExistingView = ViewContext.CustomViews.FirstOrDefault(viewSpec => name == viewSpec.Name);
-                if (currentExistingView != null && name != OriginalViewInfo.Name)
+                if (name != OriginalViewInfo.Name)
                 {
-                    if (ViewContext.ShowMessageBox(this, string.Format(Resources.CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__, name), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (ViewContext.GetViewSpecList(OriginalViewInfo.ViewGroup.Id).ViewSpecs.Any(viewSpec=>viewSpec.Name == name))
                     {
-                        formClosingEventArgs.Cancel = true;
+                        errorMessage = string.Format("There is already a view named '{0}'", name);
                     }
                 }
             }

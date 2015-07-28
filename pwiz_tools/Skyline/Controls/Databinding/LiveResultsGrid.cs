@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var builtInViewSpec = SkylineViewContext.GetDefaultViewInfo(parentColumn).GetViewSpec()
                 .SetName(builtInViewName).SetRowType(rowType);
             if (null == BindingListSource.ViewContext ||
-                !BindingListSource.ViewContext.BuiltInViews.Contains(builtInViewSpec))
+                !BindingListSource.ViewContext.GetViewSpecList(ViewGroup.BUILT_IN.Id).ViewSpecs.Contains(builtInViewSpec))
             {
                 var oldViewContext = BindingListSource.ViewContext as ResultsGridViewContext;
                 if (null != oldViewContext)
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     oldViewContext.RememberColumnWidths(DataGridView);
                 }
                 Debug.Assert(null != builtInViewName);
-                var builtInView = new ViewInfo(parentColumn, builtInViewSpec);
+                var builtInView = new ViewInfo(parentColumn, builtInViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
                 var rowSourceInfo = new RowSourceInfo(rowSource, builtInView);
                 var viewContext = new ResultsGridViewContext(_dataSchema,
                     new[] {rowSourceInfo});
@@ -270,11 +270,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 string activeViewName;
                 if (Settings.Default.ResultsGridActiveViews.TryGetValue(rowSourceInfo.Name, out activeViewName))
                 {
-                    var activeViewSpec = viewContext.CustomViews.FirstOrDefault(view => view.Name == activeViewName);
-                    if (null != activeViewSpec)
-                    {
-                        activeView = viewContext.GetViewInfo(activeViewSpec);
-                    }
+                    activeView = viewContext.GetViewInfo(ViewName.Parse(activeViewName));
                 }
                 activeView = activeView ?? builtInView;
                 BindingListSource.SetViewContext(viewContext, activeView);
@@ -288,7 +284,7 @@ namespace pwiz.Skyline.Controls.Databinding
             if (null != viewInfo)
             {
                 var activeViews = Settings.Default.ResultsGridActiveViews;
-                activeViews[viewInfo.RowSourceName] = viewInfo.Name;
+                activeViews[viewInfo.RowSourceName] = new ViewName(viewInfo.ViewGroup.Id, viewInfo.Name).ToString();
                 Settings.Default.ResultsGridActiveViews = activeViews;
             }
         }

@@ -57,7 +57,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _skylineDataSchema = new SkylineDataSchema(GroupComparisonModel.DocumentContainer,
                     SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                var viewInfo = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), GetDefaultViewSpec(new FoldChangeRow[0]));
+                var viewInfo = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), GetDefaultViewSpec(new FoldChangeRow[0]))
+                    .ChangeViewGroup(ViewGroup.BUILT_IN);
                 var rowSourceInfo = new RowSourceInfo(typeof(FoldChangeRow), new FoldChangeRow[0], new[] { viewInfo });
                 ViewContext = new GroupComparisonViewContext(_skylineDataSchema, new[]{rowSourceInfo});
                 _container = new Container();

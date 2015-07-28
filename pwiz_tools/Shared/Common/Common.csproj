@@ -120,6 +120,12 @@
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
+    <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.Designer.cs">
+      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataBinding\Controls\QuickFilterForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -217,9 +223,13 @@
     <Compile Include="DataBinding\RowSources\ICloneableList.cs" />
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
+    <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
+    <Compile Include="DataBinding\ViewGroup.cs" />
+    <Compile Include="DataBinding\ViewGroupInfo.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
+    <Compile Include="DataBinding\ViewSpecList.cs" />
     <Compile Include="Graph\CurveDataHandler.cs" />
     <Compile Include="Graph\DataColumn.cs" />
     <Compile Include="Graph\DataFrame.cs" />
@@ -263,6 +273,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.zh-CHS.resx">
       <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.resx">
+      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.ja.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>

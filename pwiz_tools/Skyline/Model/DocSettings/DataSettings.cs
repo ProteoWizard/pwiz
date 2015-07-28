@@ -22,6 +22,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             _annotationDefs = MakeReadOnly(annotationDefs);
             _groupComparisonDefs = MakeReadOnly(new GroupComparisonDef[0]);
+            ViewSpecList = ViewSpecList.EMPTY;
         }
 
         public ImmutableList<AnnotationDef> AnnotationDefs
@@ -54,6 +56,8 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _groupComparisonDefs;}
         }
 
+        public ViewSpecList ViewSpecList { get; private set; }
+
         #region Property change methods
         public DataSettings ChangeAnnotationDefs(IList<AnnotationDef> annotationDefs)
         {
@@ -63,6 +67,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public DataSettings ChangeGroupComparisonDefs(IList<GroupComparisonDef> groupComparisonDefs)
         {
             return ChangeProp(ImClone(this), im => im._groupComparisonDefs = MakeReadOnly(groupComparisonDefs));
+        }
+
+        public DataSettings ChangeViewSpecList(ViewSpecList viewSpecList)
+        {
+            return ChangeProp(ImClone(this), im => im.ViewSpecList = viewSpecList);
         }
         #endregion
 
@@ -101,7 +110,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
-            var allElements = new List<XmlNamedElement>();
+            var allElements = new List<IXmlSerializable>();
             // Consume tag
             if (reader.IsEmptyElement)
                 reader.Read();
@@ -113,19 +122,26 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             _annotationDefs = MakeReadOnly(allElements.OfType<AnnotationDef>());
             _groupComparisonDefs = MakeReadOnly(allElements.OfType<GroupComparisonDef>());
+            ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteElements(AnnotationDefs.Cast<XmlNamedElement>().Concat(GroupComparisonDefs), GetElementHelpers());
+            var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs);
+            if (ViewSpecList.ViewSpecs.Any())
+            {
+                elements = elements.Concat(new[] {ViewSpecList});
+            }
+            writer.WriteElements(elements, GetElementHelpers());
         }
 
-        private static IXmlElementHelper<XmlNamedElement>[] GetElementHelpers()
+        private static IXmlElementHelper<IXmlSerializable>[] GetElementHelpers()
         {
-            return new IXmlElementHelper<XmlNamedElement>[]
+            return new IXmlElementHelper<IXmlSerializable>[]
                 {
-                    new XmlElementHelperSuper<AnnotationDef, XmlNamedElement>(),
-                    new XmlElementHelperSuper<GroupComparisonDef, XmlNamedElement>(), 
+                    new XmlElementHelperSuper<AnnotationDef, IXmlSerializable>(),
+                    new XmlElementHelperSuper<GroupComparisonDef, IXmlSerializable>(), 
+                    new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
                 };
         }
         #endregion
@@ -136,7 +152,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return ArrayUtil.EqualsDeep(other._annotationDefs, _annotationDefs) 
-                && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs);
+                && ArrayUtil.EqualsDeep(other._groupComparisonDefs, _groupComparisonDefs)
+                && Equals(ViewSpecList, other.ViewSpecList);
         }
 
         public override bool Equals(object obj)
@@ -153,6 +170,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = _annotationDefs.GetHashCodeDeep();
                 result = result*397 + _groupComparisonDefs.GetHashCodeDeep();
+                result = result*397 + ViewSpecList.GetHashCode();
                 return result;
             }
         }

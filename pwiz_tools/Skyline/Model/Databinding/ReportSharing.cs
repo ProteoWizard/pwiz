@@ -29,11 +29,6 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public static class ReportSharing
     {
-        public static bool IsEnableLiveReports
-        {
-            get { return Settings.Default.EnableLiveReports; }
-        }
-
         /// <summary>
         /// Reads reports from a stream.
         /// The list of reports might be in one of 3 formats.
@@ -53,10 +48,6 @@ namespace pwiz.Skyline.Model.Databinding
             }
             catch (Exception)
             {
-                if (!IsEnableLiveReports)
-                {
-                    throw;
-                }
                 try
                 {
                     // Next try to read it as a ViewSpecList, which was mistakenly exported from Skyline 2.5
@@ -69,7 +60,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     // Next try to read it as a ReportOrViewSpecList, which is the current format.
                     stream.Seek(0, SeekOrigin.Begin);
-                    var reportOrViewSpecListSerializer = new XmlSerializer(typeof (ReportOrViewSpecList));
+                    var reportOrViewSpecListSerializer = new XmlSerializer(typeof (ReportOrViewSpecListNoDefaults));
                     return ((ReportOrViewSpecList) reportOrViewSpecListSerializer.Deserialize(stream)).ToList();
                 }
             }
@@ -77,10 +68,6 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static bool ImportSkyrFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)
         {
-            if (!Settings.Default.EnableLiveReports)
-            {
-                return Settings.Default.ReportSpecList.ImportFile(fileName, whichToNotOverWrite);
-            }
             var reportOrViewSpecList = new ReportOrViewSpecList();
             reportOrViewSpecList.AddRange(GetExistingReports().Values);
             if (!reportOrViewSpecList.ImportFile(fileName, whichToNotOverWrite))
@@ -89,49 +76,36 @@ namespace pwiz.Skyline.Model.Databinding
             }
             foreach (var item in reportOrViewSpecList)
             {
-                SaveReport(item);
+                SaveReport(PersistedViews.MainGroup, item);
             }
             return true;
         }
 
-        public static IDictionary<string, ReportOrViewSpec> GetExistingReports()
+        public static IDictionary<ViewName, ReportOrViewSpec> GetExistingReports()
         {
-            if (!IsEnableLiveReports)
-            {
-                return Settings.Default.ReportSpecList.ToDictionary(reportSpec => reportSpec.Name,
-                    reportSpec => new ReportOrViewSpec(reportSpec));
-            }
             var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(GetDefaultDocument(), DataSchemaLocalizer.INVARIANT));
-            return SafeToDictionary(documentGridViewContext.CustomViews, 
-                view => view.Name,
-                view => new ReportOrViewSpec(view));
+            var items = documentGridViewContext.ViewGroups.SelectMany(group=>documentGridViewContext.GetViewSpecList(group.Id).ViewSpecs.Select(
+                viewSpec=> new KeyValuePair<ViewName, ReportOrViewSpec>(
+                    new ViewName(group.Id, viewSpec.Name), new ReportOrViewSpec(viewSpec))));
+            return SafeToDictionary(items);
         }
 
-        public static void SaveReport(ReportOrViewSpec reportOrViewSpec)
+        public static void SaveReport(ViewGroup viewGroup, ReportOrViewSpec reportOrViewSpec)
         {
-            if (!IsEnableLiveReports)
-            {
-                Settings.Default.ReportSpecList.RemoveKey(reportOrViewSpec.GetKey());
-                Settings.Default.ReportSpecList.Add(reportOrViewSpec.ReportSpec);
-                return;
-            }
             var srmDocument = GetDefaultDocument();
             var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(srmDocument, DataSchemaLocalizer.INVARIANT));
-            var newCustomViews =
-                documentGridViewContext.CustomViews.Where(view => view.Name != reportOrViewSpec.GetKey())
-                    .Concat(ConvertAll(new[]{reportOrViewSpec}, srmDocument));
-            documentGridViewContext.SaveViews(newCustomViews);
+            documentGridViewContext.AddOrReplaceViews(viewGroup.Id, ConvertAll(new[] {reportOrViewSpec}, srmDocument));
         }
 
-        public static void SaveReportAs(ReportOrViewSpec reportOrViewSpec, string newName)
+        public static void SaveReportAs(ViewGroup viewPath, ReportOrViewSpec reportOrViewSpec, string newName)
         {
             if (null != reportOrViewSpec.ReportSpec)
             {
-                SaveReport(new ReportOrViewSpec((ReportSpec) reportOrViewSpec.ReportSpec.ChangeName(newName)));
+                SaveReport(viewPath, new ReportOrViewSpec((ReportSpec) reportOrViewSpec.ReportSpec.ChangeName(newName)));
             }
             else if (null != reportOrViewSpec.ViewSpec)
             {
-                SaveReport(new ReportOrViewSpec(reportOrViewSpec.ViewSpec.SetName(newName)));
+                SaveReport(viewPath, new ReportOrViewSpec(reportOrViewSpec.ViewSpec.SetName(newName)));
             }
         }
 
@@ -182,15 +156,23 @@ namespace pwiz.Skyline.Model.Databinding
             return new SkylineDataSchema(memoryDocumentContainer, dataSchemaLocalizer);
         }
 
-        private static IDictionary<TKey, TValue> SafeToDictionary<TItem, TKey, TValue>(IEnumerable<TItem> items,
-            Func<TItem, TKey> getKeyFunc, Func<TItem, TValue> getValueFunc)
+        private static IDictionary<TKey, TValue> SafeToDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> items)
         {
             var result = new Dictionary<TKey, TValue>();
             foreach (var item in items)
             {
-                result[getKeyFunc(item)] = getValueFunc(item);
+                result[item.Key] = item.Value;
             }
             return result;
+        }
+
+        [XmlRoot("ReportSpecList")]
+        public class ReportOrViewSpecListNoDefaults : ReportOrViewSpecList
+        {
+            public override IEnumerable<ReportOrViewSpec> GetDefaults(int revisionIndex)
+            {
+                return new ReportOrViewSpec[0];
+            }
         }
     }
 }

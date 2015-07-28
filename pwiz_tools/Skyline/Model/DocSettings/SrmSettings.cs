@@ -1226,6 +1226,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     defSet.GroupComparisonDefList.Add(groupComparisonDef);
                 }
             }
+            var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
+            foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecs)
+            {
+                mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
+            }
+            defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
             if (!PeptideSettings.BackgroundProteome.IsNone)
             {
                 if (!defSet.BackgroundProteomeList.ContainsKey(PeptideSettings.BackgroundProteome.Name))

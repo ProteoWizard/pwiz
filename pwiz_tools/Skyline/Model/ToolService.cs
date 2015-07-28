@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
             var status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();
-            if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer,
+            if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec), writer,
                 new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
             {
                 return writer.ToString();

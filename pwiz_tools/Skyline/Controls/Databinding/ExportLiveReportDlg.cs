@@ -21,16 +21,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -38,59 +36,22 @@ namespace pwiz.Skyline.Controls.Databinding
     {
         private const int indexLocalizedLanguage = 0;
         private const int indexInvariantLanguage = 1;
-        private readonly SkylineViewContext _viewContext;
+        private const int indexImageFolder = 0;
+        private const int indexImageBlank = 1;
+        private const int indexFirstImage = 2;
         private readonly IDocumentUIContainer _documentUiContainer;
+        private DocumentGridViewContext _viewContext;
 
         public ExportLiveReportDlg(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
             _documentUiContainer = documentUIContainer;
-            _viewContext = new DocumentGridViewContext(new SkylineDataSchema(documentUIContainer, GetDataSchemaLocalizer())) {EnablePreview = true};
-            LoadList();
             Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
             comboLanguage.Items.Add(CultureInfo.CurrentUICulture.DisplayName);
             Debug.Assert(indexInvariantLanguage == comboLanguage.Items.Count);
             comboLanguage.Items.Add(Resources.ExportLiveReportDlg_ExportLiveReportDlg_Invariant);
             comboLanguage.SelectedIndex = 0;
-        }
-
-        protected void LoadList()
-        {
-            LoadList(listboxReports.SelectedItem as ListItem);
-        }
-
-        private ListBox ListBox
-        {
-            get { return listboxReports; }
-        }
-
-        public void LoadList(ListItem selectedItemLast)
-        {
-            ListBox.BeginUpdate();
-            ListBox.Items.Clear();
-            foreach (var item in _viewContext.CustomViews)
-            {
-                int i = ListBox.Items.Add(new ListItem(item));
-
-                // Select the previous selection if it is seen.
-                if (null != selectedItemLast && selectedItemLast.ViewSpec.Name == item.Name)
-                    ListBox.SelectedIndex = i;
-            }
-            ListBox.EndUpdate();
-            ListBoxReportsOnSelectedIndexChanged();
-        }
-
-        private void listboxReports_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ListBoxReportsOnSelectedIndexChanged();
-        }
-
-        private void ListBoxReportsOnSelectedIndexChanged()
-        {
-            bool selReport = listboxReports.SelectedIndex != -1;
-            btnPreview.Enabled = selReport;
-            btnExport.Enabled = selReport;
         }
 
         public void OkDialog()
@@ -113,6 +74,37 @@ namespace pwiz.Skyline.Controls.Databinding
             Close();
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (null != _documentUiContainer)
+            {
+                _viewContext = new DocumentGridViewContext(new SkylineDataSchema(_documentUiContainer,
+                        DataSchemaLocalizer.INVARIANT));
+                _viewContext.ViewsChanged += OnViewsChanged;
+                imageList1.Images.Clear();
+                imageList1.Images.Add(Resources.Folder);
+                imageList1.Images.Add(Resources.Blank);
+                imageList1.Images.AddRange(_viewContext.GetImageList());
+                Repopulate();
+            }
+        }
+
+        void OnViewsChanged()
+        {
+            Repopulate();
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            if (null != _viewContext)
+            {
+                _viewContext.ViewsChanged -= OnViewsChanged;
+                _viewContext = null;
+            }
+        }
+
         private DataSchemaLocalizer GetDataSchemaLocalizer()
         {
             return InvariantLanguage
@@ -122,10 +114,12 @@ namespace pwiz.Skyline.Controls.Databinding
        
         private bool ExportReport(string filename, char separator)
         {
-            var dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer()).Clone();
-            var viewContext = new SkylineViewContext(dataSchema,
-                SkylineViewContext.GetDocumentGridRowSources(dataSchema));
-            var viewInfo = viewContext.GetViewInfo(((ListItem) listboxReports.SelectedItem).ViewSpec);
+            var viewContext = GetViewContext(true);
+            var viewInfo = viewContext.GetViewInfo(SelectedViewName);
+            if (null == viewInfo)
+            {
+                return false;
+            }
             if (null == filename)
             {
                 return viewContext.Export(this, viewInfo);
@@ -133,17 +127,58 @@ namespace pwiz.Skyline.Controls.Databinding
             return viewContext.ExportToFile(this, viewInfo, filename, new DsvWriter(InvariantLanguage ? CultureInfo.InvariantCulture : LocalizationHelper.CurrentCulture, separator));
         }
 
-
-        public ViewInfo GetReport()
+        private void Repopulate()
         {
-            var selectedItem = listboxReports.SelectedItem as ListItem;
-            if (null == selectedItem)
+            treeView1.Nodes.Clear();
+            if (null == _viewContext)
             {
-                return null;
+                return;
             }
+            var newNodes = new List<TreeNode>();
+            foreach (var group in _viewContext.ViewGroups)
+            {
+                var groupNode = new TreeNode(group.Label) {Name = group.Id.Name, Tag=group};
+                groupNode.SelectedImageIndex = groupNode.ImageIndex = indexImageFolder;
+                foreach (var viewSpec in _viewContext.GetViewSpecList(group.Id).ViewSpecs)
+                {
+                    if (null == _viewContext.GetViewInfo(group, viewSpec))
+                    {
+                        continue;
+                    }
+                    var viewNode = new TreeNode(viewSpec.Name)
+                    {
+                        Name = viewSpec.Name
+                    };
+                    int imageIndex = _viewContext.GetImageIndex(viewSpec);
+                    if (imageIndex >= 0)
+                    {
+                        imageIndex += indexFirstImage;
+                    }
+                    else
+                    {
+                        imageIndex = indexImageBlank;
+                    }
+                    if (imageIndex >= 0)
+                    {
+                        viewNode.SelectedImageIndex = viewNode.ImageIndex = imageIndex;
+                    }
+                    groupNode.Nodes.Add(viewNode);
+                }
+                newNodes.Add(groupNode);
+            }
+            treeView1.Nodes.AddRange(newNodes.ToArray());
+            treeView1.ExpandAll();
+            UpdateButtons();
+        }
+
+        private SkylineViewContext GetViewContext(bool clone)
+        {
             var dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer());
-            SkylineViewContext viewContext = new DocumentGridViewContext(dataSchema);
-            return viewContext.GetViewInfo(selectedItem.ViewSpec);
+            if (clone)
+            {
+                dataSchema = dataSchema.Clone();
+            }
+            return new DocumentGridViewContext(dataSchema) {EnablePreview = true};
         }
 
         public bool InvariantLanguage
@@ -175,81 +210,6 @@ namespace pwiz.Skyline.Controls.Databinding
             OkDialog();
         }
 
-        private void btnShare_Click(object sender, EventArgs e)
-        {
-            ShowShare();
-        }
-
-        private void btnImport_Click(object sender, EventArgs e)
-        {
-            Import(ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>.GetImportFileName(this,
-                TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS)));
-        }
-
-        private ReportOrViewSpecList GetViewSpecList()
-        {
-            var currentList = new ReportOrViewSpecList();
-            foreach (var view in _viewContext.CustomViews)
-            {
-                currentList.Add(new ReportOrViewSpec(view));
-            }
-            return currentList;
-        }
-
-        private void SetViewSpecList(IEnumerable<ReportOrViewSpec> reportOrViewSpecList)
-        {
-            var newViews = new List<ViewSpec>();
-            var converter = new ReportSpecConverter(new SkylineDataSchema(_documentUiContainer, DataSchemaLocalizer.INVARIANT));
-            foreach (var item in reportOrViewSpecList)
-            {
-                if (null != item.ViewSpec)
-                {
-                    newViews.Add(item.ViewSpec);
-                }
-                else
-                {
-                    var viewInfo = converter.Convert(item.ReportSpec);
-                    newViews.Add(viewInfo.ViewSpec);
-                }
-            }
-            ViewSettings.ViewSpecList = new ViewSpecList(newViews);
-        }
-
-        public void Import(string fileName)
-        {
-            var list = GetViewSpecList();
-            if (ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>.ImportFile(this,
-                list, fileName))
-            {
-                SetViewSpecList(list);
-                LoadList();
-            }
-        }
-
-        private ReportOrViewSpecList GetCurrentList()
-        {
-            var currentList = new ReportOrViewSpecList();
-            foreach (var view in _viewContext.CustomViews)
-            {
-                currentList.Add(new ReportOrViewSpec(view));
-            }
-            return currentList;
-        }
-
-        public void ShowShare()
-        {
-            CheckDisposed();
-            var currentList = GetCurrentList();
-            using (var dlg = new ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>(currentList)
-            {
-                Label = Resources.ExportReportDlg_ShowShare_Report_Definitions,
-                Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS)
-            })
-            {
-                dlg.ShowDialog(this);
-            }
-        }
-
         private void btnPreview_Click(object sender, EventArgs e)
         {
             ShowPreview();
@@ -257,13 +217,9 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ShowPreview()
         {
-            var viewInfo = GetReport();
-            if (null == viewInfo)
-            {
-                return;
-            }
-            SkylineDataSchema dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer());
-            var form = new DocumentGridForm(new DocumentGridViewContext(dataSchema))
+            var viewContext = GetViewContext(false);
+            var viewInfo = viewContext.GetViewInfo(SelectedViewName);
+            var form = new DocumentGridForm(viewContext)
             {
                 ViewInfo = viewInfo,
                 Text = Resources.ExportLiveReportDlg_ShowPreview_Preview__ + viewInfo.Name,
@@ -279,13 +235,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void EditList()
         {
-            var list = GetCurrentList();
-            var newList = list.EditList(this, new DocumentGridViewContext(new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer())) {EnablePreview = true});
-            if (null != newList)
+            using (var manageViewsForm = new ManageViewsForm(GetViewContext(false)))
             {
-                _viewContext.SaveSettingsList(newList);
-            }
-            LoadList();
+                manageViewsForm.ShowDialog(this);
+            } 
         }
 
         public void CancelClick()
@@ -297,14 +250,53 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             get
             {
-                var listItem = listboxReports.SelectedItem as ListItem;
-                return null == listItem ? null : listItem.ViewSpec.Name;
+                return SelectedViewName.GetValueOrDefault().Name;
             }
-            set
+            set 
             {
-                listboxReports.SelectedIndex =
-                    listboxReports.Items.Cast<ListItem>().ToList().FindIndex(item => item.ViewSpec.Name == value);
+                foreach (TreeNode groupNode in treeView1.Nodes)
+                {
+                    foreach (TreeNode viewNode in groupNode.Nodes)
+                    {
+                        if (viewNode.Name == value)
+                        {
+                            treeView1.SelectedNode = viewNode;
+                        }
+                    }
+                }
             }
+        }
+
+        public ViewName? SelectedViewName
+        {
+            get { return GetViewName(treeView1.SelectedNode); }
+        }
+
+        private ViewName? GetViewName(TreeNode node)
+        {
+            if (null == node || null == node.Parent)
+            {
+                return null;
+            }
+            return new ViewGroupId(node.Parent.Name).ViewName(node.Name);
+        }
+
+        public void UpdateButtons()
+        {
+            btnExport.Enabled = btnPreview.Enabled = null != SelectedViewName;
+        }
+
+        private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)
+        {
+            if (null == e.Node.Parent)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            UpdateButtons();
         }
     }
 }

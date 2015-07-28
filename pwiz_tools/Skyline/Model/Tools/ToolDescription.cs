@@ -788,41 +788,28 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
         public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle, IProgressMonitor progressMonitor)
         {
-            if (Settings.Default.EnableLiveReports)
+            var container = new MemoryDocumentContainer();
+            container.SetDocument(doc, container.Document);
+            var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
+            var viewContext = new DocumentGridViewContext(dataSchema);
+            ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle));
+            if (null == viewInfo)
             {
-                var container = new MemoryDocumentContainer();
-                container.SetDocument(doc, container.Document);
-                var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-                var viewContext = new DocumentGridViewContext(dataSchema);
-                var viewSpec = viewContext.CustomViews.FirstOrDefault(view2 => view2.Name == reportTitle);
-                if (null == viewSpec)
-                {
-                    throw new ToolExecutionException(
-                        string.Format(
-                            Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
-                            toolTitle, reportTitle));
-                }
-                var status =
-                    new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
-                        reportTitle));
-                var writer = new StringWriter();
-                if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer, 
-                    new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
-                {
-                    return writer.ToString();
-                }
-                return null;
-            }
-            ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportTitle);
-            if (reportSpec == null)
-            {
-                // Complain that the report no longer exist.
-                throw new ToolExecutionException(string.Format(
+                throw new ToolExecutionException(
+                    string.Format(
                         Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
             }
-
-            return ToolReportCache.Instance.GetReport(doc, reportSpec, progressMonitor);
+            var status =
+                new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+                    reportTitle));
+            var writer = new StringWriter();
+            if (viewContext.Export(progressMonitor, ref status, viewInfo, writer, 
+                new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
+            {
+                return writer.ToString();
+            }
+            return null;
         }
 
         public static string GetToolsDirectory()

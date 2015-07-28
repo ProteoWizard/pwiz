@@ -9,7 +9,7 @@ namespace CommonTest.DataBinding.SampleData
 {
     public class TestViewContext : AbstractViewContext
     {
-        private ViewSpecList _viewSpecList = ViewSpecList.EMPTY;
+        private Dictionary<ViewGroupId, ViewSpecList> _viewSpecLists = new Dictionary<ViewGroupId, ViewSpecList>();
 
         public TestViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSourceInfos) : base(dataSchema, rowSourceInfos)
         {
@@ -36,22 +36,52 @@ namespace CommonTest.DataBinding.SampleData
             throw new NotSupportedException();
         }
 
-        protected override ViewSpecList GetViewSpecList()
+        public override ViewGroup DefaultViewGroup
         {
-            return _viewSpecList;
+            get { return new ViewGroup("default", () => "Default"); }
         }
 
-        protected override void SaveViewSpecList(ViewSpecList viewSpecList)
+        protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
         {
-            _viewSpecList = viewSpecList;
+            _viewSpecLists[viewGroup] = viewSpecList;
         }
 
-        public override void ExportViews(Control owner, IEnumerable<ViewSpec> views)
+        public override ViewSpecList GetViewSpecList(ViewGroupId viewGroup)
+        {
+            ViewSpecList viewSpecList;
+            if (_viewSpecLists.TryGetValue(viewGroup, out viewSpecList))
+            {
+                return viewSpecList;
+            }
+            return base.GetViewSpecList(viewGroup);
+        }
+
+        public override void ExportViews(Control owner, ViewSpecList views)
         {
             throw new NotSupportedException();
         }
 
-        public override void ImportViews(Control owner)
+        public override IEnumerable<ViewGroup> ViewGroups
+        {
+            get { return new[] {DefaultViewGroup}; }
+        }
+
+        public override void ImportViews(Control owner, ViewGroup viewGroup)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void ExportViewsToFile(Control owner, ViewSpecList views, string fileName)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void ImportViewsFromFile(Control control, ViewGroup viewGroup, string fileName)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void CopyViewsToGroup(Control control, ViewGroup viewGroup, ViewSpecList viewSpecList)
         {
             throw new NotSupportedException();
         }

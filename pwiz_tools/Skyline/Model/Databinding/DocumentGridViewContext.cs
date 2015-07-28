@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Model.Databinding
 
         public bool EnablePreview { get; set; }
 
-        protected override ViewEditor CreateViewEditor(ViewSpec viewSpec)
+        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
         {
-            var viewEditor = base.CreateViewEditor(viewSpec);
+            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec);
             viewEditor.SetViewTransformer(new DocumentViewTransformer());
             viewEditor.AddViewEditorWidget(new PivotReplicateAndIsotopeLabelWidget {Dock = DockStyle.Left});
 #if DEBUG
@@ -82,6 +82,11 @@ namespace pwiz.Skyline.Model.Databinding
             var memoryDocumentContainer = new MemoryDocumentContainer();
             memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
             return new DocumentGridViewContext(new SkylineDataSchema(memoryDocumentContainer, dataSchemaLocalizer));
+        }
+
+        protected override ViewSpec GetBlankView()
+        {
+            return new ViewSpec().SetRowType(typeof (Entities.Protein)).SetSublistId(PropertyPath.Parse("Results!*"));
         }
     }
 }

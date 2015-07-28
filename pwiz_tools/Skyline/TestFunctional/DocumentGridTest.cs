@@ -20,6 +20,7 @@
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -42,10 +43,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            if (!IsEnableLiveReports)
-            {
-                return;
-            }
             TestImportResults();
         }
         
@@ -60,9 +57,14 @@ namespace pwiz.SkylineTestFunctional
 
             // Show a DocumentGridForm for the "PeptideReplicates" view.
             DocumentGridForm peptideReplicatesForm = null;
+            var manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
             RunUI(() =>
             {
-                exportLiveReportDlg.Import(TestFilesDir.GetTestPath("PeptideReplicates.skyr"));
+                manageViewsForm.ImportViews(TestFilesDir.GetTestPath("PeptideReplicates.skyr"));
+            });
+            OkDialog(manageViewsForm, manageViewsForm.Close);
+            RunUI(() =>
+            {
                 exportLiveReportDlg.ReportName = "PeptideReplicates";
                 Assert.IsNull(FindOpenForm<DocumentGridForm>());
                 exportLiveReportDlg.ShowPreview();

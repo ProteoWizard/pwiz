@@ -49,8 +49,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            IsEnableLiveReports = true;   // force LiveReports, because we are testing the document grid
-
             // Formerly this little .sky file would not update its (unsearchable) protein metdata on load
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Mutant Peptides  with Braf AG A00Y - Cut Down.sky")));
             var doc = WaitForDocumentLoaded();
