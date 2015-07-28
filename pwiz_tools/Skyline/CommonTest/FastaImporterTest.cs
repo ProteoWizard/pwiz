@@ -288,11 +288,11 @@ namespace CommonTest
                     ">ENSMUSP00000100344 pep:known chromosome:GRCm38:14:52427928:52428874:1 gene:ENSMUSG00000076758 transcript:ENSMUST00000103567 gene_biotype:TR_V_gene transcript_biotype:TR_V_gene",
                     new[]
                     {
-                        new FastaHeaderReaderResult(accession: "Q5R1J0", name: "ENSMUSP00000100344",
-                            preferredname: "Q5R1J0_MOUSE",
+                        new FastaHeaderReaderResult(accession: "A0A075B5Z4", name: "ENSMUSP00000100344",
+                            preferredname: "A0A075B5Z4_MOUSE",
                             description:
                                 "pep:known chromosome:GRCm38:14:52427928:52428874:1 gene:ENSMUSG00000076758 transcript:ENSMUST00000103567 gene_biotype:TR_V_gene transcript_biotype:TR_V_gene",
-                            species: "Mus musculus (Mouse)", gene: "TRAV1")
+                            species: "Mus musculus (Mouse)", gene: "Trav1")
                     }),
 
                 new FastaHeaderParserTest(">AARS.IPI00027442 IPI:IPI00027442.4|SWISS-PROT:P49588|ENSEMBL:ENSP00000261772|REFSEQ:NP_001596|H-INV:HIT000035254|VEGA:OTTHUMP00000080084 Tax_Id=9606 Gene_Symbol=AARS Alanyl-tRNA synthetase, cytoplasmic",
@@ -317,12 +317,12 @@ namespace CommonTest
                             name:"gi|16763210|ref|NP_458827.1|", accession:"P0A7U1", preferredname:"RS18_SALTI", description:"30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]", gene:"rpsR STY4749 t4444", species:"Salmonella typhi"),
                         new FastaHeaderReaderResult(
                             name:"gi|24115555|ref|NP_710065.1|", accession:"P0A7U2", preferredname:"RS18_SHIFL", description:"30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]", gene:"rpsR SF4355 S4627", species:"Shigella flexneri"),
-                        new FastaHeaderReaderResult(
-                            name:"gi|26251099|ref|NP_757139.1|", accession:"P0A7T8", preferredname:"RS18_ECOL6", description:"30S ribosomal protein S18 [Escherichia coli CFT073]", gene:"rpsR c5292", species:"Escherichia coli O6:H1 (strain CFT073 / ATCC 700928 / UPEC)"),
-                        new FastaHeaderReaderResult(
-                            name:"gi|29144689|ref|NP_808031.1|", accession:"P0A7U1", preferredname:"RS18_SALTI", description:"30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]", gene:"rpsR STY4749 t4444", species:"Salmonella typhi"),
-                        new FastaHeaderReaderResult(
-                            name:"gi|30065573|ref|NP_839744.1|", accession:"P0A7U2", preferredname:"RS18_SHIFL", description:"30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T]", gene:"rpsR SF4355 S4627", species:"Shigella flexneri"),
+                        new FastaHeaderReaderResult( // Note: entrez now returns comment "This RefSeq genome was suppressed because updated RefSeq validation criteria identified problems with the assembly or annotation."
+                            name:"gi|26251099|ref|NP_757139.1|", accession:"WP_000135199.1", preferredname:"ref|NP_757139.1|", description:"30S ribosomal protein S18 [Escherichia coli CFT073]", gene:"", species:""),
+                        new FastaHeaderReaderResult( // Note: entrez now returns comment "This RefSeq genome was suppressed because updated RefSeq validation criteria identified problems with the assembly or annotation."
+                            name:"gi|29144689|ref|NP_808031.1|", accession:"WP_000135199.1", preferredname:"ref|NP_808031.1|", description:"30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]", gene:"", species:""),
+                        new FastaHeaderReaderResult( // Note: entrez now returns comment "This RefSeq genome was suppressed because updated RefSeq validation criteria identified problems with the assembly or annotation."
+                            name:"gi|30065573|ref|NP_839744.1|", accession:"WP_000135199.1", preferredname:"ref|NP_839744.1|", description:"30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T]", gene:"", species:""),
                         new FastaHeaderReaderResult(
                             name:"gi|133836|sp|P02374|RS18_ECOLI", accession:"P0A7T7", preferredname:"RS18_ECOLI", description:"30S ribosomal protein S18", gene:"rpsR b4202 JW4160", species:"Escherichia coli (strain K12)"),
                         new FastaHeaderReaderResult(
