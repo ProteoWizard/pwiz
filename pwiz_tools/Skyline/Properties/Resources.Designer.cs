@@ -19793,6 +19793,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No results found for the precursor {0} in the file {1}..
+        /// </summary>
+        public static string SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Expected.
         /// </summary>
         public static string SkylineWindow_BuildAreaGraphMenu_Show_Expected {
@@ -21000,6 +21009,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_Paste_Unexpected_character_period_found {
             get {
                 return ResourceManager.GetString("SkylineWindow_Paste_Unexpected_character_period_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply picked peak.
+        /// </summary>
+        public static string SkylineWindow_PickPeakInChromatograms_Apply_picked_peak {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PickPeakInChromatograms_Apply_picked_peak", resourceCulture);
             }
         }
         

@@ -1267,6 +1267,9 @@ namespace pwiz.Skyline
                 {
                     if (HasPeak(SelectedResultsIndex, ((TransitionTreeNode)selectedTreeNode).DocNode))
                     {
+                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                        removePeakGraphMenuItem.DropDownItems.Add(new ToolStripMenuItem());
                         menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
                         menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
                     }
@@ -1282,7 +1285,10 @@ namespace pwiz.Skyline
 
                     if (HasPeak(SelectedResultsIndex, nodeGroup))
                     {
-                        menuStrip.Items.Insert(iInsert++, removePeaksGraphMenuItem);
+                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                        removePeakGraphMenuItem.DropDownItems.Clear();
+                        menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
                         menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
                     }
                 }
@@ -1625,66 +1631,33 @@ namespace pwiz.Skyline
             }
         }
 
-        private void removePeaksGraphMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void removePeakGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            ToolStripMenuItem menu = removePeaksGraphMenuItem;
+            ToolStripMenuItem menu = removePeakGraphMenuItem;
+            if (menu.DropDownItems.Count == 0)
+                return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            TransitionGroupDocNode nodeGroup;
-            IdentityPath pathGroup;
-            if (nodeGroupTree != null)
+            TransitionGroupDocNode nodeGroup = nodeGroupTree.DocNode;
+            IdentityPath pathGroup = nodeGroupTree.Path;
+            var nodeTranTree = (TransitionTreeNode) SelectedNode;
+            var nodeTran = nodeTranTree.DocNode;
+
+            menu.DropDownItems.Clear();
+
+            if (nodeGroup.TransitionCount > 1)
             {
-                nodeGroup = nodeGroupTree.DocNode;
-                pathGroup = nodeGroupTree.Path;
-            }
-            else
-            {
-                var nodePepTree = SelectedNode as PeptideTreeNode;
-                Assume.IsTrue(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (nodePepTree == null || nodePepTree.Nodes.Count != 1)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-                    return;
-                nodeGroup = (TransitionGroupDocNode) nodePepTree.DocNode.Children[0];
-                pathGroup = new IdentityPath(nodePepTree.Path, nodeGroup.Id);
-            }
-
-            int i = 0;
-            int iResults = SequenceTree.ResultsIndex;
-            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-            {
-                var chromInfo = GetTransitionChromInfo(nodeTran, iResults);
-                if (chromInfo == null || chromInfo.IsEmpty)
-                    continue;
-
-                string name = ChromGraphItem.GetTitle(nodeTran);
-
-                ToolStripMenuItem item = null;
-                if (i < menu.DropDownItems.Count)
-                    item = menu.DropDownItems[i] as ToolStripMenuItem;
-                if (item == null || name != item.Name)
-                {
-                    // Remove the rest of the existing items
-                    while (i < menu.DropDownItems.Count)
-                        menu.DropDownItems.RemoveAt(i);
-
-                    RemovePeakHandler handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
-                    item = new ToolStripMenuItem(name, null, handler.menuItem_Click);
-                    menu.DropDownItems.Insert(i, item);
-                }
-
-                i++;
-            }
-
-            // Remove the rest of the existing items
-            while (i < menu.DropDownItems.Count)
-                menu.DropDownItems.RemoveAt(i);
-
-            if (i > 1)
-            {
-                RemovePeakHandler handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
+                var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
                 var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, handler.menuItem_Click);
-                menu.DropDownItems.Insert(i, item);
+                menu.DropDownItems.Insert(0, item);
+            }
+
+            var chromInfo = GetTransitionChromInfo(nodeTran, SequenceTree.ResultsIndex);
+            if (chromInfo != null && !chromInfo.IsEmpty)
+            {
+                var handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
+                var item = new ToolStripMenuItem(ChromGraphItem.GetTitle(nodeTran), null, handler.menuItem_Click);
+                menu.DropDownItems.Insert(0, item);
             }
         }
 
@@ -1710,14 +1683,211 @@ namespace pwiz.Skyline
             }
         }
 
+        private void applyPeakAllContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ApplyPeak(false);
+        }
+
+        private void applyPeakSubsequentContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ApplyPeak(true);
+        }
+
+        public void ApplyPeak(bool subsequent)
+        {
+            PeptideDocNode nodePep;
+            TransitionGroupDocNode nodeTranGroup;
+            IdentityPath identityPath;
+            var selectedTreeNode = SelectedNode as PeptideTreeNode;
+            if (selectedTreeNode != null)
+            {
+                nodePep = selectedTreeNode.DocNode;
+                nodeTranGroup = nodePep.TransitionGroups.First(g => g.Results[SelectedResultsIndex] != null);
+                identityPath = new IdentityPath(selectedTreeNode.Path, nodeTranGroup.Id);
+            }
+            else
+            {
+                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                nodePep = nodeGroupTree.PepNode;
+                nodeTranGroup = nodeGroupTree.DocNode;
+                identityPath = nodeGroupTree.Path;
+            }
+
+            var originInfo = GetTransitionGroupChromInfo(nodeTranGroup, SelectedResultsIndex);
+            if (!originInfo.RetentionTime.HasValue)
+            {
+                return;
+            }
+
+            var chromatograms = Document.Settings.MeasuredResults.Chromatograms;
+            var selectedChromSet = chromatograms[SelectedResultsIndex];
+            DateTime? cutoff = subsequent
+                ? selectedChromSet.MSDataFileInfos[selectedChromSet.IndexOfId(originInfo.FileId)].RunStartTime
+                : null;
+
+            float mzMatchTolerance = (float) Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            ChromatogramGroupInfo[] selectedChromSetInfos;
+            if (!Document.Settings.MeasuredResults.TryLoadChromatogram(selectedChromSet, nodePep, nodeTranGroup,
+                mzMatchTolerance, true, out selectedChromSetInfos))
+            {
+                return;
+            }
+            var originFilePath = selectedChromSet.GetFileInfo(originInfo.FileId).FilePath;
+            int indexOriginInfo = selectedChromSetInfos.IndexOf(info => Equals(originFilePath, info.FilePath));
+            var originChromGroupInfo = selectedChromSetInfos[indexOriginInfo];
+            var transitionInfo = originChromGroupInfo.GetTransitionInfo(0);
+            int? originPeakIndex = GetOriginPeakIndex(transitionInfo, originInfo);
+
+            var originAbundances = GetIonAbundances(nodeTranGroup, originChromGroupInfo, mzMatchTolerance, originPeakIndex, originInfo.FileIndex);
+            var originFragmentIons = originAbundances.Select(abundance => abundance.Key).ToList();
+            var originStatistics = new Statistics(originFragmentIons.Select(ion => (double) originAbundances[ion]));
+            double originPercentArea = originStatistics.Sum()/
+                                       originChromGroupInfo.TransitionPointSets.Aggregate<ChromatogramInfo, double>(0, (current, chromInfo) => current + chromInfo.Peaks.Sum(peak => peak.Area));
+
+            ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, doc =>
+            {
+                for (int resultsIndex = 0; resultsIndex < chromatograms.Count; resultsIndex++)
+                {
+                    var chromSet = chromatograms[resultsIndex];
+                    ChromatogramGroupInfo[] chromGroupInfos;
+                    Document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, true, out chromGroupInfos);
+                    foreach (var fileInfo in chromSet.MSDataFileInfos)
+                    {
+                        if ((resultsIndex == SelectedResultsIndex && ReferenceEquals(originInfo.FileId, fileInfo.FileId)) || cutoff > fileInfo.RunStartTime)
+                            continue;
+
+                        ChromFileInfo chromFileInfo = fileInfo;
+                        int indexInfo = chromGroupInfos.IndexOf(info => Equals(chromFileInfo.FilePath, info.FilePath));
+                        if (indexInfo == -1)
+                        {
+                            throw new ArgumentOutOfRangeException(string.Format(Resources.SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__,
+                                                                                TransitionGroupTreeNode.GetLabel(nodeTranGroup.TransitionGroup, nodeTranGroup.PrecursorMz, string.Empty), chromFileInfo));
+                        }
+
+                        var bestPeakRt = GetBestPeakRt(nodeTranGroup, originChromGroupInfo.Times.Min(), originChromGroupInfo.Times.Max(), originPercentArea, originInfo.RetentionTime.Value, originFragmentIons, originStatistics, chromGroupInfos[indexInfo], mzMatchTolerance);
+                        doc = bestPeakRt.HasValue
+                            ? doc.ChangePeak(identityPath, chromSet.Name, fileInfo.FilePath, null, bestPeakRt.Value, UserSet.TRUE)
+                            : doc.ChangePeak(identityPath, chromSet.Name, fileInfo.FilePath, null, originInfo.StartRetentionTime, originInfo.EndRetentionTime, UserSet.TRUE, originInfo.Identified, true);
+                    }
+                }
+                return doc;
+            });
+        }
+
+        private static int? GetOriginPeakIndex(ChromatogramInfo transitionInfo, TransitionGroupChromInfo originInfo)
+        {
+            for (int i = 0; i < transitionInfo.NumPeaks; i++)
+            {
+                if (transitionInfo.GetPeak(i).ContainsTime(originInfo.RetentionTime.Value))
+                    return i;
+            }
+            return null;
+        }
+
+        private float? GetBestPeakRt(TransitionGroupDocNode nodeTranGroup, float originMinTime, float originMaxTime, double originPercentArea, float originRt, List<string> originFragmentIons, Statistics originStatistics, ChromatogramGroupInfo chromGroupInfo, float mzMatchTolerance)
+        {
+            double totalArea = chromGroupInfo.TransitionPointSets.Aggregate<ChromatogramInfo, double>(0, (current, chromInfo) => current + chromInfo.Peaks.Sum(peak => peak.Area));
+
+            float? bestRt = null;
+            double maxScore = -double.MaxValue;
+            var timeRange = Math.Max(chromGroupInfo.Times.Max(), originMaxTime) - Math.Min(chromGroupInfo.Times.Min(), originMinTime);
+            for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
+            {
+                var abundances = GetIonAbundances(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, 0);
+                var rtLargestPeak = RtLargestPeak(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i);
+
+                var statistics = new Statistics(originFragmentIons.Select(ion => abundances.ContainsKey(ion) ? (double) abundances[ion] : 0).ToList());
+                var dotScore = originStatistics.Angle(statistics);
+                var timeScore = 1 - Math.Abs(rtLargestPeak - originRt)/timeRange;
+                var areaScore = 1 - Math.Abs(statistics.Sum()/totalArea - originPercentArea);
+                var compositeScore = 0.50*dotScore + 0.35*timeScore + 0.15*areaScore;
+                if (compositeScore > maxScore)
+                {
+                    maxScore = compositeScore;
+                    bestRt = rtLargestPeak;
+                }
+            }
+            return bestRt;
+        }
+
+        private Dictionary<string, float> GetIonAbundances(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo, float mzMatchTolerance, int? peakIndex, int fileIndex)
+        {
+            var abundances = new Dictionary<string, float>();
+            foreach (TransitionDocNode nodeTran in nodeTranGroup.Children)
+            {
+                if (peakIndex.HasValue)
+                {
+                    var chromInfoCached = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
+                    if (chromInfoCached == null)
+                        continue;
+
+                    abundances[nodeTran.FragmentIonName] = chromInfoCached.GetPeak(peakIndex.Value).Area;
+                }
+                else
+                {
+                    var results = nodeTran.Results[SelectedResultsIndex];
+                    var chromInfo = results.First(r => r.FileIndex == fileIndex);
+                    abundances[nodeTran.FragmentIonName] = chromInfo.Area;
+                }
+            }
+            return abundances;
+        }
+
+        private static float RtLargestPeak(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo, float mzMatchTolerance, int peakIndex)
+        {
+            float largestArea = -float.MaxValue;
+            float rt = 0;
+            foreach (TransitionDocNode nodeTran in nodeTranGroup.Children)
+            {
+                var chromInfo = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
+                if (chromInfo == null)
+                    continue;
+
+                var peak = chromInfo.GetPeak(peakIndex);
+                if (peak.Area > largestArea)
+                {
+                    largestArea = peak.Area;
+                    rt = peak.RetentionTime;
+                }
+            }
+            return rt;
+        }
+
         private void removePeakContextMenuItem_Click(object sender, EventArgs e)
         {
-            var nodeTranTree = SelectedNode as TransitionTreeNode;
-            if (nodeTranTree == null)
+            var menu = sender as ToolStripMenuItem;
+            if (menu == null || menu.DropDownItems.Count > 0)
                 return;
-            var nodeGroup = ((TransitionGroupTreeNode) nodeTranTree.Parent).DocNode;
-            var nodeTran = nodeTranTree.DocNode;
-            RemovePeak(SelectedPath.Parent, nodeGroup, nodeTran);
+
+            var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+            TransitionGroupDocNode nodeGroup;
+            IdentityPath pathGroup;
+            if (nodeGroupTree != null)
+            {
+                nodeGroup = nodeGroupTree.DocNode;
+                pathGroup = nodeGroupTree.Path;
+            }
+            else
+            {
+                var nodePepTree = SelectedNode as PeptideTreeNode;
+                Assume.IsTrue(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
+                if (nodePepTree == null || nodePepTree.Nodes.Count != 1)
+                    return;
+                nodeGroup = (TransitionGroupDocNode)nodePepTree.DocNode.Children[0];
+                pathGroup = new IdentityPath(nodePepTree.Path, nodeGroup.Id);
+            }
+
+            TransitionDocNode nodeTran = null;
+            if (menu == removePeakContextMenuItem)
+            {
+                var nodeTranTree = SelectedNode as TransitionTreeNode;
+                if (nodeTranTree != null)
+                {
+                    nodeTran = nodeTranTree.DocNode;
+                }
+            }
+
+            RemovePeak(pathGroup, nodeGroup, nodeTran);
         }
 
         public void RemovePeak(IdentityPath groupPath,
@@ -1749,7 +1919,7 @@ namespace pwiz.Skyline
                 return;
 
             ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false));            
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false));
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
@@ -1769,7 +1939,7 @@ namespace pwiz.Skyline
             var listChromInfo = nodeTran.Results[iResults];
             if (listChromInfo == null)
                 return null;
-            return listChromInfo[0];            
+            return listChromInfo[0];
         }
 
         private void singleTranMenuItem_Click(object sender, EventArgs e)

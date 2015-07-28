@@ -245,6 +245,9 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Skyline window maximized", 9);
 
+            if (!IsPauseForScreenShots)
+                TestApplyToAll();
+
             if (IsPauseForScreenShots)
                 RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
         }
@@ -1473,6 +1476,133 @@ namespace pwiz.SkylineTestTutorial
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(foldChangeGrid.FoldChangeBindingSource.ViewContext.Delete);
             PauseForScreenShot<MultiButtonMsgDlg>("Are you sure you want to delete...", 69);
             OkDialog(messageDlg, messageDlg.BtnYesClick);
+        }
+
+        private static void TestApplyToAll()
+        {
+            // Apply to all
+            SelectAndApplyPeak("GILAADESVGSMAK", "D_103_REP1", 19.0987);
+            VerifyPeaks(MakeVerificationDictionary(
+                19.09872, 18.53870, 18.38107, 18.98798, 18.80227, 18.76315,
+                19.10433, 19.03328, 18.83977, 19.10928, 18.65008, 18.45997,
+                19.44880, 18.57200, 18.79917, 18.73012, 18.64647, 18.72783,
+                18.84278, 18.35188, 18.72457, 18.80247, 18.57477, 18.30993));
+            SelectAndApplyPeak("LNDGSQITFEK", "D_138_REP1", 23.5299);
+            VerifyPeaks(MakeVerificationDictionary(
+                23.45410, 22.77782, 23.11210, 23.19398, 22.88790, 23.00840,
+                23.52992, 23.57400, 23.19233, 23.45998, 22.81207, 22.81960,
+                23.87478, 23.68238, 23.03755, 22.89255, 22.69688, 23.04172,
+                22.85375, 23.04702, 22.85068, 22.88932, 22.70258, 23.19258));
+            // Apply to subsequent
+            SelectAndApplyPeak("DLTGFPQGADQR", "H_159_REP2", 24.7955, true);
+            VerifyPeaks(MakeVerificationDictionary(
+                24.02537, 23.31307, 24.60460, 23.61628, 23.12335, 25.40152,
+                23.99268, 23.95832, 25.69842, 24.07185, 23.27097, 25.12858,
+                24.41210, 26.79822, 25.46880, 23.08690, 26.87400, 25.36023,
+                23.05053, 24.79552, 25.24442, 23.38800, 25.08665, 24.63885));
+            SelectAndApplyPeak("GATYAFSGSHYWR", "D_103_REP3", 16.4223, true);
+            VerifyPeaks(MakeVerificationDictionary(
+                17.38182, 17.08060, 16.42228, 17.19397, 17.21502, 16.66367,
+                17.23210, 17.45838, 16.66472, 17.39735, 17.00417, 16.43715,
+                17.61817, 17.00378, 16.64450, 17.15165, 17.00528, 16.54887,
+                17.20048, 16.88772, 16.51452, 17.14997, 17.04057, 16.47637));
+            // For each test, a peak was picked and applied - undo two actions per test
+            for (int i = 0; i < 2*4; i++)
+                RunUI(() => SkylineWindow.Undo());
+        }
+
+        private static void SelectAndApplyPeak(string modifiedSequence, string resultsName, double rt, bool subsequent = false)
+        {
+            bool found = false;
+            var doc = SkylineWindow.Document;
+            IdentityPath identityPath = null;
+            foreach (PeptideGroupDocNode nodePepGroup in doc.MoleculeGroups)
+            {
+                foreach (var nodePep in nodePepGroup.Peptides.Where(nodePep => nodePep.ModifiedSequence.Equals(modifiedSequence)))
+                {
+                    Assert.AreEqual(1, nodePep.TransitionGroupCount);
+                    var nodeTranGroup = nodePep.TransitionGroups.First();
+                    identityPath = new IdentityPath(nodePepGroup.Id, nodePep.Id, nodeTranGroup.Id);
+                    IdentityPath path = identityPath;
+                    RunUI(() => SkylineWindow.SelectedPath = path);
+                    found = true;
+                    break;
+                }
+                if (found)
+                    break;
+            }
+            if (!found)
+            {
+                Assert.Fail("Could not find peptide {0}", modifiedSequence);
+            }
+
+            found = false;
+            var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
+            foreach (var chromatogram in chromatograms.Where(chromSet => chromSet.Name.Equals(resultsName)))
+            {
+                found = true;
+                ChromatogramSet chromSet = chromatogram;
+                RunUI(() =>
+                {
+                    SkylineWindow.SelectedResultsIndex = chromatograms.IndexOf(chromSet);
+                    SkylineWindow.ModifyDocument("change peak", document =>
+                        document.ChangePeak(identityPath, chromSet.Name, chromSet.MSDataFilePaths.First(), null, rt, UserSet.TRUE));
+                });
+                break;
+            }
+            if (!found)
+            {
+                Assert.Fail("Could not find results {0}", resultsName);
+            }
+            RunUI(() => SkylineWindow.ApplyPeak(subsequent));
+        }
+
+        private static Dictionary<string, double> MakeVerificationDictionary(params double[] expected)
+        {
+            Assert.AreEqual(24, expected.Length);
+            return new Dictionary<string, double>
+            {
+                {"D_103_REP1", expected[0]}, {"D_103_REP2", expected[1]}, {"D_103_REP3", expected[2]},
+                {"D_108_REP1", expected[3]}, {"D_108_REP2", expected[4]}, {"D_108_REP3", expected[5]},
+                {"D_138_REP1", expected[6]}, {"D_138_REP2", expected[7]}, {"D_138_REP3", expected[8]},
+                {"D_196_REP1", expected[9]}, {"D_196_REP2", expected[10]}, {"D_196_REP3", expected[11]},
+                {"H_146_REP1", expected[12]}, {"H_146_REP2", expected[13]}, {"H_146_REP3", expected[14]},
+                {"H_148_REP1", expected[15]}, {"H_148_REP2", expected[16]}, {"H_148_REP3", expected[17]},
+                {"H_159_REP1", expected[18]}, {"H_159_REP2", expected[19]}, {"H_159_REP3", expected[20]},
+                {"H_162_REP1", expected[21]}, {"H_162_REP2", expected[22]}, {"H_162_REP3", expected[23]},
+            };
+        }
+
+        private static void VerifyPeaks(IReadOnlyDictionary<string, double> expected)
+        {
+            RunUI(() =>
+            {
+                var selectedTreeNode = SkylineWindow.SelectedNode as PeptideTreeNode;
+                TransitionGroupDocNode nodeTranGroup = selectedTreeNode != null
+                    ? selectedTreeNode.DocNode.TransitionGroups.First(g => g.Results[SkylineWindow.SelectedResultsIndex] != null)
+                    : SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>().DocNode;
+
+                var settings = SkylineWindow.Document.Settings;
+                float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
+
+                var chromatograms = settings.MeasuredResults.Chromatograms;
+                for (int resultsIndex = 0; resultsIndex < chromatograms.Count; resultsIndex++)
+                {
+                    var chromSet = chromatograms[resultsIndex];
+                    Assert.IsTrue(chromSet.FileCount == 1);
+                    ChromatogramGroupInfo[] chromGroupInfos;
+                    Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, false, out chromGroupInfos));
+                    var rt = nodeTranGroup.Results[resultsIndex][0].RetentionTime;
+                    Assert.IsTrue(rt.HasValue);
+                    var chromName = chromSet.Name;
+                    Assert.IsTrue(expected.ContainsKey(chromName));
+                    var expectedRt = expected[chromName];
+                    if (Math.Abs(expectedRt - rt.Value) > 0.01)
+                    {
+                        Assert.Fail("{0}: expected RT of {1} for {2}, but was {3}", nodeTranGroup, expectedRt, chromName, rt.Value);
+                    }
+                }
+            });
         }
     }
 }

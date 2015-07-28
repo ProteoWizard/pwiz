@@ -663,40 +663,42 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return ScaledRetentionTime.ZERO;
             }
-            double time;
-            if (double.TryParse(label.Text.Split('\n')[0], out time))
-            {
-                return FindPeakRetentionTime(time);
-            }
-            return ScaledRetentionTime.ZERO;
+            return FindPeakRetentionTime(label.Location.X);
         }
 
         public ScaledRetentionTime FindPeakRetentionTime(double time)
         {
             // Search for a time that corresponds with a label
+            int closestLabelIndex = -1;
+            double closestLabelDeltaTime = Double.MaxValue;
             for (int i = 0; i < _arrayLabelIndexes.Length; i++)
             {
-                int iTime = _arrayLabelIndexes[i];
-                if (iTime != -1 && Math.Abs(time - _displayTimes[iTime]) < 0.15)
+                int iLabel = _arrayLabelIndexes[i];
+                if (iLabel == -1)
+                    continue;
+                double deltaTime = Math.Abs(time - _displayTimes[iLabel]);
+                if (deltaTime < 0.15 && deltaTime < closestLabelDeltaTime)
                 {
-                    // Look for the closest matching time to what is stored in the
-                    // annotated peak, to make sure the peak can be found by this time.
-                    var peak = Chromatogram.GetPeak(i);
-                    float rt = peak.RetentionTime;
-                    iTime = Array.BinarySearch(_measuredTimes, rt);
-                    if (iTime < 0)
-                    {
-                        iTime = ~iTime;
-                        if (iTime > _measuredTimes.Length - 1 ||
-                            (iTime > 0 && Math.Abs(rt - _measuredTimes[iTime]) > Math.Abs(rt - _measuredTimes[iTime - 1])))
-                        {
-                            iTime--;
-                        }
-                    }
-                    return new ScaledRetentionTime(rt, _displayTimes[iTime]);
+                    closestLabelIndex = i;
+                    closestLabelDeltaTime = deltaTime;
                 }
             }
-            return ScaledRetentionTime.ZERO;
+            if (closestLabelIndex == -1)
+                return ScaledRetentionTime.ZERO;
+
+            var peak = Chromatogram.GetPeak(closestLabelIndex);
+            float rt = peak.RetentionTime;
+            int iTime = Array.BinarySearch(_measuredTimes, rt);
+            if (iTime < 0)
+            {
+                iTime = ~iTime;
+                if (iTime > _measuredTimes.Length - 1 ||
+                    (iTime > 0 && Math.Abs(rt - _measuredTimes[iTime]) > Math.Abs(rt - _measuredTimes[iTime - 1])))
+                {
+                    iTime--;
+                }
+            }
+            return new ScaledRetentionTime(rt, _displayTimes[iTime]);
         }
 
         public ScaledRetentionTime FindSpectrumRetentionTime(GraphObj graphObj)
