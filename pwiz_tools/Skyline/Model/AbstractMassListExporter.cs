@@ -507,8 +507,10 @@ namespace pwiz.Skyline.Model
             foreach (TransitionDocNode nodeTran in reorderedTransitions)
             {
                 if (OptimizeType == null)
+                {
                     fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0);
-                else
+                }
+                else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
                 {
                     // -step through step
                     for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
@@ -525,6 +527,12 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        protected virtual bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
+        {
+            return false;
         }
 
 

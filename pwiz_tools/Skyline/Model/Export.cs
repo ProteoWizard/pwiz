@@ -1651,14 +1651,6 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            bool exportCov = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
-            if (exportCov && (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)) && nodeTranGroup.TransitionCount > 1 && PrimaryTransitionCount > 0)
-            {
-                // If we know the top ranked transition for every precursor and this is not it, skip writing it
-                int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
-                if (!rank.HasValue || rank.Value > PrimaryTransitionCount)
-                    return;
-            }
             OptimizeStepIndex = step;
             string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
             string q3 = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo);
@@ -1700,7 +1692,7 @@ namespace pwiz.Skyline.Model
                 primaryOrSecondary = IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran) ? "1" : "2"; // Not L10N
             }
 
-            string compensationVoltage = exportCov
+            string compensationVoltage = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null
                 ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.00", CultureInfo)) // Not L10N
                 : null;
 
@@ -1717,6 +1709,20 @@ namespace pwiz.Skyline.Model
 
             writer.Write(oneLine.Replace(',', FieldSeparator));
             writer.WriteLine();
+        }
+
+        protected override bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
+        {
+            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
+                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
+                nodeGroup.TransitionCount > 1 && PrimaryTransitionCount > 0)
+            {
+                // If we know the top ranked transition for every precursor and this is not it, skip writing it
+                int? rank = GetRank(nodeGroup, nodeGroupPrimary, nodeTran);
+                return !rank.HasValue || rank.Value > PrimaryTransitionCount;
+            }
+            return false;
         }
 
         protected virtual string GetOptionalColumns(string dp,

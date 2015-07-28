@@ -910,51 +910,38 @@ namespace pwiz.Skyline.FileUI
                 var compensationVoltage = prediction.CompensationVoltage;
                 var tuneLevel = CompensationVoltageParameters.GetTuneLevel(tuning);
 
-                if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.medium))
+                if (helper.ShowMessages)
                 {
-                    var missing = _document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.rough).ToList();
-                    if (missing.Any())
+                    if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.medium))
                     {
-                        missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_);
-                        helper.ShowTextBoxError(comboTuning, TextUtil.LineSeparate(missing));
-                        return false;
+                        var missing = _document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.rough).ToList();
+                        if (missing.Any())
+                        {
+                            missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_medium_tune_transition_list__The_following_precursors_are_missing_rough_tune_results_);
+                            helper.ShowTextBoxError(comboTuning, TextUtil.LineSeparate(missing));
+                            return false;
+                        }
                     }
-                }
-                else if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.fine))
-                {
-                    var missing = _document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.medium).ToList();
-                    if (missing.Any())
+                    else if (tuneLevel.Equals(CompensationVoltageParameters.Tuning.fine))
                     {
-                        missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_);
-                        helper.ShowTextBoxError(comboTuning, TextUtil.LineSeparate(missing));
-                        return false;
+                        var missing = _document.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.medium).ToList();
+                        if (missing.Any())
+                        {
+                            missing.Insert(0, Resources.ExportMethodDlg_ValidateSettings_Cannot_export_fine_tune_transition_list__The_following_precursors_are_missing_medium_tune_results_);
+                            helper.ShowTextBoxError(comboTuning, TextUtil.LineSeparate(missing));
+                            return false;
+                        }
                     }
                 }
 
                 _exportProperties.OptimizeStepSize = compensationVoltage.GetStepSize(tuneLevel);
                 _exportProperties.OptimizeStepCount = compensationVoltage.GetStepCount(tuneLevel);
-
-                var precursorsMissingRanks = _document.GetPrecursorsWithoutTopRank(0, _exportProperties.SchedulingReplicateNum).ToArray();
-                if (precursorsMissingRanks.Any())
-                {
-                    if (helper.ShowMessages && DialogResult.Cancel == MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(
-                        Resources.ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_,
-                        TextUtil.LineSeparate(precursorsMissingRanks),
-                        Resources.ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_),
-                        Resources.ExportMethodDlg_OkDialog_OK))
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    _exportProperties.PrimaryTransitionCount = 1;
-                }
+                _exportProperties.PrimaryTransitionCount = 1;
             }
             else
             {
                 _exportProperties.OptimizeType = null;
-                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = 0;
+                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = _exportProperties.PrimaryTransitionCount = 0;
             }
 
             string maxTran = textMaxTransitions.Text;
@@ -1046,6 +1033,26 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            if (ExportOptimize.CompensationVoltageTuneTypes.Contains(_exportProperties.OptimizeType))
+            {
+                var precursorsMissingRanks = _document.GetPrecursorsWithoutTopRank(0, _exportProperties.SchedulingReplicateNum).ToArray();
+                if (precursorsMissingRanks.Any())
+                {
+                    if (helper.ShowMessages)
+                    {
+                        if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(
+                            Resources.ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_,
+                            TextUtil.LineSeparate(precursorsMissingRanks),
+                            Resources.ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_),
+                            Resources.ExportMethodDlg_OkDialog_OK))
+                        {
+                            return false;
+                        }
+                    }
+                    _exportProperties.PrimaryTransitionCount = 0;
+                }
+            }
+
             return true;
         }
 
@@ -1072,7 +1079,7 @@ namespace pwiz.Skyline.FileUI
             {
                 int tranRequired = nodeGroup.Children.Count;
 
-                if (Equals(OptimizeType, ExportOptimize.COV) && PrimaryCount > 0)
+                if ((Equals(OptimizeType, ExportOptimize.COV) || ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType)) && PrimaryCount > 0)
                 {
                     tranRequired = PrimaryCount;
                 }
