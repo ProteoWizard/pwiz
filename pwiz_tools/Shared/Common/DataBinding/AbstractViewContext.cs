@@ -361,14 +361,14 @@ namespace pwiz.Common.DataBinding
                 string message;
                 if (conflicts.Count == 1)
                 {
-                    message = "The name '{0}' already exists. Do you want to replace it?";
+                    message = Resources.AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_;
                 }
                 else
                 {
                     var messageLines = new List<String>();
-                    messageLines.Add("The following names already exist:");
+                    messageLines.Add(Resources.AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_);
                     messageLines.AddRange(conflicts);
-                    messageLines.Add("Do you want to replace them?");
+                    messageLines.Add(Resources.AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_);
                     message = string.Join(Environment.NewLine, messageLines);
                 }
                 var result = ShowMessageBox(control, message, MessageBoxButtons.YesNoCancel);

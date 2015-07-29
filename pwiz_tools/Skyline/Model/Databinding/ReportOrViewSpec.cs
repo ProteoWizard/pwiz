@@ -124,10 +124,10 @@ namespace pwiz.Skyline.Model.Databinding
                 list.AddRange(ReportSharing.DeserializeReportList(new MemoryStream(Encoding.UTF8.GetBytes(REPORTS_V3))));
             }
             var nameMap = new Dictionary<string, string>{
-                {"Peptide Ratio Results", Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results},
-                {"Peptide RT Results", Resources.ReportSpecList_GetDefaults_Peptide_RT_Results},
-                {"Transition Results", Resources.ReportSpecList_GetDefaults_Transition_Results},
-                {"Peak Boundaries", Resources.ReportSpecList_GetDefaults_Peak_Boundaries}
+                {"Peptide Ratio Results", Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results}, // Not L10N
+                {"Peptide RT Results", Resources.ReportSpecList_GetDefaults_Peptide_RT_Results}, // Not L10N
+                {"Transition Results", Resources.ReportSpecList_GetDefaults_Transition_Results}, // Not L10N
+                {"Peak Boundaries", Resources.ReportSpecList_GetDefaults_Peak_Boundaries} // Not L10N
             };
             for (int i = 0; i < list.Count; i++)
             {
@@ -178,14 +178,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public ReportOrViewSpec EditItem(Control owner, ReportOrViewSpec item, IEnumerable<ReportOrViewSpec> existing, object tag)
         {
-//            var skylineViewContext = (SkylineViewContext) tag;
-//            var view = item == null ? new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse("Results!*")) : item.ViewSpec; // Not L10N
-//            var result = skylineViewContext.CustomizeView(owner, ViewPath.CUSTOM, view);
-//            if (null == result)
-//            {
-                return null;
-//            }
-//            return new ReportOrViewSpec(result);
+            return null;
         }
 
         public ReportOrViewSpec CopyItem(ReportOrViewSpec item)
@@ -198,6 +191,7 @@ namespace pwiz.Skyline.Model.Databinding
             return ReportSharing.DeserializeReportList(stream);
         }
 
+        // ReSharper disable NonLocalizedString
         private const string REPORTS_V1 = @"<ReportSpecList>
   <report name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
@@ -256,5 +250,6 @@ namespace pwiz.Skyline.Model.Databinding
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </report>
 </ReportSpecList>";
+        // ReSharper restore NonLocalizedString
     }
 }

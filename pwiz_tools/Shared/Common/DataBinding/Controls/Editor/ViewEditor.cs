@@ -274,7 +274,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 {
                     if (ViewContext.GetViewSpecList(OriginalViewInfo.ViewGroup.Id).ViewSpecs.Any(viewSpec=>viewSpec.Name == name))
                     {
-                        errorMessage = string.Format("There is already a view named '{0}'", name);
+                        errorMessage = string.Format(Resources.ViewEditor_ValidateViewName_There_is_already_a_view_named___0___, name);
                     }
                 }
             }

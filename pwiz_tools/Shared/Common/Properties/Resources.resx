@@ -349,4 +349,16 @@
   <data name="ViewGroup_BUILT_IN_Built_In_Views" xml:space="preserve">
     <value>Built In Views</value>
   </data>
+  <data name="AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_" xml:space="preserve">
+    <value>The name '{0}' already exists. Do you want to replace it?</value>
+  </data>
+  <data name="AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_" xml:space="preserve">
+    <value>The following names already exist:</value>
+  </data>
+  <data name="AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_" xml:space="preserve">
+    <value>Do you want to replace them?</value>
+  </data>
+  <data name="ViewEditor_ValidateViewName_There_is_already_a_view_named___0___" xml:space="preserve">
+    <value>There is already a view named '{0}'.</value>
+  </data>
 </root>

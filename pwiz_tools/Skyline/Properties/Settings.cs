@@ -46,7 +46,6 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
 
@@ -287,12 +286,12 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var persistedViews = (PersistedViews) this["PersistedViews"];
+                var persistedViews = (PersistedViews) this["PersistedViews"]; // Not L10N
                 if (persistedViews == null)
                 {
-                    persistedViews = new PersistedViews((ReportSpecList) this["ReportSpecList"],
-                        (ViewSpecList) this["ViewSpecList"], ToolList);
-                    this["persistedViews"] = persistedViews;
+                    persistedViews = new PersistedViews((ReportSpecList)this["ReportSpecList"],// Not L10N
+                        (ViewSpecList)this["ViewSpecList"], ToolList);// Not L10N
+                    this["persistedViews"] = persistedViews; // Not L10N
                 }
                 return persistedViews;
             }

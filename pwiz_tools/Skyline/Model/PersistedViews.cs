@@ -151,6 +151,7 @@ namespace pwiz.Skyline.Model
             {
                 list.AddRange(((ViewSpecList)xmlSerializer.Deserialize(new StringReader(reportString))).ViewSpecs.Select(spec=>new KeyValuePair<ViewGroupId, ViewSpec>(MainGroup.Id, spec)));
             }
+            // ReSharper disable NonLocalizedString
             var nameMap = new Dictionary<string, ViewName>{
                 {"Peptide Ratio Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results)},
                 {"Peptide RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_RT_Results)},
@@ -161,6 +162,7 @@ namespace pwiz.Skyline.Model
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
             };
+            // ReSharper restore NonLocalizedString
 
             for (int i = 0; i < list.Count; i++)
             {
@@ -174,6 +176,7 @@ namespace pwiz.Skyline.Model
             return list;
         }
 
+        // ReSharper disable NonLocalizedString
         private const string REPORTS_V1 = @"<views>
   <view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
@@ -300,6 +303,7 @@ namespace pwiz.Skyline.Model
     <column name='ProductIonFormula' />
   </view>
 </views>";
+        // ReSharper restore NonLocalizedString
 
         #region XML Serialization
 

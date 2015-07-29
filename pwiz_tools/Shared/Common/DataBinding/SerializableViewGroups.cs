@@ -86,8 +86,8 @@ namespace pwiz.Common.DataBinding
         {
             foreach (var entry in _viewSpecLists)
             {
-                writer.WriteStartElement("views");
-                writer.WriteAttributeString("name", entry.Key);
+                writer.WriteStartElement("views"); // Not L10N
+                writer.WriteAttributeString("name", entry.Key); // Not L10N
                 entry.Value.WriteXml(writer);
                 writer.WriteEndElement();
             }

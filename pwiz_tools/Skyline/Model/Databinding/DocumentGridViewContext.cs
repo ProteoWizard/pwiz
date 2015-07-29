@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override ViewSpec GetBlankView()
         {
-            return new ViewSpec().SetRowType(typeof (Entities.Protein)).SetSublistId(PropertyPath.Parse("Results!*"));
+            return new ViewSpec().SetRowType(typeof (Entities.Protein)).SetSublistId(PropertyPath.Parse("Results!*")); // Not L10N
         }
     }
 }

@@ -71,6 +71,34 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to replace them?.
+        /// </summary>
+        internal static string AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following names already exist:.
+        /// </summary>
+        internal static string AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name &apos;{0}&apos; already exists. Do you want to replace it?.
+        /// </summary>
+        internal static string AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_t" +
+                        "o_replace_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exception constructing column of type {0}:{1}.
         /// </summary>
         internal static string AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_ {
@@ -750,6 +778,15 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("up_pro32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already a view named &apos;{0}&apos;..
+        /// </summary>
+        internal static string ViewEditor_ValidateViewName_There_is_already_a_view_named___0___ {
+            get {
+                return ResourceManager.GetString("ViewEditor_ValidateViewName_There_is_already_a_view_named___0___", resourceCulture);
             }
         }
         
