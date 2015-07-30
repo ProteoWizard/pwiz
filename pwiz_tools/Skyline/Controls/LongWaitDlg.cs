@@ -204,6 +204,14 @@ namespace pwiz.Skyline.Controls
         {
             lock (_lock)
             {
+                if (!_finished)
+                {
+                    // If the user is trying to close this form, then treat it the 
+                    // same as if they had hit "Cancel".
+                    OnClickedCancel();
+                    e.Cancel = true;
+                    return;
+                }
                 _windowShown = false;
             }
             base.OnFormClosing(e);
@@ -263,8 +271,16 @@ namespace pwiz.Skyline.Controls
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            labelMessage.Text += _cancelMessage;
-            _clickedCancel = true;
+            OnClickedCancel();
+        }
+
+        private void OnClickedCancel()
+        {
+            if (!_clickedCancel)
+            {
+                labelMessage.Text += _cancelMessage;
+                _clickedCancel = true;
+            }
         }
 
         private void timerUpdate_Tick(object sender, EventArgs e)
