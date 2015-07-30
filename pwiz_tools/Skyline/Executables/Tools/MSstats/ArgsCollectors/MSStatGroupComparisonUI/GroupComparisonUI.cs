@@ -81,7 +81,15 @@ namespace MSStatArgsCollector
             if (Arguments != null && (Arguments.Length - nonIndexArguments == ControlGroupList.Length))
             {
                 // Restore the selected control group 
-                ControlGroup.SelectedIndex = Array.IndexOf(Arguments, "1"); // Not L10N
+                int indexControlGroup = Array.IndexOf(Arguments, "-1");
+                if (indexControlGroup >= 0 && indexControlGroup < ControlGroup.Items.Count)
+                {
+                    ControlGroup.SelectedIndex = indexControlGroup;
+                }
+                else
+                {
+                    ControlGroup.SelectedIndex = 0;
+                }
 
                 // Restore the selection of comparison groups (if necessary)
                 if (ControlGroupList.Length > 2)
