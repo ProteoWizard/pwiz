@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return true;
         }
-
+        // ReSharper disable NonLocalizedString
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
             ViewSpec viewSpec = GetDefaultViewSpec(columnDescriptor);
