@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -310,87 +309,6 @@ namespace pwiz.Skyline.Model.Databinding
             return true;
         }
 
-
-        // Most of these strings are internal values, not user facing
-        // ReSharper disable NonLocalizedString
-        private static string GetColXml(string colName)
-        {
-            return string.Format("<column name='{0}'/>", colName);
-        }
-        /// <summary>
-        /// Generate a report specification suitable to the current document that
-        /// recreates the content in the Edit|Insert|TransitionList window
-        /// </summary>
-        private static ViewSpec GetTransitionListReportSpec(SkylineDataSchema dataSchema)
-        {
-            bool docHasCustomIons = dataSchema.Document.CustomIonCount != 0;
-            bool docHasProteins = dataSchema.Document.PeptideCount != 0 ||
-                                  dataSchema.Document.MoleculeCount == 0; // Empty doc is assumed proteomic
-            // Different report content and name for different document types
-            string name;
-            if (docHasCustomIons && docHasProteins)
-                name = Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List;
-            else if (docHasCustomIons)
-                name = Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List;
-            else
-                name = Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List;
-            var xml = String.Format(
-                "<ReportSpecList> <report name='{0}' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>", name);
-            xml += GetColXml("Precursor.Peptide.Protein.Name");
-            if (docHasProteins)
-                xml += GetColXml("Precursor.Peptide.ModifiedSequence");
-            if (docHasCustomIons)
-            {
-                xml += GetColXml("Precursor.Peptide.IonName");
-                xml += GetColXml("Precursor.Peptide.IonFormula");
-            }
-            xml += GetColXml("Precursor.Mz");
-            xml += GetColXml("Precursor.Charge");
-            xml += GetColXml("Precursor.CollisionEnergy");
-            if (docHasCustomIons)
-            {
-                xml += GetColXml("Precursor.ExplicitCollisionEnergy");
-                xml += GetColXml("Precursor.Peptide.ExplicitRetentionTime");
-                xml += GetColXml("Precursor.Peptide.ExplicitRetentionTimeWindow");
-                // Note: not including drift time info by default
-            }
-            xml += GetColXml("ProductMz");
-            xml += GetColXml("ProductCharge");
-            if (docHasProteins)
-                xml += GetColXml("FragmentIon");
-            if (docHasCustomIons)
-                xml += GetColXml("ProductIonFormula");
-            if (docHasProteins)
-            {
-                xml += GetColXml("FragmentIonType");
-                xml += GetColXml("FragmentIonOrdinal");
-                xml += GetColXml("CleavageAa");
-                xml += GetColXml("LossNeutralMass");
-                xml += GetColXml("Losses");
-            }
-            if (docHasProteins)
-            {
-                xml += GetColXml("LibraryRank");
-                xml += GetColXml("LibraryIntensity");
-                xml += GetColXml("IsotopeDistIndex");
-                xml += GetColXml("IsotopeDistRank");
-                xml += GetColXml("IsotopeDistProportion");
-                xml += GetColXml("FullScanFilterWidth");
-                xml += GetColXml("IsDecoy");
-                xml += GetColXml("ProductDecoyMzShift");
-            }
-            xml += "  </report> </ReportSpecList>";
-            var viewSpec =
-                ReportSharing.DeserializeReportList(new MemoryStream(Encoding.UTF8.GetBytes(xml)))[0].ViewSpec;
-            return viewSpec;
-        }
-
-        protected IEnumerable<ViewSpec> ConvertReports(ReportSpecList reportSpecs)
-        {
-            var converter = new ReportSpecConverter((SkylineDataSchema)DataSchema);
-            return converter.ConvertAll(reportSpecs);
-        }
-
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
             ViewSpec viewSpec = GetDefaultViewSpec(columnDescriptor);
@@ -565,15 +483,6 @@ namespace pwiz.Skyline.Model.Databinding
         }
         // ReSharper restore NonLocalizedString
 
-
-        public static bool IsNumeric(Type type)
-        {
-            return type == typeof (int)
-                   || type == typeof (int?)
-                   || type == typeof (double)
-                   || type == typeof (double?);
-        }
-
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
             using (var saveFileDialog = new SaveFileDialog
@@ -661,11 +570,6 @@ namespace pwiz.Skyline.Model.Databinding
                 var reportOrViewSpecs = ReportSharing.DeserializeReportList(stream);
                 return new ViewSpecList(ReportSharing.ConvertAll(reportOrViewSpecs, ((SkylineDataSchema) DataSchema).Document));
             }
-        }
-
-        public RowSourceInfo MakeRowSourceInfo<T>(IList<T> rows) where T : SkylineObject
-        {
-            return new RowSourceInfo(rows, GetDefaultViewInfo(ColumnDescriptor.RootColumn(DataSchema, typeof(T))));
         }
 
         public void SetRowSources(IList<RowSourceInfo> rowSources)

@@ -173,7 +173,30 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            return list;
+            return RemoveDuplicates(list);
+        }
+
+        /// <summary>
+        /// If there is more than one view in the list with a particular name, remove duplicates
+        /// so only the last entry with that name is present.
+        /// </summary>
+        private List<KeyValuePair<ViewGroupId, ViewSpec>> RemoveDuplicates(
+            IList<KeyValuePair<ViewGroupId, ViewSpec>> views)
+        {
+            HashSet<ViewName> names = new HashSet<ViewName>();
+            List<KeyValuePair<ViewGroupId, ViewSpec>> listWithDuplicatesRemoved = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
+            // Go through the list items in reverse order, and copy over only those items that are unique.
+            for (int i = views.Count - 1; i >= 0; i--)
+            {
+                var entry = views[i];
+                if (names.Add(entry.Key.ViewName(entry.Value.Name)))
+                {
+                    listWithDuplicatesRemoved.Add(entry);
+                }
+            }
+            // Reverse the elements in the new list, since we added them in reverse order.
+            listWithDuplicatesRemoved.Reverse();
+            return listWithDuplicatesRemoved;
         }
 
         // ReSharper disable NonLocalizedString

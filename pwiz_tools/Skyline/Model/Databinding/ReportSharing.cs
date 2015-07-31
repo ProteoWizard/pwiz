@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -39,31 +40,16 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         public static List<ReportOrViewSpec> DeserializeReportList(Stream stream)
         {
-            try
+            XmlReader xmlReader = new XmlTextReader(stream);
+            xmlReader.Read();
+            if (xmlReader.IsStartElement("views"))
             {
-                // First try to read the file as a pre 2.5 list of ReportSpec's
-                var reportSerializer = new XmlSerializer(typeof(ReportSpecList));
-                var reportSpecList = (ReportSpecList) reportSerializer.Deserialize(stream);
-                return reportSpecList.Select(report => new ReportOrViewSpec(report)).ToList();
+                ViewSpecList viewSpecList = ViewSpecList.Deserialize(xmlReader);
+                return viewSpecList.ViewSpecs.Select(view => new ReportOrViewSpec(view)).ToList();
             }
-            catch (Exception)
-            {
-                try
-                {
-                    // Next try to read it as a ViewSpecList, which was mistakenly exported from Skyline 2.5
-                    stream.Seek(0, SeekOrigin.Begin);
-                    var viewSerializer = new XmlSerializer(typeof(ViewSpecList));
-                    ViewSpecList viewSpecList = (ViewSpecList)viewSerializer.Deserialize(stream);
-                    return viewSpecList.ViewSpecs.Select(view=>new ReportOrViewSpec(view)).ToList();
-                }
-                catch (Exception)
-                {
-                    // Next try to read it as a ReportOrViewSpecList, which is the current format.
-                    stream.Seek(0, SeekOrigin.Begin);
-                    var reportOrViewSpecListSerializer = new XmlSerializer(typeof (ReportOrViewSpecListNoDefaults));
-                    return ((ReportOrViewSpecList) reportOrViewSpecListSerializer.Deserialize(stream)).ToList();
-                }
-            }
+            var reportOrViewSpecList = new ReportOrViewSpecListNoDefaults();
+            reportOrViewSpecList.ReadXml(xmlReader);
+            return reportOrViewSpecList.ToList();
         }
 
         public static bool ImportSkyrFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)

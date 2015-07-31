@@ -113,14 +113,6 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
         }
-        public string DocumentFilePath
-        {
-            get { return _documentContainer.DocumentFilePath; }
-        }
-        public bool SetDocument(SrmDocument docNew, SrmDocument docOriginal)
-        {
-            return _documentContainer.SetDocument(docNew, docOriginal);
-        }
         public void Listen(IDocumentChangeListener listener)
         {
             lock (_documentChangedEventHandlers)

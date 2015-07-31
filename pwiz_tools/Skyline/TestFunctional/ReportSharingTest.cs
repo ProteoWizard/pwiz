@@ -38,7 +38,6 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ReportSharingTest : AbstractFunctionalTest
     {
-        
         [TestMethod]
         public void TestReportSharing()
         {
@@ -138,6 +137,9 @@ namespace pwiz.SkylineTestFunctional
                 "PeptidesSharedFrom25ResultsGrid.skyr",
                 "SharedFrom25DocumentGrid.skyr",
                 "Skyline21BuiltInReports.skyr",
+                "Skyline31ShareFromDocumentGrid.skyr",
+                "Skyline31ShareFromExportReport.skyr",
+                "Skyline32Reports.skyr",
             })
             {
                 reportInfos.Add(GetReportInfo(TestFilesDir.GetTestPath(filename)));
