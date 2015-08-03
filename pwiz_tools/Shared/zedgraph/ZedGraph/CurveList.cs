@@ -448,23 +448,7 @@ namespace ZedGraph
 			{
 				if ( curve.IsVisible )
 				{
-					// For stacked types, use the GetStackRange() method which accounts for accumulated values
-					// rather than simple curve values.
-					if ( ( ( curve is BarItem ) && ( pane._barSettings.Type == BarType.Stack ||
-							pane._barSettings.Type == BarType.PercentStack ) ) ||
-						( ( curve is LineItem ) && pane.LineType == LineType.Stack ) )
-					{
-						GetStackRange( pane, curve, out tXMinVal, out tYMinVal,
-										out tXMaxVal, out tYMaxVal );
-					}
-					else
-					{
-						// Call the GetRange() member function for the current
-						// curve to get the min and max values
-						curve.GetRange( out tXMinVal, out tXMaxVal,
-										out tYMinVal, out tYMaxVal, bIgnoreInitial, true, pane );
-					}
-
+                    GetCurveRange(pane, curve, out tXMinVal, out tXMaxVal, out tYMinVal, out tYMaxVal, bIgnoreInitial);
 					// isYOrd is true if the Y axis is an ordinal type
 					Scale yScale = curve.GetYAxis( pane ).Scale;
 
@@ -569,6 +553,31 @@ namespace ZedGraph
 				scale._max : double.MaxValue;
 		}
 
+	    public void GetCurveRange(GraphPane pane, CurveItem curve, out double tXMinVal, out double tXMaxVal,
+	        out double tYMinVal, out double tYMaxVal)
+	    {
+	        GetCurveRange(pane, curve, out tXMinVal, out tXMaxVal, out tYMinVal, out tYMaxVal, false);
+	    }
+
+	    private void GetCurveRange(GraphPane pane, CurveItem curve, out double tXMinVal, out double tXMaxVal, out double tYMinVal, out double tYMaxVal, bool bIgnoreInitial)
+	    {
+	        // For stacked types, use the GetStackRange() method which accounts for accumulated values
+	        // rather than simple curve values.
+	        if (((curve is BarItem) && (pane._barSettings.Type == BarType.Stack ||
+	                                    pane._barSettings.Type == BarType.PercentStack)) ||
+	            ((curve is LineItem) && pane.LineType == LineType.Stack))
+	        {
+	            GetStackRange(pane, curve, out tXMinVal, out tYMinVal,
+	                out tXMaxVal, out tYMaxVal);
+	        }
+	        else
+	        {
+	            // Call the GetRange() member function for the current
+	            // curve to get the min and max values
+	            curve.GetRange(out tXMinVal, out tXMaxVal,
+	                out tYMinVal, out tYMaxVal, bIgnoreInitial, true, pane);
+	        }
+	    }
 		/// <summary>
 		/// Calculate the range for stacked bars and lines.
 		/// </summary>

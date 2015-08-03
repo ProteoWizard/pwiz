@@ -525,6 +525,57 @@ namespace pwiz.Skyline.Controls.Graphs
             g.Title.FontSpec.Size = fontSize*1.5f;
             g.Legend.FontSpec.Size = fontSize;
         }
+
+        public static void ReformatYAxis(GraphPane g, double myMaxY)
+        {
+            var _max = MyMod(myMaxY, g.YAxis.Scale.MajorStep) == 0.0 ? myMaxY :
+                  myMaxY + g.YAxis.Scale.MajorStep - MyMod(myMaxY, g.YAxis.Scale.MajorStep);
+            g.YAxis.Scale.Max = _max;
+        }
+        protected static double MyMod(double x, double y)
+        {
+            if (y == 0)
+                return 0;
+            var temp = x / y;
+            return y * (temp - Math.Floor(temp));
+        }
+
+        // Find maximum value for bar graph including whiskers
+        public static double GetMaxY(CurveList curveList, GraphPane g)
+        {
+            var maxY = double.MinValue;
+            foreach (var curve in curveList)
+            {
+                if (curve is MeanErrorBarItem)
+                {
+                    for (var i = 0; i < curve.Points.Count; i++)
+                    {
+                        var point = curve.Points[i];
+                        if (!double.IsNaN(point.Y))
+                        {
+                            var errorTag = point.Tag as ErrorTag;
+                            double whiskerMaxY;
+                            if (null != errorTag)
+                            {
+                                whiskerMaxY = point.Y + errorTag.Error;
+                            }
+                            else
+                            {
+                                whiskerMaxY = point.Y;
+                            }
+
+                            maxY = Math.Max(maxY, whiskerMaxY);
+                        }
+                    }
+                }
+
+                double tMinX, tMinY, tMaxX, tMaxY;
+                curveList.GetCurveRange(g, curve, out tMinX, out tMaxX, out tMinY, out tMaxY);
+
+                maxY = Math.Max(maxY, tMaxY);
+            }
+            return maxY;
+        }
     }
 
     public struct PaneKey : IComparable

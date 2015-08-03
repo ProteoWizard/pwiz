@@ -29,13 +29,14 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaExpectedValue { none, library, isotope_dist }
+    public enum AreaExpectedValue { none, library, isotope_dist }  
 
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
     /// </summary>
     public class AreaReplicateGraphPane : SummaryReplicateGraphPane
     {
+        private int _lableHeight;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
@@ -129,7 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateGraph(bool checkData)
         {
             _dotpLabels = new GraphObjList();
-          
+
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
@@ -546,6 +547,20 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             Legend.IsVisible = Settings.Default.ShowPeakAreaLegend;
             AxisChange();
+            // Reformat Y-Axis for labels and whiskers
+            var maxY = GraphHelper.GetMaxY(CurveList,this);
+            double myMaxY;
+            if (IsDotProductVisible )
+            {
+                var extraSpace = _lableHeight*(maxY/(Chart.Rect.Height-_lableHeight*2))*2;
+                myMaxY = maxY+extraSpace;
+            }
+            else
+            {
+                myMaxY = maxY;
+            }
+       
+            GraphHelper.ReformatYAxis(this,myMaxY);
         }
 
         private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas)
@@ -631,6 +646,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
+                    _lableHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);
                 }
@@ -647,7 +663,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 float labelWidth = (float) XAxis.Scale.ReverseTransform((XAxis.Scale.Transform(0) + sizeLabel.Width));
 
                 if (labelWidth < 1.2)
-                    return pointSize;
+                    return pointSize;          
             }
             return null;
         }
