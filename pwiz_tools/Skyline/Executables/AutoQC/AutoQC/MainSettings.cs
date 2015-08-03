@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 using AutoQC.Properties;
 
 namespace AutoQC
@@ -34,12 +35,16 @@ namespace AutoQC
         public const int ACQUISITION_TIME = 75;
         public const string THERMO = "Thermo";
         public const string WATERS = "Waters";
-        public const string BRUKER = "Bruker";
+        //public const string BRUKER = "Bruker";
         public const string SCIEX = "SCIEX";
         public const string AGILENT = "Agilent";
-        public const string SCHIMADZU = "Schimadzu";
+        //public const string SCHIMADZU = "Schimadzu";
 
         public string SkylineFilePath { get; set; }
+        public string SkylineFileDir 
+        { 
+            get { return String.IsNullOrEmpty(SkylineFilePath) ? "" : Path.GetDirectoryName(SkylineFilePath); }
+        }
         public string FolderToWatch { get; set; }
 
         public int AccumulationWindow
@@ -100,7 +105,7 @@ namespace AutoQC
 
         public bool ReadLastAcquiredFileDate(IAutoQCLogger logger, IProcessControl processControl)
         {
-            logger.Log("Getting the newest acquisition date on the files imported into the Skyline document.");
+            logger.Log("Getting the acquisition date on the newest file imported into the Skyline document.", 1, 0);
             var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (exeDir == null)
             {
@@ -109,13 +114,13 @@ namespace AutoQC
 
             }
             var skyrFile = Path.Combine(exeDir, "FileAcquisitionTime.skyr");
-            var reportFile = Path.Combine(FolderToWatch, "AcquisitionTimes.csv");
+            var reportFile = Path.Combine(SkylineFileDir, "AcquisitionTimes.csv");
 
             // Export a report from the given Skyline file
             var args =
                 string.Format(
                     @" --in=""{0}"" --report-conflict-resolution=overwrite --report-add=""{1}"" --report-name=""{2}"" --report-file=""{3}""",
-                    SkylineFilePath, skyrFile, "ResultsFiles", reportFile);
+                    SkylineFilePath, skyrFile, "AcquisitionTimes", reportFile);
 
             var procInfo = new ProcessInfo(AutoQCForm.SkylineRunnerPath, AutoQCForm.SKYLINE_RUNNER, args, args);
             if (!processControl.RunProcess(procInfo))
@@ -132,8 +137,15 @@ namespace AutoQC
 
             try
             {
-                LastAcquiredFileDate = GetLastAcquiredFileDate(reportFile);
-                logger.Log("The most recent acquisition date in the Skyline document is {0}", LastAcquiredFileDate);
+                LastAcquiredFileDate = GetLastAcquiredFileDate(reportFile, logger);
+                if (!LastAcquiredFileDate.Equals(DateTime.MinValue))
+                {
+                    logger.Log("The most recent acquisition date in the Skyline document is {0}", LastAcquiredFileDate);
+                }
+                else
+                {
+                    logger.Log("The Skyline document does not have any imported results files.");  
+                }
             }
             catch (IOException e)
             {
@@ -144,7 +156,7 @@ namespace AutoQC
             return true;
         }
 
-        private static DateTime GetLastAcquiredFileDate(string reportFile)
+        private static DateTime GetLastAcquiredFileDate(string reportFile, IAutoQCLogger logger)
         {
             var lastAcq = new DateTime();
 
@@ -164,7 +176,16 @@ namespace AutoQC
                     var values = line.Split(',');
                     if (values.Length == 3)
                     {
-                        var acqDate = DateTime.Parse(values[1]);
+                        DateTime acqDate = new DateTime();
+                        try
+                        {
+                            acqDate = DateTime.Parse(values[2]);
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogError("Error parsing acquired time from Skyline report: {0}", reportFile);
+                            logger.LogException(e);
+                        }
                         if (acqDate.CompareTo(lastAcq) == 1)
                         {
                             lastAcq = acqDate;
@@ -174,6 +195,52 @@ namespace AutoQC
             }
 
             return lastAcq;
+        }
+
+        public bool IsIntegrateAllChecked(IAutoQCLogger logger)
+        {
+            try
+            {
+                using (XmlReader reader = XmlReader.Create(new StreamReader(SkylineFilePath)))
+                {
+                    reader.MoveToContent();
+
+                    var done = false;
+                    while (reader.Read() && !done)
+                    {
+                        switch (reader.NodeType)
+                        {
+                            case XmlNodeType.Element:
+                                
+                                if (reader.Name == "transition_integration")
+                                {
+                                    if (reader.MoveToAttribute("integrate_all"))
+                                    {
+                                        bool integrateAll;
+                                        Boolean.TryParse(reader.Value, out integrateAll);
+                                        return integrateAll;
+                                    }
+                                    done = true;
+                                }
+                                break;
+                            case XmlNodeType.EndElement:
+                                if (reader.Name.Equals("transition_settings")) // We have come too far
+                                {
+                                    done = true;
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError("Exception reading file {0}. Exception details are: ", SkylineFilePath);
+                logger.LogException(e);
+                return false;
+            }
+            logger.LogError("Please check the \"Integrate all\" setting in the Skyline document. This can be found under the Settings menu.");
+            return false;
         }
     }
 
@@ -308,8 +375,7 @@ namespace AutoQC
                 // files in the folder.
                 if (Settings.LastAcquiredFileDate != DateTime.MinValue)
                 {
-                    importOnOrAfter = string.Format(" --import-on-or-after={0}",
-                        Settings.LastAcquiredFileDate.ToShortDateString());
+                    importOnOrAfter = string.Format(" --import-on-or-after={0}", Settings.LastAcquiredFileDate);
                 }
             }
             else

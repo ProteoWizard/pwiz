@@ -74,6 +74,7 @@ namespace AutoQCTest
         private void AddToLog(string message, params object[] args)
         {
             log.Append(string.Format(message, args)).AppendLine();
+            System.Diagnostics.Debug.WriteLine(message, args);
         }
 
         public String GetLog()

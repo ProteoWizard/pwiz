@@ -63,14 +63,15 @@ namespace AutoQC
 
     public class ProcessRunner
     {
-        private readonly ProcessInfo _procInfo;
+        private ProcessInfo _procInfo;
         private readonly IAutoQCLogger _logger;
+
+        private Process _process;
 
         private volatile bool _tryAgain;
 
-        public ProcessRunner(ProcessInfo procInfo, IAutoQCLogger logger)
+        public ProcessRunner(IAutoQCLogger logger)
         {
-            _procInfo = procInfo;
             _logger = logger;
         }
 
@@ -94,8 +95,10 @@ namespace AutoQC
             return process;
         }
 
-        public bool RunProcess()
+        public bool RunProcess(ProcessInfo processInfo)
         {
+            _procInfo = processInfo;
+
             Log("Running {0} with args: ", _procInfo.ExeName);
             Log(_procInfo.ArgsToPrint);
 
@@ -141,14 +144,14 @@ namespace AutoQC
 
         protected virtual int CreateAndRunProcess()
         {
-            var process = CreateProcess(_procInfo);
-            process.OutputDataReceived += WriteToLog;
-            process.ErrorDataReceived += WriteToLog;
-            process.Start();
-            process.BeginOutputReadLine();
-            process.StandardError.ReadToEnd();
-            process.WaitForExit();
-            return process.ExitCode;
+            _process = CreateProcess(_procInfo);
+            _process.OutputDataReceived += WriteToLog;
+            _process.ErrorDataReceived += WriteToLog;
+            _process.Start();
+            _process.BeginOutputReadLine();
+            _process.StandardError.ReadToEnd();
+            _process.WaitForExit();
+            return _process.ExitCode;
         }
 
         // Handle a line of output/error data from the process.
@@ -205,6 +208,22 @@ namespace AutoQC
         protected ProcessInfo GetProcessInfo()
         {
             return _procInfo;
+        }
+
+        public void StopProcess()
+        {
+            if (_process != null && !_process.HasExited)
+            {
+                try
+                {
+                    _procInfo.SetMaxTryCount(0);
+                    _process.Kill();
+                }
+                catch (Exception e)
+                {
+                    LogException(e, "Exception killing process {0}", _procInfo.ExeName);
+                }
+            }
         }
     }
 }

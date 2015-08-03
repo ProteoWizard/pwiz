@@ -43,11 +43,13 @@ namespace AutoQC
         {
             IXRawfile rawFile = null;
             // Get the time elapsed since the file was first created.
-            var createTime = File.GetCreationTime(filePath);
+            DateTime createTime;
 
             var inAcq = 1;
             try
             {
+                createTime = File.GetCreationTime(filePath);
+
                 rawFile = new MSFileReader_XRawfileClass();
                 rawFile.Open(filePath);
                 rawFile.InAcquisition(ref inAcq);          
@@ -89,7 +91,25 @@ namespace AutoQC
         public Status CheckStatus(string filePath)
         {
             // Get the time elapsed since the file was first created.
-            var createTime = File.GetCreationTime(filePath);
+            DateTime createTime;
+            DateTime lastModifiedTime;
+            try
+            {
+                createTime = File.GetCreationTime(filePath);
+                lastModifiedTime = File.GetLastWriteTime(filePath);
+            }
+            catch (Exception e)
+            {
+                throw new FileStatusException(string.Format("Error getting status of file {0}", filePath), e);
+            }
+
+            if (lastModifiedTime.CompareTo(createTime) == -1)
+            {
+                // If the file was copied to the directory, its "creation time" will be later than the 
+                // "last write time". In this case use the "last write time" otherwise we will have to 
+                // wait for "acquisition time" to elapse before the file is considered "ready" to import.
+                createTime = lastModifiedTime;
+            }
 
             return createTime.AddMinutes(_acquisitionTime) < DateTime.Now ? Status.Ready : Status.Waiting;
         }

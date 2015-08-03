@@ -121,7 +121,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textAccumulationTimeWindow.ToolTip" xml:space="preserve">
-    <value>The Skyline document will contain data files acquired only within the last 'n' days, where 'n' is the size of the accumulation window. Files older than the accumulation window will be removed from the Skyline document.</value>
+    <value>The Skyline document will retain results files acquired only within the last 'n' days, where 'n' is the size of the rolling "Results time window". Files older than the rolling window will be removed from the document.</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
     <value>The AutoQC version you are running must be compatible with the version of Skyline that you are running.  For example, if you are running Skyline-daily you must install AutoQC-daily. 

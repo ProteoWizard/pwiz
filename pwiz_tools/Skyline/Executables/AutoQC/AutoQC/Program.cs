@@ -26,13 +26,34 @@ namespace AutoQC
         [STAThread]
         public static void Main(string[] args)
         {
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+
             var form = new AutoQCForm();
             var version = ApplicationDeployment.IsNetworkDeployed
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                 : "";
             form.Text = string.Format("AutoQC-daily {0}", version);
-            Application.Run(form); 
+
             
+            Application.ThreadException += ((sender, e) => form.LogException(e.Exception));
+            AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
+            {
+                try
+                {
+                    form.LogError("AutoQC encountered an unexpected error. ");
+                    form.LogException((Exception) e.ExceptionObject);
+                    MessageBox.Show("AutoQC encountered an unexpected error. " +
+                                    "Please send the latest AutoQC log file in this directory to the developers : " +
+                                    form.GetLogDirectory());
+                }
+                finally
+                {
+                    Application.Exit();
+                }
+            }
+                );
+
+            Application.Run(form);       
         }
     }
 }

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 
 namespace AutoQC
@@ -37,10 +36,15 @@ namespace AutoQC
 
         private readonly FileSystemWatcher _fileWatcher;
 
+        private volatile bool _cancelled;
+
         private const int WAIT_60SEC = 60000;
 
         // TODO: We need to support other instrument vendors
         private const string THERMO_EXT = ".raw";
+        private const string SCIEX_EXT = ".wiff";
+        private const string WATERS_EXT = ".raw";
+        private const string AGILENT_EXT = ".d";
 
         public AutoQCFileSystemWatcher(IAutoQCLogger logger)
         {
@@ -50,7 +54,7 @@ namespace AutoQC
             Logger = logger;
         }
 
-        public void Start(MainSettings mainSettings)
+        public void Init(MainSettings mainSettings)
         {
             _dataFiles = new ConcurrentQueue<string>();
 
@@ -60,38 +64,54 @@ namespace AutoQC
 
             _fileWatcher.Filter = GetFileFilter(mainSettings.InstrumentType);
 
-            _fileWatcher.Path = mainSettings.FolderToWatch;
+            _fileWatcher.Path = mainSettings.FolderToWatch; 
+        }
 
+        public void StartWatching()
+        {
+            _cancelled = false;
             // Begin watching.
             _fileWatcher.EnableRaisingEvents = true;
         }
 
         private static IResultFileStatus GetFileStatusChecker(MainSettings mainSettings)
         {
-            // TODO: We need to support other instrument vendors
             if (mainSettings.InstrumentType.Equals(MainSettings.THERMO))
             {
                 return new XRawFileStatus(mainSettings.AcquisitionTime);
             }
-            // TODO: We need to support other instrument vendors
             return new AcquisitionTimeFileStatus(mainSettings.AcquisitionTime);
         }
 
         private static string GetFileFilter(string instrument)
         {
+            var ext = ".*";
             if (instrument.Equals(MainSettings.THERMO))
             {
-                return "*" + THERMO_EXT;
+                ext = THERMO_EXT;
             }
-            else
+            else if (instrument.Equals(MainSettings.SCIEX))
             {
-                // TODO: We need to support other instrument vendors
-                return "*.*";
+                ext = SCIEX_EXT;
             }
+            else if (instrument.Equals(MainSettings.WATERS))
+            {
+                // Waters: .raw directory
+                ext = WATERS_EXT;
+            }
+            else if (instrument.Equals(MainSettings.AGILENT))
+            {
+                // Agilent: .d directory
+                ext = AGILENT_EXT;
+            }
+            // TODO: We need to support other instrument vendors
+           
+            return "*" + ext;
         }
 
         public void Stop()
         {
+            _cancelled = true;
             _fileWatcher.EnableRaisingEvents = false;
         }
 
@@ -103,9 +123,16 @@ namespace AutoQC
 
         public void WaitForFileReady(string filePath)
         {
+            _cancelled = false;
+
             var counter = 0;
             while (true)
             {
+                if (!(new FileInfo(filePath).Exists))
+                {
+                    throw new FileStatusException(string.Format("File does not exist: {0}", filePath));
+                }
+
                 var fileStatus= _fileStatusChecker.CheckStatus(filePath);
                 if (fileStatus.Equals(Status.Ready))
                 {
@@ -120,11 +147,16 @@ namespace AutoQC
 
                 if (counter % 10 == 0)
                 {
-                    Logger.Log("File is being acquired. Waiting...");
+                    Logger.Log("File {0} is being acquired. Waiting...", Path.GetFileName(filePath));
                 }
                 counter++;
                 // Wait for 60 seconds.
                 Thread.Sleep(WAIT_60SEC);
+                if (_cancelled)
+                {
+                    Logger.Log("FileSystemWatcher cancelled. ");
+                    return;
+                }
             }
             Logger.Log("File {0} is ready", Path.GetFileName(filePath));
         }
@@ -143,7 +175,10 @@ namespace AutoQC
 
         public List<string> GetAllFiles()
         {
-            return Directory.GetFiles(_fileWatcher.Path, _fileWatcher.Filter).ToList();
+            List<string> filesAndDirectories = new List<string>();
+            filesAndDirectories.AddRange(Directory.GetFiles(_fileWatcher.Path, _fileWatcher.Filter));
+            filesAndDirectories.AddRange(Directory.GetDirectories(_fileWatcher.Path, _fileWatcher.Filter));
+            return filesAndDirectories;
         }
 
         public string GetDirectory()

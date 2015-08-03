@@ -55,7 +55,8 @@ namespace AutoQCTest
             {
                 FolderToWatch = testDir,
                 InstrumentType = "NoInstrument",
-                AccumulationWindowString = "31"
+                AccumulationWindowString = "31",
+                AcquisitionTimeString = "0"
             };
 
             // Start the background worker.
@@ -185,14 +186,19 @@ namespace AutoQCTest
             
             public bool RunProcess(ProcessInfo processInfo)
             {
-               _processRunner = new MockProcessRunner(processInfo, _logger);
-                var run = _processRunner.RunProcess();
+               _processRunner = new MockProcessRunner(_logger);
+                var run = _processRunner.RunProcess(processInfo);
                 if (_processRunner.GetExeName().Equals("Process2") 
                     || _processRunner.GetExeName().Equals("Process4"))
                 {
                     _done = _processRunner.IsDone();
                 }
                 return run;
+            }
+
+            public void StopProcess()
+            {
+                throw new NotImplementedException();
             }
 
             public Boolean IsDone()
@@ -207,7 +213,7 @@ namespace AutoQCTest
         {
             private Boolean _done;
 
-            public MockProcessRunner(ProcessInfo procInfo, IAutoQCLogger logger) : base(procInfo, logger)
+            public MockProcessRunner(IAutoQCLogger logger) : base(logger)
             {
             }
 

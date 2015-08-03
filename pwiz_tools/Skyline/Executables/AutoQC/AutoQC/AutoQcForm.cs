@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -48,6 +47,7 @@ namespace AutoQC
 
         // Background worker to run SkylineRunner
         private readonly AutoQCBackgroundWorker _worker;
+        private readonly ProcessRunner _processRunner;
 
         private readonly List<SettingsTab> _settingsTabs;
         
@@ -74,6 +74,7 @@ namespace AutoQC
             }
 
             _worker = new AutoQCBackgroundWorker(this, this, this);
+            _processRunner = new ProcessRunner(this);
         }
 
         private MainSettingsTab GetMainSettingsTab()
@@ -105,9 +106,11 @@ namespace AutoQC
                 return;
             }
             
-            // Initialize logging to log in the folder where results files will be written.
-            GlobalContext.Properties["WorkingDirectory"] = textFolderToWatchPath.Text;
+            // Initialize logging to log in the folder with the Skyline document.
+            var skylineFileDir = mainSettingsTab.Settings.SkylineFileDir;
+            GlobalContext.Properties["WorkingDirectory"] = skylineFileDir;
             XmlConfigurator.Configure();
+            Log("Logging to directory: {0}", skylineFileDir);
             
             Log("Watching folder " + textFolderToWatchPath.Text);
             Log("Mass spec. files will be imported to " + textSkylinePath.Text);
@@ -126,6 +129,13 @@ namespace AutoQC
 
             var mainSettings = mainSettingsTab.Settings;
 
+            // Make sure "Integrate all" is checked in the Skyline settings
+            if (!(await Task.Run(() => mainSettings.IsIntegrateAllChecked(this))))
+            {
+                SetStoppedControls();
+                return;
+            }
+
             // Export a report from the Skyline document to get the most recent acquisition date on the results files
             // imported into the document.
             if (await Task.Run(() => mainSettings.ReadLastAcquiredFileDate(this, this)))
@@ -136,6 +146,16 @@ namespace AutoQC
             {
                 SetStoppedControls();
             }
+        }
+
+        public string GetLogDirectory()
+        {
+            var mainSettingsTab = GetMainSettingsTab();
+            if (mainSettingsTab != null && mainSettingsTab.Settings != null)
+            {
+                return mainSettingsTab.Settings.SkylineFileDir;
+            }
+            return "";
         }
 
         private bool ValidateAllSettings()
@@ -241,7 +261,7 @@ namespace AutoQC
                 textAccumulationTimeWindow.Text = mainSettings.AccumulationWindowString;
                 textAquisitionTime.Text = mainSettings.AcquisitionTimeString;
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
-                comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(MainSettings.THERMO);
+                comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
             });
         }
 
@@ -381,7 +401,10 @@ namespace AutoQC
         private void Log(string line, bool logToFile, int blankLinesBefore = 0, int blankLinesAfter = 0,
             params Object[] args)
         {
-            line = string.Format(line, args);
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
 
             if (line.Equals(_lastMessage))
             {
@@ -437,7 +460,10 @@ namespace AutoQC
 
         private void LogError(string line, bool logToFile, int blankLinesBefore = 0, int blankLinesAfter = 0, params Object[] args)
         {
-            line = string.Format(line, args);
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
             RunUI(() =>
             {
                 line = "ERROR: " + line;
@@ -499,7 +525,12 @@ namespace AutoQC
 
         public bool RunProcess(ProcessInfo processInfo)
         {
-            return new ProcessRunner(processInfo, this).RunProcess();
+            return _processRunner.RunProcess(processInfo);
+        }
+
+        public void StopProcess()
+        {
+            _processRunner.StopProcess();  
         }
 
         #endregion
@@ -648,5 +679,6 @@ namespace AutoQC
     {
         IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
         bool RunProcess(ProcessInfo processInfo);
+        void StopProcess();
     }
 }

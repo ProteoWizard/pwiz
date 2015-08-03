@@ -18,6 +18,7 @@
 
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 
@@ -35,6 +36,8 @@ namespace AutoQC
         private readonly IProcessControl _processControl;
         private readonly IAutoQCLogger _logger;
 
+        private DateTime _lastAcquiredFileDate;
+
         public const int WAIT_5SEC = 5000;
         private const string CANCELLED = "Cancelled";
         private const string ERROR = "Error";
@@ -51,9 +54,9 @@ namespace AutoQC
 
         public void Start(MainSettings mainSettings)
         {
+            _lastAcquiredFileDate = mainSettings.LastAcquiredFileDate;
+            _fileWatcher.Init(mainSettings);
             ProcessFiles();
-
-            _fileWatcher.Start(mainSettings);
         }
 
         private void ProcessFiles()
@@ -108,7 +111,13 @@ namespace AutoQC
                         e.Result = ERROR;
                         break;
                     }
-                   
+
+                    if (_worker.CancellationPending)
+                    {
+                        e.Result = CANCELLED;
+                        break;
+                    }
+
                     var importContext = new ImportContext(filePath) {TotalImportCount = _totalImportCount};
                     if (!ProcessOneFile(importContext))
                     {
@@ -164,8 +173,11 @@ namespace AutoQC
         private bool ProcessExistingFiles(DoWorkEventArgs e)
         {
             // Queue up any existing data files in the folder
-            LogWithSpace("Processing existing files...");
+            _logger.Log("Processing existing files...", 1, 0);
             var files = _fileWatcher.GetAllFiles();
+
+            // Enable notifications on new files that get added to the folder.
+            _fileWatcher.StartWatching();
 
             if (files.Count == 0)
             {
@@ -173,14 +185,39 @@ namespace AutoQC
                 return true;
             }
             
-            Log("Found {0} existing files.", files.Count);
+            Log("Existing files found: {0}", files.Count);
 
             var importContext = new ImportContext(files) {TotalImportCount = _totalImportCount};
             while (importContext.GetNextFile() != null)
             {
+                if (_worker.CancellationPending)
+                {
+                    e.Result = CANCELLED;
+                    return false;
+                }
+
+                var filePath = importContext.GetCurrentFile();
+                if (!(new FileInfo(filePath).Exists))
+                {
+                    // User may have deleted this file.
+                    Log("File {0} no longer exists. Skipping...", filePath);
+                    continue;
+                }
+
+                var fileLastWriteTime = File.GetLastWriteTime(filePath);
+                if (fileLastWriteTime.CompareTo(_lastAcquiredFileDate) == -1)
+                {
+                    Log(
+                        "File {0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
+                        Path.GetFileName(filePath),
+                        fileLastWriteTime,
+                        _lastAcquiredFileDate);
+                    continue;
+                }
+
                 try
                 {
-                    _fileWatcher.WaitForFileReady(importContext.GetCurrentFile());
+                    _fileWatcher.WaitForFileReady(filePath);
                 }
                 catch (FileStatusException fse)
                 {
@@ -188,16 +225,16 @@ namespace AutoQC
                     e.Result = ERROR;
                     return false;
                 }
+                
+                if (_worker.CancellationPending)
+                {
+                    e.Result = CANCELLED;
+                    return false;
+                }
 
                 if (!ProcessOneFile(importContext))
                 {
                     e.Result = ERROR;
-                    return false;
-                }
-
-                if (_worker.CancellationPending)
-                {
-                    e.Result = CANCELLED;
                     return false;
                 }
             }
@@ -251,6 +288,7 @@ namespace AutoQC
         private void CancelAsync()
         {
             _worker.CancelAsync();
+            _processControl.StopProcess();
         }
 
         public bool IsRunning()
