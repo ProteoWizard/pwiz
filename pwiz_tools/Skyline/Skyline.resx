@@ -1152,9 +1152,6 @@
   <data name="buttonShowAllChromatograms.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="statusSequences.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="statusSequences.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 22</value>
   </data>
@@ -1163,9 +1160,6 @@
   </data>
   <data name="statusSequences.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
-  </data>
-  <data name="statusPeptides.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="statusPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>85, 22</value>
@@ -1176,9 +1170,6 @@
   <data name="statusPeptides.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
   </data>
-  <data name="statusPrecursors.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="statusPrecursors.Size" type="System.Drawing.Size, System.Drawing">
     <value>85, 22</value>
   </data>
@@ -1187,9 +1178,6 @@
   </data>
   <data name="statusPrecursors.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
-  </data>
-  <data name="statusIons.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="statusIons.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>

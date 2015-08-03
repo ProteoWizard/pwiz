@@ -1652,7 +1652,7 @@ namespace pwiz.Skyline
             this.buttonShowAllChromatograms.ButtonClick += new System.EventHandler(this.buttonShowAllChromatograms_ButtonClick);
             // 
             // statusSequences
-            // 
+            //  
             resources.ApplyResources(this.statusSequences, "statusSequences");
             this.statusSequences.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusSequences.Name = "statusSequences";
