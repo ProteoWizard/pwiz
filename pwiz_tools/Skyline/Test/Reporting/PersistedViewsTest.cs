@@ -19,10 +19,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
