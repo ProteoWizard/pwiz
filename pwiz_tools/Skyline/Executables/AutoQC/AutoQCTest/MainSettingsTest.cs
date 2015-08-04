@@ -84,7 +84,7 @@ namespace AutoQCTest
         public void TestAddArchiveArgs()
         {
             var mainSettings = new MainSettings() { SkylineFilePath = @"C:\Dummy\path\Test_file.sky" };
-            var mainSettingsTab = new MainSettingsTab(null, null) {Settings = mainSettings};
+            var mainSettingsTab = new MainSettingsTab(null, new TestLogger()) {Settings = mainSettings};
             var date = new DateTime(2015, 6, 17);
             mainSettingsTab.LastArchivalDate = date;
             

@@ -34,8 +34,10 @@ namespace AutoQC
                 : "";
             form.Text = string.Format("AutoQC-daily {0}", version);
 
-            
+            // Handle exceptions on the UI thread.
             Application.ThreadException += ((sender, e) => form.LogException(e.Exception));
+
+            // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
                 try

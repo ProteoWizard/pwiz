@@ -437,6 +437,7 @@ namespace AutoQC
         private void LogException(Exception ex, bool logToFile)
         {
             LogError(ex.Message, false);
+            LogError("Exception details can be found in the AutoQC log in {0} ", GetLogDirectory());
             if (logToFile)
             {
                 LOG.Error(ex.Message, ex); // Include stacktrace of the exception.

@@ -88,7 +88,7 @@ namespace AutoQC
 
         private void ProcessNewFiles(DoWorkEventArgs e)
         {
-            LogWithSpace("Processing new files...");
+            LogWithSpace("Importing new files...");
             var inWait = false;
             while (true)
             {
@@ -143,20 +143,20 @@ namespace AutoQC
         {
             if (e.Error != null)
             {
-                LogError("An exception occurred while processing the file:");
+                LogError("An exception occurred while importing the file.");
                 _logger.LogException(e.Error);  
             }
             else if (e.Result == null || ERROR.Equals(e.Result))
             {
-                Log("Error processing file.");
+                Log("Error importing file.");
             }
             else if (CANCELLED.Equals(e.Result))
             {
-                Log("Cancelled processing files.");
+                Log("Cancelled importing files.");
             }
             else
             {
-                LogWithSpace("Finished processing files.");
+                LogWithSpace("Finished importing files.");
             }
             Stop();
         }
@@ -173,7 +173,7 @@ namespace AutoQC
         private bool ProcessExistingFiles(DoWorkEventArgs e)
         {
             // Queue up any existing data files in the folder
-            _logger.Log("Processing existing files...", 1, 0);
+            _logger.Log("Importing existing files...", 1, 0);
             var files = _fileWatcher.GetAllFiles();
 
             // Enable notifications on new files that get added to the folder.
@@ -208,7 +208,7 @@ namespace AutoQC
                 if (fileLastWriteTime.CompareTo(_lastAcquiredFileDate) <= 0)
                 {
                     Log(
-                        "File {0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
+                        "File {0} was acquired ({1}) on or before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
                         Path.GetFileName(filePath),
                         fileLastWriteTime,
                         _lastAcquiredFileDate);
@@ -239,7 +239,7 @@ namespace AutoQC
                 }
             }
 
-            LogWithSpace("Finished processing existing files...");
+            LogWithSpace("Finished importing existing files...");
             return true;
         }
 
@@ -259,7 +259,7 @@ namespace AutoQC
             _fileWatcher.Stop();
             _totalImportCount = 0;
 
-            if (_worker.IsBusy)
+            if (_worker != null && _worker.IsBusy)
             {
                 CancelAsync();
                 _appControl.SetWaiting();

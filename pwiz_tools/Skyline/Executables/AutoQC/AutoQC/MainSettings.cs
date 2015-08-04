@@ -144,7 +144,7 @@ namespace AutoQC
                 }
                 else
                 {
-                    logger.Log("The Skyline document does not have any imported results files.");  
+                    logger.Log("The Skyline document does not have any imported results.");  
                 }
             }
             catch (IOException e)
@@ -513,6 +513,8 @@ namespace AutoQC
                 archiveDate.Month);
 
             LastArchivalDate = currentDate;
+
+            Log("Archiving to {0}", archiveFileName);
 
             // Archive file will be written in the same directory as the Skyline file.
             return string.Format("--share-zip={0}", archiveFileName);
