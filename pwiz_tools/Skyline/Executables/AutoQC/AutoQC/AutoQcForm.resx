@@ -120,18 +120,22 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="textAccumulationTimeWindow.ToolTip" xml:space="preserve">
+  <data name="textResultsTimeWindow.ToolTip" xml:space="preserve">
     <value>The Skyline document will retain results files acquired only within the last 'n' days, where 'n' is the size of the rolling "Results time window". Files older than the rolling window will be removed from the document.</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
     <value>The AutoQC version you are running must be compatible with the version of Skyline that you are running.  For example, if you are running Skyline-daily you must install AutoQC-daily. 
 
-Before running AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC data files, as well as the path to a Skyline document where results will get imported.  Any new data files added to the folder will automatically get imported to the given Skyline document. 
+Before running AutoQC set up the appropriate settings in the "Settings" tab. AutoQC requires the path to a folder were the instrument will write QC results files, as well as the path to a Skyline document where results will get imported.  Any new results files added to the folder will automatically get imported to the given Skyline document. 
+When AutoQC starts up it will import all existing files in the folder that were acquired after the acquisition date on the newest results file already imported into the Skyline document. 
 
-AutoQC allows the user to set an accumulation time window for the acquired results.  The minimum value for this setting is 31 days. The Skyline document specified in the "Setting" tab will contain results acquired only within the accumulation window.  When a new data files is added to the folder any results older than the current accumulation window, ending on that day, will be discarded.  
-AutoQC also creates an archive (.sky.zip file) of the Skyline document when data files are added to the folder in a new month.
+AutoQC allows users to specify a "Results time window" to set a time limit on how long imported results will be retained in the Skyline document. This is a rolling window and only results acquired within the last 'n' days, where 'n' is the width of the window, will be retained in the document. When a new results file imported into the document any results that no longer fall within the time window, ending on that day, will be discarded.  
 
-If you would like to publish the Skyline document to Panorama, check the box in the "Panorama Settings" tab and configure the details of the Panorama server. The document is published to Panorama after each data file import. </value>
+AutoQC also creates a monthly archive (.sky.zip file) of the Skyline document. 
+
+The "Expected acquisition time" setting tells AutoQC how long to wait before attempting to import a results file.  This should be set to the time (in minutes) that the file acquisition is expected to be complete.  If Skyline tries to import a file that has not been fully acquired it will return an error. 
+
+If you would like to publish the Skyline document to a Panorama server, check the box in the "Panorama Settings" tab and configure the details of the Panorama server. The document is published to Panorama after each data file import. </value>
   </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>57</value>

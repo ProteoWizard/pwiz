@@ -55,7 +55,7 @@ namespace AutoQCTest
             {
                 FolderToWatch = testDir,
                 InstrumentType = "NoInstrument",
-                AccumulationWindowString = "31",
+                ResultsWindowString = "31",
                 AcquisitionTimeString = "0"
             };
 

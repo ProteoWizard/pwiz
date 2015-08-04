@@ -34,7 +34,7 @@
             this.textFolderToWatchPath = new System.Windows.Forms.TextBox();
             this.textSkylinePath = new System.Windows.Forms.TextBox();
             this.textAquisitionTime = new System.Windows.Forms.TextBox();
-            this.textAccumulationTimeWindow = new System.Windows.Forms.TextBox();
+            this.textResultsTimeWindow = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
@@ -119,17 +119,17 @@
             this.textAquisitionTime.Name = "textAquisitionTime";
             this.textAquisitionTime.Size = new System.Drawing.Size(100, 20);
             this.textAquisitionTime.TabIndex = 57;
-            this.toolTip1.SetToolTip(this.textAquisitionTime, "Expected time in minutes to completely acquire a data file.  A data file will be " +
+            this.toolTip1.SetToolTip(this.textAquisitionTime, "Expected time in minutes to completely acquire a results file.  The file will be " +
         "imported into the Skyline document after the specified minutes have elapsed sinc" +
-        "e the file was created.");
+        "e it was created.");
             // 
-            // textAccumulationTimeWindow
+            // textResultsTimeWindow
             // 
-            this.textAccumulationTimeWindow.Location = new System.Drawing.Point(21, 173);
-            this.textAccumulationTimeWindow.Name = "textAccumulationTimeWindow";
-            this.textAccumulationTimeWindow.Size = new System.Drawing.Size(100, 20);
-            this.textAccumulationTimeWindow.TabIndex = 55;
-            this.toolTip1.SetToolTip(this.textAccumulationTimeWindow, resources.GetString("textAccumulationTimeWindow.ToolTip"));
+            this.textResultsTimeWindow.Location = new System.Drawing.Point(21, 173);
+            this.textResultsTimeWindow.Name = "textResultsTimeWindow";
+            this.textResultsTimeWindow.Size = new System.Drawing.Size(100, 20);
+            this.textResultsTimeWindow.TabIndex = 55;
+            this.toolTip1.SetToolTip(this.textResultsTimeWindow, resources.GetString("textResultsTimeWindow.ToolTip"));
             // 
             // splitContainer1
             // 
@@ -185,7 +185,7 @@
             this.groupBoxMain.Controls.Add(this.labelAquisitionTime);
             this.groupBoxMain.Controls.Add(this.textAquisitionTime);
             this.groupBoxMain.Controls.Add(this.labelDays);
-            this.groupBoxMain.Controls.Add(this.textAccumulationTimeWindow);
+            this.groupBoxMain.Controls.Add(this.textResultsTimeWindow);
             this.groupBoxMain.Controls.Add(this.labelAccumulationTimeWindow);
             this.groupBoxMain.Controls.Add(this.labelInstrumentType);
             this.groupBoxMain.Controls.Add(this.comboBoxInstrumentType);
@@ -233,9 +233,9 @@
             this.labelAccumulationTimeWindow.AutoSize = true;
             this.labelAccumulationTimeWindow.Location = new System.Drawing.Point(20, 157);
             this.labelAccumulationTimeWindow.Name = "labelAccumulationTimeWindow";
-            this.labelAccumulationTimeWindow.Size = new System.Drawing.Size(135, 13);
+            this.labelAccumulationTimeWindow.Size = new System.Drawing.Size(106, 13);
             this.labelAccumulationTimeWindow.TabIndex = 54;
-            this.labelAccumulationTimeWindow.Text = "Accumulation time window:";
+            this.labelAccumulationTimeWindow.Text = "Results time window:";
             // 
             // labelInstrumentType
             // 
@@ -651,7 +651,7 @@
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.GroupBox groupBoxMain;
         private System.Windows.Forms.Label labelDays;
-        private System.Windows.Forms.TextBox textAccumulationTimeWindow;
+        private System.Windows.Forms.TextBox textResultsTimeWindow;
         private System.Windows.Forms.Label labelAccumulationTimeWindow;
         private System.Windows.Forms.Label labelInstrumentType;
         private System.Windows.Forms.ComboBox comboBoxInstrumentType;

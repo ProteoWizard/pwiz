@@ -50,7 +50,7 @@
     <Setting Name="ImportExistingFiles" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AccumulationWindow" Type="System.Int32" Scope="User">
+    <Setting Name="ResultsWindow" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="AcquisitionTime" Type="System.Int32" Scope="User">

@@ -47,16 +47,16 @@ namespace AutoQC
         }
         public string FolderToWatch { get; set; }
 
-        public int AccumulationWindow
+        public int ResultsWindow
         {
             get
             {
                 int val;
-                return Int32.TryParse(AccumulationWindowString, out val) ? val : 0;
+                return Int32.TryParse(ResultsWindowString, out val) ? val : 0;
             }
         }
 
-        public string AccumulationWindowString { get; set; }
+        public string ResultsWindowString { get; set; }
         public string InstrumentType { get; set; }
         public DateTime LastAcquiredFileDate { get; set; } // Not saved to Properties.Settings
         public string AcquisitionTimeString { get; set; }
@@ -78,8 +78,8 @@ namespace AutoQC
                 FolderToWatch = Settings.Default.FolderToWatch,
             };
 
-            var accumWin = Settings.Default.AccumulationWindow;
-            settings.AccumulationWindowString = accumWin == 0 ? ACCUM_TIME_WINDOW.ToString() : accumWin.ToString();
+            var accumWin = Settings.Default.ResultsWindow;
+            settings.ResultsWindowString = accumWin == 0 ? ACCUM_TIME_WINDOW.ToString() : accumWin.ToString();
 
             var instrumentType = Settings.Default.InstrumentType;
             settings.InstrumentType = string.IsNullOrEmpty(instrumentType) ? THERMO : instrumentType;
@@ -96,7 +96,7 @@ namespace AutoQC
 
             Settings.Default.FolderToWatch = FolderToWatch;
 
-            Settings.Default.AccumulationWindow = AccumulationWindow;
+            Settings.Default.ResultsWindow = ResultsWindow;
 
             Settings.Default.InstrumentType = InstrumentType;
 
@@ -201,34 +201,37 @@ namespace AutoQC
         {
             try
             {
-                using (XmlReader reader = XmlReader.Create(new StreamReader(SkylineFilePath)))
+                using (var stream = new FileStream(SkylineFilePath, FileMode.Open))
                 {
-                    reader.MoveToContent();
-
-                    var done = false;
-                    while (reader.Read() && !done)
+                    using (XmlReader reader = XmlReader.Create(stream))
                     {
-                        switch (reader.NodeType)
+                        reader.MoveToContent();
+
+                        var done = false;
+                        while (reader.Read() && !done)
                         {
-                            case XmlNodeType.Element:
-                                
-                                if (reader.Name == "transition_integration")
-                                {
-                                    if (reader.MoveToAttribute("integrate_all"))
+                            switch (reader.NodeType)
+                            {
+                                case XmlNodeType.Element:
+
+                                    if (reader.Name == "transition_integration")
                                     {
-                                        bool integrateAll;
-                                        Boolean.TryParse(reader.Value, out integrateAll);
-                                        return integrateAll;
+                                        if (reader.MoveToAttribute("integrate_all"))
+                                        {
+                                            bool integrateAll;
+                                            Boolean.TryParse(reader.Value, out integrateAll);
+                                            return integrateAll;
+                                        }
+                                        done = true;
                                     }
-                                    done = true;
-                                }
-                                break;
-                            case XmlNodeType.EndElement:
-                                if (reader.Name.Equals("transition_settings")) // We have come too far
-                                {
-                                    done = true;
-                                }
-                                break;
+                                    break;
+                                case XmlNodeType.EndElement:
+                                    if (reader.Name.Equals("transition_settings")) // We have come too far
+                                    {
+                                        done = true;
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }
@@ -239,7 +242,7 @@ namespace AutoQC
                 logger.LogException(e);
                 return false;
             }
-            logger.LogError("Please check the \"Integrate all\" setting in the Skyline document. This can be found under the Settings menu.");
+            logger.LogError("Skyline documents with QC results should have the\"Integrate all\" setting, under the \"Settings\" menu, checked. Please save the Skyline document with \"Integrate all\" checked and restart AutoQC.");
             return false;
         }
     }
@@ -301,8 +304,8 @@ namespace AutoQC
                 error = true;
             }
 
-            // Accumulation window.
-            var accumWin = mainSettingsUI.AccumulationWindowString;
+            // Results time window.
+            var accumWin = mainSettingsUI.ResultsWindowString;
             if (string.IsNullOrWhiteSpace(accumWin))
             {
                 LogErrorOutput("Please specify a value for the \"Accumulation time window\".");
@@ -311,10 +314,10 @@ namespace AutoQC
             else
             {
                 int accumWindow;
-                if (!Int32.TryParse(mainSettingsUI.AccumulationWindowString, out accumWindow))
+                if (!Int32.TryParse(mainSettingsUI.ResultsWindowString, out accumWindow))
                 {
                     LogErrorOutput("Invalid value for \"Accumulation time window\": {0}.",
-                        mainSettingsUI.AccumulationWindowString);
+                        mainSettingsUI.ResultsWindowString);
                     error = true;
                 }
                 else if (accumWindow < MainSettings.ACCUM_TIME_WINDOW)
@@ -352,12 +355,12 @@ namespace AutoQC
 
         public override string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
         {
-            // Get the current accumulation window
+            // Get the current results time window
             var currentDate = DateTime.Today;
-            var accumulationWindow = AccumulationWindow.Get(currentDate, Settings.AccumulationWindow);
+            var accumulationWindow = AccumulationWindow.Get(currentDate, Settings.ResultsWindow);
             if (toPrint)
             {
-                Log("Current accumulation window is {0} TO {1}",
+                Log("Current results time window is {0} TO {1}",
                     accumulationWindow.StartDate.ToShortDateString(), accumulationWindow.EndDate.ToShortDateString());
             }
 

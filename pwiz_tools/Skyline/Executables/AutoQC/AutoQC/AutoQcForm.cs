@@ -258,7 +258,7 @@ namespace AutoQC
             {
                 textSkylinePath.Text = mainSettings.SkylineFilePath;
                 textFolderToWatchPath.Text = mainSettings.FolderToWatch;
-                textAccumulationTimeWindow.Text = mainSettings.AccumulationWindowString;
+                textResultsTimeWindow.Text = mainSettings.ResultsWindowString;
                 textAquisitionTime.Text = mainSettings.AcquisitionTimeString;
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
                 comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
@@ -276,7 +276,7 @@ namespace AutoQC
             {
                 SkylineFilePath = textSkylinePath.Text,
                 FolderToWatch = textFolderToWatchPath.Text,
-                AccumulationWindowString = textAccumulationTimeWindow.Text,
+                ResultsWindowString = textResultsTimeWindow.Text,
                 InstrumentType = comboBoxInstrumentType.SelectedItem.ToString(),
                 AcquisitionTimeString = textAquisitionTime.Text
             };

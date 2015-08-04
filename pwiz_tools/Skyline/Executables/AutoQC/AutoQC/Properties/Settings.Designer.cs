@@ -218,12 +218,12 @@ namespace AutoQC.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int AccumulationWindow {
+        public int ResultsWindow {
             get {
-                return ((int)(this["AccumulationWindow"]));
+                return ((int)(this["ResultsWindow"]));
             }
             set {
-                this["AccumulationWindow"] = value;
+                this["ResultsWindow"] = value;
             }
         }
         

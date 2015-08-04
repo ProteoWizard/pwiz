@@ -45,7 +45,7 @@ namespace AutoQCTest
             {
                 SkylineFilePath = skyPath,
                 FolderToWatch = folderPath,
-                AccumulationWindowString = "not a number",
+                ResultsWindowString = "not a number",
                 // ImportExistingFiles = false
             };
             mainControl = new TestAppControl();
@@ -60,7 +60,7 @@ namespace AutoQCTest
             Assert.IsTrue(log.Contains(string.Format("Invalid value for \"Accumulation time window\": {0}.", accumWindow)));
 
             accumWindow = "-1";
-            settings.AccumulationWindowString = accumWindow;
+            settings.ResultsWindowString = accumWindow;
             logger.Clear();
             mainSettingsTab = new MainSettingsTab(mainControl, logger);
             Assert.IsFalse(mainSettingsTab.ValidateSettings());
@@ -115,7 +115,7 @@ namespace AutoQCTest
             var mainSettings = new MainSettings()
             {
                 SkylineFilePath = skyFile,
-                AccumulationWindowString = MainSettings.ACCUM_TIME_WINDOW.ToString()
+                ResultsWindowString = MainSettings.ACCUM_TIME_WINDOW.ToString()
             };
             
             var mainSettingsTab = new MainSettingsTab(null, logger)
@@ -150,7 +150,7 @@ namespace AutoQCTest
             var mainSettings = new MainSettings()
             {
                 SkylineFilePath = skyFile,
-                AccumulationWindowString = MainSettings.ACCUM_TIME_WINDOW.ToString()
+                ResultsWindowString = MainSettings.ACCUM_TIME_WINDOW.ToString()
             };
 
             var mainSettingsTab = new MainSettingsTab(null, logger)

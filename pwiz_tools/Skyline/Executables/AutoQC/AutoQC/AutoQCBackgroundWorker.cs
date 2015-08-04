@@ -205,7 +205,7 @@ namespace AutoQC
                 }
 
                 var fileLastWriteTime = File.GetLastWriteTime(filePath);
-                if (fileLastWriteTime.CompareTo(_lastAcquiredFileDate) == -1)
+                if (fileLastWriteTime.CompareTo(_lastAcquiredFileDate) <= 0)
                 {
                     Log(
                         "File {0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
