@@ -85,6 +85,14 @@ public:
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
 
     /**
+    * Getter.
+    * @param index spectrum index
+    * @param detailLevel If set to DetailLevel_FullData this method will also get all binary data(raw data)
+    * @return smart pointer to spectrum
+    */
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
+
+    /**
      * Destructor.
      */
     virtual ~SpectrumList_mz5Impl();
@@ -230,6 +238,11 @@ IndexList SpectrumList_mz5Impl::findSpotID(const std::string& spotID) const
     initSpectra();
     std::map<std::string, IndexList>::const_iterator it = spotMap_.find(spotID);
     return it != spotMap_.end() ? it->second : IndexList();
+}
+
+SpectrumPtr SpectrumList_mz5Impl::spectrum(size_t index, DetailLevel detailLevel) const
+{
+    return spectrum(index, detailLevel == DetailLevel_FullData);
 }
 
 SpectrumPtr SpectrumList_mz5Impl::spectrum(size_t index, bool getBinaryData) const

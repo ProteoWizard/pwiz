@@ -56,6 +56,7 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     virtual size_t find(const std::string& id) const;
     virtual IndexList findSpotID(const std::string& spotID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(const SpectrumPtr &seed, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const;
 
@@ -105,6 +106,11 @@ IndexList SpectrumList_mzMLImpl::findSpotID(const string& spotID) const
 {
     //boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     return index_->findSpectrumBySpotID(spotID);
+}
+
+SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, DetailLevel detailLevel) const
+{
+    return spectrum(index, (detailLevel == DetailLevel_FullData) ? IO::ReadBinaryData : IO::IgnoreBinaryData, NULL);
 }
 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) const

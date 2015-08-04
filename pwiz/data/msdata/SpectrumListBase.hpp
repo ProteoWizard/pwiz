@@ -48,14 +48,6 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     /// set DataProcessing
     virtual void setDataProcessingPtr(DataProcessingPtr dp) { dp_ = dp; }
 
-    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const = 0;
-
-    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const
-    {
-        // for the basic spectrum lists (mzML, mz5, mzXML, etc.), faster metadeta access just returns full metadata
-        return spectrum(index, detailLevel == DetailLevel_FullData);
-    }
-
     /// issues a warning once per SpectrumList instance (based on string hash)
     virtual void warn_once(const char* msg) const
     {
