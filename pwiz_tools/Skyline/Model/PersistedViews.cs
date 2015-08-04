@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model
             }
             if (null != reportSpecList)
             {
-                RevisionIndex = reportSpecList.RevisionIndex;
+                RevisionIndex = reportSpecList.RevisionIndex + 1;
                 foreach (var newView in ReportSharing.ConvertAll(reportSpecList.Select(reportSpec => new ReportOrViewSpec(reportSpec)),
                             new SrmDocument(SrmSettingsList.GetDefault())))
                 {

@@ -130,6 +130,7 @@
     <Compile Include="Reporting\DocumentViewTransformerTest.cs" />
     <Compile Include="Reporting\LiveReportPivotTest.cs" />
     <Compile Include="Reporting\ColumnCaptionLocalizationTest.cs" />
+    <Compile Include="Reporting\PersistedViewsTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
