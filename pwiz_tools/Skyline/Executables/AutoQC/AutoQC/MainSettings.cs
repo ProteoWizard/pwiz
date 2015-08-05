@@ -422,9 +422,9 @@ namespace AutoQC
             var currentDate = DateTime.Today;
             if (importContext.ImportExisting && importContext.ImportingLast())
             {
-                // If We are importing existing files in the folder, create an archive (if required) of the 
+                // If we are importing existing files in the folder, create an archive (if required) of the 
                 // Skyline document AFTER importing the last results file.
-                var oldestFileDate = importContext.GetOldestFileDate();
+                var oldestFileDate = importContext.GetOldestImportedFileDate(Settings.LastAcquiredFileDate);
                 var today = DateTime.Today;
                 if(oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
                 {
@@ -513,8 +513,6 @@ namespace AutoQC
                 archiveDate.Month);
 
             LastArchivalDate = currentDate;
-
-            Log("Archiving to {0}", archiveFileName);
 
             // Archive file will be written in the same directory as the Skyline file.
             return string.Format("--share-zip={0}", archiveFileName);

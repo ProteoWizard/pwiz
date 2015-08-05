@@ -72,10 +72,22 @@ namespace AutoQC
             return _currentIndex >= _resultsFileList.Count - 1;
         }
 
-        public virtual DateTime GetOldestFileDate()
+        public virtual DateTime GetOldestImportedFileDate(DateTime lastAcqDate)
         {
             // Results files are sorted by LastWriteTime;
-            return new FileInfo(_resultsFileList[0]).LastWriteTime;
+            if (DateTime.MinValue.Equals(lastAcqDate))
+            {
+                return new FileInfo(_resultsFileList[0]).LastWriteTime;
+            }
+            for (int i = 0; i < _resultsFileList.Count; i++)
+            {
+                DateTime lastWriteTime = new FileInfo(_resultsFileList[i]).LastWriteTime;
+                if (lastWriteTime.CompareTo(lastAcqDate) > 0)
+                {
+                    return lastWriteTime;
+                }
+            }
+            return lastAcqDate;
         }
     }
 }

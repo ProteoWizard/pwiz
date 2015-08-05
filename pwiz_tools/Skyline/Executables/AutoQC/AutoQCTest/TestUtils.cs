@@ -158,7 +158,7 @@ namespace AutoQCTest
         {
         }
 
-        public override DateTime GetOldestFileDate()
+        public override DateTime GetOldestImportedFileDate(DateTime lastAcqDate)
         {
             return OldestFileDate;
         }

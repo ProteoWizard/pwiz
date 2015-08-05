@@ -103,7 +103,7 @@
             this.textFolderToWatchPath.Name = "textFolderToWatchPath";
             this.textFolderToWatchPath.Size = new System.Drawing.Size(514, 20);
             this.textFolderToWatchPath.TabIndex = 30;
-            this.toolTip1.SetToolTip(this.textFolderToWatchPath, "Path to the folder where the instrument will write QC acquisition files");
+            this.toolTip1.SetToolTip(this.textFolderToWatchPath, "Path to the folder where the instrument will write QC runs");
             // 
             // textSkylinePath
             // 
@@ -119,9 +119,9 @@
             this.textAquisitionTime.Name = "textAquisitionTime";
             this.textAquisitionTime.Size = new System.Drawing.Size(100, 20);
             this.textAquisitionTime.TabIndex = 57;
-            this.toolTip1.SetToolTip(this.textAquisitionTime, "Expected time in minutes to completely acquire a results file.  The file will be " +
-        "imported into the Skyline document after the specified minutes have elapsed sinc" +
-        "e it was created.");
+            this.toolTip1.SetToolTip(this.textAquisitionTime, "Expected duration in minutes to completely acquire a run.  The file will be impor" +
+        "ted into the Skyline document after the specified number of minutes have elapsed" +
+        " since it was created.");
             // 
             // textResultsTimeWindow
             // 
@@ -215,9 +215,9 @@
             this.labelAquisitionTime.AutoSize = true;
             this.labelAquisitionTime.Location = new System.Drawing.Point(302, 225);
             this.labelAquisitionTime.Name = "labelAquisitionTime";
-            this.labelAquisitionTime.Size = new System.Drawing.Size(130, 13);
+            this.labelAquisitionTime.Size = new System.Drawing.Size(149, 13);
             this.labelAquisitionTime.TabIndex = 58;
-            this.labelAquisitionTime.Text = "Expected acquisition time:";
+            this.labelAquisitionTime.Text = "Expected acquisition duration:";
             // 
             // labelDays
             // 

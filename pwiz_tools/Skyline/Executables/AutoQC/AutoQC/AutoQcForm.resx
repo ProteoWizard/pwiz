@@ -121,7 +121,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textResultsTimeWindow.ToolTip" xml:space="preserve">
-    <value>The Skyline document will retain results files acquired only within the last 'n' days, where 'n' is the size of the rolling "Results time window". Files older than the rolling window will be removed from the document.</value>
+    <value>The Skyline document will retain results acquired only within the last 'n' days, where 'n' is the size of the rolling "Results time window". Results from runs older than the rolling window will be removed from the document.</value>
   </data>
   <data name="richTextBox1.Text" xml:space="preserve">
     <value>The version of AutoQC installed must be compatible with the version of Skyline being used. For example, if you are running Skyline-daily you must install AutoQC-daily. 
@@ -131,7 +131,7 @@ When AutoQC is started it will import all existing runs in the folder that are n
 
 The "Results time window" setting determines how long imported results will be retained in the Skyline document.  This is a rolling window and only results acquired within the last ‘n’ days, where ‘n’ is the width of this window in days, will be retained in the document.  When a new run is imported into the document any results that no longer fall within the time window, ending on that day, will be removed from the document.  The default (and minimum) width of the window is 31 days. 
 
-The "Expected acquisition time" setting tells AutoQC how long to wait before attempting to import a run. This should be set to the time (in minutes) that file acquisition is expected to be completed.  If Skyline tries to import a file that has not been fully acquired it will return an error. The default value for this setting is 75 minutes, assuming 10 min. trapping time + 60 min. gradient + 5 min. extra. 
+The "Expected acquisition duration" setting tells AutoQC how long to wait before attempting to import a run. This should be set to the time (in minutes) that file acquisition is expected to be completed.  If Skyline tries to import a file that has not been fully acquired it will return an error. The default value for this setting is 75 minutes, assuming 10 min. trapping time + 60 min. gradient + 5 min. extra. 
 
 If you would like to upload the Skyline document to a Panorama server, check the "Publish to Panorama"  checkbox in the "Panorama Settings" tab and enter  the details of the Panorama server. AutoQC will upload the document to the Panorama server each time a new run is imported into the document. </value>
   </data>
