@@ -78,6 +78,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public MeasuredResults MeasuredResults { get; private set; }
 
+        /// <summary>
+        /// Unfortunately, because the MeasuredResults property can be null, this
+        /// property needs to be present to allow disabling of joining from before
+        /// the MeasuredResults object is created.
+        /// </summary>
+        public bool IsResultsJoiningDisabled { get; private set; }
+
         public DocumentRetentionTimes DocumentRetentionTimes { get; private set; }
 
         public bool HasResults { get { return MeasuredResults != null; } }
@@ -412,6 +419,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
             return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
+        }
+
+        public SrmSettings ChangeIsResultsJoiningDisabled(bool prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.IsResultsJoiningDisabled = prop;
+                if (HasResults)
+                    im.MeasuredResults = im.MeasuredResults.ChangeIsJoiningDisabled(prop);
+            });
         }
 
         public SrmSettings ChangeDocumentRetentionTimes(DocumentRetentionTimes prop)
@@ -1734,7 +1751,8 @@ namespace pwiz.Skyline.Model.DocSettings
             _startDocument = startDocument;
 
             _formatString = formatString;
-            _status = new ProgressStatus(_formatString);
+            // Set status string to empty, since it should be reset very quickly
+            _status = new ProgressStatus(string.Empty);
         }
 
         public void ProcessGroup(PeptideGroupDocNode nodeGroup)
@@ -2083,6 +2101,12 @@ namespace pwiz.Skyline.Model.DocSettings
             // Results handler is temporary. Any time the document has one, it means the results
             // must be updated and reintegration applied.
             if (newPep.Integration.ResultsHandler != null)
+                DiffResults = true;
+            // Avoid updating results while in a bulk import operation without UI
+            if (settingsNew.IsResultsJoiningDisabled)
+                DiffResults = false;
+            // Force update if the bulk import has just completed
+            else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
         }
 

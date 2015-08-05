@@ -100,6 +100,10 @@ namespace pwiz.Skyline.Model.Results
                     return false;
                 }
             }
+            // Make sure any iRT calculater gets loaded before starting to import
+            var rtPrediction = document.Settings.PeptideSettings.Prediction.RetentionTime;
+            if (rtPrediction != null && !rtPrediction.Calculator.IsUsable)
+                return false;
             return true;
         }
 

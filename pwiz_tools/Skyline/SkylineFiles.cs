@@ -219,33 +219,6 @@ namespace pwiz.Skyline
             }
         }
 
-        /// <summary>
-        /// Utility class to update progress while reading a Skyline document.
-        /// </summary>
-        private class StreamReaderWithProgress : StreamReader
-        {
-            private readonly long _totalBytes;
-            private long _bytesRead;
-
-            public StreamReaderWithProgress(string path)
-                : base(path)
-            {
-                _totalBytes = new FileInfo(path).Length;
-            }
-
-            public ILongWaitBroker WaitBroker { private get; set; }
-
-            public override int Read(char[] buffer, int index, int count)
-            {
-                if (WaitBroker.IsCanceled)
-                    throw new OperationCanceledException();
-                var byteCount = base.Read(buffer, index, count);
-                _bytesRead += byteCount;
-                WaitBroker.ProgressValue = (int)(100 * _bytesRead / _totalBytes);
-                return byteCount;
-            }
-        }
-
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
             // Remove any extraneous temporary chromatogram spill files.
@@ -258,22 +231,21 @@ namespace pwiz.Skyline
 
             try
             {
-                using (var reader = new StreamReaderWithProgress(path))
+                using (var longWaitDlg = new LongWaitDlg(this))
                 {
-                    using (var longWaitDlg = new LongWaitDlg(this))
+                    longWaitDlg.Text = Resources.SkylineWindow_OpenFile_Loading___;
+                    longWaitDlg.Message = Path.GetFileName(path);
+                    longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        reader.WaitBroker = longWaitDlg;
-                        longWaitDlg.Text = Resources.SkylineWindow_OpenFile_Loading___;
-                        longWaitDlg.Message = Path.GetFileName(path);
-                        longWaitDlg.PerformWork(parentWindow ?? this, 500, () =>
+                        using (var reader = new StreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                             document = (SrmDocument) ser.Deserialize(reader);
-                        });
+                        }
+                    });
 
-                        if (longWaitDlg.IsCanceled)
-                            document = null;
-                    }
+                    if (longWaitDlg.IsCanceled)
+                        document = null;
                 }
             }
             catch (Exception x)
@@ -872,27 +844,29 @@ namespace pwiz.Skyline
                             Text = Resources.SkylineWindow_SaveDocument_Saving___,
                             Message = Path.GetFileName(fileName)
                         })
-                    using (var writer = new XmlWriterWithProgress(saver.SafeName, Encoding.UTF8, longWaitDlg)
-                        {
-                            Formatting = Formatting.Indented
-                        })
                     {
-                        writer.TransitionCount = document.MoleculeTransitionCount;
-                        longWaitDlg.PerformWork(this, 800, () =>
+                        longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
-                            ser.Serialize(writer, document);
+                            using (var writer = new XmlWriterWithProgress(saver.SafeName, Encoding.UTF8,
+                                document.MoleculeTransitionCount, progressMonitor)
+                            {
+                                Formatting = Formatting.Indented
+                            })
+                            {
+                                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                                ser.Serialize(writer, document);
 
-                            writer.Flush();
-                            writer.Close();
+                                writer.Flush();
+                                writer.Close();
 
-                            // If the user has chosen "Save As", and the document has a
-                            // document specific spectral library, copy this library to 
-                            // the new name.
-                            if (!Equals(DocumentFilePath, fileName))
-                                SaveDocumentLibraryAs(fileName);
+                                // If the user has chosen "Save As", and the document has a
+                                // document specific spectral library, copy this library to 
+                                // the new name.
+                                if (!Equals(DocumentFilePath, fileName))
+                                    SaveDocumentLibraryAs(fileName);
 
-                            saver.Commit();
+                                saver.Commit();
+                            }
                         });
 
                         // Sometimes this catches a cancellation that doesn't throw an OperationCanceledException.
@@ -2206,8 +2180,9 @@ namespace pwiz.Skyline
             }
 
             var arrayChrom = listChrom.ToArray();
-            return doc.ChangeMeasuredResults(results == null ?
-                                                                 new MeasuredResults(arrayChrom) : results.ChangeChromatograms(arrayChrom));
+            return doc.ChangeMeasuredResults(results == null
+                ? new MeasuredResults(arrayChrom)
+                : results.ChangeChromatograms(arrayChrom));
         }
 
         private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<MsDataFileUri> dataSources,
@@ -2534,23 +2509,5 @@ namespace pwiz.Skyline
         }
 
         #endregion
-    }
-
-    public class XmlWriterWithProgress : XmlTextWriter
-    {
-        private int _transitionsWritten;
-        private readonly ILongWaitBroker _monitor;
-
-        public XmlWriterWithProgress(string filename, Encoding encoding, ILongWaitBroker monitor) : base(filename, encoding)
-        {
-            _monitor = monitor;
-        }
-
-        public int TransitionCount { get; set; }
-
-        public void WroteTransition()
-        {
-            _monitor.SetProgressCheckCancel(++_transitionsWritten, TransitionCount);
-        }
     }
 }

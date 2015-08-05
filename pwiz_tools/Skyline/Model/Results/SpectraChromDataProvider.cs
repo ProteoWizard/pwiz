@@ -587,6 +587,7 @@ namespace pwiz.Skyline.Model.Results
             private bool _runningAsync;
             private readonly SrmDocument _document;
             private readonly SpectrumFilter _filter;
+            private object _dataFileLock = new object();
             private MsDataFileImpl _dataFile;
             private LookaheadContext _lookaheadContext;
             private readonly int _countSpectra;
@@ -677,7 +678,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 MsDataFileImpl dataFile;
 
-                lock (_dataFile)
+                lock (_dataFileLock)
                 {
                     dataFile = _dataFile;
                     _dataFile = null;
@@ -739,7 +740,7 @@ namespace pwiz.Skyline.Model.Results
 
             public string GetLog()
             {
-                lock (_dataFile)
+                lock (_dataFileLock)
                 {
                     return _dataFile.GetLog();
                 }
@@ -761,7 +762,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    lock (_dataFile)
+                    lock (_dataFileLock)
                     {
                         int i = _currentInfo != null ? _currentInfo.Index : -1;
                         _currentInfo = ReadSpectrum(ref i);
@@ -779,7 +780,7 @@ namespace pwiz.Skyline.Model.Results
                 SpectrumInfo nextInfo;
                 do
                 {
-                    lock (_dataFile)
+                    lock (_dataFileLock)
                     {
                         // Check to see if disposed by another thread
                         if (_dataFile == null)

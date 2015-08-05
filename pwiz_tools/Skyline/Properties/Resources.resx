@@ -6227,7 +6227,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>The dwell time {0} must be between {1} and {2}.</value>
   </data>
-  <data name="CommandArgs_ParseArgs_Error___0_" xml:space="preserve">
+  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_" xml:space="preserve">
@@ -6685,9 +6685,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
     <value>Error: Failure attempting to save {0} report to {1}.</value>
-  </data>
-  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_" xml:space="preserve">
-    <value>Report {0} exported successfully.</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
     <value>Error: The report {0} does not exist. If it has spaces in its name, use "double quotes" around the entire list of command parameters.</value>
@@ -8545,5 +8542,71 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
     <value>No results found for the precursor {0} in the file {1}.</value>
+  </data>
+  <data name="CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_" xml:space="preserve">
+    <value>Warning: Use of the argument {0} requires the argument {1}</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
+    <value>Error: You must first import results into the document before reintegrating.</value>
+  </data>
+  <data name="CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__" xml:space="preserve">
+    <value>Error: Unknown peak scoring model '{0}'</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Creating_scoring_model__0_" xml:space="preserve">
+    <value>Creating scoring model {0}</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>Error: There are no decoy peptides in the document. Failed to create scoring model.</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_" xml:space="preserve">
+    <value>Error: Failed to create scoring model.</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_" xml:space="preserve">
+    <value>Error: The current peak scoring model is incompatible with one or more peptides in the document. Please train a new model.</value>
+  </data>
+  <data name="CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_" xml:space="preserve">
+    <value>Error: Failed to reintegrate peaks successfully.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__" xml:space="preserve">
+    <value>Report {0} exported successfully to {1}.</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_all_results" xml:space="preserve">
+    <value>Removing all results</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
+    <value>Error: Unexpected argument --{0}</value>
+  </data>
+  <data name="CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_" xml:space="preserve">
+    <value>Error: The argument {0} requires a decimal number value.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__" xml:space="preserve">
+    <value>Changing full-scan precursor resolution to {0}.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__" xml:space="preserve">
+    <value>Changing full-scan precursor resolving power to {0} at {1}.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__" xml:space="preserve">
+    <value>Changing full-scan precursor resolving power to {0}.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__" xml:space="preserve">
+    <value>Changing full-scan product resolution to {0}.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__" xml:space="preserve">
+    <value>Changing full-scan product resolving power to {0} at {1}.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__" xml:space="preserve">
+    <value>Changing full-scan product resolving power to {0}.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_" xml:space="preserve">
+    <value>Changing full-scan extraction to +/- {0} minutes from predicted value.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_" xml:space="preserve">
+    <value>Changing full-scan extraction to +/- {0} minutes from MS/MS IDs.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transiton full-scan settings.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The specified working directory {0} does not exist.</value>
   </data>
 </root>

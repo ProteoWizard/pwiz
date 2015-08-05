@@ -176,6 +176,19 @@ namespace pwiz.Common.SystemUtil
             return ChangePercentComplete(100);
         }
 
+        public ProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor,
+            long currentCount, long totalCount)
+        {
+            if (progressMonitor.IsCanceled)
+                throw new OperationCanceledException();
+            int percentComplete = (int) (100 * currentCount / totalCount);
+            if (percentComplete == PercentComplete)
+                return this;
+            var statusNew = ChangePercentComplete(percentComplete);
+            progressMonitor.UpdateProgress(statusNew);
+            return statusNew;
+        }
+
         #endregion
     }
 }

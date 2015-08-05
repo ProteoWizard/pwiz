@@ -1063,6 +1063,7 @@
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaksSet.cs" />
     <Compile Include="Model\Results\Scoring\ScoredPeak.cs" />
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaks.cs" />
+    <Compile Include="Model\Results\Scoring\TargetDecoyGenerator.cs" />
     <Compile Include="Model\Results\SpectraChromDataProvider.cs" />
     <Compile Include="Model\Results\SpectrumFilter.cs" />
     <Compile Include="Model\Results\SpectrumFilterPair.cs" />

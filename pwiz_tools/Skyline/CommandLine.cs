@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -39,12 +38,12 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-
 
 namespace pwiz.Skyline
 {
@@ -56,7 +55,7 @@ namespace pwiz.Skyline
         public bool ImportAppend { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
-        public DateTime RemoveBeforeDate { get; private set; }
+        public DateTime? RemoveBeforeDate { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
         public string FastaPath { get; private set; }
@@ -98,9 +97,28 @@ namespace pwiz.Skyline
             set { _saving = value; }
         }
 
+        // For reintegration
+        private const string ARG_REINTEGRATE_MODEL_NAME = "reintegrate-model-name"; // Not L10N
+        private const string ARG_REINTEGRATE_CREATE_MODEL = "reintegrate-create-model"; // Not L10N
+        private const string ARG_REINTEGRATE_MODEL_SECOND_BEST = "reintegrate-model-second-best"; // Not L10N
+        private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both"; // Not L10N
+        private const string ARG_REINTEGRATE_ANNOTATE_SCORING = "reintegrate-annotate-scoring"; // Not L10N
+        private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks"; // Not L10N
+
+        public string ReintegratModelName { get; private set; }
+        public bool IsOverwritePeaks { get; private set; }
+        public bool IsAnnotateScoring { get; private set; }
+        public bool IsCreateScoringModel { get; private set; }
+        public bool IsSecondBestModel { get; private set; }
+        public bool IsDecoyModel { get; private set; }
+
+        public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
+
+        // For exporting reports
         public string ReportName { get; private set; }
         public char ReportColumnSeparator { get; private set; }
         public string ReportFile { get; private set; }
+        public bool IsReportInvariant { get; private set; }
         public bool ExportingReport
         {
             get { return !string.IsNullOrEmpty(ReportName); }
@@ -136,6 +154,31 @@ namespace pwiz.Skyline
             set { _importingTool = value; }
         }
         public bool? ResolveToolConflictsBySkipping { get; private set; }
+
+        // For adjusting full-scan settings
+        private const string ARG_FULL_SCAN_PRECURSOR_RES = "full-scan-precursor-res"; // Not L10N
+        private const string ARG_FULL_SCAN_PRECURSOR_RES_MZ = "full-scan-precursor-res-mz"; // Not L10N
+        private const string ARG_FULL_SCAN_PRODUCT_RES = "full-scan-product-res"; // Not L10N
+        private const string ARG_FULL_SCAN_PRODUCT_RES_MZ = "full-scan-product-res-mz"; // Not L10N
+        private const string ARG_FULL_SCAN_RT_FILTER_TOLERANCE = "full-scan-rt-filter-tolerance"; // Not L10N
+
+        public double? FullScanPrecursorRes { get; private set; }
+        public double? FullScanPrecursorResMz { get; private set; }
+        public double? FullScanProductRes { get; private set; }
+        public double? FullScanProductResMz { get; private set; }
+        public double? FullScanRetentionTimeFilterLength { get; private set; }
+
+        public bool FullScanSetting
+        {
+            get
+            {
+                return (FullScanPrecursorRes
+                        ?? FullScanPrecursorResMz
+                        ?? FullScanProductRes
+                        ?? FullScanProductResMz
+                        ?? FullScanRetentionTimeFilterLength).HasValue;
+            }
+        }
 
         // For importing a tool from a zip file.
         public bool InstallingToolsFromZip { get; private set; }
@@ -390,14 +433,14 @@ namespace pwiz.Skyline
             }
             catch (UsageException x)
             {
-                _out.WriteLine(Resources.CommandArgs_ParseArgs_Error___0_, x.Message);
+                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 return false;
             }
             catch (Exception x)
             {
                 // Unexpected behavior, but better to output the error then appear to crash, and
                 // have Windows write it to the application event log.
-                _out.WriteLine(Resources.CommandArgs_ParseArgs_Error___0_, x.Message);
+                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 _out.WriteLine(x.StackTrace);
                 return false;
             }
@@ -419,6 +462,11 @@ namespace pwiz.Skyline
                 }
                 else if (IsNameValue(pair, "dir")) // Not L10N
                 {
+                    if (!Directory.Exists(pair.Value))
+                    {
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_, pair.Value);
+                        return false;
+                    }
                     Directory.SetCurrentDirectory(pair.Value);
                 }
                 else if (IsNameOnly(pair, "timestamp")) // Not L10N
@@ -470,6 +518,42 @@ namespace pwiz.Skyline
                     {
                         ResolveSkyrConflictsBySkipping = true;
                     }
+                }
+
+                else if (IsNameValue(pair, ARG_FULL_SCAN_PRECURSOR_RES))
+                {
+                    RequiresSkylineDocument = true;
+                    FullScanPrecursorRes = ParseDouble(pair.Value, ARG_FULL_SCAN_PRECURSOR_RES);
+                    if (!FullScanPrecursorRes.HasValue)
+                        return false;
+                }
+                else if (IsNameValue(pair, ARG_FULL_SCAN_PRECURSOR_RES_MZ))
+                {
+                    RequiresSkylineDocument = true;
+                    FullScanPrecursorResMz = ParseDouble(pair.Value, ARG_FULL_SCAN_PRECURSOR_RES_MZ);
+                    if (!FullScanPrecursorResMz.HasValue)
+                        return false;
+                }
+                else if (IsNameValue(pair, ARG_FULL_SCAN_PRODUCT_RES))
+                {
+                    RequiresSkylineDocument = true;
+                    FullScanProductRes = ParseDouble(pair.Value, ARG_FULL_SCAN_PRODUCT_RES);
+                    if (!FullScanProductRes.HasValue)
+                        return false;
+                }
+                else if (IsNameValue(pair, ARG_FULL_SCAN_PRODUCT_RES_MZ))
+                {
+                    RequiresSkylineDocument = true;
+                    FullScanProductResMz = ParseDouble(pair.Value, ARG_FULL_SCAN_PRODUCT_RES_MZ);
+                    if (!FullScanProductResMz.HasValue)
+                        return false;
+                }
+                else if (IsNameValue(pair, ARG_FULL_SCAN_RT_FILTER_TOLERANCE))
+                {
+                    RequiresSkylineDocument = true;
+                    FullScanRetentionTimeFilterLength = ParseDouble(pair.Value, ARG_FULL_SCAN_RT_FILTER_TOLERANCE);
+                    if (!FullScanRetentionTimeFilterLength.HasValue)
+                        return false;
                 }
 
                 else if (IsNameValue(pair, "tool-add-zip")) // Not L10N
@@ -721,6 +805,12 @@ namespace pwiz.Skyline
                     }
                 }
 
+                else if (IsNameValue(pair, "remove-all")) // Not L10N
+                {
+                    RemovingResults = true;
+                    RequiresSkylineDocument = true;
+                    RemoveBeforeDate = null;
+                }
                 else if (IsNameValue(pair, "remove-before")) // Not L10N
                 {
                     var removeBeforeDate = pair.Value;
@@ -740,7 +830,33 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-
+                else if (IsNameValue(pair, ARG_REINTEGRATE_MODEL_NAME))
+                {
+                    ReintegratModelName = pair.Value;
+                }
+                else if (IsNameOnly(pair, ARG_REINTEGRATE_CREATE_MODEL))
+                {
+                    IsCreateScoringModel = true;
+                    if (!IsSecondBestModel)
+                        IsDecoyModel = true;
+                }
+                else if (IsNameOnly(pair, ARG_REINTEGRATE_ANNOTATE_SCORING))
+                {
+                    IsAnnotateScoring = true;
+                }
+                else if (IsNameOnly(pair, ARG_REINTEGRATE_OVERWRITE_PEAKS))
+                {
+                    IsOverwritePeaks = true;
+                }
+                else if (IsNameOnly(pair, ARG_REINTEGRATE_MODEL_SECOND_BEST))
+                {
+                    IsSecondBestModel = true;
+                    IsDecoyModel = false;
+                }
+                else if (IsNameOnly(pair, ARG_REINTEGRATE_MODEL_BOTH))
+                {
+                    IsSecondBestModel = IsDecoyModel = true;
+                }
                 else if (IsNameValue(pair, "report-name")) // Not L10N
                 {
                     ReportName = pair.Value;
@@ -769,6 +885,10 @@ namespace pwiz.Skyline
                     }
                 }
 
+                else if (IsName(pair, "report-invariant")) // Not L10N
+                {
+                    IsReportInvariant = true;
+                }
                 else if (IsNameValue(pair, "exp-translist-instrument")) // Not L10N
                 {
                     try
@@ -951,10 +1071,12 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine(
-                            Resources.CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__,
+                            Resources
+                                .CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__,
                             pair.Value,
                             AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX);
-                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to__0__, AbstractMassListExporter.RUN_LENGTH_DEFAULT);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to__0__,
+                            AbstractMassListExporter.RUN_LENGTH_DEFAULT);
                     }
                     RequiresSkylineDocument = true;
                 }
@@ -980,11 +1102,38 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                     if (!string.IsNullOrEmpty(pair.Value))
                     {
-                        SharedFile = pair.Value;   
+                        SharedFile = pair.Value;
                     }
+                }
+                else
+                {
+                    _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
+                    return false;
                 }
             }
 
+            if (Reintegrating)
+                RequiresSkylineDocument = true;
+            else
+            {
+                if (IsCreateScoringModel)
+                    WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL);
+                if (IsAnnotateScoring)
+                    WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_ANNOTATE_SCORING);
+                if (IsOverwritePeaks)
+                    WarnArgRequirment(ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_OVERWRITE_PEAKS);
+            }
+            if (FullScanPrecursorResMz.HasValue && !FullScanPrecursorRes.HasValue)
+                WarnArgRequirment(ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ);
+            if (FullScanProductResMz.HasValue && !FullScanProductRes.HasValue)
+                WarnArgRequirment(ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ);
+            if (!IsCreateScoringModel && IsSecondBestModel)
+            {
+                if (IsDecoyModel)
+                    WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_BOTH);
+                else
+                    WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_SECOND_BEST);
+            }
             if (!string.IsNullOrEmpty(PanoramaServerUri) || !string.IsNullOrEmpty(PanoramaFolder))
             {
                 if (!PanoramaArgsComplete())
@@ -1046,6 +1195,22 @@ namespace pwiz.Skyline
                 SaveFile = SkylineFile;
             }
             return true;
+        }
+
+        private void WarnArgRequirment(string requiredArg, string usedArg)
+        {
+            _out.WriteLine(Resources.CommandArgs_ReportArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_, usedArg, requiredArg);
+        }
+
+        private double? ParseDouble(string value, string argName)
+        {
+            double valueDecimal;
+            if (!double.TryParse(value, out valueDecimal))
+            {
+                _out.WriteLine(Resources.CommandArgs_ParseDouble_Error__The_argument__0__requires_a_decimal_number_value_, argName);
+                return null;
+            }
+            return valueDecimal;
         }
 
         private static string GetFullPath(string path)
@@ -1217,7 +1382,6 @@ namespace pwiz.Skyline
 
         public void Run(string[] args)
         {
-
             var commandArgs = new CommandArgs(_out, _doc != null);
 
             if(!commandArgs.ParseArgs(args))
@@ -1260,6 +1424,35 @@ namespace pwiz.Skyline
                 return;
             }
 
+            if (commandArgs.FullScanSetting)
+            {
+                if (!SetFullScanSettings(commandArgs))
+                    return;
+            }
+
+            if (commandArgs.SettingLibraryPath)
+            {
+                if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
+                    _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
+            }
+
+            if (commandArgs.ImportingFasta)
+            {
+                try
+                {
+                    ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins);
+                }
+                catch (Exception x)
+                {
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
+                }
+            }
+
+            if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
+            {
+                RemoveResults(null);
+            }
+
             if (commandArgs.ImportingResults)
             {
                 OptimizableRegression optimize = null;
@@ -1295,33 +1488,21 @@ namespace pwiz.Skyline
 
             if (_doc != null && !_doc.IsLoaded)
             {
-                IProgressMonitor progressMonitor = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor };
                 docContainer.SetDocument(_doc, null, true);
                 _doc = docContainer.Document;
             }
 
-            if (commandArgs.RemovingResults)
+            if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
                 RemoveResults(commandArgs.RemoveBeforeDate);
             }
 
-            if (commandArgs.ImportingFasta)
+            if (commandArgs.Reintegrating)
             {
-                try
-                {
-                    ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins);
-                }
-                catch (Exception x)
-                {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
-                }
-            }
-
-            if (commandArgs.SettingLibraryPath)
-            {
-                if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
-                    _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
+                if (!ReintegratePeaks(commandArgs))
+                    return;
             }
 
             if (commandArgs.Saving)
@@ -1331,7 +1512,8 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingReport)
             {
-                ExportReport(commandArgs.ReportName, commandArgs.ReportFile, commandArgs.ReportColumnSeparator);
+                ExportReport(commandArgs.ReportName, commandArgs.ReportFile,
+                    commandArgs.ReportColumnSeparator, commandArgs.IsReportInvariant);
             }
 
             if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) &&
@@ -1388,11 +1570,62 @@ namespace pwiz.Skyline
             }
         }
 
+        private bool SetFullScanSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                if (commandArgs.FullScanPrecursorRes.HasValue)
+                {
+                    double res = commandArgs.FullScanPrecursorRes.Value;
+                    double? resMz = commandArgs.FullScanPrecursorResMz;
+                    if (!_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
+                    else if (resMz.HasValue)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
+                    else
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__, res);
+                    _doc = _doc.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
+                        f.ChangePrecursorResolution(f.PrecursorMassAnalyzer, res, resMz ?? f.PrecursorResMz)));
+                }
+                if (commandArgs.FullScanProductRes.HasValue)
+                {
+                    double res = commandArgs.FullScanProductRes.Value;
+                    double? resMz = commandArgs.FullScanProductResMz;
+                    if (!_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
+                    else if (resMz.HasValue)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
+                    else
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__, res);
+                    _doc = _doc.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
+                        f.ChangeProductResolution(f.ProductMassAnalyzer, res, resMz ?? f.ProductResMz)));
+                }
+                if (commandArgs.FullScanRetentionTimeFilterLength.HasValue)
+                {
+                    double rtLen = commandArgs.FullScanRetentionTimeFilterLength.Value;
+                    if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_, rtLen);
+                    else if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_, rtLen);
+                    _doc = _doc.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
+                        f.ChangeRetentionTimeFilter(f.RetentionTimeFilterType, rtLen)));
+                }
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
         public bool OpenSkyFile(string skylineFile)
         {
             try
             {
-                using (var stream = new FileStream(skylineFile, FileMode.Open))
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                using (var stream = new StreamReaderWithProgress(skylineFile, progressMonitor))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
@@ -1450,7 +1683,10 @@ namespace pwiz.Skyline
             {
                 LibrarySpec spec;
                 if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
-                    return spec;
+                {
+                    if (File.Exists(spec.FilePath))
+                        return spec;
+                }
 
                 string fileName = library.FileNameHint;
                 if (fileName != null)
@@ -1493,10 +1729,15 @@ namespace pwiz.Skyline
 
         private RCalcIrt FindIrtDatabase(string documentPath, RCalcIrt irtCalc)
         {
-
             RetentionScoreCalculatorSpec result;
             if (Settings.Default.RTScoreCalculatorList.TryGetValue(irtCalc.Name, out result))
-                return result as RCalcIrt;
+            {
+                var irtCalcSettings = result as RCalcIrt;
+                if (irtCalcSettings != null && (irtCalcSettings.IsUsable || File.Exists(irtCalcSettings.DatabasePath)))
+                {
+                    return irtCalcSettings;
+                }
+            }
 
             // First look for the file name in the document directory
             string fileName = Path.GetFileName(irtCalc.DatabasePath);
@@ -1532,7 +1773,10 @@ namespace pwiz.Skyline
         {
             OptimizationLibrary result;
             if (Settings.Default.OptimizationLibraryList.TryGetValue(optLib.Name, out result))
-                return result;
+            {
+                if (result.IsNone || File.Exists(result.DatabasePath))
+                    return result;
+            }
 
             // First look for the file name in the document directory
             string fileName = Path.GetFileName(optLib.DatabasePath);
@@ -1570,7 +1814,10 @@ namespace pwiz.Skyline
 
             IonMobilityLibrarySpec result;
             if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out result))
-                return result;
+            {
+                if (result.IsNone || File.Exists(result.PersistencePath))
+                    return result;                
+            }
 
             // First look for the file name in the document directory
             string fileName = Path.GetFileName(ionMobilityLibSpec.PersistencePath);
@@ -1610,7 +1857,10 @@ namespace pwiz.Skyline
         {
             var result = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(backgroundProteomeSpec.Name);
             if (result != null)
-                return result;
+            {
+                if (result.IsNone || File.Exists(result.DatabasePath))
+                    return result;                
+            }
 
             string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
             // First look for the file name in the document directory
@@ -1633,6 +1883,14 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            bool hasMultiple = listNamedPaths.SelectMany(pair => pair.Key).Count() > 1;
+            if (hasMultiple)
+            {
+                // Join at the end
+                _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
+            }
+
+            // Import files one at a time
             foreach (var namedPaths in listNamedPaths)
             {
                 string replicateName = namedPaths.Key;
@@ -1643,10 +1901,27 @@ namespace pwiz.Skyline
                         return false;
                 }
             }
+
+            if (hasMultiple)
+            {
+                // Allow joining to happen
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                var docContainer = new ResultsMemoryDocumentContainer(null, _skylineFile) { ProgressMonitor = progressMonitor };
+                _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(false));
+                if (!_doc.IsLoaded)
+                {
+                    docContainer.SetDocument(_doc, null, true);
+                    _doc = docContainer.Document;
+                    // If not fully loaded now, there must have been an error.
+                    if (!_doc.IsLoaded)
+                        return false;
+                }
+            }
+
             return true;
         }
 
-        private IEnumerable<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern)
+        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern)
         {   
             // get all the valid data sources (files and sub directories) in this directory.
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
@@ -1894,7 +2169,7 @@ namespace pwiz.Skyline
             //This function will also detect whether the replicate exists in the document
             ProgressStatus status;
             SrmDocument newDoc;
-            IProgressMonitor progressMonitor = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
+            IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
 
             try
             {
@@ -1934,9 +2209,12 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public void RemoveResults(DateTime removeBefore)
+        public void RemoveResults(DateTime? removeBefore)
         {
-            _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.ToShortDateString() + "..."); // Not L10N
+            if (removeBefore.HasValue)
+                _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.Value.ToShortDateString() + "..."); // Not L10N
+            else
+                _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_all_results);
             var filteredChroms = new List<ChromatogramSet>();
             if (_doc.Settings.MeasuredResults == null)
             {
@@ -1945,16 +2223,20 @@ namespace pwiz.Skyline
             }
             foreach (var chromSet in _doc.Settings.MeasuredResults.Chromatograms)
             {
-                var listFileInfos = chromSet.MSDataFileInfos.Where(fileInfo =>
-                    fileInfo.RunStartTime == null || fileInfo.RunStartTime >= removeBefore).ToArray();
-                if (ArrayUtil.ReferencesEqual(listFileInfos, chromSet.MSDataFileInfos))
+                var listFileInfosRemaining = new ChromFileInfo[0];
+                if (removeBefore.HasValue)
+                {
+                    listFileInfosRemaining = chromSet.MSDataFileInfos.Where(fileInfo =>
+                        fileInfo.RunStartTime == null || fileInfo.RunStartTime >= removeBefore).ToArray();
+                }
+                if (ArrayUtil.ReferencesEqual(listFileInfosRemaining, chromSet.MSDataFileInfos))
                     filteredChroms.Add(chromSet);
                 else
                 {
-                    foreach (var fileInfo in chromSet.MSDataFileInfos.Except(listFileInfos))
+                    foreach (var fileInfo in chromSet.MSDataFileInfos.Except(listFileInfosRemaining))
                         _out.WriteLine(Resources.CommandLine_RemoveResults_Removed__0__, fileInfo.FilePath);
-                    if (listFileInfos.Any())
-                        filteredChroms.Add(chromSet.ChangeMSDataFileInfos(listFileInfos));
+                    if (listFileInfosRemaining.Any())
+                        filteredChroms.Add(chromSet.ChangeMSDataFileInfos(listFileInfosRemaining));
                 }
             }
             if (!ArrayUtil.ReferencesEqual(filteredChroms, _doc.Settings.MeasuredResults.Chromatograms))
@@ -1966,12 +2248,141 @@ namespace pwiz.Skyline
             }
         }
 
+        private bool ReintegratePeaks(CommandArgs commandArgs)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_);
+                return false;
+            }
+            else
+            {
+                ModelAndFeatures modelAndFeatures;
+                if (commandArgs.IsCreateScoringModel)
+                {
+                    modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
+                        commandArgs.IsDecoyModel, commandArgs.IsSecondBestModel);
+
+                    if (modelAndFeatures == null)
+                        return false;
+                }
+                else
+                {
+                    PeakScoringModelSpec scoringModel;
+                    if (!Settings.Default.PeakScoringModelList.TryGetValue(commandArgs.ReintegratModelName, out scoringModel))
+                    {
+                        _out.WriteLine(Resources.CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__);
+                        return false;
+                    }
+                    modelAndFeatures = new ModelAndFeatures(scoringModel, null);
+                }
+
+                if (!Reintegrate(modelAndFeatures, commandArgs.IsAnnotateScoring, commandArgs.IsOverwritePeaks))
+                    return false;
+            }
+            return true;
+        }
+
+        private class ModelAndFeatures
+        {
+            public ModelAndFeatures(PeakScoringModelSpec scoringModel, IList<PeakTransitionGroupFeatures> features)
+            {
+                ScoringModel = scoringModel;
+                Features = features;
+            }
+
+            public PeakScoringModelSpec ScoringModel { get; private set; }
+            public IList<PeakTransitionGroupFeatures> Features { get; private set; }
+        }
+
+        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest)
+        {
+            _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
+
+            try
+            {
+                // Create new scoring model using the default calculators.
+                var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, null, decoys, secondBest);
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+                var targetDecoyGenerator = new TargetDecoyGenerator(_doc, scoringModel, progressMonitor);
+
+                // Get scores for target and decoy groups.
+                List<IList<double[]>> targetTransitionGroups;
+                List<IList<double[]>> decoyTransitionGroups;
+                targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
+                // If decoy box is checked and no decoys, throw an error
+                if (decoys && decoyTransitionGroups.Count == 0)
+                {
+                    _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document__Failed_to_create_scoring_model_);
+                    return null;
+                }
+                // Use decoys for training only if decoy box is checked
+                if (!decoys)
+                    decoyTransitionGroups = new List<IList<double[]>>();
+
+                // Set intial weights based on previous model (with NaN's reset to 0)
+                var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
+                // But then set to NaN the weights that have unknown values for this dataset
+                for (int i = 0; i < initialWeights.Length; ++i)
+                {
+                    if (!targetDecoyGenerator.EligibleScores[i])
+                        initialWeights[i] = double.NaN;
+                }
+                var initialParams = new LinearModelParams(initialWeights);
+
+                // Train the model.
+                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups,
+                    decoyTransitionGroups, initialParams, secondBest, true, progressMonitor);
+
+                Settings.Default.PeakScoringModelList.SetValue(scoringModel);
+
+                return new ModelAndFeatures(scoringModel, targetDecoyGenerator.PeakGroupFeatures);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_);
+                _out.WriteLine(x.Message);
+                return null;
+            }
+        }
+
+        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isAnnotateScoring, bool isOverwritePeaks)
+        {
+            try
+            {
+                var resultsHandler = new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
+                {
+                    OverrideManual = isOverwritePeaks,
+                    AddAnnotation = isAnnotateScoring,
+                    AddMAnnotation = isAnnotateScoring
+                };
+
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+
+                resultsHandler.ScoreFeatures(progressMonitor);
+                if (resultsHandler.IsMissingScores())
+                {
+                    _out.WriteLine(Resources.CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
+                    return false;
+                }
+                _doc = resultsHandler.ChangePeaks(progressMonitor);
+
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
         public void ImportFasta(string path, bool keepEmptyProteins)
         {
             _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(path));
             using (var readerFasta = new StreamReader(path))
             {
-                IProgressMonitor progressMonitor = new NoMessageCommandWaitBroker(_out, new ProgressStatus(string.Empty));
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 IdentityPath selectPath;
                 long lines = Helpers.CountLinesInFile(path);
                 int emptiesIgnored;
@@ -2100,7 +2511,7 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_SaveFile_Saving_file___);
             try
             {
-                SaveDocument(_doc, saveFile);
+                SaveDocument(_doc, saveFile, _out);
             }
             catch
             {
@@ -2110,7 +2521,7 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
         }
 
-        public void ExportReport(string reportName, string reportFile, char reportColSeparator)
+        public void ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
         {
 
             if (String.IsNullOrEmpty(reportFile))
@@ -2119,12 +2530,14 @@ namespace pwiz.Skyline
                 return;
             }
 
-            ExportLiveReport(reportName, reportFile, reportColSeparator);
+            ExportLiveReport(reportName, reportFile, reportColSeparator, reportInvariant);
         }
 
-        private void ExportLiveReport(string reportName, string reportFile, char reportColSeparator)
+        private void ExportLiveReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
         {
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
+                ? DataSchemaLocalizer.INVARIANT
+                : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             if (null == viewInfo)
             {
@@ -2144,17 +2557,17 @@ namespace pwiz.Skyline
                     }
 
                     var status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandWaitBroker(_out, status);
+                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         viewContext.Export(broker, ref status, viewInfo, writer,
-                            new DsvWriter(CultureInfo.CurrentCulture, reportColSeparator));
+                            new DsvWriter(reportInvariant ? CultureInfo.InvariantCulture : LocalizationHelper.CurrentCulture, reportColSeparator));
                     }
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_, reportName);
+                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
                 }
             }
             catch (Exception x)
@@ -2734,9 +3147,15 @@ namespace pwiz.Skyline
                            Path.GetFileName(args.ExportPath));
         }
 
-        public static void SaveDocument(SrmDocument doc, string outFile)
+        public static void SaveDocument(SrmDocument doc, string outFile, TextWriter outText)
         {
-            using (var writer = new XmlTextWriter(outFile, Encoding.UTF8) {Formatting = Formatting.Indented})
+            // Make sure the containing directory is created
+            string dirPath = Path.GetDirectoryName(outFile);
+            if (dirPath != null)
+                Directory.CreateDirectory(dirPath);
+
+            var progressMonitor = new CommandProgressMonitor(outText, new ProgressStatus(string.Empty));
+            using (var writer = new XmlWriterWithProgress(outFile, Encoding.UTF8, doc.MoleculeTransitionCount, progressMonitor))
             {
                 XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                 ser.Serialize(writer, doc);
@@ -2804,7 +3223,7 @@ namespace pwiz.Skyline
 
                 var results = doc.Settings.HasResults
                                   ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
-                                  : new MeasuredResults(listChromatograms);
+                                  : new MeasuredResults(listChromatograms, doc.Settings.IsResultsJoiningDisabled);
 
                 docAdded = doc.ChangeMeasuredResults(results);
             }
@@ -2856,7 +3275,7 @@ namespace pwiz.Skyline
 
         private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, CommandStatusWriter statusWriter)
         {
-            var waitBroker = new CommandWaitBroker(statusWriter,
+            var waitBroker = new CommandProgressMonitor(statusWriter,
                 new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
             var sharing = new SrmDocumentSharing(document, documentPath, fileDest, false);
             try
@@ -2899,7 +3318,7 @@ namespace pwiz.Skyline
 
             private void PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
             {
-                var waitBroker = new CommandWaitBroker(_statusWriter,
+                var waitBroker = new CommandProgressMonitor(_statusWriter,
                     new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama));
                 IPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
                 try
@@ -2989,20 +3408,8 @@ namespace pwiz.Skyline
 
         public override void PerformLongExport(Action<IProgressMonitor> performExport)
         {
-            var waitBroker = new CommandWaitBroker(_out, new ProgressStatus(string.Empty));
+            var waitBroker = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             performExport(waitBroker);
-        }
-    }
-
-    internal class NoMessageCommandWaitBroker : CommandWaitBroker
-    {
-        public NoMessageCommandWaitBroker(TextWriter outWriter, ProgressStatus status) : base(outWriter, status)
-        {
-        }
-
-        protected override void WriteStatusMessage(string message)
-        {
-            // Do nothing
         }
     }
 
@@ -3159,17 +3566,18 @@ namespace pwiz.Skyline
         }
     }
 
-    internal class CommandWaitBroker : IProgressMonitor
+    internal class CommandProgressMonitor : IProgressMonitor
     {
         private ProgressStatus _currentProgress;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
+        private string _lastMessage;
 
         private readonly TextWriter _out;
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandWaitBroker(TextWriter outWriter, ProgressStatus status)
+        public CommandProgressMonitor(TextWriter outWriter, ProgressStatus status)
         {
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.Now;
@@ -3191,10 +3599,7 @@ namespace pwiz.Skyline
 
         public bool HasUI { get { return false; } }
 
-        protected virtual void WriteStatusMessage(string message)
-        {
-            _out.WriteLine(message);
-        }
+        public Exception ErrorException { get { return _currentProgress != null ? _currentProgress.ErrorException : null; } }
 
         private void UpdateProgress(ProgressStatus status)
         {
@@ -3207,14 +3612,24 @@ namespace pwiz.Skyline
                     _waitingThread.Join();
                 }  
             }
-           
-            if (!string.IsNullOrEmpty(status.Message) &&
-                (_currentProgress == null || !ReferenceEquals(status.Message, _currentProgress.Message)))
+
+            var currentTime = DateTime.Now;
+            // Show progress at least every 2 seconds and at 100%, if any other percentage
+            // output has been shown.
+            if ((currentTime - _lastOutput).Seconds < 2 && !status.IsError && (status.PercentComplete != 100 || _lastOutput == _waitStart))
             {
-                WriteStatusMessage(status.Message);
+                return;
             }
-            
-            if (status.PercentComplete == -1)
+
+            bool writeMessage = !string.IsNullOrEmpty(status.Message) &&
+                                (_lastMessage == null || !ReferenceEquals(status.Message, _lastMessage));
+
+            if (status.IsError)
+            {
+                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, status.ErrorException.Message);
+                writeMessage = false;
+            }
+            else if (status.PercentComplete == -1)
             {
                 _out.Write(Resources.CommandWaitBroker_UpdateProgress_Waiting___);
                 _waiting = true;
@@ -3224,15 +3639,21 @@ namespace pwiz.Skyline
             }
             else if (_currentProgress != null && status.PercentComplete != _currentProgress.PercentComplete)
             {
-                // Show progress at least every 2 seconds and at 100%, if any other percentage
-                // output has been shown.
-                var currentTime = DateTime.Now;
-                if ((currentTime - _lastOutput).Seconds > 2 || (status.PercentComplete == 100 && _lastOutput != _waitStart))
-                {
+                // If writing a message at the same time as updating percent complete,
+                // put them both on the same line
+                if (writeMessage)
+                    _out.WriteLine("{0}% - {1}", status.PercentComplete, status.Message); // Not L10N
+                else
                     _out.WriteLine("{0}%", status.PercentComplete); // Not L10N
-                    _lastOutput = currentTime;
-                }
             }
+            else if (writeMessage)
+            {
+                _out.WriteLine(status.Message);
+            }
+
+            if (writeMessage)
+                _lastMessage = status.Message;
+            _lastOutput = currentTime;
             _currentProgress = status;
         }
 

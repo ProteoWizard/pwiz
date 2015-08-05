@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Find;
@@ -126,7 +125,7 @@ namespace pwiz.Skyline.SettingsUI
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
             {
                 longWaitDlg.PerformWork(owner, 800,
-                    progressMonitor => _targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, progressMonitor));
+                    progressMonitor => _targetDecoyGenerator = new TargetDecoyGenerator(Program.MainWindow.Document, scoringModel, progressMonitor));
             }
             
             _peakScoringModel = scoringModel;
@@ -1239,189 +1238,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
-
-        /// <summary>
-        /// Class to separate target and decoy peaks, and keep track of disabled calculators.
-        /// </summary>
-        private class TargetDecoyGenerator
-        {
-            public bool[] EligibleScores { get; private set; }
-
-            public IList<IPeakFeatureCalculator> FeatureCalculators { get; private set; }
-
-            private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
-
-            public Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
-            public TargetDecoyGenerator(IPeakScoringModel scoringModel, IProgressMonitor progressMonitor = null)
-            {
-                // Determine which calculators will be used to score peaks in this document.
-                var document = Program.ActiveDocument;
-                FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
-                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators, progressMonitor)
-                    .Where(feature => feature.PeakGroupFeatures.Any())
-                    .ToArray();
-                PopulateDictionary();
-
-                EligibleScores = new bool[FeatureCalculators.Count];
-                // Disable calculators that have only a single score value or any unknown scores.
-                for (int i = 0; i < FeatureCalculators.Count; i++)
-                    EligibleScores[i] = IsValidCalculator(i);
-            }
-
-            private void PopulateDictionary()
-            {
-                PeakTransitionGroupDictionary = new Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>>();
-                foreach (var transitionGroupFeatures in _peakTransitionGroupFeaturesList)
-                {
-                    var pepId = transitionGroupFeatures.Id.NodePep.Id.GlobalIndex;
-                    var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath).GlobalIndex;
-                    var key = new KeyValuePair<int, int>(pepId, fileId);
-                    if (PeakTransitionGroupDictionary.ContainsKey(key))
-                    {
-                        PeakTransitionGroupDictionary[key].Add(transitionGroupFeatures);
-                    }
-                    else
-                    {
-                        PeakTransitionGroupDictionary.Add(key, new List<PeakTransitionGroupFeatures> { transitionGroupFeatures });
-                    } 
-                }
-            }
-
-            public void GetTransitionGroups(out List<IList<double[]>> targetGroups,
-                                            out List<IList<double[]>> decoyGroups)
-            {
-                targetGroups = new List<IList<double[]>>();
-                decoyGroups = new List<IList<double[]>>();
-
-                foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
-                {
-                    var transitionGroup = new List<double[]>();
-                    foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
-                        transitionGroup.Add(ToDoubles(peakGroupFeatures.Features));
-
-                    if (!transitionGroup.Any())
-                        continue;
-                    if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
-                        decoyGroups.Add(transitionGroup);
-                    else
-                        targetGroups.Add(transitionGroup);
-                }
-            }
-
-            /// <summary>
-            /// Convert array of floats to array of doubles.
-            /// </summary>
-            private static double[] ToDoubles(float[] f)
-            {
-                var d = new double[f.Length];
-                for (int i = 0; i < f.Length; i++)
-                    d[i] = f[i];
-                return d;
-            }
-
-            /// <summary>
-            /// Calculate scores for targets and decoys.  A transition is selected from each transition group using the
-            /// scoring weights, and then its score is calculated using the calculator weights applied to each feature.
-            /// </summary>
-            /// <param name="scoringParams">Parameters to choose the best peak</param>
-            /// <param name="calculatorParams">Parameters to calculate the score of the best peak.</param>
-            /// <param name="targetScores">Output list of target scores.</param>
-            /// <param name="decoyScores">Output list of decoy scores.</param>
-            /// <param name="secondBestScores">Output list of false target scores.</param>
-            /// <param name="invert">If true, select minimum rather than maximum scores</param>
-            public void GetScores(LinearModelParams scoringParams, LinearModelParams calculatorParams, out List<double> targetScores, out List<double> decoyScores,
-                                  out List<double> secondBestScores, bool invert = false)
-            {
-                targetScores = new List<double>();
-                decoyScores = new List<double>();
-                secondBestScores = new List<double>();
-                int invertSign = invert ? -1 : 1;
-
-                foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
-                {
-                    PeakGroupFeatures maxFeatures = null;
-                    PeakGroupFeatures nextFeatures = null;
-                    double maxScore = double.MinValue;
-                    double nextScore = double.MinValue;
-
-                    // No peaks in this transition group record
-                    if (peakTransitionGroupFeatures.PeakGroupFeatures.Count == 0)
-                        continue;
-
-                    // Find the highest and second highest scores among the transitions in this group.
-                    foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
-                    {
-                        double score = invertSign * GetScore(scoringParams, peakGroupFeatures);
-                        if (nextScore < score)
-                        {
-                            if (maxScore < score)
-                            {
-                                nextScore = maxScore;
-                                maxScore = score;
-                                nextFeatures = maxFeatures;
-                                maxFeatures = peakGroupFeatures;
-                            }
-                            else
-                            {
-                                nextScore = score;
-                                nextFeatures = peakGroupFeatures;
-                            }
-                        }
-                    }
-
-                    double currentScore = maxFeatures == null ? double.NaN : GetScore(calculatorParams, maxFeatures);
-                    if (peakTransitionGroupFeatures.Id.NodePep.IsDecoy)
-                        decoyScores.Add(currentScore);
-                    else
-                    {
-                        targetScores.Add(currentScore);
-                        // Skip if only one peak
-                        if (peakTransitionGroupFeatures.PeakGroupFeatures.Count == 1)
-                            continue;
-                        double secondBestScore = nextFeatures == null ? double.NaN : GetScore(calculatorParams, nextFeatures);
-                        secondBestScores.Add(secondBestScore);
-
-                    }
-                }
-            }
-
-            /// <summary>
-            ///  Is the specified calculator valid for this dataset (has no unknown values and not all the same value)?
-            /// </summary>
-            private bool IsValidCalculator(int calculatorIndex)
-            {
-                double maxValue = double.MinValue;
-                double minValue = double.MaxValue;
-
-                foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList)
-                {
-                    // Find the highest and second highest scores among the transitions in this group.
-                    foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
-                    {
-                        double value = peakGroupFeatures.Features[calculatorIndex];
-                        if (IsUnknown(value))
-                            return false;
-                        maxValue = Math.Max(value, maxValue);
-                        minValue = Math.Min(value, minValue);
-                    }
-                }
-                return maxValue > minValue;
-            }
-
-            /// <summary>
-            /// Calculate the score of a set of features given an array of weighting coefficients.
-            /// </summary>
-            private static double GetScore(IList<double> weights, PeakGroupFeatures peakGroupFeatures, double bias)
-            {
-                // TODO: Can we avoid this allocation?  Why are features floats sometimes and doubles at other times?
-                return LinearModelParams.Score(ToDoubles(peakGroupFeatures.Features), weights, bias);
-            }
-
-            private static double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures)
-            {
-                return GetScore(parameters.Weights, peakGroupFeatures, parameters.Bias);
-            }
-        }
 
         private class PeakCalculatorGridViewDriver : SimpleGridViewDriver<PeakCalculatorWeight>
         {

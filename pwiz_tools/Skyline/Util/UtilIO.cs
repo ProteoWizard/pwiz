@@ -26,7 +26,9 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 using NHibernate;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -884,6 +886,57 @@ namespace pwiz.Skyline.Util
                 lenRead -= len;
             }
         }    
+    }
+
+    /// <summary>
+    /// Utility class to update progress while reading a Skyline document.
+    /// </summary>
+    public sealed class StreamReaderWithProgress : StreamReader
+    {
+        private readonly IProgressMonitor _progressMonitor;
+        private ProgressStatus _status;
+        private readonly long _totalBytes;
+        private long _bytesRead;
+
+        public StreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
+            : base(path)
+        {
+            _progressMonitor = progressMonitor;
+            _status = new ProgressStatus(string.Empty);
+            _totalBytes = new FileInfo(path).Length;
+        }
+
+        public override int Read(char[] buffer, int index, int count)
+        {
+            if (_progressMonitor.IsCanceled)
+                throw new OperationCanceledException();
+            var byteCount = base.Read(buffer, index, count);
+            _bytesRead += byteCount;
+            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _bytesRead, _totalBytes);
+            return byteCount;
+        }
+    }
+
+    public class XmlWriterWithProgress : XmlTextWriter
+    {
+        private readonly IProgressMonitor _progressMonitor;
+        private ProgressStatus _status;
+        private readonly int _transitionCount;
+        private int _transitionsWritten;
+
+        public XmlWriterWithProgress(string filename, Encoding encoding, int transitionCount, IProgressMonitor progressMonitor)
+            : base(filename, encoding)
+        {
+            _progressMonitor = progressMonitor;
+            _status = new ProgressStatus(string.Empty);
+
+            _transitionCount = transitionCount;
+        }
+
+        public void WroteTransition()
+        {
+            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, ++_transitionsWritten, _transitionCount);
+        }
     }
 
     public sealed class FileSaver : IDisposable

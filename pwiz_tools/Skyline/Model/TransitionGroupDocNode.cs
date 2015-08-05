@@ -1010,8 +1010,11 @@ namespace pwiz.Skyline.Model
                     ChromatogramGroupInfo[] arrayChromInfo;
                     // Check if this object has existing results information
                     int iResultOld;
-                    if (!dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld))
+                    if (!dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld) ||
+                        (Results != null && iResultOld >= Results.Count))
+                    {
                         iResultOld = -1;
+                    }
                     // But never if performing reintegration, since there will always be existing information
                     // for everything, and this will just cause reintegration to do nothing.
                     else if (resultsHandler == null)
@@ -1437,8 +1440,10 @@ namespace pwiz.Skyline.Model
                 if (_nodeGroup.HasResults)
                 {
                     int iResultOld = GetOldPosition(iResult);
-                    if (iResultOld != -1)
+                    if (iResultOld != -1 && iResultOld < _nodeGroup.Results.Count)
+                    {
                         listChromInfo = _nodeGroup.Results[iResultOld];
+                    }
                 }
                 _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings,
                     iResult, transitionCount, listChromInfo));

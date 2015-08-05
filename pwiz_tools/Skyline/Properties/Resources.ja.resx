@@ -6224,7 +6224,7 @@
   <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>ドウェル時間{0}は{1}から{2}の間でなければなりません。</value>
   </data>
-  <data name="CommandArgs_ParseArgs_Error___0_" xml:space="preserve">
+  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
     <value>エラー：{0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_" xml:space="preserve">
@@ -6682,9 +6682,6 @@
   </data>
   <data name="CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
     <value>エラー： {0}レポートの{1}への保存に失敗しました。</value>
-  </data>
-  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_" xml:space="preserve">
-    <value>レポート{0}が正常にエクスポートされました。</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
     <value>エラー： レポート{0}が存在していません。名前に空白がある場合、コマンドパラメータのリスト全体に「二重引用符」を使用します。</value>

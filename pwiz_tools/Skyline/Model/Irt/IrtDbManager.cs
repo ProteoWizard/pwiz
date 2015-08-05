@@ -32,6 +32,9 @@ namespace pwiz.Skyline.Model.Irt
             var calc = GetIrtCalculator(document);
             if (calc != null && !calc.IsUsable)
                 return false;
+            // Auto-calc of all replicates can wait until the bulk load completes
+            if (document.Settings.IsResultsJoiningDisabled)
+                return true;
             // Not loaded if the regression requires re-calculating of auto-calc regressions
             var rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
             return rtRegression == null || !rtRegression.IsAutoCalcRequired(document, null);

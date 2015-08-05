@@ -55,13 +55,15 @@ namespace pwiz.Skyline.Model
 
         public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + "Score"; } } // Not L10N
 
-        public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel)
+        public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel,
+            IList<PeakTransitionGroupFeatures> features = null)
         {
             Document = document;
             ScoringModel = scoringModel;
             _calcs = ScoringModel != null
                 ? ScoringModel.PeakFeatureCalculators
                 : PeakFeatureCalculator.Calculators.ToArray();
+            _features = features;
             _featureDictionary = new Dictionary<PeakTransitionGroupIdKey, PeakFeatureStatistics>();
 
             // Legacy defaults
@@ -90,8 +92,11 @@ namespace pwiz.Skyline.Model
 
         public void ScoreFeatures(IProgressMonitor progressMonitor = null)
         {
-            _features = Document.GetPeakFeatures(_calcs, progressMonitor)
-                .Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any()).ToList();
+            if (_features == null)
+            {
+                _features = Document.GetPeakFeatures(_calcs, progressMonitor)
+                    .Where(groupFeatures => groupFeatures.PeakGroupFeatures.Any()).ToList();
+            }
             if (ScoringModel == null)
                 return;
 

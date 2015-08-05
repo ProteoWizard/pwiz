@@ -76,8 +76,8 @@ namespace pwiz.Skyline.Model
                     DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal));
 
                     if (wait)
-                        Monitor.Wait(CHANGE_EVENT_LOCK, 10000000);
-                    else if (IsComplete(docNew))
+                        Monitor.Wait(CHANGE_EVENT_LOCK);    // Wait forever
+                    else if (IsComplete(docNew) || (LastProgress != null && LastProgress.IsError))
                         Monitor.Pulse(CHANGE_EVENT_LOCK);
                 }
             }

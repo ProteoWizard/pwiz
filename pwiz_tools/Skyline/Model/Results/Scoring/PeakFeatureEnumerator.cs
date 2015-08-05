@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 runEnumDict.Add(fileInfo.FileIndex, runEnumDict.Count + 1);
             }
 
+            PeptideGroupDocNode nodePepGroupLast = null;
             foreach (var nodePepGroup in document.MoleculeGroups)
             {
                 foreach (var nodePep in nodePepGroup.Molecules)
@@ -64,10 +65,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         int percentComplete = currentPeptide++*100/totalPeptides;
                         if (percentComplete < 100)
                         {
-                            progressMonitor.UpdateProgress(status =
-                                status.ChangeMessage(string.Format(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_,
-                                    nodePepGroup.Name)) // Modified sequence, or custom ion name
-                                      .ChangePercentComplete(percentComplete));
+                            if (!ReferenceEquals(nodePepGroup, nodePepGroupLast))
+                            {
+                                status = status.ChangeMessage(string.Format(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_,
+                                    nodePepGroup.Name));
+                                nodePepGroupLast = nodePepGroup;
+                            }
+                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
                         }
                     }
 

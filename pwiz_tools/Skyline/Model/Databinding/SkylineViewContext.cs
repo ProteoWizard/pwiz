@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public bool Export(IProgressMonitor progressMonitor, ref ProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
         {
-            progressMonitor = progressMonitor ?? new CommandWaitBroker(new StringWriter(), status);
+            progressMonitor = progressMonitor ?? new CommandProgressMonitor(new StringWriter(), status);
             using (var bindingListSource = new BindingListSource())
             {
                 bindingListSource.SetViewContext(this, viewInfo);

@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestA
                                 "--import-file=" + rawPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
                                 "--exp-file=" + agilentPath,
-                                "--exp-dwelltime=20");
+                                "--exp-dwell-time=20");
 
             //check for success
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv")));
@@ -366,7 +366,7 @@ namespace pwiz.SkylineTestA
                                 "--import-file=" + rawPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.ABI,
                                 "--exp-file=" + sciexPath,
-                                "--exp-dwelltime=20");
+                                "--exp-dwell-time=20");
 
             //check for success
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv")));
@@ -381,7 +381,7 @@ namespace pwiz.SkylineTestA
                                 "--import-file=" + rawPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
                                 "--exp-file=" + watersPath,
-                                "--exp-runlength=100");
+                                "--exp-run-length=100");
 
             //check for success
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv")));
@@ -521,7 +521,7 @@ namespace pwiz.SkylineTestA
             doc = doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(
                 p => p.ChangeCollisionEnergy(ceRegression)));
             doc = (SrmDocument) doc.RemoveChild(doc.Children[1]);
-            CommandLine.SaveDocument(doc, triggerPath);
+            CommandLine.SaveDocument(doc, triggerPath, Console.Out);
 
             output = RunCommand("--in=" + triggerPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
@@ -643,7 +643,7 @@ namespace pwiz.SkylineTestA
             string schedulePath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
             var doc = ResultsUtil.DeserializeDocument(docPath);
             doc = (SrmDocument)doc.RemoveChild(doc.Children[1]);
-            CommandLine.SaveDocument(doc, schedulePath);
+            CommandLine.SaveDocument(doc, schedulePath, Console.Out);
             docPath = schedulePath;
 
             output = RunCommand("--in=" + docPath,
@@ -1234,6 +1234,7 @@ namespace pwiz.SkylineTestA
                      "--tool-command=" + command,
                      "--tool-arguments=" + arguments,
                      "--tool-initial-dir=" + initialDirectory);
+            Assert.IsTrue(Settings.Default.ToolList.Count > 0, "The expected tool was not added to the list.");
             int index = Settings.Default.ToolList.Count -1;
             ToolDescription tool = Settings.Default.ToolList[index];
             Assert.AreEqual(title, tool.Title);

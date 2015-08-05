@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -45,9 +44,11 @@ namespace pwiz.Skyline.Model.Results
         private ImmutableList<string> _listSharedCachePaths;
         private ProgressStatus _statusLoading;
 
-        public MeasuredResults(IList<ChromatogramSet> chromatograms)
+        public MeasuredResults(IList<ChromatogramSet> chromatograms, bool disableJoining = false)
         {
             Chromatograms = chromatograms;
+            IsJoiningDisabled = disableJoining;
+
             // The only way to get peaks with areas not normalized by
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
@@ -72,9 +73,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 // All the chromatogram sets are loaded, and the cache has not been modified
                 return !Chromatograms.Contains(c => !c.IsLoaded) &&
-                       _cacheFinal != null && !_cacheFinal.ReadStream.IsModified;
+                    (IsJoiningDisabled || (_cacheFinal != null && !_cacheFinal.ReadStream.IsModified));
             }
         }
+
+        public bool IsJoiningDisabled { get; private set; }
+        public bool IsResultsUpdateRequired { get; private set; }
 
         public bool IsChromatogramSetLoaded(int index)
         {
@@ -313,6 +317,7 @@ namespace pwiz.Skyline.Model.Results
             results._statusLoading = resultsCache._statusLoading;
             results._listPartialCaches = resultsCache._listPartialCaches;
             results._cacheFinal = resultsCache._cacheFinal;
+            results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
 
             // If both sets have partial caches, merge them
             if (_listPartialCaches != null && results._listPartialCaches != null)
@@ -557,6 +562,16 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #region Property change methods
+
+        public MeasuredResults ChangeIsJoiningDisabled(bool prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.IsJoiningDisabled = prop;
+                if (!prop)
+                    im.IsResultsUpdateRequired = true;
+            });
+        }
 
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop, bool forceUpdate = false)
         {
@@ -1099,7 +1114,7 @@ namespace pwiz.Skyline.Model.Results
                         string partPath;
                         // If there is only one result path, then just create the cache directly to its
                         // final destination.
-                        if (msDataFilePaths.Length == 1)
+                        if (msDataFilePaths.Length == 1 && !_resultsClone.IsJoiningDisabled)
                             partPath = cachePath;
                         else
                         {
@@ -1147,7 +1162,10 @@ namespace pwiz.Skyline.Model.Results
                     // If more than just a single file will be cached, then create a segmented
                     // status object for marking progress.
                     if (msDataFilePaths.Length > 1 && _status.SegmentCount < uncachedCount)
-                        _status = _status.ChangeSegments(0, uncachedCount + 1); // +1 for join
+                    {
+                        int joinAddition = _resultsClone.IsJoiningDisabled ? 0 : 1; // +1 for join
+                        _status = _status.ChangeSegments(0, uncachedCount + joinAddition);
+                    }
 
                     // CONSIDER: In theory concurrent builds should be possible, and could
                     //           improve resource utilization to speed up cache creation.  Initial
@@ -1165,24 +1183,33 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // This would mean that there were not data files
-                Debug.Assert(_resultsClone._listPartialCaches != null);
+                Assume.IsTrue(_resultsClone._listPartialCaches != null);
                 // Keep ReSharper happy
                 if (_resultsClone._listPartialCaches == null)
                     return;
 
+                // If joining is allowed just finish
+                if (_resultsClone.IsJoiningDisabled)
+                {
+                    _loader.UpdateProgress(_status.ChangeSegments(0, 0).Complete());
+
+                    Complete(true);
+                }
                 // Once everything is represented, if there is only one cache, then it is final
                 // As long as it is not a shared cache
-                if (_resultsClone._listPartialCaches.Count == 1 &&
+                else if (_resultsClone._listPartialCaches.Count == 1 &&
                         !_resultsClone.IsSharedCache(_resultsClone._listPartialCaches[0]))
                 {
                     _resultsClone._cacheFinal = _resultsClone._listPartialCaches[0];
                     _resultsClone._cacheRecalc = null;
                     _resultsClone._listPartialCaches = null;
+                    _resultsClone.IsResultsUpdateRequired = false;
 
                     _loader.UpdateProgress(_status.ChangeSegments(0, 0).Complete());
 
                     Complete(true);
                 }
+                // Otherwise start the join
                 else
                 {
                     _status = _status.NextSegment();
