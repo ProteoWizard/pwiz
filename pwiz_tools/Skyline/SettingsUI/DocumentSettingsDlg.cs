@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -127,5 +128,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             return tabControl;
         }
+
+        public ChooseViewsControl ChooseViewsControl { get { return chooseViewsControl; } }
     }
 }

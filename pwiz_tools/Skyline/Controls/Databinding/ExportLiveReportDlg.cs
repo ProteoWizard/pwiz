@@ -191,20 +191,6 @@ namespace pwiz.Skyline.Controls.Databinding
             comboLanguage.SelectedIndex = useInvariantLanguage ? indexInvariantLanguage : indexLocalizedLanguage;
         }
 
-        public class ListItem
-        {
-            public ListItem(ViewSpec viewSpec)
-            {
-                ViewSpec = viewSpec;
-            }
-
-            public ViewSpec ViewSpec { get; private set; }
-            public override string ToString()
-            {
-                return ViewSpec.Name;
-            }
-        }
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();

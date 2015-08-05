@@ -146,6 +146,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
+    <Compile Include="DocumentReportTest.cs" />
     <Compile Include="DocumentSizeErrorTest.cs" />
     <Compile Include="EditCustomMoleculeDlgTest.cs" />
     <Compile Include="AnnotationTest.cs" />
