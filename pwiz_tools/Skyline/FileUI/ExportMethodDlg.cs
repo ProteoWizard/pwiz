@@ -155,6 +155,7 @@ namespace pwiz.Skyline.FileUI
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
+            cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             panelThermoColumns.Top = labelDwellTime.Top;
@@ -162,12 +163,11 @@ namespace pwiz.Skyline.FileUI
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
             panelSciexTune.Top = labelOptimizing.Top;
+            panelWaters.Top = labelDwellTime.Top - panelWaters.Height;
 
             foreach (string tuneType in ExportOptimize.CompensationVoltageTuneTypes)
                 comboTuning.Items.Add(tuneType);
             comboTuning.SelectedIndex = 0;
-
-            cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -227,6 +227,8 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_LTQ) ||
                    Equals(type, ExportInstrumentType.THERMO_Q_EXACTIVE) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
+                   Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
+                   Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
                    Equals(type, ExportInstrumentType.WATERS_XEVO) ||
                    Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                    // For AbSciex's TOF 5600 and QSTAR instruments, the dwell (accumulation) time
@@ -248,6 +250,8 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
                        Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
+                       Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
+                       Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
@@ -394,6 +398,12 @@ namespace pwiz.Skyline.FileUI
             set { _exportProperties.ExportMultiQuant = cbExportMultiQuant.Checked = value; }
         }
 
+        public bool ExportEdcMass
+        {
+            get { return _exportProperties.ExportEdcMass; }
+            set { _exportProperties.ExportEdcMass = cbExportEdcMass.Checked = value; }
+        }
+
         private void UpdateThermoColumns(ExportMethodType targetType)
         {
             panelThermoColumns.Visible = targetType == ExportMethodType.Scheduled &&
@@ -403,6 +413,21 @@ namespace pwiz.Skyline.FileUI
         private void UpdateAbSciexControls()
         {
             panelAbSciexTOF.Visible = InstrumentType == ExportInstrumentType.ABI_TOF;
+        }
+
+        private void UpdateWatersControls()
+        {
+            switch (InstrumentType)
+            {
+                case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
+                case ExportInstrumentType.WATERS_SYNAPT_TRAP:
+                case ExportInstrumentType.WATERS_XEVO:
+                    panelWaters.Show();
+                    break;
+                default:
+                    panelWaters.Hide();
+                    break;
+            }
         }
 
         private void UpdateCovControls()
@@ -844,6 +869,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
             if (cbExportMultiQuant.Visible)
                 Settings.Default.ExportMultiQuant = ExportMultiQuant;
+            if (cbExportEdcMass.Visible)
+                Settings.Default.ExportEdcMass = ExportEdcMass;
 
             DialogResult = DialogResult.OK;
             Close();
@@ -875,6 +902,8 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
 
             _exportProperties.RetentionStartAndEnd = panelThermoRt.Visible && cbUseStartAndEndRts.Checked;
+
+            _exportProperties.ExportEdcMass = panelWaters.Visible && cbExportEdcMass.Checked;
 
             _exportProperties.Ms1Scan = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                                         _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
@@ -1288,6 +1317,7 @@ namespace pwiz.Skyline.FileUI
             UpdateDwellControls(standard);
             UpdateThermoColumns(targetType);
             UpdateAbSciexControls();
+            UpdateWatersControls();
             UpdateThermoRtControls(targetType);
             UpdateMaxLabel(standard);
         }

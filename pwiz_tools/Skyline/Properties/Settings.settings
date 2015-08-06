@@ -512,5 +512,8 @@
     <Setting Name="AreaFontSize" Type="System.Single" Scope="User">
       <Value Profile="(Default)">12</Value>
     </Setting>
+    <Setting Name="ExportEdcMass" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

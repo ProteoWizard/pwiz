@@ -67,11 +67,14 @@
             this.comboTuning = new System.Windows.Forms.ComboBox();
             this.panelSciexTune = new System.Windows.Forms.Panel();
             this.label6 = new System.Windows.Forms.Label();
+            this.panelWaters = new System.Windows.Forms.Panel();
+            this.cbExportEdcMass = new System.Windows.Forms.CheckBox();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
             this.panelThermoRt.SuspendLayout();
             this.panelSciexTune.SuspendLayout();
+            this.panelWaters.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -317,6 +320,18 @@
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
             // 
+            // panelWaters
+            // 
+            this.panelWaters.Controls.Add(this.cbExportEdcMass);
+            resources.ApplyResources(this.panelWaters, "panelWaters");
+            this.panelWaters.Name = "panelWaters";
+            // 
+            // cbExportEdcMass
+            // 
+            resources.ApplyResources(this.cbExportEdcMass, "cbExportEdcMass");
+            this.cbExportEdcMass.Name = "cbExportEdcMass";
+            this.cbExportEdcMass.UseVisualStyleBackColor = true;
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -350,6 +365,7 @@
             this.Controls.Add(this.panelAbSciexTOF);
             this.Controls.Add(this.panelThermoColumns);
             this.Controls.Add(this.panelThermoRt);
+            this.Controls.Add(this.panelWaters);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -366,6 +382,8 @@
             this.panelThermoRt.PerformLayout();
             this.panelSciexTune.ResumeLayout(false);
             this.panelSciexTune.PerformLayout();
+            this.panelWaters.ResumeLayout(false);
+            this.panelWaters.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -410,5 +428,7 @@
         private System.Windows.Forms.ComboBox comboTuning;
         private System.Windows.Forms.Panel panelSciexTune;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Panel panelWaters;
+        private System.Windows.Forms.CheckBox cbExportEdcMass;
     }
 }

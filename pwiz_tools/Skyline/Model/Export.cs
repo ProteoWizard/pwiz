@@ -172,6 +172,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO = "Waters Xevo";
+        public const string WATERS_SYNAPT_TRAP = "Waters Synapt (trap)";
+        public const string WATERS_SYNAPT_TRANSFER = "Waters Synapt (transfer)";
         public const string WATERS_QUATTRO_PREMIER = "Waters Quattro Premier";
 
         public const string EXT_AB_SCIEX = ".dam";
@@ -211,7 +213,10 @@ namespace pwiz.Skyline.Model
                 ABI_TOF,
                 AGILENT_TOF,
                 THERMO_Q_EXACTIVE,
-                THERMO_FUSION
+                THERMO_FUSION,
+                WATERS_SYNAPT_TRAP,
+                WATERS_SYNAPT_TRANSFER,
+                WATERS_XEVO
             };
 
         private readonly static Dictionary<string, string> METHOD_EXTENSIONS;
@@ -242,9 +247,17 @@ namespace pwiz.Skyline.Model
 
         public static string IsolationListExtension(string instrument)
         {
-            return Equals(instrument, ABI_TOF)
-                ? AbiTofIsolationListExporter.EXT_ABI_TOF_ISOLATION_LIST
-                : TextUtil.EXT_CSV;
+            switch (instrument)
+            {
+                case ABI_TOF:
+                    return AbiTofIsolationListExporter.EXT_ABI_TOF_ISOLATION_LIST;
+                case WATERS_SYNAPT_TRAP:
+                case WATERS_SYNAPT_TRANSFER:
+                case WATERS_XEVO:
+                    return WatersIsolationListExporter.EXT_WATERS_ISOLATION_LIST;
+                default:
+                    return TextUtil.EXT_CSV;
+            }
         }
 
         /// <summary>
@@ -264,6 +277,9 @@ namespace pwiz.Skyline.Model
                    Equals(type, THERMO_Q_EXACTIVE) ||
                    Equals(type, THERMO_FUSION) ||
                    Equals(type, AGILENT_TOF) ||
+                   Equals(type, WATERS_SYNAPT_TRAP) ||
+                   Equals(type, WATERS_SYNAPT_TRANSFER) ||
+                   Equals(type, WATERS_XEVO) ||
                    Equals(type, BRUKER_TOF) ||
                    Equals(type, ABI_TOF);
         }
@@ -341,6 +357,8 @@ namespace pwiz.Skyline.Model
 
         public virtual int MultiplexIsolationListCalculationTime { get; set; }
         public virtual bool DebugCycles { get; set; }
+
+        public virtual bool ExportEdcMass { get; set; }
 
         public TExp InitExporter<TExp>(TExp exporter)
             where TExp : AbstractMassListExporter
@@ -431,9 +449,13 @@ namespace pwiz.Skyline.Model
                     }
                     return ExportThermoQExactiveIsolationList(doc, path, template);
                 case ExportInstrumentType.WATERS:
+                case ExportInstrumentType.WATERS_SYNAPT_TRAP:
+                case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
                 case ExportInstrumentType.WATERS_XEVO:
                     if (type == ExportFileType.List)
                         return ExportWatersCsv(doc, path);
+                    else if (type == ExportFileType.IsolationList)
+                        return ExportWatersIsolationList(doc, path, template, instrumentType);
                     else
                         return ExportWatersMethod(doc, path, template);
                 case ExportInstrumentType.WATERS_QUATTRO_PREMIER:
@@ -654,6 +676,18 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.Export(fileName);
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportWatersIsolationList(SrmDocument document, string fileName,
+            string templateName, string instrumentType)
+        {
+            var exporter = InitExporter(new WatersIsolationListExporter(document, instrumentType));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            exporter.ExportEdcMass = ExportEdcMass;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
         }
@@ -2985,6 +3019,234 @@ namespace pwiz.Skyline.Model
                 writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
             writer.WriteLine();
+        }
+    }
+
+    public class WatersIsolationListExporter : AbstractMassListExporter
+    {
+        public const string EXT_WATERS_ISOLATION_LIST = ".mrm"; // Not L10N
+        
+        public bool ExportEdcMass { get; set; }
+
+        private readonly string _instrumentType;
+        public double RunLength { get; set; }
+        public double ConeVoltage { get; set; }
+        public double SlopeStart { get; set; }
+        public double SlopeEnd { get; set; }
+        public double InterceptTrapStart { get; set; }
+        public double InterceptTrapEnd { get; set; }
+        public double InterceptTransferStart { get; set; }
+        public double InterceptTransferEnd { get; set; }
+        public double TrapRegionTransferCE { get; set; }
+        public double TransferRegionTrapCE { get; set; }
+
+        public WatersIsolationListExporter(SrmDocument document, string instrumentType)
+            : base(document, null)
+        {
+            _instrumentType = instrumentType;
+            IsolationList = true;
+
+            /* From Waters:
+             * 
+             * For Synapt trap region (mode 1) methods, please use the following formulae and values:
+             * Trap CE start = 0.0286*m/z + 4.5714
+             * Trap CE end = 0.0352*m/z + 7.3956
+             * Transfer CE start = 2
+             * Transfer CE end = 2
+             * 
+             * For Synapt transfer region (mode 1) methods, please use the following formulae and values:
+             * Trap CE start = 4
+             * Trap CE end = 4
+             * Transfer CE start = 0.0286*m/z + 9.5714
+             * Transfer CE end = 0.0352*m/z + 12.3956
+             * 
+             * For Xevo QTof, please use the following formulae:
+             * Trap CE start = 0.0286*m/z + 4.5714
+             * Trap CE end = 0.0352*m/z + 7.3956
+             */
+            ConeVoltage = 30;
+            SlopeStart = 0.0286;
+            SlopeEnd = 0.0352;
+            InterceptTrapStart = 4.5714;
+            InterceptTrapEnd = 7.3956;
+            InterceptTransferStart = 9.5714;
+            InterceptTransferEnd = 12.3956;
+            TrapRegionTransferCE = 2;
+            TransferRegionTrapCE = 4;
+        }
+
+        protected override string InstrumentType
+        {
+            get { return _instrumentType; }
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+            Export(fileName);
+        }
+
+        public override bool HasHeaders { get { return true; } }
+
+        public static string GetHeader(char fieldSeparator)
+        {
+            return
+                ";Funtion channel,Retention Time Start,Retention Time End,Set Mass,Mass Fragments 1,2,3,4,5,6,Trap CE Start,Trap CE End," + // Not L10N
+                "Transfer CE Start,Transfer CE End,CV,EDCMass,DT Start,DT End,compound name".Replace(',', fieldSeparator); // Not L10N
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.WriteLine(GetHeader(FieldSeparator));
+        }
+
+        protected override void WriteTransition(TextWriter writer,
+                                                PeptideGroupDocNode nodePepGroup,
+                                                PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            var transitions = GetTransitionsInBestOrder(nodeTranGroup, nodeTranGroupPrimary).ToArray();
+
+            // Funtion channel
+            writer.Write(0);
+            writer.Write(FieldSeparator);
+            // Retention Time Start, Retention Time End
+            double rtStart = 0;
+            double rtEnd = 0;
+            if (MethodType != ExportMethodType.Standard)
+            {
+                var prediction = Document.Settings.PeptideSettings.Prediction;
+                double windowRT;
+                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                if (predictedRT.HasValue)
+                {
+                    rtStart = predictedRT.Value - windowRT/2;
+                    rtEnd = predictedRT.Value + windowRT/2;
+                }
+            }
+            else
+            {
+                rtStart = 0;
+                rtEnd = RunLength;
+            }
+            writer.Write(Math.Round(rtStart, 6).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(Math.Round(rtEnd, 6).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // Set Mass
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // Mass Fragments 1-6
+            for (int i = 0; i < 6; i++)
+            {
+                var mz = i < transitions.Count()
+                    ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions[i]).Mz), step)
+                    : 0;
+                writer.Write(mz.ToString(CultureInfo));
+                writer.Write(FieldSeparator);
+            }
+            // Trap CE Start, Trap CE End, Transfer CE Start, Transfer CE End
+            double trapStart, trapEnd, transferStart, transferEnd;
+            GetCEValues(nodeTranGroup.PrecursorMz, out trapStart, out trapEnd, out transferStart, out transferEnd);
+            writer.Write(Math.Round(trapStart, 6));
+            writer.Write(FieldSeparator);
+            writer.Write(Math.Round(trapEnd, 6));
+            writer.Write(FieldSeparator);
+            writer.Write(Math.Round(transferStart, 6));
+            writer.Write(FieldSeparator);
+            writer.Write(Math.Round(transferEnd, 6));
+            writer.Write(FieldSeparator);
+            // CV
+            writer.Write(ConeVoltage);
+            writer.Write(FieldSeparator);
+            // EDCMass
+            var edcMass = ExportEdcMass && transitions.Any()
+                ? GetProductMz(SequenceMassCalc.PersistentMZ(((TransitionDocNode) transitions.First()).Mz), step)
+                : 0;
+            writer.Write(edcMass.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // DT Start, DT End
+            writer.Write(0);
+            writer.Write(FieldSeparator);
+            writer.Write(199);
+            writer.Write(FieldSeparator);
+            // compound name
+            writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
+            writer.WriteLine();
+        }
+
+        protected void GetCEValues(double mz, out double trapStart, out double trapEnd, out double transferStart, out double transferEnd)
+        {
+            switch (_instrumentType)
+            {
+                case ExportInstrumentType.WATERS_SYNAPT_TRAP:
+                    trapStart = SlopeStart*mz + InterceptTrapStart;
+                    trapEnd = SlopeEnd*mz + InterceptTrapEnd;
+                    transferStart = transferEnd = TrapRegionTransferCE;
+                    break;
+                case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
+                    trapStart = trapEnd = TransferRegionTrapCE;
+                    transferStart = SlopeStart*mz + InterceptTransferStart;
+                    transferEnd = SlopeEnd*mz + InterceptTransferEnd;
+                    break;
+                default:
+                    trapStart = SlopeStart*mz + InterceptTrapStart;
+                    trapEnd = SlopeEnd*mz + InterceptTrapEnd;
+                    transferStart = transferEnd = 0; // Ignored for Xevo
+                    break;
+            }
+        }
+
+        protected override IEnumerable<DocNode> GetTransitionsInBestOrder(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
+        {
+            IComparer<TransitionOrdered> comparer = TransitionOrdered.TransitionComparerInstance;
+            var sortedByPrimaryTransitions = new SortedDictionary<TransitionOrdered, TransitionDocNode>(comparer);
+            foreach (TransitionDocNode transition in nodeGroup.Children)
+            {
+                int? calculatedRank = GetRank(nodeGroup, nodeGroupPrimary, transition);
+                int? useableRank = (calculatedRank.HasValue && calculatedRank == 0) ? 10000 : calculatedRank; // red integrations appear to give a rank of 0, making them better rank than the best transition
+                sortedByPrimaryTransitions.Add(new TransitionOrdered { Mz = transition.Mz, Rank = useableRank }, transition);
+            }
+            return sortedByPrimaryTransitions.Values;
+        }
+
+        private struct TransitionOrdered
+        {
+            public int? Rank { private get; set; }
+            public double Mz { private get; set; }
+
+            private sealed class TransitionComparer : IComparer<TransitionOrdered>
+            {
+                public int Compare(TransitionOrdered x, TransitionOrdered y)
+                {
+                    // null results should be treated has having the worst rank (highest Rank number)
+                    if (x.Rank == null && y.Rank != null)
+                        return 1;
+                    if (x.Rank != null && y.Rank == null)
+                        return -1;
+
+                    int c = Comparer.Default.Compare(x.Rank, y.Rank);
+                    if (c != 0)
+                        return c;
+                    c = Comparer.Default.Compare(x.Mz, y.Mz);
+                    if (c != 0)
+                        return c;
+
+                    return 1;
+                }
+            }
+
+            private static readonly IComparer<TransitionOrdered> PRECURSOR_MOD_SEQ_COMPARER_INSTANCE = new TransitionComparer();
+
+            public static IComparer<TransitionOrdered> TransitionComparerInstance
+            {
+                get { return PRECURSOR_MOD_SEQ_COMPARER_INSTANCE; }
+            }
         }
     }
 
