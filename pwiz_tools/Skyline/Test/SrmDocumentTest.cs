@@ -254,6 +254,18 @@ namespace pwiz.SkylineTest
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
                               ExportMethodType.Scheduled, asSmallMolecules);
             Assert.AreEqual(1, count);
+            if (asSmallMolecules)
+            {
+                count = ExportAll(DOC_MOLECULES, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
+                   ExportMethodType.Scheduled, false,
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,59.999451,59.999451,3.45,4.56,-4.7,0\r\nmolecule_light,1,,59.999451,54.999451,3.45,4.56,-4.7,0\r\n");
+                Assert.AreEqual(1, count);
+                // Try negative charges
+                count = ExportAll(DOC_MOLECULES.Replace(" charge=\"", " charge=\"-"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
+                   ExportMethodType.Scheduled, false,
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60.000549,60.000549,3.45,4.56,4.7,1\r\nmolecule_light,1,,60.000549,54.999451,3.45,4.56,4.7,1\r\n");
+                Assert.AreEqual(1, count);
+            }
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
                               ExportMethodType.Standard, asSmallMolecules);
             Assert.AreEqual(1, count);
@@ -323,7 +335,8 @@ namespace pwiz.SkylineTest
 
         private static int ExportAll(string xml, int countFields, CreateExporter exporters,
                                      ExportStrategy strategy, int minTransition, int? maxTransition,
-                                     ExportMethodType methodType, bool asSmallMolecules)
+                                     ExportMethodType methodType, bool asSmallMolecules,
+                                     string expectedOutput = null)
         {
             SrmDocument actual = AssertEx.Deserialize<SrmDocument>(xml);
             if (asSmallMolecules)
@@ -331,17 +344,24 @@ namespace pwiz.SkylineTest
                 var refine = new RefinementSettings();
                 actual = refine.ConvertToSmallMolecules(actual);
             }
-            return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType);
+            return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType, expectedOutput);
         }
 
         private static int ExportAll(SrmDocument actual, int countFields, CreateExporter exporter,
                                      ExportStrategy strategy, int minTransition, int? maxTransition,
-                                     ExportMethodType methodType)
+                                     ExportMethodType methodType,
+                                     string expectedOutput = null)
         {
             AbstractMassListExporter exporterActual;
             exporter(actual, methodType, strategy, out exporterActual);
             exporterActual.Export(null);
             var exportedActual = exporterActual.MemoryOutput;
+            if (expectedOutput != null)
+            {
+                var actualOutput = exportedActual.Values.First().ToString();
+                Assert.AreEqual(actualOutput, expectedOutput);
+                return exportedActual.Count;  // Just be satisfied with output correctness, don't try to roundtrip
+            }
             
             // Make sure the resulting output can be imported
             SrmDocument docImport = new SrmDocument(actual.Settings);

@@ -46,6 +46,7 @@ struct PWIZ_API_DECL SRMTransition
     short event;
     short segment;
     double collisionEnergy;
+    short polarity;
     double Q1;
     double Q3;
     //TimeRange acquiredTimeRange;

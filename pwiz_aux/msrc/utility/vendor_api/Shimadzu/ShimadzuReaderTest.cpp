@@ -40,7 +40,7 @@ void test(const string& rawpath)
     vector<double> times, intensities;
     BOOST_FOREACH(const SRMTransition& transition, dataReader->getTransitions())
     {
-        cout << "Transition Id=" << transition.id << " Q1=" << transition.Q1 << " Q3=" << transition.Q3 << endl;
+        cout << "Transition Id=" << transition.id << " Q1=" << transition.Q1 << " Q3=" << transition.Q3 << " CE=" << transition.CE << " Polarity=" << transition.polarity << endl;
         ChromatogramPtr chromatogram = dataReader->getChromatogram(transition);
         chromatogram->getXArray(times);
         chromatogram->getYArray(intensities);

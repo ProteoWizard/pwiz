@@ -111,6 +111,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q1, MS_m_z);
             result->precursor.activation.set(MS_CID);
             result->precursor.activation.set(MS_collision_energy, ci.transition.collisionEnergy, UO_electronvolt);
+            result->set(ci.transition.polarity != 1 ? MS_positive_scan : MS_negative_scan);
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.transition.Q3, MS_m_z);
             //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);

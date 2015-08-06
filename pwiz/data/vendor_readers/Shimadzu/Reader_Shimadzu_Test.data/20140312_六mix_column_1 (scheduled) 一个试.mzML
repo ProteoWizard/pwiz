@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="20140312_六mix_column_1 (scheduled) 一个试" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="3.60.0" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="3.74.0" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="12:10:2011" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,7 +9,7 @@
       <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd" name="20140312_六mix_column_1 (scheduled) 一个试.lcd" location="file:///C:\pwiz-src2\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
+      <sourceFile id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd" name="20140312_六mix_column_1 (scheduled) 一个试.lcd" location="file:///">
         <cvParam cvRef="MS" accession="MS:1000929" name="Shimadzu Biotech nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000560" name="mass spectrometer file format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="74e7b9e84c1135dcf9f94fc1def85fccd7eeecf7"/>
@@ -20,7 +20,7 @@
     <software id="Shimadzu_x0020_software" version="4.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.6312">
+    <software id="pwiz" version="3.0.8725">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -39,15 +39,16 @@
   </dataProcessingList>
   <run id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_" defaultInstrumentConfigurationRef="IC1" defaultSourceFileRef="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd">
     <chromatogramList count="143" defaultDataProcessingRef="pwiz_Reader_Shimadzu_conversion">
-      <chromatogram index="0" id="SRM SIC Q1=1059 Q3=244.15 Channel=1 Event=1 Segment=1 CE=-50.647" defaultArrayLength="238">
+      <chromatogram index="0" id="SRM SIC Q1=1059 Q3=244.15 Channel=1 Event=1 Segment=1 CE=50.6" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-50.647" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="50.6" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -70,15 +71,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="1" id="SRM SIC Q1=1059 Q3=359.2 Channel=2 Event=1 Segment=1 CE=-38" defaultArrayLength="238">
+      <chromatogram index="1" id="SRM SIC Q1=1059 Q3=359.2 Channel=2 Event=1 Segment=1 CE=38" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-38.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="38.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -101,15 +103,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="2" id="SRM SIC Q1=1059 Q3=529.3 Channel=3 Event=1 Segment=1 CE=-48.552" defaultArrayLength="238">
+      <chromatogram index="2" id="SRM SIC Q1=1059 Q3=529.3 Channel=3 Event=1 Segment=1 CE=48.6" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-48.552" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="48.6" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -132,15 +135,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="3" id="SRM SIC Q1=1059 Q3=741.4 Channel=4 Event=1 Segment=1 CE=-40.647" defaultArrayLength="238">
+      <chromatogram index="3" id="SRM SIC Q1=1059 Q3=741.4 Channel=4 Event=1 Segment=1 CE=40.6" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-40.647" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="40.6" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -163,15 +167,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="4" id="SRM SIC Q1=1059 Q3=855.4 Channel=5 Event=1 Segment=1 CE=-39" defaultArrayLength="238">
+      <chromatogram index="4" id="SRM SIC Q1=1059 Q3=855.4 Channel=5 Event=1 Segment=1 CE=39" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-39.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="39.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -194,15 +199,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="5" id="SRM SIC Q1=1059 Q3=1041.5 Channel=6 Event=1 Segment=1 CE=-38.558" defaultArrayLength="238">
+      <chromatogram index="5" id="SRM SIC Q1=1059 Q3=1041.5 Channel=6 Event=1 Segment=1 CE=38.6" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-38.558" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="38.6" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -225,15 +231,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="6" id="SRM SIC Q1=1059 Q3=1298.65 Channel=7 Event=1 Segment=1 CE=-39" defaultArrayLength="238">
+      <chromatogram index="6" id="SRM SIC Q1=1059 Q3=1298.65 Channel=7 Event=1 Segment=1 CE=39" defaultArrayLength="238">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="1059.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-39.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="39.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -256,15 +263,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="7" id="SRM SIC Q1=582.3 Q3=595.3 Channel=1 Event=2 Segment=2 CE=-23" defaultArrayLength="60">
+      <chromatogram index="7" id="SRM SIC Q1=582.3 Q3=595.3 Channel=1 Event=2 Segment=2 CE=23" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="582.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -287,15 +295,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="8" id="SRM SIC Q1=582.3 Q3=708.4 Channel=2 Event=2 Segment=2 CE=-23" defaultArrayLength="60">
+      <chromatogram index="8" id="SRM SIC Q1=582.3 Q3=708.4 Channel=2 Event=2 Segment=2 CE=23" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="582.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -318,15 +327,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="9" id="SRM SIC Q1=582.3 Q3=837.45 Channel=3 Event=2 Segment=2 CE=-23" defaultArrayLength="60">
+      <chromatogram index="9" id="SRM SIC Q1=582.3 Q3=837.45 Channel=3 Event=2 Segment=2 CE=23" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="582.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -349,15 +359,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="10" id="SRM SIC Q1=582.3 Q3=951.5 Channel=4 Event=2 Segment=2 CE=-23" defaultArrayLength="60">
+      <chromatogram index="10" id="SRM SIC Q1=582.3 Q3=951.5 Channel=4 Event=2 Segment=2 CE=23" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="582.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -380,15 +391,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="11" id="SRM SIC Q1=582.3 Q3=1050.55 Channel=5 Event=2 Segment=2 CE=-23" defaultArrayLength="60">
+      <chromatogram index="11" id="SRM SIC Q1=582.3 Q3=1050.55 Channel=5 Event=2 Segment=2 CE=23" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="582.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -411,15 +423,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="12" id="SRM SIC Q1=540.3 Q3=460.3 Channel=1 Event=3 Segment=2 CE=-22" defaultArrayLength="60">
+      <chromatogram index="12" id="SRM SIC Q1=540.3 Q3=460.3 Channel=1 Event=3 Segment=2 CE=22" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="540.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -442,15 +455,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="13" id="SRM SIC Q1=540.3 Q3=574.3 Channel=2 Event=3 Segment=2 CE=-22" defaultArrayLength="60">
+      <chromatogram index="13" id="SRM SIC Q1=540.3 Q3=574.3 Channel=2 Event=3 Segment=2 CE=22" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="540.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -473,15 +487,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="14" id="SRM SIC Q1=540.3 Q3=673.4 Channel=3 Event=3 Segment=2 CE=-22" defaultArrayLength="60">
+      <chromatogram index="14" id="SRM SIC Q1=540.3 Q3=673.4 Channel=3 Event=3 Segment=2 CE=22" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="540.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -504,15 +519,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="15" id="SRM SIC Q1=540.3 Q3=836.45 Channel=4 Event=3 Segment=2 CE=-22" defaultArrayLength="60">
+      <chromatogram index="15" id="SRM SIC Q1=540.3 Q3=836.45 Channel=4 Event=3 Segment=2 CE=22" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="540.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -535,15 +551,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="16" id="SRM SIC Q1=540.3 Q3=907.5 Channel=5 Event=3 Segment=2 CE=-22" defaultArrayLength="60">
+      <chromatogram index="16" id="SRM SIC Q1=540.3 Q3=907.5 Channel=5 Event=3 Segment=2 CE=22" defaultArrayLength="60">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="540.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -566,15 +583,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="17" id="SRM SIC Q1=653.35 Q3=712.45 Channel=1 Event=4 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="17" id="SRM SIC Q1=653.35 Q3=712.45 Channel=1 Event=4 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="653.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -597,15 +615,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="18" id="SRM SIC Q1=653.35 Q3=841.5 Channel=2 Event=4 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="18" id="SRM SIC Q1=653.35 Q3=841.5 Channel=2 Event=4 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="653.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -628,15 +647,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="19" id="SRM SIC Q1=653.35 Q3=956.5 Channel=3 Event=4 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="19" id="SRM SIC Q1=653.35 Q3=956.5 Channel=3 Event=4 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="653.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -659,15 +679,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="20" id="SRM SIC Q1=653.35 Q3=1055.55 Channel=4 Event=4 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="20" id="SRM SIC Q1=653.35 Q3=1055.55 Channel=4 Event=4 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="653.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -690,15 +711,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="21" id="SRM SIC Q1=653.35 Q3=1168.65 Channel=5 Event=4 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="21" id="SRM SIC Q1=653.35 Q3=1168.65 Channel=5 Event=4 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="653.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -721,15 +743,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="22" id="SRM SIC Q1=740.4 Q3=274.2 Channel=1 Event=5 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="22" id="SRM SIC Q1=740.4 Q3=274.2 Channel=1 Event=5 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -752,15 +775,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="23" id="SRM SIC Q1=740.4 Q3=387.25 Channel=2 Event=5 Segment=3 CE=-26" defaultArrayLength="52">
+      <chromatogram index="23" id="SRM SIC Q1=740.4 Q3=387.25 Channel=2 Event=5 Segment=3 CE=26" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -783,15 +807,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="24" id="SRM SIC Q1=740.4 Q3=685.45 Channel=3 Event=5 Segment=3 CE=-28" defaultArrayLength="52">
+      <chromatogram index="24" id="SRM SIC Q1=740.4 Q3=685.45 Channel=3 Event=5 Segment=3 CE=28" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -814,15 +839,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="25" id="SRM SIC Q1=740.4 Q3=813.5 Channel=4 Event=5 Segment=3 CE=-28" defaultArrayLength="52">
+      <chromatogram index="25" id="SRM SIC Q1=740.4 Q3=813.5 Channel=4 Event=5 Segment=3 CE=28" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -845,15 +871,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="26" id="SRM SIC Q1=740.4 Q3=960.55 Channel=5 Event=5 Segment=3 CE=-28" defaultArrayLength="52">
+      <chromatogram index="26" id="SRM SIC Q1=740.4 Q3=960.55 Channel=5 Event=5 Segment=3 CE=28" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -876,15 +903,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="27" id="SRM SIC Q1=740.4 Q3=1017.6 Channel=6 Event=5 Segment=3 CE=-28" defaultArrayLength="52">
+      <chromatogram index="27" id="SRM SIC Q1=740.4 Q3=1017.6 Channel=6 Event=5 Segment=3 CE=28" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -907,15 +935,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="28" id="SRM SIC Q1=740.4 Q3=1180.65 Channel=7 Event=5 Segment=3 CE=-28" defaultArrayLength="52">
+      <chromatogram index="28" id="SRM SIC Q1=740.4 Q3=1180.65 Channel=7 Event=5 Segment=3 CE=28" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="740.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -938,15 +967,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="29" id="SRM SIC Q1=858.9 Q3=628.3 Channel=1 Event=6 Segment=3 CE=-33" defaultArrayLength="51">
+      <chromatogram index="29" id="SRM SIC Q1=858.9 Q3=628.3 Channel=1 Event=6 Segment=3 CE=33" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -969,15 +999,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="30" id="SRM SIC Q1=858.9 Q3=687.3 Channel=2 Event=6 Segment=3 CE=-31" defaultArrayLength="51">
+      <chromatogram index="30" id="SRM SIC Q1=858.9 Q3=687.3 Channel=2 Event=6 Segment=3 CE=31" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1000,15 +1031,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="31" id="SRM SIC Q1=858.9 Q3=816.3 Channel=3 Event=6 Segment=3 CE=-33" defaultArrayLength="51">
+      <chromatogram index="31" id="SRM SIC Q1=858.9 Q3=816.3 Channel=3 Event=6 Segment=3 CE=33" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1031,15 +1063,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="32" id="SRM SIC Q1=858.9 Q3=929.4 Channel=4 Event=6 Segment=3 CE=-33" defaultArrayLength="51">
+      <chromatogram index="32" id="SRM SIC Q1=858.9 Q3=929.4 Channel=4 Event=6 Segment=3 CE=33" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1062,15 +1095,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="33" id="SRM SIC Q1=858.9 Q3=1158.5 Channel=5 Event=6 Segment=3 CE=-33" defaultArrayLength="51">
+      <chromatogram index="33" id="SRM SIC Q1=858.9 Q3=1158.5 Channel=5 Event=6 Segment=3 CE=33" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1093,15 +1127,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="34" id="SRM SIC Q1=858.9 Q3=1255.55 Channel=6 Event=6 Segment=3 CE=-33" defaultArrayLength="51">
+      <chromatogram index="34" id="SRM SIC Q1=858.9 Q3=1255.55 Channel=6 Event=6 Segment=3 CE=33" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1124,15 +1159,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="35" id="SRM SIC Q1=858.9 Q3=1369.6 Channel=7 Event=6 Segment=3 CE=-31" defaultArrayLength="51">
+      <chromatogram index="35" id="SRM SIC Q1=858.9 Q3=1369.6 Channel=7 Event=6 Segment=3 CE=31" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="858.9" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1155,15 +1191,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="36" id="SRM SIC Q1=533.3 Q3=310.2 Channel=1 Event=7 Segment=3 CE=-19" defaultArrayLength="51">
+      <chromatogram index="36" id="SRM SIC Q1=533.3 Q3=310.2 Channel=1 Event=7 Segment=3 CE=19" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1186,15 +1223,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="37" id="SRM SIC Q1=533.3 Q3=425.2 Channel=2 Event=7 Segment=3 CE=-21" defaultArrayLength="51">
+      <chromatogram index="37" id="SRM SIC Q1=533.3 Q3=425.2 Channel=2 Event=7 Segment=3 CE=21" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1217,15 +1255,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="38" id="SRM SIC Q1=533.3 Q3=526.25 Channel=3 Event=7 Segment=3 CE=-21" defaultArrayLength="51">
+      <chromatogram index="38" id="SRM SIC Q1=533.3 Q3=526.25 Channel=3 Event=7 Segment=3 CE=21" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1248,15 +1287,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="39" id="SRM SIC Q1=533.3 Q3=641.3 Channel=4 Event=7 Segment=3 CE=-21" defaultArrayLength="51">
+      <chromatogram index="39" id="SRM SIC Q1=533.3 Q3=641.3 Channel=4 Event=7 Segment=3 CE=21" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1279,15 +1319,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="40" id="SRM SIC Q1=533.3 Q3=754.35 Channel=5 Event=7 Segment=3 CE=-21" defaultArrayLength="51">
+      <chromatogram index="40" id="SRM SIC Q1=533.3 Q3=754.35 Channel=5 Event=7 Segment=3 CE=21" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1310,15 +1351,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="41" id="SRM SIC Q1=533.3 Q3=853.45 Channel=6 Event=7 Segment=3 CE=-21" defaultArrayLength="51">
+      <chromatogram index="41" id="SRM SIC Q1=533.3 Q3=853.45 Channel=6 Event=7 Segment=3 CE=21" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1341,15 +1383,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="42" id="SRM SIC Q1=533.3 Q3=966.5 Channel=7 Event=7 Segment=3 CE=-19" defaultArrayLength="51">
+      <chromatogram index="42" id="SRM SIC Q1=533.3 Q3=966.5 Channel=7 Event=7 Segment=3 CE=19" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="533.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1372,15 +1415,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="43" id="SRM SIC Q1=621.3 Q3=676.35 Channel=1 Event=8 Segment=4 CE=-24" defaultArrayLength="51">
+      <chromatogram index="43" id="SRM SIC Q1=621.3 Q3=676.35 Channel=1 Event=8 Segment=4 CE=24" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="621.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1403,15 +1447,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="44" id="SRM SIC Q1=621.3 Q3=775.4 Channel=2 Event=8 Segment=4 CE=-24" defaultArrayLength="51">
+      <chromatogram index="44" id="SRM SIC Q1=621.3 Q3=775.4 Channel=2 Event=8 Segment=4 CE=24" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="621.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1434,15 +1479,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="45" id="SRM SIC Q1=621.3 Q3=890.45 Channel=3 Event=8 Segment=4 CE=-24" defaultArrayLength="51">
+      <chromatogram index="45" id="SRM SIC Q1=621.3 Q3=890.45 Channel=3 Event=8 Segment=4 CE=24" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="621.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1465,15 +1511,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="46" id="SRM SIC Q1=621.3 Q3=991.5 Channel=4 Event=8 Segment=4 CE=-24" defaultArrayLength="51">
+      <chromatogram index="46" id="SRM SIC Q1=621.3 Q3=991.5 Channel=4 Event=8 Segment=4 CE=24" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="621.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1496,15 +1543,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="47" id="SRM SIC Q1=621.3 Q3=1078.55 Channel=5 Event=8 Segment=4 CE=-24" defaultArrayLength="51">
+      <chromatogram index="47" id="SRM SIC Q1=621.3 Q3=1078.55 Channel=5 Event=8 Segment=4 CE=24" defaultArrayLength="51">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="621.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1527,15 +1575,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="48" id="SRM SIC Q1=710.85 Q3=308.15 Channel=1 Event=9 Segment=5 CE=-25" defaultArrayLength="52">
+      <chromatogram index="48" id="SRM SIC Q1=710.85 Q3=308.15 Channel=1 Event=9 Segment=5 CE=25" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1558,15 +1607,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="49" id="SRM SIC Q1=710.85 Q3=610.8 Channel=2 Event=9 Segment=5 CE=-25" defaultArrayLength="52">
+      <chromatogram index="49" id="SRM SIC Q1=710.85 Q3=610.8 Channel=2 Event=9 Segment=5 CE=25" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1589,15 +1639,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="50" id="SRM SIC Q1=710.85 Q3=722.3 Channel=3 Event=9 Segment=5 CE=-27" defaultArrayLength="52">
+      <chromatogram index="50" id="SRM SIC Q1=710.85 Q3=722.3 Channel=3 Event=9 Segment=5 CE=27" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1620,15 +1671,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="51" id="SRM SIC Q1=710.85 Q3=869.35 Channel=4 Event=9 Segment=5 CE=-27" defaultArrayLength="52">
+      <chromatogram index="51" id="SRM SIC Q1=710.85 Q3=869.35 Channel=4 Event=9 Segment=5 CE=27" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1651,15 +1703,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="52" id="SRM SIC Q1=710.85 Q3=982.45 Channel=5 Event=9 Segment=5 CE=-27" defaultArrayLength="52">
+      <chromatogram index="52" id="SRM SIC Q1=710.85 Q3=982.45 Channel=5 Event=9 Segment=5 CE=27" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1682,15 +1735,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="53" id="SRM SIC Q1=710.85 Q3=1083.5 Channel=6 Event=9 Segment=5 CE=-27" defaultArrayLength="52">
+      <chromatogram index="53" id="SRM SIC Q1=710.85 Q3=1083.5 Channel=6 Event=9 Segment=5 CE=27" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1713,15 +1767,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="54" id="SRM SIC Q1=710.85 Q3=1220.55 Channel=7 Event=9 Segment=5 CE=-27" defaultArrayLength="52">
+      <chromatogram index="54" id="SRM SIC Q1=710.85 Q3=1220.55 Channel=7 Event=9 Segment=5 CE=27" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="710.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1744,15 +1799,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="55" id="SRM SIC Q1=875.35 Q3=751.3 Channel=1 Event=10 Segment=5 CE=-33" defaultArrayLength="52">
+      <chromatogram index="55" id="SRM SIC Q1=875.35 Q3=751.3 Channel=1 Event=10 Segment=5 CE=33" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="875.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1775,15 +1831,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="56" id="SRM SIC Q1=875.35 Q3=912.3 Channel=2 Event=10 Segment=5 CE=-37.678" defaultArrayLength="52">
+      <chromatogram index="56" id="SRM SIC Q1=875.35 Q3=912.3 Channel=2 Event=10 Segment=5 CE=37.7" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="875.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-37.678" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="37.7" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1806,15 +1863,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="57" id="SRM SIC Q1=875.35 Q3=1041.35 Channel=3 Event=10 Segment=5 CE=-33" defaultArrayLength="52">
+      <chromatogram index="57" id="SRM SIC Q1=875.35 Q3=1041.35 Channel=3 Event=10 Segment=5 CE=33" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="875.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1837,15 +1895,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="58" id="SRM SIC Q1=875.35 Q3=1169.4 Channel=4 Event=10 Segment=5 CE=-33" defaultArrayLength="52">
+      <chromatogram index="58" id="SRM SIC Q1=875.35 Q3=1169.4 Channel=4 Event=10 Segment=5 CE=33" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="875.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1868,15 +1927,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="59" id="SRM SIC Q1=875.35 Q3=1316.5 Channel=5 Event=10 Segment=5 CE=-33" defaultArrayLength="52">
+      <chromatogram index="59" id="SRM SIC Q1=875.35 Q3=1316.5 Channel=5 Event=10 Segment=5 CE=33" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="875.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1899,15 +1959,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="60" id="SRM SIC Q1=875.35 Q3=1472.55 Channel=6 Event=10 Segment=5 CE=-31" defaultArrayLength="52">
+      <chromatogram index="60" id="SRM SIC Q1=875.35 Q3=1472.55 Channel=6 Event=10 Segment=5 CE=31" defaultArrayLength="52">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="875.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1930,15 +1991,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="61" id="SRM SIC Q1=471.25 Q3=175.1 Channel=1 Event=11 Segment=6 CE=-16" defaultArrayLength="54">
+      <chromatogram index="61" id="SRM SIC Q1=471.25 Q3=175.1 Channel=1 Event=11 Segment=6 CE=16" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1961,15 +2023,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="62" id="SRM SIC Q1=471.25 Q3=274.2 Channel=2 Event=11 Segment=6 CE=-19" defaultArrayLength="54">
+      <chromatogram index="62" id="SRM SIC Q1=471.25 Q3=274.2 Channel=2 Event=11 Segment=6 CE=19" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -1992,15 +2055,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="63" id="SRM SIC Q1=471.25 Q3=387.25 Channel=3 Event=11 Segment=6 CE=-19" defaultArrayLength="54">
+      <chromatogram index="63" id="SRM SIC Q1=471.25 Q3=387.25 Channel=3 Event=11 Segment=6 CE=19" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2023,15 +2087,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="64" id="SRM SIC Q1=471.25 Q3=484.3 Channel=4 Event=11 Segment=6 CE=-19" defaultArrayLength="54">
+      <chromatogram index="64" id="SRM SIC Q1=471.25 Q3=484.3 Channel=4 Event=11 Segment=6 CE=19" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2054,15 +2119,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="65" id="SRM SIC Q1=471.25 Q3=599.35 Channel=5 Event=11 Segment=6 CE=-19" defaultArrayLength="54">
+      <chromatogram index="65" id="SRM SIC Q1=471.25 Q3=599.35 Channel=5 Event=11 Segment=6 CE=19" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2085,15 +2151,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="66" id="SRM SIC Q1=471.25 Q3=712.45 Channel=6 Event=11 Segment=6 CE=-16" defaultArrayLength="54">
+      <chromatogram index="66" id="SRM SIC Q1=471.25 Q3=712.45 Channel=6 Event=11 Segment=6 CE=16" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2116,15 +2183,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="67" id="SRM SIC Q1=471.25 Q3=769.45 Channel=7 Event=11 Segment=6 CE=-19" defaultArrayLength="54">
+      <chromatogram index="67" id="SRM SIC Q1=471.25 Q3=769.45 Channel=7 Event=11 Segment=6 CE=19" defaultArrayLength="54">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="471.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="19.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2147,15 +2215,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="68" id="SRM SIC Q1=497.75 Q3=244.15 Channel=1 Event=12 Segment=7 CE=-20" defaultArrayLength="69">
+      <chromatogram index="68" id="SRM SIC Q1=497.75 Q3=244.15 Channel=1 Event=12 Segment=7 CE=20" defaultArrayLength="69">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2178,15 +2247,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="69" id="SRM SIC Q1=497.75 Q3=372.2 Channel=2 Event=12 Segment=7 CE=-17" defaultArrayLength="69">
+      <chromatogram index="69" id="SRM SIC Q1=497.75 Q3=372.2 Channel=2 Event=12 Segment=7 CE=17" defaultArrayLength="69">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-17.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="17.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2209,15 +2279,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="70" id="SRM SIC Q1=497.75 Q3=459.25 Channel=3 Event=12 Segment=7 CE=-20" defaultArrayLength="69">
+      <chromatogram index="70" id="SRM SIC Q1=497.75 Q3=459.25 Channel=3 Event=12 Segment=7 CE=20" defaultArrayLength="69">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2240,15 +2311,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="71" id="SRM SIC Q1=497.75 Q3=572.35 Channel=4 Event=12 Segment=7 CE=-20" defaultArrayLength="69">
+      <chromatogram index="71" id="SRM SIC Q1=497.75 Q3=572.35 Channel=4 Event=12 Segment=7 CE=20" defaultArrayLength="69">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2271,15 +2343,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="72" id="SRM SIC Q1=497.75 Q3=629.35 Channel=5 Event=12 Segment=7 CE=-20" defaultArrayLength="69">
+      <chromatogram index="72" id="SRM SIC Q1=497.75 Q3=629.35 Channel=5 Event=12 Segment=7 CE=20" defaultArrayLength="69">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2302,15 +2375,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="73" id="SRM SIC Q1=497.75 Q3=790.4 Channel=6 Event=12 Segment=7 CE=-20" defaultArrayLength="69">
+      <chromatogram index="73" id="SRM SIC Q1=497.75 Q3=790.4 Channel=6 Event=12 Segment=7 CE=20" defaultArrayLength="69">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.75" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2333,15 +2407,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="74" id="SRM SIC Q1=692.85 Q3=351.2 Channel=1 Event=13 Segment=8 CE=-25" defaultArrayLength="104">
+      <chromatogram index="74" id="SRM SIC Q1=692.85 Q3=351.2 Channel=1 Event=13 Segment=8 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2364,15 +2439,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="75" id="SRM SIC Q1=692.85 Q3=460.75 Channel=2 Event=13 Segment=8 CE=-25" defaultArrayLength="104">
+      <chromatogram index="75" id="SRM SIC Q1=692.85 Q3=460.75 Channel=2 Event=13 Segment=8 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2395,15 +2471,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="76" id="SRM SIC Q1=692.85 Q3=676.35 Channel=3 Event=13 Segment=8 CE=-27" defaultArrayLength="104">
+      <chromatogram index="76" id="SRM SIC Q1=692.85 Q3=676.35 Channel=3 Event=13 Segment=8 CE=27" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2426,15 +2503,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="77" id="SRM SIC Q1=692.85 Q3=823.45 Channel=4 Event=13 Segment=8 CE=-27" defaultArrayLength="104">
+      <chromatogram index="77" id="SRM SIC Q1=692.85 Q3=823.45 Channel=4 Event=13 Segment=8 CE=27" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2457,15 +2535,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="78" id="SRM SIC Q1=692.85 Q3=920.5 Channel=5 Event=13 Segment=8 CE=-27" defaultArrayLength="104">
+      <chromatogram index="78" id="SRM SIC Q1=692.85 Q3=920.5 Channel=5 Event=13 Segment=8 CE=27" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2488,15 +2567,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="79" id="SRM SIC Q1=692.85 Q3=991.5 Channel=6 Event=13 Segment=8 CE=-27" defaultArrayLength="104">
+      <chromatogram index="79" id="SRM SIC Q1=692.85 Q3=991.5 Channel=6 Event=13 Segment=8 CE=27" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2519,15 +2599,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="80" id="SRM SIC Q1=692.85 Q3=1090.6 Channel=7 Event=13 Segment=8 CE=-27" defaultArrayLength="104">
+      <chromatogram index="80" id="SRM SIC Q1=692.85 Q3=1090.6 Channel=7 Event=13 Segment=8 CE=27" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="692.85" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="27.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2550,15 +2631,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="81" id="SRM SIC Q1=487.3 Q3=347.25 Channel=1 Event=14 Segment=9 CE=-20" defaultArrayLength="105">
+      <chromatogram index="81" id="SRM SIC Q1=487.3 Q3=347.25 Channel=1 Event=14 Segment=9 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="487.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2581,15 +2663,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="82" id="SRM SIC Q1=487.3 Q3=462.25 Channel=2 Event=14 Segment=9 CE=-20" defaultArrayLength="105">
+      <chromatogram index="82" id="SRM SIC Q1=487.3 Q3=462.25 Channel=2 Event=14 Segment=9 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="487.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2612,15 +2695,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="83" id="SRM SIC Q1=487.3 Q3=575.35 Channel=3 Event=14 Segment=9 CE=-20" defaultArrayLength="105">
+      <chromatogram index="83" id="SRM SIC Q1=487.3 Q3=575.35 Channel=3 Event=14 Segment=9 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="487.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2643,15 +2727,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="84" id="SRM SIC Q1=487.3 Q3=646.4 Channel=4 Event=14 Segment=9 CE=-20" defaultArrayLength="105">
+      <chromatogram index="84" id="SRM SIC Q1=487.3 Q3=646.4 Channel=4 Event=14 Segment=9 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="487.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2674,15 +2759,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="85" id="SRM SIC Q1=487.3 Q3=761.4 Channel=5 Event=14 Segment=9 CE=-20" defaultArrayLength="105">
+      <chromatogram index="85" id="SRM SIC Q1=487.3 Q3=761.4 Channel=5 Event=14 Segment=9 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="487.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2705,15 +2791,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="86" id="SRM SIC Q1=487.3 Q3=874.5 Channel=6 Event=14 Segment=9 CE=-17" defaultArrayLength="105">
+      <chromatogram index="86" id="SRM SIC Q1=487.3 Q3=874.5 Channel=6 Event=14 Segment=9 CE=17" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="487.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-17.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="17.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2736,15 +2823,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="87" id="SRM SIC Q1=869.45 Q3=565.25 Channel=1 Event=15 Segment=10 CE=-43.881" defaultArrayLength="109">
+      <chromatogram index="87" id="SRM SIC Q1=869.45 Q3=565.25 Channel=1 Event=15 Segment=10 CE=43.9" defaultArrayLength="109">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="869.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-43.881" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="43.9" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2767,15 +2855,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="88" id="SRM SIC Q1=869.45 Q3=963.45 Channel=2 Event=15 Segment=10 CE=-36.626" defaultArrayLength="109">
+      <chromatogram index="88" id="SRM SIC Q1=869.45 Q3=963.45 Channel=2 Event=15 Segment=10 CE=36.6" defaultArrayLength="109">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="869.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-36.626" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="36.6" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2798,15 +2887,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="89" id="SRM SIC Q1=869.45 Q3=1062.5 Channel=3 Event=15 Segment=10 CE=-29.049" defaultArrayLength="109">
+      <chromatogram index="89" id="SRM SIC Q1=869.45 Q3=1062.5 Channel=3 Event=15 Segment=10 CE=29" defaultArrayLength="109">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="869.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-29.049" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="29.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2829,15 +2919,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="90" id="SRM SIC Q1=869.45 Q3=1175.6 Channel=4 Event=15 Segment=10 CE=-38.073" defaultArrayLength="109">
+      <chromatogram index="90" id="SRM SIC Q1=869.45 Q3=1175.6 Channel=4 Event=15 Segment=10 CE=38.1" defaultArrayLength="109">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="869.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-38.073" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="38.1" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2860,15 +2951,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="91" id="SRM SIC Q1=869.45 Q3=1272.65 Channel=5 Event=15 Segment=10 CE=-33.247" defaultArrayLength="109">
+      <chromatogram index="91" id="SRM SIC Q1=869.45 Q3=1272.65 Channel=5 Event=15 Segment=10 CE=33.2" defaultArrayLength="109">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="869.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.247" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.2" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2891,15 +2983,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="92" id="SRM SIC Q1=869.45 Q3=1385.75 Channel=6 Event=15 Segment=10 CE=-40.009" defaultArrayLength="109">
+      <chromatogram index="92" id="SRM SIC Q1=869.45 Q3=1385.75 Channel=6 Event=15 Segment=10 CE=40" defaultArrayLength="109">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="869.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-40.009" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="40.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2922,15 +3015,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="93" id="SRM SIC Q1=634.35 Q3=288.2 Channel=1 Event=16 Segment=11 CE=-22" defaultArrayLength="104">
+      <chromatogram index="93" id="SRM SIC Q1=634.35 Q3=288.2 Channel=1 Event=16 Segment=11 CE=22" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="634.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2953,15 +3047,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="94" id="SRM SIC Q1=634.35 Q3=658.4 Channel=2 Event=16 Segment=11 CE=-25" defaultArrayLength="104">
+      <chromatogram index="94" id="SRM SIC Q1=634.35 Q3=658.4 Channel=2 Event=16 Segment=11 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="634.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -2984,15 +3079,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="95" id="SRM SIC Q1=634.35 Q3=771.45 Channel=3 Event=16 Segment=11 CE=-25" defaultArrayLength="104">
+      <chromatogram index="95" id="SRM SIC Q1=634.35 Q3=771.45 Channel=3 Event=16 Segment=11 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="634.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3015,15 +3111,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="96" id="SRM SIC Q1=634.35 Q3=934.55 Channel=4 Event=16 Segment=11 CE=-25" defaultArrayLength="104">
+      <chromatogram index="96" id="SRM SIC Q1=634.35 Q3=934.55 Channel=4 Event=16 Segment=11 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="634.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3046,15 +3143,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="97" id="SRM SIC Q1=634.35 Q3=991.55 Channel=5 Event=16 Segment=11 CE=-25" defaultArrayLength="104">
+      <chromatogram index="97" id="SRM SIC Q1=634.35 Q3=991.55 Channel=5 Event=16 Segment=11 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="634.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3077,15 +3175,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="98" id="SRM SIC Q1=634.35 Q3=1104.65 Channel=6 Event=16 Segment=11 CE=-25" defaultArrayLength="104">
+      <chromatogram index="98" id="SRM SIC Q1=634.35 Q3=1104.65 Channel=6 Event=16 Segment=11 CE=25" defaultArrayLength="104">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="634.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3108,15 +3207,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="99" id="SRM SIC Q1=610.8 Q3=332.2 Channel=1 Event=17 Segment=12 CE=-22" defaultArrayLength="103">
+      <chromatogram index="99" id="SRM SIC Q1=610.8 Q3=332.2 Channel=1 Event=17 Segment=12 CE=22" defaultArrayLength="103">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="610.8" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="22.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3139,15 +3239,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="100" id="SRM SIC Q1=610.8 Q3=576.3 Channel=2 Event=17 Segment=12 CE=-24" defaultArrayLength="103">
+      <chromatogram index="100" id="SRM SIC Q1=610.8 Q3=576.3 Channel=2 Event=17 Segment=12 CE=24" defaultArrayLength="103">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="610.8" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3170,15 +3271,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="101" id="SRM SIC Q1=610.8 Q3=675.4 Channel=3 Event=17 Segment=12 CE=-24" defaultArrayLength="103">
+      <chromatogram index="101" id="SRM SIC Q1=610.8 Q3=675.4 Channel=3 Event=17 Segment=12 CE=24" defaultArrayLength="103">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="610.8" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3201,15 +3303,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="102" id="SRM SIC Q1=610.8 Q3=790.4 Channel=4 Event=17 Segment=12 CE=-24" defaultArrayLength="103">
+      <chromatogram index="102" id="SRM SIC Q1=610.8 Q3=790.4 Channel=4 Event=17 Segment=12 CE=24" defaultArrayLength="103">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="610.8" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3232,15 +3335,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="103" id="SRM SIC Q1=610.8 Q3=889.5 Channel=5 Event=17 Segment=12 CE=-24" defaultArrayLength="103">
+      <chromatogram index="103" id="SRM SIC Q1=610.8 Q3=889.5 Channel=5 Event=17 Segment=12 CE=24" defaultArrayLength="103">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="610.8" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3263,15 +3367,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="104" id="SRM SIC Q1=610.8 Q3=988.55 Channel=6 Event=17 Segment=12 CE=-24" defaultArrayLength="103">
+      <chromatogram index="104" id="SRM SIC Q1=610.8 Q3=988.55 Channel=6 Event=17 Segment=12 CE=24" defaultArrayLength="103">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="610.8" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="24.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3294,15 +3399,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="105" id="SRM SIC Q1=860.45 Q3=645.35 Channel=1 Event=18 Segment=13 CE=-31" defaultArrayLength="102">
+      <chromatogram index="105" id="SRM SIC Q1=860.45 Q3=645.35 Channel=1 Event=18 Segment=13 CE=31" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3325,15 +3431,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="106" id="SRM SIC Q1=860.45 Q3=801.4 Channel=2 Event=18 Segment=13 CE=-33" defaultArrayLength="102">
+      <chromatogram index="106" id="SRM SIC Q1=860.45 Q3=801.4 Channel=2 Event=18 Segment=13 CE=33" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3356,15 +3463,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="107" id="SRM SIC Q1=860.45 Q3=930.45 Channel=3 Event=18 Segment=13 CE=-31" defaultArrayLength="102">
+      <chromatogram index="107" id="SRM SIC Q1=860.45 Q3=930.45 Channel=3 Event=18 Segment=13 CE=31" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="31.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3387,15 +3495,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="108" id="SRM SIC Q1=860.45 Q3=1059.5 Channel=4 Event=18 Segment=13 CE=-33" defaultArrayLength="102">
+      <chromatogram index="108" id="SRM SIC Q1=860.45 Q3=1059.5 Channel=4 Event=18 Segment=13 CE=33" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3418,15 +3527,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="109" id="SRM SIC Q1=860.45 Q3=1174.55 Channel=5 Event=18 Segment=13 CE=-33" defaultArrayLength="102">
+      <chromatogram index="109" id="SRM SIC Q1=860.45 Q3=1174.55 Channel=5 Event=18 Segment=13 CE=33" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3449,15 +3559,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="110" id="SRM SIC Q1=860.45 Q3=1287.6 Channel=6 Event=18 Segment=13 CE=-33" defaultArrayLength="102">
+      <chromatogram index="110" id="SRM SIC Q1=860.45 Q3=1287.6 Channel=6 Event=18 Segment=13 CE=33" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3480,15 +3591,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="111" id="SRM SIC Q1=860.45 Q3=1507.7 Channel=7 Event=18 Segment=13 CE=-33" defaultArrayLength="102">
+      <chromatogram index="111" id="SRM SIC Q1=860.45 Q3=1507.7 Channel=7 Event=18 Segment=13 CE=33" defaultArrayLength="102">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="860.45" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3511,15 +3623,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="112" id="SRM SIC Q1=482.25 Q3=400.75 Channel=1 Event=19 Segment=14 CE=-20" defaultArrayLength="105">
+      <chromatogram index="112" id="SRM SIC Q1=482.25 Q3=400.75 Channel=1 Event=19 Segment=14 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="482.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3542,15 +3655,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="113" id="SRM SIC Q1=482.25 Q3=516.3 Channel=2 Event=19 Segment=14 CE=-20" defaultArrayLength="105">
+      <chromatogram index="113" id="SRM SIC Q1=482.25 Q3=516.3 Channel=2 Event=19 Segment=14 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="482.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3573,15 +3687,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="114" id="SRM SIC Q1=482.25 Q3=573.35 Channel=3 Event=19 Segment=14 CE=-20" defaultArrayLength="105">
+      <chromatogram index="114" id="SRM SIC Q1=482.25 Q3=573.35 Channel=3 Event=19 Segment=14 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="482.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3604,15 +3719,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="115" id="SRM SIC Q1=482.25 Q3=686.4 Channel=4 Event=19 Segment=14 CE=-20" defaultArrayLength="105">
+      <chromatogram index="115" id="SRM SIC Q1=482.25 Q3=686.4 Channel=4 Event=19 Segment=14 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="482.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3635,15 +3751,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="116" id="SRM SIC Q1=482.25 Q3=800.45 Channel=5 Event=19 Segment=14 CE=-20" defaultArrayLength="105">
+      <chromatogram index="116" id="SRM SIC Q1=482.25 Q3=800.45 Channel=5 Event=19 Segment=14 CE=20" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="482.25" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3666,15 +3783,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="117" id="SRM SIC Q1=713.3 Q3=395.2 Channel=1 Event=20 Segment=15 CE=-25" defaultArrayLength="105">
+      <chromatogram index="117" id="SRM SIC Q1=713.3 Q3=395.2 Channel=1 Event=20 Segment=15 CE=25" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="713.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="25.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3697,15 +3815,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="118" id="SRM SIC Q1=713.3 Q3=524.25 Channel=2 Event=20 Segment=15 CE=-28" defaultArrayLength="105">
+      <chromatogram index="118" id="SRM SIC Q1=713.3 Q3=524.25 Channel=2 Event=20 Segment=15 CE=28" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="713.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3728,15 +3847,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="119" id="SRM SIC Q1=713.3 Q3=637.35 Channel=3 Event=20 Segment=15 CE=-28" defaultArrayLength="105">
+      <chromatogram index="119" id="SRM SIC Q1=713.3 Q3=637.35 Channel=3 Event=20 Segment=15 CE=28" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="713.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3759,15 +3879,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="120" id="SRM SIC Q1=713.3 Q3=736.4 Channel=4 Event=20 Segment=15 CE=-28" defaultArrayLength="105">
+      <chromatogram index="120" id="SRM SIC Q1=713.3 Q3=736.4 Channel=4 Event=20 Segment=15 CE=28" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="713.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3790,15 +3911,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="121" id="SRM SIC Q1=713.3 Q3=865.45 Channel=5 Event=20 Segment=15 CE=-28" defaultArrayLength="105">
+      <chromatogram index="121" id="SRM SIC Q1=713.3 Q3=865.45 Channel=5 Event=20 Segment=15 CE=28" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="713.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3821,15 +3943,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="122" id="SRM SIC Q1=713.3 Q3=1051.5 Channel=6 Event=20 Segment=15 CE=-28" defaultArrayLength="105">
+      <chromatogram index="122" id="SRM SIC Q1=713.3 Q3=1051.5 Channel=6 Event=20 Segment=15 CE=28" defaultArrayLength="105">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="713.3" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3852,15 +3975,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="123" id="SRM SIC Q1=734.4 Q3=530.3 Channel=1 Event=21 Segment=16 CE=-26" defaultArrayLength="183">
+      <chromatogram index="123" id="SRM SIC Q1=734.4 Q3=530.3 Channel=1 Event=21 Segment=16 CE=26" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3883,15 +4007,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="124" id="SRM SIC Q1=734.4 Q3=643.4 Channel=2 Event=21 Segment=16 CE=-26" defaultArrayLength="183">
+      <chromatogram index="124" id="SRM SIC Q1=734.4 Q3=643.4 Channel=2 Event=21 Segment=16 CE=26" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3914,15 +4039,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="125" id="SRM SIC Q1=734.4 Q3=714.45 Channel=3 Event=21 Segment=16 CE=-28" defaultArrayLength="183">
+      <chromatogram index="125" id="SRM SIC Q1=734.4 Q3=714.45 Channel=3 Event=21 Segment=16 CE=28" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3945,15 +4071,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="126" id="SRM SIC Q1=734.4 Q3=785.45 Channel=4 Event=21 Segment=16 CE=-28" defaultArrayLength="183">
+      <chromatogram index="126" id="SRM SIC Q1=734.4 Q3=785.45 Channel=4 Event=21 Segment=16 CE=28" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -3976,15 +4103,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="127" id="SRM SIC Q1=734.4 Q3=898.55 Channel=5 Event=21 Segment=16 CE=-28" defaultArrayLength="183">
+      <chromatogram index="127" id="SRM SIC Q1=734.4 Q3=898.55 Channel=5 Event=21 Segment=16 CE=28" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4007,15 +4135,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="128" id="SRM SIC Q1=734.4 Q3=1013.55 Channel=6 Event=21 Segment=16 CE=-28" defaultArrayLength="183">
+      <chromatogram index="128" id="SRM SIC Q1=734.4 Q3=1013.55 Channel=6 Event=21 Segment=16 CE=28" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4038,15 +4167,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="129" id="SRM SIC Q1=734.4 Q3=1217.65 Channel=7 Event=21 Segment=16 CE=-28" defaultArrayLength="183">
+      <chromatogram index="129" id="SRM SIC Q1=734.4 Q3=1217.65 Channel=7 Event=21 Segment=16 CE=28" defaultArrayLength="183">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="734.4" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="28.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4069,15 +4199,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="130" id="SRM SIC Q1=489.95 Q3=416.25 Channel=1 Event=22 Segment=17 CE=-16" defaultArrayLength="188">
+      <chromatogram index="130" id="SRM SIC Q1=489.95 Q3=416.25 Channel=1 Event=22 Segment=17 CE=16" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4100,15 +4231,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="131" id="SRM SIC Q1=489.95 Q3=530.3 Channel=2 Event=22 Segment=17 CE=-20" defaultArrayLength="188">
+      <chromatogram index="131" id="SRM SIC Q1=489.95 Q3=530.3 Channel=2 Event=22 Segment=17 CE=20" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4131,15 +4263,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="132" id="SRM SIC Q1=489.95 Q3=643.4 Channel=3 Event=22 Segment=17 CE=-20" defaultArrayLength="188">
+      <chromatogram index="132" id="SRM SIC Q1=489.95 Q3=643.4 Channel=3 Event=22 Segment=17 CE=20" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4162,15 +4295,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="133" id="SRM SIC Q1=489.95 Q3=683.35 Channel=4 Event=22 Segment=17 CE=-20" defaultArrayLength="188">
+      <chromatogram index="133" id="SRM SIC Q1=489.95 Q3=683.35 Channel=4 Event=22 Segment=17 CE=20" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4193,15 +4327,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="134" id="SRM SIC Q1=489.95 Q3=714.45 Channel=5 Event=22 Segment=17 CE=-20" defaultArrayLength="188">
+      <chromatogram index="134" id="SRM SIC Q1=489.95 Q3=714.45 Channel=5 Event=22 Segment=17 CE=20" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4224,15 +4359,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="135" id="SRM SIC Q1=489.95 Q3=754.4 Channel=6 Event=22 Segment=17 CE=-20" defaultArrayLength="188">
+      <chromatogram index="135" id="SRM SIC Q1=489.95 Q3=754.4 Channel=6 Event=22 Segment=17 CE=20" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="20.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4255,15 +4391,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="136" id="SRM SIC Q1=489.95 Q3=825.45 Channel=7 Event=22 Segment=17 CE=-16" defaultArrayLength="188">
+      <chromatogram index="136" id="SRM SIC Q1=489.95 Q3=825.45 Channel=7 Event=22 Segment=17 CE=16" defaultArrayLength="188">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="489.95" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="16.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4286,15 +4423,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="137" id="SRM SIC Q1=585.35 Q3=232.15 Channel=1 Event=23 Segment=18 CE=-21" defaultArrayLength="555">
+      <chromatogram index="137" id="SRM SIC Q1=585.35 Q3=232.15 Channel=1 Event=23 Segment=18 CE=21" defaultArrayLength="555">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="585.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="21.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4317,15 +4455,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="138" id="SRM SIC Q1=585.35 Q3=619.3 Channel=2 Event=23 Segment=18 CE=-23" defaultArrayLength="555">
+      <chromatogram index="138" id="SRM SIC Q1=585.35 Q3=619.3 Channel=2 Event=23 Segment=18 CE=23" defaultArrayLength="555">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="585.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4348,15 +4487,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="139" id="SRM SIC Q1=585.35 Q3=690.35 Channel=3 Event=23 Segment=18 CE=-23" defaultArrayLength="555">
+      <chromatogram index="139" id="SRM SIC Q1=585.35 Q3=690.35 Channel=3 Event=23 Segment=18 CE=23" defaultArrayLength="555">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="585.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4379,15 +4519,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="140" id="SRM SIC Q1=585.35 Q3=803.45 Channel=4 Event=23 Segment=18 CE=-23" defaultArrayLength="555">
+      <chromatogram index="140" id="SRM SIC Q1=585.35 Q3=803.45 Channel=4 Event=23 Segment=18 CE=23" defaultArrayLength="555">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="585.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4410,15 +4551,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="141" id="SRM SIC Q1=585.35 Q3=916.55 Channel=5 Event=23 Segment=18 CE=-23" defaultArrayLength="555">
+      <chromatogram index="141" id="SRM SIC Q1=585.35 Q3=916.55 Channel=5 Event=23 Segment=18 CE=23" defaultArrayLength="555">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="585.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -4441,15 +4583,16 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="142" id="SRM SIC Q1=585.35 Q3=1070.6 Channel=6 Event=23 Segment=18 CE=-23" defaultArrayLength="555">
+      <chromatogram index="142" id="SRM SIC Q1=585.35 Q3=1070.6 Channel=6 Event=23 Segment=18 CE=23" defaultArrayLength="555">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <precursor>
           <isolationWindow>
             <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="585.35" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="-23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="23.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>

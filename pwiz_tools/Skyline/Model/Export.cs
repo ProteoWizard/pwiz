@@ -1109,6 +1109,8 @@ namespace pwiz.Skyline.Model
             writer.Write("RT Window"); // Not L10N
             writer.Write(FieldSeparator);
             writer.Write("CE"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Polarity"); // Not L10N
 
             writer.WriteLine();
         }
@@ -1177,7 +1179,13 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            var ce = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1);
+            bool positiveIon = nodeTranGroup.PrecursorCharge >= 0;
+            if (positiveIon)
+                ce = -ce;
+            writer.Write(ce.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(positiveIon ? 0 : 1);
             writer.WriteLine();
         }
     }

@@ -100,7 +100,8 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 t.channel = transition->Channel;
                 t.event = transition->Event;
                 t.segment = transition->Segment;
-                t.collisionEnergy = transition->CE;
+                t.collisionEnergy = transition->CE; // always non-negative, even if scan polarity is negative
+                t.polarity = transition->Polarity;
                 t.Q1 = (transition->ParentMz[0] + transition->ParentMz[1]) / 2;
                 t.Q3 = (transition->ChildMz[0] + transition->ChildMz[1]) / 2;
                 transitionSet_.insert(transitionSet_.end(), t);
