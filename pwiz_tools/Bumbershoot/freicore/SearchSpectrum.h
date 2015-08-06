@@ -564,6 +564,8 @@ namespace freicore
                                 pe->pre = prevAA.empty() ? '-' : *prevAA.rbegin();
                                 pe->post = nextAA.empty() ? '-' : *nextAA.begin();
                                 pe->isDecoy = bal::starts_with(accession, decoyPrefix);
+                                pe->start = result.offset() + 1;
+                                pe->end = pe->start + result.sequence().length();
 
                                 insertResult.first->second.push_back(pe);
                                 mzid.sequenceCollection.peptideEvidence.push_back(pe);
