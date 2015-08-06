@@ -229,7 +229,8 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
-                   Equals(type, ExportInstrumentType.WATERS_XEVO) ||
+                   Equals(type, ExportInstrumentType.WATERS_XEVO_TQ) ||
+                   Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                    Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                    // For AbSciex's TOF 5600 and QSTAR instruments, the dwell (accumulation) time
                    // given in the template method is used. So we will not display the 
@@ -252,7 +253,8 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
-                       Equals(type, ExportInstrumentType.WATERS_XEVO) ||
+                       Equals(type, ExportInstrumentType.WATERS_XEVO_TQ) ||
+                       Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
@@ -421,7 +423,7 @@ namespace pwiz.Skyline.FileUI
             {
                 case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
                 case ExportInstrumentType.WATERS_SYNAPT_TRAP:
-                case ExportInstrumentType.WATERS_XEVO:
+                case ExportInstrumentType.WATERS_XEVO_QTOF:
                     panelWaters.Show();
                     break;
                 default:
@@ -1597,7 +1599,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_THERMO));
                 }
-                else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO) ||
+                else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ) ||
                          Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_WATERS));

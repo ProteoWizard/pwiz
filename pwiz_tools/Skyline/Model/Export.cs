@@ -171,7 +171,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
         public const string WATERS = "Waters";
-        public const string WATERS_XEVO = "Waters Xevo";
+        public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
+        public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
         public const string WATERS_SYNAPT_TRAP = "Waters Synapt (trap)";
         public const string WATERS_SYNAPT_TRANSFER = "Waters Synapt (transfer)";
         public const string WATERS_QUATTRO_PREMIER = "Waters Quattro Premier";
@@ -193,7 +194,7 @@ namespace pwiz.Skyline.Model
                 THERMO_LTQ,
                 THERMO_QUANTIVA,
                 THERMO_FUSION,
-                WATERS_XEVO,
+                WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
 
@@ -216,7 +217,7 @@ namespace pwiz.Skyline.Model
                 THERMO_FUSION,
                 WATERS_SYNAPT_TRAP,
                 WATERS_SYNAPT_TRANSFER,
-                WATERS_XEVO
+                WATERS_XEVO_QTOF,
             };
 
         private readonly static Dictionary<string, string> METHOD_EXTENSIONS;
@@ -233,7 +234,7 @@ namespace pwiz.Skyline.Model
                                        {THERMO_LTQ, EXT_THERMO},
                                        {THERMO_QUANTIVA, EXT_THERMO},
                                        {THERMO_FUSION, EXT_THERMO},
-                                       {WATERS_XEVO, EXT_WATERS},
+                                       {WATERS_XEVO_TQ, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
         }
@@ -253,7 +254,7 @@ namespace pwiz.Skyline.Model
                     return AbiTofIsolationListExporter.EXT_ABI_TOF_ISOLATION_LIST;
                 case WATERS_SYNAPT_TRAP:
                 case WATERS_SYNAPT_TRANSFER:
-                case WATERS_XEVO:
+                case WATERS_XEVO_QTOF:
                     return WatersIsolationListExporter.EXT_WATERS_ISOLATION_LIST;
                 default:
                     return TextUtil.EXT_CSV;
@@ -279,7 +280,7 @@ namespace pwiz.Skyline.Model
                    Equals(type, AGILENT_TOF) ||
                    Equals(type, WATERS_SYNAPT_TRAP) ||
                    Equals(type, WATERS_SYNAPT_TRANSFER) ||
-                   Equals(type, WATERS_XEVO) ||
+                   Equals(type, WATERS_XEVO_QTOF) ||
                    Equals(type, BRUKER_TOF) ||
                    Equals(type, ABI_TOF);
         }
@@ -322,7 +323,7 @@ namespace pwiz.Skyline.Model
         public static bool IsSingleWindowInstrumentType(string type)
         {
             return Equals(type, WATERS) ||
-                   Equals(type, WATERS_XEVO) ||
+                   Equals(type, WATERS_XEVO_TQ) ||
                    Equals(type, WATERS_QUATTRO_PREMIER);
         }
     }
@@ -451,7 +452,8 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.WATERS:
                 case ExportInstrumentType.WATERS_SYNAPT_TRAP:
                 case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
-                case ExportInstrumentType.WATERS_XEVO:
+                case ExportInstrumentType.WATERS_XEVO_TQ:
+                case ExportInstrumentType.WATERS_XEVO_QTOF:
                     if (type == ExportFileType.List)
                         return ExportWatersCsv(doc, path);
                     else if (type == ExportFileType.IsolationList)

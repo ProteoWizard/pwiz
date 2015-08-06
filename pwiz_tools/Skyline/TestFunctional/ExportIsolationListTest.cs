@@ -290,7 +290,7 @@ namespace pwiz.SkylineTestFunctional
             // Export Waters Xevo unscheduled Targeted list
             ExportIsolationList(
                 "WatersXevoUnscheduledTargeted.mrm",
-                ExportInstrumentType.WATERS_XEVO, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
+                ExportInstrumentType.WATERS_XEVO_QTOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 WatersIsolationListExporter.GetHeader(_fieldSeparator),
                 FieldSeparate(0, 0, 30, mzFirst, fragmentsFirst, trapCeFirstTrap, 0, 0, 30, 0, 0, 199),
                 FieldSeparate(0, 0, 30, mzLast, fragmentsLast, trapCeLastTrap, 0, 0, 30, 0, 0, 199));
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
             // Export Waters Xevo scheduled Targeted list
             ExportIsolationList(
                 "WatersXevoScheduledTargeted.mrm",
-                ExportInstrumentType.WATERS_XEVO, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
+                ExportInstrumentType.WATERS_XEVO_QTOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 WatersIsolationListExporter.GetHeader(_fieldSeparator),
                 FieldSeparate(0, rtFirst, mzFirst, fragmentsFirst, trapCeFirstTrap, 0, 0, 30, 0, 0, 199),
                 FieldSeparate(0, rtLast, mzLast, fragmentsLast, trapCeLastTrap, 0, 0, 30, 0, 0, 199));
