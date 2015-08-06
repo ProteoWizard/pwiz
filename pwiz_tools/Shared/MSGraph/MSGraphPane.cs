@@ -437,7 +437,7 @@ namespace pwiz.MSGraph
                    obj.Location.CoordinateFrame == CoordType.XChartFractionY2Scale;
         }
         
-        private bool isYChartFractionObject(GraphObj obj)
+        private bool IsYChartFractionObject(GraphObj obj)
         {
             return obj.Location.CoordinateFrame == CoordType.XPaneFractionYChartFraction ||
                    obj.Location.CoordinateFrame == CoordType.ChartFraction ||
@@ -487,14 +487,25 @@ namespace pwiz.MSGraph
                     if (text.Location.X < XAxis.Scale.Min || text.Location.X > XAxis.Scale.Max)
                         continue;
 
-                    if (!YAxis.Scale.IsLog)
+                    if (!YAxis.Scale.IsLog && !IsYChartFractionObject(text))
                     {
                         double axisHeight = YAxis.Scale.Max - YAxis.Scale.Min;
 
                         PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, text.Location.AlignH, text.Location.AlignV, 1.0f,
                             new SizeF());
+                        float pixelShift = 0;
+                        var rectPeak = _labelBoundsCache.GetLabelBounds(text, this, g);
+                        foreach (var id in _manualLabels.Keys.Where(IsYChartFractionObject))
+                        {
+                            var rectID = _labelBoundsCache.GetLabelBounds(id, this, g);
+
+                            if (rectID.Left  < rectPeak.Right && rectID.Right > rectID.Left)
+                            {
+                                pixelShift = Math.Max(rectID.Height, pixelShift);
+                            }
+                        }
                         double labelHeight = 
-                            Math.Abs(yAxis.Scale.ReverseTransform(pts[0].Y) - yAxis.Scale.ReverseTransform(pts[2].Y));
+                            Math.Abs(yAxis.Scale.ReverseTransform(pts[0].Y - pixelShift) - yAxis.Scale.ReverseTransform(pts[2].Y));
                         if (labelHeight < axisHeight / 2)
                         {
                             // Ensure that the YAxis will have enough space to show the label.
@@ -504,7 +515,7 @@ namespace pwiz.MSGraph
                             // When calculating the scaling required, take into account that the height of the label
                             // itself will not shrink when we shrink the YAxis.
                             var labelYMaxRequired = (text.Location.Y - labelHeight*YAxis.Scale.Min/axisHeight)/
-                                                    (1 - labelHeight/axisHeight);
+                                                    (1 - labelHeight/axisHeight) + pixelShift;
                             yMaxRequired = Math.Max(yMaxRequired, labelYMaxRequired);
                         }
                     }
@@ -523,7 +534,6 @@ namespace pwiz.MSGraph
                 {
                     yAxis.Scale.Max = Math.Max(yAxis.Scale.Max, yMaxRequired);
                 }
-                // TODO: adjust objects with ChartFraction coordinates
             }
             finally
             {
