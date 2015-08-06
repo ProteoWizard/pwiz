@@ -368,8 +368,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 BioReplicate = replicateEntry.Value.BioReplicate,
                 Control = replicateEntry.Value.IsControl,
                 ReplicateIndex = replicateEntry.Key,
-                Intensity = normalizedArea,
-                Denominator = denominator,
+                Intensity = Math.Max(normalizedArea, 1.0),
+                Denominator = Math.Max(denominator, 1.0),
             });
         }
 

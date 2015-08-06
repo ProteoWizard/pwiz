@@ -2485,10 +2485,16 @@
     <value>Pea&amp;k Areas</value>
   </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>105, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="addGroupComparisonMenuItem.Text" xml:space="preserve">
     <value>Add...</value>
+  </data>
+  <data name="editGroupComparisonListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
+    <value>Edit List...</value>
   </data>
   <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -4816,6 +4822,12 @@
     <value>addGroupComparisonMenuItem</value>
   </data>
   <data name="&gt;&gt;addGroupComparisonMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editGroupComparisonListMenuItem.Name" xml:space="preserve">
+    <value>editGroupComparisonListMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editGroupComparisonListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">

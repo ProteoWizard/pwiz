@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void UpdateResults()
         {
             var results = GroupComparisonModel.Results;
-            List<FoldChangeRow> rows = new List<FoldChangeRow>();
+            var rows = new List<FoldChangeRow>();
             if (null != results)
             {
                 var groupComparisonDef = results.GroupComparer.ComparisonDef;
@@ -106,9 +106,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         peptide = new Model.Databinding.Entities.Peptide(_skylineDataSchema,
                             new IdentityPath(protein.IdentityPath, resultRow.Selector.Peptide.Id));
                     }
-                    rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType, 
+                    rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType,
                         resultRow.Selector.MsLevel, resultRow.ReplicateCount,
-                        new FoldChangeResult(groupComparisonDef.ConfidenceLevel, 
+                        new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
                             adjustedPValues[iRow], resultRow.LinearFitResult)));
                 }
             }
@@ -116,8 +116,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (!Equals(defaultViewSpec, ViewContext.BuiltInViews.First()))
             {
                 var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec);
-                ViewContext.SetRowSources(new []{new RowSourceInfo(
-                    rows, viewInfo)});
+                ViewContext.SetRowSources(new[]
+                {
+                    new RowSourceInfo(
+                        rows, viewInfo)
+                });
                 if (null != _bindingListSource.ViewSpec && _bindingListSource.ViewSpec.Name == defaultViewSpec.Name &&
                     !_bindingListSource.ViewSpec.Equals(defaultViewSpec))
                 {
@@ -129,7 +132,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private ViewSpec GetDefaultViewSpec(IList<FoldChangeRow> foldChangeRows)
         {
-            bool showPeptide; 
+            bool showPeptide;
             bool showLabelType;
             bool showMsLevel;
             if (foldChangeRows.Any())
@@ -193,7 +196,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class FoldChangeRow
         {
-            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType, int? msLevel, int replicateCount, FoldChangeResult foldChangeResult)
+            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
+                int? msLevel, int replicateCount, FoldChangeResult foldChangeResult)
             {
                 Protein = protein;
                 Peptide = peptide;
@@ -202,6 +206,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 ReplicateCount = replicateCount;
                 FoldChangeResult = foldChangeResult;
             }
+
             public Protein Protein { get; private set; }
             public Model.Databinding.Entities.Peptide Peptide { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
@@ -209,6 +214,5 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public int ReplicateCount { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
         }
-
     }
 }

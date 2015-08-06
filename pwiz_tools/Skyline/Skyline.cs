@@ -2643,8 +2643,14 @@ namespace pwiz.Skyline
 
         public void ShowDocumentSettingsDialog()
         {
+            DisplayDocumentSettingsDialogPage(0);
+        }
+
+        public void DisplayDocumentSettingsDialogPage(int tabPageIndex)
+        {
             using (var dlg = new DocumentSettingsDlg(this))
             {
+                dlg.GetTabControl().SelectedIndex = tabPageIndex;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
@@ -4346,6 +4352,11 @@ namespace pwiz.Skyline
             }
         }
 
+        private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
+        {
+            DisplayDocumentSettingsDialogPage(1);
+        }
+
         private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             groupComparisonsMenuItem.DropDownItems.Clear();
@@ -4360,6 +4371,7 @@ namespace pwiz.Skyline
             groupComparisonsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
                 addGroupComparisonMenuItem,
+                editGroupComparisonListMenuItem
             });
         }
 

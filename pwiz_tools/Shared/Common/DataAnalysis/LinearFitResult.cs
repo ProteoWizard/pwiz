@@ -34,32 +34,32 @@ namespace pwiz.Common.DataAnalysis
             DegreesOfFreedom = linearFitResult.DegreesOfFreedom;
             PValue = linearFitResult.PValue;
         }
-        public double EstimatedValue { get; set; }
+        public double EstimatedValue { get; private set; }
 
         public LinearFitResult SetEstimatedValue(double value)
         {
             return new LinearFitResult(this){EstimatedValue = value};
         }
-        public double StandardError { get; set; }
+        public double StandardError { get; private set; }
 
         public LinearFitResult SetStandardError(double value)
         {
             return new LinearFitResult(this){StandardError = value};
         }
        
-        public double TValue { get; set; }
+        public double TValue { get; private set; }
 
         public LinearFitResult SetTValue(double value)
         {
             return new LinearFitResult(this){TValue = value};
         }
-        public int DegreesOfFreedom { get; set; }
+        public int DegreesOfFreedom { get; private set; }
 
         public LinearFitResult SetDegreesOfFreedom(int value)
         {
             return new LinearFitResult(this){DegreesOfFreedom = value};
         }
-        public double PValue { get; set; }
+        public double PValue { get; private set; }
 
         public LinearFitResult SetPValue(double value)
         {

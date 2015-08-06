@@ -390,6 +390,7 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
@@ -2971,7 +2972,8 @@ namespace pwiz.Skyline
             // groupComparisonsMenuItem
             // 
             this.groupComparisonsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.addGroupComparisonMenuItem});
+            this.addGroupComparisonMenuItem,
+            this.editGroupComparisonListMenuItem});
             this.groupComparisonsMenuItem.Name = "groupComparisonsMenuItem";
             resources.ApplyResources(this.groupComparisonsMenuItem, "groupComparisonsMenuItem");
             this.groupComparisonsMenuItem.DropDownOpening += new System.EventHandler(this.groupComparisonsMenuItem_DropDownOpening);
@@ -2981,6 +2983,12 @@ namespace pwiz.Skyline
             this.addGroupComparisonMenuItem.Name = "addGroupComparisonMenuItem";
             resources.ApplyResources(this.addGroupComparisonMenuItem, "addGroupComparisonMenuItem");
             this.addGroupComparisonMenuItem.Click += new System.EventHandler(this.addFoldChangeMenuItem_Click);
+            // 
+            // editGroupComparisonListMenuItem
+            // 
+            this.editGroupComparisonListMenuItem.Name = "editGroupComparisonListMenuItem";
+            resources.ApplyResources(this.editGroupComparisonListMenuItem, "editGroupComparisonListMenuItem");
+            this.editGroupComparisonListMenuItem.Click += new System.EventHandler(this.editGroupComparisonListMenuItem_Click);
             // 
             // resultsGridMenuItem
             // 
@@ -3649,6 +3657,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator53;
         private System.Windows.Forms.ToolStripMenuItem acceptProteinsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editGroupComparisonListMenuItem;
     }
 }
 
