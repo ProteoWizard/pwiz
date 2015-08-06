@@ -53,6 +53,7 @@ namespace pwiz.Skyline
         public string ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public bool ImportAppend { get; private set; }
+        public bool ImportDisableJoining { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
@@ -724,6 +725,12 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "import-all"))
                 {
                     ImportSourceDirectory = GetFullPath(pair.Value);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameOnly(pair, "import-no-join"))
+                {
+                    ImportDisableJoining = true;
                     RequiresSkylineDocument = true;
                 }
                 // ReSharper restore NonLocalizedString
@@ -1471,17 +1478,22 @@ namespace pwiz.Skyline
                     // If expected results are not imported successfully, terminate
                     if (!ImportResultsFile(MsDataFileUri.Parse(commandArgs.ReplicateFile),
                                            commandArgs.ReplicateName,
+                                           commandArgs.ImportBeforeDate,
+                                           commandArgs.ImportOnOrAfterDate,
                                            optimize,
                                            commandArgs.ImportAppend,
-                                           commandArgs.ImportBeforeDate,
-                                           commandArgs.ImportOnOrAfterDate))
+                                           commandArgs.ImportDisableJoining))
                         return;
                 }
                 else if(commandArgs.ImportingSourceDirectory)
                 {
                     // If expected results are not imported successfully, terminate
-                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern,
-                                           commandArgs.ImportBeforeDate, commandArgs.ImportOnOrAfterDate, optimize))
+                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory,
+                                           commandArgs.ImportNamingPattern,
+                                           commandArgs.ImportBeforeDate,
+                                           commandArgs.ImportOnOrAfterDate,
+                                           optimize,
+                                           commandArgs.ImportDisableJoining))
                         return;
                 }
             }
@@ -1875,7 +1887,8 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize)
+        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, DateTime? importBefore, DateTime? importOnOrAfter,
+            OptimizableRegression optimize, bool disableJoining)
         {
             var listNamedPaths = GetDataSources(sourceDir, namingPattern);
             if (listNamedPaths == null)
@@ -1884,7 +1897,7 @@ namespace pwiz.Skyline
             }
 
             bool hasMultiple = listNamedPaths.SelectMany(pair => pair.Key).Count() > 1;
-            if (hasMultiple)
+            if (hasMultiple || disableJoining)
             {
                 // Join at the end
                 _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
@@ -1897,12 +1910,12 @@ namespace pwiz.Skyline
                 var files = namedPaths.Value;
                 foreach (var file in files)
                 {
-                    if (!ImportResultsFile(file, replicateName, optimize, importBefore, importOnOrAfter))
+                    if (!ImportResultsFile(file, replicateName, importBefore, importOnOrAfter, optimize))
                         return false;
                 }
             }
 
-            if (hasMultiple)
+            if (hasMultiple && !disableJoining)
             {
                 // Allow joining to happen
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
@@ -2097,8 +2110,8 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize,
-            bool append, DateTime? importBefore, DateTime? importOnOrAfter)
+        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
+            OptimizableRegression optimize, bool append, bool disableJoining)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = replicateFile.GetFileNameWithoutExtension();
@@ -2128,11 +2141,11 @@ namespace pwiz.Skyline
                 }
             }
 
-            return ImportResultsFile(replicateFile, replicateName, optimize, importBefore, importOnOrAfter);
+            return ImportResultsFile(replicateFile, replicateName, importBefore, importOnOrAfter, optimize, disableJoining);
         }
 
-        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize,
-            DateTime? importBefore, DateTime? importOnOrAfter)
+        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
+            OptimizableRegression optimize, bool disableJoining = false)
         {
             // Skip if file write time is after importBefore or before importAfter
             try
@@ -2173,6 +2186,9 @@ namespace pwiz.Skyline
 
             try
             {
+                if (disableJoining)
+                    _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
+
                 newDoc = ImportResults(_doc, _skylineFile, replicateName, replicateFile, optimize, progressMonitor, out status);
             }
             catch (Exception x)
