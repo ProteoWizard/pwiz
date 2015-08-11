@@ -292,16 +292,16 @@ namespace pwiz.SkylineTestFunctional
                 "WatersXevoUnscheduledTargeted.mrm",
                 ExportInstrumentType.WATERS_XEVO_QTOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 WatersIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(0, 0, 30, mzFirst, fragmentsFirst, trapCeFirstTrap, 0, 0, 30, 0, 0, 199),
-                FieldSeparate(0, 0, 30, mzLast, fragmentsLast, trapCeLastTrap, 0, 0, 30, 0, 0, 199));
+                FieldSeparate(0, 0, 30, mzFirst, fragmentsFirst, trapCeFirstTrap, 30, 0, 0, 199),
+                FieldSeparate(0, 0, 30, mzLast, fragmentsLast, trapCeLastTrap, 30, 0, 0, 199));
 
             // Export Waters Xevo scheduled Targeted list
             ExportIsolationList(
                 "WatersXevoScheduledTargeted.mrm",
                 ExportInstrumentType.WATERS_XEVO_QTOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 WatersIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(0, rtFirst, mzFirst, fragmentsFirst, trapCeFirstTrap, 0, 0, 30, 0, 0, 199),
-                FieldSeparate(0, rtLast, mzLast, fragmentsLast, trapCeLastTrap, 0, 0, 30, 0, 0, 199));
+                FieldSeparate(0, rtFirst, mzFirst, fragmentsFirst, trapCeFirstTrap, 30, 0, 0, 199),
+                FieldSeparate(0, rtLast, mzLast, fragmentsLast, trapCeLastTrap, 30, 0, 0, 199));
 
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);

@@ -3108,7 +3108,7 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
-            writer.WriteLine(GetHeader(FieldSeparator));
+            writer.Write(GetHeader(FieldSeparator));
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -3119,6 +3119,8 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            writer.WriteLine(); // MassLynx doesn't like blank line at end of file
+
             var transitions = GetTransitionsInBestOrder(nodeTranGroup, nodeTranGroupPrimary).ToArray();
 
             // Funtion channel
@@ -3161,16 +3163,20 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
             }
             // Trap CE Start, Trap CE End, Transfer CE Start, Transfer CE End
-            double trapStart, trapEnd, transferStart, transferEnd;
+            double trapStart, trapEnd;
+            double? transferStart, transferEnd;
             GetCEValues(nodeTranGroup.PrecursorMz, out trapStart, out trapEnd, out transferStart, out transferEnd);
             writer.Write(Math.Round(trapStart, 6));
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(trapEnd, 6));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(transferStart, 6));
-            writer.Write(FieldSeparator);
-            writer.Write(Math.Round(transferEnd, 6));
-            writer.Write(FieldSeparator);
+            if (transferStart.HasValue && transferEnd.HasValue)
+            {
+                writer.Write(Math.Round(transferStart.Value, 6));
+                writer.Write(FieldSeparator);
+                writer.Write(Math.Round(transferEnd.Value, 6));
+                writer.Write(FieldSeparator);
+            }
             // CV
             writer.Write(ConeVoltage);
             writer.Write(FieldSeparator);
@@ -3186,11 +3192,10 @@ namespace pwiz.Skyline.Model
             writer.Write(199);
             writer.Write(FieldSeparator);
             // compound name
-            writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
-            writer.WriteLine();
+            writer.WriteDsvField(TextUtil.SpaceSeparate(nodePepGroup.Name, nodePep.ModifiedSequenceDisplay), FieldSeparator);
         }
 
-        protected void GetCEValues(double mz, out double trapStart, out double trapEnd, out double transferStart, out double transferEnd)
+        protected void GetCEValues(double mz, out double trapStart, out double trapEnd, out double? transferStart, out double? transferEnd)
         {
             switch (_instrumentType)
             {
@@ -3207,7 +3212,7 @@ namespace pwiz.Skyline.Model
                 default:
                     trapStart = SlopeStart*mz + InterceptTrapStart;
                     trapEnd = SlopeEnd*mz + InterceptTrapEnd;
-                    transferStart = transferEnd = 0; // Ignored for Xevo
+                    transferStart = transferEnd = null; // Ignored for Xevo
                     break;
             }
         }

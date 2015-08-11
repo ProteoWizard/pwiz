@@ -425,6 +425,13 @@ namespace pwiz.Skyline.FileUI
                 case ExportInstrumentType.WATERS_SYNAPT_TRAP:
                 case ExportInstrumentType.WATERS_XEVO_QTOF:
                     panelWaters.Show();
+                    bool exportEdcEnabled = !_document.GetPrecursorsWithoutTopRank(
+                        _exportProperties.PrimaryTransitionCount, _exportProperties.SchedulingReplicateNum).Any();
+                    cbExportEdcMass.Enabled = exportEdcEnabled;
+                    if (!exportEdcEnabled)
+                    {
+                        ExportEdcMass = false;
+                    }
                     break;
                 default:
                     panelWaters.Hide();
