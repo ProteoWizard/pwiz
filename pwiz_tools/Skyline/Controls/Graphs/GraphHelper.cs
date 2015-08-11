@@ -551,6 +551,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     for (var i = 0; i < curve.Points.Count; i++)
                     {
                         var point = curve.Points[i];
+                        if (point.IsMissing)
+                        {
+                            continue;
+                        }
                         if (!double.IsNaN(point.Y))
                         {
                             var errorTag = point.Tag as ErrorTag;
