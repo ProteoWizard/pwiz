@@ -8298,6 +8298,12 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ExportMethodDlg_OkDialog_The_DIA_isolation_list_must_have_prespecified_windows_" xml:space="preserve">
     <value>The DIA isolation list must have prespecified windows.</value>
   </data>
+  <data name="DataboundGridControl_FillDown_Fill_Down" xml:space="preserve">
+    <value>Fill Down</value>
+  </data>
+  <data name="DataboundGridControl_DoFillDown_Error_setting_value_" xml:space="preserve">
+    <value>Error setting value:</value>
+  </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>User {0} does not have permissions to upload to the Panorama folder {1}</value>
   </data>

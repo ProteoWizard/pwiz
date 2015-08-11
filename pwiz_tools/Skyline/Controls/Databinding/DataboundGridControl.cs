@@ -26,7 +26,11 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Internal;
+using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 // This code is associated with the DocumentGrid.
 
@@ -216,6 +220,72 @@ namespace pwiz.Skyline.Controls.Databinding
                 sortAscendingToolStripMenuItem.Checked = false;
                 sortDescendingToolStripMenuItem.Checked = false;
             }
+            fillDownToolStripMenuItem.Enabled = IsEnableFillDown();
+        }
+
+        public bool IsEnableFillDown()
+        {
+            PropertyDescriptor[] propertyDescriptors;
+            int firstRowIndex;
+            int lastRowIndex;
+            return GetRectangularSelection(out propertyDescriptors, out firstRowIndex, out lastRowIndex);
+        }
+
+        /// <summary>
+        /// Returns true if the selection in the DataGridView is rectangular (i.e. a continuous set of rows),
+        /// and that none of the columns in the selection are read-only.
+        /// </summary>
+        private bool GetRectangularSelection(
+            out PropertyDescriptor[] propertyDescriptors,
+            out int firstRowIndex,
+            out int lastRowIndex)
+        {
+            propertyDescriptors = null;
+            firstRowIndex = lastRowIndex = -1;
+            if (DataGridView.SelectedRows.Count > 0)
+            {
+                return false;
+            }
+            var cellsByColumn = DataGridView.SelectedCells.Cast<DataGridViewCell>().ToLookup(cell => cell.ColumnIndex);
+            int? firstRow = null;
+            int? lastRow = null;
+            foreach (var grouping in cellsByColumn)
+            {
+                int minRow = grouping.Min(cell => cell.RowIndex);
+                int maxRow = grouping.Max(cell => cell.RowIndex);
+                if (grouping.Count() != maxRow - minRow + 1)
+                {
+                    return false;
+                }
+                if (minRow == maxRow)
+                {
+                    return false;
+                }
+                firstRow = firstRow ?? minRow;
+                lastRow = lastRow ?? maxRow;
+                if (firstRow != minRow || lastRow != maxRow)
+                {
+                    return false;
+                }
+            }
+            if (!firstRow.HasValue)
+            {
+                return false;
+            }
+            
+            var columnIndexes = cellsByColumn.Select(grouping => grouping.Key).ToArray();
+            Array.Sort(columnIndexes);
+            propertyDescriptors = columnIndexes.Select(colIndex => GetPropertyDescriptor(DataGridView.Columns[colIndex])).ToArray();
+            foreach (var propertyDescriptor in propertyDescriptors)
+            {
+                if (propertyDescriptor == null || propertyDescriptor.IsReadOnly)
+                {
+                    return false;
+                }
+            }
+            firstRowIndex = firstRow.Value;
+            lastRowIndex = lastRow.Value;
+            return true;
         }
 
         private void clearAllFiltersToolStripMenuItem_Click(object sender, EventArgs e)
@@ -303,6 +373,68 @@ namespace pwiz.Skyline.Controls.Databinding
         public PropertyDescriptor GetPropertyDescriptor(DataGridViewColumn column)
         {
             return bindingListSource.GetItemProperties(null)[column.DataPropertyName];
+        }
+
+        private void fillDownToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FillDown();
+        }
+
+        public bool FillDown()
+        {
+            PropertyDescriptor[] propertyDescriptors;
+            int firstRowIndex;
+            int lastRowIndex;
+            if (!GetRectangularSelection(out propertyDescriptors, out firstRowIndex, out lastRowIndex))
+            {
+                return false;
+            }
+            var skylineWindow = ((SkylineDataSchema) BindingListSource.ViewInfo.DataSchema).SkylineWindow;
+            if (null == skylineWindow)
+            {
+                return false;
+            }
+            using (var undoTransaction = skylineWindow.BeginUndo(Resources.DataboundGridControl_FillDown_Fill_Down))
+            {
+                if (DoFillDown(propertyDescriptors, firstRowIndex, lastRowIndex))
+                {
+                    undoTransaction.Commit();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool DoFillDown(PropertyDescriptor[] propertyDescriptors, int firstRowIndex, int lastRowIndex)
+        {
+            bool anyChanges = false;
+            var firstRowValues = propertyDescriptors.Select(pd => pd.GetValue(BindingListSource[firstRowIndex])).ToArray();
+            for (int iRow = firstRowIndex + 1; iRow <= lastRowIndex; iRow++)
+            {
+                var row = BindingListSource[iRow];
+                for (int icol = 0; icol < propertyDescriptors.Length; icol++)
+                {
+                    var propertyDescriptor = propertyDescriptors[icol];
+                    try
+                    {
+                        propertyDescriptor.SetValue(row, firstRowValues[icol]);
+                        anyChanges = true;
+                    }
+                    catch (Exception e)
+                    {
+                        MessageDlg.Show(this, TextUtil.LineSeparate(Resources.DataboundGridControl_DoFillDown_Error_setting_value_, 
+                            e.Message));
+                        var column = DataGridView.Columns.OfType<DataGridViewColumn>()
+                            .FirstOrDefault(col => col.DataPropertyName == propertyDescriptor.Name);
+                        if (null != column)
+                        {
+                            DataGridView.CurrentCell = DataGridView.Rows[iRow].Cells[column.Index];
+                        }
+                        return anyChanges;
+                    }
+                }
+            }
+            return anyChanges;
         }
     }
 }

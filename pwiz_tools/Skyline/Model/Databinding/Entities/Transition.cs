@@ -131,13 +131,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return DocNode.Transition.Ordinal;
             }
         }
-        public char CleavageAa
+        public char? CleavageAa
         {
             get
             {
                 return IsCustomTransition()
-                    ? '\0' // Not L10N
-                    :  DocNode.Transition.AA;
+                    ? default(char?) 
+                    : DocNode.Transition.AA;
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]

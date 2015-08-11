@@ -88,6 +88,8 @@ namespace pwiz.Skyline.Controls.Databinding
             databoundGridControl.QuickFilter(column);
         }
 
+        public DataboundGridControl DataboundGridControl { get { return databoundGridControl; } }
+
         #endregion
     }
 }

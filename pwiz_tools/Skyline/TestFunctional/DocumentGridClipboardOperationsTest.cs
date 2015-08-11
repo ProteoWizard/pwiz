@@ -1,0 +1,159 @@
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2015 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil;
+
+namespace pwiz.SkylineTestFunctional
+{
+    [TestClass]
+    public class DocumentGridClipboardOperationsTest : AbstractFunctionalTest
+    {
+        [TestMethod]
+        public void TestDocumentGridClipboardOperations()
+        {
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
+            {
+                pasteDlg.IsMolecule = true;
+                pasteDlg.SetSmallMoleculeColumns(new[]
+                {
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
+                }.ToList());
+                string text = TextUtil.LineSeparate(
+                    "Drugs\tCaffeine\tLoss of CHO\tC8H10N4O2\tC7H9N4O\t1\t1",
+                    "Drugs\tCaffeine\tLoss of CH3NCO\tC8H10N4O2\tC6H7N3O\t1\t1",
+                    "Drugs\tAmphetamine\tLoss of Ammonia\tC9H13N\tC9H11\t1\t1"
+                );
+                SetClipboardText(text);
+                pasteDlg.PasteTransitions();
+                pasteDlg.OkDialog();
+            });
+            RunUI(() => SkylineWindow.SequenceTree.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID)));
+            RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
+            {
+                string text = TextUtil.LineSeparate("RPKPQQFFGLM\tSubstance P", 
+                    "DVPKSDQFVGLM\tKassinin");
+                SetClipboardText(text);
+                pasteDlg.PastePeptides();
+                pasteDlg.OkDialog();
+            });
+            
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            RunUI(()=>documentGrid.ChooseView("Peptides"));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            Assert.AreEqual(4, documentGrid.DataGridView.Rows.Count);
+            foreach (var molecule in SkylineWindow.Document.Molecules)
+            {
+                Assert.IsNull(molecule.Note);
+                Assert.IsNull(molecule.ExplicitRetentionTime);
+            }
+            RunUI(() =>
+            {
+                var colExplicitRetentionTime =
+                    documentGrid.FindColumn(PropertyPath.Root.Property("ExplicitRetentionTime"));
+                documentGrid.DataGridView.CurrentCell =  documentGrid.DataGridView.Rows[0].Cells[colExplicitRetentionTime.Index];
+                documentGrid.DataGridView.CurrentCell.Value = 10.0;
+                for (int iRow = 0; iRow < documentGrid.DataGridView.RowCount; iRow++)
+                {
+                    documentGrid.DataGridView.Rows[iRow].Cells[colExplicitRetentionTime.Index].Selected = true;
+                }
+            });
+            // When we do a fill down, an error message is expected to be displayed, and the current cell should be in the third row.
+            RunDlg<MessageDlg>(() => documentGrid.DataboundGridControl.FillDown(), messageDlg => messageDlg.OkDialog());
+            Assert.AreEqual(2, documentGrid.DataGridView.CurrentCellAddress.Y);
+            foreach (var molecule in SkylineWindow.Document.Molecules)
+            {
+                Assert.IsNull(molecule.Note);
+                if (molecule.IsProteomic)
+                {
+                    Assert.IsNull(molecule.ExplicitRetentionTime);
+                }
+                else
+                {
+                    Assert.AreEqual(10.0, molecule.ExplicitRetentionTime.RetentionTime);    
+                }
+            }
+            RunUI(() =>
+            {
+                var colNote = documentGrid.FindColumn(PropertyPath.Root.Property("Note"));
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[colNote.Index];
+                documentGrid.DataGridView.CurrentCell.Value = "PeptideNote";
+                for (int iRow = 0; iRow < documentGrid.DataGridView.RowCount; iRow++)
+                {
+                    documentGrid.DataGridView.Rows[iRow].Cells[colNote.Index].Selected = true;
+                }
+            });
+            RunUI(()=>documentGrid.DataboundGridControl.FillDown());
+            foreach (var molecule in SkylineWindow.Document.Molecules)
+            {
+                Assert.AreEqual("PeptideNote", molecule.Note);
+                if (molecule.IsProteomic)
+                {
+                    Assert.IsNull(molecule.ExplicitRetentionTime);
+                }
+                else
+                {
+                    Assert.AreEqual(10.0, molecule.ExplicitRetentionTime.RetentionTime);
+                }
+            }
+            // Undoing the fill down operation will take us back to just the first peptide having
+            // a note.
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            foreach (var molecule in SkylineWindow.Document.Molecules)
+            {
+                if (ReferenceEquals(molecule, SkylineWindow.Document.Molecules.First()))
+                {
+                    Assert.AreEqual("PeptideNote", molecule.Note);
+                }
+                else
+                {
+                    Assert.IsNull(molecule.Note);
+                }
+                if (molecule.IsProteomic)
+                {
+                    Assert.IsNull(molecule.ExplicitRetentionTime);
+                }
+                else
+                {
+                    Assert.AreEqual(10.0, molecule.ExplicitRetentionTime.RetentionTime);
+                }
+            }
+        }
+    }
+}
