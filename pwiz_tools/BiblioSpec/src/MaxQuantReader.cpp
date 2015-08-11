@@ -214,15 +214,15 @@ void MaxQuantReader::initFixedModifications()
         const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
         if (lookup == NULL)
         {
-            throw BlibException(false, "Unknown modification %s in mqpar file. Add a modifications.xml "
-                                       "file to the same directory as msms.txt which contains this "
-                                       "modification.",
-                                iter->c_str());
+            Verbosity::error("Unknown modification %s in mqpar file.Add a modifications.xml "
+                             "file to the same directory as msms.txt which contains this "
+                             "modification.", iter->c_str());
+            return;
         }
 
         if (lookup->position != MaxQuantModification::ANYWHERE)
         {
-            Verbosity::warn("Fixed mod '%s' will not be used (position is not 'anywhere').",
+            Verbosity::warn("Fixed mod '%s' will not be used (position is `not 'anywhere').",
                             iter->c_str());
         }
 
@@ -263,10 +263,10 @@ void MaxQuantReader::initFixedModifications()
                     const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *labelIter);
                     if (lookup == NULL)
                     {
-                        throw BlibException(false, "Unknown label %s in mqpar file. Add a modifications.xml "
-                                                   "file to the same directory as msms.txt which contains this "
-                                                   "modification.",
-                                            labelIter->c_str());
+                        Verbosity::error("Unknown label %s in mqpar file. Add a modifications.xml "
+                                         "file to the same directory as msms.txt which contains this "
+                                         "modification.", labelIter->c_str());
+                        return;
                     }
                     mods.push_back(lookup);
                 }

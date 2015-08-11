@@ -61,9 +61,9 @@ int main(int argc, char* argv[])
     builder.parseCommandArgs(argc, argv);
 
     builder.init();
-  
+
     vector<char*> inFiles = builder.getInputFiles();
- 
+
     // for progress of score files 
     ProgressIndicator progress(inFiles.size());
     const ProgressIndicator* progress_cptr = &progress; // read-only pointer
@@ -139,15 +139,15 @@ int main(int argc, char* argv[])
             } else if (has_extension(result_file, ".mzid")) {
                 MzIdentMLReader mzidReader(builder, result_file, progress_cptr);
                 success = mzidReader.parseFile();
- 
+
             } else if (has_extension(result_file, "final_fragment.csv")) {
                 WatersMseReader mseReader(builder, result_file, progress_cptr);
                 success = mseReader.parseFile();
- 
+
              } else { 
                 // shouldn't get to here b/c cmd line parsing checks, but...
                 Verbosity::error("Unknown input file type '%s'.", result_file);
-            }      
+            }
             
             if( !success ){ // in the unlikely event a reader returns false instead of throwing an error
                 string errorMsg = "Failed to parse ";
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
             success = false;
         }
     }
-    
+
     if( ! success ){
         // try saving the library
         builder.undoActiveTransaction();
