@@ -994,11 +994,11 @@ namespace pwiz.Skyline.Model
                 bool keepUserSet = true;
                 if (resultsHandler != null)
                 {
+                    keepUserSet = !resultsHandler.OverrideManual;
                     if (!resultsHandler.IncludeDecoys && IsDecoy)
                         resultsHandler = null;
                     else
                         qcutoff = resultsHandler.QValueCutoff;
-                    keepUserSet = !resultsHandler.OverrideManual;
                 }
                 var measuredResults = settingsNew.MeasuredResults;
                 for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
