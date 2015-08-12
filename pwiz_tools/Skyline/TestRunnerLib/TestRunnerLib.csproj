@@ -65,7 +65,7 @@
       <HintPath>..\..\Shared\Crawdad\obj\$(Platform)\Crawdad.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />

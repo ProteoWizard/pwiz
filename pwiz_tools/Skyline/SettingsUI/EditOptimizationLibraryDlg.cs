@@ -438,7 +438,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Optimizations.RaiseListChangedEvents = false;
                 Optimizations.Clear();
-                optimizations.ForEach(opt => Optimizations.Add(opt));
+                Array.ForEach(optimizations.ToArray(), opt => Optimizations.Add(opt));
                 Optimizations.RaiseListChangedEvents = true;
                 Optimizations.ResetBindings();
             }
@@ -451,7 +451,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 Items.Clear();
                 Items.RaiseListChangedEvents = false;
-                Optimizations.Where(opt => opt.Type.Equals((int)ViewDbType)).ForEach(opt => Items.Add(opt));
+                Array.ForEach(Optimizations.Where(opt => opt.Type.Equals((int)ViewDbType)).ToArray(), opt => Items.Add(opt));
                 Items.RaiseListChangedEvents = true;
                 Items.ResetBindings();
 

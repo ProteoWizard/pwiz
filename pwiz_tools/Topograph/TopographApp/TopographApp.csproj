@@ -124,16 +124,16 @@
     <Reference Include="JetBrains.Annotations">
       <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+    <Reference Include="log4net">
+      <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
     </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
+    <Reference Include="NHibernate">
+      <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\NHibernate.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">

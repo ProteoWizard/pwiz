@@ -75,10 +75,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime, Version=3.1.0.39271, Culture=neutral, PublicKeyToken=3a9cab8f8d22bfb7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\Antlr3.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.2.0.0, Culture=neutral, PublicKeyToken=83b2c390cd515404, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
@@ -86,9 +82,9 @@
     <Reference Include="JetBrains.Annotations">
       <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+    <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
@@ -101,9 +97,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\mysql.data.dll</HintPath>
     </Reference>
-    <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
+    <Reference Include="NHibernate">
+      <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\NHibernate.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql, Version=2.0.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

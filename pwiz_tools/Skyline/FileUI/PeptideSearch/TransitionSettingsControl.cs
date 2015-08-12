@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
                 int offset = lblTolerance.Top - cbExclusionUseDIAWindow.Top;
-                new Control[] {lblTolerance, txtTolerance, lblToleranceUnits, lblIonCount, txtIonCount, lblIonCountUnits}.ForEach(c => c.Top -= offset);
+                Array.ForEach(new Control[] {lblTolerance, txtTolerance, lblToleranceUnits, lblIonCount, txtIonCount, lblIonCountUnits}, c => c.Top -= offset);
                 cbExclusionUseDIAWindow.Hide();
             }
         }

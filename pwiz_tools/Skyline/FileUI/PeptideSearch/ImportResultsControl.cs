@@ -157,7 +157,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            dataSources.ForEach(d => CheckMatch(d.ToString(), true));
+            Array.ForEach(dataSources, d => CheckMatch(d.ToString(), true));
             UpdateResultsFilesUI();
         }
 
@@ -204,7 +204,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var longWaitDlg = new LongWaitDlg {Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files};
                 try
                 {
-                    longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker => dirPaths.Distinct().ForEach(dir => FindDataFiles(longWaitBroker, dir, overwrite)));
+                    longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker => Array.ForEach(dirPaths.Distinct().ToArray(), dir => FindDataFiles(longWaitBroker, dir, overwrite)));
                 }
                 catch (Exception x)
                 {

@@ -234,18 +234,6 @@ namespace pwiz.ProteomeDatabase.Util
             _session.Persist(entityName, obj);
         }
 
-        public object SaveOrUpdateCopy(object obj)
-        {
-            EnsureWriteLock();
-            return _session.SaveOrUpdateCopy(obj);
-        }
-
-        public object SaveOrUpdateCopy(object obj, object id)
-        {
-            EnsureWriteLock();
-            return _session.SaveOrUpdateCopy(obj, id);
-        }
-
         public void Delete(object obj)
         {
             EnsureWriteLock();
@@ -560,6 +548,24 @@ namespace pwiz.ProteomeDatabase.Util
         {
             get { return _session.DefaultReadOnly; }
             set { _session.DefaultReadOnly = value; }
+        }
+
+        public void Save(string entityName, object obj, object id)
+        {
+            EnsureWriteLock();
+            _session.Save(entityName, obj, id);
+        }
+
+        public void SaveOrUpdate(string entityName, object obj, object id)
+        {
+            EnsureWriteLock();
+            _session.SaveOrUpdate(entityName, obj, id);
+        }
+
+        public void Update(string entityName, object obj, object id)
+        {
+            EnsureWriteLock();
+            _session.Update(entityName, obj, id);
         }
     }
 }
