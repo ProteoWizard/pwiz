@@ -225,7 +225,7 @@ namespace Test
                     analysis.StartTime = DateTime.Today.AddHours(row.Analysis);
                     analysis.Type = AnalysisType.DatabaseSearch;
 
-                    analysis.Parameters = new Iesi.Collections.Generic.SortedSet<AnalysisParameter>()
+                    analysis.Parameters = new SortedSet<AnalysisParameter>()
                     {
                         new AnalysisParameter()
                         {
