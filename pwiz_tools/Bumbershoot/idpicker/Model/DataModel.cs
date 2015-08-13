@@ -40,7 +40,7 @@ namespace IDPicker.DataModel
     public class SpectrumSourceGroup : Entity<SpectrumSourceGroup>
     {
         public virtual string Name { get; set; }
-        public virtual Iesi.Collections.Generic.ISet<SpectrumSourceGroupLink> Sources { get; set; }
+        public virtual ISet<SpectrumSourceGroupLink> Sources { get; set; }
     }
 
     public class SpectrumSource : Entity<SpectrumSource>
@@ -53,7 +53,7 @@ namespace IDPicker.DataModel
         /// <summary>
         /// All parent groups of this spectrum source (direct and indirect).
         /// </summary>
-        public virtual Iesi.Collections.Generic.ISet<SpectrumSourceGroupLink> Groups { get; set; }
+        public virtual ISet<SpectrumSourceGroupLink> Groups { get; set; }
         public virtual string Name { get; set; }
         public virtual string URL { get; set; }
 
@@ -152,7 +152,7 @@ namespace IDPicker.DataModel
         public virtual AnalysisType Type { get; set; }
         public virtual DateTime? StartTime { get; set; }
         public virtual QonverterSettings QonverterSettings { get; set; }
-        public virtual Iesi.Collections.Generic.ISet<AnalysisParameter> Parameters { get; set; }
+        public virtual ISet<AnalysisParameter> Parameters { get; set; }
         public virtual IList<PeptideSpectrumMatch> Matches { get; set; }
     }
 

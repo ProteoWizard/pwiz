@@ -67,13 +67,13 @@ namespace IDPicker.Controls
                 var row = new DataGridViewRow();
                 row.CreateCells(dataGridView);
 
-                Iesi.Collections.Generic.ISet<AnalysisParameter> diffParameters = new Iesi.Collections.Generic.SortedSet<AnalysisParameter>();
+                IEnumerable<AnalysisParameter> diffParameters = new SortedSet<AnalysisParameter>();
                 foreach (var a2 in qonverterSettingsByAnalysis.Keys)
                 {
                     if (a.Software.Name != a2.Software.Name)
                         continue;
 
-                    diffParameters = diffParameters.Union(a.Parameters.Minus(a2.Parameters));
+                    diffParameters = diffParameters.Union(a.Parameters.Except(a2.Parameters));
                 }
 
                 string key = a.Id + ": " + a.Name;

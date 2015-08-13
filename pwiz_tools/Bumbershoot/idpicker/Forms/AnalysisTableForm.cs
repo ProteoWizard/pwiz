@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
+using NHibernate.Util;
 using IDPicker.DataModel;
 using IDPicker.Controls;
 

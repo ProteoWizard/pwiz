@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
+using NHibernate.Util;
 using BrightIdeasSoftware;
 using PopupControl;
 using IDPicker.DataModel;
@@ -516,14 +517,14 @@ namespace IDPicker.Forms
                     if (stats.first)
                     {
                         if (itr.Current.Value.IsArray)
-                            return itr.Current.Value.Value.As<double[]>()[Convert.ToInt32(pivotColumn.DataPropertyName)];
+                            return ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
                         else
                             return itr.Current.Value.Value;
                     }
                     else
                     {
                         if (itr.Current.Value.IsArray)
-                            return itr.Current.Value.Value.As<double[]>()[Convert.ToInt32(pivotColumn.DataPropertyName)];
+                            return ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
                         else
                             return itr.Current.Value.Value;
                     }

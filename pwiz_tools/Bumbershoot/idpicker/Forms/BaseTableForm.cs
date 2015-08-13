@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using System.IO;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
+using NHibernate.Util;
 using PopupControl;
 using IDPicker;
 using IDPicker.DataModel;

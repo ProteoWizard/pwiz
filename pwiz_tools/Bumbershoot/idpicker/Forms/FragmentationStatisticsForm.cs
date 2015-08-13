@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using System.Threading;
 using NHibernate;
 using NHibernate.Linq;
+using NHibernate.Util;
 using DigitalRune.Windows.Docking;
 using IDPicker.DataModel;
 using ZedGraph;
