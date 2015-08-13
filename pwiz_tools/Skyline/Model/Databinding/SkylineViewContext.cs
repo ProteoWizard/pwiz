@@ -579,19 +579,24 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins, new Proteins(dataSchema));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides, new Peptides(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, new ReplicateList(dataSchema));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins,
+                () => new Proteins(dataSchema));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+                () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
+                () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
+                () => new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
+            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 
+                () => new ReplicateList(dataSchema));
             yield return new RowSourceInfo(typeof(SkylineDocument), new SkylineDocument[0], new ViewInfo[0]);
         }
 
-        private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, IEnumerable<T> rows)
+        private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, Func<IEnumerable<T>> rowProvider)
         {
             var parentColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(T));
             var viewInfo = new ViewInfo(parentColumn, GetDefaultViewInfo(parentColumn).GetViewSpec().SetName(name));
-            return new RowSourceInfo(rows, viewInfo);
+            return RowSourceInfo.DeferredRowSourceInfo(rowProvider, viewInfo);
         }
 
         protected override TColumn InitializeColumn<TColumn>(TColumn column, PropertyDescriptor propertyDescriptor)

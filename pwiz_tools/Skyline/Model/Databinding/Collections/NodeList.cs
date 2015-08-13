@@ -102,11 +102,18 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         protected static bool StartsWith(IdentityPath child, IdentityPath ancestor)
         {
-            if (child.Depth < ancestor.Depth)
+            if (child.Length < ancestor.Length)
             {
                 return false;
             }
-            return ancestor.Equals(child.GetPathTo(ancestor.Depth));
+            for (int i = 0; i < ancestor.Length; i++)
+            {
+                if (!Equals(ancestor.GetIdentity(i), child.GetIdentity(i)))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
         public override IdentityPath GetKey(TNode item)
         {
