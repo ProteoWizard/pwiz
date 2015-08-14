@@ -107,6 +107,7 @@ namespace pwiz.Skyline
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
 
         private List<ProgressStatus> _listProgress;
+        private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
 
@@ -3889,6 +3890,7 @@ namespace pwiz.Skyline
             if (listProgress.Count == 0)
             {
                 statusProgress.Visible = false;
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
                 buttonShowAllChromatograms.Visible = false;
                 statusGeneral.Text = Resources.SkylineWindow_UpdateProgressUI_Ready;
                 _timerProgress.Stop();
@@ -3906,6 +3908,8 @@ namespace pwiz.Skyline
                 ProgressStatus status = listProgress[0];
                 statusProgress.Value = status.PercentComplete;
                 statusProgress.Visible = true;
+                _taskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Normal);
+                _taskbarProgress.SetValue(Handle, status.PercentComplete, 100);
                 statusGeneral.Text = status.Message;
 
                 if (!SHOW_LOADING_CHROMATOGRAMS)
