@@ -35,6 +35,7 @@ void CrawPeakMethod::init() {
   extend_allowed_asymmetry = 1.0f;
   fraction_to_valley = 0.0f;
   background_estimation_method = PEAK_BOUNDARY_ESTIMATE;
+  area_calc_method = FULL_WIDTH;
   this->one_peak_slope_merge_constraint = 0.0f;
   this->mean_slope_merge_constraint = 0.0f;
   this->exclude_extension_overlaps_by_peakrt = false;

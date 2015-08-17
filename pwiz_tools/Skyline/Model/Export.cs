@@ -1169,9 +1169,9 @@ namespace pwiz.Skyline.Model
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
                 if (predictedRT.HasValue)
                 {
-                    writer.Write(predictedRT);
+                    writer.Write(predictedRT.Value.ToString(CultureInfo));
                     writer.Write(FieldSeparator);
-                    writer.Write(windowRT);
+                    writer.Write(windowRT.ToString(CultureInfo));
                     writer.Write(FieldSeparator);
                 }
                 else
@@ -3166,15 +3166,15 @@ namespace pwiz.Skyline.Model
             double trapStart, trapEnd;
             double? transferStart, transferEnd;
             GetCEValues(nodeTranGroup.PrecursorMz, out trapStart, out trapEnd, out transferStart, out transferEnd);
-            writer.Write(Math.Round(trapStart, 6));
+            writer.Write(Math.Round(trapStart, 6).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(trapEnd, 6));
+            writer.Write(Math.Round(trapEnd, 6).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             if (transferStart.HasValue && transferEnd.HasValue)
             {
-                writer.Write(Math.Round(transferStart.Value, 6));
+                writer.Write(Math.Round(transferStart.Value, 6).ToString(CultureInfo));
                 writer.Write(FieldSeparator);
-                writer.Write(Math.Round(transferEnd.Value, 6));
+                writer.Write(Math.Round(transferEnd.Value, 6).ToString(CultureInfo));
                 writer.Write(FieldSeparator);
             }
             // CV

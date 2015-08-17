@@ -902,7 +902,7 @@ namespace pwiz.Skyline.Util
             : base(path)
         {
             _progressMonitor = progressMonitor;
-            _status = new ProgressStatus(string.Empty);
+            _status = new ProgressStatus(Path.GetFileName(path));
             _totalBytes = new FileInfo(path).Length;
         }
 
@@ -924,11 +924,11 @@ namespace pwiz.Skyline.Util
         private readonly int _transitionCount;
         private int _transitionsWritten;
 
-        public XmlWriterWithProgress(string filename, Encoding encoding, int transitionCount, IProgressMonitor progressMonitor)
+        public XmlWriterWithProgress(string filename, string displayName, Encoding encoding, int transitionCount, IProgressMonitor progressMonitor)
             : base(filename, encoding)
         {
             _progressMonitor = progressMonitor;
-            _status = new ProgressStatus(string.Empty);
+            _status = new ProgressStatus(Path.GetFileName(displayName));
 
             _transitionCount = transitionCount;
         }

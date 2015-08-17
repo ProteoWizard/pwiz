@@ -22,6 +22,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -119,6 +122,10 @@ namespace pwiz.SkylineTestA
             long lineCount = Helpers.CountLinesInFile(mProphetActual);
             peakBoundaryImporter.Import(mProphetActual, null, lineCount);
             var docImport = peakBoundaryImporter.Document;
+            // Serialized documents are easier to debug when something is different
+            string strDocNew = SerializeDoc(docNewQAll);
+            string strDocImport = SerializeDoc(docImport);
+            AssertEx.NoDiff(strDocNew, strDocImport);
             Assert.AreSame(docNewQAll, docImport);
 
             // 5. Reintegration with q value cutoff of <0 causes all peaks set to null
@@ -162,6 +169,17 @@ namespace pwiz.SkylineTestA
             docContainer.Release();
         }
 
+        private string SerializeDoc(SrmDocument doc)
+        {
+            XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+            StringBuilder sb = new StringBuilder();
+            using (XmlTextWriter writer = new XmlTextWriter(new StringWriter(sb)))
+            {
+                writer.Formatting = Formatting.Indented;
+                ser.Serialize(writer, doc);
+            }
+            return sb.ToString();
+        }
 
         private static ReportSpec MakeReportSpec()
         {

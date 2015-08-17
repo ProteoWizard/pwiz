@@ -185,7 +185,8 @@ double get_raw_area( int start_rt_idx, int stop_rt_idx );
 
 
 double get_area( int start_idx, int stop_idx );
-float calculate_slope(  int start_rt_idx, int stop_rt_idx);
+double get_area_f( float start_idx, float stop_idx );
+float calculate_slope(int start_rt_idx, int stop_rt_idx);
 void set_peak_slope ( SlimCrawPeak & peak );
 void set_bg_scratch ( int start_idx, int stop_idx );
 
@@ -212,6 +213,10 @@ private :
 int calc_len ( int start_rt_idx, int stop_rt_idx ) {
   return stop_rt_idx - start_rt_idx + 1;
 }
+
+void calc_fwhm_extents(int start_idx, int stop_idx, int peak_idx, float raw_height,
+    float & lh_hm, float & rh_hm, bool & calculated_ok);
+
   int _get_peakloc_by_2d ( int start_idx, int stop_idx );
   int _get_peakloc_by_centroid ( int start_idx, int stop_idx );
   int _get_peakloc_by_local_max ( int start_idx, int stop_idx );

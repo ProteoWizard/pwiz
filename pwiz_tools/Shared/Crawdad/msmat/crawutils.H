@@ -338,6 +338,27 @@ double area_under_curve ( const std::vector<T> & vals, int start_idx, int stop_i
    return sum;
 }
 template <typename T>
+double area_under_curve_f( const std::vector<T> & vals, float start_idx, float stop_idx ) {
+    // First calculate area of all whole trapezoids
+    int start_idx_whole = (int)std::ceil(start_idx);
+    int stop_idx_whole = (int)std::floor(stop_idx);
+    double sum = area_under_curve(vals, start_idx_whole, stop_idx_whole);
+    // Calculate the fractional trapezoid areas
+    if (start_idx_whole > start_idx)
+        sum += area_under_fraction(start_idx_whole - start_idx, vals[start_idx_whole], vals[start_idx_whole - 1]);
+    if (stop_idx_whole < stop_idx)
+        sum += area_under_fraction(stop_idx - stop_idx_whole, vals[stop_idx_whole], vals[stop_idx_whole + 1]);
+    return sum;
+}
+inline double area_under_fraction(double fraction, double start_height, double stop_height) {
+    double height_frac = start_height + (stop_height - start_height) * fraction;
+    double rect_area = start_height * fraction;
+    double sum = rect_area; //fractional rectangle
+    double triangle_area = (height_frac - start_height) * fraction / 2.0;
+    sum += triangle_area; //fractional triangle
+    return sum;
+}
+template <typename T>
 double area_under_curve ( const std::vector<T> & vals ) {
    return area_under_curve(vals, 0, vals.size() - 1);
 }

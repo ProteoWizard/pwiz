@@ -456,16 +456,28 @@ void CrawPeakAnnotator::set_bg_scratch ( int start_idx, int stop_idx ) {
 void CrawPeakAnnotator::get_all_areas( int start_idx, int stop_idx, int peak_idx,
 				      float & raw_area, float & bg_area , float & bg_sub_area , float & bg_sub_height, float & raw_height ) {
 
-  raw_area = (float)get_area(start_idx,stop_idx);
-  int len = stop_idx - start_idx + 1;
-  if ( len > (int)bg_scratch.size() ) {
-    bg_scratch.resize(len);
-  }
-  set_bg_scratch(start_idx, stop_idx);
-  bg_sub_height = get_active_chrom()->at(peak_idx) - bg_scratch[peak_idx - start_idx];
-  raw_height    = get_active_chrom()->at(peak_idx);
-  bg_area = (float)crawutils::area_under_curve( bg_scratch, 0, len - 1);
-  bg_sub_area = raw_area - bg_area;  
+    // Calculate width independent values
+    int len = stop_idx - start_idx + 1;
+    if (len > (int)bg_scratch.size()) {
+        bg_scratch.resize(len);
+    }
+    set_bg_scratch(start_idx, stop_idx);
+    bg_sub_height = get_active_chrom()->at(peak_idx) - bg_scratch[peak_idx - start_idx];
+    raw_height = get_active_chrom()->at(peak_idx);
+
+    // Calculate areas with widths appropriate to the area calculation method
+    if (this->pf->method.area_calc_method == FULL_WIDTH) {
+        raw_area = (float)get_area(start_idx, stop_idx);
+        bg_area = (float)crawutils::area_under_curve(bg_scratch, 0, len - 1);
+    }
+    else /* if(this->pf->method.area_calc_method == HALF_HEIGHT_WIDTH) */ {
+        float lh_hm, rh_hm;
+        bool calculated_ok;
+        calc_fwhm_extents(start_idx, stop_idx, peak_idx, raw_height, lh_hm, rh_hm, calculated_ok);
+        raw_area = (float)get_area_f(lh_hm, rh_hm);
+        bg_area = (float)crawutils::area_under_curve_f(bg_scratch, lh_hm - start_idx, rh_hm - start_idx);
+    }
+    bg_sub_area = raw_area - bg_area;
 }
 
 void CrawPeakAnnotator::set_peak_bg_subtracted_area ( SlimCrawPeak & peak ) {
@@ -476,48 +488,56 @@ void CrawPeakAnnotator::set_peak_bg_subtracted_area ( SlimCrawPeak & peak ) {
 }
 
 void CrawPeakAnnotator::calc_fwhm( SlimCrawPeak & peak ) {
+    float lh_hm, rh_hm;
+    bool calculated_ok;
+    calc_fwhm_extents(peak.start_rt_idx, peak.stop_rt_idx, peak.peak_rt_idx, peak.raw_height,
+        lh_hm, rh_hm, calculated_ok);
+    peak.fwhm_calculated_ok = calculated_ok;
+    peak.fwhm = rh_hm - lh_hm;
+}
+
+void CrawPeakAnnotator::calc_fwhm_extents(int start_idx, int stop_idx, int peak_idx, float raw_height,
+    float & lh_hm, float & rh_hm, bool & calculated_ok) {
     std::vector<float> * c = this->get_active_chrom();
     std::vector<float> & chrom = *c;
-   float lh_height = chrom.at(peak.start_rt_idx);
-   float rh_height = chrom.at(peak.stop_rt_idx);
-   float height = peak.raw_height - std::min(lh_height,rh_height);
-   float half_max = (float)(peak.raw_height - (height / 2.0));
-   int lh_pt = - 1, rh_pt = -1;
-   float lh_hm, rh_hm;
-   for ( int i = peak.start_rt_idx ; i < peak.peak_rt_idx ; i++ ) {
-       if ( chrom[i] <= half_max && chrom[i+1] >= half_max ) {
-          lh_pt = i;
-          break;
-       }
-   }
-   for ( int i = peak.peak_rt_idx ; i < std::min(peak.stop_rt_idx, (int)(chrom.size() - 2)) ; i++ ) {
-       if ( chrom[i] >= half_max && chrom[i+1] <= half_max ) {
-         rh_pt = i;
-         break;
-       }
-   }
-   if ( lh_pt > -1 && rh_pt > -1 ) {
-      peak.fwhm_calculated_ok = true;
-   }
-   else {
-      peak.fwhm_calculated_ok = false;
-   }
+    float lh_height = chrom.at(start_idx);
+    float rh_height = chrom.at(stop_idx);
+    float height = raw_height - std::min(lh_height, rh_height);
+    float half_max = (float)(raw_height - (height / 2.0));
+    int lh_pt = -1, rh_pt = -1;
+    for (int i = start_idx; i < peak_idx; i++) {
+        if (chrom[i] <= half_max && chrom[i + 1] > half_max) {
+            lh_pt = i;
+            break;
+        }
+    }
+    for (int i = peak_idx; i < std::min(stop_idx, (int)(chrom.size() - 1)); i++) {
+        if (chrom[i] >= half_max && chrom[i + 1] < half_max) {
+            rh_pt = i;
+            break;
+        }
+    }
+    if (lh_pt > -1 && rh_pt > -1) {
+        calculated_ok = true;
+    }
+    else {
+        calculated_ok = false;
+    }
 
-   if ( lh_pt == -1 ) {
-       lh_hm = (float)peak.start_rt_idx;
-   }
-   else {
-       float frac_delta = (half_max - chrom[lh_pt]) / (chrom[lh_pt+1] - chrom[lh_pt]);
-       lh_hm = (float)lh_pt + frac_delta;      
-   }
-   if ( rh_pt == -1 ) {
-       rh_hm = (float)peak.stop_rt_idx;
-   }
-   else {
-       float frac_delta = (chrom[rh_pt] - half_max) / (chrom[rh_pt] - chrom[rh_pt+1]);
-       rh_hm = (float)rh_pt + frac_delta;
-   }
-   peak.fwhm = rh_hm - lh_hm;
+    if (lh_pt == -1) {
+        lh_hm = (float)start_idx;
+    }
+    else {
+        float frac_delta = (half_max - chrom[lh_pt]) / (chrom[lh_pt + 1] - chrom[lh_pt]);
+        lh_hm = (float)lh_pt + frac_delta;
+    }
+    if (rh_pt == -1) {
+        rh_hm = (float)stop_idx;
+    }
+    else {
+        float frac_delta = (chrom[rh_pt] - half_max) / (chrom[rh_pt] - chrom[rh_pt + 1]);
+        rh_hm = (float)rh_pt + frac_delta;
+    }
 }
 
 void CrawPeakAnnotator::refind_peak_peak( SlimCrawPeak & peak ) {
@@ -930,6 +950,10 @@ float CrawPeakAnnotator::calculate_slope( int start_rt_idx, int stop_rt_idx) {
 
 double CrawPeakAnnotator::get_area( int start_rt_idx, int stop_rt_idx ) {
    return crawutils::area_under_curve( *(get_active_chrom()) , start_rt_idx, stop_rt_idx );
+}
+
+double CrawPeakAnnotator::get_area_f(float start_rt_idx, float stop_rt_idx) {
+    return crawutils::area_under_curve_f(*(get_active_chrom()), start_rt_idx, stop_rt_idx);
 }
 
 };

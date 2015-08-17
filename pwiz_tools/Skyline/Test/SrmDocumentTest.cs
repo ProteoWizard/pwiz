@@ -359,7 +359,7 @@ namespace pwiz.SkylineTest
             if (expectedOutput != null)
             {
                 var actualOutput = exportedActual.Values.First().ToString();
-                Assert.AreEqual(actualOutput, expectedOutput);
+                Assert.AreEqual(expectedOutput, actualOutput);
                 return exportedActual.Count;  // Just be satisfied with output correctness, don't try to roundtrip
             }
             

@@ -1466,8 +1466,18 @@ float crawstats::pi0_from_StoreySplineFit(const std::vector<std::pair<float, flo
   return (float)result;
 }
 
+/*
+#include <Windows.h>
 
+namespace crawutils {
 
+    void OutputString(const char* str)
+    {
+        OutputDebugStringA(str);
+    }
+
+}
+*/
 /*
 double crawstats::myincbet(double a, double b, double c) {
   //have not built cephes in VC++ yet

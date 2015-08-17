@@ -3171,30 +3171,36 @@ namespace pwiz.Skyline
                 Directory.CreateDirectory(dirPath);
 
             var progressMonitor = new CommandProgressMonitor(outText, new ProgressStatus(string.Empty));
-            using (var writer = new XmlWriterWithProgress(outFile, Encoding.UTF8, doc.MoleculeTransitionCount, progressMonitor))
+            using (var saver = new FileSaver(outFile))
             {
-                XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
-                ser.Serialize(writer, doc);
+                saver.CheckException();
 
-                writer.Flush();
-                writer.Close();
-
-                var settings = doc.Settings;
-                if (settings.HasResults)
+                using (var writer = new XmlWriterWithProgress(saver.SafeName, outFile, Encoding.UTF8, doc.MoleculeTransitionCount, progressMonitor))
                 {
-                    if (settings.MeasuredResults.IsLoaded)
+                    XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                    ser.Serialize(writer, doc);
+
+                    writer.Flush();
+                    writer.Close();
+                    saver.Commit();
+
+                    var settings = doc.Settings;
+                    if (settings.HasResults)
                     {
-                        FileStreamManager fsm = FileStreamManager.Default;
-                        settings.MeasuredResults.OptimizeCache(outFile, fsm);
+                        if (settings.MeasuredResults.IsLoaded)
+                        {
+                            FileStreamManager fsm = FileStreamManager.Default;
+                            settings.MeasuredResults.OptimizeCache(outFile, fsm);
 
-                        //don't worry about updating the document with the results of optimization
-                        //as is done in SkylineFiles
+                            //don't worry about updating the document with the results of optimization
+                            //as is done in SkylineFiles
+                        }
                     }
-                }
-                else
-                {
-                    string cachePath = ChromatogramCache.FinalPathForName(outFile, null);
-                    FileEx.SafeDelete(cachePath, true);
+                    else
+                    {
+                        string cachePath = ChromatogramCache.FinalPathForName(outFile, null);
+                        FileEx.SafeDelete(cachePath, true);
+                    }
                 }
             }
         }

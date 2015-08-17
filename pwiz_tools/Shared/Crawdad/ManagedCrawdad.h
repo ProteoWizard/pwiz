@@ -117,6 +117,7 @@ namespace Crawdad {
             _pPeakFinder->slim = true;
             _pPeakFinder->method.peak_location_meth = MAXIMUM_PEAK;
             _pPeakFinder->method.background_estimation_method = LOWER_BOUNDARY;
+            // _pPeakFinder->method.area_calc_method = HALF_HEIGHT_WIDTH; // Demonstrated only nominal benefit
         }
 
         ~CrawdadPeakFinder()

@@ -260,6 +260,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
+        private const int MAX_TRAINING_MEMORY = 512*1024*1024; // 512 MB
+
         /// <summary>
         /// Calculate new weight factors for one iteration of the refinement process.  This is the heart
         /// of the MProphet algorithm.
@@ -303,12 +305,42 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var featureCount = weights.Count(w => !double.IsNaN(w));
 
             // Copy target and decoy peaks to training data array.
-            var trainData =
-                new double[truePeaks.Count + decoyTransitionGroups.Count, featureCount + 1];
-            for (int i = 0; i < truePeaks.Count; i++)
-                CopyToTrainData(truePeaks[i].Features, trainData, weights, i, 1);
-            for (int i = 0; i < decoyPeaks.Count; i++)
-                CopyToTrainData(decoyPeaks[i].Features, trainData, weights, i + truePeaks.Count, 0);
+            int totalTrainingPeaks = truePeaks.Count + decoyTransitionGroups.Count;
+            // Calculate the maximum number of training peaks (8 bytes per score - double, featurCount + 1 scores per peak)
+            int maxTrainingPeaks = MAX_TRAINING_MEMORY/8/(featureCount + 1);
+
+            var trainData = new double[Math.Min(totalTrainingPeaks, maxTrainingPeaks), featureCount + 1];
+            if (totalTrainingPeaks < maxTrainingPeaks)
+            {
+                for (int i = 0; i < truePeaks.Count; i++)
+                    CopyToTrainData(truePeaks[i].Features, trainData, weights, i, 1);
+                for (int i = 0; i < decoyPeaks.Count; i++)
+                    CopyToTrainData(decoyPeaks[i].Features, trainData, weights, i + truePeaks.Count, 0);
+            }
+            else
+            {
+                double proportionTrue = truePeaks.Count*1.0/totalTrainingPeaks;
+                int truePeakCount = (int) Math.Round(maxTrainingPeaks*proportionTrue);
+                int i = 0;
+                foreach (var peak in truePeaks.RandomOrder())
+                {
+                    if (i < truePeakCount)
+                        CopyToTrainData(peak.Features, trainData, weights, i, 1);
+                    else
+                        break;
+                    i++;
+                }
+                int decoyPeakCount = maxTrainingPeaks - truePeakCount;
+                i = 0;
+                foreach (var peak in decoyPeaks.RandomOrder())
+                {
+                    if (i < decoyPeakCount)
+                        CopyToTrainData(peak.Features, trainData, weights, i + truePeakCount, 0);
+                    else
+                        break;
+                    i++;
+                }
+            }
 
             // Use Linear Discriminant Analysis to find weights that separate true and decoy peak scores.
             int info;

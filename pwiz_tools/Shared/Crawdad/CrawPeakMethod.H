@@ -36,8 +36,11 @@ enum PeakPeakMethod { GAUSS_2D_PEAK, CENTROID_PEAK, MAXIMUM_PEAK };
 ///Background determination technique
 enum BackgroundEstimationMethod { PEAK_BOUNDARY_ESTIMATE, LOWER_BOUNDARY, MEAN_BOUNDARY, FIXED_BACKGROUND };
 
+///Chromatogram smoothing method
 enum ChromSmoothMethod { GAUSS_SMOOTHER, SAVITZKY_GOLAY_SMOOTHER };
 
+///Area calculation method
+enum AreaCalculationMethod { FULL_WIDTH, HALF_HEIGHT_WIDTH };
 
 const double FHWM_TO_SD_CONV = 2.35482;
 class CrawPeakMethod {
@@ -57,6 +60,7 @@ public:
   PeakPeakMethod  peak_location_meth;
   BackgroundEstimationMethod background_estimation_method;
   ChromSmoothMethod chrom_smooth_method;
+  AreaCalculationMethod area_calc_method;
 
   bool merge_peaks_list_based;
   bool extend_peak_to_lower_bound;

@@ -847,7 +847,7 @@ namespace pwiz.Skyline
                     {
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            using (var writer = new XmlWriterWithProgress(saver.SafeName, Encoding.UTF8,
+                            using (var writer = new XmlWriterWithProgress(saver.SafeName, fileName, Encoding.UTF8,
                                 document.MoleculeTransitionCount, progressMonitor)
                             {
                                 Formatting = Formatting.Indented
